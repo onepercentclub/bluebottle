@@ -1,0 +1,71 @@
+{# Template which goes into the main {{outlet}} #}
+{% load bb_ember i18n %}
+
+
+{% tplhandlebars "user" %}
+
+<div class="container" id="profile">
+    <div id="profile-actions" class="section">
+        <div class="wrapper">
+        
+            {% block_verbatim profile_nav %}
+                {# TODO: Fix CSS (My Profile is too high) #}
+                <div class="profile-actions-meta">
+                    <a {{action openInBigBox "userModal" controllers.currentUser.content }}>
+                        <img {{bindAttr src="controllers.currentUser.getAvatar"}} />
+                        <span class="profile-actions-meta-title">
+                            {% block profile_text_preview %}
+                                {% trans "My profile" %}
+                                <small>{% trans "Preview" %}</small>
+                            {% endblock profile_text_preview %}
+                        </span>
+                    </a>
+                </div>
+                <br />
+                <ul class="tabs">
+                    
+                    {% block_verbatim profile_nav_tabs %}
+                        
+                        <li class="tab-item first">
+                            {{#linkTo userProfile }}
+                                <strong class="tab-title">
+                                    {% trans "Profile" %} 
+                                    <em class="tab-subtitle">{% trans "Public info" %}</em>
+                                </strong>
+                            {{/linkTo}}
+                        </li>
+
+                        <li class="tab-item">
+                            {{#linkTo userSettings }}
+                                <strong class="tab-title">
+                                    {% trans "Account" %} 
+                                    <em class="tab-subtitle">{% trans "Settings" %}</em>
+                                </strong>
+                            {{/linkTo}}
+                        </li>
+                    
+                    {% endblock_verbatim profile_nav_tabs %}
+
+                    {% comment %}
+                        Temporary solution as {{ block.super }} doesn't work
+                        as it should.
+                        FIXME
+                    {% endcomment %}
+
+                    {% block extra_profile_nav_tabs %}
+                    {% endblock %}
+                
+                </ul>
+
+            {% endblock_verbatim profile_nav %}
+
+        </div>
+    </div>
+
+    {# Outlet for user/profile, user/settings and user/orders #}
+    {{ outlet }}
+
+    <br>
+</div>
+
+{% endtplhandlebars %}

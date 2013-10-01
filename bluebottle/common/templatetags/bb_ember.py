@@ -35,6 +35,19 @@ def verbatim_tags(parser, token, endtagname='', endtagnames=[]):
         if token.contents in endtagnames or token.contents == endtagname:
             break
 
+        # special case, {{ block.super }} is something we don't want to escape!
+        # TODO: refactor this condition, token.split_contents should return
+        # only one string, block.super, otherwise we might be dealing with
+        # handlebars templating shenanigans
+        
+        # FIXME: block.super not working
+
+        # if 'block.super' in token.contents:
+        #     filter_expression = parser.compile_filter(token.contents)
+        #     var_node = parser.create_variable_node(filter_expression)
+        #     parser.extend_nodelist(nodelist, var_node, token)
+        #     import pdb; pdb.set_trace()
+        
         if token.token_type == template.TOKEN_VAR:
             parser.extend_nodelist(nodelist, TextNode('{{'), token)
             parser.extend_nodelist(nodelist, TextNode(token.contents), token)

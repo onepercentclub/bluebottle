@@ -1,0 +1,82 @@
+{% load i18n bb_ember %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<nav class="nav-member member-login">
+    
+    {% block_verbatim nav_login_content %}
+        
+        <h1 class="nav-title">{% trans "Profile" %}</h1>
+        <ul>
+            {{#if controllers.currentUser.isAuthenticated }}
+                
+                {% block_verbatim user_logged_in %}
+                
+                    <li class="nav-member-profile">
+                        
+                        {% block_verbatim profile_anchor %}
+                            <a href="#" class="nav-profile">
+                                <strong>
+                                    {% trans "Profile" %} &nbsp;
+                                    <em class="flaticon solid down-2"></em>
+                                </strong>
+                            </a>
+                        {% endblock_verbatim profile_anchor %}
+                        
+                        <ul class="my-menu">
+                            {% block_verbatim my_menu %}
+                                
+                                <li>
+                                    {{#linkTo "userProfile" }}
+                                        {% trans "Edit my profile & settings" %}
+                                    {{/linkTo }}
+                                </li>
+                                
+                                {{#if controllers.myProjectList.model.length }}
+                                    <li>
+                                        {{#linkTo "myProjectList" }}
+                                            {% trans "Manage My Project" %}
+                                        {{/linkTo}}
+                                    </li>
+                                {{/if}}
+                                
+                                <li>
+                                    {% block logout_anchor %}
+                                        <a href="{% url 'accounts:logout' %}?next=/{{ LANGUAGE_CODE }}/">Logout</a>
+                                    {% endblock logout_anchor %}
+                                </li>
+                                
+                                <li class="nav-my-language">
+                                    {% trans "Language" %} {{view "App.LanguageSwitchView"}}
+                                </li>
+
+                            {% endblock_verbatim my_menu %}
+                        </ul>
+                    </li>
+
+                    {# TODO: only if donations app is enabled #}
+                    {% block donations_anchor %}
+                    {% endblock donations_anchor %}
+
+                {% endblock_verbatim user_logged_in %}
+
+            {{else}}
+                
+                {% block_verbatim anonymous_user %}
+                
+                    <li class="nav-member-actions">
+                        {{#linkTo "signup" class="nav-signup"}}{% trans "Sign up" %}{{/linkTo}}
+                        &#124;
+                        <a {{action openInBox "login"}} class="nav-login">{%  trans "Log in" %}</a>
+                    </li>
+
+                    <li class="nav-switch-lang">{{view "App.LanguageSwitchView"}}</li>
+
+                {% endblock_verbatim anonymous_user %}
+                
+            {{/if}}
+        </ul>
+
+    {% endblock_verbatim nav_login_content %}
+
+</nav>

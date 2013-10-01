@@ -1,0 +1,23 @@
+language: python
+
+python:
+  - "2.6"
+  - "2.7"
+
+env:
+  - DJANGO=django==1.5.1
+  - DJANGO=https://github.com/django/django/archive/master.zip
+
+install:
+  - "pip install --upgrade setuptools --use-mirrors"
+  - "pip install $DJANGO --use-mirrors"
+  - "pip install -r requirements.txt --use-mirrors"
+  - "pip install Pillow --use-mirrors"
+  - "touch bluebottle/settings/secrets.py"
+
+matrix:
+  allow_failures:
+    - env: DJANGO=https://github.com/django/django/archive/master.zip
+
+script:
+  - python ./manage.py test --settings=bluebottle.settings.travis -v 2

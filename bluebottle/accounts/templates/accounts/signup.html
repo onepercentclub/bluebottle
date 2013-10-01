@@ -1,0 +1,165 @@
+{% load i18n bb_ember %}
+
+
+{# Main template, responsible for including the partials #}
+{% block signup_wrapper %}
+    {% tplhandlebars "signup" %}
+
+        {% block_verbatim signup_container %}
+            
+            <div class="container">
+                <div class="wrapper">
+                    {{partial signup_content}}
+                    {{partial signup_sidebar}}
+                </div>
+            </div>
+
+        {% endblock_verbatim signup_container %}
+
+    {% endtplhandlebars %}
+{% endblock signup_wrapper %}
+
+
+
+{# Content with form partial. #}
+{% block signup_content_wrapper %}
+    {% tplhandlebars "_signup_content" %}
+    
+        {% block_verbatim signup_content %}
+            
+            <div class="content" id="signup">
+
+                {% block signup_form_top %}
+                    <h1>{% trans "Join &lt;BlueBottle-project-name&gt;" %}</h1>
+                    <p>
+                        {% trans "Override block 'signup_form_top' to display your description here." %}
+                    </p>
+                {% endblock signup_form_top %}
+                    
+                {{#if isUserCreated}}
+                    {% block user_created_message %}
+                        
+                        <h1>{% trans "'Thank you' note for signing up." %}</h1>
+                        <p>{% trans "e.g.: Email information." %}</p>
+                    
+                    {% endblock user_created_message %}
+                {{else}}
+
+                    {% block_verbatim signup_form %}
+                        <form class="signup-form">
+                            <fieldset>
+                                <div class="control-group">
+                                    <label class="control-label">
+                                        {% trans "Name" %}
+                                    </label>
+                    
+                                    <div class="controls">
+                                        {{view Em.TextField valueBinding="first_name" placeholder="{% trans "First name" %}"
+                                        class="inline-prepend" classBinding="errors.first_name.length:error"}}
+                    
+                                        {{view Em.TextField valueBinding="last_name" placeholder="Surname" 
+                                        class="inline-append" classBinding="errors.last_name.length:error"}}
+                                    </div>
+                                </div>
+                    
+                                <div class="control-group">
+                                    <label class="control-label">
+                                        {% trans "Email" %}
+                                    </label>
+                    
+                                    <div class="controls">
+                                        {{view Em.TextField valueBinding="email" type="email" classBinding="errors.email.length:error"}}
+                                    </div>
+                                    
+                                    {{#if errors.email}}
+                                        <div class="errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
+                                    {{/if}}
+                                    
+                                </div>
+                    
+                                <div class="control-group">
+                                    <label class="control-label">
+                                        {% trans "Password" %}
+                                    </label>
+                    
+                                    <div class="controls">
+                                        
+                                        {{view Em.TextField valueBinding="password" type="password" classBinding="errors.password.length:error"}}
+                                        
+                                    </div>
+                    
+                                    {{#if errors.password}}
+                                        <div class="errors">{{#each errors.password}}<p>{{this}}</p>{{/each}}</div>
+                                    {{/if}}
+                                    
+                                </div>
+                            </fieldset>
+                            
+                            <div class="user-agree">
+                                {% block_verbatim user_agreement %}
+                                    
+                                    By joining &lt;BlueBottle-project-name&gt; I hereby agree to the 
+                                    <a {{action showPage 'terms-and-conditions'}} href="/#!/pages/terms-and-conditions">&lt;BlueBottle-project-name&gt; Terms of service</a>
+
+                                {% endblock_verbatim user_agreement %}
+                           </div>
+                           
+                            <button class="btn btn-iconed btn-primary" {{action 'createUser' model}}>
+                                <em class="flaticon solid user-1"></em>
+                                {% trans "Sign up" %}
+                            </button>
+                        </form>
+                    {% endblock_verbatim signup_form %}
+                {{/if}}
+            </div>
+
+        {% endblock_verbatim signup_content %}
+    
+    {% endtplhandlebars %}
+{% endblock signup_content_wrapper %}
+
+
+
+{# Sidebar partial #}
+{% block signup_sidebar_wrapper %}
+    
+    {% tplhandlebars "_signup_sidebar" %}
+
+        {% block_verbatim signup_sidebar_content %}
+            
+            <div class="sidebar tip" id="members">
+
+                <div class="login-link">
+                    <a {{action openInBox "login"}} class="highlight">
+                        
+                        {% block login_text %}
+                            <em class="flaticon solid unlock-3"></em>
+                            <strong>{%  trans "Already have an account?" %}</strong>
+                            <em>{% trans "Log in here, fast & easy" %}</em>
+                        {% endblock login_text %}
+
+                    </a>
+                </div>
+
+                <div class="members-advantage">
+                    {% block member_advantages %}
+                    
+                        <em class="flaticon solid heart-1"></em>
+
+                        <h3>{% trans "Why join &lt;BlueBottle-project-name&gt;" %}</h3>
+                        <ol>
+                            <li>{% trans "Reason 1" %}</li>
+                            <li>{% trans "Reason 2" %}</li>
+                            <li>{% trans "Reason 3" %}</li>
+                        </ol>
+
+                    {% endblock member_advantages %}
+                </div>
+
+            </div>
+
+        {% endblock_verbatim signup_sidebar_content %}
+
+    {% endtplhandlebars %}
+
+{% endblock signup_sidebar_wrapper %}

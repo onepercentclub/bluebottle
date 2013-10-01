@@ -1,0 +1,75 @@
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+#Translations
+*.mo
+
+#Mr Developer
+.mr.developer.cfg
+
+# Mac stuff and specific weirdness
+.DS\_Store
+*.sqlite
+*.sw?
+
+# Static files
+/static/media/*
+!/static/media/.gitkeep
+/static/assets/*
+!/static/assets/.gitkeep
+
+# Local settings overrides
+bluebottle/settings/local.py
+bluebottle/settings/secrets.py
+
+# Misc stuff
+env
+docs/_build
+.idea
+.noseids
+
+# CI reports
+reports
+
+# SASS
+.sass-cache
+
+# Espresso
+*.esproj
+
+# Salesforce Dataloader
+!**/.gitkeep
+salesforce/dataloader_prd/Bin/DataLoader20/*
+salesforce/dataloader_uat/Bin/DataLoader20/*
+salesforce/*/*/*/*/read/*
+salesforce/*/*/*/*/write/*
+salesforce/*/*/*/*/log/*
+salesforce/*/*/*/*/active_job.properties
+salesforce/*/*/*/*/*/*lastRun.properties
+salesforce/*/*/*/log/*
+salesforce/*/*/*/archive/*
+salesforce/*/Data/Input/*
+salesforce/*/Data/Output/*
+
+static/global/compass_app_log.txt
+
+ghostdriver.log

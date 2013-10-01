@@ -2,6 +2,16 @@
 {% load i18n %}
 {% load static %}
 
+
+{% include "accounts/login.html" %}
+{% include "accounts/signup.html" %}
+
+
+
+
+
+
+
 {% tplhandlebars "user" %}
 
 <div class="container" id="profile">
@@ -570,8 +580,7 @@
 {% endtplhandlebars %}
 
 
-{# signup template #}
-{% include "accounts/signup.html" %}
+
 
 
 {% tplhandlebars "user_modal" %}

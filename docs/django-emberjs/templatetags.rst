@@ -22,6 +22,7 @@ to accomodate these needs.
 
 Available tags
 --------------
+
   {% verbatim %}: Django's own tag, ignores all variables and tags.
   
   {% bb_verbatim %}: ignores variables, but renders tags like {% trans %}
@@ -29,3 +30,9 @@ Available tags
   
   {% block_verbatim %}: combination of {% block %} and {% bb_verbatim %}.
   If you need to evaluate a context variable in the template within a block_verbatim block, use a normal {% block %} inside the block_verbatim.
+
+
+Usage
+-----
+
+Near the top of the template, load the bb_ember tag library.

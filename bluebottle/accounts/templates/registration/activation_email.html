@@ -4,12 +4,15 @@
 {% load static %}
 
 {% block content %}
+    {% trans "Override registration/activation_email.html to create your own activation mail template." %}
     <table cellpadding="0" cellspacing="0" border="0" align="center" style="width: 600px; padding-left: 20px; padding-right: 20px;">
         <tr><td height="64"></td></tr>
 
         <tr>
             <td valign="top">
-                <img src="{{ site }}{% get_static_prefix %}images/1procentclub-logo-email.png" width="97" height="35" alt="1%Club" style="outline:none; text-decoration:none; -ms-interpolation-mode: bicubic; display: block;" />
+                {% block site_logo %}
+                    {% trans "You can put your site logo here." %}
+                {% endblock site_logo %}
             </td>
         </tr>
 
@@ -25,7 +28,7 @@
 
         <tr>
             <td valign="top">
-                {% blocktrans %}Great! We can almost welcome you at 1%Club!{% endblocktrans %}
+                {% trans "You're almost done!" %}
             </td>
         </tr>
 

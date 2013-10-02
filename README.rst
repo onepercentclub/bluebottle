@@ -8,7 +8,7 @@ Contributors
 ------------
 
 For those who want to contribute to the BlueBottle project, it's easy to get
-started::
+started:
 
 #. Make sure you have a recent Python distro (2.7+ recommended).
 #. Make sure (a recent) `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ is installed.
@@ -23,9 +23,15 @@ started::
 
     $ python setup.py develop
 
-...
-
 #.  You're ready to roll now, baby!    
+
+Testing
+-------
+
+The BlueBottle test suite can be run completely using::
+
+    $ pip install nose
+    $ python setup.py nosetests
 
 
 Website developers

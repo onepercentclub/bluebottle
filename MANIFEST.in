@@ -1,2 +1,2 @@
-include AUTHORS LICENSE README.md
+include AUTHORS LICENSE README.rst
 recursive-include bluebottle *.*

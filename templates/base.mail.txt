@@ -1,0 +1,7 @@
+{% block content %}{% endblock %}
+
+-------------------
+Example Organisation
+Address line 1
+Address line 2
+Override 'base.mail.txt' template.

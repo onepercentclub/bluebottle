@@ -12,7 +12,6 @@
 App.User = DS.Model.extend({
     url: 'users/profiles',
 
-    // field( type)s
     username: DS.attr('string'),
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),

@@ -53,7 +53,9 @@
                 <div class="modal-footer">
                     {% block_verbatim login_footer %}
                         
-                        <a class="left" {{ action requestPasswordReset }}>{% trans "Password forgotten" %}</a>
+                        <a class="left" {{ action 'requestPasswordReset' }}>
+                            {% trans "Password forgotten" %}
+                        </a>
                         <input class="btn right" type="submit" value="{% trans "Click me!" %}">
                         <input type="hidden" name="next" {{bindAttr value="view.next"}}>
                     

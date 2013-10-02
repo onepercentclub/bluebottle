@@ -45,7 +45,7 @@
                                         <img {{bindAttr src="getAvatar"}} class="preview" />
 
                                         <a class="btn btn-iconed btn-uploader">
-                                            {{view App.UploadFileView contentBinding="this" name="picture" id="picture" accept="image/*"}}
+                                            {{view App.UploadFile contentBinding="this" name="picture" id="picture" accept="image/*" fileBinding="picture"}}
                                             <em class="flaticon solid upload-document-1"></em>
                                             {% trans "Upload picture" %}
                                         </a>

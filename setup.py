@@ -69,15 +69,19 @@ install_requires = [
 
 
 dependency_links = [
-    #'hg+ssh://hg@bitbucket.org/onepercentclub/suds@afe727f50704#egg=suds-jurko-0.4.1.jurko.5.-development-',
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
-    #'git+ssh://git@github.com/onepercentclub/django-salesforce.git@1e54beb7bcc15a893e9590fb27cbf08853da5599#egg=django-salesforce-0.1.6.3',
+
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
-    #'hg+ssh://hg@bitbucket.org/onepercentclub/django-registration@ae9e9ed265ed#egg=django-registration-0.8',
+    
+    # There hasn't been a release of django-registration is a while and we need the 1.5 custom user support.
+    # Official: https://bitbucket.org/ubernostrum/django-registration/
+    # Fork with 1.5 Custom User support: https://bitbucket.org/eire1130/django-registration
+    # Our fork of the fork with HTML_ACTIVATION_EMAIL option:
+    # TODO Try to unwind this mess and contribute some stuff upstream.
     'https://bitbucket.org/onepercentclub/django-registration/get/ae9e9ed265ed.zip#egg=django-registration-0.8',
-    #'hg+ssh://hg@bitbucket.org/wkornewald/django-filetransfers@32ddeac#egg=django-filetransfers-0.0.0',
+
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
-    #'git+ssh://git@github.com/onepercentclub/django-docdata.git@120ae5b8a1da6152d43d4601edc8832268e05515#egg=django-docdata-0.1',
+
     'https://github.com/onepercentclub/django-docdata/archive/120ae5b8a1da6152d43d4601edc8832268e05515.zip#egg=django-docdata-0.1',
 ]
 

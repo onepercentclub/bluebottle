@@ -1,6 +1,4 @@
-{% load templatetag_handlebars %}
-{% load i18n %}
-{% load static %}
+{% load bb_ember i18n static %}
 
 
 {% include "accounts/signup.html" %}
@@ -12,7 +10,12 @@
 {% include "accounts/profile_form.html" %}
 {% include "accounts/account_settings.html" %}
 
+{# Public profile page #}
+{% include "accounts/profile_public.html" %}
 
+
+
+{# TODO: move to 'orders' app or something alike #}
 {% tplhandlebars "userOrders" %}
 <section class="wrapper">
     <div class="content">
@@ -121,56 +124,4 @@
     </div>
 </section>
 
-{% endtplhandlebars %}
-
-
-
-
-
-{% tplhandlebars "user_modal" %}
-    <div class="user-modal-sidebar">
-        <img {{bindAttr src="getAvatar" info="first_name"}} width="100" height="100" />
-
-        <h2>{{ first_name }} {{ last_name }}</h2>
-
-        <p class="um-member-since">{% trans "Member since" %} {{user_since}}</p>
-    </div>
-
-    <div class="user-modal-content">
-        {{#if about }}
-            <h3>{% trans "About" %}</h3>
-            <p>{{ about }} </p>
-        {{/if}}
-
-        {{#if why }}
-            <h4>{% blocktrans %}Joined 1%Club because{% endblocktrans %}</h4>
-            <p>{{ why }} </p>
-        {{/if}}
-
-        <div class="um-list">
-            {{#if location }}
-                <div class="um-list-item">
-                    <em class="flaticon solid location-pin-1"></em>
-                    <span class="key">{% trans "Location" %}</span>
-                    <span class="value">{{ location }}</span>
-                </div>
-            {{/if}}
-
-            {{#if availability }}
-                <div class="um-list-item">
-                    <em class="flaticon solid clock-1"></em>
-                    <span class="key">{% trans "Time available" %}</span>
-                    <span class="value">{{ availability }}</span>
-                </div>
-            {{/if}}
-        </div>
-
-        <div class="um-meta">
-            {{#if website }}
-                <span class="um-meta-item website">
-                    <a {{bindAttr href="website"}} target="_blank"><em class="flaticon solid link-3"></em>  {{website}}</a>
-                </span>
-            {{/if}}
-        </div>
-    </div>
 {% endtplhandlebars %}

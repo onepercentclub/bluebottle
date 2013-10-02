@@ -150,7 +150,7 @@ class AccountSeleniumTests(ProjectTestsMixin, SeleniumTestCase):
         
         self.login(user.email, 'secret')
 
-        self.browser.find_by_css('.nav-member-my1percent').first.mouse_over()
+        self.browser.find_by_css('.nav-member-profile').first.mouse_over()
         self.browser.find_link_by_partial_text('Edit my profile & settings').first.click()
 
         # Validate that we are on the intended page.
@@ -195,7 +195,7 @@ class AccountSeleniumTests(ProjectTestsMixin, SeleniumTestCase):
 
         self.login(user.email, 'secret')
 
-        self.browser.find_by_css('.nav-member-my1percent').first.mouse_over()
+        self.browser.find_by_css('.nav-member-profile').first.mouse_over()
         self.browser.find_link_by_partial_text('Edit my profile & settings').first.click()
 
         # Validate that we are on the intended page.

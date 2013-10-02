@@ -1,0 +1,17 @@
+{% load bb_ember i18n static %}
+
+
+{% include "accounts/signup.html" %}
+{% include "accounts/login.html" %}
+{% include "accounts/password_reset.html" %}
+
+{# Personal profile page #}
+{% include "accounts/profile_nav.html" %}
+{% include "accounts/profile_form.html" %}
+{% include "accounts/account_settings.html" %}
+
+{# Public profile page #}
+{% include "accounts/profile_public.html" %}
+
+
+{% block extra_templates %}{% endblock %}

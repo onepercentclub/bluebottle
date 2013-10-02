@@ -17,11 +17,9 @@ App.SignupRoute = Em.Route.extend({
 });
 
 
-
-
 App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {
-        this.transitionTo('userProfile'); // == redirect to, see router_config.js
+        this.transitionTo('userProfile');
     }
 });
 
@@ -132,7 +130,6 @@ App.UserOrdersRoute = Em.Route.extend({
 });
 
 
-
 App.UserActivateRoute = Em.Route.extend({
 
     model: function(params) {
@@ -182,7 +179,6 @@ App.UserActivateRoute = Em.Route.extend({
 });
 
 
-
 App.PasswordResetRoute = Em.Route.extend({
     model: function(params) {
         var route = this;
@@ -209,4 +205,3 @@ App.PasswordResetRoute = Em.Route.extend({
         return record;
     }
 });
-

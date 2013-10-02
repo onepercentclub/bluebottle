@@ -7,11 +7,10 @@
 var accounts_router = function(){
 	this.resource('signup');
 
-	// 'member' instead of 'user'
-	this.resource('user', {path: '/member'}, function() {
+    this.resource('user', {path: '/member'}, function() {
         this.resource('userProfile', {path: '/profile/'});
         this.resource('userSettings', {path: '/settings'});
-
+        
         // TODO: isolate this
         this.resource('userOrders', {path: '/orders'});
     });

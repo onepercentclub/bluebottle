@@ -11,7 +11,7 @@
             {% block_verbatim profile_nav %}
                 {# TODO: Fix CSS (My Profile is too high) #}
                 <div class="profile-actions-meta">
-                    <a {{action openInBigBox "userModal" controllers.currentUser.content }}>
+                    <a {{action "openInBigBox" "userModal" controllers.currentUser.content }}>
                         <img {{bindAttr src="controllers.currentUser.getAvatar"}} />
                         <span class="profile-actions-meta-title">
                             {% block profile_text_preview %}
@@ -27,7 +27,7 @@
                     {% block_verbatim profile_nav_tabs %}
                         
                         <li class="tab-item first">
-                            {{#linkTo userProfile }}
+                            {{#linkTo "userProfile" }}
                                 <strong class="tab-title">
                                     {% trans "Profile" %} 
                                     <em class="tab-subtitle">{% trans "Public info" %}</em>
@@ -36,7 +36,7 @@
                         </li>
 
                         <li class="tab-item">
-                            {{#linkTo userSettings }}
+                            {{#linkTo "userSettings" }}
                                 <strong class="tab-title">
                                     {% trans "Account" %} 
                                     <em class="tab-subtitle">{% trans "Settings" %}</em>

@@ -25,6 +25,14 @@ started:
 
 #.  You're ready to roll now, baby!    
 
+Testing
+-------
+
+The BlueBottle test suite can be run completely using::
+
+    $ pip install nose
+    $ python setup.py nosetests
+
 
 Website developers
 ------------------

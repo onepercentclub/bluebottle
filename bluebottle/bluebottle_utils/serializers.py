@@ -2,15 +2,6 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_utils.validators import validate_postal_code
 from bluebottle.bluebottle_utils.models import Address
-#from bluebottle.projects.models import ProjectTheme
-
-
-#class ThemeSerializer(serializers.ModelSerializer):
-#    title = serializers.Field(source='name')
-#
-#    class Meta:
-#        model = ProjectTheme
-#        fields = ('id', 'title')
 
 
 class AddressSerializer(serializers.ModelSerializer):

@@ -56,7 +56,7 @@ class DocumentDownloadView(View):
             file = type_class.objects.get(pk=pk)
         except type_class.DoesNotExist:
             return HttpResponseNotFound()
-        if file.author != request.user:
-            return HttpResponseForbidden()
-        file_name = os.path.basename(file.file.name)
-        return serve_file(request, file.file, save_as=file_name)
+        if file.author == request.user or request.user.is_staff:
+            file_name = os.path.basename(file.file.name)
+            return serve_file(request, file.file, save_as=file_name)
+        return HttpResponseForbidden()

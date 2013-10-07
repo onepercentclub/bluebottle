@@ -52,6 +52,9 @@ class UserCreate(generics.CreateAPIView):
     def get_name(self):
         return "Users"
 
+    def pre_save(self, obj):
+        obj.primary_language = self.request.LANGUAGE_CODE[:2]
+
     def post_save(self, obj, created=False):
         # Create a RegistrationProfile and email its activation key to the User.
         registration_profile = RegistrationProfile.objects.create_profile(obj)

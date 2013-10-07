@@ -6,9 +6,3 @@ except ImportError:
 
 from .base import *
 
-
-
-INSTALLED_APPS = (
-    'bluebottle.accounts'
-
-)

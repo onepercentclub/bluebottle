@@ -43,7 +43,7 @@ install_requires = [
     'django-registration==0.8',
 #    'django-salesforce==0.1.6.3',
 #    'django-social-auth==0.7.23',
-#    'django-statici18n==0.4.5',
+    'django-statici18n==0.4.5',
     'django-taggit==0.10a1',
     'django-taggit-autocomplete-modified==0.1.0b4',
 #    'django-templatetag-handlebars==1.2.0',

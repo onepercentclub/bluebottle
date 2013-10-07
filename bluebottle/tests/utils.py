@@ -9,8 +9,7 @@ from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
 from splinter.exceptions import DriverNotFoundError
 
-# TODO: import bb-core Project
-from apps.projects.models import Project
+# from apps.projects.models import Project
 
 
 def css_dict(style):
@@ -279,8 +278,8 @@ class SeleniumTestCase(LiveServerTestCase):
         :return: ``True`` if the homepage could be visited.
         """
         # TODO: A project should not be needed to visit the homepage.
-        self.assertNotEqual(Project.objects.count(), 0,
-                            'The homepage depends on at least 1 project to be present to prevent JS errors.')
+        # self.assertNotEqual(Project.objects.count(), 0,
+        #                     'The homepage depends on at least 1 project to be present to prevent JS errors.')
 
         # Open the homepage, in the specified language.
         self.visit_path('', lang_code)

@@ -88,7 +88,10 @@ dependency_links = [
 
 tests_require = [
     'coverage==3.6',
-    'django-nose==1.1',
+    'django-nose',
+    'django-apptemplates==0.0.1',
+    'django_compressor==1.2',
+    'django-templatetag-handlebars==1.2.0',
     'mock==1.0.1',
     'nose==1.3.0',
     'pylint==0.28.0',
@@ -123,4 +126,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development',
     ],
+
+    # tests
+    test_suite='tests.BlueBottleTestSuite',
 )

@@ -14,10 +14,6 @@ from django.utils.unittest.case import skipUnless, skipIf
 from bluebottle.tests.utils import SeleniumTestCase, css_dict
 from bluebottle.geo.models import Region
 
-# TODO: fix import when projects is moved to bb-core
-from apps.projects.tests import ProjectTestsMixin
-
-
 import re
 import datetime
 
@@ -27,16 +23,10 @@ from ..models import BlueBottleUser
 
 @skipUnless(getattr(settings, 'SELENIUM_TESTS', False),
         'Selenium tests disabled. Set SELENIUM_TESTS = True in your settings.py to enable.')
-class AccountSeleniumTests(ProjectTestsMixin, SeleniumTestCase):
+class AccountSeleniumTests(SeleniumTestCase):
     """
     Selenium tests for account actions.
     """
-    def setUp(self):
-
-        # This project is required to make the homepage work without JS errors.
-        project = self.create_project(title='Example', slug='example', money_asked=100000)
-        project.projectcampaign.money_donated = 50000
-        project.projectcampaign.save()
 
     def test_signup(self):
         """

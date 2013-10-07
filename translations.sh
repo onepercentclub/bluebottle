@@ -11,7 +11,7 @@ MAKEMESSAGES="$MANAGE_PY makemessages -l $SOURCE_LANGUAGE --no-wrap -e hbs,html,
 MAKEJSMESSAGES="$MANAGE_PY makemessages -l $SOURCE_LANGUAGE --no-wrap -e js -i compressed -d djangojs $SETTINGS"
 COMPILEMESSAGES="$MANAGE_PY compilemessages $SETTINGS"
 COMPILEJSMESSAGES="$MANAGE_PY compilejsi18n $SETTINGS"
-APPS_DIR="apps"
+APPS_DIR="bluebottle"
 EXCLUDED_APPS=""
 
 APPS=""

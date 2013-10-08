@@ -143,7 +143,7 @@ App.UserActivateRoute = Em.Route.extend({
         var currentUser = App.CurrentUser.find('current');
 
         var route = this;
-        currentUser.one('didReload', function() {
+        currentUser.one('didReload', function() { // WARNING: is one correct? Not on (on <-> one)?
             // User profile needs to load it's own currentUser apparently so unload this here.
             currentUser.unloadRecord();
             route.transitionTo('userProfile');

@@ -151,7 +151,6 @@ App.UserActivateRoute = Em.Route.extend({
 
         // This seems the only way to (more or less) always load the logged in user,
         Em.run.later(function() {
-            currentUser.transitionTo('loaded.saved');
             currentUser.reload();
         }, 3000);
 
@@ -188,7 +187,7 @@ App.PasswordResetRoute = Em.Route.extend({
         });
 
         // Need this so that the adapter makes a PUT instead of POST
-        record.transitionTo('loaded.saved');
+        record.get('stateManager').transitionTo('loaded.saved');
 
         record.on('becameError', function() {
             route.controllerFor('application').setProperties({

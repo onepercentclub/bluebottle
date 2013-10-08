@@ -85,7 +85,7 @@ App.UserSettings = DS.Model.extend({
     share_time_knowledge: DS.attr('boolean'),
     share_money: DS.attr('boolean'),
     gender: DS.attr('string'),
-    birthdate: DS.attr('string'),
+    birthdate: DS.attr('date'),
     user_type: DS.attr('string'),
     primary_language: DS.attr('string'),
 

@@ -7,16 +7,18 @@ App.SignupController = Ember.ObjectController.extend({
 
     needs: "currentUser",
 
-    createUser: function(user) {
-        var self = this;
+    actions: {
+        createUser: function(user) {
+            var self = this;
 
-        user.on('didCreate', function() {
-            self.set('isUserCreated', true);
-        });
+            user.on('didCreate', function() {
+                self.set('isUserCreated', true);
+            });
 
-        // Change the model URL to the User creation API.
-        user.set('url', 'users');
-        user.save();
+            // Change the model URL to the User creation API.
+            user.set('url', 'users');
+            user.save();
+        }
     }
 });
 

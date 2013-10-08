@@ -140,7 +140,6 @@ App.CurrentUser = App.UserPreview.extend({
 
 App.UserActivation = App.CurrentUser.extend({
     url: 'users/activate'
-
 });
 
 

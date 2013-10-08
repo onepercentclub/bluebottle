@@ -165,7 +165,7 @@ App.UserActivateRoute = Em.Route.extend({
         });
     },
 
-    events: {
+    actions: {
         error: function (reason, transition) {
             this.controllerFor('application').setProperties({
                 display_message: true,

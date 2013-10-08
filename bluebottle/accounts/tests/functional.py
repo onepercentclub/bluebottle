@@ -45,11 +45,11 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.browser.find_link_by_partial_text('Sign up').first.click()
 
         # Validate that we are on the intended page.
-        self.assertTrue(self.browser.is_text_present('JOIN 1%CLUB'),
+        self.assertTrue(self.browser.is_text_present('Join <BlueBottle-project-name>'),
                 'Cannot load the signup page.'),
 
         self.assertEqual(self.browser.url, '%s/en/#!/signup' % self.live_server_url)
-        self.assertEqual(self.browser.title, '1%Club - Share a little. Change the world')
+        self.assertEqual(self.browser.title, 'BlueBottle')
 
         # NOTE: Most ember elements don't have meaningful names. This makes it hard to find out which element is the
         # correct one.
@@ -72,7 +72,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         form.find_by_css('button').first.click()
 
         # After signing up, a message should appear
-        self.assertTrue(self.browser.is_text_present('THANKS FOR SIGNING UP!'))
+        self.assertTrue(self.browser.is_text_present("'Thank you' note for signing up."))
 
         # And a user should be created.
         self.assertEqual(BlueBottleUser.objects.filter(email='johndoe@example.com').count(), 1)
@@ -83,7 +83,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertEqual(len(mail.outbox), 1)
         activation_mail = mail.outbox[0]
 
-        self.assertEqual(activation_mail.subject, 'Welcome to 1%Club')
+        self.assertEqual(activation_mail.subject, 'Welcome to <...>')
         self.assertIn(user.email, activation_mail.to)
 
         # Extract activation link and change domain for the test.

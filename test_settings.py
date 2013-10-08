@@ -1,6 +1,8 @@
 from django.conf import global_settings
 import os
 
+SITE_ID = 1
+TIME_ZONE = 'Europe/Amsterdam'
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -31,7 +33,7 @@ STATICFILES_FINDERS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/home/bbt/coding/.virtualenvs/bb_onepercent/onepercentclub/test.db', # TODO
+        'NAME': os.path.join(PROJECT_ROOT, 'temp', 'test.db'),
     }
 }
 
@@ -43,6 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
 
     #3rp party apps

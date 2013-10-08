@@ -143,7 +143,7 @@ App.UserActivateRoute = Em.Route.extend({
         var currentUser = App.CurrentUser.find('current');
 
         var route = this;
-        currentUser.one('didReload', function() { // WARNING: is one correct? Not on (on <-> one)?
+        currentUser.one('didReload', function() {
             // User profile needs to load it's own currentUser apparently so unload this here.
             currentUser.unloadRecord();
             route.transitionTo('userProfile');
@@ -151,6 +151,7 @@ App.UserActivateRoute = Em.Route.extend({
 
         // This seems the only way to (more or less) always load the logged in user,
         Em.run.later(function() {
+            currentUser.transitionTo('loaded.saved');
             currentUser.reload();
         }, 3000);
 
@@ -164,7 +165,7 @@ App.UserActivateRoute = Em.Route.extend({
         });
     },
 
-    actions: {
+    events: {
         error: function (reason, transition) {
             this.controllerFor('application').setProperties({
                 display_message: true,
@@ -187,7 +188,7 @@ App.PasswordResetRoute = Em.Route.extend({
         });
 
         // Need this so that the adapter makes a PUT instead of POST
-        record.get('stateManager').transitionTo('loaded.saved');
+        record.transitionTo('loaded.saved');
 
         record.on('becameError', function() {
             route.controllerFor('application').setProperties({
@@ -199,8 +200,6 @@ App.PasswordResetRoute = Em.Route.extend({
 
             route.replaceWith('home');
         });
-
-        this.get('store').transaction().add(record);
         return record;
     }
 });

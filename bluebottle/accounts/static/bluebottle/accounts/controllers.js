@@ -120,54 +120,55 @@ App.UserModalController = Ember.ObjectController.extend({
 
 
 App.LoginController = Em.Controller.extend({
+    actions: {
+        requestPasswordReset: function() {
+            // Close previous modal, if any.
+            $('.close').click();
 
-    requestPasswordReset: function() {
-        // Close previous modal, if any.
-        $('.close').click();
+            var modalPaneTemplate = '<div>{{view templateName="request_password_reset"}}</div>';
 
-        var modalPaneTemplate = '<div>{{view templateName="request_password_reset"}}</div>';
+            Bootstrap.ModalPane.popup({
+                classNames: ['modal'],
+                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
 
-        Bootstrap.ModalPane.popup({
-            classNames: ['modal'],
-            defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
+                callback: function(opts, e) {
+                    if (opts.secondary) {
+                        var $btn        = $(e.target),
+                            $modal      = $btn.closest('.modal'),
+                            $emailInput = $modal.find('#passwordResetEmail'),
+                            $error      = $modal.find('#passwordResetError'),
+                            email       = $emailInput.val();
 
-            callback: function(opts, e) {
-                if (opts.secondary) {
-                    var $btn        = $(e.target),
-                        $modal      = $btn.closest('.modal'),
-                        $emailInput = $modal.find('#passwordResetEmail'),
-                        $error      = $modal.find('#passwordResetError'),
-                        email       = $emailInput.val();
+                        $.ajax({
+                            type: 'PUT',
+                            url: '/api/users/passwordreset',
+                            data: JSON.stringify({email: email}),
+                            dataType: 'json',
+                            contentType: 'application/json; charset=utf-8',
+                            success: function() {
+                                var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
+                                var $success = $("<p>" + message +"</p>");
 
-                    $.ajax({
-                        type: 'PUT',
-                        url: '/api/users/passwordreset',
-                        data: JSON.stringify({email: email}),
-                        dataType: 'json',
-                        contentType: 'application/json; charset=utf-8',
-                        success: function() {
-                            var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
-                            var $success = $("<p>" + message +"</p>");
+                                $modal.find('.modal-body').html($success);
+                                $btn.remove();
+                            },
+                            error: function(xhr) {
+                                var error = $.parseJSON(xhr.responseText);
+                                $error.html(error.email);
+                                $error.removeClass('hidden');
+                                $error.fadeIn();
+                                $emailInput.addClass('error').val();
+                                $emailInput.keyUp(function() {
+                                    $error.fadeOut();
+                                });
+                            }
+                        });
 
-                            $modal.find('.modal-body').html($success);
-                            $btn.remove();
-                        },
-                        error: function(xhr) {
-                            var error = $.parseJSON(xhr.responseText);
-                            $error.html(error.email);
-                            $error.removeClass('hidden');
-                            $error.fadeIn();
-                            $emailInput.addClass('error').val();
-                            $emailInput.keyUp(function() {
-                                $error.fadeOut();
-                            });
-                        }
-                    });
-
-                    return false;
+                        return false;
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 });
 

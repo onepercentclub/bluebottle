@@ -1,0 +1,890 @@
+/*--------------------------------------------------------------
+DOCDATA ORIGINAL
+--------------------------------------------------------------*/
+body 
+{
+	background-color: #336699;
+	color: #000000;
+}
+
+a
+{
+	color: blue;
+}
+
+a:link
+{ 
+	color: blue;
+	text-decoration: underline;
+}
+
+a:visited
+{ 
+	color: red;
+}
+
+a:hover
+{ 
+	color: black;
+}
+
+a:active
+{ 
+	color: black;
+}
+
+.bodyOuter
+{
+	width: 100%;
+	text-align: center;
+}
+
+.bodyInner
+{
+	margin: auto;
+	width: 60%;
+}
+
+.menuMain
+{
+	background-color: #FFFFFF;
+	text-align: left;
+}
+
+.menuMainTitle
+{
+	padding: 10px; 
+	background-color: #FFFFFF;
+}
+
+.menuMainMerchantHelp
+{
+	padding: 10px; 
+	background-color: #FFFFFF;
+}
+
+.menuMainTransaction
+{
+	padding: 10px;
+	background-color: #FFFFFF;
+}
+
+.menuMainCountryLeft
+{
+	padding: 10px;
+	width: 33%;
+	background-color: #FFFFFF;
+}
+
+.menuMainCountryRight
+{
+	padding: 10px; 
+	background-color: #FFFFFF;
+}
+
+.menuMainPaymentMethodLeft
+{
+	padding: 10px; 
+	background-color: #FFFFFF;
+}
+
+.menuMainPaymentMethodRight
+{
+	padding: 10px; 
+	background-color: #FFFFFF;
+}
+
+.menuMainButtonsLeft
+{
+	padding: 10px; 
+	background-color: #FFFFFF; 
+}
+
+.menuMainButtonsRight
+{
+	padding: 10px; 
+	background-color: #FFFFFF; 
+}
+
+.menuTitle
+{
+
+}
+
+.menuDescription
+{
+	padding: 10px; 
+	background-color: #FFFFFF; 
+}
+
+.menuTitleText
+{
+	font-weight: bold;
+}
+
+.menuTitleMerchant
+{
+	font-weight: bold;
+	font-size: larger;
+}
+
+.menuTransaction
+{
+	width: 100%;
+}
+
+.menuPaymentHeader
+{
+	padding: 2px;
+	width: 31%;
+	background-color: #FFFFFF;
+}
+
+.menuPaymentRow
+{
+	padding: 2px;
+	width: 31%;
+	background-color: #FFFFFF;
+}
+
+.menuTransactionLabel
+{
+	padding: 2px;
+	width: 31%;
+	background-color: #FFFFFF;
+}
+
+.menuTransactionValue
+{
+	padding: 2px;
+	background-color: #FFFFFF;
+}
+
+.menuTransactionAmount
+{
+	padding: 2px;
+	background-color: #FFFFFF;
+	font-weight: bold;
+}
+
+.menuTransactionTripleDeal
+{
+	text-align: right;
+	font-size: 80%;
+}
+
+.menuCountryHelp
+{
+	text-decoration: none;
+	font-weight: bold; 
+}
+
+.menuCountrySelect
+{
+
+}
+
+.menuPaymentMethodSelect
+{
+
+}
+
+.menuPaymentMethodHelp
+{
+	text-decoration: none;
+	font-weight: bold;
+	font-size: small;
+}
+
+.menuButtonContinue
+{
+	width: 21ex;
+}
+
+.menuButtonReturnToShop
+{
+	width: 21ex;
+}
+
+.pmMain
+{
+	background-color: #FFFFFF;
+}
+
+.pmMainTitle
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+	text-align: left; 
+	font-weight: bold; 
+	font-size: 120%; 
+}
+
+.pmMainImage
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+}
+
+.pmMainDescription
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+	text-align: left;
+}
+
+.pmMainLabel
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+	text-align: left;
+}
+
+.pmMainLabelExample
+{
+	font-size: 90%;
+}
+
+.pmMainValue
+{
+	padding: 3px;
+	background-color: #FFFFFF; 
+	text-align: left;
+	font-weight: bold;
+}
+
+.pmMainAmount
+{
+	padding: 3px;
+	background-color: #FFFFFF; 
+	text-align: left;
+	font-weight: bold;
+}
+
+.pmMainAmountCosts
+{
+	font-weight: normal;
+	font-size: smaller;
+}
+
+.pmMainButtonsLeft
+{
+	padding: 3px; 
+	background-color: #FFFFFF; 
+}
+
+.pmMainButtonsRight
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+}
+
+.pmMainButtons
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+	text-align: center;
+}
+
+.pmMainProgressBar
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+	text-align: left;
+}
+
+.pmMainHelp
+{
+	background-color: #FFFFFF;
+	text-align: right;
+	font-size: small;
+}
+
+.pmMainHelpQuestionMark
+{
+	text-decoration: none;
+	font-weight: bold;
+	font-size: small;
+}
+
+.pmMainWarning
+{
+	padding: 3px; 
+	background-color: #FFFFFF;
+	color: red;
+}
+
+.pmInputText
+{
+}
+
+.pmInputCC1
+{
+}
+
+.pmInputCC2
+{
+}
+
+.pmInputCC3
+{
+}
+
+.pmInputCC4
+{
+}
+
+.pmInputExp
+{
+}
+
+.pmInputCheckbox
+{
+}
+
+.pmInputSelect
+{
+}
+
+.pmButtonContinue
+{
+	width: 21ex;
+}
+
+.pmButtonFinish
+{
+	width: 21ex;
+}
+
+.pmButtonCancel
+{
+	width: 21ex;
+}
+
+.pmButtonReturnToShop
+{
+	width: 21ex;
+}
+
+.pmCompulsaryField
+{
+	color: red;
+}
+
+.pmProgressBar
+{
+	background-color: red;
+	text-align: left;
+}
+
+.helpMain
+{
+	background-color: #FFFFFF;
+	text-align: center;
+}
+
+.helpMainDescription
+{
+	background-color: #FFFFFF;
+	text-align: justify;
+}
+
+.helpMainReturn
+{
+	background-color: #FFFFFF;
+	text-align: right;
+}
+
+.secureLock
+{
+	text-align: right;
+}
+
+.pmMerchantLogo
+{
+	padding: 25px;
+}
+
+/*--------------------------------------------------------------
+1%CLUB OVERRIDES
+--------------------------------------------------------------*/
+
+/*--------------------------------------------------------------
+GENERAL
+--------------------------------------------------------------*/
+
+* {
+    -webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	-ms-box-sizing: border-box;
+}
+
+html {
+	color: #454545;
+	font-size: 14px;
+	font-family: "Futura Alt", "Trebuchet MS", Helvetica, Arial, sans-serif;
+	line-height: 1;
+}
+
+body {
+	overflow-y: scroll;
+	margin: 0;
+	padding: 0;
+	background-color: #fff;
+	line-height: 1.5em;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+.wrapper {
+    margin: auto;
+    padding: 0 16px;
+    min-width: 980px;
+    max-width: 91.42857em;
+}
+
+a  img {
+	display: block;
+	overflow: hidden;
+	border: none;
+}
+
+a,
+a:link {
+	color: #00c051;
+	text-decoration: none;
+	-webkit-transition: color 0.2s ease-in, color 0.25s ease-out;
+	-moz-transition: color 0.2s ease-in, color 0.25s ease-out;
+	-o-transition: color 0.2s ease-in, color 0.25s ease-out;
+	transition: color 0.2s ease-in, color 0.25s ease-out;
+}
+
+a:hover {
+	color: #ff619a;
+}
+
+/*--------------------------------------------------------------
+HEADER
+--------------------------------------------------------------*/
+
+.merchantHeader {
+	background-color: #000;
+}
+
+.merchantHeader:after {
+	display: block;
+	visibility: hidden;
+	clear: both;
+	height: 0;
+	content: ".";
+}
+
+#logo {
+	float: left;
+	margin-top: 16px;
+	margin-right: 0;
+	margin-left: 2.08333%;
+	width: 10.41667%;
+	text-align: left;
+	white-space: nowrap;
+}
+
+#logo img {
+	background: #fff;
+}
+
+#title {
+	display: none;
+}
+
+#logo #subtitle {
+	position: relative;
+	top: -4px;
+	top: -0.25rem;
+	display: inline-block !important;
+	margin: 0;
+	padding: 0;
+	color: #00c051;
+	text-transform: uppercase;
+	font-weight: normal;
+	font-size: 11px;
+	font-size: 0.6875rem;
+}
+
+#logo #subtitle em {
+	color: #ff619a;
+	font-style: normal;
+}
+
+#safePayment {
+	float: right;
+	margin: 16px 0 0;
+	width: 50%;
+	color: #fff;
+}
+
+#safePayment img {
+	float: left;
+	margin-right: 16px;
+}
+
+/*--------------------------------------------------------------
+CENTER LAYOUT
+--------------------------------------------------------------*/
+
+.centerLayout {
+	margin: auto;
+	min-width: 980px;
+	max-width: 91.42857em;
+}
+
+.introduction.paymentChoiceBox {
+	position: absolute;
+	right: 0;
+	left: 0;
+	padding: 32px 0;
+	padding: 2rem 0;
+	width: 100%;
+	background-color: #e9e9e9;
+}
+
+.introduction .title:after {
+	display: block;
+	visibility: hidden;
+	clear: both;
+	height: 0;
+	content: ".";
+}
+
+.introduction .title .h1 {
+	float: left;
+	margin-bottom: 5px;
+	color: #222;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 30px;
+	font-size: 1.875rem;
+}
+
+.introduction.paymentChoiceBox  > div {
+	margin: auto;
+	padding-left: 2.0833%;
+	min-width: 980px;
+	max-width: 91.42857em;
+}
+
+.paymentChoiceBox:nth-child(3) {
+	margin-top: 100px;
+}
+
+.paymentChoiceContainer {
+	float: left;
+	margin-right: 2.08333%;
+	margin-bottom: 1.25em;
+	margin-left: 2.08333%;
+	width: 62.5%;
+}
+
+.primarySidebarContainer {
+	float: left;
+	margin-right: 2.08333%;
+	margin-left: 0%;
+	width: 31.25%;
+}
+
+.paymentChoiceMenuRow {
+	border-bottom: 1px solid #fff;
+	background-color: #e9e9e9;
+}
+
+.paymentChoiceHeader {
+	padding: 16px;
+	background-color: #cccccc;
+	cursor: pointer;
+}
+
+.paymentChoiceHeader:focus,
+.paymentChoiceHeader:hover,
+.paymentChoiceHeader.active {
+    outline: none;
+	background-color: #00c051;
+}
+
+.paymentChoiceHeader .logo {
+	float: left;
+	width: 40px;
+}
+
+.paymentChoiceHeader img {
+	width: 25px;
+}
+
+.paymentChoiceHeader .h3 {
+	color: #fff;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 16px;
+}
+
+.paymentChoiceForm {
+	padding: 32px 32px 16px; 
+	border-bottom: 1px solid #fff;
+}
+
+/*--------------------------------------------------------------
+CREDIT CARD
+--------------------------------------------------------------*/
+.creditCardNumber .creditCardField {
+    margin-left: 1.3333%;
+    width: 24%;
+}
+
+.creditCardNumber .creditCardField.left {
+    margin-left: 0;
+}
+
+.expiryDateField .gwt-Label {
+    display: none;
+    visibility: hidden;
+}
+
+/*--------------------------------------------------------------
+MODAL
+--------------------------------------------------------------*/
+.gwt-PopupPanelGlass {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.dialogMiddleCenter {
+    padding: 20px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+/*--------------------------------------------------------------
+SIDEBAR
+--------------------------------------------------------------*/
+
+.languageSelection,
+.safePaymentInformation {
+	display: none;
+}
+
+.transactionSummary {
+	margin-top: 100px;
+}
+
+.transactionSummary .headerTitle,
+.transactionSummary .identification {
+	display: none;
+}
+
+.transactionSummary,
+.priceCalculation {
+	padding: 16px 0;
+	border-bottom: 1px solid #e9e9e9;
+}
+
+.transactionSummary .description .title,
+.priceCalculation .headerTitle .gwt-Label {
+	color: #00c051;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+
+.priceCalculation .footer {
+	display: none;
+}
+
+/*--------------------------------------------------------------
+FORM ELEMENTS
+--------------------------------------------------------------*/
+
+select,
+textarea,
+input[type=text],
+input[type=password],
+input[type=number],
+input[type=search],
+input[type=email],
+input[type=tel],
+input[type=url] {
+    padding: 0.6em;
+    width: 50%;
+    border: 1px solid #bcbcbc;
+    background-color: #fff;
+
+    -webkit-box-shadow: inset 0px 1px 2px rgba(5, 5, 5, 0.1);
+	-moz-box-shadow: inset 0px 1px 2px rgba(5, 5, 5, 0.1);
+	box-shadow: inset 0px 1px 2px rgba(5, 5, 5, 0.1);
+    color:#999999;
+	vertical-align: baseline;
+    font-size: 14px;
+    font-family: 'Futura Alt', 'Trebuchet MS', Helvetica, Arial, sans-serif;
+    line-height: 1.5em;
+	-webkit-transition: border 0.1s;
+	-moz-transition: border 0.1s;
+	-o-transition: border 0.1s;
+	transition: border 0.1s;
+}
+
+textarea:focus,
+input[type=text]:focus,
+input[type=password]:focus,
+input[type=number]:focus,
+input[type=search]:focus,
+input[type=email]:focus,
+input[type=tel]:focus,
+input[type=url] :focus{
+	outline: 0;
+	border-color: #00c051;
+	-webkit-box-shadow: 0px 0px 2px rgba(5, 5, 5, 0.3);
+	-moz-box-shadow: 0px 0px 2px rgba(5, 5, 5, 0.3);
+	box-shadow: 0px 0px 2px rgba(5, 5, 5, 0.3);
+	color: #444444;
+}
+
+.form {
+	margin-bottom: 16px;
+}
+
+.paymentChoiceForm  .intro {
+    margin: 0 4.1667% 16px;
+}
+
+.paymentChoiceForm .intro .gwt-Image {
+	display: none;
+}
+
+.paymentChoiceForm{
+    color: #444;
+}
+
+.form:after {
+	display: block;
+	visibility: hidden;
+	clear: both;
+	height: 0;
+	content: ".";
+}
+
+.form .gwt-Label {
+    float: left;
+	margin-right: 2.0833%;
+	margin-left: 4.1667%;
+	padding: 0.6em 0;
+	width: 27.0833%;
+	text-align: left;
+    font-weight: 300;
+}
+
+.form .inputField {
+	float: left;
+	width: 55%;
+}
+
+.form .gwt-Anchor {
+    display: inline-block;
+    margin: 0;
+    padding: 12px 24px 8px 24px;
+    padding: 0.85714rem 1.71429rem 0.57143rem 1.71429rem;
+    border: 1px solid #ff478a;
+    background-color: #ff619a;
+    color: white;
+    vertical-align: baseline;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 18px;
+    font-size: 1.28571rem;
+    cursor: pointer;
+	-webkit-transition: all 50ms;
+	-moz-transition: all 50ms;
+	-o-transition: all 50ms;
+	transition: all 50ms;
+}
+
+.form .gwt-Anchor:hover {
+	border-color: #373737;
+	background-color: #444444;
+	color: white;
+}
+
+.form .gwt-Anchor:active {
+    top: 0;
+    padding: 16px 24px 4px 24px;
+    padding: 1.14286rem 1.71429rem 0.28571rem 1.71429rem;
+    border-color: black;
+    background: #222;
+    -webkit-box-shadow: 0 4px 0 black inset;
+    -moz-box-shadow: 0 4px 0 black inset;
+    box-shadow: 0 4px 0 black inset;
+    color: #bfbfbf;
+    text-shadow: 0 0 0;
+}
+
+.form.requiredFields {
+	margin: 0 -32px;
+	border-top: 1px solid #fff;
+	color: #bcbcbc;
+	text-transform: uppercase;
+}
+
+.form.requiredFields .gwt-Label {
+	margin-top: 16px;
+}
+
+.form.submit {
+	float: right;
+	margin-top: -38px;
+}
+
+.form .gwt-Image {
+    margin: 10px 0 0 10px;
+    vertical-align: middle;
+}
+
+/*--------------------------------------------------------------
+TYPOGRAPHY
+--------------------------------------------------------------*/
+
+@font-face {
+  font-weight: normal;
+  font-family: 'Futura Alt';
+  src: url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-book-webfont.eot');
+  src: url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-book-webfont.eot?#iefix') format('embedded-opentype'),
+       url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-book-webfont.woff') format('woff'),
+       url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-book-webfont.ttf') format('truetype');
+}
+
+@font-face {
+  font-weight: 300;
+  font-family: 'Futura Alt';
+  src: url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-heavy-webfont.eot');
+  src: url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-heavy-webfont.eot?#iefix') format('embedded-opentype'),
+       url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-heavy-webfont.woff') format('woff'),
+       url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-heavy-webfont.ttf') format('truetype');
+}
+
+@font-face {
+  font-weight: 600;
+  font-family: 'Futura Alt';
+  src: url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-bold-webfont.eot');
+  src: url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-bold-webfont.eot?#iefix') format('embedded-opentype'),
+       url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-bold-webfont.woff') format('woff'),
+       url('https://staging.onepercentclub.com/static/assets/fonts/futura-alt-bold-webfont.ttf') format('truetype');
+}
+
+/*--------------------------------------------------------------
+STATES
+--------------------------------------------------------------*/
+
+.right {
+    float: right;
+}
+
+.left {
+    float: left;
+}

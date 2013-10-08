@@ -85,7 +85,7 @@ dependency_links = [
     'https://github.com/onepercentclub/django-docdata/archive/120ae5b8a1da6152d43d4601edc8832268e05515.zip#egg=django-docdata-0.1',
 ]
 
-
+# TODO: update
 tests_require = [
     'coverage==3.6',
     'django-nose',

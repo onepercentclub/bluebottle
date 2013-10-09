@@ -70,15 +70,13 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/plugins/ember.hashbang.js"></script>
 
         {# BlueBottle Application #}
-        {# FIXME: this should be moved into a template(tag) #}
-        <script type="text/javascript" src="{% static "bluebottle/accounts/router_config.js" %}"></script>
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/app.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/app/utils.js"></script>
 
-        {# accounts is always required #}
         {% block ember_app_scripts %}
             
+            {# accounts is always required #}
             {% include "accounts/ember_scripts.html" %}
             <script type="text/javascript" src="{{ STATIC_URL }}js/app/projects.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/app/manage.js"></script>

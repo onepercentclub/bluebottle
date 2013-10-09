@@ -20,7 +20,8 @@ import datetime
 
 from ..models import BlueBottleUser
 
-
+@skipIf(getattr(settings, 'SKIP_BB_FUNCTIONAL_TESTS', False),
+    'Functional bluebottle core tests disabled.') # Different templates!
 @skipUnless(getattr(settings, 'SELENIUM_TESTS', False),
         'Selenium tests disabled. Set SELENIUM_TESTS = True in your settings.py to enable.')
 class AccountSeleniumTests(SeleniumTestCase):

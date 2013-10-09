@@ -42,7 +42,7 @@ install_requires = [
 #    'django-polymorphic==0.5',
     'django-registration==1.0',
 #    'django-salesforce==0.1.6.3',
-#    'django-social-auth==0.7.23',
+    'django-social-auth==0.7.23',
     'django-statici18n==0.4.5',
     'django-taggit==0.10a1',
     'django-taggit-autocomplete-modified==0.1.0b4',
@@ -72,13 +72,6 @@ dependency_links = [
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
-    
-    # There hasn't been a release of django-registration is a while and we need the 1.5 custom user support.
-    # Official: https://bitbucket.org/ubernostrum/django-registration/
-    # Fork with 1.5 Custom User support: https://bitbucket.org/eire1130/django-registration
-    # Our fork of the fork with HTML_ACTIVATION_EMAIL option:
-    # TODO Try to unwind this mess and contribute some stuff upstream.
-    'https://bitbucket.org/onepercentclub/django-registration/get/ae9e9ed265ed.zip#egg=django-registration-0.8',
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
 
@@ -92,6 +85,7 @@ tests_require = [
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
     'django-registration==1.0',
+    'django-social-auth==0.7.23',
     'django-taggit==0.10a1',
     'django-templatetag-handlebars==1.2.0',
     'djangorestframework==2.3.6',

@@ -251,7 +251,6 @@ App.Router.reopen({
 App.Router.map(function() {
     this.resource('language', {path:'/:lang'});
     this.route("home", { path: "/" });
-    accounts_router.call(this);
 });
 
 App.ApplicationRoute = Em.Route.extend({

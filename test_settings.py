@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'compressor',
     'registration',
     'rest_framework',
-    #'social_auth',
+    'social_auth',
     'south',
     'taggit',
     'templatetag_handlebars',

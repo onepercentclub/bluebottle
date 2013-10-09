@@ -170,6 +170,32 @@ App = Em.Application.create({
     }
 });
 
+// Dates are incorrectly interpreted as DateTimes, with Timezone issues
+// register birthdate as a date with 'no' time and unlocalized dates
+// TODO: is there a cleaner approach?
+DS.RESTAdapter.registerTransform("birthdate", {
+    deserialize: function(serialized) {
+        if (serialized == undefined) {
+            return null;
+        }
+        return new Date(serialized);
+    },
+
+    serialize: function(date) {
+        if (date == null) {
+            return null;
+        }
+        var pad = function (num) {
+            return num < 10 ? "0" + num : "" + num;
+        };
+        var Year = date.getFullYear(),
+            Month = date.getMonth() +1,
+            DayOfMonth = date.getDate();
+
+        return Year + "-" + pad(Month) + "-" + pad(DayOfMonth) + "T00:00:00Z";
+    }
+});
+
 
 App.Adapter = DS.DRF2Adapter.extend({
     namespace: "api",

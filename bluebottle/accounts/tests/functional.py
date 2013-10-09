@@ -240,9 +240,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertTrue(user.share_money)
         self.assertTrue(user.share_time_knowledge)
 
-        # FAILS -> the UTC datetime is sent to the server, yielding a date one
-        # day before the configured date.
-        # self.assertEqual(user.birthdate, datetime.date(1980, 1, 1))
+        self.assertEqual(user.birthdate, datetime.date(1980, 1, 1))
 
         self.assertEqual(user.address.line1, 'Example street 1')
         self.assertEqual(user.address.line2, '')

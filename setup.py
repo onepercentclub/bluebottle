@@ -40,7 +40,7 @@ install_requires = [
 #    'django-jenkins==0.14.0',
 #    'django-localflavor==1.0',
 #    'django-polymorphic==0.5',
-    'django-registration==0.8',
+    'django-registration==1.0',
 #    'django-salesforce==0.1.6.3',
 #    'django-social-auth==0.7.23',
     'django-statici18n==0.4.5',
@@ -91,10 +91,14 @@ tests_require = [
     'django-nose',
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
+    'django-registration==1.0',
+    'django-taggit==0.10a1',
     'django-templatetag-handlebars==1.2.0',
+    'djangorestframework==2.3.6',
     'mock==1.0.1',
     'nose==1.3.0',
     'pylint==0.28.0',
+    'South==0.8.1',
 ]
 
 
@@ -128,5 +132,5 @@ setup(
     ],
 
     # tests
-    test_suite='tests.BlueBottleTestSuite',
+    test_suite='bluebottle.tests.BlueBottleTestSuite',
 )

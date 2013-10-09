@@ -30,8 +30,7 @@ Testing
 
 The BlueBottle test suite can be run completely using::
 
-    $ pip install nose
-    $ python setup.py nosetests
+    $ python setup.py test
 
 
 Website developers

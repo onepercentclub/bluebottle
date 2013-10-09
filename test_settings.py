@@ -6,14 +6,14 @@ TIME_ZONE = 'Europe/Amsterdam'
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'temp', 'media')
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'media')
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'temp', 'assets')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'assets')
 
-STATICI18N_ROOT = os.path.join(PROJECT_ROOT, 'temp', 'global')
+STATICI18N_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'global')
 
 STATICFILES_DIRS = (
-    (os.path.join(PROJECT_ROOT, 'temp', 'global')),
+    (os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'global')),
 )
 
 
@@ -33,7 +33,8 @@ STATICFILES_FINDERS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(PROJECT_ROOT, 'temp', 'test.db'),
+        # 'NAME': os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'test.db'),
+        'NAME': ':memory:',
     }
 }
 
@@ -52,7 +53,7 @@ INSTALLED_APPS = (
     'compressor',
     'registration',
     'rest_framework',
-    'social_auth',
+    #'social_auth',
     'south',
     'taggit',
     'templatetag_handlebars',
@@ -77,7 +78,7 @@ MIDDLEWARE_CLASSES = [
 ]
 
 TEMPLATE_DIRS = (
-    os.path.join(PROJECT_ROOT, 'temp', 'templates'),
+    os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'templates'),
 )
 
 TEMPLATE_LOADERS = [

@@ -13,6 +13,13 @@
     <meta name="viewport" content="width=device-width" />
 
     <title>{% block title %}{% endblock %}1%Club - Share a little. Change the world</title>
+
+    <script type="text/javascript">
+        var default_title = '1%Club - Share a little. Change the world';
+        var default_description = '{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}';
+        var default_keywords = '{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}';
+    </script>
+
     <meta name="description" content="{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}" />
     <meta name="author" content="1%Club" />
 	<meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
@@ -23,7 +30,7 @@
 	<meta property="og:type" content="website" />
 	<meta property="og:image" content="http://www.onepercentclub.com{{ STATIC_URL }}images/1procentclub-facebook.png" />
 	<meta property="og:url" content="http://www.onepercentclub.com" />
-	<meta property="og:description" content="{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}" />
+	{# og:description is by ember-meta.js, and it's ignored anyway because of the og:url property #}
 	<meta property="og:site_name" content="1%Club - Share a little. Change the world" />
 	<meta property="fb:admins" content="ENTER YOUR FACEBOOK USER ID HERE" />
 	<meta property="fb:page_id" content="298248659856" />
@@ -46,6 +53,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-drf2-adapter.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-meta.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/globalize.js"></script>
 
         {# Other libs #}

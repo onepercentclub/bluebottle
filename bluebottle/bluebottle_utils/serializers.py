@@ -1,9 +1,12 @@
 from django.core.exceptions import FieldError
 from django.template.defaultfilters import truncatechars
 
+
 from rest_framework import serializers
 from taggit.managers import _TaggableManager
 
+
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.bluebottle_utils.validators import validate_postal_code
 from bluebottle.bluebottle_utils.models import Address
 
@@ -32,9 +35,11 @@ class AddressSerializer(serializers.ModelSerializer):
 class MetaModelSerializer(serializers.ModelSerializer):
     """ Serializer which fills meta data based on model attributes """
 
+    # Set to None to disable
     page_title_field_name = 'title'
-    page_description_field_name = 'projectplan__description'
-    page_keywords_field_name = 'projectplan__tags'
+    page_description_field_name = 'description'
+    page_keywords_field_name = 'tags'
+    page_image_source = None
 
     def __init__(self, *args, **kwargs):
         """ Call the default __init__ and then add fields with meta-data """
@@ -50,6 +55,12 @@ class MetaModelSerializer(serializers.ModelSerializer):
         if not self.fields.get('page_keywords', None):
             self.fields['page_keywords'] = serializers.SerializerMethodField('get_page_keywords')
 
+        if self.page_image_source is not None and not self.fields.get('page_image', None):
+            self.fields['page_image'] = ImageSerializer(
+                                            required = False, read_only = True, 
+                                            source = self.page_image_source
+                                        )
+
     def _get_field(self, obj, field_name):
         """ Allow traversing the relations tree for fields """
         attrs = field_name.split('__')
@@ -59,30 +70,36 @@ class MetaModelSerializer(serializers.ModelSerializer):
             try:
                 field = getattr(field, attr)
             except AttributeError:
-                raise FieldError('Unknown field "%s" in "%s"' % (attr, self.page_keywords_field_name))
+                raise FieldError('Unknown field "%s" in "%s"' % (attr, field_name))
         return field
 
     def get_page_title(self, obj):
         """ Get the page title based on a model attribute """
-        title = self._get_field(obj, self.page_title_field_name)
-        return title
+        if self.page_title_field_name is not None:
+            title = self._get_field(obj, self.page_title_field_name)
+            return title
+        return ''
 
     def get_page_description(self, obj):
         """ Get the page description based on a model attribute """
-        desc = self._get_field(obj, self.page_description_field_name)
-        return truncatechars(desc, 150)
+        if self.page_description_field_name is not None:
+            desc = self._get_field(obj, self.page_description_field_name)
+            return truncatechars(desc, 150)
+        return ''
 
     def get_page_keywords(self, obj):
-        field = self._get_field(obj, self.page_keywords_field_name)
+        if self.page_keywords_field_name is not None:
+            field = self._get_field(obj, self.page_keywords_field_name)
 
-        # we're dealing with taggit.Tag's here
-        if isinstance(field, _TaggableManager):
-            keywords = [tag.name.lower() for tag in field.all()]
-        else:
-            # try to split the keywords
-            try:
-                keywords = field.lower().split()
-            except AttributeError:
-                keywords = ''
-        
-        return ", ".join(keywords)
+            # we're dealing with taggit.Tag's here
+            if isinstance(field, _TaggableManager):
+                keywords = [tag.name.lower() for tag in field.all()]
+            else:
+                # try to split the keywords
+                try:
+                    keywords = field.lower().split()
+                except AttributeError:
+                    keywords = ''
+            
+            return ", ".join(keywords)
+        return ''

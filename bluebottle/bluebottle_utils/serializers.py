@@ -2,6 +2,10 @@ from django.core.exceptions import FieldError
 from django.template.defaultfilters import truncatechars
 
 
+from rest_framework import serializers
+from taggit.managers import _TaggableManager
+
+
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.bluebottle_utils.validators import validate_postal_code
 from bluebottle.bluebottle_utils.models import Address

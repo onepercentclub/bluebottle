@@ -9,8 +9,7 @@ from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
 from splinter.exceptions import DriverNotFoundError
 
-# TODO: import bb-core Project
-from apps.projects.models import Project
+# from apps.projects.models import Project
 
 
 def css_dict(style):
@@ -237,7 +236,7 @@ class SeleniumTestCase(LiveServerTestCase):
         self.visit_homepage()
 
         # Find the link to the signup button page and click it.
-        self.browser.find_link_by_text('Log in').first.click()
+        self.browser.find_link_by_itext('log in').first.click()
 
         # Validate that we are on the intended page.
         if not self.browser.is_text_present('LOG IN', wait_time=10):
@@ -247,9 +246,9 @@ class SeleniumTestCase(LiveServerTestCase):
         self.browser.fill('username', username)
         self.browser.fill('password', password)
 
-        self.browser.find_by_value('Log in').first.click()
+        self.browser.find_by_value('OK').first.click()
 
-        return self.browser.is_text_present('MY 1%', wait_time=10)
+        return self.browser.is_text_present('PROFILE', wait_time=10)
 
     def visit_path(self, path, lang_code=None):
         """
@@ -278,14 +277,10 @@ class SeleniumTestCase(LiveServerTestCase):
         :param lang_code: A two letter language code as used in the URL.
         :return: ``True`` if the homepage could be visited.
         """
-        # TODO: A project should not be needed to visit the homepage.
-        self.assertNotEqual(Project.objects.count(), 0,
-                            'The homepage depends on at least 1 project to be present to prevent JS errors.')
-
-        # Open the homepage, in the specified language.
+        
         self.visit_path('', lang_code)
 
         # # Check if the homepage opened, and the dynamically loaded content appeared.
         # # Remember that
-        return self.browser.is_text_present('CHOOSE YOUR PROJECT', wait_time=10)
+        return self.browser.is_text_present('I am the homepage', wait_time=10)
 

@@ -200,8 +200,6 @@ App.PasswordResetRoute = Em.Route.extend({
 
             route.replaceWith('home');
         });
-
-        this.get('store').transaction().add(record);
         return record;
     }
 });

@@ -40,9 +40,9 @@ install_requires = [
 #    'django-jenkins==0.14.0',
 #    'django-localflavor==1.0',
 #    'django-polymorphic==0.5',
-    'django-registration==0.8',
+    'django-registration==1.0',
 #    'django-salesforce==0.1.6.3',
-#    'django-social-auth==0.7.23',
+    'django-social-auth==0.7.23',
     'django-statici18n==0.4.5',
     'django-taggit==0.10a1',
     'django-taggit-autocomplete-modified==0.1.0b4',
@@ -72,26 +72,28 @@ dependency_links = [
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
-    
-    # There hasn't been a release of django-registration is a while and we need the 1.5 custom user support.
-    # Official: https://bitbucket.org/ubernostrum/django-registration/
-    # Fork with 1.5 Custom User support: https://bitbucket.org/eire1130/django-registration
-    # Our fork of the fork with HTML_ACTIVATION_EMAIL option:
-    # TODO Try to unwind this mess and contribute some stuff upstream.
-    'https://bitbucket.org/onepercentclub/django-registration/get/ae9e9ed265ed.zip#egg=django-registration-0.8',
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
 
     'https://github.com/onepercentclub/django-docdata/archive/120ae5b8a1da6152d43d4601edc8832268e05515.zip#egg=django-docdata-0.1',
 ]
 
-
+# TODO: update
 tests_require = [
     'coverage==3.6',
-    'django-nose==1.1',
+    'django-nose',
+    'django-apptemplates==0.0.1',
+    'django_compressor==1.2',
+    'django-registration==1.0',
+    'django-social-auth==0.7.23',
+    'django-taggit==0.10a1',
+    'django-templatetag-handlebars==1.2.0',
+    'djangorestframework==2.3.6',
     'mock==1.0.1',
     'nose==1.3.0',
     'pylint==0.28.0',
+    'selenium==2.35.0',
+    'South==0.8.1',
 ]
 
 
@@ -123,4 +125,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development',
     ],
+
+    # tests
+    test_suite='bluebottle.tests.suite.BlueBottleTestSuite',
 )

@@ -32,14 +32,6 @@
                                     {{/linkTo }}
                                 </li>
                                 
-                                {{#if controllers.myProjectList.model.length }}
-                                    <li>
-                                        {{#linkTo "myProjectList" }}
-                                            {% trans "Manage My Project" %}
-                                        {{/linkTo}}
-                                    </li>
-                                {{/if}}
-                                
                                 <li>
                                     {% block logout_anchor %}
                                         <a href="{% url 'accounts:logout' %}?next=/{{ LANGUAGE_CODE }}/">Logout</a>

@@ -6,8 +6,7 @@
 {% load static %}
 
 <!DOCTYPE HTML>
-<html lang="{{ LANGUAGE_CODE }}">
-
+<html lang="{{ LANGUAGE_CODE }}">    
 <head>
     <meta charset="utf-8" />
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
@@ -30,8 +29,7 @@
 	<meta property="og:title" content="1%Club - Share a little. Change the world" />
 	<meta property="og:type" content="website" />
 	<meta property="og:image" content="http://www.onepercentclub.com{{ STATIC_URL }}images/1procentclub-facebook.png" />
-	{# <meta property="og:url" content="http://www.onepercentclub.com" /> #}
-	{# og:description is set by ember-meta.js #}
+	<meta property="og:url" content="http://www.onepercentclub.com" />
 	<meta property="og:site_name" content="1%Club - Share a little. Change the world" />
 	<meta property="fb:admins" content="ENTER YOUR FACEBOOK USER ID HERE" />
 	<meta property="fb:page_id" content="298248659856" />
@@ -79,30 +77,32 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/plugins/ember.hashbang.js"></script>
 
         {# BlueBottle Application #}
-        {# FIXME: this should be moved into a template(tag) #}
-        <script type="text/javascript" src="{% static "bluebottle/accounts/router_config.js" %}"></script>
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/app.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/app/utils.js"></script>
 
-        {# accounts is always required #}
-        {% include "accounts/ember_scripts.html" %}
-
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/projects.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/manage.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/wallposts.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/reactions.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/orders.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/vouchers.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/tasks.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/pages.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/homepage.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/blogs.js"></script>
+        {% block ember_app_scripts %}
+            
+            {# accounts is always required #}
+            {% include "accounts/ember_scripts.html" %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/projects.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/manage.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/wallposts.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/reactions.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/orders.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/vouchers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/tasks.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/pages.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/homepage.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/app/blogs.js"></script>
+        
+        {% endblock ember_app_scripts %}
 
     {% endcompress %}
 
     {% block handlebars_templates %}
         {% include  "accounts/base.hbs" %}
+    
         {% include  "homepage.hbs" %}
         {% include  "wallposts.hbs" %}
         {% include  "reactions.hbs" %}
@@ -114,6 +114,7 @@
         {% include  "manage.hbs" %}
         {% include  "vouchers.hbs" %}
         {% include  "pages.hbs" %}
+    
     {% endblock handlebars_templates %}
 
     <!-- avoid hardcoding these urls -->
@@ -435,6 +436,6 @@
 
     {% block content %}
     {% endblock %}
-	
+
 </body>
 </html>

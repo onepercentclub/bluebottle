@@ -12,33 +12,29 @@
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width" />
 
-    <title>{% block title %}{% endblock %}1%Club - Share a little. Change the world</title>
+    <title>{% block title %}BlueBottle{% endblock %}</title>
 
-    <script type="text/javascript">
-        var default_title = '1%Club - Share a little. Change the world';
-        var default_description = '{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}';
-        var default_keywords = '{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}';
-    </script>
+    {% block meta %}
+        <script type="text/javascript">
+            var default_title = 'Default title';
+            var default_description = '{% blocktrans %}Default description{% endblocktrans %}';
+            var default_keywords = '{% blocktrans %}default, keyword{% endblocktrans %}';
+        </script>
 
-    <meta name="description" content="{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}" />
-    <meta name="author" content="1%Club" />
-	<meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
+        <meta name="description" content="{% blocktrans %}Default description{% endblocktrans %}" />
+        <meta name="author" content="1%Club" />
+        <meta name="keywords" content="{% blocktrans %}default, keyword{% endblocktrans %}" />
 
-	<link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
-	
-	<meta property="og:title" content="1%Club - Share a little. Change the world" />
-	<meta property="og:type" content="website" />
-	<meta property="og:image" content="http://www.onepercentclub.com{{ STATIC_URL }}images/1procentclub-facebook.png" />
-<<<<<<< HEAD
-	<meta property="og:url" content="http://www.onepercentclub.com" />
-	{# og:description is by ember-meta.js, and it's ignored anyway because of the og:url property #}
-=======
-	{# <meta property="og:url" content="http://www.onepercentclub.com" /> #}
-	{# og:description is set by ember-meta.js #}
->>>>>>> df8a888233080233f4a6c66a2e33c1d6726f7b66
-	<meta property="og:site_name" content="1%Club - Share a little. Change the world" />
-	<meta property="fb:admins" content="ENTER YOUR FACEBOOK USER ID HERE" />
-	<meta property="fb:page_id" content="298248659856" />
+        <link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
+        
+        <meta property="og:title" content="Bluebottle" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="http://www.onepercentclub.com{{ STATIC_URL }}images/1procentclub-facebook.png" />
+        <meta property="og:url" content="http://www.onepercentclub.com" />
+        <meta property="og:site_name" content="BlueBottle" />
+        <meta property="fb:admins" content="ENTER YOUR FACEBOOK USER ID HERE" />
+        <meta property="fb:page_id" content="298248659856" />
+    {% endblock meta %}
 		
     {# Stylesheets #}
     {% compress css %}

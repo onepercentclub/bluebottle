@@ -1,1 +1,1 @@
-from .suite import BlueBottleTestSuite
+# from .suite import BlueBottleTestSuite

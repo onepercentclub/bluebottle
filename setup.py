@@ -127,5 +127,5 @@ setup(
     ],
 
     # tests
-    test_suite='bluebottle.tests.BlueBottleTestSuite',
+    test_suite='bluebottle.tests.suite.BlueBottleTestSuite',
 )

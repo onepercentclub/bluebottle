@@ -64,6 +64,19 @@ App.User = DS.Model.extend({
 
  User settings Detail (GET/PUT):  /users/settings/<pk>
  */
+// TODO: fix date issue
+// http://stackoverflow.com/questions/15695809/what-is-the-best-way-to-modify-the-date-format-when-ember-data-does-serializatio
+// https://github.com/toranb/ember-data-django-rest-adapter/issues/26
+// DS.RESTAdapter.registerTransform("isodate", { 
+//   deserialize: function(serialized) {
+//     return serialized;
+//   },
+
+//   serialize: function(deserialized) {
+//     return deserialized;
+//   }
+// });
+
 App.UserSettings = DS.Model.extend({
     url: 'users/settings',
 
@@ -72,7 +85,7 @@ App.UserSettings = DS.Model.extend({
     share_time_knowledge: DS.attr('boolean'),
     share_money: DS.attr('boolean'),
     gender: DS.attr('string'),
-    birthdate: DS.attr('date'),
+    birthdate: DS.attr('birthdate'),
     user_type: DS.attr('string'),
     primary_language: DS.attr('string'),
 
@@ -140,7 +153,6 @@ App.CurrentUser = App.UserPreview.extend({
 
 App.UserActivation = App.CurrentUser.extend({
     url: 'users/activate'
-
 });
 
 

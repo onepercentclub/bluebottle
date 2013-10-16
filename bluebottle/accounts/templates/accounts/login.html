@@ -25,6 +25,7 @@
                     {{#if post_password_reset }}
                         
                         {% block password_reset_success %}
+                            <p>Password reset ok.</p>
                             <p>{%  trans "Override block password_reset_success to display your own password reset success message." %}</p>
                         {% endblock password_reset_success %}
                     
@@ -53,10 +54,8 @@
                 <div class="modal-footer">
                     {% block_verbatim login_footer %}
                         
-                        <a class="left" {{ action 'requestPasswordReset' }}>
-                            {% trans "Password forgotten" %}
-                        </a>
-                        <input class="btn right" type="submit" value="{% trans "Click me!" %}">
+                        <a class="left" {{ action 'requestPasswordReset' }}>{% trans "Password forgotten" %}</a>
+                        <input class="btn right" type="submit" value="{% trans "OK" %}">
                         <input type="hidden" name="next" {{bindAttr value="view.next"}}>
                     
                     {% endblock_verbatim login_footer %}

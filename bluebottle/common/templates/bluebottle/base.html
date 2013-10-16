@@ -6,35 +6,15 @@
 {% load static %}
 
 <!DOCTYPE HTML>
-<html lang="{{ LANGUAGE_CODE }}">    
+<html lang="{{ LANGUAGE_CODE }}">
+
 <head>
     <meta charset="utf-8" />
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width" />
 
-    <title>{% block title %}{% endblock %}1%Club - Share a little. Change the world</title>
+    <title>{% block title %}Bluebottle Project{% endblock %}</title>
 
-    <script type="text/javascript">
-        var default_title = '1%Club - Share a little. Change the world';
-        var default_description = '{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}';
-        var default_keywords = '{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}';
-    </script>
-
-    <meta name="description" content="{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}" />
-    <meta name="author" content="1%Club" />
-	<meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
-
-	<link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
-	
-	<meta property="og:title" content="1%Club - Share a little. Change the world" />
-	<meta property="og:type" content="website" />
-	<meta property="og:image" content="http://www.onepercentclub.com{{ STATIC_URL }}images/1procentclub-facebook.png" />
-	<meta property="og:url" content="http://www.onepercentclub.com" />
-	{# og:description is by ember-meta.js, and it's ignored anyway because of the og:url property #}
-	<meta property="og:site_name" content="1%Club - Share a little. Change the world" />
-	<meta property="fb:admins" content="ENTER YOUR FACEBOOK USER ID HERE" />
-	<meta property="fb:page_id" content="298248659856" />
-		
     {# Stylesheets #}
     {% compress css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" media="screen" />
@@ -53,7 +33,6 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-drf2-adapter.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-meta.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/globalize.js"></script>
 
         {# Other libs #}
@@ -79,43 +58,20 @@
 
         {# BlueBottle Application #}
 
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/app/utils.js"></script>
+        {% block ember_scripts %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/presets.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/app.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>
 
-        {% block ember_app_scripts %}
-            
-            {# accounts is always required #}
-            {% include "accounts/ember_scripts.html" %}
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/projects.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/manage.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/wallposts.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/reactions.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/orders.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/vouchers.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/tasks.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/pages.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/homepage.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/app/blogs.js"></script>
-        
-        {% endblock ember_app_scripts %}
-
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/routes.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/controllers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/views.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/models.js"></script>
+        {% endblock %}
     {% endcompress %}
 
     {% block handlebars_templates %}
         {% include  "accounts/base.hbs" %}
-    
-        {% include  "homepage.hbs" %}
-        {% include  "wallposts.hbs" %}
-        {% include  "reactions.hbs" %}
-        {% include  "tasks.hbs" %}
-        {% include  "projects.hbs" %}
-        {% include  "orders.hbs" %}
-        {% include  "utils.hbs" %}
-        {% include  "blogs.hbs" %}
-        {% include  "manage.hbs" %}
-        {% include  "vouchers.hbs" %}
-        {% include  "pages.hbs" %}
-    
     {% endblock handlebars_templates %}
 
     <!-- avoid hardcoding these urls -->
@@ -252,7 +208,7 @@
                                         {% trans "Meet the team" %}
                                     </a>
                                 </li>
-                                
+
                                 <li>
                                     <a {{action 'showPage' 'partners'}} href="/#!/pages/partners">
                                         {% trans "Partners" %}
@@ -437,6 +393,6 @@
 
     {% block content %}
     {% endblock %}
-
+	
 </body>
 </html>

@@ -9,4 +9,4 @@ install:
   - "pip install nose"
 
 script:
-  - python setup.py nosetests
+  - python setup.py test

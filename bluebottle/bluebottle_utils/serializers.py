@@ -32,35 +32,93 @@ class AddressSerializer(serializers.ModelSerializer):
 
 
 
-class MetaModelSerializer(serializers.ModelSerializer):
-    """ Serializer which fills meta data based on model attributes """
+class MetaField(serializers.Field):
+    """ 
+    Serializer field which fills meta data based on model attributes
+    Init with `field = None` to disable the field.
 
-    # Set to None to disable
-    page_title_field_name = 'title'
-    page_description_field_name = 'description'
-    page_keywords_field_name = 'tags'
-    page_image_source = None
+    To override the attribute, provide a (callable) keyword argument,
+    see tests for examples.
+    """
 
-    def __init__(self, *args, **kwargs):
-        """ Call the default __init__ and then add fields with meta-data """
-        super(MetaModelSerializer, self).__init__(*args, **kwargs)
+    def __init__(self, 
+            title = 'title',
+            description = 'description',
+            keywords = 'tags',
+            image_source = None,
+            *args, **kwargs):
+        super(MetaField, self).__init__(*args, **kwargs)
 
-        # if the field names don't collide, add the fields
-        if not self.fields.get('page_title', None):
-            self.fields['page_title'] = serializers.SerializerMethodField('get_page_title')
+        self.title = title
+        self.description = description
+        self.keywords = keywords
+        self.image_source = image_source
 
-        if not self.fields.get('page_description', None):
-            self.fields['page_description'] = serializers.SerializerMethodField('get_page_description')
+    def field_to_native(self, obj, field_name):
+        """ Get the parts of the meta dict """
 
-        if not self.fields.get('page_keywords', None):
-            self.fields['page_keywords'] = serializers.SerializerMethodField('get_page_keywords')
+        # set defaults
+        value = {
+            'title': None,
+            'description': None,
+            'image': {
+                'large': None,
+                'small': None,
+                'full': None,
+                'square': None
+            },
+            'keywords': None,
+        }
 
-        if self.page_image_source is not None and not self.fields.get('page_image', None):
-            self.fields['page_image'] = ImageSerializer(
-                                            required = False, read_only = True, 
-                                            source = self.page_image_source
-                                        )
+        if self.title:
+            title = self._get_callable(obj, self.title)
+            if title is None:
+                title = self._get_field(obj, self.title)
+            value['title'] = title
+                
 
+        if self.description:
+            description = self._get_callable(obj, self.description)
+            if description is None:
+                description = self._get_field(obj, self.description)
+                description = truncatechars(description, 150)
+            value['description'] = description
+
+
+        if self.keywords:
+            keywords = self._get_callable(obj, self.keywords)
+            if keywords is None:
+                # Get the keywords
+                keywords = self._get_field(obj, self.keywords)
+                
+                if isinstance(keywords, _TaggableManager):
+                    keywords = [tag.name.lower() for tag in keywords.all()]
+                else:
+                    # try to split the keywords
+                    try:
+                        keywords = keywords.lower().split()
+                    except AttributeError:
+                        keywords = ''
+                value['keywords'] = ", ".join(keywords)
+            else:
+                value['keywords'] = keywords
+
+        # special case with images
+        if self.image_source:
+            image_source = self._get_callable(obj, self.image_source)
+            if image_source is None:
+                image_source = self._get_field(obj, self.image_source)
+
+
+            serializer = ImageSerializer()
+            serializer.context = self.context
+            images = serializer.to_native(image_source)
+            
+            value['image'] = images
+
+        return self.to_native(value)
+    
+    
     def _get_field(self, obj, field_name):
         """ Allow traversing the relations tree for fields """
         attrs = field_name.split('__')
@@ -73,33 +131,12 @@ class MetaModelSerializer(serializers.ModelSerializer):
                 raise FieldError('Unknown field "%s" in "%s"' % (attr, field_name))
         return field
 
-    def get_page_title(self, obj):
-        """ Get the page title based on a model attribute """
-        if self.page_title_field_name is not None:
-            title = self._get_field(obj, self.page_title_field_name)
-            return title
-        return ''
-
-    def get_page_description(self, obj):
-        """ Get the page description based on a model attribute """
-        if self.page_description_field_name is not None:
-            desc = self._get_field(obj, self.page_description_field_name)
-            return truncatechars(desc, 150)
-        return ''
-
-    def get_page_keywords(self, obj):
-        if self.page_keywords_field_name is not None:
-            field = self._get_field(obj, self.page_keywords_field_name)
-
-            # we're dealing with taggit.Tag's here
-            if isinstance(field, _TaggableManager):
-                keywords = [tag.name.lower() for tag in field.all()]
-            else:
-                # try to split the keywords
-                try:
-                    keywords = field.lower().split()
-                except AttributeError:
-                    keywords = ''
-            
-            return ", ".join(keywords)
-        return ''
+    def _get_callable(self, obj, attr):
+        """ Check if the attr is callable, return its value if it is """
+        try:
+            _attr = getattr(obj, attr)
+            if callable(_attr): 
+                return _attr() # Call it, and return the result
+        except AttributeError: # not a model attribute
+            pass
+        return None

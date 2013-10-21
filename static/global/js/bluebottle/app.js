@@ -244,6 +244,20 @@ App.Router.reopen({
     }
 });
 
+App.Router.reopen({
+    didTransition: function(infos) {
+        this._super(infos);
+        Ember.run.next(function() {
+            // the meta module will now go trough the routes and look for data
+            App.meta.trigger('reloadDataFromRoutes');
+        });
+    }
+});
+
+DS.Model.reopen({
+    meta: DS.attr('object'),
+});
+
 App.Router.map(function() {
 
     this.resource('language', {path:'/:lang'});

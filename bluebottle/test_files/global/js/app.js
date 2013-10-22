@@ -203,24 +203,29 @@ App.ApplicationController = Ember.Controller.extend({
     }
 });
 
-
-/* Routing */
-
-// App.SlugRouter = Em.Mixin.create({
-//     serialize: function(model, params) {
-//         if (params.length !== 1) { return {}; }
-
-//         var name = params[0], object = {};
-//         object[name] = get(model, 'slug');
-
-//         return object;
-//     }
-// });
-
 App.Router.reopen({
     location: 'hashbang'
 });
 
+App.Router.reopen({
+    didTransition: function(infos) {
+        this._super(infos);
+        Ember.run.next(function() {
+            // the meta module will now go trough the routes and look for data
+            App.meta.trigger('reloadDataFromRoutes');
+        });
+    }
+});
+
+DS.Model.reopen({
+    meta_data: DS.attr('object')
+});
+
+Em.Route.reopen({
+    meta_data: function(){
+        return this.get('context.meta_data');
+    }.property('context.meta_data')
+});
 
 App.Router.map(function() {
     this.resource('language', {path:'/:lang'});

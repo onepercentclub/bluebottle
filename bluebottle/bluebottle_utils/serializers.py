@@ -103,7 +103,7 @@ class MetaField(serializers.Field):
             else:
                 value['keywords'] = keywords
 
-        # special case with images
+        # special case with images, use the ImageSerializer to get different formats
         if self.image_source:
             image_source = self._get_callable(obj, self.image_source)
             if image_source is None:

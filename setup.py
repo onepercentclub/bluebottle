@@ -85,7 +85,7 @@ tests_require = [
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
     'django-registration==1.0',
-    'django-setuptest',
+    'django-setuptest==0.1.4',
     'django-social-auth==0.7.23',
     'django-taggit==0.10a1',
     'django-templatetag-handlebars==1.2.0',

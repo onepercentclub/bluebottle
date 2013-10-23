@@ -1,4 +1,3 @@
-// TODO Rename App to BlueBottle, BB or BBApp.
 App = Em.Application.create({
     VERSION: '1.0.0',
 
@@ -244,6 +243,26 @@ App.Router.reopen({
     }
 });
 
+App.Router.reopen({
+    didTransition: function(infos) {
+        this._super(infos);
+        Ember.run.next(function() {
+            // the meta module will now go trough the routes and look for data
+            App.meta.trigger('reloadDataFromRoutes');
+        });
+    }
+});
+
+DS.Model.reopen({
+    meta: DS.attr('object'),
+});
+
+Em.Route.reopen({
+    meta_data: function(){
+        return this.get('context.meta_data');
+    }.property('context.meta_data')
+});
+
 App.Router.map(function() {
 
     this.resource('language', {path:'/:lang'});
@@ -446,47 +465,6 @@ App.HomeRoute = Em.Route.extend({
         this._super(controller, model);
         controller.set('projectIndex', 0).loadProject();
         controller.set('quoteIndex', 0).loadQuote();
-    }
-});
-
-
-/* Static Pages */
-
-App.PageRoute = Em.Route.extend({
-    model: function(params) {
-        var page =  App.Page.find(params.page_id);
-        var route = this;
-        page.on('becameError', function() {
-            route.transitionTo('error.notFound');
-        });
-        return page;
-    }
-});
-
-/* Contact Page */
-
-App.ContactMessageRoute = Em.Route.extend({
-    model: function(params) {
-        var store = this.get('store');
-        return store.createRecord(App.ContactMessage);
-    },
-    setupController: function(controller, model) {
-        window.scrollTo(0, 0);
-        this._super(controller, model);
-        controller.startEditing();
-    },
-
-    exit: function() {
-        if (this.get('controller')) {
-            this.get('controller').stopEditing();
-        }
-    }
-});
-
-// Show the latest donations
-App.TickerRoute = Em.Route.extend({
-    model: function(params) {
-        return  App.Ticker.find();
     }
 });
 

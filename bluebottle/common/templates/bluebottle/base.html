@@ -6,14 +6,15 @@
 {% load static %}
 
 <!DOCTYPE HTML>
-<html lang="{{ LANGUAGE_CODE }}">    
+<html lang="{{ LANGUAGE_CODE }}">
+
 <head>
     <meta charset="utf-8" />
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width" />
 
     <title>{% block title %}Bluebottle Project{% endblock %}</title>
-
+    
     <script type="text/javascript">
         var default_title = '{% blocktrans %}1%Club - Share a little. Change the world{%  endblocktrans %}';
         var default_description = '{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}';
@@ -26,8 +27,9 @@
 	<meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
 
 	<link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
-	{% endblock %}
-
+	
+    {% endblock %}
+    
 
     {# Stylesheets #}
     {% compress css %}
@@ -105,38 +107,36 @@
 
 
     {% tplhandlebars "application" %}
-    <!-- main header -->
-        <div id="content">
-            <div class="container" id="navigation">
-                <header class="wrapper">
-                    <div class="header-main">
-                        <!-- logo -->
-                        {{#linkTo "home"}}
-                        <span id="logo">
-                            <h1 id="title">1%Club</h1>
-                            <em id="subtitle">Share a little.Change the world</em>
-                        </span>
-                        {{/linkTo}}
-                        <!-- end: logo -->
+    
+    <!-- global site -->
+		<div id="main">
 
-                        <!-- main navigation -->
-                        <div class="nav">
-                            <nav class="nav-main">
-                                <h1 class="nav-title">Navigation</h1>
-                                <ul>
-                                    <li><a {{action 'showPage' 'about'}} href="/#!/pages/about">{% blocktrans %}What is 1%{% endblocktrans %}</a></li>
-                                    <li>{{#linkTo 'projectList'}}{% blocktrans %}1%Projects{% endblocktrans %}{{/linkTo}}</li>
-                                    <li>{{#linkTo 'taskList'}}{% blocktrans %}1%Skills{% endblocktrans %}{{/linkTo}}</li>
-                                    <li><a {{action 'showPage' 'get-involved'}} href="/#!/pages/get-involved">{% trans "Get involved" %}</a></li>
-                                </ul>
-                            </nav>
-                            
-                            {% include "accounts/nav.html" %}
+			<!-- global header -->
+			<div id="header" class="l-section">
+				<header class="l-wrapper">
+                        
+                    <!-- logo -->
+					<div id="logo">
+						{{#linkTo 'home' class="logo-link"}}
+						<object type="image/svg+xml" data="/static/assets/images/global/onepercentclub-white.svg" class="logo-image"><img src="{{ STATIC_URL }}images/global/onepercentclub-white.png" alt="1%Club" class="logo-image" /></object>
+						{{/linkTo}}
+					</div>
+					<!-- end: logo -->
 
-                        </div>
-                        <!-- end: main navigation -->
+					<!-- main navigation -->
+					<nav id="nav">
+					
+						<ul class="nav-main">
+                            <li class="nav-main-item"><a {{action 'showPage' 'about'}} href="/#!/pages/about">{% blocktrans %}What is 1%{% endblocktrans %}</a></li>
+                            <li class="nav-main-item">{{#linkTo 'projectList'}}{% blocktrans %}1%Projects{% endblocktrans %}{{/linkTo}}</li>
+                            <li class="nav-main-item">{{#linkTo 'taskList'}}{% blocktrans %}1%Skills{% endblocktrans %}{{/linkTo}}</li>
+                            <li class="nav-main-item"><a {{action 'showPage' 'get-involved'}} href="/#!/pages/get-involved">{% trans "Get involved" %}</a></li>
+                        </ul>
+                    
+                        {% include "accounts/nav.html" %}
                     </div>
-
+                    <!-- end: main navigation -->
+                    
                     {{#if display_message}}
 
                         <div {{bindAttr class=":message isError"}}>
@@ -158,16 +158,15 @@
             <!-- end: main header -->
 
             <!-- main content -->
-            {{outlet}}
+			<div id="content">
+				{{outlet}}
+			</div>
 			<!-- end: main content -->
 			
         </div>
         {{partial "footer" }}
 
     {% endtplhandlebars %}
-
-
-    
 
 
     {% tplhandlebars "_footer" %}
@@ -190,9 +189,10 @@
                                         {% blocktrans %}1%Projects{% endblocktrans %}
                                     {{/linkTo}}
                                 </li>
-                                <li>{{#linkTo 'taskList'}}
-                                		{% blocktrans %}1%Skills{% endblocktrans %}
-                                	{{/linkTo}}
+                                <li>
+                                    {{#linkTo 'taskList'}}
+                                        {% blocktrans %}1%Skills{% endblocktrans %}
+                                    {{/linkTo}}
                                 </li>
                                 <li>
                                     <a {{action 'showPage' 'get-involved'}} href="/#!/pages/get-involved">
@@ -216,14 +216,14 @@
                                     </a>
                                 </li>
                                 <li>
-                                	<a {{action 'showPage' 'faq'}} href="/#!/pages/faq">{% trans "Frequently Asked Questions" %}</a>
+                                    <a {{action 'showPage' 'faq'}} href="/#!/pages/faq">{% trans "Frequently Asked Questions" %}</a>
                                 </li>
                                 <li>
                                     <a {{action 'showPage' 'meet-team'}} href="/#!/pages/meet-team">
                                         {% trans "Meet the team" %}
                                     </a>
                                 </li>
-                                
+
                                 <li>
                                     <a {{action 'showPage' 'partners'}} href="/#!/pages/partners">
                                         {% trans "Partners" %}
@@ -250,7 +250,7 @@
                         <li>
                             <h3>{% trans "Discover 1%More" %}</h3>
                             <ul>
-                            	<li>
+                                <li>
                                     <a {{action 'showPage' 'business'}} href="/#!/pages/business">
                                         {% trans "1%Business" %}
                                     </a>
@@ -265,7 +265,7 @@
                                         {% trans "1%Github" %}
                                     </a>
                                 </li>
-                                
+
                             </ul>
                         </li>
 
@@ -320,39 +320,39 @@
 
                     {{#unless controllers.currentUser.isAuthenticated}}
                     <div class="footer-join-us">
-						<h3>{% blocktrans %}Join 1%Club{% endblocktrans %}</h3>
-	                    <p>{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online. {% endblocktrans %}</p>
-	                    <ul>
-	                        <li><i class="flaticon solid right-2"></i> {% trans "Select a project or task" %}</li>
-	                        <li><i class="flaticon solid right-2"></i> {% trans "Share your skills or money" %}</li>
-	                        <li><i class="flaticon solid right-2"></i> {% trans "See direct results" %}</li>
-	                    </ul>
-	                    {{#linkTo 'signup' classNames="btn btn-primary"}}{% blocktrans %}Join 1%Club{% endblocktrans %}{{/linkTo}}
-					</div>
-					{{/unless}}
+                        <h3>{% blocktrans %}Join 1%Club{% endblocktrans %}</h3>
+                        <p>{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online. {% endblocktrans %}</p>
+                        <ul>
+                            <li><i class="flaticon solid right-2"></i> {% trans "Select a project or task" %}</li>
+                            <li><i class="flaticon solid right-2"></i> {% trans "Share your skills or money" %}</li>
+                            <li><i class="flaticon solid right-2"></i> {% trans "See direct results" %}</li>
+                        </ul>
+                        {{#linkTo 'signup' classNames="btn btn-primary"}}{% blocktrans %}Join 1%Club{% endblocktrans %}{{/linkTo}}
+                    </div>
+                    {{/unless}}
 
                 </section>
-			</div>
-          
+            </div>
+
             <div class="container copyright">
-	            <div class="wrapper">
-	                <ul>
-	                    <li>
-	                        &copy;2013 1%Club
-	                    </li>
-	                    <li>
-	                        <a {{action 'showPage' 'terms-and-conditions'}} href="/#!/pages/terms-and-conditions">{% trans "General Conditions" %}</a>&nbsp;
-	                        <a {{action 'showPage' 'privacy'}} href="/#!/pages/privacy">{% trans "Privacy Policy" %}</a>
-	                    </li>
-	                    <li>
+                <div class="wrapper">
+                    <ul>
+                        <li>
+                            &copy;2013 1%Club
+                        </li>
+                        <li>
+                            <a {{action 'showPage' 'terms-and-conditions'}} href="/#!/pages/terms-and-conditions">{% trans "General Conditions" %}</a>&nbsp;
+                            <a {{action 'showPage' 'privacy'}} href="/#!/pages/privacy">{% trans "Privacy Policy" %}</a>
+                        </li>
+                        <li>
                             {{#linkTo 'contactMessage' href=true class=feedback}}
                                 {% trans "Give us feedback" %}
                             {{/linkTo}}
-	                    </li>
-	                </ul>
-	            </div>
-	        </div>
-	        
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
 
     {% endtplhandlebars %}
@@ -408,6 +408,6 @@
 
     {% block content %}
     {% endblock %}
-
+	
 </body>
 </html>

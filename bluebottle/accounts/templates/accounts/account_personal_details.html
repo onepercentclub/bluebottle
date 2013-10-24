@@ -17,7 +17,7 @@
             </div>
 
             {{#if errors.line1}}
-                <div class="errors">{{#each errors.line1}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.line1}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
         <li class="control-group">
@@ -30,7 +30,7 @@
             </div>
 
             {{#if errors.line2}}
-                <div class="errors">{{#each errors.line2}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.line2}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
         <li class="control-group">
@@ -43,7 +43,7 @@
             </div>
 
             {{#if errors.city}}
-                <div class="errors">{{#each errors.city}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.city}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
         <li class="control-group">
@@ -56,7 +56,7 @@
             </div>
 
             {{#if errors.state}}
-                <div class="errors">{{#each errors.state}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.state}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
         <li class="control-group">
@@ -69,7 +69,7 @@
             </div>
 
             {{#if errors.postal_code}}
-                <div class="errors">{{#each errors.postal_code}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.postal_code}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
 
         </li>
@@ -84,7 +84,7 @@
             </div>
 
             {{#if error.country}}
-                <div class="errors">{{#each errors.country}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.country}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
 
@@ -94,10 +94,10 @@
             </label>
 
             <div class="controls">
-                {{#view Em.RadioButtonGroup name="gender" selectedValueBinding="gender" class="radio-group-horizontal"}}
-                    <div class="radio3">{{view view.RadioButton value="female"}}<span>{% trans "Female" %}</span></div>
-                    <div class="radio3">{{view view.RadioButton value="male"}}<span>{% trans "Male" %}</span></div>
-                    <div class="radio3 hidden">{{view view.RadioButton value=""}}<span>{% trans "Unset" %}</span></div>
+                {{#view Em.RadioButtonGroup name="gender" selectedValueBinding="gender" class="radio-group three"}}
+                    <label for="genderFemale">{{view view.RadioButton value="female" elementId="genderFemale"}} <span>{% trans "Female" %}</span></label>
+                    <label for="genderMale">{{view view.RadioButton value="male" elementId="genderMale"}} <span>{% trans "Male" %}</span></label>
+                    <label for="genderUnset">{{view view.RadioButton value="" elementId="genderUnset"}} <span>{% trans "Unset" %}</span></label>
                 {{/view}}
             </div>
         </li>
@@ -112,7 +112,7 @@
             </div>
 
             {{#if errors.birthdate}}
-                <div class="errors">{{#each errors.birthdate}}<p>{{this}}</p>{{/each}}</div>
+                <div class="has-errors">{{#each errors.birthdate}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
     </ul>

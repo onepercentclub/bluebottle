@@ -1,9 +1,6 @@
-from setuptest.setuptest import SetupTestSuite
+from setuptest import setuptest
 
-# TODO: rename from runner to suite
-# TODO: use in-memory sqlite database
-
-class BlueBottleTestSuite(SetupTestSuite):
+class BlueBottleTestSuite(setuptest.SetupTestSuite):
     """
     Test Suite configuring Django settings and using
     NoseTestSuiteRunner as test runner.

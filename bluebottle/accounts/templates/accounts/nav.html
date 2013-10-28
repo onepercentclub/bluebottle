@@ -2,28 +2,24 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-<nav class="nav-member member-login">
-    
     {% block_verbatim nav_login_content %}
         
-        <h1 class="nav-title">{% trans "Profile" %}</h1>
-        <ul>
+        <ul class="nav-actions">
             {{#if controllers.currentUser.isAuthenticated }}
                 
                 {% block_verbatim user_logged_in %}
                 
-                    <li class="nav-member-profile">
+                    <li class="nav-member">
                         
                         {% block_verbatim profile_anchor %}
-                            <a href="#" class="nav-profile">
+                            <a href="#" class="nav-member-dropdown">
                                 <strong>
                                     {% trans "Profile" %} &nbsp;
-                                    <em class="flaticon solid down-2"></em>
                                 </strong>
                             </a>
                         {% endblock_verbatim profile_anchor %}
                         
-                        <ul class="my-menu">
+                        <ul class="nav-member-dropdown-menu">
                             {% block_verbatim my_menu %}
                                 
                                 <li>
@@ -32,13 +28,21 @@
                                     {{/linkTo }}
                                 </li>
                                 
+                                {{#if controllers.myProjectList.model.length }}
+                                    <li>
+                                        {{#linkTo "myProjectList" }}
+                                            {% trans "Manage My Project" %}
+                                        {{/linkTo}}
+                                    </li>
+                                {{/if}}
+                                
                                 <li>
                                     {% block logout_anchor %}
                                         <a href="{% url 'accounts:logout' %}?next=/{{ LANGUAGE_CODE }}/">Logout</a>
                                     {% endblock logout_anchor %}
                                 </li>
                                 
-                                <li class="nav-my-language">
+                                <li class="nav-member-switch-language">
                                     {% trans "Language" %} {{view "App.LanguageSwitchView"}}
                                 </li>
 
@@ -56,13 +60,13 @@
                 
                 {% block_verbatim anonymous_user %}
                 
-                    <li class="nav-member-actions">
+                    <li class="nav-signup-login">
                         {{#linkTo "signup" class="nav-signup"}}{% trans "Sign up" %}{{/linkTo}}
                         &#124;
                         <a {{action 'openInBox' "login"}} class="nav-login">{%  trans "Log in" %}</a>
                     </li>
 
-                    <li class="nav-switch-lang">{{view "App.LanguageSwitchView"}}</li>
+                    <li class="nav-switch-language">{{view "App.LanguageSwitchView"}}</li>
 
                 {% endblock_verbatim anonymous_user %}
                 

@@ -1,144 +1,133 @@
 {% load bb_ember i18n %}
 
-
 {% tplhandlebars "userSettings" %}
 
 {{#if isLoaded}}
-    <section class="wrapper">
-        <div class="content">
-            <form>
-                <div class="form-meta">
-                    {% block form_meta %}
-                        <div class="form-label">{% trans "Edit your account" %}</div>
-                        <div class="form-desc">{% trans "These are the details we currently have for you – update or change them below." %}</div>
-                    {% endblock form_meta %}
-                </div>
-                    
-                
-                    <fieldset>
-                        <ul>
-                            <li class="control-group">
-                                <label class="control-label">
-                                    {% trans "Email Address" %}
-                                </label>
+    <form>
+        <legend>
+            {% block form_meta %}
+                <strong>{% trans "Edit your account" %}</strong>
+                <p>{% trans "These are the details we currently have for you – update or change them below." %}</p>
+            {% endblock form_meta %}
+        </legend>
+            
+        <fieldset>
+            <ul>
+                <li class="control-group">
+                    <label class="control-label">
+                        {% trans "Email Address" %}
+                    </label>
 
-                                <div class="controls">
-                                    {{view Em.TextField valueBinding="email" 
-                                    placeholder="{% trans "your@email.com" %}"
-                                    classBinding="errors.email.length:error"}}
-                                </div>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="email" 
+                        placeholder="{% trans "your@email.com" %}"
+                        classBinding="errors.email.length:error"}}
+                    </div>
 
-                                {{#if errors.email}}
-                                    <div class="errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
-                                {{/if}}
-                            </li>
-                        </ul>
-                    </fieldset>
+                    {{#if errors.email}}
+                        <div class="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+            </ul>
+        </fieldset>
 
-                    <hr class="form-divider">
+        {% block_verbatim fieldsets %}
+            <fieldset>
+                <ul>
+                    <li class="control-group">
+                        <label class="control-label">
+                            {% trans "I'd like to receive emails about" %}
+                        </label>
 
-                {% block_verbatim fieldsets %}
-                    <fieldset>
-                        <ul>
-                            <li class="control-group">
-                                <label class="control-label">
-                                    {% trans "I'd like to receive emails about" %}
-                                </label>
+                        <div class="controls checkbox-group">
+                            <label class="checkbox" for="newsletter">
+                                {{view Em.Checkbox checkedBinding="newsletter" elementId="newsletter" }}
+                                <span>
+                                {% block site_name %}
+                                    {% trans "&lt;Organisation-name&gt;" %}
+                                {% endblock site_name %}
+                                </span>
+                            </label>
+                        </div>
+                    </li>
+                </ul>
+            </fieldset>
 
-                                <div class="controls">
-                                    <label class="checkbox">
-                                        {{view Em.Checkbox checkedBinding="newsletter" }}
-                                        <span for="optionsCheckboxes1">
-                                            {% block site_name %}
-                                                {% trans "&lt;Organisation-name&gt;" %}</span>
-                                            {% endblock site_name %}
-                                    </label>
-                                </div>
-                            </li>
-                        </ul>
-                    </fieldset>
+            <fieldset>
+                <ul>
+                    <li class="control-group">
+                        <label class="control-label">
+                            {% trans "Account type" %}
+                        </label>
 
-                    <hr class="form-divider">
+                        <div class="controls">
+                            {{view Em.Select
+                                contentBinding="userTypeList"
+                                optionValuePath="content.value"
+                                optionLabelPath="content.name"
+                                valueBinding="user_type"}}
+                        </div>
 
-                    <fieldset>
-                        <ul>
-                            <li class="control-group">
-                                <label class="control-label">
-                                    {% trans "Account type" %}
-                                </label>
+                        {{#if errors.user_type}}
+                            <div class="has-errors">{{#each errors.user_type}}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
 
-                                <div class="controls">
-                                    {{view Em.Select
-                                        contentBinding="userTypeList"
-                                        optionValuePath="content.value"
-                                        optionLabelPath="content.name"
-                                        valueBinding="user_type"}}
-                                </div>
+                    <li class="control-group">
+                        <label class="control-label">
+                            {% trans "Primary language" %}
+                        </label>
 
-                                {{#if errors.user_type}}
-                                    <div class="errors">{{#each errors.user_type}}<p>{{this}}</p>{{/each}}</div>
-                                {{/if}}
-                            </li>
+                        <div class="controls">
+                            {{view Em.Select
+                                contentBinding="App.interfaceLanguages"
+                                optionValuePath="content.code"
+                                optionLabelPath="content.name"
+                                valueBinding="primary_language"}}
+                        </div>
 
-                            <li class="control-group">
-                                <label class="control-label">
-                                    {% trans "Primary language" %}
-                                </label>
+                        {{#if errors.primary_language}}
+                            <div class="has-errors">{{#each errors.primary_language}}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
 
-                                <div class="controls">
-                                    {{view Em.Select
-                                        contentBinding="App.interfaceLanguages"
-                                        optionValuePath="content.code"
-                                        optionLabelPath="content.name"
-                                        valueBinding="primary_language"}}
-                                </div>
+                    <li class="control-group">
+                        <label class="control-label">
+                            {% trans "I want to share" %}
+                        </label>
 
-                                {{#if errors.primary_language}}
-                                    <div class="errors">{{#each errors.primary_language}}<p>{{this}}</p>{{/each}}</div>
-                                {{/if}}
-                            </li>
+                        <div class="controls checkbox-group two">
+                            <label class="checkbox" for="shareTimeKnowledge">
+                                {{view Em.Checkbox checkedBinding="share_time_knowledge" elementId="shareTimeKnowledge" }}
+                                {% trans "Time & Knowledge" %}
+                            </label>
+                            <label class="checkbox" for="shareMoney">
+                                {{view Em.Checkbox checkedBinding="share_money" elementId="shareMoney" }}
+                                {% trans "Money" %}
+                            </label>
+                        </div>
+                    </li>
+                </ul>
+            </fieldset>
 
-                            <li class="control-group">
-                                <label class="control-label">
-                                    {% trans "I want to share" %}
-                                </label>
+            {% block personal_details %}
+                {% include "accounts/account_personal_details.html" %}
+            {% endblock personal_details %}
+            
+        {% endblock_verbatim fieldsets %}
 
-                                <div class="controls">
-                                    <label class="checkbox">
-                                        {{view Em.Checkbox checkedBinding="share_time_knowledge" }}
-                                        <span for="optionsCheckboxes1">{% trans "Time & Knowledge" %}</span>
-                                    </label>
-                                    <label class="checkbox">
-                                        {{view Em.Checkbox checkedBinding="share_money" }}
-                                        <span for="optionsCheckboxes1">{% trans "Money" %}</span>
-                                    </label>
-                                </div>
-                            </li>
-                        </ul>
-                    </fieldset>
+        {{#if saved}}
+            <div class="is-saved"><span class="flaticon solid checkmark-1"></span> {% trans "Account settings saved" %}</div>
+        {{/if}}
 
-
-                    {% block personal_details %}
-                        <hr class="form-divider">
-                        {% include "accounts/account_personal_details.html" %}
-                    {% endblock personal_details %}
-                    
-                {% endblock_verbatim fieldsets %}
-
-                {{#if saved}}
-                    <span class="settings-saved"><em class="flaticon solid checkmark-1"> {% trans "Account settings saved" %}</em></span>
-                {{/if}}
-
-                <button class="btn btn-iconed btn-primary right" {{action 'save' model}}>
-                    <em class="flaticon solid checkmark-1"></em>
-                    {{saveButtonText}}
-                </button>
-            </form>
-        </div>
-    </section>
+        <button class="btn btn-iconed btn-primary" {{action 'save' model}}>
+            <span class="flaticon solid checkmark-1"></span>
+            {{saveButtonText}}
+        </button>
+    </form>
 
 {{else}}
-    <span class="loading-big">Loading&#8230;</span>
+    <div class="is-loading-big">Loading&#8230;</div>
 {{/if}}
 
 {% endtplhandlebars %}

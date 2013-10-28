@@ -13,6 +13,20 @@
     <meta name="viewport" content="width=device-width" />
 
     <title>{% block title %}{% endblock %}BlueBottle</title>
+
+    <script type="text/javascript">
+        var default_title = '{% blocktrans %}BlueBottle{%  endblocktrans %}';
+        var default_description = '{% blocktrans %}BlueBottle{% endblocktrans %}';
+        var default_keywords = '{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}';
+    </script>
+
+    {% block meta %}
+        <meta name="description" content="{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}" />
+        <meta name="author" content="{% blocktrans %}1%Club{% endblocktrans %}" />
+        <meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
+
+        <link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
+    {% endblock %}
     
     {# Stylesheets #}
     {% compress css %}
@@ -32,6 +46,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-drf2-adapter.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-meta.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/globalize.js"></script>
 
         {# Other libs #}
@@ -61,23 +76,14 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/app/utils.js"></script>
 
         {# accounts is always required #}
-        {% block ember_app_scripts %}
+        {% block ember_scripts %}
             
-            {% include "accounts/ember_scripts.html" %}
-            {% comment %}
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/projects.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/manage.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/wallposts.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/reactions.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/orders.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/vouchers.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/tasks.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/pages.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/homepage.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/blogs.js"></script>
-            {% endcomment %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/routes.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/controllers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/views.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/models.js"></script>
         
-        {% endblock ember_app_scripts %}
+        {% endblock ember_scripts %}
 
     {% endcompress %}
 

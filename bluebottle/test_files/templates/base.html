@@ -61,23 +61,15 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/app/utils.js"></script>
 
         {# accounts is always required #}
-        {% block ember_app_scripts %}
+        {% block ember_scripts %}
             
-            {% include "accounts/ember_scripts.html" %}
-            {% comment %}
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/projects.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/manage.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/wallposts.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/reactions.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/orders.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/vouchers.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/tasks.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/pages.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/homepage.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}js/app/blogs.js"></script>
-            {% endcomment %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/router.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/routes.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/controllers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/views.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/models.js"></script>
         
-        {% endblock ember_app_scripts %}
+        {% endblock ember_scripts %}
 
     {% endcompress %}
 

@@ -87,8 +87,6 @@ class OEmbedField(serializers.Field):
         super(OEmbedField, self).__init__(source)
         self.params = getattr(settings, 'MICAWBER_DEFAULT_SETTINGS', {})
         self.params.update(kwargs)
-        # enforce HTTPS, see https://groups.google.com/forum/?fromgroups#!topic/youtube-api-gdata/S9Fa-Zw2Ma8
-        self.params['scheme'] = 'https'
         if maxwidth and maxheight:
             self.params['maxwidth'] = maxwidth
             self.params['maxheight'] = maxheight

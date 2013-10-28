@@ -117,10 +117,10 @@
         {% endblock_verbatim fieldsets %}
 
         {{#if saved}}
-            <div class="is-saved"><span class="flaticon solid checkmark-1"></span> {% trans "Account settings saved" %}</div>
+            <div class="is-saved"><span class="flaticon solid checkmark-1"></span> <strong>{% trans "Account settings saved" %}</strong></div>
         {{/if}}
 
-        <button class="btn btn-iconed btn-primary" {{action 'save' model}}>
+        <button class="btn btn-iconed btn-primary btn-save" {{action 'save' model}}>
             <span class="flaticon solid checkmark-1"></span>
             {{saveButtonText}}
         </button>

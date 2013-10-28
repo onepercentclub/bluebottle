@@ -1,113 +1,105 @@
-{% load bb_ember i18n %}
 
+{% load bb_ember i18n %}
 
 {% tplhandlebars "userProfile" %}
 
 {{#if isLoaded}}
-    <section class="wrapper">
-        <div class="content">
-            <form>
-                    
-                {% block_verbatim profile_form %}
+    <form>
+            
+        {% block_verbatim profile_form %}
+        
+            <legend>
+                {% block form_meta %}
+                    <strong>{% trans "Edit your profile" %}</strong>
+                    <p>{% trans "Override block form_meta from accounts/profile_form.html." %}</p>
+                {% endblock form_meta %}
+            </legend>
+
+            {% block_verbatim fieldset1 %}
+                <fieldset>
+                    <ul>
+                        <li class="control-group">
+                            <label class="control-label">
+                                {% trans "Name" %}
+                            </label>
+
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="first_name" placeholder="{% trans "First name" %}" 
+                                class="inline-prepend" classBinding="errors.first_name.length:error"}}
+                                
+                                {{view Em.TextField valueBinding="last_name" placeholder="{% trans "Surname" %}" 
+                                class="inline-append" classBinding="errors.last_name.length:error"}}
+                            </div>
+
+                            {# TODO: Error Handling #}
+                        </li>
+
+                        <li class="control-group">
+                            <label class="control-label">
+                                {% trans "Profile Picture" %}
+                            </label>
+
+                            <div class="controls file-upload">
+                                <img {{bindAttr src="getAvatar"}} class="preview" />
+                                <a class="btn btn-iconed btn-upload">
+                                    {{view App.UploadFile contentBinding="this" name="picture" id="picture" accept="image/*" fileBinding="picture"}}
+                                    <span class="flaticon solid upload-document-1"></span>
+                                    {% trans "Upload picture" %}
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </fieldset>
+            {% endblock_verbatim fieldset1 %}
+
+            {% block_verbatim fieldset2 %}
+                <fieldset>
+                    <ul>
+                        {% block_verbatim profile_fields %}
+                            
+                            <li class="control-group">
+                                <label class="control-label">
+                                    {% trans "One (of many possible) profile fields" %}
+                                </label>
+
+                                <div class="controls">
+                                    {{view Em.TextArea valueBinding="about" maxlength="265" 
+                                    placeholder="{% trans "An example placeholder" %}" 
+                                    classBinding="errors.about.length:error"}}
+                                </div>
+
+                                {{#if errors.about}}
+                                    <div class="has-errors">{{#each errors.about}}<p>{{this}}</p>{{/each}}</div>
+                                {{/if}}
+                            </li>
+
+                        {% endblock_verbatim profile_fields %}
+                    </ul>
+                </fieldset>
+            {% endblock_verbatim fieldset2 %}
+
+            {% block extra_fieldsets %}
+            {% endblock extra_fieldsets %}
+
+            {% block_verbatim profile_save %}
                 
-                    <div class="form-meta">
-                        {% block form_meta %}
-                            <div class="form-label">{% trans "Edit your profile" %}</div>
-                            <div class="form-desc">{% trans "Override block form_meta from accounts/profile_form.html." %}</div>
-                        {% endblock form_meta %}
-                    </div>
+                {{#if saved}}
+                    <div class="is-saved"><span class="flaticon solid checkmark-1">{% trans "Profile saved" %}</span></div>
+                {{/if}}
 
-                    {% block_verbatim fieldset1 %}
-                        <fieldset>
-                            <ul>
-                                <li class="control-group">
-                                    <label class="control-label">
-                                        {% trans "Name" %}
-                                    </label>
+                <button class="btn btn-iconed btn-primary btn-save" {{action 'save' model}}>
+                    <span class="flaticon solid checkmark-1"></span>
+                    {{saveButtonText}}
+                </button>
 
-                                    <div class="controls">
-                                        {{view Em.TextField valueBinding="first_name" placeholder="{% trans "First name" %}" 
-                                        class="inline-prepend" classBinding="errors.first_name.length:error"}}
-                                        
-                                        {{view Em.TextField valueBinding="last_name" placeholder="{% trans "Surname" %}" 
-                                        class="inline-append" classBinding="errors.last_name.length:error"}}
-                                    </div>
+            {% endblock_verbatim profile_save %}
 
-                                    {# TODO: Error Handling #}
-                                </li>
+        {% endblock_verbatim profile_form %}
 
-                                <li class="control-group">
-                                    <label class="control-label">
-                                        {% trans "Profile Picture" %}
-                                    </label>
-
-                                    <div class="controls profile-pic-uploader">
-                                        <img {{bindAttr src="getAvatar"}} class="preview" />
-
-                                        <a class="btn btn-iconed btn-uploader">
-                                            {{view App.UploadFile contentBinding="this" name="picture" id="picture" accept="image/*" fileBinding="picture"}}
-                                            <em class="flaticon solid upload-document-1"></em>
-                                            {% trans "Upload picture" %}
-                                        </a>
-                                    </div>
-                                </li>
-                            </ul>
-                        </fieldset>
-                    {% endblock_verbatim fieldset1 %}
-
-                    {% block_verbatim fieldset2 %}
-                        <hr class="form-divider">
-                        <fieldset>
-                            <ul>
-                                {% block_verbatim profile_fields %}
-                                    
-                                    <li class="control-group">
-                                        <label class="control-label">
-                                            {% trans "One (of many possible) profile fields" %}
-                                        </label>
-
-                                        <div class="controls">
-                                            {{view Em.TextArea valueBinding="about" maxlength="265" 
-                                            placeholder="{% trans "An example placeholder" %}" 
-                                            classBinding="errors.about.length:error"}}
-                                        </div>
-
-                                        {{#if errors.about}}
-                                            <div class="errors">{{#each errors.about}}<p>{{this}}</p>{{/each}}</div>
-                                        {{/if}}
-                                    </li>
-
-                                {% endblock_verbatim profile_fields %}
-                            </ul>
-                        </fieldset>
-                    {% endblock_verbatim fieldset2 %}
-
-                    {% block extra_fieldsets %}
-                    {% endblock extra_fieldsets %}
-
-                    {% block_verbatim profile_save %}
-                        
-                        {{#if saved}}
-                            <span class="left">
-                                <em class="flaticon solid checkmark-1">{% trans "Profile saved" %}</em>
-                            </span>
-                        {{/if}}
-
-                        <button class="btn btn-iconed btn-primary right" {{action 'save' model}}>
-                            <em class="flaticon solid checkmark-1"></em>
-                            {{saveButtonText}}
-                        </button>
-
-                    {% endblock_verbatim profile_save %}
-
-                {% endblock_verbatim profile_form %}
-
-            </form>
-        </div>
-    </section>
+    </form>
 
 {{else}}
-    <span class="loading-big">Loading&#8230;</span>
+    <div class="is-loading-big">Loading&#8230;</div>
 {{/if}}
 
 {% endtplhandlebars %}

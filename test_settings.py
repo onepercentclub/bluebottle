@@ -109,7 +109,7 @@ HTML_ACTIVATION_EMAIL = True  # Note this setting is from our forked version.
 SOUTH_TESTS_MIGRATE = False # Make south shut up during tests
 
 SELENIUM_TESTS = True
-SELENIUM_WEBDRIVER = 'phantomjs'  # Can be any of chrome, firefox, phantomjs
+SELENIUM_WEBDRIVER = 'firefox'  # Can be any of chrome, firefox, phantomjs
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

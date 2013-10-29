@@ -246,7 +246,7 @@ class SeleniumTestCase(LiveServerTestCase):
         self.browser.fill('username', username)
         self.browser.fill('password', password)
 
-        self.browser.find_by_value('OK').first.click()
+        self.browser.find_by_value('Login').first.click()
 
         return self.browser.is_text_present('PROFILE', wait_time=10)
 

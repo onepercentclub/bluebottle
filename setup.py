@@ -94,7 +94,8 @@ tests_require = [
     'nose==1.3.0',
     'pylint==0.28.0',
     'selenium==2.35.0',
-    'South==0.8.1',
+    'South==0.8.1', # Functional testing libraries
+    'splinter==0.5.3', # Functional testing libraries
 ]
 
 

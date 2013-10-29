@@ -1,0 +1,9 @@
+The Oxygen icon theme is freely available from KDE. You may use the icons freely
+under the GNU Library General Public License <http://www.gnu.org/licenses/lgpl.html>
+
+The full icon set can be downloaded from:
+- http://download.kde.org/stable/4.9.0/src/oxygen-icons-4.9.0.tar.xz
+
+For more info, see:
+- http://techbase.kde.org/Projects/Oxygen/Licensing
+- http://www.oxygen-icons.org/?page_id=4

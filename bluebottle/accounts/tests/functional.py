@@ -141,7 +141,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.browser.fill('username', user.email)
         self.browser.fill('password', 'secret')
 
-        self.browser.find_by_value('OK').first.click()
+        self.browser.find_by_value('Login').first.click()
 
         self.assertTrue(self.browser.is_text_present('PROFILE', wait_time=10))
 
@@ -152,7 +152,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         
         self.login(user.email, 'secret')
 
-        self.browser.find_by_css('.nav-member-profile').first.mouse_over()
+        self.browser.find_by_css('.nav-member-dropdown').first.mouse_over()
         self.browser.find_link_by_partial_text('Edit my profile & settings').first.click()
 
         # Validate that we are on the intended page.
@@ -190,14 +190,14 @@ class AccountSeleniumTests(SeleniumTestCase):
 
         self.login(user.email, 'secret')
 
-        self.browser.find_by_css('.nav-member-profile').first.mouse_over()
+        self.browser.find_by_css('.nav-member-dropdown').first.mouse_over()
         self.browser.find_link_by_partial_text('Edit my profile & settings').first.click()
 
         # Validate that we are on the intended page.
         self.assertTrue(self.browser.is_text_present('EDIT YOUR PROFILE'))
 
         # Navigate to account settings.
-        self.browser.find_link_by_itext('ACCOUNT\nSETTINGS').first.click()
+        self.browser.find_by_css('.tab-item')[1].find_by_tag('a').first.click()
 
         # Validate that we are on the intended page.
         self.assertTrue(self.browser.is_text_present('EDIT YOUR ACCOUNT'))
@@ -216,8 +216,11 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.browser.fill_form_by_label(fieldsets[2], [
             ('Account type', 'person'),
             ('Primary language', 'en'),
-            ('I want to share', [True, True]),
+            # ('I want to share', [True, True]), # doesn't work because of the hidden input elements
         ])
+        self.browser.find_by_css('span[for="shareTimeKnowledge"]').first.click();
+        self.browser.find_by_css('span[for="shareMoney"]').first.click();
+
         self.browser.fill_form_by_label(fieldsets[3], [
             ('Address Line 1', 'Example street 1'),
             ('Address Line 2', ''),
@@ -225,9 +228,11 @@ class AccountSeleniumTests(SeleniumTestCase):
             ('Province / State', 'North-Holland'),
             ('Postal Code', '1234AB'),
             ('Country', 'NL'),
-            ('Gender', [None, 'male', None]),
-            ('Date of birth', '01/01/1980')
+            # ('Gender', [None, 'male', None]), # and another hidden element
+            # ('Date of birth', '01/01/1980') # and another hidden element
         ])
+        self.browser.find_by_css('label[for="genderMale"] > span').first.click()
+        self.browser.find_by_css('.hasDatepicker').first.fill('01/01/1980')
 
         self.browser.find_link_by_itext('SAVE').first.click()
 
@@ -312,8 +317,8 @@ class AccountSeleniumTests(SeleniumTestCase):
         # TODO: Button is not part of the form.
         self.browser.find_by_css('.modal .modal-footer button').first.click()
 
-        # Validate that we are on the intended page.
-        self.assertTrue(self.browser.is_text_present('Password reset ok'))
+        # Validate that we are on the intended page, redirected to the login page
+        self.assertTrue(self.browser.is_text_present('LOG IN TO'))
 
         # Reload and validate user password in the database.
         user = BlueBottleUser.objects.get(pk=user.pk)

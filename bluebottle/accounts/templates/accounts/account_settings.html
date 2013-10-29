@@ -99,11 +99,11 @@
                         <div class="controls checkbox-group two">
                             <label class="checkbox" for="shareTimeKnowledge">
                                 {{view Em.Checkbox checkedBinding="share_time_knowledge" elementId="shareTimeKnowledge" }}
-                                {% trans "Time & Knowledge" %}
+                                <span for="shareTimeKnowledge">{% trans "Time & Knowledge" %}</span>
                             </label>
                             <label class="checkbox" for="shareMoney">
                                 {{view Em.Checkbox checkedBinding="share_money" elementId="shareMoney" }}
-                                {% trans "Money" %}
+                                <span for="shareMoney">{% trans "Money" %}</span>
                             </label>
                         </div>
                     </li>

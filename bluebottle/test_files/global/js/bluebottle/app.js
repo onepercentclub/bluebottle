@@ -1,62 +1,3 @@
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-var csrf_token = getCookie('csrftoken');
-
-function csrfSafeMethod(method) {
-    // these HTTP methods do not require CSRF protection
-    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-}
-
-function sameOrigin(url) {
-    // If url starts with / it's relative and same origin
-    if (url.substr(0, 1) == '/') {
-        return true;
-    }
-    // test that a given url is a same-origin URL
-    // url could be relative or scheme relative or absolute
-    var host = document.location.host; // host + port
-    var protocol = document.location.protocol;
-    var sr_origin = '//' + host;
-    var origin = protocol + sr_origin;
-    // Allow absolute or scheme relative URLs to same origin
-    return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
-        (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/');
-    // or any other URL that isn't scheme relative or absolute i.e relative. !(/^(\/\/|http:|https:).*/.test(url));
-}
-
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
-            // Send the token to same-origin, relative URLs only.
-            // Send the token only if the method warrants CSRF protection
-            // Using the CSRFToken value acquired earlier
-            xhr.setRequestHeader("X-CSRFToken", csrf_token);
-        }
-    }
-});
-
-
-// Create a mock 'File' class so things won't break to awfully in IE8&9
-// FIXME: Use a polyfill for this!!
-// https://github.com/francois2metz/html5-formdata
-if (Em.isNone(File)) {
-    var File = function(){};
-}
-
 Em.TextField.reopen({
     // Update attributeBinding with 'step' and 'multiple'
     attributeBindings: ['type', 'value', 'size', 'step', 'multiple']
@@ -320,90 +261,12 @@ App.ApplicationRoute = Em.Route.extend({
             });
 
         },
-        // showPage: function(page_id) {
-        //     var route = this;
-        //     App.Page.find(page_id).then(function(page) {
-        //         route.transitionTo('page', page);
-        //         window.scrollTo(0, 0);
-        //     });
-        // },
-
-        // addDonation: function (project) {
-        //     var route = this;
-        //     App.CurrentOrder.find('current').then(function(order) {
-        //         var store = route.get('store');
-        //         var donation = store.createRecord(App.CurrentOrderDonation);
-        //         donation.set('project', project);
-        //         donation.set('order', order);
-        //         donation.save();
-        //         route.transitionTo('currentOrder.donationList');
-        //     });
-        // }
     },
 
     urlForEvent: function(actionName, context) {
         return "/nice/stuff"
     }
 });
-
-// App.RecurringDirectDebitPaymentRoute = Em.Route.extend({
-//     beforeModel: function() {
-//         var order = this.modelFor('currentOrder');
-//         if (!order.get('recurring')) {
-//             this.transitionTo('paymentSelect');
-//         }
-//     },
-
-//     model: function() {
-//         var route = this;
-//         return App.RecurringDirectDebitPayment.find({}).then(function(recordList) {
-//                 var store = route.get('store');
-//                 if (recordList.get('length') > 0) {
-//                     var record = recordList.objectAt(0);
-//                     return record;
-//                 } else {
-//                     return store.createRecord(App.RecurringDirectDebitPayment);
-//                 }
-//             }
-//         )
-//     }
-// });
-
-
-// TODO Delete this Route when we implement Order history.
-// App.UserRoute = Em.Route.extend({
-//     setupController: function(controller, model) {
-//         this._super(controller, model);
-
-//         return App.RecurringDirectDebitPayment.find({}).then(function(recurringPayments) {
-//             controller.set('showPaymentsTab', recurringPayments.get('length') > 0)
-//         });
-//     }
-// });
-
-
-/* Home Page */
-// FIXME
-// App.HomeRoute = Em.Route.extend({
-//     model: function(params) {
-//         return ['foo', 'bar'];
-//         //return App.HomePage.find(App.get('language'));
-//     }
-// });
-
-
-/* Static Pages */
-
-// App.PageRoute = Em.Route.extend({
-//     model: function(params) {
-//         var page =  App.Page.find(params.page_id);
-//         var route = this;
-//         page.on('becameError', function() {
-//             route.transitionTo('error.notFound');
-//         });
-//         return page;
-//     }
-// });
 
 /* Views */
 

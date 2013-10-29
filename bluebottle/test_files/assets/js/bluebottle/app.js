@@ -1,10 +1,72 @@
-// TODO Rename App to BlueBottle, BB or BBApp.
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrf_token = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+function sameOrigin(url) {
+    // If url starts with / it's relative and same origin
+    if (url.substr(0, 1) == '/') {
+        return true;
+    }
+    // test that a given url is a same-origin URL
+    // url could be relative or scheme relative or absolute
+    var host = document.location.host; // host + port
+    var protocol = document.location.protocol;
+    var sr_origin = '//' + host;
+    var origin = protocol + sr_origin;
+    // Allow absolute or scheme relative URLs to same origin
+    return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+        (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/');
+    // or any other URL that isn't scheme relative or absolute i.e relative. !(/^(\/\/|http:|https:).*/.test(url));
+}
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            xhr.setRequestHeader("X-CSRFToken", csrf_token);
+        }
+    }
+});
+
+
+// Create a mock 'File' class so things won't break to awfully in IE8&9
+// FIXME: Use a polyfill for this!!
+// https://github.com/francois2metz/html5-formdata
+if (Em.isNone(File)) {
+    var File = function(){};
+}
+
+Em.TextField.reopen({
+    // Update attributeBinding with 'step' and 'multiple'
+    attributeBindings: ['type', 'value', 'size', 'step', 'multiple']
+});
+
+
 App = Em.Application.create({
     VERSION: '1.0.0',
 
-    // TODO: Remove this in production builds.
     LOG_TRANSITIONS: true,
-
 
     // We store language & locale here because they need to be available before loading templates.
     language: 'en',
@@ -17,7 +79,7 @@ App = Em.Application.create({
     ready: function() {
         // Read language string from url.
         var language = window.location.pathname.split('/')[1];
-        App.CurrentUser.find('current').then(function(user){
+        App.CurrentUser.find('current').then(function(user){ // Throws 404 if not logged in
             var primaryLanguage = user.get('primary_language');
             if (primaryLanguage && primaryLanguage != language) {
                 document.location = '/' + primaryLanguage + document.location.hash;
@@ -25,9 +87,6 @@ App = Em.Application.create({
         });
         // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
         this.set('language', language);
-
-        // Now that we know the language we can load the handlebars templates.
-        //this.loadTemplates(this.templates);
 
         // Read locale from browser with fallback to default.
         var locale = navigator.language || navigator.userLanguage || this.get('locale');
@@ -46,29 +105,13 @@ App = Em.Application.create({
             }
         }
 
-        App.Page.reopen({
-            url: 'pages/' + language + '/pages'
-        });
         this.initSelectViews();
         this.setLocale(locale);
         this.initSelectViews();
     },
 
     initSelectViews: function() {
-        // Pre-load these lists so we avoid race conditions when displaying forms
-        App.Theme.find().then(function(list) {
-            App.ThemeSelectView.reopen({
-                content: list
-            });
-        });
-
-        App.Skill.find().then(function(list) {
-            App.SkillSelectView.reopen({
-                content: list
-            });
-        });
-
-        App.Country.find().then(function(list) {
+        App.Country.find().then(function(list) { // throws 404 on dev/testing, as expected
             App.CountrySelectView.reopen({
                 content: list
             });
@@ -128,53 +171,24 @@ App = Em.Application.create({
 });
 
 
-/**
- * The Ember Data Adapter and Store configuration.
- */
 App.Adapter = DS.DRF2Adapter.extend({
     namespace: "api",
 
     plurals: {
-        "projects/manage": "projects/manage",
-        "projects/pitches/manage": "projects/pitches/manage",
-        "projects/plans/manage": "projects/plans/manage",
-        "projects/campaigns/manage": "projects/campaigns/manage",
-        "projects/wallposts/media": "projects/wallposts/media",
-        "projects/wallposts/text": "projects/wallposts/text",
-        "organizations/manage": "organizations/manage",
-        "organizations/addresses/manage": "organizations/addresses/manage",
-        "organizations/documents/manage": "organizations/documents/manage",
-        "projects/ambassadors/manage": "projects/ambassadors/manage",
-        "projects/budgetlines/manage": "projects/budgetlines/manage",
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
-        "homepage": "homepage",
-        "pages/contact": "pages/contact"
     }
 });
 
-// Assigning plurals for model properties doesn't seem to work with extend, it does this way:
-App.Adapter.configure("plurals", {
-    "address": "addresses"
-});
 
-App.Adapter.map(
-    'App.Payment', {
-        availablePaymentMethods: { readOnly: true }
-    },
-    'App.Order', {
-        total: { readOnly: true }
-    }
-);
+App.Store = DS.Store.extend({
+    adapter: 'App.Adapter'
+});
 
 
 App.ApplicationController = Ember.Controller.extend({
-    needs: ['currentUser', 'currentOrder', 'myProjectList'],
+    needs: ['currentUser'],
     display_message: false,
-
-    news: function() {
-        return App.NewsPreview.find({language: App.get('language')});
-    }.property(),
 
     displayMessage: (function() {
         if (this.get('display_message') == true) {
@@ -186,50 +200,6 @@ App.ApplicationController = Ember.Controller.extend({
 
     hideMessage: function() {
         this.set('display_message', false);
-    },
-    currentPathChanged: function() {
-        // window.location gets updated later in the current run loop, so we will
-        // wait until the next run loop to inspect its value and make the call
-        // to track the page view
-        Ember.run.next(function() {
-            setCookie('hash_compat', window.location.hash)
-        });
-    }.observes('currentPath')
-});
-
-// Embedded Model Mapping
-//
-// http://stackoverflow.com/questions/14320925/how-to-make-embedded-hasmany-relationships-work-with-ember-data/14324532#14324532
-// The two possible values of embedded are:
-//   load: The child records are embedded when loading, but should be saved as standalone records. In order
-//         for this to work, the child records must have an ID.
-//   always: The child records are embedded when loading, and are saved embedded in the same record. This,
-//           of course, affects the dirtiness of the records (if the child record changes, the adapter will
-//           mark the parent record as dirty).
-
-
-App.Adapter.map('App.Quote', {
-    user: {embedded: 'load'}
-});
-App.Adapter.map('App.ContactMessage', {
-    author: {embedded: 'load'}
-});
-
-App.Store = DS.Store.extend({
-    adapter: 'App.Adapter'
-});
-
-
-/* Routing */
-
-App.SlugRouter = Em.Mixin.create({
-    serialize: function(model, params) {
-        if (params.length !== 1) { return {}; }
-
-        var name = params[0], object = {};
-        object[name] = get(model, 'slug');
-
-        return object;
     }
 });
 
@@ -238,44 +208,31 @@ App.Router.reopen({
 });
 
 App.Router.reopen({
-    /**
-     * Tracks pageviews if google analytics is used
-     * Source: http://www.randomshouting.com/2013/05/04/Ember-and-Google-Analytics.html
-     */
     didTransition: function(infos) {
         this._super(infos);
-        if (window._gaq === undefined) { return; }
-        
-        Ember.run.next(function(){
-            _gaq.push(['_trackPageview', window.location.hash.substr(1)]);
+        Ember.run.next(function() {
+            // the meta module will now go trough the routes and look for data
+            App.meta.trigger('reloadDataFromRoutes');
         });
     }
 });
 
-App.Router.map(function() {
-
-    this.resource('language', {path:'/:lang'});
-
-    // Fix for Facebook logins
-    this.route("home", { path: "_=_" });
-
-    this.route("home", { path: "/" });
-
-    this.resource('error', {path: '/error'}, function() {
-        this.route('notFound', {path: '/not-found'});
-        this.route('notAllowed', {path: '/not-allowed'});
-    });
+DS.Model.reopen({
+    meta_data: DS.attr('object')
 });
 
+Em.Route.reopen({
+    meta_data: function(){
+        return this.get('context.meta_data');
+    }.property('context.meta_data')
+});
 
+App.Router.map(function() {
+    this.resource('language', {path:'/:lang'});
+    this.route("home", { path: "/" });
+});
 
 App.ApplicationRoute = Em.Route.extend({
-
-//    setupController: function(controller, model) {
-//        this.controllerFor('myProjectList').set('model', App.MyProject.find());
-//        this._super(controller, model);
-//    },
-
     actions: {
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
@@ -324,22 +281,6 @@ App.ApplicationRoute = Em.Route.extend({
             return true;
         },
 
-        openModal: function(name) {
-            var route = this;
-            $('#' + name).addClass('modal-active').removeClass('hidden');
-            $('body').append('<div class="modal-backdrop"></div>');
-            $('.modal-backdrop').click(function(){
-                route.send('closeAllModals');
-            });
-        },
-
-        closeAllModals: function(){
-            $('.modal-active').removeClass('modal-active').addClass('hidden');
-            $('.modal-backdrop').fadeOut(200, function(){
-                this.remove();
-            });
-        },
-
         openInBigBox: function(name, context) {
             // Get the controller or create one
             var controller = this.controllerFor(name);
@@ -349,7 +290,7 @@ App.ApplicationRoute = Em.Route.extend({
             var view = App[name.classify() + 'View'].create();
             view.set('controller', controller);
 
-            var modalPaneTemplate = ['<div class="modal-wrapper"><a class="modal-close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
+            var modalPaneTemplate = ['<div class="modal-body"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
 
             Bootstrap.ModalPane.popup({
                 classNames: ['modal', 'large'],
@@ -359,7 +300,6 @@ App.ApplicationRoute = Em.Route.extend({
             });
 
         },
-
         openInBox: function(name, context) {
             // Get the controller or create one
             var controller = this.controllerFor(name);
@@ -371,7 +311,7 @@ App.ApplicationRoute = Em.Route.extend({
             var view = App[name.classify() + 'View'].create();
             view.set('controller', controller);
 
-            var modalPaneTemplate = ['<div class="modal-wrapper"><a class="modal-close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
+            var modalPaneTemplate = ['<div class="modal-body"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
 
             Bootstrap.ModalPane.popup({
                 classNames: ['modal'],
@@ -380,54 +320,25 @@ App.ApplicationRoute = Em.Route.extend({
             });
 
         },
-        showProject: function(project_id) {
-            var route = this;
-            App.Project.find(project_id).then(function(project) {
-                route.transitionTo('project', project);
-            });
-        },
-        showProjectTaskList: function(project_id) {
-            var route = this;
-            App.Project.find(project_id).then(function(project) {
-                route.transitionTo('project', project);
-                route.transitionTo('projectTaskList');
-            });
-        },
-        showTask: function(task) {
-            var route = this;
-            App.Task.find(task.get('id')).then(function(task) {
-                App.Project.find(task.get('project.id')).then(function(project) {
-                    route.transitionTo('project', project);
-                    route.transitionTo('projectTask', task);
-                });
-            });
-        },
-        showNews: function(news_id) {
-            var route = this;
-            App.News.find(news_id).then(function(news) {
-                route.transitionTo('newsItem', news);
-                window.scrollTo(0, 0);
-            });
-        },
-        showPage: function(page_id) {
-            var route = this;
-            App.Page.find(page_id).then(function(page) {
-                route.transitionTo('page', page);
-                window.scrollTo(0, 0);
-            });
-        },
+        // showPage: function(page_id) {
+        //     var route = this;
+        //     App.Page.find(page_id).then(function(page) {
+        //         route.transitionTo('page', page);
+        //         window.scrollTo(0, 0);
+        //     });
+        // },
 
-        addDonation: function (project) {
-            var route = this;
-            App.CurrentOrder.find('current').then(function(order) {
-                var store = route.get('store');
-                var donation = store.createRecord(App.CurrentOrderDonation);
-                donation.set('project', project);
-                donation.set('order', order);
-                donation.save();
-                route.transitionTo('currentOrder.donationList');
-            });
-        }
+        // addDonation: function (project) {
+        //     var route = this;
+        //     App.CurrentOrder.find('current').then(function(order) {
+        //         var store = route.get('store');
+        //         var donation = store.createRecord(App.CurrentOrderDonation);
+        //         donation.set('project', project);
+        //         donation.set('order', order);
+        //         donation.save();
+        //         route.transitionTo('currentOrder.donationList');
+        //     });
+        // }
     },
 
     urlForEvent: function(actionName, context) {
@@ -435,53 +346,64 @@ App.ApplicationRoute = Em.Route.extend({
     }
 });
 
+// App.RecurringDirectDebitPaymentRoute = Em.Route.extend({
+//     beforeModel: function() {
+//         var order = this.modelFor('currentOrder');
+//         if (!order.get('recurring')) {
+//             this.transitionTo('paymentSelect');
+//         }
+//     },
 
-
-App.UserIndexRoute = Em.Route.extend({
-    beforeModel: function() {
-        this.transitionTo('userProfile');
-    }
-});
+//     model: function() {
+//         var route = this;
+//         return App.RecurringDirectDebitPayment.find({}).then(function(recordList) {
+//                 var store = route.get('store');
+//                 if (recordList.get('length') > 0) {
+//                     var record = recordList.objectAt(0);
+//                     return record;
+//                 } else {
+//                     return store.createRecord(App.RecurringDirectDebitPayment);
+//                 }
+//             }
+//         )
+//     }
+// });
 
 
 // TODO Delete this Route when we implement Order history.
-App.UserRoute = Em.Route.extend({
-    setupController: function(controller, model) {
-        this._super(controller, model);
+// App.UserRoute = Em.Route.extend({
+//     setupController: function(controller, model) {
+//         this._super(controller, model);
 
-        return App.RecurringDirectDebitPayment.find({}).then(function(recurringPayments) {
-            controller.set('showPaymentsTab', recurringPayments.get('length') > 0)
-        });
-    }
-});
+//         return App.RecurringDirectDebitPayment.find({}).then(function(recurringPayments) {
+//             controller.set('showPaymentsTab', recurringPayments.get('length') > 0)
+//         });
+//     }
+// });
+
 
 /* Home Page */
+// FIXME
+// App.HomeRoute = Em.Route.extend({
+//     model: function(params) {
+//         return ['foo', 'bar'];
+//         //return App.HomePage.find(App.get('language'));
+//     }
+// });
 
-App.HomeRoute = Em.Route.extend({
-    model: function(params) {
-        return App.HomePage.find(App.get('language'));
-    },
 
-    setupController: function(controller, model) {
-        this._super(controller, model);
-        controller.set('projectIndex', 0).loadProject();
-        controller.set('quoteIndex', 0).loadQuote();
-    }
-});
+/* Static Pages */
 
-/* Components */
-
-App.BbModalComponent = Ember.Component.extend({
-    actions: {
-        close: function() {
-            this.$().removeClass('modal-active').addClass('hidden');
-            $('.modal-backdrop').fadeOut(200, function(){
-                this.remove();
-            });
-        }
-    }
-});
-
+// App.PageRoute = Em.Route.extend({
+//     model: function(params) {
+//         var page =  App.Page.find(params.page_id);
+//         var route = this;
+//         page.on('becameError', function() {
+//             route.transitionTo('error.notFound');
+//         });
+//         return page;
+//     }
+// });
 
 /* Views */
 
@@ -497,6 +419,7 @@ App.LanguageView = Em.View.extend({
 
 });
 
+
 App.LanguageSwitchView = Em.CollectionView.extend({
     tagName: 'ul',
     classNames: ['nav-language'],
@@ -508,5 +431,4 @@ App.LanguageSwitchView = Em.CollectionView.extend({
 App.ApplicationView = Em.View.extend({
     elementId: 'site'
 });
-
 

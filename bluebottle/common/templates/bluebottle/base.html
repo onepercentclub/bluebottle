@@ -117,7 +117,7 @@
                     <!-- logo -->
 					<div id="logo">
 						{{#linkTo 'home' class="logo-link"}}
-						<object type="image/svg+xml" data="/static/assets/images/global/onepercentclub-white.svg" class="logo-image"><img src="{{ STATIC_URL }}images/global/onepercentclub-white.png" alt="1%Club" class="logo-image" /></object>
+						<object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"><img src="{% static "images/onepercentclub-white.png" %}" alt="1%Club" class="logo-image" /></object>
 						{{/linkTo}}
 					</div>
 					<!-- end: logo -->

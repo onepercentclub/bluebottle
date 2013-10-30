@@ -1,0 +1,134 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-10-30 13:24+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: templates/base.html:13 templates/base.html.py:14
+msgid "BlueBottle"
+msgstr ""
+
+#: templates/base.html:15
+msgid "crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity"
+msgstr ""
+
+#: templates/base.html:73
+msgid "Menu item 1"
+msgstr ""
+
+#: templates/base.html:74
+msgid "Menu item 2"
+msgstr ""
+
+#: templates/base.html:126
+msgid "It all starts with BlueBottle"
+msgstr ""
+
+#: templates/base.html:130
+msgid "What is BlueBottle?"
+msgstr ""
+
+#: templates/base.html:135
+msgid "Get involved"
+msgstr ""
+
+#: templates/base.html:142
+msgid "About BlueBottle"
+msgstr ""
+
+#: templates/base.html:146
+msgid "Our story"
+msgstr ""
+
+#: templates/base.html:150
+msgid "Frequently Asked Questions"
+msgstr ""
+
+#: templates/base.html:154
+msgid "Meet the team"
+msgstr ""
+
+#: templates/base.html:160
+msgid "Partners"
+msgstr ""
+
+#: templates/base.html:165
+msgid "Press"
+msgstr ""
+
+#: templates/base.html:170
+msgid "Work with BlueBottle"
+msgstr ""
+
+#: templates/base.html:177
+msgid "Discover BlueBottle"
+msgstr ""
+
+#: templates/base.html:181
+#, python-format
+msgid "1%%Business"
+msgstr ""
+
+#: templates/base.html:186
+#, python-format
+msgid "1%%Blog"
+msgstr ""
+
+#: templates/base.html:191
+#, python-format
+msgid "1%%Github"
+msgstr ""
+
+#: templates/base.html:202
+#, python-format
+msgid "1%%News"
+msgstr ""
+
+#: templates/base.html:216 templates/base.html.py:223
+msgid "Join BlueBottle"
+msgstr ""
+
+#: templates/base.html:217
+msgid "BlueBottle is a frame to build good-cause websites centered around users and projects."
+msgstr ""
+
+#: templates/base.html:219
+msgid "Select a project or task"
+msgstr ""
+
+#: templates/base.html:220
+msgid "Share your skills or money"
+msgstr ""
+
+#: templates/base.html:221
+msgid "See direct results"
+msgstr ""
+
+#: templates/base.html:236
+msgid "General Conditions"
+msgstr ""
+
+#: templates/base.html:237
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/base.html:263
+msgid ""
+"\n"
+"                        Our new website currently does not work well with older versions of Internet Explorer.<br/>\n"
+"                        Please install Internet Explorer 10 or use another browser such as Firefox or Chrome!<br/>\n"
+"                        "
+msgstr ""

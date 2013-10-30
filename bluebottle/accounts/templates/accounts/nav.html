@@ -28,13 +28,15 @@
                                     {{/linkTo }}
                                 </li>
                                 
-                                {{#if controllers.myProjectList.model.length }}
-                                    <li>
-                                        {{#linkTo "myProjectList" }}
-                                            {% trans "Manage My Project" %}
-                                        {{/linkTo}}
-                                    </li>
-                                {{/if}}
+                                {% comment %}
+                                    {{#if controllers.myProjectList.model.length }}
+                                        <li>
+                                            {{#linkTo "myProjectList" }}
+                                                {% trans "Manage My Project" %}
+                                            {{/linkTo}}
+                                        </li>
+                                    {{/if}}
+                                {% endcomment %}
                                 
                                 <li>
                                     {% block logout_anchor %}

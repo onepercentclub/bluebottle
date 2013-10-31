@@ -216,10 +216,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.browser.fill_form_by_label(fieldsets[2], [
             ('Account type', 'person'),
             ('Primary language', 'en'),
-            # ('I want to share', [True, True]), # doesn't work because of the hidden input elements
         ])
-        self.browser.find_by_css('span[for="shareTimeKnowledge"]').first.click();
-        self.browser.find_by_css('span[for="shareMoney"]').first.click();
 
         self.browser.fill_form_by_label(fieldsets[3], [
             ('Address Line 1', 'Example street 1'),
@@ -243,8 +240,6 @@ class AccountSeleniumTests(SeleniumTestCase):
         user = BlueBottleUser.objects.get(pk=user.pk)
         self.assertEqual(user.email, 'doejohn@example.com')
         self.assertEqual(user.gender, 'male')
-        self.assertTrue(user.share_money)
-        self.assertTrue(user.share_time_knowledge)
 
         self.assertEqual(user.birthdate, datetime.date(1980, 1, 1))
 
@@ -265,7 +260,7 @@ class AccountSeleniumTests(SeleniumTestCase):
 
         # Find the link to the login button page and click it.
         self.browser.find_link_by_text('Log in').first.click()
-        self.browser.find_link_by_text('Password forgotten').first.click()
+        self.browser.find_link_by_itext('Password forgotten').first.click()
 
         # Validate that we are on the intended page.
         self.assertTrue(self.browser.is_text_present('FORGOT YOUR PASSWORD?'))
@@ -278,6 +273,9 @@ class AccountSeleniumTests(SeleniumTestCase):
 
         # Validate that we are on the intended page.
         self.assertTrue(self.browser.is_text_present('YOU\'VE GOT MAIL!'))
+
+        # Close the modal
+        self.browser.find_by_css('.close').first.click()
 
         # Do we really have mail?
         self.assertEqual(len(mail.outbox), 1)
@@ -306,7 +304,8 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.browser.visit(reset_link)
 
         # Validate that we are on the intended page.
-        self.assertTrue(self.browser.is_text_present('RESET YOUR PASSWORD'))
+        self.assertTrue(self.browser.is_text_present('RESET YOUR PASSWORD', wait_time=10))
+
 
         # Fill in the reset form.
         new_password = 'new_secret'
@@ -315,10 +314,10 @@ class AccountSeleniumTests(SeleniumTestCase):
             field.fill(new_password)
 
         # TODO: Button is not part of the form.
-        self.browser.find_by_css('.modal .modal-footer button').first.click()
+        self.browser.find_by_css('.btn-submit').first.click()
 
         # Validate that we are on the intended page, redirected to the login page
-        self.assertTrue(self.browser.is_text_present('LOG IN TO'))
+        self.assertTrue(self.browser.is_text_present('LOG IN TO', wait_time=10))
 
         # Reload and validate user password in the database.
         user = BlueBottleUser.objects.get(pk=user.pk)

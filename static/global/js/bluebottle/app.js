@@ -285,6 +285,7 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Em.Route.extend({
+    needs: ['currentUser'],
 
 //    setupController: function(controller, model) {
 //        this.controllerFor('myProjectList').set('model', App.MyProject.find());

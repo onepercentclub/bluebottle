@@ -6,7 +6,6 @@
         
         <ul class="nav-actions">
             {{#if controllers.currentUser.isAuthenticated }}
-                
                 {% block_verbatim user_logged_in %}
                 
                     <li class="nav-member">
@@ -27,14 +26,6 @@
                                         {% trans "Edit my profile & settings" %}
                                     {{/linkTo }}
                                 </li>
-                                
-                                {{#if controllers.myProjectList.model.length }}
-                                    <li>
-                                        {{#linkTo "myProjectList" }}
-                                            {% trans "Manage My Project" %}
-                                        {{/linkTo}}
-                                    </li>
-                                {{/if}}
                                 
                                 <li>
                                     {% block logout_anchor %}

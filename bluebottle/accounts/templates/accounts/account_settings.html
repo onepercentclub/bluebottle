@@ -20,7 +20,6 @@
 
                     <div class="controls">
                         {{view Em.TextField valueBinding="email" 
-                        placeholder="{% trans "your@email.com" %}"
                         classBinding="errors.email.length:error"}}
                     </div>
 
@@ -99,11 +98,11 @@
                         <div class="controls checkbox-group two">
                             <label class="checkbox" for="shareTimeKnowledge">
                                 {{view Em.Checkbox checkedBinding="share_time_knowledge" elementId="shareTimeKnowledge" }}
-                                <span for="shareTimeKnowledge">{% trans "Time & Knowledge" %}</span>
+                                <span>{% trans "Time & Knowledge" %}</span>
                             </label>
                             <label class="checkbox" for="shareMoney">
                                 {{view Em.Checkbox checkedBinding="share_money" elementId="shareMoney" }}
-                                <span for="shareMoney">{% trans "Money" %}</span>
+                                <span>{% trans "Money" %}</span>
                             </label>
                         </div>
                     </li>

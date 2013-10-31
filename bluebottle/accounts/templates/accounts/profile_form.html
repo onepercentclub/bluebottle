@@ -40,8 +40,8 @@
                             </label>
 
                             <div class="controls file-upload">
-                                <img {{bindAttr src="getAvatar"}} class="preview" />
-                                <a class="btn btn-iconed btn-upload">
+                                <figure class="member-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
+                                <a class="btn-link btn-upload">
                                     {{view App.UploadFile contentBinding="this" name="picture" id="picture" accept="image/*" fileBinding="picture"}}
                                     <span class="flaticon solid upload-document-1"></span>
                                     {% trans "Upload picture" %}

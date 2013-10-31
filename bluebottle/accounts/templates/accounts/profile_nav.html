@@ -13,14 +13,12 @@
                 
                 <header class="account-title">
                     <h2>{% blocktrans %}My 1%{% endblocktrans %}  <em class="account-subtitle">{% trans "Profile" %}</em></h2>
-                    
-                    <a {{action openInBigBox "userModal" controllers.currentUser.content}} class="account-preview btn-link">
-                        <span class="flaticon solid eye-1"></span>
-                        {% trans "Preview my profile" %}
-                    </a>
                 </header>
                 
-                
+                <a {{action openInBigBox "userModal" controllers.currentUser.content}} class="account-preview btn-link">
+                    <span class="flaticon solid eye-1"></span>
+                    {% trans "Preview my profile" %}
+                </a>
                 
                 <ul class="tabs three">
                 

@@ -125,7 +125,6 @@ class MetaField(serializers.Field):
             'tweet': None,
             'description': None,
             'image': None,
-            'fb_image': None,
             'keywords': None,
         }
 

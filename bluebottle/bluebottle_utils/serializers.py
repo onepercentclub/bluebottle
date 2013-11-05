@@ -92,22 +92,28 @@ class MetaField(serializers.Field):
     When image_source is provided, you get a JSON object with keys 'large',
     'small', 'full' and 'square'.
 
+    Currently, images are only used for facebook
+
     # TODO: unittests
 
     """
 
-    def __init__(self, 
-            title = 'title',
-            description = 'description',
-            keywords = 'tags',
-            image_source = None,
-            *args, **kwargs):
-        super(MetaField, self).__init__(*args, **kwargs)
+    def __init__(self, title = 'title',
+                description = 'description', keywords = 'tags',
+                image_source = None, 
+                *args, **kwargs):
+        
+        # default to None, return the default title/image if no explicit title/image were provided
+        self.fb_title = kwargs.pop('fb_title', None)
+        self.tweet = kwargs.pop('tweet', None)
+        # TODO: add support for list of image sources -> multiple images
 
         self.title = title
         self.description = description
         self.keywords = keywords
         self.image_source = image_source
+
+        super(MetaField, self).__init__(*args, **kwargs)
 
     def field_to_native(self, obj, field_name):
         """ Get the parts of the meta dict """
@@ -115,13 +121,11 @@ class MetaField(serializers.Field):
         # set defaults
         value = {
             'title': None,
+            'fb_title': None,
+            'tweet': None,
             'description': None,
-            'image': {
-                'large': None,
-                'small': None,
-                'full': None,
-                'square': None
-            },
+            'image': None,
+            'fb_image': None,
             'keywords': None,
         }
 
@@ -131,6 +135,23 @@ class MetaField(serializers.Field):
             if title is None:
                 title = self._get_field(obj, self.title)
             value['title'] = title
+
+        # try to get the facebook title
+        if self.fb_title is not None:
+            fb_title = self._get_callable(obj, self.fb_title)
+            if fb_title is None:
+                fb_title = self._get_field(obj, self.fb_title)
+            value['fb_title'] = fb_title
+        elif self.title:
+            value['fb_title'] = value['title']
+
+        if self.tweet is not None:
+            tweet = self._get_callable(obj, self.tweet)
+            if tweet is None:
+                tweet = self._get_field(obj, self.tweet)
+            value['tweet'] = tweet
+        elif self.title:
+            value['tweet'] = '{URL}'
                 
         # get the meta description from object callable or object property
         if self.description:
@@ -161,7 +182,7 @@ class MetaField(serializers.Field):
             else:
                 value['keywords'] = keywords
 
-        # special case with images, use the ImageSerializer to get different formats
+        # special case with images, use the ImageSerializer to get cropped formats
         if self.image_source:
             image_source = self._get_callable(obj, self.image_source)
             if image_source is None:
@@ -171,8 +192,10 @@ class MetaField(serializers.Field):
             serializer = ImageSerializer()
             serializer.context = self.context
             images = serializer.to_native(image_source)
-            
-            value['image'] = images
+            if images:
+                # always take the full image for facebook, they consume it and
+                # resize/store the images themselve
+                value['image'] = images.get('full', None)
 
         return self.to_native(value)
     

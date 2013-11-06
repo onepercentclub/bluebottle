@@ -47,20 +47,8 @@ App.UserProfileRoute = Em.Route.extend({
         var route = this;
 
         return App.CurrentUser.find('current').then(function(user) {
-            var profile = App.User.find(user.get('id_for_ember'));
-            var controller = route.controllerFor('userProfile');
-
-            // Set the model here instead of the promise in setupController so that the model can be used in the
-            // startEditing() method.
-            controller.set('model', profile);
-            controller.startEditing();
-
-            return profile;
+            return App.User.find(user.get('id_for_ember'));
         });
-    },
-
-    setupController: function(controller, profile) {
-        // Don't set the model here because we're setting it after the promise is resolved.
     },
 
     exit: function() {
@@ -75,20 +63,8 @@ App.UserSettingsRoute = Em.Route.extend({
         var route = this;
 
         return App.CurrentUser.find('current').then(function(user) {
-            var settings = App.UserSettings.find(user.get('id_for_ember'));
-            var controller = route.controllerFor('userSettings');
-
-            // Set the model here instead of the promise in setupController so that the model can be used in the
-            // startEditing() method.
-            controller.set('model', settings);
-            controller.startEditing();
-
-            return settings;
+            return App.UserSettings.find(user.get('id_for_ember'));
         });
-    },
-
-    setupController: function(controller, profile) {
-        // Don't set the model here because we're setting it after the promise is resolved.
     },
 
     exit: function() {

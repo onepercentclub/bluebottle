@@ -32,7 +32,7 @@ install_requires = [
 #    'django-debug-toolbar==0.9.4',
 #    'django-docdata==0.1',
     'django-extensions==1.1.1',
-#    'django-filetransfers==0.0.0',
+    'django-filetransfers==0.0.0',
 #    'django-filter==0.6',
 #    'django-fluent-contents==0.9a1',
 #    'django-fluent-dashboard==0.3.2',
@@ -85,6 +85,8 @@ tests_require = [
     'django-admin-tools==0.5.1',
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
+    'django-fluent-contents==0.9a1',
+    'django-filetransfers==0.0.0',
     'django-localflavor==1.0',
     'django-registration==1.0',
     'django-setuptest==0.1.4',
@@ -92,6 +94,7 @@ tests_require = [
     'django-taggit==0.10a1',
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
+    'django-wysiwyg==0.5.1',
     'djangorestframework==2.3.6',
     'micawber==0.2.6',
     'mock==1.0.1',
@@ -99,6 +102,7 @@ tests_require = [
     'pylint==0.28.0',
     'selenium==2.35.0',
     'South==0.8.1', # Functional testing libraries
+    'sorl-thumbnail==11.12',
     'splinter==0.5.3', # Functional testing libraries
 ]
 

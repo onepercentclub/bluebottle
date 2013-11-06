@@ -258,3 +258,33 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         # Test: check that trying to reuse the password reset link doesn't work.
         response = self.client.put(password_set_url, json.dumps(passwords), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
+        
+
+class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
+    """
+    Integration tests for the User API.
+    """
+    def setUp(self):
+        self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
+        
+    def test_early_redirect_to_user_language(self):
+        self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
+        self.some_user.primary_language = 'en'
+        self.some_user.save()
+
+        response = self.client.get('/nl/', follow=False)
+        self.assertRedirects(response, '/en/')
+
+    def test_no_redirect_for_non_language_urls(self):
+        self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
+        self.some_user.primary_language = 'en'
+        self.some_user.save()
+
+        response = self.client.get('/api/', follow=False)
+        self.assertTrue(response.status_code, 200)
+        
+    def test_no_redirect_for_anonymous_user(self):
+        self.client.logout()  # Just to be sure.
+    
+        response = self.client.get('/nl/', follow=False)
+        self.assertTrue(response.status_code, 200)

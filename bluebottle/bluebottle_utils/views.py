@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType, ContentTypeManager
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
@@ -64,10 +65,13 @@ class DocumentDownloadView(View):
 
 
 # TESTS
+INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
-from .models import MetaDataModel
-from .serializers import MetaDataSerializer
+if INCLUDE_TEST_MODELS:
 
-class MetaDataDetail(generics.RetrieveAPIView):
-    model = MetaDataModel
-    serializer_class = MetaDataSerializer
+    from .models import MetaDataModel
+    from .serializers import MetaDataSerializer
+
+    class MetaDataDetail(generics.RetrieveAPIView):
+        model = MetaDataModel
+        serializer_class = MetaDataSerializer

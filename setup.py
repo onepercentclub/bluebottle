@@ -101,6 +101,7 @@ tests_require = [
     'pylint==0.28.0',
     'selenium==2.35.0',
     'South==0.8.1', # Functional testing libraries
+    'sorl-thumbnail==11.12',
     'splinter==0.5.3', # Functional testing libraries
 ]
 

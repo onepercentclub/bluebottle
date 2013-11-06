@@ -96,9 +96,6 @@ class MetaField(serializers.Field):
     'small', 'full' and 'square'.
 
     Currently, images are only used for facebook
-
-    # TODO: unittests
-
     """
 
     def __init__(self, title = 'title',

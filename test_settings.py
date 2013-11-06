@@ -55,19 +55,20 @@ INSTALLED_APPS = (
     'fluent_contents',
     'fluent_contents.plugins.text',
     'fluent_contents.plugins.oembeditem',
-    'fluent_contents.plugins.picture',
     'registration',
     'rest_framework',
     'social_auth',
+    'sorl.thumbnail',
     'south',
     'taggit',
     'templatetag_handlebars',
 
     # Bluebottle apps
     'bluebottle.accounts',
-    'bluebottle.common',
-    'bluebottle.geo',
     'bluebottle.bluebottle_utils',
+    'bluebottle.common',
+    'bluebottle.contentplugins',
+    'bluebottle.geo',
     )
 
 MIDDLEWARE_CLASSES = [

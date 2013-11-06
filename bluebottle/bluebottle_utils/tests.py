@@ -91,11 +91,17 @@ class HashTagTestCase(unittest.TestCase):
         
 
 
+from django.core.urlresolvers import reverse
+from django.test.client import Client
+
 
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
-from fluent_contents.plugins.picture.models import PictureItem
+from bluebottle.contentplugins.models import PictureItem
 from fluent_contents.plugins.text.models import TextItem
+
+
+import json
 
 
 class MetaTestCase(TestCase):
@@ -156,6 +162,10 @@ class MetaTestCase(TestCase):
         tags = ['Tag 1', 'Tag 2']
         self.object.tags.add(*tags)
 
+        # set up the client
+        self.client = Client()
+        self.url = reverse('meta-test', kwargs = {'pk': self.object.id})
+
     def test_content_items_correctly_created(self):
         """ Test that the setUp function creates the correct items """
         
@@ -163,4 +173,53 @@ class MetaTestCase(TestCase):
 
         self.assertEqual(len(items), 4, 'Error in the setUp function: not all items are correctly created.')
         
+    def test_return_metadata(self):
+        """ 
+        Verify that the MetaField functions work and can correctly retvrieve
+        the desired meta data.
+        """
 
+        # get the metadata through the API
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+        item = json.loads(response.content)
+        meta_data = item.get('meta_data')
+        
+        # verify that indeed the title is the same and attribute lookups are ok
+        self.assertEqual(item['title'], meta_data['title'])
+        self.assertEqual(item['title'], meta_data['fb_title']) # fb title falls back to default title
+
+        # verify that callables work
+        img1 = 'images/kitten_snow.jpg'
+        self.assertIn(img1, meta_data['image'])
+
+    def test_image_source(self):
+        """ Image source can return an image to be serialized, or an url """
+
+        # get the metadata through the API
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+        item = json.loads(response.content)
+        meta_data = item.get('meta_data2')
+
+        # this image has to be processed by sorl.thumbnail
+        # the filename differs (hash or something similar), and 'cache' 
+        # should be in the url
+        self.assertNotEqual(meta_data['image'], self.picture.image.url)
+        self.assertIn('cache', meta_data['image'])
+
+    def test_url_tag_in_tweet(self):
+        """ 
+        Test that {URL} is present by default in tweets, to be replaced by
+        Ember
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+        item = json.loads(response.content)
+        meta_data = item.get('meta_data')
+
+
+        self.assertIn('{URL}', meta_data['tweet'])

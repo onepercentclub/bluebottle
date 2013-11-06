@@ -96,9 +96,6 @@ class MetaField(serializers.Field):
     'small', 'full' and 'square'.
 
     Currently, images are only used for facebook
-
-    # TODO: unittests
-
     """
 
     def __init__(self, title = 'title',
@@ -253,12 +250,22 @@ if INCLUDE_TEST_MODELS:
 
     class MetaDataSerializer(serializers.ModelSerializer):
         
+        # # WARNING: if you touch this, be sure to adapt the tests! 
         meta_data = MetaField(
+            title = 'title',  # attribute lookup (non-callable)
             description = None,
-            image_source = None,
+            image_source = 'get_first_image', # callable lookup
             keywords = 'tags'
+            )
+
+        meta_data2 = MetaField(
+            title = None,
+            description = None,
+            image_source = 'get_image_without_is_url',
+            keywords = None,
+            fb_title = None,
+            tweet = None,
             )
 
         class Meta:
             model = MetaDataModel
-            # fields = 

@@ -60,3 +60,14 @@ class DocumentDownloadView(View):
             file_name = os.path.basename(file.file.name)
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
+
+
+
+# TESTS
+
+from .models import MetaDataModel
+from .serializers import MetaDataSerializer
+
+class MetaDataDetail(generics.RetrieveAPIView):
+    model = MetaDataModel
+    serializer_class = MetaDataSerializer

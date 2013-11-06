@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 
@@ -10,7 +11,9 @@ from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.bluebottle_utils.validators import validate_postal_code
 from bluebottle.bluebottle_utils.models import Address
 
+
 from HTMLParser import HTMLParser
+
 
 class MLStripper(HTMLParser):
     """ Used to strip HTML tags for meta fields (e.g. description) """
@@ -183,18 +186,31 @@ class MetaField(serializers.Field):
 
         # special case with images, use the ImageSerializer to get cropped formats
         if self.image_source:
+            """
+            Sometimes, direct urls can be returned, and then we don't
+            want to serialize the 'image'. It's also possible that only an
+            image is returned without  is_url (e.g. directly from model attribute).
+            """
             image_source = self._get_callable(obj, self.image_source)
             if image_source is None:
-                image_source = self._get_field(obj, self.image_source)
+                image, is_url = self._get_field(obj, self.image_source), False
+            else:
+                try:
+                    image, is_url = image_source[0], image_source[1]
+                except TypeError: # no indexing, so not a tupple that was returned
+                    image, is_url = image_source, False
 
-
-            serializer = ImageSerializer()
-            serializer.context = self.context
-            images = serializer.to_native(image_source)
-            if images:
-                # always take the full image for facebook, they consume it and
-                # resize/store the images themselve
-                value['image'] = images.get('full', None)
+            if is_url:
+                # the callable returned a direct url, instead of a serializable image
+                value['image'] = image
+            else:
+                serializer = ImageSerializer()
+                serializer.context = self.context
+                images = serializer.to_native(image)
+                if images:
+                    # always take the full image for facebook, they consume it and
+                    # resize/store the images themselve
+                    value['image'] = images.get('full', None)
 
         return self.to_native(value)
     
@@ -223,3 +239,26 @@ class MetaField(serializers.Field):
         except AttributeError: # not a model/object attribute or relation does not exist
             pass
         return None
+
+
+
+
+#### TESTS #############
+
+INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
+
+if INCLUDE_TEST_MODELS:
+
+    from .models import MetaDataModel
+
+    class MetaDataSerializer(serializers.ModelSerializer):
+        
+        meta_data = MetaField(
+            description = None,
+            image_source = None,
+            keywords = 'tags'
+            )
+
+        class Meta:
+            model = MetaDataModel
+            # fields = 

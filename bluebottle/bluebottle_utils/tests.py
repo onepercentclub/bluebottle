@@ -6,6 +6,7 @@ from django.test.utils import override_settings
 from bluebottle.accounts.models import BlueBottleUser
 
 
+from .models import MetaDataModel
 from .utils import clean_for_hashtag
 
 
@@ -90,4 +91,76 @@ class HashTagTestCase(unittest.TestCase):
         
 
 
+
+from fluent_contents.models import Placeholder
+from fluent_contents.plugins.oembeditem.models import OEmbedItem
+from fluent_contents.plugins.picture.models import PictureItem
+from fluent_contents.plugins.text.models import TextItem
+
+
+class MetaTestCase(TestCase):
+    
+    def setUp(self):
+        """ 
+        The complex work is using the fluent_contents stuff.
+
+        Setting the 'contents' of the MetaDataModel requires setting the
+        PictureItem, TextItem, OEmbedItem manually and creating a Placeholder to
+        group these ContentItems on the parent.  
+        """
+
+        # Create the MetaDataModel instance
+        self.object = MetaDataModel.objects.create(title='Wow. Such meta. Amaze.')
+
+        # Add in a placeholder
+        self.ph = Placeholder.objects.create(
+            parent = self.object, 
+            title = 'Foo', 
+            slot = 'blog_contents'
+            )
+
+        """ Time to create some content items... """
+        # Simple text item
+        self.text_item = TextItem.objects.create(
+            text = '<p>I am doge</p>', 
+            parent = self.object, 
+            placeholder = self.ph,
+            sort_order = 1
+            )
+        
+        # Don't bother simulating uploads, that's not the scope of this test
+        self.picture = PictureItem.objects.create(
+            image = 'images/kitten_snow.jpg',
+            parent = self.object,
+            placeholder = self.ph,
+            sort_order = 2,
+            )
+
+        # OEmbed object, with youtube link
+        self.youtube = OEmbedItem.objects.create(
+            embed_url = 'http://www.youtube.com/watch?v=0ETxuM-hq8c',
+            parent = self.object,
+            placeholder = self.ph,
+            sort_order = 3
+            )
+
+        # Imgur
+        self.imgur = OEmbedItem.objects.create(
+            embed_url = 'http://imgur.com/gallery/CXLgSVc',
+            parent = self.object,
+            placeholder = self.ph,
+            sort_order = 4
+            )
+
+        # Add tags...
+        tags = ['Tag 1', 'Tag 2']
+        self.object.tags.add(*tags)
+
+    def test_content_items_correctly_created(self):
+        """ Test that the setUp function creates the correct items """
+        
+        items = self.object.contents.get_content_items()
+
+        self.assertEqual(len(items), 4, 'Error in the setUp function: not all items are correctly created.')
+        
 

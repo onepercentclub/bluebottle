@@ -1,11 +1,16 @@
-import uuid
-
 from django.core.management import call_command
 from django.db.models import loading
 from django.test import TestCase
 from django.test.utils import override_settings
 
 from bluebottle.accounts.models import BlueBottleUser
+
+
+from .utils import clean_for_hashtag
+
+
+import uuid
+import unittest
 
 
 def generate_random_slug():
@@ -67,4 +72,22 @@ class CustomSettingsTestCase(TestCase):
     def syncdb(cls):
         loading.cache.loaded = False
         call_command('syncdb', verbosity=0)
+
+
+class HashTagTestCase(unittest.TestCase):
+    def test_clean_text_for_hashtag(self):
+        """ 
+        Test that non-alphanumeric characters are excluded and proper joining is done
+        """
+        text = 'foo bar'
+        self.assertEqual('FooBar', clean_for_hashtag(text))
+
+        text = 'foo / bar /baz'
+        self.assertEqual('Foo #Bar #Baz', clean_for_hashtag(text))
+
+        text = 'foo bar /baz'
+        self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
+        
+
+
 

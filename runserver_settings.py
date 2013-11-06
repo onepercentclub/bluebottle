@@ -62,6 +62,7 @@ INSTALLED_APPS = (
     'bluebottle.accounts',
     'bluebottle.common',
     'bluebottle.geo',
+    'bluebottle.bluebottle_utils',
     )
 
 MIDDLEWARE_CLASSES = [

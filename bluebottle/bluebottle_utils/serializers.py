@@ -1,4 +1,4 @@
-from django.core.exceptions import FieldError
+from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 
 
@@ -207,6 +207,8 @@ class MetaField(serializers.Field):
         for attr in attrs:
             try:
                 field = getattr(field, attr)
+            except ObjectDoesNotExist:
+                return None
             except AttributeError:
                 raise FieldError('Unknown field "%s" in "%s"' % (attr, field_name))
         return field
@@ -218,6 +220,6 @@ class MetaField(serializers.Field):
             if callable(_attr): 
                 # return _attr() # Call it, and return the result
                 return _attr(request=self.context['request'])
-        except AttributeError: # not a model/object attribute
+        except AttributeError: # not a model/object attribute or relation does not exist
             pass
         return None

@@ -266,21 +266,22 @@ class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
     """
     def setUp(self):
         self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
-        
-    def test_early_redirect_to_user_language(self):
-        self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
         self.some_user.primary_language = 'en'
         self.some_user.save()
+
+    def test_early_redirect_to_user_language(self):
+        self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
 
         response = self.client.get('/nl/', follow=False)
         self.assertRedirects(response, '/en/')
 
     def test_no_redirect_for_non_language_urls(self):
         self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
-        self.some_user.primary_language = 'en'
-        self.some_user.save()
 
         response = self.client.get('/api/', follow=False)
+        self.assertTrue(response.status_code, 200)
+        
+        response = self.client.get('/', follow=False)
         self.assertTrue(response.status_code, 200)
         
     def test_no_redirect_for_anonymous_user(self):

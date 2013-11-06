@@ -51,6 +51,11 @@ INSTALLED_APPS = (
 
     #3rp party apps
     'compressor',
+    'django_wysiwyg',
+    'fluent_contents',
+    'fluent_contents.plugins.text',
+    'fluent_contents.plugins.oembeditem',
+    'fluent_contents.plugins.picture',
     'registration',
     'rest_framework',
     'social_auth',
@@ -62,6 +67,7 @@ INSTALLED_APPS = (
     'bluebottle.accounts',
     'bluebottle.common',
     'bluebottle.geo',
+    'bluebottle.bluebottle_utils',
     )
 
 MIDDLEWARE_CLASSES = [
@@ -118,3 +124,5 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 
 USE_EMBER_STYLE_ATTRS = True
+
+INCLUDE_TEST_MODELS = True

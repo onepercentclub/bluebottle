@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -17,3 +18,29 @@ class Address(models.Model):
 
     class Meta:
         abstract = True
+
+
+# Below is test-only stuff
+
+INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
+
+if INCLUDE_TEST_MODELS:
+    from django.template.defaultfilters import truncatechars
+
+
+    from fluent_contents.models import PlaceholderField
+    from fluent_contents.plugins.oembeditem.models import OEmbedItem
+    from fluent_contents.plugins.picture.models import PictureItem
+    from fluent_contents.plugins.text.models import TextItem
+    from fluent_contents.rendering import render_placeholder
+    from sorl.thumbnail import ImageField
+    from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+
+
+    class MetaDataModel(models.Model):
+        """
+        This is a model purely for MetaData testing in the API.
+        """
+        title = models.CharField(max_length=50)
+        tags = TaggableManager(blank=True)
+        contents = PlaceholderField("blog_contents")

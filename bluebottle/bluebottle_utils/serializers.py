@@ -1,4 +1,4 @@
-from django.conf import settings
+import sys
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 
@@ -224,7 +224,7 @@ class MetaField(serializers.Field):
             except ObjectDoesNotExist:
                 return None
             except AttributeError:
-                raise FieldError('Unknown field "%s" in "%s"' % (attr, field_name))
+                return None
         return field
 
     def _get_callable(self, obj, attr):
@@ -243,9 +243,7 @@ class MetaField(serializers.Field):
 
 #### TESTS #############
 
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-
-if INCLUDE_TEST_MODELS:
+if 'test' in sys.argv:
 
     from .models import MetaDataModel
 

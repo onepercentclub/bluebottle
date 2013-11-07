@@ -1,6 +1,10 @@
 Project Bluebottle
 ==================
 
+.. image:: https://travis-ci.org/onepercentclub/bluebottle.png?branch=master
+   :target: https://travis-ci.org/onepercentclub/bluebottle
+
+
 The repository for Project Bluebottle, the crowdsourcing framework initiated
 by the 1%CLUB.
 

@@ -224,7 +224,7 @@ class MetaField(serializers.Field):
             except ObjectDoesNotExist:
                 return None
             except AttributeError:
-                return None
+                raise FieldError('Unknown field "%s" in "%s"' % (attr, field_name))
         return field
 
     def _get_callable(self, obj, attr):

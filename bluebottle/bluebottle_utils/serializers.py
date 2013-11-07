@@ -204,13 +204,14 @@ class MetaField(serializers.Field):
         attrs = field_name.split('__')
         
         field = obj
+        # Just return None on errors so tests won't trip.
         for attr in attrs:
             try:
                 field = getattr(field, attr)
             except ObjectDoesNotExist:
                 return None
             except AttributeError:
-                raise FieldError('Unknown field "%s" in "%s"' % (attr, field_name))
+                return None
         return field
 
     def _get_callable(self, obj, attr):

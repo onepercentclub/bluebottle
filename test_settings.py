@@ -51,16 +51,23 @@ INSTALLED_APPS = (
 
     #3rp party apps
     'compressor',
+    'django_wysiwyg',
+    'fluent_contents',
+    'fluent_contents.plugins.text',
+    'fluent_contents.plugins.oembeditem',
     'registration',
     'rest_framework',
     'social_auth',
+    'sorl.thumbnail',
     'south',
     'taggit',
     'templatetag_handlebars',
 
     # Bluebottle apps
     'bluebottle.accounts',
+    'bluebottle.bluebottle_utils',
     'bluebottle.common',
+    'bluebottle.contentplugins',
     'bluebottle.geo',
     )
 
@@ -118,3 +125,5 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 
 USE_EMBER_STYLE_ATTRS = True
+
+INCLUDE_TEST_MODELS = True

@@ -342,6 +342,9 @@ App.ApplicationRoute = Em.Route.extend({
         },
 
         openInBigBox: function(name, context) {
+            // Close all other modals.
+            $('.close-modal').click();
+
             // Get the controller or create one
             var controller = this.controllerFor(name);
             controller.set('model', context);
@@ -361,6 +364,9 @@ App.ApplicationRoute = Em.Route.extend({
 
         },
         openInBox: function(name, context) {
+            // Close all other modals.
+            $('.close-modal').click();
+
             // Get the controller or create one
             var controller = this.controllerFor(name);
             if (context) {
@@ -379,6 +385,9 @@ App.ApplicationRoute = Em.Route.extend({
                 bodyViewClass: view
             });
 
+        },
+        closeAllModals: function(){
+            $('.close-modal').click();
         },
         showProject: function(project_id) {
             var route = this;

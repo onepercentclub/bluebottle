@@ -91,7 +91,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertIn(user.email, activation_mail.to)
 
         # Extract activation link and change domain for the test.
-        pattern = r'href="([\w:/.]+/en\/#\!\/activate\/[\w-]{40})"'
+        pattern = r'href="([\w:/.]+/[enl]{2}\/#\!\/activate\/[\w-]{40})"'
         m = re.search(pattern, activation_mail.body)
         # import pdb; pdb.set_trace()
         
@@ -102,6 +102,8 @@ class AccountSeleniumTests(SeleniumTestCase):
         # TODO: See if we should change activation link generation.
         activation_link = activation_link.replace('https', 'http')
         activation_link = activation_link.replace('/go', '/#!')
+        # Make sure it's in English.
+        activation_link = activation_link.replace('/nl/', '/en/')
 
         current_site = Site.objects.get_current()
 
@@ -299,13 +301,14 @@ class AccountSeleniumTests(SeleniumTestCase):
         reset_link = reset_link.replace('/go', '/#!')
         self.assertTrue(current_site.domain in reset_link)
         reset_link = reset_link.replace(current_site.domain, self.live_server_url[7:])
+        # Make sure it's in English.
+        reset_link = reset_link.replace('/nl/', '/en/')
 
         # Visit the reset link.
         self.browser.visit(reset_link)
 
         # Validate that we are on the intended page.
-        self.assertTrue(self.browser.is_text_present('RESET YOUR PASSWORD', wait_time=10))
-
+        self.assertTrue(self.browser.is_text_present('New password', wait_time=3))
 
         # Fill in the reset form.
         new_password = 'new_secret'

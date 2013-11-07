@@ -1,4 +1,6 @@
 import sys
+from django.conf import settings
+
 from django.db import models
 
 
@@ -21,7 +23,9 @@ class Address(models.Model):
 
 
 # Below is test-only stuff
-if 'test' in sys.argv:
+INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
+
+if 'test' in sys.argv or INCLUDE_TEST_MODELS:
 
     from fluent_contents.models import PlaceholderField
     from fluent_contents.plugins.oembeditem.models import OEmbedItem

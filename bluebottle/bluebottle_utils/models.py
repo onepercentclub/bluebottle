@@ -1,4 +1,4 @@
-from django.conf import settings
+import sys
 from django.db import models
 
 
@@ -21,17 +21,11 @@ class Address(models.Model):
 
 
 # Below is test-only stuff
-
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-
-if INCLUDE_TEST_MODELS:
-    from django.template.defaultfilters import truncatechars
-
+if 'test' in sys.argv:
 
     from fluent_contents.models import PlaceholderField
     from fluent_contents.plugins.oembeditem.models import OEmbedItem
     from bluebottle.contentplugins.models import PictureItem
-    from fluent_contents.rendering import render_placeholder
     from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 

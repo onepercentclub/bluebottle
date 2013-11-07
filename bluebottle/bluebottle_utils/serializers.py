@@ -1,4 +1,5 @@
 import sys
+from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 
@@ -242,8 +243,10 @@ class MetaField(serializers.Field):
 
 
 #### TESTS #############
+# Below is test-only stuff
+INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
-if 'test' in sys.argv:
+if 'test' in sys.argv or INCLUDE_TEST_MODELS:
 
     from .models import MetaDataModel
 

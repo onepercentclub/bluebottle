@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-30 13:24+0100\n"
+"POT-Creation-Date: 2013-11-12 12:06+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,7 +71,7 @@ msgstr ""
 msgid "Organizations"
 msgstr ""
 
-#: templates/footer.html:13 templates/bluebottle/base.html:228
+#: templates/footer.html:13 templates/bluebottle/base.html:230
 msgid "Partners"
 msgstr ""
 
@@ -92,7 +92,7 @@ msgid "FAQ"
 msgstr ""
 
 #: templates/footer.html:18 templates/footer.html.py:38
-#: templates/bluebottle/base.html:243
+#: templates/bluebottle/base.html:245
 msgid "Contact"
 msgstr ""
 
@@ -124,17 +124,17 @@ msgstr ""
 msgid "We like you too"
 msgstr ""
 
-#: templates/bluebottle/base.html:19
+#: templates/bluebottle/base.html:18
 #, python-format
 msgid "1%%Club - Share a little. Change the world"
 msgstr ""
 
-#: templates/bluebottle/base.html:20 templates/bluebottle/base.html.py:25
+#: templates/bluebottle/base.html:19 templates/bluebottle/base.html.py:25
 #, python-format
 msgid "1%%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1%% of your knowledge, money or time and follow the progress online."
 msgstr ""
 
-#: templates/bluebottle/base.html:21 templates/bluebottle/base.html.py:27
+#: templates/bluebottle/base.html:20 templates/bluebottle/base.html.py:27
 msgid "crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity"
 msgstr ""
 
@@ -143,130 +143,130 @@ msgstr ""
 msgid "1%%Club"
 msgstr ""
 
-#: templates/bluebottle/base.html:129
+#: templates/bluebottle/base.html:131
 #, python-format
 msgid "What is 1%%"
 msgstr ""
 
-#: templates/bluebottle/base.html:130 templates/bluebottle/base.html.py:188
+#: templates/bluebottle/base.html:132 templates/bluebottle/base.html.py:190
 #, python-format
 msgid "1%%Projects"
 msgstr ""
 
-#: templates/bluebottle/base.html:131 templates/bluebottle/base.html.py:193
+#: templates/bluebottle/base.html:133 templates/bluebottle/base.html.py:195
 #, python-format
 msgid "1%%Skills"
 msgstr ""
 
-#: templates/bluebottle/base.html:132 templates/bluebottle/base.html.py:198
+#: templates/bluebottle/base.html:134 templates/bluebottle/base.html.py:200
 msgid "Get involved"
 msgstr ""
 
-#: templates/bluebottle/base.html:178
+#: templates/bluebottle/base.html:180
 #, python-format
 msgid "It all starts with 1%%"
 msgstr ""
 
-#: templates/bluebottle/base.html:182
+#: templates/bluebottle/base.html:184
 #, python-format
 msgid "What is 1%%CLUB?"
 msgstr ""
 
-#: templates/bluebottle/base.html:203
+#: templates/bluebottle/base.html:205
 msgid "Start your project"
 msgstr ""
 
-#: templates/bluebottle/base.html:210
+#: templates/bluebottle/base.html:212
 #, python-format
 msgid "About 1%%CLUB"
 msgstr ""
 
-#: templates/bluebottle/base.html:214
+#: templates/bluebottle/base.html:216
 msgid "Our story"
 msgstr ""
 
-#: templates/bluebottle/base.html:218
+#: templates/bluebottle/base.html:220
 msgid "Frequently Asked Questions"
 msgstr ""
 
-#: templates/bluebottle/base.html:222
+#: templates/bluebottle/base.html:224
 msgid "Meet the team"
 msgstr ""
 
-#: templates/bluebottle/base.html:233
+#: templates/bluebottle/base.html:235
 msgid "Press"
 msgstr ""
 
-#: templates/bluebottle/base.html:238
+#: templates/bluebottle/base.html:240
 #, python-format
 msgid "Work at 1%%CLUB"
 msgstr ""
 
-#: templates/bluebottle/base.html:250
+#: templates/bluebottle/base.html:252
 #, python-format
 msgid "Discover 1%%More"
 msgstr ""
 
-#: templates/bluebottle/base.html:254
+#: templates/bluebottle/base.html:256
 #, python-format
 msgid "1%%Business"
 msgstr ""
 
-#: templates/bluebottle/base.html:259
+#: templates/bluebottle/base.html:261
 #, python-format
 msgid "1%%Blog"
 msgstr ""
 
-#: templates/bluebottle/base.html:264
+#: templates/bluebottle/base.html:266
 #, python-format
 msgid "1%%Github"
 msgstr ""
 
-#: templates/bluebottle/base.html:272
+#: templates/bluebottle/base.html:274
 #, python-format
 msgid "1%%Social"
 msgstr ""
 
-#: templates/bluebottle/base.html:308
+#: templates/bluebottle/base.html:310
 #, python-format
 msgid "1%%News"
 msgstr ""
 
-#: templates/bluebottle/base.html:322 templates/bluebottle/base.html.py:329
+#: templates/bluebottle/base.html:324 templates/bluebottle/base.html.py:331
 #, python-format
 msgid "Join 1%%Club"
 msgstr ""
 
-#: templates/bluebottle/base.html:323
+#: templates/bluebottle/base.html:325
 #, python-format
 msgid "1%%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1%% of your knowledge, money or time and follow the progress online. "
 msgstr ""
 
-#: templates/bluebottle/base.html:325
+#: templates/bluebottle/base.html:327
 msgid "Select a project or task"
 msgstr ""
 
-#: templates/bluebottle/base.html:326
+#: templates/bluebottle/base.html:328
 msgid "Share your skills or money"
 msgstr ""
 
-#: templates/bluebottle/base.html:327
+#: templates/bluebottle/base.html:329
 msgid "See direct results"
 msgstr ""
 
-#: templates/bluebottle/base.html:343
+#: templates/bluebottle/base.html:345
 msgid "General Conditions"
 msgstr ""
 
-#: templates/bluebottle/base.html:344
+#: templates/bluebottle/base.html:346
 msgid "Privacy Policy"
 msgstr ""
 
-#: templates/bluebottle/base.html:348
+#: templates/bluebottle/base.html:350
 msgid "Give us feedback"
 msgstr ""
 
-#: templates/bluebottle/base.html:386
+#: templates/bluebottle/base.html:388
 msgid ""
 "\n"
 "                        Our new website currently does not work well with older versions of Internet Explorer.<br/>\n"

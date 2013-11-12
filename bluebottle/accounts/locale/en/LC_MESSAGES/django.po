@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-30 13:24+0100\n"
+"POT-Creation-Date: 2013-11-12 12:06+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -54,13 +54,13 @@ msgstr ""
 msgid "Personal info"
 msgstr ""
 
-#: admin.py:88 templates/accounts/nav.html:17
+#: admin.py:88 templates/accounts/nav.html:16
 #: templates/accounts/profile_nav.html:15
-#: templates/accounts/profile_nav.html:31
+#: templates/accounts/profile_nav.html:29
 msgid "Profile"
 msgstr ""
 
-#: admin.py:89 templates/accounts/profile_nav.html:38
+#: admin.py:89 templates/accounts/profile_nav.html:36
 msgid "Settings"
 msgstr ""
 
@@ -336,39 +336,35 @@ msgstr ""
 msgid "Email Address"
 msgstr ""
 
-#: templates/accounts/account_settings.html:23
-msgid "your@email.com"
-msgstr ""
-
-#: templates/accounts/account_settings.html:39
+#: templates/accounts/account_settings.html:38
 msgid "I'd like to receive emails about"
 msgstr ""
 
-#: templates/accounts/account_settings.html:47
+#: templates/accounts/account_settings.html:46
 msgid "&lt;Organisation-name&gt;"
 msgstr ""
 
-#: templates/accounts/account_settings.html:60
+#: templates/accounts/account_settings.html:59
 msgid "Account type"
 msgstr ""
 
-#: templates/accounts/account_settings.html:78
+#: templates/accounts/account_settings.html:77
 msgid "Primary language"
 msgstr ""
 
-#: templates/accounts/account_settings.html:96
+#: templates/accounts/account_settings.html:95
 msgid "I want to share"
 msgstr ""
 
-#: templates/accounts/account_settings.html:102
+#: templates/accounts/account_settings.html:101
 msgid "Time & Knowledge"
 msgstr ""
 
-#: templates/accounts/account_settings.html:106
+#: templates/accounts/account_settings.html:105
 msgid "Money"
 msgstr ""
 
-#: templates/accounts/account_settings.html:120
+#: templates/accounts/account_settings.html:119
 msgid "Account settings saved"
 msgstr ""
 
@@ -385,27 +381,27 @@ msgstr ""
 msgid "Email"
 msgstr ""
 
-#: templates/accounts/login.html:55
+#: templates/accounts/login.html:56
 msgid "Password forgotten"
 msgstr ""
 
-#: templates/accounts/login.html:56 templates/registration/login.html:42
+#: templates/accounts/login.html:58 templates/registration/login.html:42
 msgid "Login"
 msgstr ""
 
-#: templates/accounts/nav.html:27
+#: templates/accounts/nav.html:26
 msgid "Edit my profile & settings"
 msgstr ""
 
-#: templates/accounts/nav.html:49
+#: templates/accounts/nav.html:37
 msgid "Language"
 msgstr ""
 
-#: templates/accounts/nav.html:67 templates/accounts/signup.html:111
+#: templates/accounts/nav.html:55 templates/accounts/signup.html:111
 msgid "Sign up"
 msgstr ""
 
-#: templates/accounts/nav.html:69
+#: templates/accounts/nav.html:57
 msgid "Log in"
 msgstr ""
 
@@ -483,15 +479,15 @@ msgstr ""
 msgid "My 1%%"
 msgstr ""
 
-#: templates/accounts/profile_nav.html:19
+#: templates/accounts/profile_nav.html:20
 msgid "Preview my profile"
 msgstr ""
 
-#: templates/accounts/profile_nav.html:31
+#: templates/accounts/profile_nav.html:29
 msgid "Public info"
 msgstr ""
 
-#: templates/accounts/profile_nav.html:38
+#: templates/accounts/profile_nav.html:36
 msgid "Account"
 msgstr ""
 

@@ -9,10 +9,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Project Bluebottle\n"
-"Report-Msgid-Bugs-To: https://github.com/onepercentclub/bluebottle/issues\n"
-"POT-Creation-Date: 2013-10-30 13:24+0100\n"
-"PO-Revision-Date: 2013-10-30 12:25+0000\n"
-"Last-Translator: gannetson <loek@1procentclub.nl>\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-11-12 12:04+0100\n"
+"PO-Revision-Date: 2013-11-12 09:06+0000\n"
+"Last-Translator: nieja <niels@1procentclub.nl>\n"
 "Language-Team: Dutch (http://www.transifex.com/projects/p/bluebottle/language/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -54,19 +54,19 @@ msgid ""
 "Raw passwords are not stored, so there is no way to see this user's "
 "password, but you can change the password using <a href=\"password/\">this "
 "form</a>."
-msgstr "Wachtwoorden worden gecodeerd bewaard, deze achterhalen is dus onmogelijk. Maar je kunt het wachtwoord door <a href=\"password/\">dit formulier</a> te gebruiken."
+msgstr "Wachtwoorden worden gecodeerd bewaard, deze achterhalen is dus onmogelijk. Maar je kunt het wachtwoord wijzigen door <a href=\"password/\">dit formulier</a> te gebruiken."
 
 #: admin.py:87
 msgid "Personal info"
 msgstr "Persoonlijke info"
 
-#: admin.py:88 templates/accounts/nav.html:17
+#: admin.py:88 templates/accounts/nav.html:16
 #: templates/accounts/profile_nav.html:15
-#: templates/accounts/profile_nav.html:31
+#: templates/accounts/profile_nav.html:29
 msgid "Profile"
 msgstr "Profiel"
 
-#: admin.py:89 templates/accounts/profile_nav.html:38
+#: admin.py:89 templates/accounts/profile_nav.html:36
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -348,80 +348,76 @@ msgstr "Onderstaande gegevens kun je aanvullen of aanpassen"
 msgid "Email Address"
 msgstr "E-mailadres"
 
-#: templates/accounts/account_settings.html:23
-msgid "your@email.com"
-msgstr ""
-
-#: templates/accounts/account_settings.html:39
+#: templates/accounts/account_settings.html:38
 msgid "I'd like to receive emails about"
 msgstr "Ik wil e-mails ontvangen over"
 
-#: templates/accounts/account_settings.html:47
+#: templates/accounts/account_settings.html:46
 msgid "&lt;Organisation-name&gt;"
-msgstr ""
+msgstr "&lt;Organisatie naam&gt;"
 
-#: templates/accounts/account_settings.html:60
+#: templates/accounts/account_settings.html:59
 msgid "Account type"
 msgstr "Type account"
 
-#: templates/accounts/account_settings.html:78
+#: templates/accounts/account_settings.html:77
 msgid "Primary language"
 msgstr "voorkeur taal"
 
-#: templates/accounts/account_settings.html:96
+#: templates/accounts/account_settings.html:95
 msgid "I want to share"
 msgstr "Ik wil delen:"
 
-#: templates/accounts/account_settings.html:102
+#: templates/accounts/account_settings.html:101
 msgid "Time & Knowledge"
 msgstr "Tijd & kennis"
 
-#: templates/accounts/account_settings.html:106
+#: templates/accounts/account_settings.html:105
 msgid "Money"
 msgstr "Geld"
 
-#: templates/accounts/account_settings.html:120
+#: templates/accounts/account_settings.html:119
 msgid "Account settings saved"
 msgstr "Wijzigingen opgeslagen"
 
 #: templates/accounts/login.html:21
 msgid "Log in to &lt;BlueBottle-project-name&gt;"
-msgstr ""
+msgstr "Log in bij &lt;BlueBottle-project-name&gt;"
 
 #: templates/accounts/login.html:29
 msgid ""
 "Override block password_reset_success to display your own password reset "
 "success message."
-msgstr ""
+msgstr "Override block password_reset_success to display your own password reset success message."
 
 #: templates/accounts/login.html:35 templates/accounts/signup.html:71
 #: templates/registration/login.html:24
 msgid "Email"
 msgstr "E-mail"
 
-#: templates/accounts/login.html:55
+#: templates/accounts/login.html:56
 msgid "Password forgotten"
-msgstr ""
+msgstr "Wachtwoord vergeten"
 
-#: templates/accounts/login.html:56 templates/registration/login.html:42
+#: templates/accounts/login.html:58 templates/registration/login.html:42
 msgid "Login"
-msgstr ""
+msgstr "Log in"
 
-#: templates/accounts/nav.html:27
+#: templates/accounts/nav.html:26
 msgid "Edit my profile & settings"
-msgstr ""
+msgstr "Profiel & instellingen"
 
-#: templates/accounts/nav.html:49
+#: templates/accounts/nav.html:37
 msgid "Language"
-msgstr ""
+msgstr "Taal"
 
-#: templates/accounts/nav.html:67 templates/accounts/signup.html:111
+#: templates/accounts/nav.html:55 templates/accounts/signup.html:111
 msgid "Sign up"
 msgstr "Registreer"
 
-#: templates/accounts/nav.html:69
+#: templates/accounts/nav.html:57
 msgid "Log in"
-msgstr ""
+msgstr "Log in"
 
 #: templates/accounts/password_reset.html:12
 msgid "Forgot your password?"
@@ -460,7 +456,7 @@ msgstr "Vul je profiel aan"
 
 #: templates/accounts/profile_form.html:14
 msgid "Override block form_meta from accounts/profile_form.html."
-msgstr ""
+msgstr "Override block form_meta from accounts/profile_form.html."
 
 #: templates/accounts/profile_form.html:23 templates/accounts/signup.html:57
 msgid "Name"
@@ -468,11 +464,11 @@ msgstr "Naam"
 
 #: templates/accounts/profile_form.html:27 templates/accounts/signup.html:61
 msgid "First name"
-msgstr ""
+msgstr "Voornaam"
 
 #: templates/accounts/profile_form.html:30
 msgid "Surname"
-msgstr ""
+msgstr "Achternaam"
 
 #: templates/accounts/profile_form.html:39
 msgid "Profile Picture"
@@ -484,11 +480,11 @@ msgstr "Upload foto"
 
 #: templates/accounts/profile_form.html:62
 msgid "One (of many possible) profile fields"
-msgstr ""
+msgstr "One (of many possible) profile fields"
 
 #: templates/accounts/profile_form.html:67
 msgid "An example placeholder"
-msgstr ""
+msgstr "Een voorbeeld placeholder"
 
 #: templates/accounts/profile_form.html:87
 msgid "Profile saved"
@@ -499,15 +495,15 @@ msgstr "Profiel opgeslagen"
 msgid "My 1%%"
 msgstr "Mijn 1%%"
 
-#: templates/accounts/profile_nav.html:19
+#: templates/accounts/profile_nav.html:20
 msgid "Preview my profile"
 msgstr "Bekijk mijn profiel"
 
-#: templates/accounts/profile_nav.html:31
+#: templates/accounts/profile_nav.html:29
 msgid "Public info"
 msgstr "Openbaar"
 
-#: templates/accounts/profile_nav.html:38
+#: templates/accounts/profile_nav.html:36
 msgid "Account"
 msgstr "Account"
 
@@ -517,19 +513,19 @@ msgstr "Lid sinds"
 
 #: templates/accounts/signup.html:36
 msgid "'Thank you' note for signing up."
-msgstr ""
+msgstr "'Thank you' note for signing up."
 
 #: templates/accounts/signup.html:37
 msgid "e.g.: Email information."
-msgstr ""
+msgstr "e.g.: Email information."
 
 #: templates/accounts/signup.html:45
 msgid "Join &lt;BlueBottle-project-name&gt;"
-msgstr ""
+msgstr "Join &lt;BlueBottle-project-name&gt;"
 
 #: templates/accounts/signup.html:47
 msgid "Override block 'signup_form_top' to display your description here."
-msgstr ""
+msgstr "Override block 'signup_form_top' to display your description here."
 
 #: templates/accounts/signup.html:137
 msgid "Already have an account?"
@@ -541,89 +537,89 @@ msgstr "Log hier in"
 
 #: templates/accounts/signup.html:149
 msgid "Why join &lt;BlueBottle-project-name&gt;"
-msgstr ""
+msgstr "Why join &lt;BlueBottle-project-name&gt;"
 
 #: templates/accounts/signup.html:151
 msgid "Reason 1"
-msgstr ""
+msgstr "Reason 1"
 
 #: templates/accounts/signup.html:152
 msgid "Reason 2"
-msgstr ""
+msgstr "Reason 2"
 
 #: templates/accounts/signup.html:153
 msgid "Reason 3"
-msgstr ""
+msgstr "Reason 3"
 
 #: templates/registration/activation_email.html:7
 msgid ""
 "Override registration/activation_email.html to create your own activation "
 "mail template."
-msgstr ""
+msgstr "Override registration/activation_email.html to create your own activation mail template."
 
 #: templates/registration/activation_email.html:14
 msgid "You can put your site logo here."
-msgstr ""
+msgstr "You can put your site logo here."
 
 #: templates/registration/activation_email.html:23
 msgid "Confirm your registration"
-msgstr ""
+msgstr "Bevestig je aanmelding"
 
 #: templates/registration/activation_email.html:31
 msgid "You're almost done!"
-msgstr ""
+msgstr "Je bent er bijna!"
 
 #: templates/registration/activation_email.html:39
 msgid "Click the link below to confirm your registration"
-msgstr ""
+msgstr "Klik op onderstaande link om je aanmelding te bevestigen."
 
 #: templates/registration/activation_email.html:49
 msgid "activate profile"
-msgstr ""
+msgstr "activeer profiel"
 
 #: templates/registration/activation_email.html:59
 #, python-format
 msgid "Your activation code will expire in %(expiration_days)s days."
-msgstr ""
+msgstr "Je activatiecode verloopt in %(expiration_days)s dagen. "
 
 #: templates/registration/activation_email_subject.txt:3
 msgid "Welcome to <...>"
-msgstr ""
+msgstr "Welkom bij <...>"
 
 #: templates/registration/logged_out.html:6
 msgid "Logged out."
-msgstr ""
+msgstr "Uitgelogd."
 
 #: templates/registration/login.html:11
 #, python-format
 msgid "Log in to 1%%Club"
-msgstr ""
+msgstr "Log in bij 1%%Club"
 
 #: templates/registration/login.html:18
 msgid "Your email address and password didn't match. Please try again."
-msgstr ""
+msgstr "Je e-mailadres en wachtwoord kwamen niet overeen. Probeer het nog eens."
 
 #: templates/registration/password_reset_email.html:13
 msgid "Override registration/password_reset_email.html to provide your logo."
-msgstr ""
+msgstr "Override registration/password_reset_email.html to provide your logo."
 
 #: templates/registration/password_reset_email.html:21
 msgid "Click on this link to reset your password."
-msgstr ""
+msgstr "Klik op de link voor een nieuw wachtwoord."
 
 #: templates/registration/password_reset_email.html:31
 msgid "Reset"
-msgstr ""
+msgstr "Reset"
 
 #: templates/registration/password_reset_email.html:41
 msgid "See you at"
-msgstr ""
+msgstr "Ga snel naar"
 
 #: templates/registration/password_reset_email.html:41
 msgid "in a minute!"
-msgstr ""
+msgstr "Tot zo!"
 
 #: templates/registration/password_reset_subject.txt:2
 #, python-format
 msgid "Password reset on %(site_name)s"
-msgstr ""
+msgstr "Wachtwoord wijzigen voor %(site_name)s"

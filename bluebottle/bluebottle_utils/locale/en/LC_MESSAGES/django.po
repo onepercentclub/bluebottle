@@ -17,30 +17,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: content_plugins.py:20
-msgid "Multimedia"
+#: templates/utils.hbs:22
+msgid "Share"
 msgstr ""
 
-#: models.py:16
-msgid "Float left"
-msgstr ""
-
-#: models.py:17
-msgid "Center"
-msgstr ""
-
-#: models.py:18
-msgid "Float right"
-msgstr ""
-
-#: models.py:20 models.py:24
-msgid "Picture"
-msgstr ""
-
-#: models.py:21
-msgid "Align"
-msgstr ""
-
-#: models.py:25
-msgid "Pictures"
+#: templates/utils.hbs:23
+msgid "Tweet"
 msgstr ""

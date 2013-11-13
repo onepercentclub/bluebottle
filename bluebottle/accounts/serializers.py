@@ -47,7 +47,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(read_only=True)
     username = serializers.CharField(read_only=True)
 
-    website = URLField()
+    website = URLField(required=False)
 
     class Meta:
         model = BlueBottleUser

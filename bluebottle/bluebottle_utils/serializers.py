@@ -57,6 +57,8 @@ class URLField(serializers.URLField):
 
     def from_native(self, value):
         """ Allow exclusion of http(s)://, add it if it's missing """
+        if not value:
+            return value
         m = re.match(SCHEME_PATTERN, value)
         if not m: # no scheme
             value = "http://%s" % value

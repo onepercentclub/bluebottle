@@ -1,4 +1,6 @@
 import sys
+import re
+
 from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
@@ -48,8 +50,21 @@ class AddressSerializer(serializers.ModelSerializer):
 
 
 
+SCHEME_PATTERN = r'^https?://'
+
+class URLField(serializers.URLField):
+    """ URLField allowing absence of url scheme """
+
+    def from_native(self, value):
+        """ Allow exclusion of http(s)://, add it if it's missing """
+        m = re.match(SCHEME_PATTERN, value)
+        if not m: # no scheme
+            value = "http://%s" % value
+        return value
+
+
 class MetaField(serializers.Field):
-    """ 
+    """
     Serializer field which fills meta data based on model attributes
     Init with `field = None` to disable the field.
 
@@ -64,7 +79,7 @@ class MetaField(serializers.Field):
         def get_description(self, **kwargs):
             return self.title + ' (description)'
 
-    
+
     # serializers.py
     class ExampleSerializer(serializers.ModelSerializer):
 
@@ -101,9 +116,9 @@ class MetaField(serializers.Field):
 
     def __init__(self, title = 'title',
                 description = 'description', keywords = 'tags',
-                image_source = None, 
+                image_source = None,
                 *args, **kwargs):
-        
+
         # default to None, return the default title/image if no explicit title/image were provided
         self.fb_title = kwargs.pop('fb_title', None)
         self.tweet = kwargs.pop('tweet', None)
@@ -152,7 +167,7 @@ class MetaField(serializers.Field):
             value['tweet'] = tweet
         elif self.title:
             value['tweet'] = '{URL}'
-                
+
         # get the meta description from object callable or object property
         if self.description:
             description = self._get_callable(obj, self.description)
@@ -168,7 +183,7 @@ class MetaField(serializers.Field):
             if keywords is None:
                 # Get the keywords
                 keywords = self._get_field(obj, self.keywords)
-                
+
                 # usually tags as keywords
                 if isinstance(keywords, _TaggableManager):
                     keywords = [tag.name.lower() for tag in keywords.all()]
@@ -211,12 +226,12 @@ class MetaField(serializers.Field):
                     value['image'] = images.get('full', None)
 
         return self.to_native(value)
-    
-    
+
+
     def _get_field(self, obj, field_name):
         """ Allow traversing the relations tree for fields """
         attrs = field_name.split('__')
-        
+
         field = obj
         # Just return None on errors so tests won't trip.
         for attr in attrs:
@@ -232,7 +247,7 @@ class MetaField(serializers.Field):
         """ Check if the attr is callable, return its value if it is """
         try:
             _attr = getattr(obj, attr)
-            if callable(_attr): 
+            if callable(_attr):
                 # return _attr() # Call it, and return the result
                 return _attr(request=self.context['request'])
         except AttributeError: # not a model/object attribute or relation does not exist
@@ -251,7 +266,7 @@ if 'test' in sys.argv or INCLUDE_TEST_MODELS:
     from .models import MetaDataModel
 
     class MetaDataSerializer(serializers.ModelSerializer):
-        
+
         meta_data = MetaField(
             description = None,
             image_source = None,
@@ -260,4 +275,4 @@ if 'test' in sys.argv or INCLUDE_TEST_MODELS:
 
         class Meta:
             model = MetaDataModel
-            # fields = 
+            # fields =

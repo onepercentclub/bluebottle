@@ -1,16 +1,14 @@
 from django.conf import settings
 from django import forms
-from django.contrib.sites.models import Site
 
-from registration.models import RegistrationProfile
 from rest_framework import serializers
 
-
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.bluebottle_utils.serializers import URLField
 from bluebottle.bluebottle_utils.validators import validate_postal_code
 from bluebottle.geo.models import Country
-from .models import BlueBottleUser
 
+from .models import BlueBottleUser
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
@@ -48,6 +46,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
     username = serializers.CharField(read_only=True)
+
+    website = URLField(required=False)
 
     class Meta:
         model = BlueBottleUser

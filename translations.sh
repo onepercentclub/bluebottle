@@ -46,12 +46,15 @@ case "$1" in
                 (cd $APP_DIR && $MAKEMESSAGES)
             done
 
-            echo "Generating PO-file for templates"
-            mv locale templates/ && cd templates/ && $MAKEMESSAGES
-            echo "Generating PO-file for javascripts"
-            $MAKEJSMESSAGES
+            # Skip this for now
+            # echo "Generating PO-file for templates"
+            # mv locale ../bluebottle/common/templates/ && cd bluebottle/common/templates/ && $MAKEMESSAGES
+            # echo "Generating PO-file for javascripts"
+            # echo $MAKEJSMESSAGES
+            # $MAKEJSMESSAGES
+            # mv locale ../../../
 
-            mv locale ../
+
 
             ;;
 

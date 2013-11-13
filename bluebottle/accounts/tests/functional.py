@@ -94,7 +94,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         pattern = r'href="([\w:/.]+/[enl]{2}\/#\!\/activate\/[\w-]{40})"'
         m = re.search(pattern, activation_mail.body)
         # import pdb; pdb.set_trace()
-        
+
         self.assertTrue(m is not None)
         activation_link = m.group(1)
 
@@ -151,7 +151,7 @@ class AccountSeleniumTests(SeleniumTestCase):
     def test_edit_profile(self):
         # Create and activate user.
         user = BlueBottleUser.objects.create_user('johndoe@example.com', 'secret')
-        
+
         self.login(user.email, 'secret')
 
         self.browser.find_by_css('.nav-member-dropdown').first.mouse_over()

@@ -1,26 +1,21 @@
 [main]
 host = https://www.transifex.com
 
-[bluebottle.accounts_django]
+[bluebottle.accounts]
 file_filter = bluebottle/accounts/locale/<lang>/LC_MESSAGES/django.po
 source_file = bluebottle/accounts/locale/en/LC_MESSAGES/django.po
 source_lang = en
 type = PO
 
-[bluebottle.geo_django]
+[bluebottle.geo]
 file_filter = bluebottle/geo/locale/<lang>/LC_MESSAGES/django.po
 source_file = bluebottle/geo/locale/en/LC_MESSAGES/django.po
 source_lang = en
 type = PO
 
-[bluebottle.templates]
-file_filter = locale/<lang>/LC_MESSAGES/django.po
-source_file = locale/en/LC_MESSAGES/django.po
+[bluebottle.common]
+file_filter = bluebottle/common/locale/<lang>/LC_MESSAGES/django.po
+source_file = bluebottle/common/locale/en/LC_MESSAGES/django.po
 source_lang = en
 type = PO
 
-[bluebottle.javascript]
-file_filter = locale/<lang>/LC_MESSAGES/djangojs.po
-source_file = locale/en/LC_MESSAGES/djangojs.po
-source_lang = en
-type = PO

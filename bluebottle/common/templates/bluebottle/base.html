@@ -128,7 +128,7 @@
                         {% block_verbatim nav_main %}
                             <ul class="nav-main">
                                 <li class="nav-main-item"><a {{action 'showPage' 'about'}} href="/#!/pages/about">{% blocktrans %}About us{% endblocktrans %}</a></li>
-                                <li class="nav-main-item">{{#linkTo 'projectList'}}{% blocktrans %}Projects{% endblocktrans %}{{/linkTo}}</li>
+                                <li class="nav-main-item">{% blocktrans %}Projects{% endblocktrans %}</li>
                             </ul>
                         {%  endblock_verbatim %}
 
@@ -184,17 +184,6 @@
                                             {% blocktrans %}About{% endblocktrans %}
                                         </a>
                                     </li>
-
-                                    <li>
-                                        {{#linkTo 'projectList'}}
-                                            {% blocktrans %}Projects{% endblocktrans %}
-                                        {{/linkTo}}
-                                    </li>
-                                    <li class="start-your-project">
-                                        {{#linkTo 'myPitchNew'}}
-                                            {% trans "Start your project" %}
-                                        {{/linkTo}}
-                                    </li>
                                 </ul>
                             {% endblock_verbatim %}
                         </li>
@@ -212,9 +201,7 @@
                                         </a>
                                     </li>
                                     <li>
-                                        {{#linkTo 'contactMessage' href=true}}
-                                            {% trans "Contact" %}
-                                        {{/linkTo}}
+                                        {% trans "Contact" %}
                                     </li>
                                 </ul>
                             {% endblock_verbatim %}
@@ -316,9 +303,7 @@
                                 <a {{action 'showPage' 'privacy'}} href="/#!/pages/privacy">{% trans "Privacy Policy" %}</a>
                             </li>
                             <li>
-                                {{#linkTo 'contactMessage' href=true class=feedback}}
-                                    {% trans "Give us feedback" %}
-                                {{/linkTo}}
+                                {% trans "Give us feedback" %}
                             </li>
                         </ul>
                     {% endblock_verbatim %}

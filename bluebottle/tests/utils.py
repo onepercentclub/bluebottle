@@ -282,5 +282,5 @@ class SeleniumTestCase(LiveServerTestCase):
 
         # # Check if the homepage opened, and the dynamically loaded content appeared.
         # # Remember that
-        return self.browser.is_text_present('I am the homepage', wait_time=10)
+        return self.browser.is_text_present('2013 Bluebottle', wait_time=10)
 

@@ -83,6 +83,10 @@ class AccountSeleniumTests(SeleniumTestCase):
         user = BlueBottleUser.objects.get(email='johndoe@example.com')
         self.assertFalse(user.is_active)
 
+        # Force English as primary language here
+        user.primary_language = 'en'
+        user.save()
+
         # And a mail should be sent to the just signed up email address.
         self.assertEqual(len(mail.outbox), 1)
         activation_mail = mail.outbox[0]

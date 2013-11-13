@@ -79,10 +79,11 @@ case "$1" in
 
             done
 
-            echo "Generating PO-file for templates"
-            $COMPILEMESSAGES
-            echo "Generating PO-file for javascript"
-            $COMPILEJSMESSAGES
+            # echo "Generating PO-file for templates"
+            # $COMPILEMESSAGES
+            # $COMPILEMESSAGES
+            # echo "Generating PO-file for javascript"
+            # $COMPILEJSMESSAGES
 
             ;;
 

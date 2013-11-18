@@ -65,6 +65,7 @@ install_requires = [
 #    'suds-jurko==0.4.1.jurko.5.-development-',
     'surlex==0.1.2',
     'transifex-client==0.9',
+    'django-tools==0.25.0',
 ]
 
 
@@ -104,6 +105,7 @@ tests_require = [
     'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
     'splinter==0.5.3', # Functional testing libraries
+    'django-tools==0.25.0',
 ]
 
 

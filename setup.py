@@ -105,7 +105,7 @@ tests_require = [
     'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
     'splinter==0.5.3', # Functional testing libraries
-    'django_tools',
+    'django-tools==0.25.0',
 ]
 
 

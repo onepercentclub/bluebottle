@@ -99,7 +99,7 @@ class BlueBottleAdmin(UserAdmin):
         ),
     )
 
-    readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted')
+    readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as')
 
     # This post describes how you could put the address closer to the 'Personal Info' section.
     # https://groups.google.com/d/msg/django-users/yUq2Nvx_4eM/30_EkjePrOAJ
@@ -110,8 +110,13 @@ class BlueBottleAdmin(UserAdmin):
 
     list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser')
 
-    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active')
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as')
     ordering = ('-date_joined', 'email',)
+
+    def login_as_user(self, obj):
+        return "<a href='/login/user/{0}'>{1}</a>".format(obj.id, 'Login as user')
+
+    login_as_user.allow_tags = True
 
 
 admin.site.register(BlueBottleUser, BlueBottleAdmin)

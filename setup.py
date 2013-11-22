@@ -66,6 +66,7 @@ install_requires = [
     'surlex==0.1.2',
     'transifex-client==0.9',
     'django-tools==0.25.0',
+    'django-loginas==0.1.3',
 ]
 
 
@@ -106,6 +107,7 @@ tests_require = [
     'sorl-thumbnail==11.12',
     'splinter==0.5.3', # Functional testing libraries
     'django-tools==0.25.0',
+    'django-loginas==0.1.3',
 ]
 
 

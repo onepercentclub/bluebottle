@@ -16,6 +16,10 @@ urlpatterns = patterns('',
     url(r'^api/metadata/', include('bluebottle.bluebottle_utils.urlsapi')),
 )
 
+urlpatterns += patterns('loginas.views',
+    url(r"^login/user/(?P<user_id>.+)/$", "user_login", name="loginas-user-login"),
+)
+
 
 urlpatterns += i18n_patterns('',
 
@@ -29,6 +33,7 @@ urlpatterns += i18n_patterns('',
     url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset', name='admin_password_reset'),
     url(r'^admin/password_reset/done/$', 'django.contrib.auth.views.password_reset_done'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/', include(admin.site.urls)),
 
     # Other modules that need URLs exposed
     url(r'^admin/utils/taggit-autocomplete/', include('taggit_autocomplete_modified.urls')),

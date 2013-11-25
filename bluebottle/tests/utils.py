@@ -147,7 +147,8 @@ class WebDriverAdditionMixin(object):
                             form_input_type = form_input['type']
 
                             if form_input_type == 'file':
-                                form_input.attach_file(val)
+                                #form_input.attach_file(val)
+                                self.attach_file(form_input['name'], val)
                             elif form_input_type == 'checkbox':
                                 if val:
                                     form_input.check()

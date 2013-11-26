@@ -124,6 +124,7 @@ class MetaField(serializers.Field):
         # default to None, return the default title/image if no explicit title/image were provided
         self.fb_title = kwargs.pop('fb_title', None)
         self.tweet = kwargs.pop('tweet', None)
+        self.url = kwargs.pop('url', None)
         # TODO: add support for list of image sources -> multiple images
 
         self.title = title
@@ -144,6 +145,7 @@ class MetaField(serializers.Field):
             'description': None,
             'image': None,
             'keywords': None,
+            'url': None,
         }
 
         # get the meta title from object callable or object property
@@ -227,6 +229,12 @@ class MetaField(serializers.Field):
                     # resize/store the images themselve
                     value['image'] = images.get('full', None)
 
+        if self.url:
+            url = self._get_callable(obj, self.url)
+            if url is None:
+                url = self._get_field(obj, self.url)
+            value['url'] = url
+
         return self.to_native(value)
 
 
@@ -277,4 +285,3 @@ if 'test' in sys.argv or INCLUDE_TEST_MODELS:
 
         class Meta:
             model = MetaDataModel
-            # fields =

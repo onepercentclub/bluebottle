@@ -8,6 +8,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
 
+from registration import signals
 from registration.models import RegistrationProfile
 from rest_framework import generics
 from rest_framework import response
@@ -102,6 +103,9 @@ class UserActivate(generics.RetrieveAPIView):
             self.login_user(request, activated_user)
             self.object = activated_user
             serializer = self.get_serializer(self.object)
+            signals.user_activated.send(sender=self.__class__,
+                                        user=activated_user,
+                                        request=request)
             return response.Response(serializer.data)
         # Return 400 when the activation didn't work.
         return response.Response(status=status.HTTP_400_BAD_REQUEST)

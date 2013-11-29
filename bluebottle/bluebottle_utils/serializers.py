@@ -4,6 +4,7 @@ import re
 from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
+from django_tools.middlewares import ThreadLocal
 
 
 from rest_framework import serializers
@@ -258,8 +259,8 @@ class MetaField(serializers.Field):
         try:
             _attr = getattr(obj, attr)
             if callable(_attr):
-                # return _attr() # Call it, and return the result
-                return _attr(request=self.context['request'])
+                request = ThreadLocal.get_current_request()
+                return _attr(request=request)
         except AttributeError: # not a model/object attribute or relation does not exist
             pass
         return None

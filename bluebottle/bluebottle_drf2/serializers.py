@@ -105,7 +105,10 @@ class OEmbedField(serializers.Field):
         except ProviderException:
             return ""
         else:
-            return full_handler(url, response, **self.params)
+            html = full_handler(url, response, **self.params)
+            # Tweak for youtube to hide controls and info bars.
+            html = html.replace('feature=oembed', 'feature=oembed&showinfo=0&controls=0')
+            return html
 
 
 #

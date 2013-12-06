@@ -272,8 +272,8 @@ class ImageSerializer(serializers.ImageField):
         thumbnail = ""
         try:
             large = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x450', crop=self.crop))
-            full = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x600'))
-            small = settings.MEDIA_URL + unicode(get_thumbnail(value, '247x180', crop=self.crop))
+            full = settings.MEDIA_URL + unicode(get_thumbnail(value, '1200x900'))
+            small = settings.MEDIA_URL + unicode(get_thumbnail(value, '400x380', crop=self.crop))
             square = settings.MEDIA_URL + unicode(get_thumbnail(value, '120x120', crop=self.crop, colorspace="GRAY"))
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):

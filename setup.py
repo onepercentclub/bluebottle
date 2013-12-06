@@ -38,7 +38,7 @@ install_requires = [
 #    'django-fluent-dashboard==0.3.2',
 #    'django-iban==0.2.1',
 #    'django-jenkins==0.14.0',
-   'django-localflavor==1.0',
+    'django-localflavor==1.0',
 #    'django-polymorphic==0.5',
     'django-registration==1.0',
 #    'django-salesforce==0.1.6.3',
@@ -54,7 +54,7 @@ install_requires = [
 #    'dnspython==1.11.0',
 #    'html5lib==0.95',
 #    'jsmin==2.0.2',
-   'micawber==0.2.6',
+    'micawber==0.2.6',
 #    'pycurl==7.19.0',
 #    'pytz==2013b',
 #    'raven==3.3.12',
@@ -68,7 +68,6 @@ install_requires = [
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
 ]
-
 
 dependency_links = [
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',

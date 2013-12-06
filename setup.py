@@ -69,7 +69,6 @@ install_requires = [
     'django-loginas==0.1.3',
 ]
 
-
 dependency_links = [
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 

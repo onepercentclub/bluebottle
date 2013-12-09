@@ -27,7 +27,7 @@ install_requires = [
     'django-admin-tools==0.5.1',
 #    'django-celery==3.0.17',
     'django-choices==1.1.11',
-#    'django-compressor==1.2',
+    'django-compressor==1.3',
 #    'django-countries==1.5',
 #    'django-debug-toolbar==0.9.4',
 #    'django-docdata==0.1',

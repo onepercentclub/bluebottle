@@ -157,6 +157,10 @@ App.Adapter.configure("plurals", {
     "address": "addresses"
 });
 
+/* COMMENTED FOR MODULARIZATION
+ * This code needs to be conditioned, since it impedes the normal loading of the homepage
+ * in a standard BlueBottle-based website.
+ 
 App.Adapter.map(
     'App.Payment', {
         availablePaymentMethods: { readOnly: true }
@@ -165,15 +169,19 @@ App.Adapter.map(
         total: { readOnly: true }
     }
 );
-
+*/
 
 App.ApplicationController = Ember.Controller.extend({
-    needs: ['currentUser', 'currentOrder', 'myProjectList'],
+    needs: ['currentUser'],// COMMENTED FOR MODULARIZATION 'currentOrder', 'myProjectList'],
     display_message: false,
 
+    /* COMMENTED FOR MODULARIZATION
+     *
     news: function() {
         return App.NewsPreview.find({language: App.get('language')});
     }.property(),
+    *
+    */
 
     displayMessage: (function() {
         if (this.get('display_message') == true) {
@@ -199,12 +207,16 @@ App.ApplicationController = Ember.Controller.extend({
 //           mark the parent record as dirty).
 
 
+/* COMMENTED FOR MODULARIZATION
+ *
 App.Adapter.map('App.Quote', {
     user: {embedded: 'load'}
 });
 App.Adapter.map('App.ContactMessage', {
     author: {embedded: 'load'}
 });
+*
+*/
 
 App.Store = DS.Store.extend({
     adapter: 'App.Adapter'
@@ -467,6 +479,9 @@ App.UserRoute = Em.Route.extend({
 /* Home Page */
 
 App.HomeRoute = Em.Route.extend({
+    
+    /* COMMENTED FOR MODULARIZATION
+     *
     model: function(params) {
         return App.HomePage.find(App.get('language'));
     },
@@ -476,10 +491,17 @@ App.HomeRoute = Em.Route.extend({
         controller.set('projectIndex', 0).loadProject();
         controller.set('quoteIndex', 0).loadQuote();
     }
+    *
+    */
 });
 
 
 /* Views */
+
+App.HomeView = Em.View.extend({
+    templateName: 'home'
+});
+
 
 App.LanguageView = Em.View.extend({
     templateName: 'language',

@@ -45,9 +45,14 @@ App = Em.Application.create({
             }
         }
 
+        /* COMMENTED FOR MODULARIZATION
+         *
         App.Page.reopen({
             url: 'pages/' + language + '/pages'
         });
+        *
+        */
+
         this.initSelectViews();
         this.setLocale(locale);
         this.initSelectViews();
@@ -61,11 +66,14 @@ App = Em.Application.create({
             });
         });
 
+        /* COMMENTED FOR MODULARIZATION
         App.Skill.find().then(function(list) {
             App.SkillSelectView.reopen({
                 content: list
             });
         });
+        *
+        */
 
         App.Country.find().then(function(list) {
             App.CountrySelectView.reopen({
@@ -497,11 +505,6 @@ App.HomeRoute = Em.Route.extend({
 
 
 /* Views */
-
-App.HomeView = Em.View.extend({
-    templateName: 'home'
-});
-
 
 App.LanguageView = Em.View.extend({
     templateName: 'language',

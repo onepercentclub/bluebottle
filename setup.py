@@ -85,7 +85,7 @@ tests_require = [
     'django-nose',
     'django-admin-tools==0.5.1',
     'django-apptemplates==0.0.1',
-    'django_compressor==1.2',
+    'django_compressor==1.3',
     'django-fluent-contents==0.9a1',
     'django-filetransfers==0.0.0',
     'django-localflavor==1.0',

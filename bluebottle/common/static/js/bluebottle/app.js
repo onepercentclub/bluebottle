@@ -45,14 +45,6 @@ App = Em.Application.create({
             }
         }
 
-        /* COMMENTED FOR MODULARIZATION
-         *
-        App.Page.reopen({
-            url: 'pages/' + language + '/pages'
-        });
-        *
-        */
-
         this.initSelectViews();
         this.setLocale(locale);
         this.initSelectViews();
@@ -65,15 +57,6 @@ App = Em.Application.create({
                 content: list
             });
         });
-
-        /* COMMENTED FOR MODULARIZATION
-        App.Skill.find().then(function(list) {
-            App.SkillSelectView.reopen({
-                content: list
-            });
-        });
-        *
-        */
 
         App.Country.find().then(function(list) {
             App.CountrySelectView.reopen({
@@ -165,31 +148,9 @@ App.Adapter.configure("plurals", {
     "address": "addresses"
 });
 
-/* COMMENTED FOR MODULARIZATION
- * This code needs to be conditioned, since it impedes the normal loading of the homepage
- * in a standard BlueBottle-based website.
- 
-App.Adapter.map(
-    'App.Payment', {
-        availablePaymentMethods: { readOnly: true }
-    },
-    'App.Order', {
-        total: { readOnly: true }
-    }
-);
-*/
-
 App.ApplicationController = Ember.Controller.extend({
-    needs: ['currentUser'],// COMMENTED FOR MODULARIZATION 'currentOrder', 'myProjectList'],
+    needs: ['currentUser'],
     display_message: false,
-
-    /* COMMENTED FOR MODULARIZATION
-     *
-    news: function() {
-        return App.NewsPreview.find({language: App.get('language')});
-    }.property(),
-    *
-    */
 
     displayMessage: (function() {
         if (this.get('display_message') == true) {
@@ -213,18 +174,6 @@ App.ApplicationController = Ember.Controller.extend({
 //   always: The child records are embedded when loading, and are saved embedded in the same record. This,
 //           of course, affects the dirtiness of the records (if the child record changes, the adapter will
 //           mark the parent record as dirty).
-
-
-/* COMMENTED FOR MODULARIZATION
- *
-App.Adapter.map('App.Quote', {
-    user: {embedded: 'load'}
-});
-App.Adapter.map('App.ContactMessage', {
-    author: {embedded: 'load'}
-});
-*
-*/
 
 App.Store = DS.Store.extend({
     adapter: 'App.Adapter'
@@ -274,7 +223,7 @@ App.Router.reopen({
 });
 
 DS.Model.reopen({
-    meta: DS.attr('object'),
+    meta: DS.attr('object')
 });
 
 Em.Route.reopen({
@@ -306,12 +255,6 @@ App.Router.map(function() {
 
 App.ApplicationRoute = Em.Route.extend({
     needs: ['currentUser'],
-
-//    setupController: function(controller, model) {
-//        this.controllerFor('myProjectList').set('model', App.MyProject.find());
-//        this._super(controller, model);
-//    },
-
 
     actions: {
         selectLanguage: function(language) {
@@ -482,25 +425,6 @@ App.UserRoute = Em.Route.extend({
             controller.set('showPaymentsTab', recurringPayments.get('length') > 0)
         });
     }
-});
-
-/* Home Page */
-
-App.HomeRoute = Em.Route.extend({
-    
-    /* COMMENTED FOR MODULARIZATION
-     *
-    model: function(params) {
-        return App.HomePage.find(App.get('language'));
-    },
-
-    setupController: function(controller, model) {
-        this._super(controller, model);
-        controller.set('projectIndex', 0).loadProject();
-        controller.set('quoteIndex', 0).loadQuote();
-    }
-    *
-    */
 });
 
 

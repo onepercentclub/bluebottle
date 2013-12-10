@@ -1,14 +1,12 @@
-from django.conf.urls import include, url
-from django.conf.urls.i18n import i18n_patterns
+from django.conf.urls import include, url, patterns
 from django.contrib import admin
 
 from bluebottle.views import HomeView
-# from bluebottle.urls import urlpatterns
 
 
-i18n_urlpatterns = i18n_patterns('',
+urlpatterns = patterns('',
     # These URL's will be automatically prefixed with the locale (e.g. '/nl/')
-    url(r'^$', HomeView.as_view(), name='home'),
+    url(r'/$', HomeView.as_view(), name='home'),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset', name='admin_password_reset'),

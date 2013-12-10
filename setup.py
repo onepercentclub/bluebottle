@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
-   
+
 readme = read_file('README.rst')
 changes = ''
 #changes = read_file('CHANGES.rst')
@@ -27,7 +27,7 @@ install_requires = [
     'django-admin-tools==0.5.1',
 #    'django-celery==3.0.17',
     'django-choices==1.1.11',
-#    'django-compressor==1.2',
+    'django-compressor==1.3',
 #    'django-countries==1.5',
 #    'django-debug-toolbar==0.9.4',
 #    'django-docdata==0.1',
@@ -85,7 +85,7 @@ tests_require = [
     'django-nose',
     'django-admin-tools==0.5.1',
     'django-apptemplates==0.0.1',
-    'django_compressor==1.2',
+    'django_compressor==1.3',
     'django-fluent-contents==0.9a1',
     'django-filetransfers==0.0.0',
     'django-localflavor==1.0',

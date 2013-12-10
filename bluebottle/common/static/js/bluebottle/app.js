@@ -45,9 +45,6 @@ App = Em.Application.create({
             }
         }
 
-        App.Page.reopen({
-            url: 'pages/' + language + '/pages'
-        });
         this.initSelectViews();
         this.setLocale(locale);
         this.initSelectViews();
@@ -57,12 +54,6 @@ App = Em.Application.create({
         // Pre-load these lists so we avoid race conditions when displaying forms
         App.Theme.find().then(function(list) {
             App.ThemeSelectView.reopen({
-                content: list
-            });
-        });
-
-        App.Skill.find().then(function(list) {
-            App.SkillSelectView.reopen({
                 content: list
             });
         });
@@ -157,23 +148,9 @@ App.Adapter.configure("plurals", {
     "address": "addresses"
 });
 
-App.Adapter.map(
-    'App.Payment', {
-        availablePaymentMethods: { readOnly: true }
-    },
-    'App.Order', {
-        total: { readOnly: true }
-    }
-);
-
-
 App.ApplicationController = Ember.Controller.extend({
-    needs: ['currentUser', 'currentOrder', 'myProjectList'],
+    needs: ['currentUser'],
     display_message: false,
-
-    news: function() {
-        return App.NewsPreview.find({language: App.get('language')});
-    }.property(),
 
     displayMessage: (function() {
         if (this.get('display_message') == true) {
@@ -197,14 +174,6 @@ App.ApplicationController = Ember.Controller.extend({
 //   always: The child records are embedded when loading, and are saved embedded in the same record. This,
 //           of course, affects the dirtiness of the records (if the child record changes, the adapter will
 //           mark the parent record as dirty).
-
-
-App.Adapter.map('App.Quote', {
-    user: {embedded: 'load'}
-});
-App.Adapter.map('App.ContactMessage', {
-    author: {embedded: 'load'}
-});
 
 App.Store = DS.Store.extend({
     adapter: 'App.Adapter'
@@ -254,7 +223,7 @@ App.Router.reopen({
 });
 
 DS.Model.reopen({
-    meta: DS.attr('object'),
+    meta: DS.attr('object')
 });
 
 Em.Route.reopen({
@@ -286,12 +255,6 @@ App.Router.map(function() {
 
 App.ApplicationRoute = Em.Route.extend({
     needs: ['currentUser'],
-
-//    setupController: function(controller, model) {
-//        this.controllerFor('myProjectList').set('model', App.MyProject.find());
-//        this._super(controller, model);
-//    },
-
 
     actions: {
         selectLanguage: function(language) {
@@ -461,20 +424,6 @@ App.UserRoute = Em.Route.extend({
         return App.RecurringDirectDebitPayment.find({}).then(function(recurringPayments) {
             controller.set('showPaymentsTab', recurringPayments.get('length') > 0)
         });
-    }
-});
-
-/* Home Page */
-
-App.HomeRoute = Em.Route.extend({
-    model: function(params) {
-        return App.HomePage.find(App.get('language'));
-    },
-
-    setupController: function(controller, model) {
-        this._super(controller, model);
-        controller.set('projectIndex', 0).loadProject();
-        controller.set('quoteIndex', 0).loadQuote();
     }
 });
 

@@ -63,7 +63,6 @@ class ContactMessage(models.Model):
     """
     Message sent from Contact Page.
     """
-
     class ContactStatus(DjangoChoices):
         new = ChoiceItem('new', label=_("New"))
         in_progress = ChoiceItem('in progress', label=_("In progress"))

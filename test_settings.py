@@ -69,7 +69,8 @@ INSTALLED_APPS = (
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
-    )
+    'bluebottle.pages',
+)
 
 MIDDLEWARE_CLASSES = [
     # Have a middleware to make sure old cookies still work after we switch to domain-wide cookies.

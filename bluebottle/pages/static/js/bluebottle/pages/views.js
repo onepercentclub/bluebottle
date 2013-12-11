@@ -118,7 +118,7 @@ App.PageView = Ember.View.extend(App.GoTo, {
                                 {top: '118px', left: '126px', rotate: 3}, // MH
                                 {top: '123px', left: '109px', rotate: -3}, // SS
                                 {top: '1000px', left: '-1000px', rotate: 7}
-                            ]
+                            ];
 
                             var t = 0;
                             var m = [];
@@ -130,12 +130,12 @@ App.PageView = Ember.View.extend(App.GoTo, {
                                     m[t].fadeOut(0);
                                     m[t].fadeIn(1000);
                                     m[t].css({
-                                                '-webkit-transform': 'rotate(' + degree + 'deg)',
-                                                '-moz-transform': 'rotate(' + degree + 'deg)',
-                                                '-ms-transform': 'rotate(' + degree + 'deg)',
-                                                '-o-transform': 'rotate(' + degree + 'deg)',
-                                                'transform': 'rotate(' + degree + 'deg)',
-                                                'zoom': 1
+                                        '-webkit-transform': 'rotate(' + degree + 'deg)',
+                                        '-moz-transform': 'rotate(' + degree + 'deg)',
+                                        '-ms-transform': 'rotate(' + degree + 'deg)',
+                                        '-o-transform': 'rotate(' + degree + 'deg)',
+                                        'transform': 'rotate(' + degree + 'deg)',
+                                        'zoom': 1
                                     }, 5000);
                                     m[t].animate(loc[t], 10000);
                                 }

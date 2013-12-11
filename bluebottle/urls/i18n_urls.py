@@ -3,10 +3,12 @@ from django.contrib import admin
 
 from bluebottle.views import HomeView
 
+admin.autodiscover()
 
-urlpatterns = patterns('',
-    # These URL's will be automatically prefixed with the locale (e.g. '/nl/')
-    url(r'/$', HomeView.as_view(), name='home'),
+
+urlpatterns = patterns(
+    '',
+    url(r'^$', HomeView.as_view(), name='home'),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset', name='admin_password_reset'),

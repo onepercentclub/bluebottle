@@ -83,11 +83,17 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/controllers.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/views.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/models.js"></script>
+
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/routes.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/controllers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/views.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/models.js"></script>
         {% endblock %}
     {% endcompress %}
 
     {% block handlebars_templates %}
-        {% include  "accounts/base.hbs" %}
+        {% include "accounts/base.hbs" %}
+        {% include "pages/pages.hbs" %}
     {% endblock handlebars_templates %}
 
     <!-- avoid hardcoding these urls -->

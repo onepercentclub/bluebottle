@@ -3,7 +3,6 @@
  */
 
 App.Router.map(function() {
-
     this.resource('page', {path: '/pages/:page_id'});
     this.resource('contactMessage', {path: '/contact'});
 });
@@ -31,4 +30,3 @@ App.ContactMessageRoute = Em.Route.extend(App.ScrollToTop, {
         return store.createRecord(App.ContactMessage);
     }
 });
-

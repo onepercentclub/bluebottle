@@ -75,6 +75,7 @@
         {# BlueBottle Application #}
 
         {% block ember_scripts %}
+            {{ block.super }}
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/presets.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/app.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>
@@ -93,7 +94,7 @@
 
     {% block handlebars_templates %}
         {% include "accounts/base.hbs" %}
-        {% include "pages.hbs" %}
+        {% include "pages/pages.hbs" %}
     {% endblock handlebars_templates %}
 
     <!-- avoid hardcoding these urls -->
@@ -107,7 +108,7 @@
     {% block htmlheader %}{% endblock %}
 
     {% tplhandlebars "language" %}
-        <a {{action "selectLanguage" view.content.code }}{{bindAttr title=view.content.name}}>{{ view.content.code }}</a>
+        <a {{action "selectLanguage" view.content.code}}{{bindAttr title=view.content.name}}>{{ view.content.code }}</a>
     {% endtplhandlebars %}
 
 

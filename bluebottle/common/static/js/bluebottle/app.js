@@ -52,12 +52,6 @@ App = Em.Application.create({
 
     initSelectViews: function() {
         // Pre-load these lists so we avoid race conditions when displaying forms
-        App.Theme.find().then(function(list) {
-            App.ThemeSelectView.reopen({
-                content: list
-            });
-        });
-
         App.Country.find().then(function(list) {
             App.CountrySelectView.reopen({
                 content: list
@@ -66,6 +60,7 @@ App = Em.Application.create({
                 content: list
             });
         });
+
         // Get a filtered list of countries that can apply for a project ('oda' countries).
         var filteredList = App.Country.filter(function(item) {return item.get('oda')});
 

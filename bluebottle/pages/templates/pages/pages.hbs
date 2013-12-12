@@ -5,7 +5,8 @@
 {#  {{bindAttr class=id + "l-section"}} #}
 
 {% tplhandlebars "page" %}
-    <div class="l-section"id="page" >
+    <div class="l-section" id="page">
+        <h1>{{title}}</h1>
         {{#if view.showTitle}}
         	<section class="l-wrapper">
 					<article class="l-content">
@@ -27,19 +28,15 @@
 							<li>{{#linkTo contactMessage href=true}}{% trans "Contact" %}{{/linkTo}}</a></li>
 						</ul>
 					</sidebar>
-					
-        		</div>
         	</section>
         {{else}}
         	{{{body}}}
         {{/if}}
     </div>
-
 {% endtplhandlebars %}
 
 
 {% tplhandlebars "error/not_found" %}
-	
 	<div class="l-section page-error" id="page" >
 		<section class="l-wrapper">
 			<article class="l-content">
@@ -53,7 +50,6 @@
 
 
 {% tplhandlebars "contact_message" %}
-
     <div class="l-section" id="page">
         <section class="l-wrapper">
         
@@ -144,7 +140,6 @@
 	            
         </section>
     </div>
-
 {% endtplhandlebars %}
 
 

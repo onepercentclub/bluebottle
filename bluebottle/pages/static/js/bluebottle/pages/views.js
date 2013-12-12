@@ -1,4 +1,3 @@
-
 /*
    Mixin to enable scrolling from one anchor point to another
    within a same page.
@@ -33,7 +32,7 @@ App.GoTo = Ember.Mixin.create({
 
 
 App.PageView = Ember.View.extend(App.GoTo, {
-    templateName: 'page',
+    template: Ember.TEMPLATES['page'],
 
     showTitle: function(){
         // Don't show title for styled pages

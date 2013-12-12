@@ -6,9 +6,9 @@ from django.conf.urls.static import static
 
 urlpatterns = patterns('',
     # The api urls are in the / url namespace so that they're not redirected to /en/.
-    url(r'^api/users/', include('bluebottle.accounts.urlsapi')),
-    url(r'^api/geo/', include('bluebottle.geo.urlsapi')),
-    url(r'^api/metadata/', include('bluebottle.bluebottle_utils.urlsapi')),
+    url(r'^api/users/', include('bluebottle.accounts.urls_api')),
+    url(r'^api/geo/', include('bluebottle.geo.urls_api')),
+    url(r'^api/metadata/', include('bluebottle.bluebottle_utils.urls_api')),
     url(r'^api/pages/', include('bluebottle.pages.urls_api')),
 )
 

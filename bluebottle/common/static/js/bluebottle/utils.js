@@ -53,23 +53,6 @@ App.TimeNeededSelectView = Em.Select.extend({
 });
 
 
-App.Theme = DS.Model.extend({
-    url:'utils/themes',
-    title: DS.attr('string')
-});
-
-App.ThemeList = [
-    {id: "0", title: gettext("--loading--")}
-];
-
-App.ThemeSelectView = Em.Select.extend({
-    content: App.ThemeList,
-    optionValuePath: "content.id",
-    optionLabelPath: "content.title",
-    prompt: "Pick a theme"
-});
-
-
 App.IsAuthorMixin = Em.Mixin.create({
     isAuthor: function () {
         var username = this.get('controllers.currentUser.username');

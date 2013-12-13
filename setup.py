@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
-   
+
 readme = read_file('README.rst')
 changes = ''
 #changes = read_file('CHANGES.rst')
@@ -34,11 +34,11 @@ install_requires = [
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
 #    'django-filter==0.6',
-#    'django-fluent-contents==0.9a1',
+    'django-fluent-contents==0.9a1',
 #    'django-fluent-dashboard==0.3.2',
 #    'django-iban==0.2.1',
 #    'django-jenkins==0.14.0',
-   'django-localflavor==1.0',
+    'django-localflavor==1.0',
 #    'django-polymorphic==0.5',
     'django-registration==1.0',
 #    'django-salesforce==0.1.6.3',
@@ -46,15 +46,15 @@ install_requires = [
     'django-statici18n==0.4.5',
     'django-taggit==0.10a1',
     'django-taggit-autocomplete-modified==0.1.0b4',
-#    'django-templatetag-handlebars==1.2.0',
+    'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
-#    'django-wysiwyg==0.5.1',
+    'django-wysiwyg==0.5.1',
     'djangorestframework==2.3.6',
 #    'dkimpy==0.5.4',
 #    'dnspython==1.11.0',
-#    'html5lib==0.95',
+    'html5lib==0.95',
 #    'jsmin==2.0.2',
-   'micawber==0.2.6',
+    'micawber==0.2.6',
 #    'pycurl==7.19.0',
 #    'pytz==2013b',
 #    'raven==3.3.12',

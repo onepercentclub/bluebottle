@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http.response import Http404
+from django.shortcuts import get_list_or_404, get_object_or_404
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
@@ -20,7 +21,8 @@ class PageList(generics.ListAPIView):
         qs = super(PageList, self).get_queryset()
         qs = qs.filter(status=Page.PageStatus.published)
         qs = qs.filter(publication_date__lte=now)
-        qs = qs.filter(Q(publication_end_date__gte=now) | Q(publication_end_date__isnull=True))
+        qs = qs.filter(Q(publication_end_date__gte=now) |
+                       Q(publication_end_date__isnull=True))
         return qs
 
 
@@ -32,19 +34,16 @@ class PageDetail(generics.RetrieveAPIView):
         qs = super(PageDetail, self).get_queryset()
         qs = qs.filter(status=Page.PageStatus.published)
         qs = qs.filter(publication_date__lte=now)
-        qs = qs.filter(Q(publication_end_date__gte=now) | Q(publication_end_date__isnull=True))
+        qs = qs.filter(Q(publication_end_date__gte=now) |
+                       Q(publication_end_date__isnull=True))
         return qs
 
     def get_object(self, queryset=None):
         qs = self.get_queryset()
         qs = qs.filter(slug=self.kwargs['slug'])
-        qs = qs.filter(language=self.kwargs['language'])
-        try:
-            # Get the single item from the filtered queryset
-            obj = qs.get()
-        except ObjectDoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
+        qs = get_list_or_404(qs, slug=self.kwargs['slug'])
+        obj = get_object_or_404(qs, language=self.kwargs['language'])
+
         return obj
 
 

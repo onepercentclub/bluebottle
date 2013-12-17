@@ -409,6 +409,7 @@ DS.DRF2Adapter.registerTransform("object", {
         }
         return serialized;
     },
+    
     serialize: function(deserialized) {
         return Ember.isNone(deserialized) ? null : deserialized;
     }

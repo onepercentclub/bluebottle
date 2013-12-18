@@ -1,4 +1,4 @@
-{% load templatetag_handlebars %}
+{% load bb_ember %}
 {% load i18n %}
 {% load static %}
 
@@ -265,37 +265,45 @@
         <div class="l-wrapper">
         
             <ul class="tabs four">
-                <li class="tab-updates">
-                    {{#linkTo 'project.index'}}
-                        <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
-                        <strong class="tab-title">
-                            {% trans "Updates" %}
+                {% if 'wallposts' in bb_apps %}
+                    {% block_verbatim 'project_wallpost_button' %}
+                        <li class="tab-updates">
+                            {{#linkTo 'project.index'}}
+                                <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
+                                <strong class="tab-title">
+                                    {% trans "Updates" %}
 
-                            {{#if controllers.projectIndex.meta.total}}
-                                {{#if controllers.projectIndex.firstObject.isLoaded}}
-                                    <em class="tab-subtitle">{{localize controllers.projectIndex.firstObject.created formatting="X"}}</em>
-                                {{else}}
-                                    <em class="tab-subtitle">{% trans "Loading&#8230;" %}</em>
-                                {{/if}}
+                                    {{#if controllers.projectIndex.meta.total}}
+                                        {{#if controllers.projectIndex.firstObject.isLoaded}}
+                                            <em class="tab-subtitle">{{localize controllers.projectIndex.firstObject.created formatting="X"}}</em>
+                                        {{else}}
+                                            <em class="tab-subtitle">{% trans "Loading&#8230;" %}</em>
+                                        {{/if}}
+                                    {{else}}
+                                        <em class="tab-subtitle">{% trans "No updates" %}</em>
+                                    {{/if}}
+                                </strong>
+                            {{/linkTo}}
+                        </li>
+                    {% endblock_verbatim %}
+                {% endif %}
+                {% if 'tasks' in bb_apps %}
+                    {% block_verbatim 'project_task_button' %}
+                        <li class="tab-tasks">
+                            {{#if taskCount}}
+                                {{#linkTo 'projectTasks'}}
+                                    <span class="tab-icon">{{taskCount}}</span>
+                                    <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "Skills needed" %}</em></strong>
+                                {{/linkTo}}
                             {{else}}
-                                <em class="tab-subtitle">{% trans "No updates" %}</em>
+                                {{#linkTo 'projectTasks'}}
+                                    <span class="tab-icon">0</span>
+                                    <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "No skills needed" %}</em></strong>
+                                {{/linkTo}}
                             {{/if}}
-                        </strong>
-                    {{/linkTo}}
-                </li>
-                <li class="tab-tasks">
-                    {{#if taskCount}}
-                        {{#linkTo 'projectTasks'}}
-                            <span class="tab-icon">{{taskCount}}</span>
-                            <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "Skills needed" %}</em></strong>
-                        {{/linkTo}}
-                    {{else}}
-                        {{#linkTo 'projectTasks'}}
-                            <span class="tab-icon">0</span>
-                            <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "No skills needed" %}</em></strong>
-                        {{/linkTo}}
-                    {{/if}}
-                </li>
+                        </li>
+                    {% endblock_verbatim %}
+                {% endif %}
                 <li class="tab-plan">
                     {{#linkTo "projectPlan"}}
                         <span class="tab-icon"><span class="flaticon solid document-2"></span></span>

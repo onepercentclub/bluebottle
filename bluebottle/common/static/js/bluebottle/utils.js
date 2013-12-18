@@ -1,5 +1,3 @@
-// TODO: Combine this Country model with the one in projects.
-
 App.Country = DS.Model.extend({
     url: "geo/countries",
     name: DS.attr('string'),

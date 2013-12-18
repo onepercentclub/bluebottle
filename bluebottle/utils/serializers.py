@@ -5,15 +5,13 @@ from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 from django_tools.middlewares import ThreadLocal
-
-
 from rest_framework import serializers
 from taggit.managers import _TaggableManager
 
-
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-from bluebottle.bluebottle_utils.validators import validate_postal_code
-from bluebottle.bluebottle_utils.models import Address
+
+from .validators import validate_postal_code
+from .models import Address
 
 
 from HTMLParser import HTMLParser

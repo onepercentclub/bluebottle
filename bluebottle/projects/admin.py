@@ -28,7 +28,6 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     raw_id_fields = ('owner',)
 
-    readonly_fields = ('image', )
     fields = ('owner', 'phase', 'title', 'pitch', 'image','description', 'effects', 'for_who', 'future', 'reach',
               'latitude', 'longitude', 'country', 'video_url', 'money_needed', 'tags')
 

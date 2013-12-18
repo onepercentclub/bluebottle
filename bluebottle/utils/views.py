@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework import views, response
 from taggit.models import Tag
 
-#from apps.bluebottle_utils.serializers import ThemeSerializer
+#from apps.utils.serializers import ThemeSerializer
 #from apps.projects.models import ProjectTheme
 
 

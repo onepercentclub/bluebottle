@@ -11,10 +11,6 @@ class Migration(SchemaMigration):
         ('geo', '0001_initial'),
     )
 
-    needed_by = (
-        ('social_auth', '0001_initial'),
-    )
-
     def forwards(self, orm):
         # Adding model 'BlueBottleUser'
         db.create_table(u'accounts_bluebottleuser', (

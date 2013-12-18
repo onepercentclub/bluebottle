@@ -4,7 +4,7 @@ from fluent_contents.rendering import render_placeholder
 from rest_framework import serializers
 
 from bluebottle.accounts.serializers import UserPreviewSerializer
-from bluebottle.bluebottle_utils.serializers import MetaField
+from bluebottle.utils.serializers import MetaField
 from .models import ContactMessage, Page
 
 

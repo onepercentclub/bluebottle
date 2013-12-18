@@ -5,38 +5,31 @@ App.Adapter.map('App.Project', {
     country: {embedded: 'load'},
     meta: {embedded: 'load'}
 });
+
 App.Adapter.map('App.ProjectPreview', {
     campaign: {embedded: 'load'},
     country: {embedded: 'load'}
 });
 
-App.Adapter.map('App.ProjectPlan', {
-    tags: {embedded: 'load'},
-    country: {embedded: 'load'},
-    budgetLines: {embedded: 'load'}
-});
-App.Adapter.map('App.ProjectPitch', {
-    tags: {embedded: 'load'},
-    country: {embedded: 'load'}
-});
 App.Adapter.map('App.MyProjectPlan', {
     ambassadors: {embedded: 'load'},
     budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
 });
-App.Adapter.map('App.MyProjectPitch', {
-    tags: {embedded: 'always'}
-});
+
 App.Adapter.map('App.MyOrganization', {
     addresses: {embedded: 'both'},
     documents: {embedded: 'load'}
 });
+
 App.Adapter.map('App.MyOrganizationDocument', {
     file: {embedded: 'load'}
 });
+
 App.Adapter.map('App.PartnerOrganization', {
     projects: {embedded: 'load'}
 });
+
 App.Adapter.map('App.ProjectDonation', {
     member: {embedded: 'both'}
 });
@@ -92,42 +85,15 @@ App.ProjectCountry = DS.Model.extend({
     subregion: DS.attr('string')
 });
 
+App.Project = DS.Model.extend({
+    url: 'projects/projects',
 
-App.ProjectPitch = DS.Model.extend({
-    url: 'projects/pitches',
-
-    project: DS.belongsTo('App.MyProject'),
+    // Model fields
+    slug: DS.attr('string'),
+    phase: DS.attr('string'),
     created: DS.attr('date'),
-    status: DS.attr('string'),
 
-    // Basics
-    title: DS.attr('string'),
-    pitch: DS.attr('string'),
-    theme: DS.attr('string'),
-    tags: DS.hasMany('App.Tag'),
-    description: DS.attr('string'),
-    need: DS.attr('string'),
-
-    // Location
-    country: DS.belongsTo('App.ProjectCountry'),
-    latitude: DS.attr('string'),
-    longitude: DS.attr('string'),
-
-    // Media
-    image: DS.attr('string'),
-    image_small: DS.attr('string'),
-    image_square: DS.attr('string'),
-    image_bg: DS.attr('string')
-
-});
-
-
-App.ProjectPlan = DS.Model.extend({
-    url: 'projects/plans',
-
-    project: DS.belongsTo('App.MyProject'),
-    status: DS.attr('string'),
-    created: DS.attr('date'),
+    owner: DS.belongsTo('App.UserPreview'),
 
     // Basics
     title: DS.attr('string'),
@@ -153,69 +119,21 @@ App.ProjectPlan = DS.Model.extend({
 
     // Organization
     organization: DS.belongsTo('App.Organization'),
-    budgetLines: DS.hasMany('App.BudgetLine')
+    budgetLines: DS.hasMany('App.BudgetLine'),
 
-});
+    isPhasePlan: Em.computed.equal('phase', 'plan'),
+    isPhaseCampaign: Em.computed.equal('phase', 'campaign'),
+    isPhaseDone: Em.computed.equal('phase', 'failed'),
 
-
-App.ProjectCampaign = DS.Model.extend({
-    url: 'projects/plans',
-
-    project: DS.belongsTo('App.MyProject'),
-    status: DS.attr('string'),
-    money_asked: DS.attr('number'),
-    money_donated: DS.attr('number'),
-    deadline: DS.attr('date'),
+    getProject: function(){
+        return App.Project.find(this.get('id'));
+    }.property('id'),
 
     daysToGo: function(){
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
-    }.property('deadline'),
-
-    money_needed: function(){
-        var donated = this.get('money_asked') - this.get('money_donated');
-        if (donated < 0) {
-            return 0;
-        }
-        return Math.ceil(donated);
-    }.property('money_asked', 'money_donated')
-});
-
-
-App.Project = DS.Model.extend({
-    url: 'projects/projects',
-
-    // Model fields
-    slug: DS.attr('string'),
-    title: DS.attr('string'),
-    pitch: DS.attr('string'),
-    description: DS.attr('string'),
-    phase: DS.attr('string'),
-    created: DS.attr('date'),
-
-    owner: DS.belongsTo('App.UserPreview'),
-
-    days_left: DS.attr('number'),
-    supporters_count: DS.attr('number'),
-
-    wallposts: DS.hasMany('App.WallPost'),
-
-    taskCount: DS.attr('number'),
-
-    isCampaign: DS.attr('boolean'),
-
-    isPhasePlan: Em.computed.equal('phase', 'plan'),
-    isPhaseCampaign: Em.computed.equal('phase', 'campaign'),
-    isPhaseAct: Em.computed.equal('phase', 'act'),
-    isPhaseResults: Em.computed.equal('phase', 'results'),
-    isPhaseRealized: Em.computed.equal('phase', 'realized'),
-    isPhaseFailed: Em.computed.equal('phase', 'failed'),
-
-    getProject: function(){
-        return App.Project.find(this.get('id'));
-    }.property('id')
-
+    }.property('deadline')
 
 });
 
@@ -369,65 +287,6 @@ App.MyOrganization = DS.Model.extend({
 });
 
 
-App.MyProjectPitch = DS.Model.extend({
-    url: 'projects/pitches/manage',
-
-    project: DS.belongsTo('App.MyProject'),
-
-    // Basics
-    title: DS.attr('string'),
-    pitch: DS.attr('string'),
-    theme: DS.attr('string'),
-    tags: DS.hasMany('App.Tag'),
-    description: DS.attr('string'),
-    need: DS.attr('string'),
-
-    validBasics: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('description') &&
-            this.get('theme') && this.get('tags.length') && this.get('need')){
-            return true;
-        }
-        return false;
-    }.property('title', 'pitch', 'theme', 'tags', 'description', 'theme', 'need'),
-
-
-    // Location
-    country: DS.attr('string'),
-    latitude: DS.attr('string'),
-    longitude: DS.attr('string'),
-
-    validLocation: function(){
-        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
-            return true;
-        }
-        return false;
-    }.property('country', 'latitude', 'longitude'),
-
-
-    // Media
-    image: DS.attr('image'),
-
-    validMedia: function(){
-        if (this.get('image')){
-            return true;
-        }
-        return false;
-    }.property('image'),
-
-    // Submitting
-    status: DS.attr('string'),
-    agreed: DS.attr('boolean'),
-
-	isBeingReviewed: function(){
-        if (this.get('status') == 'reviewed') {
-            return true;
-        }
-        return false;
-	}.property('status'),
-
-    created: DS.attr('date')
-});
-
 App.BudgetLine = DS.Model.extend({
     project_plan: DS.belongsTo('App.ProjectPlan'),
     description: DS.attr('string'),
@@ -435,8 +294,8 @@ App.BudgetLine = DS.Model.extend({
 });
 
 
-App.MyProjectPlan = DS.Model.extend({
-    url: 'projects/plans/manage',
+App.MyProject = App.Project.extend({
+    url: 'projects/manage',
 
     project: DS.belongsTo('App.MyProject'),
 
@@ -545,18 +404,6 @@ App.MyProjectPlan = DS.Model.extend({
 
     created: DS.attr('date')
 });
-
-
-App.MyProjectCampaign = App.ProjectCampaign.extend({
-    url: 'projects/campaigns/manage',
-
-    project: DS.belongsTo('App.MyProject'),
-    status: DS.attr('string'),
-    moneyAsked: DS.attr('number'),
-    moneyDonated: DS.attr('number'),
-    deadline: DS.attr('date')
-});
-
 
 App.MyProject = DS.Model.extend({
     url: 'projects/manage',

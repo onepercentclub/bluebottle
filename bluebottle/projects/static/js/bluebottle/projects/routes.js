@@ -92,22 +92,14 @@ App.ProjectIndexRoute = Em.Route.extend({
         if (controller.get('parent_id') != parent_id){
             controller.set('page', 1);
             controller.set('parent_id', parent_id);
-            var store = this.get('store');
-            store.find('wallPost', {'parent_type': 'project', 'parent_id': parent_id}).then(function(items){
-                controller.set('meta', items.get('meta'));
-                controller.set('model', items.toArray());
-            });
+//            var store = this.get('store');
+//            store.find('wallPost', {'parent_type': 'project', 'parent_id': parent_id}).then(function(items){
+//                controller.set('meta', items.get('meta'));
+//                controller.set('model', items.toArray());
+//            });
         }
     }
 });
-
-
-App.ProjectPlanRoute = Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('project').get('plan');
-    }
-});
-
 
 
 /**
@@ -142,78 +134,9 @@ App.MyProjectRoute = Em.Route.extend({
 });
 
 
-App.MyProjectPitchRoute =  Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('myProject').get('pitch');
-    }
-});
-
-
-App.MyProjectPitchSubRoute = Ember.Route.extend({
-    redirect: function() {
-        var status = this.modelFor('myProject').get('pitch.status');
-        switch(status) {
-            case 'submitted':
-                this.transitionTo('myProjectPitchReview');
-                break;
-            case 'rejected':
-                this.transitionTo('myProjectPitchRejected');
-                break;
-            case 'approved':
-                this.transitionTo('myProjectPitchApproved');
-                break;
-        }
-    },
-    model: function(params) {
-        return this.modelFor('myProject').get('pitch');
-    },
-    exit: function() {
-        if (this.get('controller')) {
-            this.get('controller').stopEditing();
-        }
-    }
-
-});
-
-
-App.MyProjectPitchBasicsRoute = App.MyProjectPitchSubRoute.extend({});
-App.MyProjectPitchLocationRoute = App.MyProjectPitchSubRoute.extend({});
-App.MyProjectPitchMediaRoute = App.MyProjectPitchSubRoute.extend({});
-App.MyProjectPitchSubmitRoute = App.MyProjectPitchSubRoute.extend({});
-
-App.MyProjectPitchIndexRoute =  Em.Route.extend({
-    redirect: function() {
-        var status = this.modelFor('myProject').get('pitch.status');
-        switch(status) {
-            case 'submitted':
-                this.transitionTo('myProjectPitchReview');
-                break;
-            case 'rejected':
-                this.transitionTo('myProjectPitchRejected');
-                break;
-            case 'approved':
-                this.transitionTo('myProjectPitchApproved');
-                break;
-        }
-    },
-    model: function(params) {
-        return this.modelFor('myProject').get('pitch');
-    }
-});
-
-
-App.MyProjectPitchReviewRoute = Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('myProject').get('pitch');
-    }
-});
-
-
-// My ProjectPlan routes
-
 App.MyProjectPlanRoute = Em.Route.extend({
     model: function(params) {
-        return this.modelFor('myProject').get('plan');
+        return this.modelFor('myProject');
     }
 });
 

@@ -172,8 +172,6 @@
 
 {% tplhandlebars "project" %}
 
-    {{#if isCampaign}}<div id="project-campaign">{{/if}}
-
     <div class="l-section detail" id="project-detail">
         <section class="l-wrapper">
 
@@ -266,43 +264,43 @@
         
             <ul class="tabs four">
                 {% if 'wallposts' in bb_apps %}
-                    {% block_verbatim 'project_wallpost_button' %}
-                        <li class="tab-updates">
-                            {{#linkTo 'project.index'}}
-                                <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
-                                <strong class="tab-title">
-                                    {% trans "Updates" %}
+                {% verbatim %}
+                    <li class="tab-updates">
+                        {{#linkTo 'project.index'}}
+                            <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
+                            <strong class="tab-title">
+                                {% trans "Updates" %}
 
-                                    {{#if controllers.projectIndex.meta.total}}
-                                        {{#if controllers.projectIndex.firstObject.isLoaded}}
-                                            <em class="tab-subtitle">{{localize controllers.projectIndex.firstObject.created formatting="X"}}</em>
-                                        {{else}}
-                                            <em class="tab-subtitle">{% trans "Loading&#8230;" %}</em>
-                                        {{/if}}
+                                {{#if controllers.projectIndex.meta.total}}
+                                    {{#if controllers.projectIndex.firstObject.isLoaded}}
+                                        <em class="tab-subtitle">{{localize controllers.projectIndex.firstObject.created formatting="X"}}</em>
                                     {{else}}
-                                        <em class="tab-subtitle">{% trans "No updates" %}</em>
+                                        <em class="tab-subtitle">{% trans "Loading&#8230;" %}</em>
                                     {{/if}}
-                                </strong>
-                            {{/linkTo}}
-                        </li>
-                    {% endblock_verbatim %}
+                                {{else}}
+                                    <em class="tab-subtitle">{% trans "No updates" %}</em>
+                                {{/if}}
+                            </strong>
+                        {{/linkTo}}
+                    </li>
+                {% endverbatim %}
                 {% endif %}
                 {% if 'tasks' in bb_apps %}
-                    {% block_verbatim 'project_task_button' %}
-                        <li class="tab-tasks">
-                            {{#if taskCount}}
-                                {{#linkTo 'projectTasks'}}
-                                    <span class="tab-icon">{{taskCount}}</span>
-                                    <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "Skills needed" %}</em></strong>
-                                {{/linkTo}}
-                            {{else}}
-                                {{#linkTo 'projectTasks'}}
-                                    <span class="tab-icon">0</span>
-                                    <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "No skills needed" %}</em></strong>
-                                {{/linkTo}}
-                            {{/if}}
-                        </li>
-                    {% endblock_verbatim %}
+                {% verbatim %}
+                    <li class="tab-tasks">
+                        {{#if taskCount}}
+                            {{#linkTo 'projectTasks'}}
+                                <span class="tab-icon">{{taskCount}}</span>
+                                <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "Skills needed" %}</em></strong>
+                            {{/linkTo}}
+                        {{else}}
+                            {{#linkTo 'projectTasks'}}
+                                <span class="tab-icon">0</span>
+                                <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "No skills needed" %}</em></strong>
+                            {{/linkTo}}
+                        {{/if}}
+                    </li>
+                {% endverbatim %}
                 {% endif %}
                 <li class="tab-plan">
                     {{#linkTo "projectPlan"}}
@@ -316,8 +314,6 @@
     </nav>
 
     {{ outlet }}
-
-    {{#if isCampaign}}</div> <!-- /.project-campaign -->{{/if}}
 
 {% endtplhandlebars %}
 

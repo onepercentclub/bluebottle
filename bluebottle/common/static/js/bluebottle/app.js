@@ -422,22 +422,9 @@ App.ApplicationRoute = Em.Route.extend({
 });
 
 
-
 App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {
         this.transitionTo('userProfile');
-    }
-});
-
-
-// TODO Delete this Route when we implement Order history.
-App.UserRoute = Em.Route.extend({
-    setupController: function(controller, model) {
-        this._super(controller, model);
-
-        return App.RecurringDirectDebitPayment.find({}).then(function(recurringPayments) {
-            controller.set('showPaymentsTab', recurringPayments.get('length') > 0)
-        });
     }
 });
 
@@ -467,4 +454,3 @@ App.LanguageSwitchView = Em.CollectionView.extend({
 App.ApplicationView = Em.View.extend({
     elementId: 'site'
 });
-

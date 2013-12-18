@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     url(r'^api/geo/', include('bluebottle.geo.urls_api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls_api')),
     url(r'^api/pages/', include('bluebottle.pages.urls_api')),
+    url(r'^api/projects/', include('bluebottle.projects.urls_api')),
     url(r'^api/utils/', include('bluebottle.utils.urls_api')),
 )
 

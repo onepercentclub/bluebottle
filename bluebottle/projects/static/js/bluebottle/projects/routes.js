@@ -18,46 +18,23 @@ App.Router.map(function(){
     });
 
     this.resource('myProject', {path: '/my/projects/:my_project_id'}, function() {
-        this.resource('myProjectPlan', {path: 'plan'}, function() {
-            this.route('index');
-            this.route('basics');
-            this.route('location');
-            this.route('description');
-            this.route('media');
+        this.route('index');
+        this.route('basics');
+        this.route('location');
+        this.route('description');
+        this.route('media');
 
-            this.route('organisation');
-            this.route('legal');
-            this.route('ambassadors');
+        this.route('organisation');
+        this.route('legal');
+        this.route('ambassadors');
 
-            this.route('bank');
-            this.route('campaign');
-            this.route('budget');
+        this.route('bank');
+        this.route('campaign');
+        this.route('budget');
 
-            this.route('submit');
-
-        });
-
-        this.resource('myProjectPlanReview', {path: 'plan/review'});
-        this.resource('myProjectPlanApproved', {path: 'plan/approved'});
-        this.resource('myProjectPlanRejected', {path: 'plan/rejected'});
-
-        this.resource('myProjectPitch', {path: 'pitch'}, function() {
-            this.route('index');
-            this.route('basics');
-            this.route('location');
-            this.route('media');
-
-            this.route('submit');
-        });
-        this.resource('myProjectPitchReview', {path: 'pitch/review'});
-        this.resource('myProjectPitchApproved', {path: 'pitch/approved'});
-        this.resource('myProjectPitchRejected', {path: 'pitch/rejected'});
-
-        this.resource('myProjectCampaign', {path: 'campaign'});
-
+        this.route('submit');
     });
 
-    this.resource('myPitchNew', {path: '/my/pitch/new'});
     this.resource('myProjectList', {path: '/my/projects'});
     this.resource('partner', {path: '/pp/:partner_organization_id'});
 
@@ -79,7 +56,7 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
             route.transitionTo('projectList');
         });
         return page;
-    },
+    }
 
 });
 
@@ -134,24 +111,24 @@ App.MyProjectRoute = Em.Route.extend({
 });
 
 
-App.MyProjectPlanRoute = Em.Route.extend({
+App.MyProjectRoute = Em.Route.extend({
     model: function(params) {
         return this.modelFor('myProject');
     }
 });
 
-App.MyProjectPlanSubRoute = Em.Route.extend({
+App.MyProjectSubRoute = Em.Route.extend({
     redirect: function() {
         var status = this.modelFor('myProject').get('plan.status');
         switch(status) {
             case 'submitted':
-                this.transitionTo('myProjectPlanReview');
+                this.transitionTo('myProjectReview');
                 break;
             case 'rejected':
-                this.transitionTo('myProjectPlanRejected');
+                this.transitionTo('myProjectRejected');
                 break;
             case 'approved':
-                this.transitionTo('myProjectPlanApproved');
+                this.transitionTo('myProjectApproved');
                 break;
         }
     },
@@ -167,16 +144,15 @@ App.MyProjectPlanSubRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectPlanBasicsRoute = App.MyProjectPlanSubRoute.extend({});
-App.MyProjectPlanDescriptionRoute = App.MyProjectPlanSubRoute.extend({});
-App.MyProjectPlanLocationRoute = App.MyProjectPlanSubRoute.extend({});
-App.MyProjectPlanMediaRoute = App.MyProjectPlanSubRoute.extend({});
-//App.MyProjectPlanAmbassadorsRoute = App.MyProjectPlanSubRoute.extend({});
-App.MyProjectPlanSubmitRoute = App.MyProjectPlanSubRoute.extend({});
+App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
 
-App.MyProjectPlanCampaignRoute = App.MyProjectPlanSubRoute.extend({});
+App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
 
-App.MyProjectPlanBudgetRoute = App.MyProjectPlanSubRoute.extend({
+App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     setupController: function(controller, model){
         this._super(controller, model);
 
@@ -192,7 +168,7 @@ App.MyProjectPlanBudgetRoute = App.MyProjectPlanSubRoute.extend({
     }
 });
 
-App.MyProjectPlanOrganisationRoute = App.MyProjectPlanSubRoute.extend({
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);
@@ -204,24 +180,22 @@ App.MyProjectPlanOrganisationRoute = App.MyProjectPlanSubRoute.extend({
     }
 });
 
-App.MyProjectPlanBankRoute = App.MyProjectPlanSubRoute.extend({});
+App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
 
+App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
-App.MyProjectPlanLegalRoute = App.MyProjectPlanSubRoute.extend({});
-
-
-App.MyProjectPlanIndexRoute = Ember.Route.extend({
+App.MyProjectIndexRoute = Ember.Route.extend({
     redirect: function() {
         var status = this.modelFor('myProject').get('plan.status');
         switch(status) {
             case 'submitted':
-                this.transitionTo('myProjectPlanReview');
+                this.transitionTo('myProjectReview');
                 break;
             case 'rejected':
-                this.transitionTo('myProjectPlanRejected');
+                this.transitionTo('myProjectRejected');
                 break;
             case 'approved':
-                this.transitionTo('myProjectPlanApproved');
+                this.transitionTo('myProjectApproved');
                 break;
         }
     },
@@ -232,15 +206,8 @@ App.MyProjectPlanIndexRoute = Ember.Route.extend({
 });
 
 
-App.MyProjectPlanReviewRoute = Em.Route.extend({
+App.MyProjectReviewRoute = Em.Route.extend({
     model: function(params) {
         return this.modelFor('myProject').get('plan');
     }
 });
-
-App.MyProjectCampaignRoute = Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('myProject');
-    }
-});
-

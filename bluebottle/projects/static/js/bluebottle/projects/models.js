@@ -11,7 +11,7 @@ App.Adapter.map('App.ProjectPreview', {
     country: {embedded: 'load'}
 });
 
-App.Adapter.map('App.MyProjectPlan', {
+App.Adapter.map('App.MyProject', {
     ambassadors: {embedded: 'load'},
     budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
@@ -208,19 +208,10 @@ App.MyOrganizationDocument = DS.Model.extend({
     file: DS.attr('file')
 });
 
-App.MyProjectAmbassador = DS.Model.extend({
-    url: 'projects/ambassadors/manage',
-
-    project_plan: DS.belongsTo('App.MyProjectPlan'),
-    name: DS.attr('string'),
-    email: DS.attr('string'),
-    description: DS.attr('string')
-});
-
 App.MyProjectBudgetLine = DS.Model.extend({
     url: 'projects/budgetlines/manage',
 
-    project_plan: DS.belongsTo('App.MyProjectPlan'),
+    project_plan: DS.belongsTo('App.MyProject'),
     description: DS.attr('string'),
     amount: DS.attr('number')
 });
@@ -288,7 +279,7 @@ App.MyOrganization = DS.Model.extend({
 
 
 App.BudgetLine = DS.Model.extend({
-    project_plan: DS.belongsTo('App.ProjectPlan'),
+    project: DS.belongsTo('App.Project'),
     description: DS.attr('string'),
     amount: DS.attr('number')
 });
@@ -296,8 +287,6 @@ App.BudgetLine = DS.Model.extend({
 
 App.MyProject = App.Project.extend({
     url: 'projects/manage',
-
-    project: DS.belongsTo('App.MyProject'),
 
     // Basics
     title: DS.attr('string'),
@@ -404,52 +393,3 @@ App.MyProject = App.Project.extend({
 
     created: DS.attr('date')
 });
-
-App.MyProject = DS.Model.extend({
-    url: 'projects/manage',
-
-    // Model fields
-    slug: DS.attr('string'),
-    title: DS.attr('string'),
-    phase: DS.attr('string'),
-
-    pitch: DS.belongsTo('App.MyProjectPitch'),
-    plan: DS.belongsTo('App.MyProjectPlan'),
-    campaign: DS.belongsTo('App.MyProjectCampaign'),
-
-    coach: DS.belongsTo('App.User'),
-
-    getProject: function(){
-        return App.Project.find(this.get('id'));
-    }.property('id'),
-
-    isPhasePitch: Em.computed.equal('phase', 'pitch'),
-    isPhasePlan: Em.computed.equal('phase', 'plan'),
-    isPhaseCampaign: Em.computed.equal('phase', 'campaign'),
-    isPhaseAct: Em.computed.equal('phase', 'act'),
-    isPhaseResults: Em.computed.equal('phase', 'results'),
-
-    isPublic: function(){
-        if (this.get('phase') == 'pitch') {
-            return false;
-        }
-        if (this.get('phase') == null) {
-            return false;
-        }
-        return true;
-    }.property('phase'),
-
-
-    inProgress: function(){
-        var phase = this.get('phase');
-        if (phase == 'realized') {
-            return false;
-        }
-        if (phase == 'failed') {
-            return false;
-        }
-        return true;
-    }.property('phase', 'pitch.status', 'plan.status')
-
-});
-

@@ -122,9 +122,11 @@
 
                     <!-- logo -->
                     <div id="logo">
-                        {{#linkTo 'home' class="logo-link"}}
-                            <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
-                        {{/linkTo}}
+                        {% block_verbatim nav_logo %}
+                            {{#linkTo 'home' class="logo-link"}}
+                                <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
+                            {{/linkTo}}
+                        {% endblock_verbatim %}
                     </div>
                     <!-- end: logo -->
 

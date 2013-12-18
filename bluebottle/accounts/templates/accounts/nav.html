@@ -27,12 +27,22 @@
                                     {{/linkTo }}
                                 </li>
                                 
+                                {% if 'projects' in bb_apps %}
+                                {% block_verbatim 'my-projects-menu-link' %}
+                                    <li>
+                                        {{#linkTo 'myProjectList'}}
+                                            {% trans "My Projects" %}
+                                        {{/linkTo}}
+                                    </li>
+                                {% endblock_verbatim %}
+                                {% endif %}
+
                                 <li>
                                     {% block logout_anchor %}
                                         <a href="{% url 'accounts:logout' %}?next=/{{ LANGUAGE_CODE }}/">Logout</a>
                                     {% endblock logout_anchor %}
                                 </li>
-                                
+
                                 <li class="nav-member-switch-language">
                                     {% trans "Language" %} {{view "App.LanguageSwitchView"}}
                                 </li>

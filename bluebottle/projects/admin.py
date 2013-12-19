@@ -8,7 +8,6 @@ from babel.numbers import format_currency
 from sorl.thumbnail.admin import AdminImageMixin
 import logging
 
-
 from .models import Project
 
 
@@ -71,3 +70,4 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     project_owner.allow_tags = True
 
 admin.site.register(Project, ProjectAdmin)
+

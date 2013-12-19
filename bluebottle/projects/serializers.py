@@ -63,16 +63,27 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'phase', 'country')
 
 
-class ManageProjectSerializer(serializers.ModelSerializer):
+class ProjectEditableField(serializers.BooleanField):
+
+    pass
+
+
+
+class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project-manage-detail')
     phase = serializers.CharField(read_only=True)
+    editable = ProjectEditableField(read_only=True, source=phase)
+    tags = TagSerializer()
+    organization = serializers.PrimaryKeyRelatedField(source="organization", required=False)
 
     class Meta:
         model = Project
-        fields = ('id', 'created', 'title', 'url', 'phase')
+        fields = ('id', 'created', 'title', 'url', 'phase', 'image', 'pitch', 'tags', 'description',
+                  'country', 'latitude', 'longitude', 'effects', 'future', 'for_who', 'reach',
+                  'image', 'money_needed')
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):

@@ -130,6 +130,9 @@ App.Project = DS.Model.extend({
     }.property('id'),
 
     daysToGo: function(){
+        if (!this.get('time')) {
+            return null;
+        }
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
@@ -391,5 +394,10 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('totalBudget'),
 
-    created: DS.attr('date')
+    created: DS.attr('date'),
+
+    canEdit: function(){
+        if (this.get())
+        return true;
+    }.property('phase')
 });

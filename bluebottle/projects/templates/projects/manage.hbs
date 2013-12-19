@@ -2,10 +2,6 @@
 {% load i18n %}
 {% load static %}
 
-{% language "en" %}
-{# Force all these pages to english #}
-
-
 {% tplhandlebars "my_project_list" %}
 
     <div class="l-section" id="project-dashboard">
@@ -52,36 +48,19 @@
                         </span>
 
 				        <div class="project-actions">
-				        	{% trans "Phase" %}: <strong>{{ project.phase }}</strong> |
-			                {{#if project.isPhasePitch}}
-			                	{% trans "Status:" %} <strong>{{project.plan.status}}</strong>
-                                {{#if project.pitch.isBeingReviewed}}
-								{% trans "Your pitch is in review now." %}
-								  <br/>
-								  {% trans "We'll get back to you soon!" %}
-								{{else}}
-	                              {{#linkTo "myProjectPitch.basics" project tagName="a" class="btn btn-iconed"}}
+				        	{% trans "Phase" %}: <strong>{{ project.phase }}</strong>
+                            <br/>
+	                        {{#if project.canEdit}}
+	                            {{#linkTo "myProject" project tagName="a" class="btn btn-iconed right"}}
 	                                <span class="flaticon solid pencil-3"></span>
-	                                {% trans "Continue pitch" %}
-	                              {{/linkTo}}
-								{{/if}}
+	                                {% trans "Edit" %}
+	                            {{/linkTo}}
+
+                            {{else}}
+	                                <span class="flaticon solid pencil-3"></span>
+	                                {% trans "Project is locked" %}
 	                        {{/if}}
 
-	                        {{#if project.isPhasePlan}}
-	                            {% trans "Status:" %} <strong>{{project.plan.status}}</strong>
-	                            {{#linkTo "myProjectPlan" project tagName="a" class="btn btn-iconed right"}}
-	                                <span class="flaticon solid pencil-3"></span>
-	                                {% trans "Continue plan" %}
-	                            {{/linkTo}}
-	                        {{/if}}
-
-	                        {{#if project.isPhaseCampaign}}
-	                            {% trans "Status:" %} <strong>{{project.campaign.status}}</strong>
-	                            {{#linkTo "myProjectCampaign" project tagName="a" class="btn btn-iconed right"}}
-	                                <span class="flaticon solid pencil-3"></span>
-	                                {% trans "Campaigning" %}
-	                            {{/linkTo}}
-	                        {{/if}}
 				        </div>
 				    </li>
 					{{/each}}
@@ -89,97 +68,6 @@
 			</div>
         </div>
     </div>
-
-{% endtplhandlebars %}
-
-
-{% tplhandlebars "my_pitch_new" %}
-
-
-    <div class="l-section" id="project-dashboard">
-
-    	{{partial "my_project_top"}}
-
-        <div class="l-wrapper">
-            <div class="l-content">
-
-                <header class="l-page-header">
-                    <h1> {% trans "Send in your Project Pitch" %}</h1>
-                    <p><strong>
-{% blocktrans %}
-Do you have a smart idea to make a contribution to your community? An idea to tackle a waste problem in your neighborhood? An idea for clean and green transport? An idea to use tech innovations to improve local healthcare? Well, you came to the right place. We LOVE smart ideas!
-{% endblocktrans %}
-                    </strong></p>
-                </header>
-
-                <p>
-{% blocktrans %}
-1%Club offers you tools to engage your crowd to turn your smart idea in to reality.<br />
-Are you ready to invest time and effort in succeeding? Double check our <a href="/#!/pages/faq-projects">FAQ</a> and pitch your smart idea here!
-{% endblocktrans %}
-                </p>
-
-                {{#if controllers.currentUser.isAuthenticated}}
-                    {{#if errors.detail}}
-                        <p class="alert alert-error">
-                            {% trans "Problem creating pitch." %}
-                        </p>
-                        {% trans "It looks like you already have started a project in progress. You can manage your project here:" %}
-                        {{#linkTo "myProjectList" tagName="button" class="btn btn-primary btn-iconed"}}
-                            <span class="flaticon solid pencil-3"></span>
-                            {% trans "Manage projects." %}
-                        {{/linkTo}}
-
-                    {{else}}
-                        <form id="manage-project-new">
-                            <fieldset>
-                                <ul>
-                                    <li class="control-group">
-                                        <label class="control-label">{% trans "Name your pitch" %}</label>
-                                        <div class="controls">
-                                            {{view Em.TextField valueBinding="title" name="title" placeholder="Title for your smart idea" classBinding="errors.title.length:error"}}
-                                        </div>
-                                        {{#if errors.title }}
-                                            <div class="has-errors">{{#each errors.title }}<p>{{this}}</p>{{/each}}</div>
-                                        {{/if}}
-                                    </li>
-                                </ul>
-                            </fieldset>
-
-                            <button {{bindAttr class=":btn :btn-iconed :btn-primary :btn-save isDirty::disabled"}} {{action updateRecordOnServer}}>
-                                <span class="flaticon solid pencil-3"></span>{% trans "write your pitch" %}
-                            </button>
-                        </form>
-                    {{/if}}
-                {{else}}
-                    <p class="login-signup"><a href="/accounts/login">{% trans "Login" %}</a> {% trans "or become a" %} {{#linkTo "signup"}}{% trans "member" %}{{/linkTo}} {% trans "to pitch your plan." %}</p>
-                {{/if}}
-            </div>
-            <sidebar class="l-sidebar">
-                <h3>{% trans "WHEN YOUR SMART IDEA..." %}</h3>
-                <ul>
-                    <li>{% trans "Might seem small, but will have a big social impact" %}</li>
-                    <li>{% trans "Is concrete and thus has a clear start and end" %}</li>
-                    <li>{% trans "Needs on off investment to make it self-sufficient and sustainable on the long term" %}</li>
-                    <li>{% trans "Takes place in one of these developing countries" %}</li>
-                    <li>{% trans "Is managed and owned locally" %}</li>
-                    <li>{% trans "Needs people, special know-how and skills" %}</li>
-                    <li>{% trans "Needs some cash to get started (up to €5000)" %}</li>
-                </ul>
-                {% trans "...your idea fits right in with 1%Club!" %}
-            </sidebar>
-        </div>
-    </div>
-
-{% endtplhandlebars %}
-
-
-{% tplhandlebars "my_project" %}
-
-	<div class="l-section" id="manage-project">
-    	{{partial "my_project_top"}}
-		{{ outlet }}
-	</div>
 
 {% endtplhandlebars %}
 
@@ -202,60 +90,10 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
         </header>
 
         {{#if id}}
-            {{#if title}}
-                {{#unless isPhasePitch}}
-                    <a {{action "showProject" id href=true}} class="account-preview btn-link">
-                        <span class="flaticon solid eye-1"></span>
-                        {% trans "View project" %}
-                    </a>
-                {{/unless}}
-            {{/if}}
-
-            <ul class="tabs steps five">
-                <li {{bindAttr class=":tab-item :first isPhasePitch:is-active:is-inactive"}}>
-                    <a>
-                        <span class="tab-icon"><span class="flaticon solid lightbulb-3"></span></span>
-                        <strong class="tab-title">
-                            {% trans "Pitch" %}
-                            <em class="tab-subtitle">{{ pitch.status }}&nbsp;</em>
-                        </strong>
-                    </a>
-                </li>
-                <li  {{bindAttr class=":tab-item :second isPhasePlan:is-active:is-inactive"}}>
-                    <span>
-                        <span class="tab-icon"><span class="flaticon solid notebook-1"></span></span>
-                        <strong class="tab-title">
-                            {% trans "Plan" %}
-                            <em class="tab-subtitle">{{ plan.status }}&nbsp;</em>
-                        </strong>
-                    </span>
-                </li>
-                <li {{bindAttr class=":tab-item :third isPhaseCampaign:is-active:is-inactive"}}>
-                    <span>
-                        <span class="tab-icon"><span class="flaticon solid wallet-1"></span></span>
-                        <strong class="tab-title">
-                            {% trans "Campaign" %}
-                            <em class="tab-subtitle">{{ campaign.status }}&nbsp;</em>
-                        </strong>
-                    </span>
-                </li>
-                <li {{bindAttr class=":tab-item :fourth isPhaseAct:is-active:is-inactive"}}>
-                    <span>
-                        <span class="tab-icon"><span class="flaticon solid wrench-1"></span></span>
-                        <strong class="tab-title">{% trans "Execute" %}
-                            <em class="tab-subtitle">{{ act.status }}&nbsp;</em>
-                        </strong>
-                    </span>
-                </li>
-                <li {{bindAttr class=":tab-item :fifth isPhaseResults:is-active:is-inactive"}}>
-                    <span>
-                        <span class="tab-icon"><span class="flaticon solid flag-3"></span></span>
-                        <strong class="tab-title">{% trans "Results" %}
-                            <em class="tab-subtitle">{{ results.status }}&nbsp;</em>
-                        </strong>
-                    </span>
-                </li>
-            </ul>
+            <a {{action "showProject" id href=true}} class="account-preview btn-link">
+                <span class="flaticon solid eye-1"></span>
+                {% trans "View project" %}
+            </a>
         {{/if}}
     </nav>
 </div>
@@ -294,7 +132,11 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 
 {% endtplhandlebars %}
 
-{% tplhandlebars "my_project_plan" %}
+{% tplhandlebars "my_project" %}
+
+	<div class="l-section" id="manage-project">
+
+    	{{partial "my_project_top"}}
 
         <div class="l-wrapper">
 
@@ -302,25 +144,25 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
                 <h4><span class="flaticon solid notebook-1"></span> {% trans "Project Story" %} </h4>
                 <ul class="manage-project-nav">
                     <li>
-                        {{#linkTo "myProjectPlan.basics"}}
+                        {{#linkTo "myProject.basics"}}
                             <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
                             {% trans "Project Basics" %}
                         {{/linkTo}}
                     </li>
                     <li>
-                        {{#linkTo "myProjectPlan.description"}}
+                        {{#linkTo "myProject.description"}}
                             <em {{bindAttr class="validDescription:is-finished:is-unfinished"}}></em>
                             {% trans "Project Description" %}
                         {{/linkTo}}
                     </li>
                     <li>
-                        {{#linkTo "myProjectPlan.location"}}
+                        {{#linkTo "myProject.location"}}
                             <em {{bindAttr class="validLocation:is-finished:is-unfinished"}}></em>
                             {% trans "Location" %}
                         {{/linkTo}}
                     </li>
                     <li>
-                        {{#linkTo "myProjectPlan.media"}}
+                        {{#linkTo "myProject.media"}}
                             <em {{bindAttr class="validMedia:is-finished:is-unfinished"}}></em>
                             {% trans "Media" %}
                         {{/linkTo}}
@@ -330,20 +172,20 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
                 <h4><span class="flaticon solid briefcase-1"></span> {% trans "Organisation" %}</h4>
                 <ul class="manage-project-nav">
                     <li>
-                        {{#linkTo "myProjectPlan.organisation"}}
+                        {{#linkTo "myProject.organisation"}}
                             <em {{bindAttr class="organization.validProfile:is-finished:is-unfinished"}}></em>
                             {% trans "Organisation Profile" %}
                         {{/linkTo}}
                     </li>
                     {{#if organization}}
                     <li>
-                        {{#linkTo "myProjectPlan.legal"}}
+                        {{#linkTo "myProject.legal"}}
                             <em {{bindAttr class="organization.validLegalStatus:is-finished:is-unfinished"}}></em>
                             {% trans "Legal Status" %}
                         {{/linkTo}}
                     </li>
                     <!--{% comment %}<li>
-                        {{#linkTo "myProjectPlan.ambassadors"}}
+                        {{#linkTo "myProject.ambassadors"}}
                             <em {{bindAttr class="validAmbassadors:is-finished:is-unfinished"}}></em>
                             {% trans "Ambassadors" %}
                         {{/linkTo}}
@@ -354,20 +196,20 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
                     <h4><span class="flaticon solid wallet-1"></span> {% trans "Crowdfunding" %}</h4>
                     <ul class="manage-project-nav">
                         <li>
-                            {{#linkTo "myProjectPlan.campaign"}}
+                            {{#linkTo "myProject.campaign"}}
                                 <em {{bindAttr class="validCampaign:is-finished:is-unfinished"}}></em>
                                 {% trans "Start Campaign" %}
                             {{/linkTo}}
                         </li>
                         <li>
-                            {{#linkTo "myProjectPlan.budget"}}
+                            {{#linkTo "myProject.budget"}}
                                 <em {{bindAttr class="validBudget:is-finished:is-unfinished"}}></em>
                                 {% trans "Budget" %}
                             {{/linkTo}}
                         </li>
                         {{#if organization}}
                         <li>
-                            {{#linkTo "myProjectPlan.bank"}}
+                            {{#linkTo "myProject.bank"}}
                                 <em {{bindAttr class="organization.validBank:is-finished:is-unfinished"}}></em>
                                 {% trans "Bank details" %}
                             {{/linkTo}}
@@ -375,7 +217,7 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
                         {{/if}}
                 {{/if}}
 
-                {{#linkTo "myProjectPlan.submit" class="btn btn-iconed btn-primary btn-submit"}}
+                {{#linkTo "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
                     <span class="flaticon solid right-2"></span>
                     {% trans "Submit Plan" %}
                 {{/linkTo}}
@@ -387,46 +229,12 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
             </form>
 
         </div>
+	</div>
 
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_index" %}
-
-    <fieldset>
-        <legend>
-            <strong>{% trans "Woohoo, your pitch was accepted!" %}</strong>
-        </legend>
-        <div class="fieldset-content">
-            <p>{% trans "To complete your project plan, please fill in the empty spaces. Are there still some gaps? Don’t worry! We have a community full of people that are willing to help you. The only thing you need to do is create a 1%Skills task ask for the right expertise." %}</p>
-        </div>
-    </fieldset>
-
-    {{#if project.coach}}
-        <fieldset>
-            <legend>
-                <strong>{% trans "Project Coach" %}</strong>
-            </legend>
-            <div class="fieldset-content">
-                <p>{% trans "Meet" %} <strong>{{project.coach.first_name}}</strong>, {% trans "who's ready to guide you through writing your ProjectPlan." %}
-                    <br />
-                    <a {{action openInBigBox "userModal" project.coach }} class="member">
-                        <figure class="member-avatar"><img {{bindAttr src="project.coach.getAvatar" info="project.coach.first_name"}} /></figure>
-                        <strong class="member-name">{{project.coach.full_name}}</strong>
-                    </a>
-                </p>
-            </div>
-        </fieldset>
-    {{/if}}
-
-    {{#linkTo "myProjectPlan.basics" class="btn btn-iconed btn-next"}}<span class="flaticon solid right-2"></span>{% trans "Next" %}{{/linkTo}}
-
-    {{partial "my_project_tasks_and_updates"}}
-
-{% endtplhandlebars %}
-
-
-{% tplhandlebars "my_project_plan_basics" %}
+{% tplhandlebars "my_project_basics" %}
 
     <legend>
         <strong>{% trans "Project basics" %}</strong>
@@ -434,64 +242,20 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 
     <fieldset>
         <ul>
-            <li class="control-group has-popover" data-content="{% trans "Be short, creative, simple and memorable." %}">
-                <label class="control-label">{% trans "Title" %}</label>
-                <div class="controls">
-                    {{view Em.TextField valueBinding="title" placeholder="Title" classBinding="errors.title.length:error"}}
-                </div>
+            {{bb-textfield label='Title' hint='Be short, creative, simple and memorable.'
+                valueBinding=title placeholder='Title'errors=errors.title}}
 
-                {{#if errors.title }}
-                    <div class="has-errors">{{#each errors.title }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-
-            <li class="control-group has-popover" data-content="{% trans "Pitch your smart idea in one sentence." %}">
-                <label class="control-label">{% trans "Pitch" %}</label>
-                <div class="controls">
-                    {{view Em.TextArea valueBinding="pitch" placeholder="Description" classBinding="errors.pitch.length:error"}}
-                </div>
-
-                {{#if errors.pitch }}
-                    <div class="has-errors">{{#each errors.pitch }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
+            {{bb-textarea label='Pitch' hint='Pitch your smart idea in one sentence.' valueBinding=pitch
+                placeholder='Tell us in one sentence where you need to the money for.' errors=errors.pitch}}
         </ul>
     </fieldset>
     <fieldset>
         <ul>
-            <li class="control-group has-popover" data-content="{% trans "Select one of the themes." %}">
-                <label class="control-label">{% trans "Theme" %}</label>
-                <div class="controls">
-                    {{view App.ThemeSelectView valueBinding="theme" classBinding="errors.theme.length:error"}}
-                </div>
-
-                {{#if errors.theme }}
-                    <div class="has-errors">{{#each errors.theme }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
+            {{#bb-formfield hint='Select one of the themes.' label='Theme' errors=errors.theme}}
+                {{view App.ThemeSelectView valueBinding="theme" classBinding="errors.theme.length:error"}}
+            {{/bb-formfield}}
         </ul>
     </fieldset>
-    {% comment %}
-    <fieldset>
-        <ul>
-
-            <li class="control-group has-popover" data-content="{% trans "Pick a short, clear name." %}">
-                <label class="control-label">{% trans "Short name" %}</label>
-                <div class="controls">
-                    {{view Em.TextField valueBinding="slug" placeholder="Short name" classBinding="errors.slug.length:error"}}
-                    <div class="extra-info">
-                        {% trans "Example: " %}
-                        <strong>http://onepercentclub.com/#/projects/{{ slug }}</strong>
-                    </div>
-                </div>
-
-                {{#if errors.slug }}
-                    <div class="has-errors">{{#each errors.slug }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-        </ul>
-    </fieldset>
-    {% endcomment %}
     <fieldset>
         <ul>
             <li class="control-group">
@@ -540,7 +304,7 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_description" %}
+{% tplhandlebars "my_project_description" %}
 
     <legend>
         <strong>{% trans "Project description" %}</strong>
@@ -654,7 +418,7 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_media" %}
+{% tplhandlebars "my_project_media" %}
 
     <legend>
         <strong>{% trans "Project media" %}</strong>
@@ -697,7 +461,7 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_organisation" %}
+{% tplhandlebars "my_project_organisation" %}
 
     <legend>
         <strong>{% trans "Organisation" %}</strong>
@@ -892,7 +656,7 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_legal" %}
+{% tplhandlebars "my_project_legal" %}
 
     <legend>
         <strong>{% trans "Legal status" %}</strong>
@@ -948,7 +712,7 @@ Are you ready to invest time and effort in succeeding? Double check our <a href=
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_ambassadors" %}
+{% tplhandlebars "my_project_ambassadors" %}
 
     <legend>
         <strong>{% trans "Ambassadors" %}</strong>
@@ -1020,7 +784,7 @@ You've to have at least 3 ambassadors. (more? great!)<br /><br />
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_bank" %}
+{% tplhandlebars "my_project_bank" %}
 
     <legend>
         <strong>{% trans "Bank details" %}</strong>
@@ -1146,7 +910,7 @@ You've to have at least 3 ambassadors. (more? great!)<br /><br />
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_campaign" %}
+{% tplhandlebars "my_project_campaign" %}
 
     <legend>
         <strong>{% trans "Crowndfunding Campaign" %}</strong>
@@ -1195,7 +959,7 @@ Need more tips and tricks? Read our <a href="/#!/pages/faq-projects">FAQ</a>.<br
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_budget" %}
+{% tplhandlebars "my_project_budget" %}
 
     <legend>
         <strong>{% trans "Budget needed" %}</strong>
@@ -1270,7 +1034,7 @@ Please add 5% administration fee to your budget. The total amount, including the
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_submit" %}
+{% tplhandlebars "my_project_submit" %}
 
     <legend>
         <strong>{% trans "Submit Plan" %}</strong>
@@ -1305,7 +1069,7 @@ Please add 5% administration fee to your budget. The total amount, including the
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_review" %}
+{% tplhandlebars "my_project_review" %}
 
     <div class="l-wrapper">
         <article class="l-content">
@@ -1319,7 +1083,7 @@ Please add 5% administration fee to your budget. The total amount, including the
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_rejected" %}
+{% tplhandlebars "my_project_rejected" %}
 
 
     <div class="l-wrapper">
@@ -1335,7 +1099,7 @@ Please add 5% administration fee to your budget. The total amount, including the
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_plan_approved" %}
+{% tplhandlebars "my_project_approved" %}
 
 
     <div class="l-wrapper ">
@@ -1614,7 +1378,7 @@ Please add 5% administration fee to your budget. The total amount, including the
         <article class="l-content">
             <header class="l-page-header">
                 <h2>{% trans "Yeah! Your pitch has been approved" %}</h2>
-                <p>{% trans "You can write your {{#linkTo myProjectPlan}}Project Plan{{/linkTo}}!" %}</p>
+                <p>{% trans "You can write your {{#linkTo myProject}}Project Plan{{/linkTo}}!" %}</p>
             </header>
         </article>
     </div>
@@ -1632,61 +1396,3 @@ Please add 5% administration fee to your budget. The total amount, including the
 
 {% endtplhandlebars %}
 
-
-{% tplhandlebars "my_project_campaign" %}
-
-    <div class="l-wrapper">
-
-        <div class="manage-project-sidebar">
-
-            <h4><span class="flaticon solid lock-1"></span> {% trans "Project Story" %}</h4>
-            <p>Your plan is approved and currently locked. If you need to make any changes: please sent a message to
-            {{#if coach}}your 1%COACH, <strong>{{coach.full_name}}</strong>, at{{/if}} projects@onepercentclub.com.</p>
-
-            <h4><span class="flaticon solid wallet-1"></span> {% trans "Funding status" %}</h4>
-
-            <div class="project-fund">
-                <p class="project-fund-amount">
-                    <strong class="amount-donated">&euro;{{campaign.money_donated}}</strong>
-                    {% trans "of" %}
-                    <strong class="amount-asked">&euro;{{campaign.money_asked}}</strong>
-                    {% trans "raised" %}
-                </p>
-
-                <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
-			</div>
-        </div>
-
-        <form class="l-content manage-project-status">
-            <fieldset>
-                <legend>
-                    <strong>{% trans "How is your campaign going?" %}</strong>
-                </legend>
-
-                <div class="fieldset-content">
-                    <p>{% blocktrans %}
-                    Is money pouring in? No? Our tips & tricks might help you.
-                    Check our <a href="/#!/pages/faq-projects">FAQ</a>! And remember Einsteins words: "You have to learn the rules
-                    of the game. And then you have to play better than anyone else".
-                    You can do it!
-                    {% endblocktrans %}</p>
-
-                    {{#if campaign.deadline}}
-                        <div class="project-days-left">
-						    <strong><span class="flaticon solid clock-1"></span> {{campaign.daysToGo}}</strong>
-                            <em>{% trans "days to go" %}</em>
-                        </div>
-                    {{/if}}
-
-                </div>
-            </fieldset>
-
-            {{!-- FIXME: Frans, this looks a bit weird - different height --}}
-            {{partial "my_project_tasks_and_updates"}}
-        </form>
-
-    </div>
-
-{% endtplhandlebars %}
-
-{% endlanguage %}

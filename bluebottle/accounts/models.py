@@ -16,7 +16,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-from bluebottle.bluebottle_utils.models import Address
+from bluebottle.utils.models import Address
 
 
 # TODO: Make this generic for all user file uploads.

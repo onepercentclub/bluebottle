@@ -8,10 +8,19 @@ urlpatterns = patterns('',
     # The api urls are in the / url namespace so that they're not redirected to /en/.
     url(r'^api/users/', include('bluebottle.accounts.urls_api')),
     url(r'^api/geo/', include('bluebottle.geo.urls_api')),
-    url(r'^api/metadata/', include('bluebottle.bluebottle_utils.urls_api')),
-    url(r'^api/pages/', include('bluebottle.pages.urls_api')),
-    url(r'^api/utils/', include('bluebottle.bluebottle_utils.urls_api')),
+    url(r'^api/metadata/', include('bluebottle.utils.urls_api')),
+
 )
+
+for app in settings.INSTALLED_APPS:
+    if app[:11] == 'bluebottle.':
+        app = app[11:]
+        if app not in ['common', 'accounts', 'utils']:
+            urlpatterns += patterns('',
+                url(r'^api/%s/' %app, include('bluebottle.' + app + '.urls_api')),
+            )
+
+
 
 urlpatterns += patterns('loginas.views',
     url(r"^login/user/(?P<user_id>.+)/$", "user_login", name="loginas-user-login"),

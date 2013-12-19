@@ -80,21 +80,20 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/app.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>
 
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/routes.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/controllers.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/views.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/accounts/models.js"></script>
+            {% for app in bb_apps %}
+                <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/routes.js"></script>
+                <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/controllers.js"></script>
+                <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/views.js"></script>
+                <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/models.js"></script>
+            {% endfor %}
 
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/routes.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/controllers.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/views.js"></script>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/pages/models.js"></script>
         {% endblock %}
     {% endcompress %}
 
     {% block handlebars_templates %}
-        {% include "accounts/base.hbs" %}
-        {% include "pages/pages.hbs" %}
+        {% for app in bb_apps %}
+            {% include app|add:"/base.hbs" %}
+        {% endfor %}
     {% endblock handlebars_templates %}
 
     <!-- avoid hardcoding these urls -->
@@ -123,9 +122,11 @@
 
                     <!-- logo -->
                     <div id="logo">
-                        {{#linkTo 'home' class="logo-link"}}
-                            <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
-                        {{/linkTo}}
+                        {% block_verbatim nav_logo %}
+                            {{#linkTo 'home' class="logo-link"}}
+                                <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
+                            {{/linkTo}}
+                        {% endblock_verbatim %}
                     </div>
                     <!-- end: logo -->
 
@@ -135,7 +136,27 @@
                         {% block_verbatim nav_main %}
                             <ul class="nav-main">
                                 <li class="nav-main-item"><a {{action 'showPage' 'about'}} href="/#!/pages/about">{% blocktrans %}About us{% endblocktrans %}</a></li>
-                                <li class="nav-main-item">{% blocktrans %}Projects{% endblocktrans %}</li>
+
+                                {% if 'projects' in bb_apps %}
+                                    {% block_verbatim nav_main_projects %}
+                                        <li class="nav-main-item">
+                                            {{#link-to 'projectList'}}
+                                                {% blocktrans %}Projects{% endblocktrans %}
+                                            {{/link-to}}
+                                        </li>
+                                    {%  endblock_verbatim %}
+                                {% endif %}
+
+                                {% if 'tasks' in bb_apps %}
+                                    {% block_verbatim nav_main_tasks %}
+                                        <li class="nav-main-item">
+                                            {{#link-to 'tasktList'}}
+                                                {% blocktrans %}Tasks{% endblocktrans %}
+                                            {{/link-to}}
+                                        </li>
+                                    {%  endblock_verbatim %}
+                                {% endif %}
+
                             </ul>
                         {%  endblock_verbatim %}
 
@@ -369,6 +390,7 @@
 
     {% block content %}
     {% endblock %}
+
 
 </body>
 </html>

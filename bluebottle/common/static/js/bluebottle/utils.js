@@ -31,17 +31,6 @@ App.IsAuthorMixin = Em.Mixin.create({
 });
 
 
-App.DeleteModelMixin = Em.Mixin.create({
-    deleteRecordOnServer: function () {
-        var record = this.get('model');
-        var transaction = this.get('store').transaction();
-        transaction.add(record);
-        record.deleteRecord();
-        transaction.commit();
-    }
-});
-
-
 /*
  Mixin that controllers with editable models can use. E.g. App.UserProfileController
 
@@ -50,39 +39,55 @@ App.DeleteModelMixin = Em.Mixin.create({
 App.Editable = Ember.Mixin.create({
     saved: false,
 
-    startEditing: function() {
-        var record = this.get('model');
-        if (record.get('transaction.isDefault') == true) {
-            this.transaction = this.get('store').transaction();
-            this.transaction.add(record);
+    actions : {
+        save: function(record) {
+            var controller = this;
+
+            if (record.get('isDirty')) {
+                this.set('saving', true);
+                this.set('saved', false);
+            }
+
+            record.one('didUpdate', function() {
+                // record was saved
+                controller.set('saving', false);
+                controller.set('saved', true);
+            });
+
+            record.save();
+        },
+
+        goToNextStep: function(){
+            $("html, body").animate({ scrollTop: 0 }, 600);
+            this.transitionToRoute(this.get('nextStep'));
+        },
+
+        updateRecordOnServer: function(){
+            var controller = this;
+            var model = this.get('model');
+
+            model.one('becameInvalid', function(record) {
+                controller.set('saving', false);
+                model.set('errors', record.get('errors'));
+            });
+
+            model.one('didUpdate', function(){
+                if (controller.get('nextStep')) {
+                    $("html, body").animate({ scrollTop: 0 }, 600);
+                    controller.transitionToRoute(controller.get('nextStep'));
+                }
+            });
+
+            model.one('didCreate', function(){
+                if (controller.get('nextStep')) {
+                    $("html, body").animate({ scrollTop: 0 }, 600);
+                    controller.transitionToRoute(controller.get('nextStep'));
+                }
+            });
+
+            model.save();
         }
-    },
 
-    updateRecordOnServer: function(){
-        var controller = this;
-        var model = this.get('model');
-        model.one('becameInvalid', function(record) {
-            controller.set('saving', false);
-            model.set('errors', record.get('errors'));
-        });
-
-        model.one('didUpdate', function(){
-            if (controller.get('nextStep')) {
-                controller.transitionToRoute(controller.get('nextStep'));
-            } else {
-                controller.startEditing();
-            }
-        });
-
-        model.one('didCreate', function(){
-            if (controller.get('nextStep')) {
-                controller.transitionToRoute(controller.get('nextStep'));
-            } else {
-                controller.startEditing();
-            }
-        });
-
-        model.transaction.commit();
     },
 
     stopEditing: function() {
@@ -101,32 +106,15 @@ App.Editable = Ember.Mixin.create({
                     e.preventDefault();
 
                     if (opts.primary) {
-                        self.save(record);
+                        record.save();
                     }
 
                     if (opts.secondary) {
-                        transaction.rollback();
+                        record.rollback();
                     }
                 }
             });
         }
-    },
-
-    save: function(record) {
-        var controller = this;
-
-        if (record.get('isDirty')) {
-            this.set('saving', true);
-            this.set('saved', false);
-        }
-
-        record.one('didUpdate', function() {
-            // record was saved
-            controller.set('saving', false);
-            controller.set('saved', true);
-        });
-
-        record.get('transaction').commit();
     },
 
     saveButtonText: (function() {
@@ -139,9 +127,26 @@ App.Editable = Ember.Mixin.create({
 });
 
 
-App.UploadFile = Ember.TextField.extend({
+App.UploadFile= Ember.TextField.extend({
     attributeBindings: ['name', 'accept'],
     type: 'file',
+
+    didInsertElement: function(){
+        // Or maybe try: https://github.com/francois2metz/html5-formdata.
+        var view = this.$();
+        if (Em.isNone(FileReader)) {
+            $.getScript('//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js').done(
+                function(){
+                    $.getScript('/static/assets/js/polyfills/FileReader/jquery.FileReader.min.js').done(
+                        function(){
+                            view.fileReader({filereader: '/static/assets/js/polyfills/FileReader/filereader.swf'});
+                        }
+                    );
+                }
+            );
+        }
+    },
+
     change: function (evt) {
         var files = evt.target.files;
         var reader = new FileReader();
@@ -154,21 +159,36 @@ App.UploadFile = Ember.TextField.extend({
             view.$().parent().after('<div class="preview">' + preview + '</div>');
         };
         reader.readAsDataURL(file);
-        // Don't set this value. It will cause an error in some browsers.
-        //this.set('value', file);
-        this.set('controller.image', file);
+        var model = this.get('parentView.controller.model');
+        this.set('file', file);
     }
 });
 
 
-App.UploadFileView = Ember.TextField.extend({
+App.UploadMultipleFiles = Ember.TextField.extend({
     type: 'file',
-    attributeBindings: ['name', 'accept'],
+    attributeBindings: ['name', 'accept', 'multiple'],
+
+    didInsertElement: function(){
+        // Or maybe try: https://github.com/francois2metz/html5-formdata.
+        var view = this.$();
+        if (Em.isNone(File)) {
+            $.getScript('//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js').done(
+                function(){
+                    $.getScript('/static/assets/js/polyfills/FileReader/jquery.FileReader.min.js').done(
+                        function(){
+                            view.fileReader({filereader: '/static/assets/js/polyfills/FileReader/filereader.swf'});
+                        }
+                    );
+                }
+            );
+        }
+    },
 
     contentBinding: 'parentView.controller.content',
 
     change: function(e) {
-        var controller = this.get('controller');
+        var controller = this.get('parentView.controller');
         var files = e.target.files;
         for (var i = 0; i < files.length; i++) {
             var reader = new FileReader();
@@ -179,13 +199,10 @@ App.UploadFileView = Ember.TextField.extend({
             var view = this;
             view.$().parents('form').find('.preview').attr('src', '/static/assets/images/loading.gif');
             reader.onload = function(e) {
-                view.$().parents('form').find('.preview').attr('src',  e.target.result);
+                view.$().parents('form').find('.preview').attr('src', e.target.result);
             }
-
-            this.get('controller').addFile(file);
+            controller.addFile(file);
         }
-        // Clear the input field after uploading.
-        e.target.value = null;
     }
 });
 

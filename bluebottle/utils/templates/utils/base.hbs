@@ -25,3 +25,45 @@
 
 {% endtplhandlebars %}
 
+
+
+{% tplhandlebars "components/bb-formfield" %}
+    <li class="control-group has-popover" {{bindAttr data-content=hint}}>
+        <label class="control-label">{{label}}</label>
+        <div class="controls">
+            {{yield}}
+        </div>
+        {{#if errors }}
+            <div class="has-errors">{{#each errors }}<p>{{this}}</p>{{/each}}</div>
+        {{/if}}
+    </li>
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "components/bb-textarea" %}
+    <li class="control-group has-popover" {{bindAttr data-content=hint}}>
+        <label class="control-label">{{label}}</label>
+        <div class="controls">
+            {{view Em.TextArea valueBinding=valueBinding placeholderBinding=placeholder classBinding="errors.length:error"}}
+        </div>
+
+        {{#if errors }}
+            <div class="has-errors">{{#each errors }}<p>{{this}}</p>{{/each}}</div>
+        {{/if}}
+    </li>
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "components/bb-textfield" %}
+    <li class="control-group has-popover" {{bindAttr data-content=hint}}>
+        <label class="control-label">{{label}}</label>
+        <div class="controls">
+            {{view Em.TextField valueBinding=valueBinding placeholderBinding=placeholder classBinding="errors.length:error"}}
+        </div>
+
+        {{#if errors}}
+            <div class="has-errors">{{#each errors }}<p>{{this}}</p>{{/each}}</div>
+        {{/if}}
+    </li>
+{% endtplhandlebars %}
+

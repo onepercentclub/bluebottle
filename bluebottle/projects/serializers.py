@@ -82,7 +82,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     class Meta:
         model = Project
         fields = ('id', 'created', 'title', 'url', 'phase', 'image', 'pitch', 'tags', 'description',
-                  'country', 'latitude', 'longitude', 'effects', 'future', 'for_who', 'reach',
+                  'country', 'latitude', 'longitude', 'reach',
                   'image', 'money_needed')
 
 

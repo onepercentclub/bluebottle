@@ -83,10 +83,46 @@ App.SocialShareView = Em.View.extend({
             var status = meta_data.tweet.replace('{URL}', currentLink);
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
-        },
+        }
     },
 
     showDialog: function(shareUrl, urlArgs, type) {
         window.open(shareUrl + urlArgs, type + '-share-dialog', 'width=' + this.get('dialogW') + ',height=' + this.get('dialogH'));
     }
+});
+
+/* Components */
+
+App.BbFormFieldComponent = Em.Component.extend({
+    // Variables that should be translated.
+    translatable: ['label', 'hint', 'placeholder'],
+
+    didInsertElement: function(){
+        var view = this;
+        // Translate all translatables.
+        this.get('translatable').map(function(param){
+            view.set(param, gettext(view.get(param)));
+        });
+    }
+});
+
+App.BbTextFieldComponent = App.BbFormFieldComponent.extend({
+    type: 'text'
+});
+
+
+App.BbTextAreaComponent = App.BbFormFieldComponent.extend({
+});
+
+App.BbMapPickerComponent = App.BbFormFieldComponent.extend({
+});
+
+App.BbUploadImageComponent = App.BbFormFieldComponent.extend({
+    translatable: ['label', 'hint', 'placeholder', 'buttonLabel'],
+
+    accept: 'image/*',
+    buttonLabel: 'Upload image'
+});
+
+App.BbVideoLinkComponent = App.BbTextFieldComponent.extend({
 });

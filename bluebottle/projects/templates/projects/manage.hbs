@@ -242,53 +242,25 @@
 
     <fieldset>
         <ul>
-            {{bb-textfield label='Title' hint='Be short, creative, simple and memorable.'
+            {{bb-text-field label='Title' hint='Be short, creative, simple and memorable.'
                 valueBinding=title placeholder='Title'errors=errors.title}}
 
-            {{bb-textarea label='Pitch' hint='Pitch your smart idea in one sentence.' valueBinding=pitch
+            {{bb-text-area label='Pitch' hint='Pitch your smart idea in one sentence.' valueBinding=pitch
                 placeholder='Tell us in one sentence where you need to the money for.' errors=errors.pitch}}
         </ul>
     </fieldset>
     <fieldset>
         <ul>
-            {{#bb-formfield hint='Select one of the themes.' label='Theme' errors=errors.theme}}
+            {{#bb-form-field hint='Select one of the themes.' label='Theme' errors=errors.theme}}
                 {{view App.ThemeSelectView valueBinding="theme" classBinding="errors.theme.length:error"}}
-            {{/bb-formfield}}
+            {{/bb-form-field}}
         </ul>
     </fieldset>
     <fieldset>
         <ul>
-            <li class="control-group">
-                <label class="control-label">
-                    {% trans "Tags" %} ({{tags.length}})<br />
-                    <small>{% trans "Between 2 and 5 tags" %}</small>
-                </label>
-                <div class="controls">
-                    {{view App.TagWidget tagsBinding="tags" classBinding="errors.tags.length:error"}}
-                </div>
-
-                {{#if errors.tags }}
-                    <div class="has-errors">{{#each errors.tags }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-        </ul>
-    </fieldset>
-    <fieldset>
-        <ul>
-            <li class="control-group has-popover" data-content="{% trans "What do you need to realise your smart idea?" %}">
-                <label class="control-label">
-                    {% trans "What do you need?" %}
-                </label>
-
-                <div class="controls">
-                    {{#view Em.RadioButtonGroup name="need" selectedValueBinding="need" class="radio-group"}}
-                        <label class="radio">{{view view.RadioButton value="skills"}}<span>{% trans "Skills and expertise" %}</span></label>
-                        <label class="radio">{{view view.RadioButton value="finance"}}<span>{% trans "Crowdfunding campaign" %}</span></label>
-                        <label class="radio">{{view view.RadioButton value="both"}}<span>{% trans "Both" %}</span></label>
-                    {{/view}}
-                </div>
-            </li>
-
+            {{#bb-form-field hint='Add some tags that characterise your project.' label='Tags' errors=errors.tags}}
+                {{view App.TagWidget tagsBinding="tags" classBinding="errors.tags.length:error"}}
+            {{/bb-form-field}}
         </ul>
     </fieldset>
 
@@ -312,63 +284,11 @@
 
     <fieldset>
         <ul>
-            <li class="control-group has-popover" data-content="{% trans "Blow us away with the details!" %}">
-                <label class="control-label">{% trans "Why, what and how" %}</label>
-                <div class="controls wide">
-                    {{view Em.TextArea valueBinding="description"classBinding="errors.description.length:error" rows=12}}
-                </div>
+            {{bb-text-area label='Why, what and how' hint='Describe your project in more detail.' valueBinding=description
+                placeholder='Describe your project' errors=errors.description}}
 
-                {{#if errors.description }}
-                    <div class="has-errors">{{#each errors.description }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-
-            <li class="control-group has-popover" data-content="{% trans "What will be the Impact? How will your Smart Idea change the lives of people?" %}">
-                <label class="control-label">{% trans "Effects" %}</label>
-                <div class="controls wide">
-                    {{view Em.TextArea valueBinding="effects" classBinding="errors.effects.length:error" rows=6}}
-                </div>
-
-                {{#if errors.effects }}
-                    <div class="has-errors">{{#each errors.effects }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-
-            <li class="control-group has-popover" data-content="{% trans "How will this project be self-sufficient and sustainable in the long term?" %}">
-                <label class="control-label">{% trans "Future" %}</label>
-                <div class="controls wide">
-                    {{view Em.TextArea valueBinding="future" classBinding="errors.future.length:error" rows=6}}
-                </div>
-
-                {{#if errors.future }}
-                    <div class="has-errors">{{#each errors.future }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-        </ul>
-    </fieldset>
-    <fieldset>
-        <ul>
-            <li class="control-group has-popover" data-content="{% trans "Describe your target group." %}">
-                <label class="control-label">{% trans "For who" %}</label>
-                <div class="controls">
-                    {{view Em.TextArea valueBinding="forWho" classBinding="errors.forWho.length:error"}}
-                </div>
-
-                {{#if errors.forWho }}
-                    <div class="has-errors">{{#each errors.forWho }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-
-            <li class="control-group has-popover" data-content="{% trans "How many people do you expect to reach? Enter a number (e.g. 50)" %}">
-                <label class="control-label">{% trans "People reached" %}</label>
-                <div class="controls">
-                    {{view Em.TextField valueBinding="reach" classBinding="errors.reach.length:error"}}
-                </div>
-
-                {{#if errors.reach }}
-                    <div class="has-errors">{{#each errors.reach }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
+            {{bb-text-field type='number' label='Number of lives changed' hint='How many lives do you expect to change?'
+                valueBinding=reach placeholder='e.g. 20' errors=errors.reach}}
         </ul>
     </fieldset>
 
@@ -384,27 +304,18 @@
 {% tplhandlebars "my_project_location" %}
 
     <legend>
-        <strong>{% trans "Project location" %}</strong>
-        <p>{% trans "So where is it all happenin'?" %}</p>
+        <strong>{% trans "Location" %}</strong>
+        <p>{% trans "Where is your project located?" %}</p>
     </legend>
 
     <fieldset>
         <ul>
-            <li class="control-group">
-                <label class="control-label">{% trans "Country" %}</label>
-                <div class="controls">
-                    {{view App.ProjectCountrySelectView valueBinding="country" classBinding="errors.country.length:error"}}
-                </div>
-                {{#if errors.country }}
-                    <div class="has-errors">{{#each errors.country }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-            <li class="control-group has-popover" data-content="{% trans "Select the location on the map. You can use the search to find your location." %}">
-                <label class="control-label">{% trans "Location" %}</label>
-                <div class="controls wide">
-                    {{view App.MapPicker longitudeBinding="longitude" latitudeBinding="latitude" classBinding="errors.location.length:error"}}
-                </div>
-            </li>
+            {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country}}
+                {{view App.ProjectCountrySelectView valueBinding=country classBinding="errors.country.length:error"}}
+            {{/bb-form-field}}
+
+            {{bb-map-picker hint='Select the location on the map. You can use the search to find your location.'
+                latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location}}
         </ul>
     </fieldset>
 
@@ -422,32 +333,19 @@
 
     <legend>
         <strong>{% trans "Project media" %}</strong>
-        <p>{% trans "Upload a photo" %}</p>
+        <p>
+            {% blocktrans %}Do you know that 90% of the information transmitted to the brain is visual? Visuals are processed 60.000 times faster in the brain than text. Wow! Make sure you picture says it all.{% endblocktrans %}
+        </p>
     </legend>
 
     <fieldset>
         <ul>
-            <li class="control-group has-popover" data-content="{% trans "This photo will represent your idea on 1%Club. So make sure it's personal, unique and recognisable for your smart idea and that it looks nice too!" %}">
-                <label class="control-label">
-                    {% trans "Project Picture" %}
-                </label>
+            {{bb-upload-image hint='Upload the picture that best describes your campaign.'
+                fileBinding=image imageBinding=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image}}
 
-                <div class="controls manage-project-image">
-                    <a class="btn btn-iconed btn-upload">
-                        {{view App.UploadFile fileBinding="image" name="image" accept="image/*" id="image"}}
-                        <span class="flaticon solid upload-document-1"></span>
-                        {% trans "Upload picture" %}
-                    </a>
-                    <br />
-                    <div {{bindAttr class=":image-preview image::empty"}}>
-                        {{#if image}}
-                            <img {{bindAttr src="image.large"}} />
-                        {{else}}
-                            <img src="{% get_static_prefix %}images/empty.png" />
-                        {{/if}}
-                    </div>
-                </div>
-            </li>
+            {{bb-video-link hint='Add here a video pitch if you want. Make it sparkling! Your energy will be your best selling point.'
+                valueBinding=video_url videoHtmlBinding=video_html label='Video' errors=errors.video}}
+
         </ul>
     </fieldset>
 

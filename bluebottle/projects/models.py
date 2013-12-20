@@ -64,9 +64,6 @@ class Project(models.Model):
 
     # Extended Description
     description = models.TextField(_("why, what and how"), help_text=_("Blow us away with the details!"), blank=True)
-    effects = models.TextField(_("effects"), help_text=_("What will be the Impact? How will your Smart Idea change the lives of people?"), blank=True)
-    for_who = models.TextField(_("for who"), help_text=_("Describe your target group"), blank=True)
-    future = models.TextField(_("future"), help_text=_("How will this project be self-sufficient and sustainable in the long term?"), blank=True)
     reach = models.PositiveIntegerField(_("Reach"), help_text=_("How many people do you expect to reach?"), blank=True, null=True)
 
     # Location
@@ -85,6 +82,8 @@ class Project(models.Model):
     money_asked = models.PositiveIntegerField(default=0, null=True)
     money_donated = models.PositiveIntegerField(default=0, null=True)
     money_needed = models.PositiveIntegerField(default=0, null=True)
+
+    organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
 
     objects = ProjectManager()
 
@@ -136,6 +135,13 @@ class Project(models.Model):
                 )
 
         return tweet
+
+    @property
+    def editable(self):
+        if self.phase in ('plan-new', 'plan-needs-work', 'plan-approved', 'campaign-running'):
+            return True
+        return False
+
 
     class Meta:
         ordering = ['title']

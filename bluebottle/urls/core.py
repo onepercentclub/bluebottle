@@ -9,13 +9,15 @@ urlpatterns = patterns('',
     url(r'^api/users/', include('bluebottle.accounts.urls_api')),
     url(r'^api/geo/', include('bluebottle.geo.urls_api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls_api')),
-
+    url(r'^api/metadata/', include('bluebottle.utils.urls_api')),
+    url(r'^documents/', include('bluebottle.utils.urls')),
+#    url(r'^documents/', include('bluebottle.organizations.urls')),
 )
 
 for app in settings.INSTALLED_APPS:
     if app[:11] == 'bluebottle.':
         app = app[11:]
-        if app not in ['common', 'accounts', 'utils']:
+        if app not in ['common', 'accounts']:
             urlpatterns += patterns('',
                 url(r'^api/%s/' %app, include('bluebottle.' + app + '.urls_api')),
             )

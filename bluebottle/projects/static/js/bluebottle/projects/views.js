@@ -116,38 +116,6 @@ App.MyProjectView = Em.View.extend({
 
 // Project Pitch Phase
 
-App.MyPitchNewView = Em.View.extend({
-    templateName: 'my_pitch_new'
-});
-
-App.MyProjectPitchView = Em.View.extend({
-    templateName: 'my_project_pitch'
-
-});
-
-App.MyProjectPitchIndexView = Em.View.extend({
-    templateName: 'my_pitch_index'
-
-});
-
-App.MyProjectPitchBasicsView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_pitch_basics'
-});
-
-App.MyProjectPitchMediaView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_media'
-});
-
-App.MyProjectPitchLocationView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_location'
-});
-
-
-App.MyProjectPitchSubmitView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_pitch_submit'
-});
-
-
 App.ThemeSelectView = Em.Select.extend({
     content: App.ThemeList,
     optionValuePath: "content.id",
@@ -156,58 +124,53 @@ App.ThemeSelectView = Em.Select.extend({
 });
 
 
-
 // Project Plan phase
 
-App.MyProjectPlanView = Em.View.extend({
-    templateName: 'my_project_plan'
+App.MyProjectView = Em.View.extend({
+    templateName: 'my_project'
 });
 
-App.MyProjectPlanIndexView = Em.View.extend({
-    templateName: 'my_project_plan_index'
+App.MyProjectIndexView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_index'
 });
 
-App.MyProjectPlanBasicsView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_basics'
+App.MyProjectDescriptionView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_description'
 });
 
-App.MyProjectPlanDescriptionView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_description'
-});
-
-App.MyProjectPlanLocationView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectLocationView = Em.View.extend(App.PopOverMixin, {
     templateName: 'my_project_location'
 });
 
-App.MyProjectPlanMediaView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_media'
+App.MyProjectMediaView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_media'
 });
 
-App.MyProjectPlanOrganisationView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_organisation'
+App.MyProjectOrganisationView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_organisation'
 });
 
-App.MyProjectPlanLegalView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_legal'
+App.MyProjectLegalView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_legal'
 });
 
-App.MyProjectPlanAmbassadorsView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_ambassadors'
+App.MyProjectAmbassadorsView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_ambassadors'
 });
 
-App.MyProjectPlanBankView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_bank'
+App.MyProjectBankView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_bank'
 });
 
-App.MyProjectPlanBudgetView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_budget'
+App.MyProjectBudgetView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_budget'
 });
 
-App.MyProjectPlanCampaignView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_campaign'
+App.MyProjectCampaignView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_campaign'
 });
 
-App.MyProjectPlanSubmitView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_plan_submit'
+App.MyProjectSubmitView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_submit'
 });
 

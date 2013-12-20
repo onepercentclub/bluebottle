@@ -19,7 +19,6 @@ App.Router.map(function(){
     this.resource('myProjectList', {path: '/my/projects'});
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
-        this.route('basics');
         this.route('location');
         this.route('description');
         this.route('media');
@@ -130,7 +129,7 @@ App.MyProjectSubRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectIndexRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
@@ -158,11 +157,15 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);
+        var transaction = this.get('store').transaction();
+        transaction.add(model);
+        controller.set('organizations', App.MyOrganization.find());
         var organization =  model.get('organization');
         if (Ember.isNone(organization)) {
-            controller.set('organizations', App.MyOrganization.find());
+            var organization = App.MyOrganization.createRecord();
+            model.set('organization', organization);
         }
-
+        transaction.add(organization);
     }
 });
 
@@ -170,30 +173,3 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
-App.MyProjectIndexRoute = Ember.Route.extend({
-    redirect: function() {
-        var status = this.modelFor('myProject').get('plan.status');
-        switch(status) {
-            case 'submitted':
-                this.transitionTo('myProjectReview');
-                break;
-            case 'rejected':
-                this.transitionTo('myProjectRejected');
-                break;
-            case 'approved':
-                this.transitionTo('myProjectApproved');
-                break;
-        }
-    },
-
-    model: function(params) {
-        return this.modelFor('myProject').get('plan');
-    }
-});
-
-
-App.MyProjectReviewRoute = Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('myProject').get('plan');
-    }
-});

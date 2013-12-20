@@ -27,7 +27,7 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     raw_id_fields = ('owner',)
 
-    fields = ('owner', 'phase', 'title', 'pitch', 'image','description', 'effects', 'for_who', 'future', 'reach',
+    fields = ('owner', 'phase', 'title', 'pitch', 'image','description', 'reach',
               'latitude', 'longitude', 'country', 'video_url', 'money_needed', 'tags')
 
     def queryset(self, request):

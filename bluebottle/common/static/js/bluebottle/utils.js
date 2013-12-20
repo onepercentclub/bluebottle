@@ -92,7 +92,7 @@ App.Editable = Ember.Mixin.create({
 
     stopEditing: function() {
         var self = this;
-        var record = this.get('model');
+        var model = this.get('model');
         var transaction = record.get('transaction');
 
         if (record.get('isDirty')) {
@@ -106,11 +106,11 @@ App.Editable = Ember.Mixin.create({
                     e.preventDefault();
 
                     if (opts.primary) {
-                        record.save();
+                        model.save();
                     }
 
                     if (opts.secondary) {
-                        record.rollback();
+                        model.rollback();
                     }
                 }
             });
@@ -121,7 +121,6 @@ App.Editable = Ember.Mixin.create({
         if (this.get('saving')) {
             return gettext('Saving');
         }
-
         return gettext('Save');
     }).property('saving')
 });
@@ -278,9 +277,16 @@ App.MapPicker = Em.View.extend({
         }
 
         view.marker = new google.maps.Marker({
+            draggable: true,
             position: position,
             map: view.map
         });
+        google.maps.event.addListener(view.marker, 'dragend', function(){
+            var pos = view.marker.getPosition();
+            view.set('latitude', pos.lat().toString());
+            view.set('longitude', pos.lng().toString());
+        });
+
         view.map.panTo(position);
     },
 

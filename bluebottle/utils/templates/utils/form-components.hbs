@@ -38,20 +38,16 @@
 
 
 {% tplhandlebars "components/bb-upload-image" %}
-    {{#bb-form-field hint=hint label=label errors=errors className='wide'}}
+    {{#bb-form-field hint=hint label=label errors=errors}}
         <a class="btn btn-iconed btn-upload">
             {{view App.UploadFile fileBinding=fileBinding accept=accept}}
             <span class="flaticon solid upload-document-1"></span>
             {{buttonLabel}}
         </a>
         <br />
-        <div {{bindAttr class=":image-preview image::empty"}}>
-            {{#if image}}
-                <img {{bindAttr src=image}} />
-            {{else}}
-                <img src="{% get_static_prefix %}images/empty.png" />
-            {{/if}}
-        </div>
+        {{#if image_url}}
+            <img {{bindAttr src=image_url}} />
+        {{/if}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
@@ -59,5 +55,10 @@
 {% tplhandlebars "components/bb-video-link" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
         {{view Em.TextField step=step valueBinding=valueBinding placeholderBinding=placeholder classBinding="errors.length:error"}}
+        <br />
+        {{#if video_html}}
+            {{{video_html}}}
+        {{/if}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
+

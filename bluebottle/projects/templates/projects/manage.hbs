@@ -12,19 +12,17 @@
             {{#if isLoading}}
                 <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading projects" %}</strong></div>
             {{else}}
-                {{#if canPitchNew}}
-                    <div class="l-content">
-                        <header class="l-page-header">
-                            <h1>{% trans "No open projects" %}</h1>
-                            <p></p>
-                        </header>
+                <div class="l-content">
+                    <header class="l-page-header">
+                        <h1>{% trans "Create new project" %}</h1>
+                        <p></p>
+                    </header>
 
-                        {{#linkTo "myPitchNew" tagName="button" class="btn btn-primary btn-iconed"}}
-                            <span class="flaticon solid lightbulb-3"></span>
-                            {% trans "Pitch a new smart idea" %}
-                        {{/linkTo}}
-                    </div>
-                {{/if}}
+                    {{#linkTo "myProject" 'new' tagName="button" class="btn btn-primary btn-iconed"}}
+                        <span class="flaticon solid lightbulb-3"></span>
+                        {% trans "Pitch a new smart idea" %}
+                    {{/linkTo}}
+                </div>
             {{/if}}
 
             <div class="l-content">
@@ -34,7 +32,7 @@
 
                         <span class="project-header">
                             <figure class="project-image">
-                                <img {{bindAttr src="project.pitch.image.square" alt="project.pitch.title"}} />
+                                <img {{bindAttr src="project.image.square" alt="project.pitch.title"}} />
                             </figure>
                             <h2 class="project-title">
                                 {{ project.title }}
@@ -50,14 +48,14 @@
 				        <div class="project-actions">
 				        	{% trans "Phase" %}: <strong>{{ project.phase }}</strong>
                             <br/>
-	                        {{#if project.canEdit}}
+	                        {{#if project.editable}}
 	                            {{#linkTo "myProject" project tagName="a" class="btn btn-iconed right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Edit" %}
 	                            {{/linkTo}}
 
                             {{else}}
-	                                <span class="flaticon solid pencil-3"></span>
+	                                <span class="flaticon solid lock-1"></span>
 	                                {% trans "Project is locked" %}
 	                        {{/if}}
 
@@ -144,7 +142,7 @@
                 <h4><span class="flaticon solid notebook-1"></span> {% trans "Project Story" %} </h4>
                 <ul class="manage-project-nav">
                     <li>
-                        {{#linkTo "myProject.basics"}}
+                        {{#linkTo "myProject.index"}}
                             <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
                             {% trans "Project Basics" %}
                         {{/linkTo}}
@@ -234,7 +232,7 @@
 {% endtplhandlebars %}
 
 
-{% tplhandlebars "my_project_basics" %}
+{% tplhandlebars "my_project_index" %}
 
     <legend>
         <strong>{% trans "Project basics" %}</strong>
@@ -341,11 +339,10 @@
     <fieldset>
         <ul>
             {{bb-upload-image hint='Upload the picture that best describes your campaign.'
-                fileBinding=image imageBinding=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image}}
+                fileBinding=image image_url=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image}}
 
             {{bb-video-link hint='Add here a video pitch if you want. Make it sparkling! Your energy will be your best selling point.'
-                valueBinding=video_url videoHtmlBinding=video_html label='Video' errors=errors.video}}
-
+                valueBinding=video_url video_html=video_html label='Video' errors=errors.video}}
         </ul>
     </fieldset>
 
@@ -355,201 +352,6 @@
         <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
     {{/if}}
 
-
-{% endtplhandlebars %}
-
-
-{% tplhandlebars "my_project_organisation" %}
-
-    <legend>
-        <strong>{% trans "Organisation" %}</strong>
-    </legend>
-
-    {{#if organization}}
-        <fieldset>
-            <ul>
-                <li class="control-group has-popover" data-content="{% trans "Name of your organisation" %}">
-                    <label class="control-label">{% trans "Name" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.name" classBinding="organization.errors.name.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.name }}
-                        <div class="has-errors">{{#each organization.errors.name }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Describe your organisation" %}">
-                    <label class="control-label">{% trans "Description" %}</label>
-                    <div class="controls">
-                        {{view Em.TextArea valueBinding="organization.description" classBinding="organization.errors.description.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.description }}
-                        <div class="has-errors">{{#each organization.errors.description }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-            </ul>
-        </fieldset>
-        <fieldset>
-            <legend>
-                <strong>{% trans "Address" %}</strong>
-            </legend>
-            <ul>
-                <li class="control-group has-popover" data-content="{% trans "Street, house number, the place in your city" %}">
-                    <label class="control-label">{% trans "Address line 1" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.address_line1" classBinding="organization.errors.address_line1.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.address_line1 }}
-                        <div class="has-errors">{{#each organization.errors.address_line1 }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "More about your address" %}">
-                    <label class="control-label">{% trans "Address line 2" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.address_line2" classBinding="organization.errors.address_line2.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.address_line2 }}
-                        <div class="has-errors">{{#each organization.errors.address_line2 }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-
-                <li class="control-group has-popover" data-content="{% trans "City or village.." %}">
-                    <label class="control-label">{% trans "City" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.city" classBinding="organization.errors.city.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.city }}
-                        <div class="has-errors">{{#each organization.errors.city }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Postal code" %}">
-                    <label class="control-label">{% trans "Postal code" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.postal_code" classBinding="organization.errors.postal_code.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.postal_code }}
-                        <div class="has-errors">{{#each organization.errors.postal_code }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Country or territory" %}">
-                    <label class="control-label">{% trans "Country" %}</label>
-                    <div class="controls">
-                        {{view App.CountrySelectView valueBinding="organization.country" classBinding="organization.errors.country.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.country }}
-                        <div class="has-errors">{{#each organization.errors.country }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-            </ul>
-        </fieldset>
-        <fieldset>
-            <legend>
-                <strong>{% trans "Online" %}</strong>
-            </legend>
-            <ul>
-
-                <li class="control-group has-popover" data-content="{% trans "Does your organization have a website?" %}">
-                    <label class="control-label">{% trans "Website" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.website" classBinding="organization.errors.website.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.website }}
-                        <div class="has-errors">{{#each organization.errors.website }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Email address" %}">
-                    <label class="control-label">{% trans "Email" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.email" classBinding="organization.errors.email.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.email }}
-                        <div class="has-errors">{{#each organization.errors.email }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Does your organization have a twitter account?" %}">
-                    <label class="control-label">{% trans "Twitter" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.twitter" placeholder="@twitteraccount" classBinding="organization.errors.twitter.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.twitter }}
-                        <div class="has-errors">{{#each organization.errors.twitter }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Does your organization have a facebook group?" %}">
-                    <label class="control-label">{% trans "Facebook" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.facebook" placeholder="https://www.facebook.com/<groupname>" classBinding="organization.errors.facebook.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.facebook }}
-                        <div class="has-errors">{{#each organization.errors.facebook }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-
-                <li class="control-group has-popover" data-content="{% trans "Can we reach you on Skype?" %}">
-                    <label class="control-label">{% trans "Skype" %}</label>
-                    <div class="controls">
-                        {{view Em.TextField valueBinding="organization.skype" placeholder="skype name" classBinding="organization.errors.skype.length:error"}}
-                    </div>
-
-                    {{#if organization.errors.skype }}
-                        <div class="has-errors">{{#each organization.errors.skype }}<p>{{this}}</p>{{/each}}</div>
-                    {{/if}}
-                </li>
-            </ul>
-        </fieldset>
-
-        {{#if shouldSave}}
-            <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
-        {{else}}
-            <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
-        {{/if}}
-
-    {{else}}
-        <fieldset>
-            <ul>
-                <li class="control-group has-popover" data-content="{% trans "Choose your organisation from the list or create a new one." %}">
-                    <label class="control-label">{% trans "Organisation" %}</label>
-                    <div class="controls">
-                        <ul>
-                            {{#each organizations}}
-                                <li>
-                                    <h4>{{this.name}}</h4>
-                                    {{this.description}}
-                                    <br/>
-                                    <a {{action selectOrganization this}} class="btn-link"><span class="flaticon solid plus-2"> {% trans "Select" %}</a>
-                                </li>
-                            {{/each}}
-                            <li>
-                                <h4>{% trans "create new" %}</h4>
-                                {% trans "Create a new organization to run this project." %}
-                                <br/>
-                                <a {{action createNewOrganization organization}} class="btn-link"><span class="flaticon solid plus-2"> {% trans "Create" %}</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </fieldset>
-    {{/if}}
 
 {% endtplhandlebars %}
 

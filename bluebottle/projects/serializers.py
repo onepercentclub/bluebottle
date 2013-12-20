@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from bluebottle.accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (SorlImageField, SlugGenericRelatedField, PolymorphicSerializer, EuroField,
-                                              TagSerializer, ImageSerializer, TaggableSerializerMixin)
+                                              TagSerializer, ImageSerializer, TaggableSerializerMixin, OEmbedField)
 from bluebottle.geo.models import Country
 from bluebottle.utils.serializers import MetaField
 
@@ -68,7 +68,6 @@ class ProjectEditableField(serializers.BooleanField):
     pass
 
 
-
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
     id = serializers.CharField(source='slug', read_only=True)
@@ -78,12 +77,16 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     editable = ProjectEditableField(read_only=True, source=phase)
     tags = TagSerializer()
     organization = serializers.PrimaryKeyRelatedField(source="organization", required=False)
+    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
+    editable = serializers.BooleanField(read_only=True)
+
+    image = ImageSerializer(required=False)
 
     class Meta:
         model = Project
         fields = ('id', 'created', 'title', 'url', 'phase', 'image', 'pitch', 'tags', 'description',
-                  'country', 'latitude', 'longitude', 'reach',
-                  'image', 'money_needed')
+                  'country', 'latitude', 'longitude', 'reach', 'organization',
+                  'image', 'video_html', 'video_url', 'money_needed', 'editable')
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):

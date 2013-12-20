@@ -207,20 +207,25 @@ App.MyProjectController = Em.ObjectController.extend(App.Editable, {
 
 });
 
-App.MyProjectBasicsController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectIndexController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.description'
 });
+
 App.MyProjectDescriptionController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.location'
 });
+
 App.MyProjectLocationController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.media'
 });
+
 App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {});
 
 App.MyProjectMediaController = Em.ObjectController.extend(App.Editable, {
+    // TODO: Different nextStep if bluebottle.organizations isn't installed.
     nextStep: 'myProject.organisation'
 });
+
 App.MyProjectCampaignController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.budget'
 });
@@ -280,94 +285,6 @@ App.MyProjectAmbassadorsController = Em.ObjectController.extend(App.Editable, {
 
 });
 */
-
-App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
-
-    nextStep: 'myProject.legal',
-
-    shouldSave: function(){
-        // Determine if any part is dirty, project plan, org or any of the org addresses
-        if (this.get('isDirty')) {
-            return true;
-        }
-        if (this.get('organization.isDirty')) {
-            return true;
-        }
-        return false;
-    }.property('organization.isLoaded', 'organization.isDirty'),
-
-    actions: {
-        updateRecordOnServer: function(){
-            var controller = this;
-            var model = this.get('model');
-            var organization = model.get('organization');
-
-            organization.one('didUpdate', function(){
-                // Updated organization info.
-                controller.transitionToRoute(controller.get('nextStep'));
-                $("html, body").animate({ scrollTop: 0 }, 600);
-            });
-            organization.one('didCreate', function(){
-                // Create organization info.
-                controller.transitionToRoute(controller.get('nextStep'));
-                $("html, body").animate({ scrollTop: 0 }, 600);
-            });
-            model.transaction.commit();
-        },
-        selectOrganization: function(org){
-            // Use the same transaction as the projectplan
-            var transaction =  this.get('model').transaction;
-            transaction.add(org);
-            this.set('organization', org);
-        },
-
-        createNewOrganization: function() {
-            var controller = this;
-            var transaction = this.get('store').transaction();
-            var org = transaction.createRecord(App.MyOrganization, {name: controller.get('model.title')});
-            this.set('model.organization', org);
-        }
-    }
-});
-
-
-
-App.MyProjectBankController = Em.ObjectController.extend(App.Editable, {
-
-    nextStep: 'myProject.submit',
-
-    shouldSave: function(){
-        // Determine if any part is dirty, project plan, org or any of the org addresses
-        if (this.get('isDirty')) {
-            return true;
-        }
-        if (this.get('organization.isDirty')) {
-            return true;
-        }
-        return false;
-    }.property('organization.isLoaded', 'isDirty'),
-
-    actions: {
-        updateRecordOnServer: function(){
-            var controller = this;
-            var model = this.get('model.organization');
-            model.one('becameInvalid', function(record){
-                model.set('errors', record.get('errors'));
-            });
-            model.one('didUpdate', function(){
-                controller.transitionToRoute(controller.get('nextStep'));
-                window.scrollTo(0);
-            });
-            model.one('didCreate', function(){
-                controller.transitionToRoute(controller.get('nextStep'));
-                window.scrollTo(0);
-            });
-
-            model.save();
-        }
-    }
-});
-
 
 
 App.MyProjectBudgetController = Em.ObjectController.extend(App.Editable, {

@@ -1,7 +1,7 @@
+/* Embedded properties */
+
 App.Adapter.map('App.Project', {
     owner: {embedded: 'load'},
-    campaign: {embedded: 'load'},
-    plan: {embedded: 'load'},
     country: {embedded: 'load'},
     meta: {embedded: 'load'}
 });
@@ -12,18 +12,8 @@ App.Adapter.map('App.ProjectPreview', {
 });
 
 App.Adapter.map('App.MyProject', {
-    ambassadors: {embedded: 'load'},
     budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
-});
-
-App.Adapter.map('App.MyOrganization', {
-    addresses: {embedded: 'both'},
-    documents: {embedded: 'load'}
-});
-
-App.Adapter.map('App.MyOrganizationDocument', {
-    file: {embedded: 'load'}
 });
 
 App.Adapter.map('App.PartnerOrganization', {
@@ -34,56 +24,12 @@ App.Adapter.map('App.ProjectDonation', {
     member: {embedded: 'both'}
 });
 
-App.Organization = DS.Model.extend({
-    url: 'organizations',
-    name: DS.attr('string'),
-    description: DS.attr('string', {defaultValue: ""}),
-
-    // Internet
-    website: DS.attr('string', {defaultValue: ""}),
-    facebook: DS.attr('string', {defaultValue: ""}),
-    twitter: DS.attr('string', {defaultValue: ""}),
-
-    websiteUrl: function(){
-        var website = this.get('website');
-        if (website) {
-            if (website.substr(0, 4) != 'http') {
-                return 'http://' + website;
-            }
-            return website;
-        }
-        return "";
-    }.property('website'),
-    facebookUrl: function(){
-        var facebook = this.get('facebook');
-        if (facebook) {
-            if (facebook.substr(0, 4) != 'http') {
-                return 'http://' + facebook;
-            }
-            return facebook;
-        }
-        return "";
-    }.property('facebook'),
-    twitterUrl: function(){
-        var twitter = this.get('facebook');
-        if (twitter) {
-            if (twitter.substr(0, 4) != 'http') {
-                return 'http://' + twitter;
-            }
-            return twitter;
-        }
-        return "";
-    }.property('twitter'),
-
-    // Legal
-    legalStatus: DS.attr('string', {defaultValue: ""})
-});
-
-
 App.ProjectCountry = DS.Model.extend({
     name: DS.attr('string'),
     subregion: DS.attr('string')
 });
+
+/* Models */
 
 App.Project = DS.Model.extend({
     url: 'projects/projects',
@@ -117,8 +63,7 @@ App.Project = DS.Model.extend({
     // Media
     image: DS.attr('image'),
 
-    // Organization
-    organization: DS.belongsTo('App.Organization'),
+    // Budget
     budgetLines: DS.hasMany('App.BudgetLine'),
 
     isPhasePlan: Em.computed.equal('phase', 'plan'),
@@ -130,6 +75,9 @@ App.Project = DS.Model.extend({
     }.property('id'),
 
     daysToGo: function(){
+        if (!this.get('time')) {
+            return null;
+        }
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
@@ -197,84 +145,12 @@ App.ThemeList = [
 
 /* Project Manage Models */
 
-/*
- Models
- */
-
-App.MyOrganizationDocument = DS.Model.extend({
-    url: 'organizations/documents/manage',
-
-    organization: DS.belongsTo('App.MyOrganization'),
-    file: DS.attr('file')
-});
-
 App.MyProjectBudgetLine = DS.Model.extend({
     url: 'projects/budgetlines/manage',
 
     project_plan: DS.belongsTo('App.MyProject'),
     description: DS.attr('string'),
     amount: DS.attr('number')
-});
-
-App.MyOrganization = DS.Model.extend({
-    url: 'organizations/manage',
-    name: DS.attr('string'),
-    description: DS.attr('string', {defaultValue: ""}),
-
-    // Address
-    address_line1: DS.attr('string', {defaultValue: ""}),
-    address_line2: DS.attr('string', {defaultValue: ""}),
-    city: DS.attr('string', {defaultValue: ""}),
-    state: DS.attr('string', {defaultValue: ""}),
-    country: DS.attr('string'),
-    postal_code: DS.attr('string', {defaultValue: ""}),
-
-    // Internet
-    website: DS.attr('string', {defaultValue: ""}),
-    email: DS.attr('string', {defaultValue: ""}),
-    facebook: DS.attr('string', {defaultValue: ""}),
-    twitter: DS.attr('string', {defaultValue: ""}),
-    skype: DS.attr('string', {defaultValue: ""}),
-
-    validProfile: function(){
-        if (this.get('name') &&  this.get('description') && this.get('email') &&
-              this.get('address_line1') && this.get('city') && this.get('country')
-            ){
-            return true;
-        }
-        return false;
-    }.property('name', 'description', 'email', 'address_line1', 'city', 'country'),
-
-
-    // Legal
-    legalStatus: DS.attr('string', {defaultValue: ""}),
-    documents: DS.hasMany('App.MyOrganizationDocument'),
-
-    validLegalStatus: function(){
-        if (this.get('legalStatus') &&  this.get('documents.length') > 0){
-            return true;
-        }
-        return false;
-    }.property('legalStatus', 'documents.length'),
-
-    // Bank
-    account_bank_name: DS.attr('string', {defaultValue: ""}),
-    account_bank_address: DS.attr('string', {defaultValue: ""}),
-    account_bank_country: DS.attr('string', {defaultValue: ""}),
-    account_iban: DS.attr('string', {defaultValue: ""}),
-    account_bic: DS.attr('string', {defaultValue: ""}),
-    account_number: DS.attr('string', {defaultValue: ""}),
-    account_name: DS.attr('string', {defaultValue: ""}),
-    account_city: DS.attr('string', {defaultValue: ""}),
-    account_other: DS.attr('string', {defaultValue: ""}),
-
-    validBank: function(){
-        if (this.get('account_bank_name') &&  this.get('account_bank_country') && this.get('account_name') && this.get('account_city') && (this.get('account_number') || this.get('account_iban'))){
-            return true;
-        }
-        return false;
-    }.property('account_bank_name', 'account_bank_country', 'account_name', 'account_city', 'account_iban', 'account_number')
-
 });
 
 
@@ -295,13 +171,7 @@ App.MyProject = App.Project.extend({
     need: DS.attr('string'),
     tags: DS.hasMany('App.Tag'),
 
-
-    needsFunding: function (){
-        if (this.get('need') == 'finance' || this.get('need') == 'both') {
-            return true;
-        }
-        return false;
-    }.property('need'),
+    editable: DS.attr('boolean'),
 
     validBasics: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('need') && this.get('tags.length')){
@@ -312,17 +182,19 @@ App.MyProject = App.Project.extend({
 
     // Description
     description: DS.attr('string'),
-    effects: DS.attr('string'),
-    future: DS.attr('string'),
-    forWho: DS.attr('string'),
     reach: DS.attr('number'),
 
     validDescription: function(){
-        if (this.get('description') &&  this.get('effects') && this.get('future') && this.get('forWho') && this.get('reach')){
+        if (this.get('description') && this.get('reach')){
             return true;
         }
         return false;
-    }.property('description', 'effects', 'future', 'for_who', 'reach'),
+    }.property('description', 'reach'),
+
+    // Media
+    image: DS.attr('image'),
+    video_url: DS.attr('string'),
+    video_html: DS.attr('string'),
 
 
     // Location
@@ -337,8 +209,6 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('country', 'latitude', 'longitude'),
 
-    // Media
-    image: DS.attr('image'),
 
     validMedia: function(){
         if (this.get('image')){
@@ -347,34 +217,8 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('image'),
 
-    // Organization
-    organization: DS.belongsTo('App.MyOrganization'),
-
-    // Ambassadors
-    ambassadors: DS.hasMany('App.MyProjectAmbassador'),
-
-    validAmbassadors: function(){
-        if (this.get('ambassadors.length') > 2) {
-            return true;
-        }
-        return false;
-    }.property('ambassadors.length'),
-
-    // Submitting
-    status: DS.attr('string'),
-
     // Crowd funding
     moneyNeeded: DS.attr('string'),
-    campaign: DS.attr('string'),
-
-    validCampaign: function(){
-        if (this.get('moneyNeeded') &&  this.get('campaign')){
-            return true;
-        }
-        return false;
-    }.property('moneyNeeded', 'campaign'),
-
-    // Budget
     budgetLines: DS.hasMany('App.MyProjectBudgetLine'),
 
     totalBudget: function(){
@@ -391,5 +235,8 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('totalBudget'),
 
-    created: DS.attr('date')
+    created: DS.attr('date'),
+
+    organization: DS.belongsTo('App.MyOrganization')
+
 });

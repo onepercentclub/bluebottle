@@ -4,7 +4,6 @@
 
 App.Router.map(function(){
     this.resource('projectList', {path: '/projects'}, function() {
-        this.route('new');
         this.route('search');
     });
 
@@ -17,9 +16,9 @@ App.Router.map(function(){
         });
     });
 
-    this.resource('myProject', {path: '/my/projects/:my_project_id'}, function() {
-        this.route('index');
-        this.route('basics');
+    this.resource('myProjectList', {path: '/my/projects'});
+
+    this.resource('myProject', {path: '/my/projects/:id'}, function() {
         this.route('location');
         this.route('description');
         this.route('media');
@@ -35,7 +34,6 @@ App.Router.map(function(){
         this.route('submit');
     });
 
-    this.resource('myProjectList', {path: '/my/projects'});
     this.resource('partner', {path: '/pp/:partner_organization_id'});
 
 });
@@ -47,7 +45,7 @@ App.Router.map(function(){
 
 App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
-        // Crap hack because Ember somehow doesn't strip queryparams.
+        // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.
         var project_id = params.project_id.split('?')[0];
         var page =  App.Project.find(project_id);
@@ -95,46 +93,33 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, {
 });
 
 
-App.MyPitchNewRoute = Em.Route.extend(App.ScrollToTop, {
-    model: function() {
-        var store = this.get('store');
-        return store.createRecord(App.MyProject);
-    }
-});
-
-
 App.MyProjectRoute = Em.Route.extend({
     // Load the Project
     model: function(params) {
-        return App.MyProject.find(params.my_project_id);
+        var store = this.get('store');
+        if (params.id == 'new' || params.id == 'null') {
+            return App.MyProject.createRecord();
+        }
+        return store.find('myProject', params.id);
     }
 });
 
-
-App.MyProjectRoute = Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('myProject');
-    }
-});
 
 App.MyProjectSubRoute = Em.Route.extend({
     redirect: function() {
-        var status = this.modelFor('myProject').get('plan.status');
-        switch(status) {
-            case 'submitted':
+        var phase = this.modelFor('myProject').get('phase');
+        switch(phase) {
+            case 'plan-submitted':
                 this.transitionTo('myProjectReview');
                 break;
-            case 'rejected':
+            case 'plan-rejected':
                 this.transitionTo('myProjectRejected');
-                break;
-            case 'approved':
-                this.transitionTo('myProjectApproved');
                 break;
         }
     },
 
     model: function(params) {
-        return this.modelFor('myProject').get('plan');
+        return this.modelFor('myProject');
     },
 
     exit: function() {
@@ -144,7 +129,7 @@ App.MyProjectSubRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectIndexRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
@@ -172,11 +157,15 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);
+        var transaction = this.get('store').transaction();
+        transaction.add(model);
+        controller.set('organizations', App.MyOrganization.find());
         var organization =  model.get('organization');
         if (Ember.isNone(organization)) {
-            controller.set('organizations', App.MyOrganization.find());
+            var organization = App.MyOrganization.createRecord();
+            model.set('organization', organization);
         }
-
+        transaction.add(organization);
     }
 });
 
@@ -184,30 +173,3 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
-App.MyProjectIndexRoute = Ember.Route.extend({
-    redirect: function() {
-        var status = this.modelFor('myProject').get('plan.status');
-        switch(status) {
-            case 'submitted':
-                this.transitionTo('myProjectReview');
-                break;
-            case 'rejected':
-                this.transitionTo('myProjectRejected');
-                break;
-            case 'approved':
-                this.transitionTo('myProjectApproved');
-                break;
-        }
-    },
-
-    model: function(params) {
-        return this.modelFor('myProject').get('plan');
-    }
-});
-
-
-App.MyProjectReviewRoute = Em.Route.extend({
-    model: function(params) {
-        return this.modelFor('myProject').get('plan');
-    }
-});

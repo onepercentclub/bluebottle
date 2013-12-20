@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 
+{% include 'utils/form-components.hbs' %}
 
 {% tplhandlebars "tag_widget" %}
 
@@ -18,10 +19,11 @@
 
 {% tplhandlebars "social_share" %}
 
-<ul id="share">
-    <li class="share-facebook"><a {{action shareOnFacebook target="view"}}><span class="flaticon social facebook-4"></span> <strong>{% trans "Share" %}</strong></a></li>
-    <li class="share-twitter"><a {{action shareOnTwitter target="view"}}><span class="flaticon social twitter-4"></span> <strong>{% trans "Tweet" %}</strong></a></li>
-</ul>
+    <ul id="share">
+        <li class="share-facebook"><a {{action shareOnFacebook target="view"}}><span class="flaticon social facebook-4"></span> <strong>{% trans "Share" %}</strong></a></li>
+        <li class="share-twitter"><a {{action shareOnTwitter target="view"}}><span class="flaticon social twitter-4"></span> <strong>{% trans "Tweet" %}</strong></a></li>
+    </ul>
 
 {% endtplhandlebars %}
+
 

@@ -16,7 +16,7 @@ changes = ''
 
 
 install_requires = [
-#    'Babel==1.3',
+    'Babel==1.3',
 #    'BeautifulSoup==3.2.1',
     'Django==1.5.5',
 #    'Jinja2==2.7',

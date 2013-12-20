@@ -65,7 +65,7 @@ INSTALLED_APPS = (
 
     # Bluebottle apps
     'bluebottle.accounts',
-    'bluebottle.bluebottle_utils',
+    'bluebottle.utils',
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
@@ -74,7 +74,7 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = [
     # Have a middleware to make sure old cookies still work after we switch to domain-wide cookies.
-    'bluebottle.bluebottle_utils.middleware.SubDomainSessionMiddleware',
+    'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

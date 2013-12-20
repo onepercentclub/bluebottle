@@ -266,7 +266,6 @@ App.Router.map(function() {
 });
 
 
-
 App.ApplicationRoute = Em.Route.extend({
     needs: ['currentUser'],
 

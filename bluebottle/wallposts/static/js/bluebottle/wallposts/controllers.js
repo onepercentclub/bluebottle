@@ -26,7 +26,7 @@ App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
     }
 });
 
-App.TaskWallPostListController = Em.ArrayController.extend(App.ShowMoreItemsMixin, {
+App.TaskWallPostListController = Em.ArrayController.extend({
     needs: ['currentUser']
 });
 
@@ -215,7 +215,7 @@ App.FundRaiserMediaWallPostNewController = App.MediaWallPostNewController.extend
 
 /* Reactions */
 
-App.WallPostReactionController = Em.ObjectController.extend(App.IsAuthorMixin, App.DeleteModelMixin, {
+App.WallPostReactionController = Em.ObjectController.extend(App.IsAuthorMixin, {
     needs: ['currentUser']
 });
 

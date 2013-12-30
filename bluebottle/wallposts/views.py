@@ -1,13 +1,15 @@
 import django_filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from bluebottle.wallposts.models import TextWallPost, MediaWallPost, MediaWallPostPhoto
-from bluebottle.wallposts.permissions import IsConnectedWallPostAuthorOrReadOnly
-from bluebottle.wallposts.serializers import TextWallPostSerializer, MediaWallPostSerializer, MediaWallPostPhotoSerializer
-from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly, AllowNone
-from bluebottle.bluebottle_utils.utils import set_author_editor_ip, get_client_ip
 from rest_framework import permissions
+
+from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly, AllowNone
+from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
-from apps.projects.models import Project
+from bluebottle.projects.models import Project
+
+from .models import TextWallPost, MediaWallPost, MediaWallPostPhoto
+from .permissions import IsConnectedWallPostAuthorOrReadOnly
+from .serializers import TextWallPostSerializer, MediaWallPostSerializer, MediaWallPostPhotoSerializer
 from .models import WallPost, Reaction
 from .serializers import ReactionSerializer, WallPostSerializer
 

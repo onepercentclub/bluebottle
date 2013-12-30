@@ -1,7 +1,8 @@
-from bluebottle.wallposts.views import WallPostDetail, TextWallPostList, MediaWallPostList, MediaWallPostPhotoList, MediaWallPostPhotoDetail
 from django.conf.urls import patterns, url
 from surlex.dj import surl
-from .views import ReactionList, ReactionDetail, WallPostList
+
+from .views import (WallPostDetail, TextWallPostList, MediaWallPostList, MediaWallPostPhotoList,
+                    MediaWallPostPhotoDetail, ReactionList, ReactionDetail, WallPostList)
 
 urlpatterns = patterns('',
     url(r'^$', WallPostList.as_view(), name='wallpost-list'),

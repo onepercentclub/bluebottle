@@ -1,5 +1,6 @@
-from bluebottle.wallposts.models import WallPost, MediaWallPost
 from rest_framework import permissions
+
+from .models import WallPost, MediaWallPost
 
 
 # TODO: Add write permission for 1%CREW / Assistants.

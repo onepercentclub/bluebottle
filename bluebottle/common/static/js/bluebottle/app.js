@@ -75,6 +75,10 @@ App = Em.Application.create({
         }
 
         if (locale != 'en-US') {
+            if (locale == 'nl') {
+                locale = 'nl-NL';
+            }
+
             // Try to load locale specifications.
             $.getScript('/static/assets/js/vendor/globalize-cultures/globalize.culture.' + locale + '.js')
                 .fail(function() {

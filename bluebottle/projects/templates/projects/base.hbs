@@ -2,6 +2,12 @@
 {% load i18n %}
 {% load static %}
 
+
+{% include 'projects/manage/main.tpl' %}
+{% include 'projects/manage/details.tpl' %}
+{% include 'projects/manage/project_list.tpl' %}
+{% include 'projects/manage/top.tpl' %}
+
 {% include "projects/manage.hbs" %}
 
 {% tplhandlebars "components/bb-progressbar" %}
@@ -264,7 +270,7 @@
         
             <ul class="tabs four">
                 {% if 'wallposts' in bb_apps %}
-                {% verbatim %}
+                {% block_verbatim 'project_wallpost_tab' %}
                     <li class="tab-updates">
                         {{#linkTo 'project.index'}}
                             <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
@@ -283,7 +289,7 @@
                             </strong>
                         {{/linkTo}}
                     </li>
-                {% endverbatim %}
+                {% endblock_verbatim %}
                 {% endif %}
                 {% if 'tasks' in bb_apps %}
                 {% verbatim %}

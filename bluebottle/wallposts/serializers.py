@@ -1,15 +1,11 @@
-# from apps.fund.serializers import DonationSerializer
-from apps.fund.models import Donation
-from apps.fundraisers.serializers import FundRaiserSerializer
-from apps.projects.models import Project
+from bluebottle.projects.models import Project
 from bluebottle.accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
-from bluebottle.wallposts.models import WallPost, SystemWallPost
 
-from .models import MediaWallPost, TextWallPost, MediaWallPostPhoto, Reaction
+from .models import WallPost, SystemWallPost, MediaWallPost, TextWallPost, MediaWallPostPhoto, Reaction
 
 
 # Serializer to serialize all wall-posts for an object into an array of ids
@@ -134,20 +130,10 @@ class TextWallPostSerializer(WallPostSerializerBase):
         fields = WallPostSerializerBase.Meta.fields + ('text',)
 
 
-class DonationPreviewSerializer(serializers.ModelSerializer):
-    project = serializers.SlugRelatedField(source='project', slug_field='slug')
-    fundraiser = FundRaiserSerializer()
-
-    class Meta:
-        model = Donation
-        fields = ('id', 'project', 'fundraiser')
 
 
 class WallPostRelatedField(serializers.RelatedField):
     def to_native(self, obj):
-        if obj.__class__.__name__ == 'Donation':
-            serializer = DonationPreviewSerializer(obj)
-            return serializer.data
         return super(WallPostRelatedField, self).to_native(obj)
 
 

@@ -5,10 +5,10 @@ from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
-from bluebottle.bluebottle_utils.tests import UserTestsMixin
+from bluebottle.utils.tests import UserTestsMixin
 
-from apps.mail import send_mail
-from apps.projects.tests import ProjectWallPostTestsMixin
+from bluebottle.mail import send_mail
+from bluebottle.projects.tests import ProjectWallPostTestsMixin
 from .models import Reaction
 
 

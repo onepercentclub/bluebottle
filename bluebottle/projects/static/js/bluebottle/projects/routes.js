@@ -19,6 +19,7 @@ App.Router.map(function(){
     this.resource('myProjectList', {path: '/my/projects'});
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
+        this.route('basics');
         this.route('location');
         this.route('description');
         this.route('media');
@@ -104,6 +105,13 @@ App.MyProjectRoute = Em.Route.extend({
     }
 });
 
+App.MyProjectIndexRoute = Em.Route.extend({
+    redirect: function(){
+        this.transitionTo('myProject.basics');
+    }
+
+});
+
 
 App.MyProjectSubRoute = Em.Route.extend({
     redirect: function() {
@@ -129,7 +137,7 @@ App.MyProjectSubRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectIndexRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});

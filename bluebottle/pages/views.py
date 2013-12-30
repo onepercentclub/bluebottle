@@ -39,10 +39,10 @@ class PageDetail(generics.RetrieveAPIView):
         return qs
 
     def get_object(self, queryset=None):
+        slug = self.kwargs['slug']
         qs = self.get_queryset()
-        qs = qs.filter(slug=self.kwargs['slug'])
-        qs = get_list_or_404(qs, slug=self.kwargs['slug'])
-        obj = get_object_or_404(qs, language=self.kwargs['language'])
+        print 'slug: ' + slug
+        obj = get_object_or_404(qs, language=self.kwargs['language'], slug=self.kwargs['slug'])
 
         return obj
 

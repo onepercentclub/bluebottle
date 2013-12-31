@@ -148,7 +148,7 @@ App.ThemeList = [
 App.MyProjectBudgetLine = DS.Model.extend({
     url: 'projects/budgetlines/manage',
 
-    project_plan: DS.belongsTo('App.MyProject'),
+    project: DS.belongsTo('App.MyProject'),
     description: DS.attr('string'),
     amount: DS.attr('number')
 });

@@ -1,5 +1,7 @@
+from babel.numbers import format_currency
 from django.db import models
 from django.utils.http import urlquote
+from django.utils import translation
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -161,4 +163,30 @@ class Project(models.Model):
         if not self.phase:
             self.phase = 'plan-new'
         super(Project, self).save(*args, **kwargs)
+
+
+class ProjectBudgetLine(models.Model):
+    """
+    BudgetLine: Entries to the Project Budget sheet.
+    This is the budget for the amount asked from this
+    website.
+    """
+    project = models.ForeignKey(Project)
+    description = models.CharField(_("description"), max_length=255, default='')
+    currency = models.CharField(max_length=3, default='EUR')
+    amount = models.PositiveIntegerField(_("amount (in cents)"))
+
+    created = CreationDateTimeField()
+    updated = ModificationDateTimeField()
+
+    class Meta:
+        verbose_name = _("budget line")
+        verbose_name_plural = _("budget lines")
+
+    def __unicode__(self):
+        language = translation.get_language().split('-')[0]
+        if not language:
+            language = 'en'
+        return u'{0} - {1}'.format(self.description,
+                                   format_currency(self.amount / 100.0, self.currency, locale=language))
 

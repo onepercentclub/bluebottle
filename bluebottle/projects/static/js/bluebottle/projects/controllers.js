@@ -207,7 +207,7 @@ App.MyProjectController = Em.ObjectController.extend(App.Editable, {
 
 });
 
-App.MyProjectIndexController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectBasicsController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.description'
 });
 
@@ -411,10 +411,4 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
         this.set('model.status', 'new');
         this._super();
     }
-});
-
-App.MyProjectCampaignController = Em.ObjectController.extend({
-    project: function() {
-        return this.get('model');
-    }.property('model')
 });

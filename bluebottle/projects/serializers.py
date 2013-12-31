@@ -1,3 +1,4 @@
+from bluebottle.projects.models import ProjectBudgetLine
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -95,3 +96,13 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'title')
+        
+        
+class ProjectBudgetLineSerializer(serializers.ModelSerializer):
+
+    amount = EuroField()
+    project = serializers.SlugRelatedField(slug_field='slug')
+
+    class Meta:
+        model = ProjectBudgetLine
+        fields = ('id', 'project', 'description', 'amount')

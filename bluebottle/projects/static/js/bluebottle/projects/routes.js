@@ -68,11 +68,13 @@ App.ProjectIndexRoute = Em.Route.extend({
         if (controller.get('parent_id') != parent_id){
             controller.set('page', 1);
             controller.set('parent_id', parent_id);
-//            var store = this.get('store');
-//            store.find('wallPost', {'parent_type': 'project', 'parent_id': parent_id}).then(function(items){
-//                controller.set('meta', items.get('meta'));
-//                controller.set('model', items.toArray());
-//            });
+
+            // Load wall-posts for this project
+            var store = this.get('store');
+            store.find('wallPost', {'parent_type': 'project', 'parent_id': parent_id}).then(function(items){
+                controller.set('meta', items.get('meta'));
+                controller.set('model', items.toArray());
+            });
         }
     }
 });

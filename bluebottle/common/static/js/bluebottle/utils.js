@@ -59,7 +59,13 @@ App.Editable = Ember.Mixin.create({
 
         goToNextStep: function(){
             $("html, body").animate({ scrollTop: 0 }, 600);
-            this.transitionToRoute(this.get('nextStep'));
+            if (this.get('nextStep')) {
+                this.transitionToRoute(this.get('nextStep'));
+            } else {
+                if (window.console){
+                    console.log("Don't know were to go next");
+                }
+            }
         },
 
         updateRecordOnServer: function(){
@@ -72,17 +78,11 @@ App.Editable = Ember.Mixin.create({
             });
 
             model.one('didUpdate', function(){
-                if (controller.get('nextStep')) {
-                    $("html, body").animate({ scrollTop: 0 }, 600);
-                    controller.transitionToRoute(controller.get('nextStep'));
-                }
+                controller.send('goToNextStep');
             });
 
             model.one('didCreate', function(){
-                if (controller.get('nextStep')) {
-                    $("html, body").animate({ scrollTop: 0 }, 600);
-                    controller.transitionToRoute(controller.get('nextStep'));
-                }
+                controller.send('goToNextStep');
             });
 
             model.save();
@@ -93,9 +93,8 @@ App.Editable = Ember.Mixin.create({
     stopEditing: function() {
         var self = this;
         var model = this.get('model');
-        var transaction = record.get('transaction');
 
-        if (record.get('isDirty')) {
+        if (model.get('isDirty')) {
             Bootstrap.ModalPane.popup({
                 classNames: ['modal'],
                 heading: gettext('Save changed data?'),
@@ -104,11 +103,9 @@ App.Editable = Ember.Mixin.create({
                 secondary: gettext('Cancel'),
                 callback: function(opts, e) {
                     e.preventDefault();
-
                     if (opts.primary) {
                         model.save();
                     }
-
                     if (opts.secondary) {
                         model.rollback();
                     }
@@ -126,7 +123,7 @@ App.Editable = Ember.Mixin.create({
 });
 
 
-App.UploadFile= Ember.TextField.extend({
+App.UploadFile = Ember.TextField.extend({
     attributeBindings: ['name', 'accept'],
     type: 'file',
 

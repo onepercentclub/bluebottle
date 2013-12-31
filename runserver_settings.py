@@ -8,6 +8,10 @@ PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'media')
 
+# Absolute filesystem path to the directory that will hold PRIVATE user-uploaded files.
+PRIVATE_MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'private', 'media')
+
+
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'assets')
 
 STATICI18N_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'global')
@@ -70,6 +74,10 @@ INSTALLED_APPS = (
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
+    'bluebottle.projects',
+    'bluebottle.pages',
+    'bluebottle.organizations',
+    'bluebottle.wallposts',
     )
 
 MIDDLEWARE_CLASSES = [
@@ -128,3 +136,23 @@ TEMPLATE_DEBUG = True
 USE_EMBER_STYLE_ATTRS = True
 
 INCLUDE_TEST_MODELS = True
+
+
+PROJECT_PHASES = (
+    ('Plan', (
+        ('plan-new', 'Plan - New'),
+        ('plan-submitted', 'Plan - Submitted'),
+        ('plan-needs-work', 'Plan - Needs work'),
+        ('plan-rejected', 'Plan - Rejected'),
+        ('plan-approved', 'Plan - Approved'),
+    )),
+    ('Campaign', (
+        ('campaign-running', 'Campaign - Running'),
+        ('campaign-stopped', 'Campaign - Stopped'),
+    )),
+    ('Done', (
+        ('done-completed', 'Done - Completed'),
+        ('done-incomplete', 'Done - Incomplete'),
+        ('done-stopped', 'Done - Stopped'),
+    )),
+)

@@ -20,7 +20,7 @@ install_requires = [
 #    'BeautifulSoup==3.2.1',
     'Django==1.5.5',
 #    'Jinja2==2.7',
-    'Pillow==2.1.0',
+    'Pillow==2.3.0',
     'South==0.8.1',
     'Sphinx==1.2b1',
 #    'cssmin==0.1.4',

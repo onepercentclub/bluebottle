@@ -7,6 +7,13 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('organizations', '0001_initial'),
+        ('geo', '0001_initial'),
+    )
+
+
+
     def forwards(self, orm):
         # Adding model 'ProjectTheme'
         db.create_table(u'projects_projecttheme', (

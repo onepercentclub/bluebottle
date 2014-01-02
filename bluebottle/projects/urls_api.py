@@ -5,8 +5,8 @@ from .views import (ProjectDetail, ProjectList, ManageProjectList, ManageProject
                     ManageProjectBudgetLineDetail)
 
 urlpatterns = patterns('',
-    url(r'^projects/$', ProjectList.as_view(), name='project-list'),
-    surl(r'^projects/<slug:s>$', ProjectDetail.as_view(), name='project-detail'),
+    url(r'^$', ProjectList.as_view(), name='project-list'),
+    surl(r'^<slug:s>/$', ProjectDetail.as_view(), name='project-detail'),
 
     url(r'^previews/$', ProjectPreviewList.as_view(), name='project-preview-list'),
     surl(r'^previews/<slug:s>$', ProjectPreviewDetail.as_view(), name='project-preview-detail'),

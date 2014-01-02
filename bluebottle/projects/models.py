@@ -224,6 +224,9 @@ class ProjectDetail(models.Model):
     class Meta:
         unique_together = ('project', 'field')
 
+    def __unicode__(self):
+        return '{0}: {1}'.format(self.field.name, self.value)
+
 
 class ProjectBudgetLine(models.Model):
     """

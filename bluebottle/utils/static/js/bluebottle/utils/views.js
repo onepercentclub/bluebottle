@@ -110,7 +110,6 @@ App.BbTextFieldComponent = App.BbFormFieldComponent.extend({
     type: 'text'
 });
 
-
 App.BbTextAreaComponent = App.BbFormFieldComponent.extend({
 });
 
@@ -125,4 +124,12 @@ App.BbUploadImageComponent = App.BbFormFieldComponent.extend({
 });
 
 App.BbVideoLinkComponent = App.BbTextFieldComponent.extend({
+});
+
+App.BbRadioComponent = App.BbFormFieldComponent.extend({
+    type: 'radio'
+});
+
+App.BbSelectComponent = App.BbFormFieldComponent.extend({
+
 });

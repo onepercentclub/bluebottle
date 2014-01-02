@@ -97,7 +97,27 @@ App.ProjectPhaseSelectView = Em.Select.extend({
 
 });
 
+App.GenericFieldView = Em.View.extend({
+    templateName: function(){
+        if (this.get('controller.model.type') == 'textarea') {
+            return 'generic_textarea';
+        }
+        if (this.get('controller.model.type') == 'text') {
+            return 'generic_text';
+        }
+        if (this.get('controller.model.type') == 'radio') {
+            return 'generic_radio';
+        }
+        if (this.get('controller.model.type') == 'select') {
+            console.log(this.get('controller.model.values'));
+            return 'generic_select';
 
+        }
+
+        return 'generic_textarea';
+
+    }.property('controller.model.type')
+});
 
 /*
  Project Manage Views
@@ -114,17 +134,12 @@ App.MyProjectView = Em.View.extend({
 });
 
 
-// Project Pitch Phase
-
 App.ThemeSelectView = Em.Select.extend({
     content: App.ThemeList,
     optionValuePath: "content.id",
     optionLabelPath: "content.title",
     prompt: "Pick a theme"
 });
-
-
-// Project Plan phase
 
 App.MyProjectView = Em.View.extend({
     templateName: 'my_project'
@@ -136,6 +151,10 @@ App.MyProjectBasicsView = Em.View.extend(App.PopOverMixin, {
 
 App.MyProjectDescriptionView = Em.View.extend(App.PopOverMixin, {
     templateName: 'my_project_description'
+});
+
+App.MyProjectDetailsView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_details'
 });
 
 App.MyProjectLocationView = Em.View.extend(App.PopOverMixin, {

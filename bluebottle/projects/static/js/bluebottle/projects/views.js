@@ -111,12 +111,11 @@ App.GenericFieldView = Em.View.extend({
         if (this.get('controller.model.type') == 'select') {
             console.log(this.get('controller.model.values'));
             return 'generic_select';
-
         }
-
         return 'generic_textarea';
 
     }.property('controller.model.type')
+
 });
 
 /*

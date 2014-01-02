@@ -6,9 +6,13 @@
     {{bb-text-area label=name valueBinding=value hint=description}}
 {% endtplhandlebars %}
 
+{% tplhandlebars "generic_text" %}
+    {{bb-text-field label=name valueBinding=value hint=description}}
+{% endtplhandlebars %}
+
 
 {% tplhandlebars "generic_radio" %}
-    {{bb-radio label=name valueBinding=value optionsBindings=options}}
+    {{bb-radio label=name valueBinding=value optionsBindings=options hint=description}}
 {% endtplhandlebars %}
 
 

@@ -103,10 +103,10 @@ tests_require = [
     'mock==1.0.1',
     'nose==1.3.0',
     'pylint==0.28.0',
-    'selenium==2.35.0',
+    'selenium==2.39.0',
     'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
-    'splinter==0.5.3', # Functional testing libraries
+    'splinter==0.5.4', # Functional testing libraries
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
 ]

@@ -148,7 +148,7 @@ App.ThemeList = [
 App.MyProjectBudgetLine = DS.Model.extend({
     url: 'projects/budgetlines/manage',
 
-    project_plan: DS.belongsTo('App.MyProject'),
+    project: DS.belongsTo('App.MyProject'),
     description: DS.attr('string'),
     amount: DS.attr('number')
 });
@@ -174,11 +174,11 @@ App.MyProject = App.Project.extend({
     editable: DS.attr('boolean'),
 
     validBasics: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('need') && this.get('tags.length')){
+        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
             return true;
         }
         return false;
-    }.property('title', 'pitch', 'theme', 'tags', 'slug'),
+    }.property('title', 'pitch', 'theme', 'tags'),
 
     // Description
     description: DS.attr('string'),

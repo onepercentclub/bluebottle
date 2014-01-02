@@ -1,5 +1,7 @@
+from babel.numbers import format_currency
 from django.db import models
 from django.utils.http import urlquote
+from django.utils import translation
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -25,6 +27,28 @@ class ProjectTheme(models.Model):
         ordering = ['name']
         verbose_name = _("project theme")
         verbose_name_plural = _("project themes")
+
+
+class ProjectPhase(models.Model):
+    """ Phase of a project """
+
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=400, blank=True)
+    sequence = models.IntegerField(unique=True, help_text=_("For ordering phases."))
+
+    active = models.BooleanField(default=True, help_text=_("Whether this phase is in use or has been discarded."))
+
+    editable = models.BooleanField(default=True,
+                                   help_text=_("Whether the project owner can change the details of the project."))
+
+    viewable = models.BooleanField(default=True,
+                                   help_text=_("Whether this phase, and projects in it show up at the website"))
+
+    def Meta(self):
+        ordering = ['sequence']
+
+    def __unicode__(self):
+        return "{0} - {1}".format(self.sequence,  self.name)
 
 
 class ProjectManager(models.Manager):
@@ -161,4 +185,72 @@ class Project(models.Model):
         if not self.phase:
             self.phase = 'plan-new'
         super(Project, self).save(*args, **kwargs)
+
+
+class ProjectDetailField(models.Model):
+
+    class Types(DjangoChoices):
+        text = ChoiceItem('text', label=_("Text field (one line)"))
+        textarea = ChoiceItem('textarea', label=_("Text area (multiple lines)"))
+        checkbox = ChoiceItem('checkbox', label=_("Checkbox"))
+        radio = ChoiceItem('radio', label=_("Radio buttons"))
+        custom = ChoiceItem('custom', label=_("Custom field"))
+
+    name = models.CharField(max_length=100)
+    active = models.BooleanField(default=True)
+    description = models.CharField(max_length=300, blank=True)
+    type = models.CharField(max_length=100, choices=Types.choices)
+
+    def __unicode__(self):
+        return self.name
+
+
+class ProjectDetailFieldValue(models.Model):
+
+    field = models.ForeignKey('ProjectDetailField')
+    value = models.CharField(max_length=200)
+    text = models.CharField(max_length=200, blank=True)
+
+
+class ProjectDetailFieldAttribute(models.Model):
+
+    field = models.ForeignKey('ProjectDetailField')
+    attribute = models.CharField(max_length=200)
+    value = models.CharField(max_length=200)
+
+
+class ProjectDetail(models.Model):
+
+    project = models.ForeignKey(Project)
+    field = models.ForeignKey(ProjectDetailField)
+    value = models.TextField()
+
+    class Meta:
+        unique_together = ('project', 'field')
+
+
+class ProjectBudgetLine(models.Model):
+    """
+    BudgetLine: Entries to the Project Budget sheet.
+    This is the budget for the amount asked from this
+    website.
+    """
+    project = models.ForeignKey(Project)
+    description = models.CharField(_("description"), max_length=255, default='')
+    currency = models.CharField(max_length=3, default='EUR')
+    amount = models.PositiveIntegerField(_("amount (in cents)"))
+
+    created = CreationDateTimeField()
+    updated = ModificationDateTimeField()
+
+    class Meta:
+        verbose_name = _("budget line")
+        verbose_name_plural = _("budget lines")
+
+    def __unicode__(self):
+        language = translation.get_language().split('-')[0]
+        if not language:
+            language = 'en'
+        return u'{0} - {1}'.format(self.description,
+                                   format_currency(self.amount / 100.0, self.currency, locale=language))
 

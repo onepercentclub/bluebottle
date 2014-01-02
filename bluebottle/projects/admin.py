@@ -1,3 +1,4 @@
+from bluebottle.projects.models import ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
@@ -14,10 +15,19 @@ from .models import Project
 logger = logging.getLogger(__name__)
 
 
+class ProjectDetailAdmin(admin.StackedInline):
+    model = ProjectDetail
+    extra = 0
+    can_delete = False
+
+
+
 class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
+    inlines = [ProjectDetailAdmin, ]
+
     actions = ('set_failed', 'toggle_campaign')
 
     list_filter = ('phase', )
@@ -71,3 +81,37 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
 admin.site.register(Project, ProjectAdmin)
 
+
+class ProjectPhaseAdmin(admin.ModelAdmin):
+    model = ProjectPhase
+    ordering = ['sequence']
+    list_editable = ['active', 'editable', 'viewable']
+    list_filter = ['active', ]
+    list_display_links = ['name']
+    list_display = ['sequence', 'name', 'active', 'editable', 'viewable']
+
+admin.site.register(ProjectPhase, ProjectPhaseAdmin)
+
+
+class ProjectDetailFieldAttributeAdmin(admin.TabularInline):
+    model = ProjectDetailFieldAttribute
+    extra = 0
+    verbose_name = 'attribute'
+    verbose_name_plural = 'attributes'
+
+
+class ProjectDetailFieldValueAdmin(admin.TabularInline):
+    model = ProjectDetailFieldValue
+    extra = 0
+    verbose_name = 'value'
+    verbose_name_plural = 'values'
+
+
+class ProjectDetailFieldAdmin(admin.ModelAdmin):
+    model = ProjectDetailField
+    inlines = [ProjectDetailFieldAttributeAdmin, ProjectDetailFieldValueAdmin]
+    list_filter = ['active', ]
+    list_display_links = ['name']
+    list_display = ['name', 'type', 'description']
+
+admin.site.register(ProjectDetailField, ProjectDetailFieldAdmin)

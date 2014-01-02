@@ -61,6 +61,12 @@ App = Em.Application.create({
             });
         });
 
+        App.Theme.find().then(function(list) {
+            App.ThemeSelectView.reopen({
+                content: list
+            });
+        });
+
         // Get a filtered list of countries that can apply for a project ('oda' countries).
         var filteredList = App.Country.filter(function(item) {return item.get('oda')});
 

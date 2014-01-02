@@ -1,7 +1,8 @@
 from django.conf.urls import patterns, url, include
 from surlex.dj import surl
 from .views import (ProjectDetail, ProjectList, ManageProjectList, ManageProjectDetail, ProjectThemeList,
-                    ProjectThemeDetail, ProjectPreviewList, ProjectPreviewDetail)
+                    ProjectThemeDetail, ProjectPreviewList, ProjectPreviewDetail, ManageProjectBudgetLineList,
+                    ManageProjectBudgetLineDetail)
 
 urlpatterns = patterns('',
     url(r'^projects/$', ProjectList.as_view(), name='project-list'),
@@ -17,5 +18,8 @@ urlpatterns = patterns('',
     # Manage stuff
     url(r'^manage/$', ManageProjectList.as_view(), name='project-manage-list'),
     surl(r'^manage/<slug:s>$', ManageProjectDetail.as_view(), name='project-manage-detail'),
+
+    url(r'^budgetlines/manage/$', ManageProjectBudgetLineList.as_view(), name='project-budgetline-manage-detail'),
+    surl(r'^budgetlines/manage/<pk:#>$', ManageProjectBudgetLineDetail.as_view(), name='project-budgetline-manage-detail'),
 
 )

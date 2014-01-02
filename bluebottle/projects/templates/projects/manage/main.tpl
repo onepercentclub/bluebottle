@@ -4,65 +4,60 @@
 
 {% tplhandlebars "my_project" %}
 
-	<div class="l-section" id="manage-project">
+    <div class="l-section" id="project-dashboard">
 
     	{{partial "my_project_top"}}
 
-        <div class="l-wrapper">
+        <div class="l-section" id="manage-project">
 
-            <nav class="manage-project-sidebar">
-                <h4><span class="flaticon solid notebook-1"></span> {% trans "Project Story" %} </h4>
-                <ul class="manage-project-nav">
-                    <li>
-                        {{#linkTo "myProject.basics"}}
-                            <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
-                            {% trans "Project Basics" %}
-                        {{/linkTo}}
-                    </li>
-                    <li>
-                        {{#linkTo "myProject.description"}}
-                            <em {{bindAttr class="validDescription:is-finished:is-unfinished"}}></em>
-                            {% trans "Project Description" %}
-                        {{/linkTo}}
-                    </li>
-                    <li>
-                        {{#linkTo "myProject.location"}}
-                            <em {{bindAttr class="validLocation:is-finished:is-unfinished"}}></em>
-                            {% trans "Location" %}
-                        {{/linkTo}}
-                    </li>
-                    <li>
-                        {{#linkTo "myProject.media"}}
-                            <em {{bindAttr class="validMedia:is-finished:is-unfinished"}}></em>
-                            {% trans "Media" %}
-                        {{/linkTo}}
-                    </li>
-                </ul>
+            <div class="l-wrapper">
 
-                <h4><span class="flaticon solid briefcase-1"></span> {% trans "Organisation" %}</h4>
-                <ul class="manage-project-nav">
-                    <li>
-                        {{#linkTo "myProject.organisation"}}
-                            <em {{bindAttr class="organization.validProfile:is-finished:is-unfinished"}}></em>
-                            {% trans "Organisation Profile" %}
-                        {{/linkTo}}
-                    </li>
-                    {{#if organization}}
-                    <li>
-                        {{#linkTo "myProject.legal"}}
-                            <em {{bindAttr class="organization.validLegalStatus:is-finished:is-unfinished"}}></em>
-                            {% trans "Legal Status" %}
-                        {{/linkTo}}
-                    </li>
-                    <!--{% comment %}<li>
-                        {{#linkTo "myProject.ambassadors"}}
-                            <em {{bindAttr class="validAmbassadors:is-finished:is-unfinished"}}></em>
-                            {% trans "Ambassadors" %}
-                        {{/linkTo}}
-                    </li>{% endcomment %}-->
-                    {{/if}}
+                <nav class="manage-project-sidebar">
+                    <h4><span class="flaticon solid notebook-1"></span> {% trans "Project Story" %} </h4>
+                    <ul class="manage-project-nav">
+                        <li>
+                            {{#linkTo "myProject.basics"}}
+                                <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
+                                {% trans "Project Basics" %}
+                            {{/linkTo}}
+                        </li>
+                        <li>
+                            {{#linkTo "myProject.description"}}
+                                <em {{bindAttr class="validDescription:is-finished:is-unfinished"}}></em>
+                                {% trans "Project Description" %}
+                            {{/linkTo}}
+                        </li>
+                        <li>
+                            {{#linkTo "myProject.location"}}
+                                <em {{bindAttr class="validLocation:is-finished:is-unfinished"}}></em>
+                                {% trans "Location" %}
+                            {{/linkTo}}
+                        </li>
+                        <li>
+                            {{#linkTo "myProject.media"}}
+                                <em {{bindAttr class="validMedia:is-finished:is-unfinished"}}></em>
+                                {% trans "Media" %}
+                            {{/linkTo}}
+                        </li>
+                    </ul>
 
-                {{#if needsFunding}}
+                    <h4><span class="flaticon solid briefcase-1"></span> {% trans "Organisation" %}</h4>
+                    <ul class="manage-project-nav">
+                        <li>
+                            {{#linkTo "myProject.organisation"}}
+                                <em {{bindAttr class="organization.validProfile:is-finished:is-unfinished"}}></em>
+                                {% trans "Organisation Profile" %}
+                            {{/linkTo}}
+                        </li>
+                        <li>
+                            {{#linkTo "myProject.legal"}}
+                                <em {{bindAttr class="organization.validLegalStatus:is-finished:is-unfinished"}}></em>
+                                {% trans "Legal Status" %}
+                            {{/linkTo}}
+                        </li>
+                    </ul>
+
+
                     <h4><span class="flaticon solid wallet-1"></span> {% trans "Crowdfunding" %}</h4>
                     <ul class="manage-project-nav">
                         <li>
@@ -85,21 +80,21 @@
                             {{/linkTo}}
                         </li>
                         {{/if}}
-                {{/if}}
+                    </ul>
 
-                {{#linkTo "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
-                    <span class="flaticon solid right-2"></span>
-                    {% trans "Submit Plan" %}
-                {{/linkTo}}
+                    {{#linkTo "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
+                        <span class="flaticon solid right-2"></span>
+                        {% trans "Submit Plan" %}
+                    {{/linkTo}}
 
-            </nav>
+                </nav>
 
-            <form class="l-content">
-                {{ outlet }}
-            </form>
+                <form class="l-content">
+                    {{ outlet }}
+                </form>
 
+            </div>
         </div>
-	</div>
-
+    </div>
 {% endtplhandlebars %}
 

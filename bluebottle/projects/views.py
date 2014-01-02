@@ -1,3 +1,5 @@
+from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.projects.serializers import ProjectBudgetLineSerializer
 from django.db.models.query_utils import Q
 from django.conf import settings
 from rest_framework import generics
@@ -110,3 +112,13 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
 
+
+class ManageProjectBudgetLineList(generics.ListCreateAPIView):
+    model = ProjectBudgetLine
+    serializer_class = ProjectBudgetLineSerializer
+    paginate_by = 20
+
+
+class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
+    model = ProjectBudgetLine
+    serializer_class = ProjectBudgetLineSerializer

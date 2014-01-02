@@ -17,6 +17,7 @@
                 placeholder='Tell us in one sentence where you need to the money for.' errors=errors.pitch}}
         </ul>
     </fieldset>
+
     <fieldset>
         <ul>
             {{#bb-form-field hint='Select one of the themes.' label='Theme' errors=errors.theme}}

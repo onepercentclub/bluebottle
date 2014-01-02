@@ -130,8 +130,8 @@ App.MyProjectView = Em.View.extend({
     templateName: 'my_project'
 });
 
-App.MyProjectIndexView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_index'
+App.MyProjectBasicsView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_basics'
 });
 
 App.MyProjectDescriptionView = Em.View.extend(App.PopOverMixin, {

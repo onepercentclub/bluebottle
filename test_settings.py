@@ -129,3 +129,22 @@ TEMPLATE_DEBUG = True
 USE_EMBER_STYLE_ATTRS = True
 
 INCLUDE_TEST_MODELS = True
+
+PROJECT_PHASES = (
+    ('Plan', (
+        ('plan-new', 'Plan - New'),
+        ('plan-submitted', 'Plan - Submitted'),
+        ('plan-needs-work', 'Plan - Needs work'),
+        ('plan-rejected', 'Plan - Rejected'),
+        ('plan-approved', 'Plan - Approved'),
+    )),
+    ('Campaign', (
+        ('campaign-running', 'Campaign - Running'),
+        ('campaign-stopped', 'Campaign - Stopped'),
+    )),
+    ('Done', (
+        ('done-completed', 'Done - Completed'),
+        ('done-incomplete', 'Done - Incomplete'),
+        ('done-stopped', 'Done - Stopped'),
+    )),
+)

@@ -1,4 +1,4 @@
-# Django settings for Booking project.
+# Django settings for BlueBottle project.
 
 import os
 
@@ -119,10 +119,6 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'booking-site.urls'
-
-# Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'booking-site.wsgi.application'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -154,7 +150,7 @@ INSTALLED_APPS = (
     'bluebottle.projects',
     'bluebottle.organizations',
 
-    # Modules required by Bluebottle
+    # Modules required by BlueBottle
     'fluent_contents',
     'fluent_contents.plugins.text',
     'fluent_contents.plugins.oembeditem',

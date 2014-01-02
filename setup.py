@@ -99,6 +99,7 @@ tests_require = [
     'django-tinymce==1.5.1b2',
     'django-wysiwyg==0.5.1',
     'djangorestframework==2.3.6',
+    'factory-boy==2.3.0',
     'micawber==0.2.6',
     'mock==1.0.1',
     'nose==1.3.0',

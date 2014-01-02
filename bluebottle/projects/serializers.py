@@ -1,4 +1,4 @@
-from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -64,18 +64,12 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'phase', 'country')
 
 
-class ProjectEditableField(serializers.BooleanField):
-
-    pass
-
-
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project-manage-detail')
     phase = serializers.CharField(read_only=True)
-    editable = ProjectEditableField(read_only=True, source=phase)
     tags = TagSerializer()
     organization = serializers.PrimaryKeyRelatedField(source="organization", required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
@@ -106,3 +100,26 @@ class ProjectBudgetLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectBudgetLine
         fields = ('id', 'project', 'description', 'amount')
+
+
+class ProjectDetailFieldAttributeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectDetailFieldAttribute
+        fields = ('id', 'attribute', 'value')
+
+class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectDetailFieldValue
+        fields = ('id', 'value', 'text')
+
+
+class ProjectDetailFieldSerializer(serializers.ModelSerializer):
+
+    options = ProjectDetailFieldValueSerializer(many=True, source='projectdetailfieldvalue_set')
+    attributes = ProjectDetailFieldAttributeSerializer(many=True, source='projectdetailfieldattribute_set')
+
+    class Meta:
+        model = ProjectDetailField
+        fields = ('id', 'name', 'description', 'type', 'options', 'attributes')

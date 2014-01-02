@@ -1,3 +1,4 @@
+from bluebottle.projects.views import ProjectDetailFieldList
 from django.conf.urls import patterns, url, include
 from surlex.dj import surl
 from .views import (ProjectDetail, ProjectList, ManageProjectList, ManageProjectDetail, ProjectThemeList,
@@ -5,6 +6,7 @@ from .views import (ProjectDetail, ProjectList, ManageProjectList, ManageProject
                     ManageProjectBudgetLineDetail)
 
 urlpatterns = patterns('',
+
     url(r'^projects/$', ProjectList.as_view(), name='project-list'),
     surl(r'^projects/<slug:s>$', ProjectDetail.as_view(), name='project-detail'),
 
@@ -14,6 +16,7 @@ urlpatterns = patterns('',
     surl(r'^themes/$', ProjectThemeList.as_view(), name='project-theme-list'),
     surl(r'^themes/<pk:#>$', ProjectThemeDetail.as_view(), name='project-theme-detail'),
 
+    surl(r'^fields/$', ProjectDetailFieldList.as_view(), name='project-detail-field-list'),
 
     # Manage stuff
     url(r'^manage/$', ManageProjectList.as_view(), name='project-manage-list'),

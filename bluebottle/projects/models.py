@@ -194,7 +194,7 @@ class ProjectDetailField(models.Model):
         textarea = ChoiceItem('textarea', label=_("Text area (multiple lines)"))
         checkbox = ChoiceItem('checkbox', label=_("Checkbox"))
         radio = ChoiceItem('radio', label=_("Radio buttons"))
-        custom = ChoiceItem('custom', label=_("Custom field"))
+        select = ChoiceItem('select', label=_("Select menu"))
 
     name = models.CharField(max_length=100)
     active = models.BooleanField(default=True)

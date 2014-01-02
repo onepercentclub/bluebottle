@@ -1,5 +1,5 @@
-from bluebottle.projects.models import ProjectBudgetLine
-from bluebottle.projects.serializers import ProjectBudgetLineSerializer
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDetailField
+from bluebottle.projects.serializers import ProjectBudgetLineSerializer, ProjectDetailFieldSerializer
 from django.db.models.query_utils import Q
 from django.conf import settings
 from rest_framework import generics
@@ -78,6 +78,11 @@ class ProjectDetail(generics.RetrieveAPIView):
         return qs
 
 
+class ProjectDetailFieldList(generics.ListAPIView):
+    model = ProjectDetailField
+    serializer_class = ProjectDetailFieldSerializer
+
+
 class ManageProjectList(generics.ListCreateAPIView):
     model = Project
     serializer_class = ManageProjectSerializer
@@ -122,3 +127,4 @@ class ManageProjectBudgetLineList(generics.ListCreateAPIView):
 class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
     model = ProjectBudgetLine
     serializer_class = ProjectBudgetLineSerializer
+

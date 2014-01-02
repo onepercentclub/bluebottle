@@ -1,7 +1,8 @@
 /**
  * Adds an animated progressbar.
  *
- * Usage: {{#bb-progressbar totalValue=100 currentValue=50}}{{/bb-progressbar}}
+ * Usage:
+ * {{bb-progressbar totalValue=100 currentValue=50}}
  */
 App.BbProgressbarComponent = Ember.Component.extend({
     didInsertElement: function(){
@@ -18,3 +19,4 @@ App.BbProgressbarComponent = Ember.Component.extend({
         this.$('.slider-progress').animate({'width': width}, 1000);
     }
 });
+

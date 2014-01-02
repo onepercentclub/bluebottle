@@ -1,3 +1,6 @@
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue
+from django.contrib.contenttypes.models import ContentType
+
 from rest_framework import serializers
 
 from bluebottle.accounts.serializers import UserPreviewSerializer
@@ -88,3 +91,26 @@ class ProjectBudgetLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectBudgetLine
         fields = ('id', 'project', 'description', 'amount')
+
+class ProjectDetailFieldAttributeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectDetailFieldAttribute
+        fields = ('id', 'attribute', 'value')
+
+class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectDetailFieldValue
+        fields = ('id', 'value', 'text')
+
+
+class ProjectDetailFieldSerializer(serializers.ModelSerializer):
+
+    options = ProjectDetailFieldValueSerializer(many=True, source='projectdetailfieldvalue_set')
+    attributes = ProjectDetailFieldAttributeSerializer(many=True, source='projectdetailfieldattribute_set')
+
+    class Meta:
+        model = ProjectDetailField
+        fields = ('id', 'name', 'description', 'type', 'options', 'attributes')
+

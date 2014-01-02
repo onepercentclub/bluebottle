@@ -24,12 +24,42 @@ App.Adapter.map('App.ProjectDonation', {
     member: {embedded: 'both'}
 });
 
+App.Adapter.map('App.ProjectDetailField', {
+    options: {embedded: 'load'},
+    attributes: {embedded: 'load'}
+});
+
+/* Models */
+
 App.ProjectCountry = DS.Model.extend({
     name: DS.attr('string'),
     subregion: DS.attr('string')
 });
 
-/* Models */
+
+// Extra project detail fields definition for this project
+App.ProjectDetailFieldAttribute = DS.Model.extend({
+    attribute: DS.attr('string'),
+    value: DS.attr('string')
+});
+
+App.ProjectDetailFieldValue = DS.Model.extend({
+    text: DS.attr('string'),
+    value: DS.attr('string')
+});
+
+App.ProjectDetailField = DS.Model.extend({
+    url: 'projects/fields',
+
+    name: DS.attr('string'),
+    type: DS.attr('string'),
+    description: DS.attr('string'),
+
+    attributes: DS.hasMany('App.ProjectDetailFieldAttribute'),
+    options: DS.hasMany('App.ProjectDetailFieldValue')
+
+
+});
 
 App.Project = DS.Model.extend({
     url: 'projects/projects',

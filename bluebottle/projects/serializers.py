@@ -1,6 +1,3 @@
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue
-from django.contrib.contenttypes.models import ContentType
-
 from rest_framework import serializers
 
 from bluebottle.accounts.serializers import UserPreviewSerializer
@@ -8,8 +5,10 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, EuroField, TagSerializer, ImageSerializer, OEmbedField,
     TaggableSerializerMixin)
 from bluebottle.geo.models import Country
+from bluebottle.projects.models import (
+    Project, ProjectTheme, ProjectBudgetLine, ProjectDetailField,
+    ProjectDetailFieldAttribute, ProjectDetailFieldValue)
 from bluebottle.utils.serializers import MetaField
-from bluebottle.projects.models import Project, ProjectTheme, ProjectBudgetLine
 
 
 class ProjectCountrySerializer(serializers.ModelSerializer):
@@ -84,7 +83,6 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
         
         
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
-
     amount = EuroField()
     project = serializers.SlugRelatedField(slug_field='slug')
 
@@ -92,11 +90,13 @@ class ProjectBudgetLineSerializer(serializers.ModelSerializer):
         model = ProjectBudgetLine
         fields = ('id', 'project', 'description', 'amount')
 
+
 class ProjectDetailFieldAttributeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectDetailFieldAttribute
         fields = ('id', 'attribute', 'value')
+
 
 class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
 
@@ -106,7 +106,6 @@ class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailFieldSerializer(serializers.ModelSerializer):
-
     options = ProjectDetailFieldValueSerializer(many=True, source='projectdetailfieldvalue_set')
     attributes = ProjectDetailFieldAttributeSerializer(many=True, source='projectdetailfieldattribute_set')
 

@@ -166,7 +166,6 @@ class Project(models.Model):
             return True
         return False
 
-
     class Meta:
         ordering = ['title']
         verbose_name = _("project")
@@ -206,22 +205,19 @@ class ProjectDetailField(models.Model):
 
 
 class ProjectDetailFieldValue(models.Model):
-
     field = models.ForeignKey('ProjectDetailField')
     value = models.CharField(max_length=200)
     text = models.CharField(max_length=200, blank=True)
 
 
 class ProjectDetailFieldAttribute(models.Model):
-
     field = models.ForeignKey('ProjectDetailField')
     attribute = models.CharField(max_length=200)
     value = models.CharField(max_length=200)
 
 
 class ProjectDetail(models.Model):
-
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(Project, related_name='details')
     field = models.ForeignKey(ProjectDetailField)
     value = models.TextField()
 
@@ -232,8 +228,7 @@ class ProjectDetail(models.Model):
 class ProjectBudgetLine(models.Model):
     """
     BudgetLine: Entries to the Project Budget sheet.
-    This is the budget for the amount asked from this
-    website.
+    This is the budget for the amount asked from this website.
     """
     project = models.ForeignKey(Project)
     description = models.CharField(_("description"), max_length=255, default='')

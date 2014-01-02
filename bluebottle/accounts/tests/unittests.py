@@ -6,7 +6,7 @@ from registration.models import RegistrationProfile
 from rest_framework import status
 
 
-from bluebottle.bluebottle_utils.tests import UserTestsMixin
+from bluebottle.utils.tests import UserTestsMixin
 from bluebottle.geo.tests import GeoTestsMixin
 
 

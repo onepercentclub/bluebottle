@@ -8,6 +8,10 @@ PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'media')
 
+# Absolute filesystem path to the directory that will hold PRIVATE user-uploaded files.
+PRIVATE_MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'private', 'media')
+
+
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'assets')
 
 STATICI18N_ROOT = os.path.join(PROJECT_ROOT, 'bluebottle', 'test_files', 'global')
@@ -44,6 +48,7 @@ SECRET_KEY = '$311#0^-72hr(uanah5)+bvl4)rzc*x1&amp;b)6&amp;fajqv_ae6v#zy'
 INSTALLED_APPS = (
     # Django apps
     'django.contrib.auth',
+    'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
@@ -65,15 +70,19 @@ INSTALLED_APPS = (
 
     # Bluebottle apps
     'bluebottle.accounts',
-    'bluebottle.bluebottle_utils',
+    'bluebottle.utils',
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
+    'bluebottle.projects',
+    'bluebottle.pages',
+    'bluebottle.organizations',
+    'bluebottle.wallposts',
     )
 
 MIDDLEWARE_CLASSES = [
     # Have a middleware to make sure old cookies still work after we switch to domain-wide cookies.
-    'bluebottle.bluebottle_utils.middleware.SubDomainSessionMiddleware',
+    'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -127,3 +136,23 @@ TEMPLATE_DEBUG = True
 USE_EMBER_STYLE_ATTRS = True
 
 INCLUDE_TEST_MODELS = True
+
+
+PROJECT_PHASES = (
+    ('Plan', (
+        ('plan-new', 'Plan - New'),
+        ('plan-submitted', 'Plan - Submitted'),
+        ('plan-needs-work', 'Plan - Needs work'),
+        ('plan-rejected', 'Plan - Rejected'),
+        ('plan-approved', 'Plan - Approved'),
+    )),
+    ('Campaign', (
+        ('campaign-running', 'Campaign - Running'),
+        ('campaign-stopped', 'Campaign - Stopped'),
+    )),
+    ('Done', (
+        ('done-completed', 'Done - Completed'),
+        ('done-incomplete', 'Done - Incomplete'),
+        ('done-stopped', 'Done - Stopped'),
+    )),
+)

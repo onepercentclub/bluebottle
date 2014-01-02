@@ -1,5 +1,6 @@
 from setuptest import setuptest
 
+
 class BlueBottleTestSuite(setuptest.SetupTestSuite):
     """
     Test Suite configuring Django settings and using
@@ -28,11 +29,3 @@ class BlueBottleTestSuite(setuptest.SetupTestSuite):
             if 'bluebottle.' in app:
                 top_packages.append(app.split('.')[-1])
         return top_packages
-
-    def pep8_report(self):
-        """ We don't want this """
-        pass
-
-    def coverage_report(self):
-        """ Nope """
-        pass

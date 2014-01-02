@@ -33,6 +33,7 @@ def css_dict(style):
     except ValueError, e:
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
+
 def BrowserExt(driver_name='firefox', *args, **kwargs):
     """
     Small helper to combine the correct webdriver with some additional methods without cloning the project.
@@ -284,4 +285,3 @@ class SeleniumTestCase(LiveServerTestCase):
         # # Check if the homepage opened, and the dynamically loaded content appeared.
         # # Remember that
         return self.browser.is_text_present('2013 Bluebottle', wait_time=10)
-

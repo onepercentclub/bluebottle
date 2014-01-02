@@ -24,7 +24,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserPreviewSerializer()
     image = ImageSerializer(required=False)
-    details = serializers.RelatedField(many=True)
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -40,6 +39,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
+        depth = 1
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
                   'phase', 'meta_data', 'image', 'details')
 

@@ -20,8 +20,9 @@ App.Router.map(function(){
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
         this.route('basics');
-        this.route('location');
         this.route('description');
+        this.route('details');
+        this.route('location');
         this.route('media');
 
         this.route('organisation');
@@ -146,6 +147,16 @@ App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
+
+
+App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
+
+    setupController: function(controller, model) {
+        this._super(controller, model);
+        controller.set('fields', App.ProjectDetailField.find());
+    }
+});
+
 
 App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     setupController: function(controller, model){

@@ -181,7 +181,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
 
 });
 
-
+App.GenericFieldController = Em.ObjectController.extend({});
 
 /*
  Project Manage Controllers
@@ -412,3 +412,4 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
         this._super();
     }
 });
+

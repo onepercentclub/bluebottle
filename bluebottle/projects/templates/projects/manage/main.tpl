@@ -18,13 +18,19 @@
                         <li>
                             {{#linkTo "myProject.basics"}}
                                 <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
-                                {% trans "Project Basics" %}
+                                {% trans "Basics" %}
                             {{/linkTo}}
                         </li>
                         <li>
                             {{#linkTo "myProject.description"}}
                                 <em {{bindAttr class="validDescription:is-finished:is-unfinished"}}></em>
-                                {% trans "Project Description" %}
+                                {% trans "Description" %}
+                            {{/linkTo}}
+                        </li>
+                        <li>
+                            {{#linkTo "myProject.details"}}
+                                <em {{bindAttr class="validDetails:is-finished:is-unfinished"}}></em>
+                                {% trans "Details" %}
                             {{/linkTo}}
                         </li>
                         <li>

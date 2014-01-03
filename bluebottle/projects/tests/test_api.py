@@ -1,6 +1,7 @@
 import json
 
 from django.test import TestCase
+from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.projects import (
@@ -231,12 +232,11 @@ class TestManageProjectList(ProjectEndpointTestCase):
         manage Project list.
         """
         self.client.login(email=self.user.email, password='testing')
-
         response = self.client.get(reverse('project_manage_list'))
+
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
-
         self.assertEqual(data['count'], 3)
 
         for item in data['results']:
@@ -273,6 +273,75 @@ class TestManageProjectList(ProjectEndpointTestCase):
         response = self.client.post(reverse('project_manage_list'), post_data)
 
         self.assertEqual(response.status_code, 201)
+
+        data = json.loads(response.content)
+        self.assertIn('id', data)
+        self.assertIn('created', data)
+        self.assertIn('title', data)
+        self.assertIn('url', data)
+        self.assertIn('phase', data)
+        self.assertIn('image', data)
+        self.assertIn('pitch', data)
+        self.assertIn('tags', data)
+        self.assertIn('description', data)
+        self.assertIn('country', data)
+        self.assertIn('latitude', data)
+        self.assertIn('longitude', data)
+        self.assertIn('reach', data)
+        self.assertIn('organization', data)
+        self.assertIn('video_html', data)
+        self.assertIn('video_url', data)
+        self.assertIn('money_needed', data)
+        self.assertIn('editable', data)
+
+
+class TestManageProjectDetail(ProjectEndpointTestCase):
+    """
+    Test case for the ``ManageProjectDetail`` API view.
+
+    Endpoint: /api/projects/manage/{slug}
+    """
+    def test_api_manage_project_detail_endpoint_login_required(self):
+        """
+        Test login required for the API endpoint for manage Project detail.
+        """
+        response = self.client.get(
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
+
+        self.assertEqual(response.status_code, 403)
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['detail'], 'Authentication credentials were not provided.')
+
+    def test_api_manage_project_detail_endpoint_not_owner(self):
+        """
+        Test unauthorized request made by a user who is not the owner of the
+        Project over the API endpoint for manage Project detail.
+        """
+        user = BlueBottleUserFactory.create(
+            email='jane.doe@onepercentclub.com',
+            username='janedoe'
+        )
+
+        self.client.login(email=user.email, password='testing')
+        response = self.client.get(
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
+
+        self.assertEqual(response.status_code, 403)
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['detail'], 'You do not have permission to perform this action.')
+
+    def test_api_manage_project_detail_endpoint_success(self):
+        """
+        Test successful request for a logged in user over the API endpoint for
+        manage Project detail.
+        """
+        self.client.login(email=self.user.email, password='testing')
+        response = self.client.get(
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
+
+        self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
         self.assertIn('id', data)

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils import translation
@@ -158,10 +159,9 @@ class Project(models.Model):
             self.phase = 'plan-new'
         super(Project, self).save(*args, **kwargs)
 
-    @models.permalink
     def get_absolute_url(self):
         """ Get the URL for the current project. """
-        return 'project-detail', (), {'slug': self.slug}
+        return reverse('project_detail', kwargs={'slug': self.slug})
 
     def get_absolute_frontend_url(self):
         url = self.get_absolute_url()

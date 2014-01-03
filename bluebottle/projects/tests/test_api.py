@@ -7,11 +7,12 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
-class TestProjectList(TestCase):
+class ProjectEndpointTestCase(TestCase):
     """
-    Test case for the ``ProjectList`` API view.
+    Base class for ``projects`` app API endpoints test cases.
 
-    Endpoint: /api/projects/projects/
+    Sets up a common set of three ``Project``s, as well as a dummy testing user
+    which can be used for unit tests.
     """
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
@@ -19,6 +20,13 @@ class TestProjectList(TestCase):
         self.project_2 = ProjectFactory.create(owner=self.user)
         self.project_3 = ProjectFactory.create(owner=self.user)
 
+
+class TestProjectList(ProjectEndpointTestCase):
+    """
+    Test case for the ``ProjectList`` API view.
+
+    Endpoint: /api/projects/projects/
+    """
     def test_api_project_list_endpoint(self):
         """
         Test the API endpoint for Projects list.
@@ -44,18 +52,12 @@ class TestProjectList(TestCase):
             self.assertIn('phase', data)
 
 
-class TestProjectDetail(TestCase):
+class TestProjectDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ProjectDetail`` API view.
 
     Endpoint: /api/projects/projects/{slug}
     """
-    def setUp(self):
-        self.user = BlueBottleUserFactory.create()
-        self.project_1 = ProjectFactory.create(owner=self.user)
-        self.project_2 = ProjectFactory.create(owner=self.user)
-        self.project_3 = ProjectFactory.create(owner=self.user)
-
     def test_api_project_detail_endpoint(self):
         """
         Test the API endpoint for Project detail.
@@ -76,18 +78,12 @@ class TestProjectDetail(TestCase):
         self.assertIn('phase', data)
 
 
-class TestProjectPreviewList(TestCase):
+class TestProjectPreviewList(ProjectEndpointTestCase):
     """
     Test case for the ``ProjectPreviewList API view.
 
     Endpoint: /api/projects/previews
     """
-    def setUp(self):
-        self.user = BlueBottleUserFactory.create()
-        self.project_1 = ProjectFactory.create(owner=self.user)
-        self.project_2 = ProjectFactory.create(owner=self.user)
-        self.project_3 = ProjectFactory.create(owner=self.user)
-
     def test_api_project_preview_list_endpoint(self):
         """
         Test the API endpoint for Project preview list.

@@ -1,28 +1,36 @@
-from bluebottle.projects.views import ProjectDetailFieldList
-from django.conf.urls import patterns, url, include
-from surlex.dj import surl
-from .views import (ProjectDetail, ProjectList, ManageProjectList, ManageProjectDetail, ProjectThemeList,
-                    ProjectThemeDetail, ProjectPreviewList, ProjectPreviewDetail, ManageProjectBudgetLineList,
-                    ManageProjectBudgetLineDetail)
+from django.conf.urls import patterns, url
 
-urlpatterns = patterns('',
-    
-    url(r'^projects/$', ProjectList.as_view(), name='project-list'),
-    surl(r'^projects/<slug:s>$', ProjectDetail.as_view(), name='project-detail'),
+from .views import (
+    ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
+    ManageProjectDetail, ManageProjectList, ProjectDetail,
+    ProjectDetailFieldList, ProjectList, ProjectThemeDetail, ProjectThemeList,
+    ProjectPreviewDetail, ProjectPreviewList)
 
-    url(r'^previews/$', ProjectPreviewList.as_view(), name='project-preview-list'),
-    surl(r'^previews/<slug:s>$', ProjectPreviewDetail.as_view(), name='project-preview-detail'),
+urlpatterns = patterns(
+    '',
+    url(r'^projects/$', ProjectList.as_view(), name='project_list'),
+    url(r'^projects/(?P<slug>[\w-]+)$', ProjectDetail.as_view(),
+        name='project_detail'),
 
-    surl(r'^themes/$', ProjectThemeList.as_view(), name='project-theme-list'),
-    surl(r'^themes/<pk:#>$', ProjectThemeDetail.as_view(), name='project-theme-detail'),
+    url(r'^previews/$', ProjectPreviewList.as_view(),
+        name='project_preview_list'),
+    url(r'^previews/(?P<slug>[\w-]+)$', ProjectPreviewDetail.as_view(),
+        name='project_preview_detail'),
 
-    surl(r'^fields/$', ProjectDetailFieldList.as_view(), name='project-detail-field-list'),
+    url(r'^themes/$', ProjectThemeList.as_view(), name='project_theme_list'),
+    url(r'^themes/(?P<pk>\d+)$', ProjectThemeDetail.as_view(),
+        name='project_theme_detail'),
+
+    url(r'^fields/$', ProjectDetailFieldList.as_view(),
+        name='project_detail_field_list'),
 
     # Manage stuff
-    url(r'^manage/$', ManageProjectList.as_view(), name='project-manage-list'),
-    surl(r'^manage/<slug:s>$', ManageProjectDetail.as_view(), name='project-manage-detail'),
+    url(r'^manage/$', ManageProjectList.as_view(), name='project_manage_list'),
+    url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(),
+        name='project_manage_detail'),
 
-    url(r'^budgetlines/manage/$', ManageProjectBudgetLineList.as_view(), name='project-budgetline-manage-detail'),
-    surl(r'^budgetlines/manage/<pk:#>$', ManageProjectBudgetLineDetail.as_view(), name='project-budgetline-manage-detail'),
-
+    url(r'^budgetlines/manage/$', ManageProjectBudgetLineList.as_view(),
+        name='project_budgetline_manage_detail'),
+    url(r'^budgetlines/manage/(?P<pk>\d+)$', ManageProjectBudgetLineDetail.as_view(),
+        name='project_budgetline_manage_detail'),
 )

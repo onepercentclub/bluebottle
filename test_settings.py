@@ -149,3 +149,11 @@ PROJECT_PHASES = (
         ('done-stopped', 'Done - Stopped'),
     )),
 )
+
+# Twitter handles, per language
+TWITTER_HANDLES = {
+    'nl': '1procentclub',
+    'en': '1percentclub',
+}
+
+DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']

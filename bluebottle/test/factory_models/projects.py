@@ -3,7 +3,7 @@ import logging
 
 from django.conf import settings
 
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectTheme
 from .accounts import BlueBottleUserFactory
 
 # Suppress debug information for Factory Boy
@@ -16,3 +16,11 @@ class ProjectFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     phase = settings.PROJECT_PHASES[0][1][0][0]
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
+
+
+class ProjectThemeFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = ProjectTheme
+
+    name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
+    name_nl = name
+    description = 'ProjectTheme factory model'

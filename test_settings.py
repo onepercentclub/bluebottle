@@ -20,6 +20,9 @@ STATICFILES_DIRS = (
 STATIC_URL = '/static/assets/'
 MEDIA_URL = '/static/media/'
 
+# Absolute filesystem path to the directory that will hold PRIVATE user-uploaded files.
+PRIVATE_MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'private', 'media')
+
 COMPRESS_ENABLED = False # = True: causes tests to be failing for some reason
 
 STATICFILES_FINDERS = [
@@ -39,7 +42,6 @@ DATABASES = {
 }
 
 SECRET_KEY = '$311#0^-72hr(uanah5)+bvl4)rzc*x1&amp;b)6&amp;fajqv_ae6v#zy'
-
 
 INSTALLED_APPS = (
     # Django apps
@@ -69,7 +71,9 @@ INSTALLED_APPS = (
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
+    'bluebottle.organizations',
     'bluebottle.pages',
+    'bluebottle.projects',
 )
 
 MIDDLEWARE_CLASSES = [
@@ -104,7 +108,6 @@ TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
 
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
 
-
 ROOT_URLCONF = 'bluebottle.urls'
 
 SESSION_COOKIE_NAME = 'bb-session-id'
@@ -112,8 +115,6 @@ SESSION_COOKIE_NAME = 'bb-session-id'
 # Django-registration settings
 ACCOUNT_ACTIVATION_DAYS = 4
 HTML_ACTIVATION_EMAIL = True  # Note this setting is from our forked version.
-
-
 
 SOUTH_TESTS_MIGRATE = False # Make south shut up during tests
 

@@ -206,3 +206,56 @@ class TestProjectDetailFieldList(ProjectEndpointTestCase):
             self.assertIn('type', item)
             self.assertIn('options', item)
             self.assertIn('attributes', item)
+
+
+class TestManageProjectList(ProjectEndpointTestCase):
+    """
+    Test case for the ``ManageProjectList`` API view.
+
+    Endpoint: /api/projects/manage
+    """
+    def test_api_manage_project_list_endpoint_login_required(self):
+        """
+        Test login required for the API endpoint for manage Project list.
+        """
+        response = self.client.get(reverse('project_manage_list'))
+
+        self.assertEqual(response.status_code, 403)
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['detail'], 'Authentication credentials were not provided.')
+
+    def test_api_manage_project_list_endpoint_success(self):
+        """
+        Test successful request for a logged in user over the API endpoint for
+        manage Project list.
+        """
+        self.client.login(email=self.user.email, password='testing')
+
+        response = self.client.get(reverse('project_manage_list'), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['count'], 3)
+
+        for item in data['results']:
+            self.assertIn('id', item)
+            self.assertIn('created', item)
+            self.assertIn('title', item)
+            self.assertIn('url', item)
+            self.assertIn('phase', item)
+            self.assertIn('image', item)
+            self.assertIn('pitch', item)
+            self.assertIn('tags', item)
+            self.assertIn('description', item)
+            self.assertIn('country', item)
+            self.assertIn('latitude', item)
+            self.assertIn('longitude', item)
+            self.assertIn('reach', item)
+            self.assertIn('organization', item)
+            self.assertIn('video_html', item)
+            self.assertIn('video_url', item)
+            self.assertIn('money_needed', item)
+            self.assertIn('editable', item)

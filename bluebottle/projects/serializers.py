@@ -54,13 +54,15 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'phase', 'country')
 
 
-class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
+class ManageProjectSerializer(TaggableSerializerMixin,
+                              serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
-    url = serializers.HyperlinkedIdentityField(view_name='project-manage-detail')
+    url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail')
     phase = serializers.CharField(read_only=True)
     tags = TagSerializer()
-    organization = serializers.PrimaryKeyRelatedField(source='organization', required=False)
+    organization = serializers.PrimaryKeyRelatedField(
+        source='organization', required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
 

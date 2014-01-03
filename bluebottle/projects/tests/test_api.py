@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.projects import (
-    ProjectFactory, ProjectThemeFactory)
+    ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
@@ -25,6 +25,10 @@ class ProjectEndpointTestCase(TestCase):
         self.theme_1 = ProjectThemeFactory.create()
         self.theme_2 = ProjectThemeFactory.create()
         self.theme_3 = ProjectThemeFactory.create()
+
+        self.detail_field_1 = ProjectDetailFieldFactory.create()
+        self.detail_field_2 = ProjectDetailFieldFactory.create()
+        self.detail_field_3 = ProjectDetailFieldFactory.create()
 
 
 class TestProjectList(ProjectEndpointTestCase):
@@ -177,3 +181,28 @@ class TestProjectThemeDetail(ProjectEndpointTestCase):
 
         self.assertIn('id', data)
         self.assertIn('title', data)
+
+
+class TestProjectDetailFieldList(ProjectEndpointTestCase):
+    """
+    Test case for the ``ProjectDetailFieldList`` API view.
+
+    Endpoint: /api/projects/fields
+    """
+    def test_api_project_detail_field_list_endpoint(self):
+        """
+        Test the API endpoint for Project detail field list.
+        """
+        response = self.client.get(reverse('project_detail_field_list'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        for item in data:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertIn('description', item)
+            self.assertIn('type', item)
+            self.assertIn('options', item)
+            self.assertIn('attributes', item)

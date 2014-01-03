@@ -232,8 +232,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         """
         self.client.login(email=self.user.email, password='testing')
 
-        response = self.client.get(reverse('project_manage_list'), follow=True)
-
+        response = self.client.get(reverse('project_manage_list'))
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
@@ -259,3 +258,38 @@ class TestManageProjectList(ProjectEndpointTestCase):
             self.assertIn('video_url', item)
             self.assertIn('money_needed', item)
             self.assertIn('editable', item)
+
+    def test_api_manage_project_list_endpoint_post(self):
+        """
+        Test successful POST request over the API endpoint for manage Project
+        list.
+        """
+        post_data = {
+            'title': 'Testing Project POST request',
+            'pitch': 'A new project to be used in unit tests',
+        }
+
+        self.client.login(email=self.user.email, password='testing')
+        response = self.client.post(reverse('project_manage_list'), post_data)
+
+        self.assertEqual(response.status_code, 201)
+
+        data = json.loads(response.content)
+        self.assertIn('id', data)
+        self.assertIn('created', data)
+        self.assertIn('title', data)
+        self.assertIn('url', data)
+        self.assertIn('phase', data)
+        self.assertIn('image', data)
+        self.assertIn('pitch', data)
+        self.assertIn('tags', data)
+        self.assertIn('description', data)
+        self.assertIn('country', data)
+        self.assertIn('latitude', data)
+        self.assertIn('longitude', data)
+        self.assertIn('reach', data)
+        self.assertIn('organization', data)
+        self.assertIn('video_html', data)
+        self.assertIn('video_url', data)
+        self.assertIn('money_needed', data)
+        self.assertIn('editable', data)

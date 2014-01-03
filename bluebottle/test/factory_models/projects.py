@@ -23,4 +23,5 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
     name_nl = name
+    slug = name
     description = 'ProjectTheme factory model'

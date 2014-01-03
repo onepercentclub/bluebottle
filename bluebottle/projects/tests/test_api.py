@@ -1,11 +1,11 @@
 import json
 
 from django.test import TestCase
-from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.projects import (
-    ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory)
+    ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
+    ProjectBudgetLineFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
@@ -362,3 +362,37 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('video_url', data)
         self.assertIn('money_needed', data)
         self.assertIn('editable', data)
+
+
+class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
+    """
+    Test case for the ``ManageProjectBudgetLineList`` API view.
+
+    Endpoint: /api/projects/budgetlines/manage
+    """
+    def setUp(self):
+        super(TestManageProjectBudgetLineList, self).setUp()
+
+        self.project_budget_1 = ProjectBudgetLineFactory.create(
+            project=self.project_1)
+        self.project_budget_2 = ProjectBudgetLineFactory.create(
+            project=self.project_2)
+        self.project_budget_3 = ProjectBudgetLineFactory.create(
+            project=self.project_3)
+
+    def test_api_manage_project_budgetline_list_endpoint(self):
+        """
+        Test API endpoint for manage Project budgetline list.
+        """
+        response = self.client.get(reverse('project_budgetline_manage_detail'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 3)
+
+        for item in data['results']:
+            self.assertIn('id', item)
+            self.assertIn('project', item)
+            self.assertIn('description', item)
+            self.assertIn('amount', item)

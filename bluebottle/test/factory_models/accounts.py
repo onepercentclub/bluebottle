@@ -13,3 +13,4 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     email = 'john.doe@onepercentclub.com'
     username = 'johndoe'
     password = factory.PostGenerationMethodCall('set_password', 'testing')
+    is_active = True

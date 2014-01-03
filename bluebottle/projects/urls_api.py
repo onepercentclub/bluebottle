@@ -6,6 +6,7 @@ from .views import (
     ProjectDetailFieldList, ProjectList, ProjectThemeDetail, ProjectThemeList,
     ProjectPreviewDetail, ProjectPreviewList)
 
+
 urlpatterns = patterns(
     '',
     url(r'^projects/$', ProjectList.as_view(), name='project_list'),

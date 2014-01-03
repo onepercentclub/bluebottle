@@ -33,12 +33,44 @@ class TestProjectList(TestCase):
         self.assertEqual(data['count'], 3)
 
         # Check sanity on the JSON response.
-        for item in data['results']:
-            self.assertIn('created', item)
-            self.assertIn('description', item)
-            self.assertIn('details', item)
-            self.assertIn('id', item)
-            self.assertIn('image', item)
-            self.assertIn('meta_data', item)
-            self.assertIn('owner', item)
-            self.assertIn('phase', item)
+        for data in data['results']:
+            self.assertIn('created', data)
+            self.assertIn('description', data)
+            self.assertIn('details', data)
+            self.assertIn('id', data)
+            self.assertIn('image', data)
+            self.assertIn('meta_data', data)
+            self.assertIn('owner', data)
+            self.assertIn('phase', data)
+
+
+class TestProjectDetail(TestCase):
+    """
+    Test case for the ``ProjectDetail`` API view.
+
+    Endpoint: /api/projects/projects/{slug}
+    """
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create()
+        self.project_1 = ProjectFactory.create(owner=self.user)
+        self.project_2 = ProjectFactory.create(owner=self.user)
+        self.project_3 = ProjectFactory.create(owner=self.user)
+
+    def test_api_project_detail_endpoint(self):
+        """
+        Test the API endpoint for Project detail.
+        """
+        response = self.client.get(
+            reverse('project_detail', kwargs={'slug': self.project_1.slug}))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertIn('created', data)
+        self.assertIn('description', data)
+        self.assertIn('details', data)
+        self.assertIn('id', data)
+        self.assertIn('image', data)
+        self.assertIn('meta_data', data)
+        self.assertIn('owner', data)
+        self.assertIn('phase', data)

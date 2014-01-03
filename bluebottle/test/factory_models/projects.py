@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 
 from bluebottle.projects.models import (
-    Project, ProjectTheme, ProjectDetailField)
+    Project, ProjectTheme, ProjectDetailField, ProjectBudgetLine)
 from .accounts import BlueBottleUserFactory
 
 # Suppress debug information for Factory Boy
@@ -34,3 +34,10 @@ class ProjectDetailFieldFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Field_{0}'.format(n))
     description = 'DetailField factory model'
     type = 'text'
+
+
+class ProjectBudgetLineFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = ProjectBudgetLine
+
+    project = factory.SubFactory(ProjectFactory)
+    amount = 100000

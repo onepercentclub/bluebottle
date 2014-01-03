@@ -1,2 +1,1 @@
-from .unittests import *
-from .functional import *
+from .test_api import *

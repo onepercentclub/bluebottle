@@ -139,7 +139,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
     """
     Test case for the ``ProjectThemeList`` API view.
 
-    Endpoint: /api/projects/
+    Endpoint: /api/projects/themes
     """
     def test_api_project_theme_list_endpoint(self):
         """
@@ -156,3 +156,24 @@ class TestProjectThemeList(ProjectEndpointTestCase):
         for item in data['results']:
             self.assertIn('id', item)
             self.assertIn('title', item)
+
+
+class TestProjectThemeDetail(ProjectEndpointTestCase):
+    """
+    Test case for the ``ProjectThemeDetail`` API view.
+
+    Endpoint: /api/projects/themes/{pk}
+    """
+    def test_api_project_theme_detail_endpoint(self):
+        """
+        Test the API endpoint for Project theme detail.
+        """
+        response = self.client.get(
+            reverse('project_theme_detail', kwargs={'pk': self.project_1.pk}))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertIn('id', data)
+        self.assertIn('title', data)

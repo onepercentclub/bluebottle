@@ -41,15 +41,15 @@ class TestProjectList(ProjectEndpointTestCase):
         self.assertEqual(data['count'], 3)
 
         # Check sanity on the JSON response.
-        for data in data['results']:
-            self.assertIn('created', data)
-            self.assertIn('description', data)
-            self.assertIn('details', data)
-            self.assertIn('id', data)
-            self.assertIn('image', data)
-            self.assertIn('meta_data', data)
-            self.assertIn('owner', data)
-            self.assertIn('phase', data)
+        for item in data['results']:
+            self.assertIn('created', item)
+            self.assertIn('description', item)
+            self.assertIn('details', item)
+            self.assertIn('id', item)
+            self.assertIn('image', item)
+            self.assertIn('meta_data', item)
+            self.assertIn('owner', item)
+            self.assertIn('phase', item)
 
 
 class TestProjectDetail(ProjectEndpointTestCase):
@@ -80,7 +80,7 @@ class TestProjectDetail(ProjectEndpointTestCase):
 
 class TestProjectPreviewList(ProjectEndpointTestCase):
     """
-    Test case for the ``ProjectPreviewList API view.
+    Test case for the ``ProjectPreviewList`` API view.
 
     Endpoint: /api/projects/previews
     """
@@ -102,3 +102,28 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
             self.assertIn('image', item)
             self.assertIn('phase', item)
             self.assertIn('country', item)
+
+
+class TestProjectPreviewDetail(ProjectEndpointTestCase):
+    """
+    Test case for the ``ProjectPreviewDetail`` API view.
+
+    Endpoint: /api/projects/preview/{slug}
+    """
+    def test_api_project_preview_detail_endpoint(self):
+        """
+        Test the API endpoint for Project preview detail.
+        """
+        response = self.client.get(
+            reverse('project_preview_detail',
+                    kwargs={'slug': self.project_1.slug}))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertIn('id', data)
+        self.assertIn('title', data)
+        self.assertIn('image', data)
+        self.assertIn('phase', data)
+        self.assertIn('country', data)

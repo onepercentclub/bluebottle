@@ -3,13 +3,13 @@
 {% get_current_language as LANGUAGE_CODE %}
 
     {% block_verbatim nav_login_content %}
-        
+
         <ul class="nav-actions">
             {{#if controllers.currentUser.isAuthenticated }}
                 {% block_verbatim user_logged_in %}
-                
+
                     <li class="nav-member">
-                        
+
                         {% block_verbatim profile_anchor %}
                             <a href="#" class="nav-member-dropdown">
                                 <strong>
@@ -17,16 +17,16 @@
                                 </strong>
                             </a>
                         {% endblock_verbatim profile_anchor %}
-                        
+
                         <ul class="nav-member-dropdown-menu">
                             {% block_verbatim my_menu %}
-                                
+
                                 <li>
                                     {{#linkTo "userProfile" }}
                                         {% trans "Edit my profile & settings" %}
                                     {{/linkTo }}
                                 </li>
-                                
+
                                 {% if 'projects' in bb_apps %}
                                 {% block_verbatim 'my-projects-menu-link' %}
                                     <li>
@@ -36,6 +36,16 @@
                                     </li>
                                 {% endblock_verbatim %}
                                 {% endif %}
+
+                                {% comment %} TODO: link to public profile
+                                    <li>
+                                        <a href="#">
+                                            {# {{#link-to "viewProfile" }} #}
+                                                {% trans "View my profile" %}
+                                            {# {{/link-to}} #}
+                                        </a>
+                                    </li>
+                                {% endcomment %}
 
                                 <li>
                                     {% block logout_anchor %}
@@ -58,9 +68,9 @@
                 {% endblock_verbatim user_logged_in %}
 
             {{else}}
-                
+
                 {% block_verbatim anonymous_user %}
-                
+
                     <li class="nav-signup-login">
                         {{#linkTo "signup" class="nav-signup"}}{% trans "Sign up" %}{{/linkTo}}
                         &#124;
@@ -70,7 +80,7 @@
                     <li class="nav-switch-language">{{view "App.LanguageSwitchView"}}</li>
 
                 {% endblock_verbatim anonymous_user %}
-                
+
             {{/if}}
         </ul>
 

@@ -203,10 +203,24 @@ class Project(models.Model):
 
     @property
     def editable(self):
-        phases = ('plan-new', 'plan-needs-work', 'plan-approved',
-                  'campaign-running')
+        if self.phase in ('plan-new', 'plan-needs-work', 'plan-approved', 'campaign-running'):
+            return True
+        return False
 
-        return True if self.phase in phases else False
+    class Meta:
+        ordering = ['title']
+        verbose_name = _("project")
+        verbose_name_plural = _("projects")
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            original_slug = slugify(self.title)
+            counter = 2
+            qs = Project.objects
+            while qs.filter(slug = original_slug).exists():
+                original_slug = '%s-%d' % (original_slug, counter)
+                counter += 1
+            self.slug = original_slug
 
 
 class ProjectDetailField(models.Model):
@@ -218,6 +232,7 @@ class ProjectDetailField(models.Model):
         select = ChoiceItem('select', label=_('Select menu'))
 
     name = models.CharField(max_length=100)
+    slug = models.CharField(max_length=30, unique=True)
     active = models.BooleanField(default=True)
     description = models.CharField(max_length=300, blank=True)
     type = models.CharField(max_length=100, choices=Types.choices)
@@ -227,33 +242,34 @@ class ProjectDetailField(models.Model):
 
 
 class ProjectDetailFieldValue(models.Model):
+
     field = models.ForeignKey('ProjectDetailField')
     value = models.CharField(max_length=200)
     text = models.CharField(max_length=200, blank=True)
 
 
 class ProjectDetailFieldAttribute(models.Model):
+
     field = models.ForeignKey('ProjectDetailField')
     attribute = models.CharField(max_length=200)
     value = models.CharField(max_length=200)
 
 
 class ProjectDetail(models.Model):
-    project = models.ForeignKey(Project, related_name='details')
+
+    project = models.ForeignKey(Project)
     field = models.ForeignKey(ProjectDetailField)
     value = models.TextField()
 
     class Meta:
         unique_together = ('project', 'field')
 
-    def __unicode__(self):
-        return '{0}: {1}'.format(self.field.name, self.value)
-
 
 class ProjectBudgetLine(models.Model):
     """
     BudgetLine: Entries to the Project Budget sheet.
-    This is the budget for the amount asked from this website.
+    This is the budget for the amount asked from this
+    website.
     """
     project = models.ForeignKey(Project)
     description = models.CharField(_('description'), max_length=255, default='')

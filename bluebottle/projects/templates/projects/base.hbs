@@ -298,7 +298,7 @@
                 {% endblock_verbatim %}
                 {% endif %}
                 {% if 'tasks' in bb_apps %}
-                {% verbatim %}
+                {% block_verbatim 'project_task_tab' %}
                     <li class="tab-tasks">
                         {{#if taskCount}}
                             {{#linkTo 'projectTasks'}}
@@ -312,7 +312,7 @@
                             {{/linkTo}}
                         {{/if}}
                     </li>
-                {% endverbatim %}
+                {% endblock_verbatim %}
                 {% endif %}
                 <li class="tab-plan">
                     {{#linkTo "projectPlan"}}

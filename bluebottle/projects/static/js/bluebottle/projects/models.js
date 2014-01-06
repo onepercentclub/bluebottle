@@ -3,7 +3,8 @@
 App.Adapter.map('App.Project', {
     owner: {embedded: 'load'},
     country: {embedded: 'load'},
-    meta: {embedded: 'load'}
+    meta: {embedded: 'load'},
+    extras: {embedded: 'load'}
 });
 
 App.Adapter.map('App.ProjectPreview', {
@@ -13,7 +14,8 @@ App.Adapter.map('App.ProjectPreview', {
 
 App.Adapter.map('App.MyProject', {
     budgetLines: {embedded: 'load'},
-    tags: {embedded: 'always'}
+    tags: {embedded: 'always'},
+    extras: {embedded: 'load'}
 });
 
 App.Adapter.map('App.PartnerOrganization', {
@@ -57,9 +59,16 @@ App.ProjectDetailField = DS.Model.extend({
 
     attributes: DS.hasMany('App.ProjectDetailFieldAttribute'),
     options: DS.hasMany('App.ProjectDetailFieldValue')
-
-
 });
+
+App.MyProjectDetail = DS.Model.extend({
+
+    value: DS.attr('string'),
+//
+//    project: DS.belongsTo('App.MyProject'),
+//    field: DS.belongsTo('App.ProjectDetailField')
+});
+
 
 App.Project = DS.Model.extend({
     url: 'projects/projects',
@@ -95,6 +104,8 @@ App.Project = DS.Model.extend({
 
     // Budget
     budgetLines: DS.hasMany('App.BudgetLine'),
+
+    extras: DS.hasMany('App.MyProjectDetail'),
 
     isPhasePlan: Em.computed.equal('phase', 'plan'),
     isPhaseCampaign: Em.computed.equal('phase', 'campaign'),
@@ -200,6 +211,8 @@ App.MyProject = App.Project.extend({
     theme: DS.attr('string'),
     need: DS.attr('string'),
     tags: DS.hasMany('App.Tag'),
+
+    extras: DS.hasMany('App.MyProjectDetail'),
 
     editable: DS.attr('boolean'),
 

@@ -114,7 +114,11 @@ App.GenericFieldView = Em.View.extend({
         }
         return 'generic_textarea';
 
-    }.property('controller.model.type')
+    }.property('controller.model.type'),
+
+    value: function(){
+        return this.get('controller.extras').firstObject.get('value');
+    }.property('controller.extras', 'controller.model.id')
 
 });
 

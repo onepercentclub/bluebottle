@@ -31,7 +31,7 @@
     <fieldset>
         <ul>
             {{#each field in fields}}
-                {{render 'genericField' field projectBinding=this}}
+                {{render 'genericField' field extrasBinding=extras}}
             {{/each}}
         </ul>
 

@@ -1,5 +1,5 @@
-from django.core.exceptions import ImproperlyConfigured
 from rest_framework import permissions
+
 from .models import Project
 
 

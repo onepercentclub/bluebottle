@@ -1,13 +1,16 @@
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDetailField
-from bluebottle.projects.serializers import ProjectBudgetLineSerializer, ProjectDetailFieldSerializer
+from bluebottle.projects.serializers import (
+    ProjectBudgetLineSerializer, ProjectDetailFieldSerializer)
 from django.db.models.query_utils import Q
-from django.conf import settings
+
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Project, ProjectTheme
-from .serializers import ManageProjectSerializer,  ProjectPreviewSerializer, ProjectThemeSerializer, ProjectSerializer
-from .permissions import IsProjectOwner
+from .serializers import (
+    ManageProjectSerializer, ProjectPreviewSerializer, ProjectThemeSerializer,
+    ProjectSerializer)
+from .permissions import IsProjectOwner, IsProjectOwnerOrReadOnly
 
 
 class ProjectPreviewList(generics.ListAPIView):
@@ -91,7 +94,8 @@ class ManageProjectList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Overwrite the default to only return the Projects the currently logged in user owns.
+        Overwrite the default to only return the Projects the currently logged
+        in user owns.
         """
         queryset = super(ManageProjectList, self).get_queryset()
         queryset = queryset.filter(owner=self.request.user)
@@ -122,10 +126,12 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
 class ManageProjectBudgetLineList(generics.ListCreateAPIView):
     model = ProjectBudgetLine
     serializer_class = ProjectBudgetLineSerializer
+    permission_classes = (IsProjectOwnerOrReadOnly, )
     paginate_by = 20
 
 
 class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
     model = ProjectBudgetLine
     serializer_class = ProjectBudgetLineSerializer
+    permission_classes = (IsProjectOwnerOrReadOnly, )
 

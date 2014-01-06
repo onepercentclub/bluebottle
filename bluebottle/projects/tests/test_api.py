@@ -417,10 +417,75 @@ class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
 
         self.assertEqual(budgetline.description, post_data['description'])
         self.assertEqual(budgetline.project.slug, post_data['project'])
-        self.assertEqual(budgetline.amount, post_data['amount'])
+        self.assertEqual(budgetline.amount, 10000000)
 
 
-class TestManageProjects(ProjectEndpointTestCase):
+class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ManageProjectBudgetLineDetail`` API view.
+
+    Endpoint: /api/projects/budgetlines/manage/{pk}
     """
+    def setUp(self):
+        super(TestManageProjectsBudgetLineDetail, self).setUp()
+
+        self.project_budget_1 = ProjectBudgetLineFactory.create(
+            project=self.project_1)
+        self.project_budget_2 = ProjectBudgetLineFactory.create(
+            project=self.project_2)
+        self.project_budget_3 = ProjectBudgetLineFactory.create(
+            project=self.project_3)
+
+    def test_api_manage_project_budgetline_detail(self):
+        """
+        Test API endpoint for manage Project budgetline detail.
+        """
+        response = self.client.get(
+            reverse('project_budgetline_manage_detail',
+                    kwargs={'pk': self.project_budget_1.pk}))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertIn('id', data)
+        self.assertIn('project', data)
+        self.assertIn('description', data)
+        self.assertIn('amount', data)
+
+    def test_api_manage_project_budgetline_detail_put(self):
+        """
+        Test PUT method over manage Project budgetline detail endpoint.
+        """
+        put_data = {
+            'project': self.project_budget_1.project.slug,
+            'description': 'Modified description for testing',
+            'amount': 200000
+        }
+        json_data = json.dumps(put_data)
+
+        response = self.client.put(
+            reverse('project_budgetline_manage_detail',
+                    kwargs={'pk': self.project_budget_1.pk}),
+            json_data, content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+
+        budgetline = ProjectBudgetLine.objects.get(pk=self.project_budget_1.pk)
+        self.assertEqual(budgetline.amount, 20000000)
+        self.assertEqual(budgetline.description, put_data['description'])
+        self.assertEqual(budgetline.project.slug, put_data['project'])
+
+    def test_api_manage_project_budgetline_delete(self):
+        """
+        Test DELETE method over manage Project budgetline detail endpoint.
+        """
+        response = self.client.delete(
+            reverse('project_budgetline_manage_detail',
+                    kwargs={'pk': self.project_budget_1.pk}))
+
+        self.assertEqual(response.status_code, 204)
+
+        self.assertRaises(
+            ProjectBudgetLine.DoesNotExist,
+            ProjectBudgetLine.objects.get,
+            pk=self.project_budget_1.pk)

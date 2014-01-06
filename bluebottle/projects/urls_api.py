@@ -31,7 +31,7 @@ urlpatterns = patterns(
         name='project_manage_detail'),
 
     url(r'^budgetlines/manage/$', ManageProjectBudgetLineList.as_view(),
-        name='project_budgetline_manage_detail'),
+        name='project_budgetline_manage_list'),
     url(r'^budgetlines/manage/(?P<pk>\d+)$', ManageProjectBudgetLineDetail.as_view(),
         name='project_budgetline_manage_detail'),
 )

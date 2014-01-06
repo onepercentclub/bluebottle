@@ -3,6 +3,7 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
+from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
     ProjectBudgetLineFactory)
@@ -384,7 +385,7 @@ class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
         """
         Test API endpoint for manage Project budgetline list.
         """
-        response = self.client.get(reverse('project_budgetline_manage_detail'))
+        response = self.client.get(reverse('project_budgetline_manage_list'))
 
         self.assertEqual(response.status_code, 200)
 
@@ -396,3 +397,30 @@ class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
             self.assertIn('project', item)
             self.assertIn('description', item)
             self.assertIn('amount', item)
+
+    def test_api_manage_project_budgetline_list_post(self):
+        """
+        Test successful POST request over API endpoint for manage Project
+        budgetline.
+        """
+        post_data = {
+            'project': self.project_1.slug,
+            'description': 'The testing project.',
+            'amount': 100000.00
+        }
+        response = self.client.post(
+            reverse('project_budgetline_manage_list'), post_data)
+
+        self.assertEqual(response.status_code, 201)
+
+        budgetline = ProjectBudgetLine.objects.latest('pk')
+
+        self.assertEqual(budgetline.description, post_data['description'])
+        self.assertEqual(budgetline.project.slug, post_data['project'])
+        self.assertEqual(budgetline.amount, post_data['amount'])
+
+
+class TestManageProjects(ProjectEndpointTestCase):
+    """
+    Test case for the ``ManageProjectBudgetLineDetail`` API view.
+    """

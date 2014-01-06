@@ -7,7 +7,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.geo.models import Country
 from bluebottle.projects.models import (
     Project, ProjectTheme, ProjectBudgetLine, ProjectDetailField,
-    ProjectDetailFieldAttribute, ProjectDetailFieldValue)
+    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail)
 from bluebottle.utils.serializers import MetaField
 
 
@@ -19,10 +19,20 @@ class ProjectCountrySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'subregion')
 
 
+class ProjectDetailSerializer(serializers.ModelSerializer):
+
+    field = serializers.CharField(source='field.slug', read_only=True)
+
+    class Meta:
+        model = ProjectDetail
+        fields = ('field', 'value')
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserPreviewSerializer()
     image = ImageSerializer(required=False)
+    details = ProjectDetailSerializer(many=True, required=False, source='projectdetail_set')
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -38,7 +48,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        depth = 1
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
                   'phase', 'meta_data', 'image', 'details')
 
@@ -54,8 +63,8 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'image', 'phase', 'country')
 
 
-class ManageProjectSerializer(TaggableSerializerMixin,
-                              serializers.ModelSerializer):
+class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
+
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail')
@@ -65,6 +74,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
         source='organization', required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
+    details = ProjectDetailSerializer(many=True, required=False, source='projectdetail_set')
 
     image = ImageSerializer(required=False)
 
@@ -73,7 +83,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
         fields = ('id', 'created', 'title', 'url', 'phase', 'image', 'pitch',
                   'tags', 'description', 'country', 'latitude', 'longitude',
                   'reach', 'organization', 'image', 'video_html', 'video_url',
-                  'money_needed', 'editable')
+                  'money_needed', 'editable', 'details')
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
@@ -108,6 +118,8 @@ class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailFieldSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(source='slug', read_only=True)
     options = ProjectDetailFieldValueSerializer(many=True, source='projectdetailfieldvalue_set')
     attributes = ProjectDetailFieldAttributeSerializer(many=True, source='projectdetailfieldattribute_set')
 

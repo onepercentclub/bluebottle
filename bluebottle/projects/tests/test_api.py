@@ -408,6 +408,7 @@ class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
             'description': 'The testing project.',
             'amount': 100000.00
         }
+        self.client.login(email=self.project_1.owner.email, password='testing')
         response = self.client.post(
             reverse('project_budgetline_manage_list'), post_data)
 
@@ -436,6 +437,12 @@ class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
         self.project_budget_3 = ProjectBudgetLineFactory.create(
             project=self.project_3)
 
+        self.put_data = {
+            'project': self.project_budget_1.project.slug,
+            'description': 'Modified description for testing',
+            'amount': 200000
+        }
+
     def test_api_manage_project_budgetline_detail(self):
         """
         Test API endpoint for manage Project budgetline detail.
@@ -452,33 +459,44 @@ class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('amount', data)
 
-    def test_api_manage_project_budgetline_detail_put(self):
+    def test_api_manage_project_budgetline_detail_put_authentication(self):
         """
-        Test PUT method over manage Project budgetline detail endpoint.
+        Test PUT method needs the user to be authenticated.
         """
-        put_data = {
-            'project': self.project_budget_1.project.slug,
-            'description': 'Modified description for testing',
-            'amount': 200000
-        }
-        json_data = json.dumps(put_data)
+        json_data = json.dumps(self.put_data)
 
         response = self.client.put(
             reverse('project_budgetline_manage_detail',
                     kwargs={'pk': self.project_budget_1.pk}),
             json_data, content_type='application/json')
 
+        self.assertEqual(response.status_code, 403)
+
+    def test_api_manage_project_budgetline_detail_put(self):
+        """
+        Test successful PUT method over manage Project budgetline detail
+        endpoint.
+        """
+        json_data = json.dumps(self.put_data)
+
+        self.client.login(email=self.project_1.owner.email, password='testing')
+        response = self.client.put(
+            reverse('project_budgetline_manage_detail',
+                    kwargs={'pk': self.project_budget_1.pk}),
+            json_data, content_type='application/json', follow=True)
+
         self.assertEqual(response.status_code, 200)
 
         budgetline = ProjectBudgetLine.objects.get(pk=self.project_budget_1.pk)
         self.assertEqual(budgetline.amount, 20000000)
-        self.assertEqual(budgetline.description, put_data['description'])
-        self.assertEqual(budgetline.project.slug, put_data['project'])
+        self.assertEqual(budgetline.description, self.put_data['description'])
+        self.assertEqual(budgetline.project.slug, self.put_data['project'])
 
     def test_api_manage_project_budgetline_delete(self):
         """
         Test DELETE method over manage Project budgetline detail endpoint.
         """
+        self.client.login(email=self.project_1.owner.email, password='testing')
         response = self.client.delete(
             reverse('project_budgetline_manage_detail',
                     kwargs={'pk': self.project_budget_1.pk}))

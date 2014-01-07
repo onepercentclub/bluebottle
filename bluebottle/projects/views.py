@@ -134,4 +134,3 @@ class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
     model = ProjectBudgetLine
     serializer_class = ProjectBudgetLineSerializer
     permission_classes = (IsProjectOwnerOrReadOnly, )
-

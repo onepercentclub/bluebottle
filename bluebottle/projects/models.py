@@ -207,21 +207,6 @@ class Project(models.Model):
             return True
         return False
 
-    class Meta:
-        ordering = ['title']
-        verbose_name = _("project")
-        verbose_name_plural = _("projects")
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            original_slug = slugify(self.title)
-            counter = 2
-            qs = Project.objects
-            while qs.filter(slug = original_slug).exists():
-                original_slug = '%s-%d' % (original_slug, counter)
-                counter += 1
-            self.slug = original_slug
-
 
 class ProjectDetailField(models.Model):
     class Types(DjangoChoices):
@@ -242,21 +227,18 @@ class ProjectDetailField(models.Model):
 
 
 class ProjectDetailFieldValue(models.Model):
-
     field = models.ForeignKey('ProjectDetailField')
     value = models.CharField(max_length=200)
     text = models.CharField(max_length=200, blank=True)
 
 
 class ProjectDetailFieldAttribute(models.Model):
-
     field = models.ForeignKey('ProjectDetailField')
     attribute = models.CharField(max_length=200)
     value = models.CharField(max_length=200)
 
 
 class ProjectDetail(models.Model):
-
     project = models.ForeignKey(Project)
     field = models.ForeignKey(ProjectDetailField)
     value = models.TextField()

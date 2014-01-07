@@ -33,6 +33,7 @@ class ProjectDetailFieldFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Field_{0}'.format(n))
     description = 'DetailField factory model'
+    slug = name
     type = 'text'
 
 

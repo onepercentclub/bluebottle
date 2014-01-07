@@ -46,7 +46,6 @@ App.UserIndexRoute = Em.Route.extend({
 App.UserProfileRoute = Em.Route.extend({
     model: function() {
         var route = this;
-
         return App.CurrentUser.find('current').then(function(user) {
             return App.User.find(user.get('id_for_ember'));
         });
@@ -59,10 +58,33 @@ App.UserProfileRoute = Em.Route.extend({
 });
 
 App.ViewProfileRoute = Em.Route.extend({
-    model: function() {
-        return App.CurrentUser.find('current').then(function(user) {
-            return App.User.find(user.get('id_for_ember'));
+    model: function(params) {
+        var model = App.User.find(params.user_id);
+        var route = this;
+        model.on('becameError', function() {
+            route.transitionTo('error.notFound');
         });
+        return model;
+    },
+
+    setupController: function(controller, model) {
+        this._super(controller, model);
+
+        controller.set('projects_supported', 0);
+
+        // statistics related to tasks
+        Em.$.ajax({
+            url: "/api/tasks/project-supports/",
+            type: 'GET',
+            data: {'user': model.get('id')}
+        }).then(function(response){
+            var initial = controller.get('projects_supported');
+            controller.set('projects_supported', initial + response.projects_supported);
+            controller.set('tasks_realized', response.tasks_realized);
+            controller.set('hours_spent', response.hours);
+        });
+
+        // TODO: statistics related to donations
     }
 });
 

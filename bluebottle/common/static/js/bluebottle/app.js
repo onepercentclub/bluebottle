@@ -239,7 +239,7 @@ App.Router.reopen({
     didTransition: function(infos) {
         this._super(infos);
         if (window._gaq === undefined) { return; }
-        
+
         Ember.run.next(function(){
             _gaq.push(['_trackPageview', window.location.hash.substr(1)]);
         });

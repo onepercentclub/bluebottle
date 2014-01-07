@@ -1,8 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum
 from django.db.models.query_utils import Q
 from rest_framework import generics
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView
@@ -168,3 +172,31 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 class SkillList(generics.ListAPIView):
     model = Skill
     serializer_class = SkillSerializer
+
+
+class ProjectSupportView(APIView):
+    """ View to return the number of projects supported by a user through tasksk. """
+
+    # TODO: permissions
+
+    def get(self, request, format=None):
+        user_id = request.GET.get('user', None)
+        user = get_object_or_404(get_user_model(), pk=user_id)
+
+        num_supported = Task.supported_projects.by_user(user).count()
+        tasks_realized = Task.objects.filter(author=user, status=Task.TaskStatuses.realized).count()
+
+        # hours spent on tasks
+        # import pdb; pdb.set_trace()
+        times_needed = TaskMember.objects.filter(
+                status=TaskMember.TaskMemberStatuses.realized,
+                member=user
+            ).values_list('task__time_needed', flat=True)
+        times_needed = sum([int(t) for t in times_needed if t.isdigit()])
+
+        result = {
+            'projects_supported': num_supported,
+            'tasks_realized': tasks_realized,
+            'hours': times_needed,
+        }
+        return Response(result)

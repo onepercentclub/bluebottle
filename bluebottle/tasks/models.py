@@ -10,6 +10,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 from bluebottle.utils.utils import clean_for_hashtag
+from bluebottle.projects.models import Project
 
 
 class Skill(models.Model):
@@ -23,6 +24,23 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ('id', )
+
+
+class SupportedProjectsManager(models.Manager):
+    """
+    Manager to retrieve user statistics related to supported projects through tasks.
+    """
+    def by_user(self, user):
+        """
+        Fetches the projects supported by `user` by being a taskmember in the related tasks.
+
+        Usage: Task.supported_projects.by_user(user) returns the projects queryset.
+        """
+        statuses = TaskMember.TaskMemberStatuses
+        valid_statuses = [statuses.applied, statuses.accepted, statuses.realized] # NOTE: should applied be in here too?
+        projects = Project.objects.filter(task__taskmember=user, task__taskmember__status__in=valid_statuses).distinct('id')
+        # order is required to play nice with distinct
+        return projects.order_by('id')
 
 
 class Task(models.Model):
@@ -56,6 +74,9 @@ class Task(models.Model):
     tags = TaggableManager(blank=True, verbose_name=_("tags"))
 
     deadline = models.DateTimeField()
+
+    objects = models.Manager()
+    supported_projects = SupportedProjectsManager()
 
     def __unicode__(self):
         return self.title

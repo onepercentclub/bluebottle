@@ -59,6 +59,20 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     }
 });
 
+App.ViewProfileController = Ember.ObjectController.extend({
+    projects_supported: function() {
+        return 0;
+    }.property(),
+
+    tasks_realized: function() {
+        return 0;
+    }.property(),
+
+    hours_spent: function() {
+        return 0;
+    }.property()
+});
+
 
 App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
     userTypeList: (function() {

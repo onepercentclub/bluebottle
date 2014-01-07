@@ -54,7 +54,6 @@ App.User = DS.Model.extend({
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
     }.property('date_joined')
-
 });
 
 /*

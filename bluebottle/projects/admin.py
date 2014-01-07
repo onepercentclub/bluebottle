@@ -21,7 +21,6 @@ class ProjectDetailAdmin(admin.StackedInline):
     can_delete = False
 
 
-
 class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     date_hierarchy = 'created'
     ordering = ('-created',)
@@ -37,8 +36,10 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     raw_id_fields = ('owner',)
 
-    fields = ('owner', 'phase', 'title', 'pitch', 'image','description', 'reach',
+    fields = ('title', 'slug', 'owner', 'phase', 'pitch', 'image','description', 'reach',
               'latitude', 'longitude', 'country', 'video_url', 'money_needed', 'tags')
+
+    prepopulated_fields = {"slug": ("title",)}
 
     def queryset(self, request):
         # Optimization: Select related fields that are used in admin specific display fields.
@@ -113,5 +114,7 @@ class ProjectDetailFieldAdmin(admin.ModelAdmin):
     list_filter = ['active', ]
     list_display_links = ['name']
     list_display = ['name', 'type', 'description']
+
+    prepopulated_fields = {"slug": ("name",)}
 
 admin.site.register(ProjectDetailField, ProjectDetailFieldAdmin)

@@ -26,7 +26,6 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     """
     Allows access only to project owner.
     """
-
     def _get_project_from_request(self, request):
         if request.DATA:
             project_slug = request.DATA.get('project', None)
@@ -35,29 +34,46 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
         if project_slug:
             try:
                 project = Project.objects.get(slug=project_slug)
+                return project
             except Project.DoesNotExist:
                 return None
         else:
             return None
-        return project
+
+    def _get_project_from_view(self, view):
+        project_pk = view.kwargs.get('pk', None)
+        if project_pk:
+            try:
+                project = Project.objects.get(pk=project_pk)
+                return project
+            except Project.DoesNotExist:
+                return None
+        else:
+            return None
 
     def has_permission(self, request, view):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        # Read permissions are allowed to any request, so we'll always allow
+        # GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
         # Test for objects/lists related to a Project (e.g WallPosts).
-        # Get the project form the request
+        # Get the project from the request
         project = self._get_project_from_request(request)
+
+        # Get the project from the view if it was not available in the request.
+        if not project:
+            project = self._get_project_from_view(view)
         return project and project.owner == request.user
 
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        # Read permissions are allowed to any request, so we'll always allow
+        # GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
         # Test for project model object-level permissions.
-        return isinstance(obj, Project) and obj.owner == request.user
-
-
-
+        if isinstance(obj, Project):
+            return obj.owner == request.user
+        else:
+            return obj.project.owner == request.user

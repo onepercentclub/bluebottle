@@ -406,7 +406,8 @@ class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
         post_data = {
             'project': self.project_1.slug,
             'description': 'The testing project.',
-            'amount': 100000.00
+            # We set the amount in Euros in the POST request.
+            'amount': 1000
         }
         self.client.login(email=self.project_1.owner.email, password='testing')
         response = self.client.post(
@@ -418,7 +419,8 @@ class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
 
         self.assertEqual(budgetline.description, post_data['description'])
         self.assertEqual(budgetline.project.slug, post_data['project'])
-        self.assertEqual(budgetline.amount, 10000000)
+        # In the model, the amount is stored in Euro-cents.
+        self.assertEqual(budgetline.amount, 100000)
 
 
 class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
@@ -440,7 +442,7 @@ class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
         self.put_data = {
             'project': self.project_budget_1.project.slug,
             'description': 'Modified description for testing',
-            'amount': 200000
+            'amount': 2000
         }
 
     def test_api_manage_project_budgetline_detail(self):
@@ -488,7 +490,7 @@ class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
         self.assertEqual(response.status_code, 200)
 
         budgetline = ProjectBudgetLine.objects.get(pk=self.project_budget_1.pk)
-        self.assertEqual(budgetline.amount, 20000000)
+        self.assertEqual(budgetline.amount, 200000)
         self.assertEqual(budgetline.description, self.put_data['description'])
         self.assertEqual(budgetline.project.slug, self.put_data['project'])
 

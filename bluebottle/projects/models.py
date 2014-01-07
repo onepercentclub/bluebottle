@@ -38,20 +38,15 @@ class ProjectPhase(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=400, blank=True)
-    sequence = models.IntegerField(
-        unique=True, help_text=_('For ordering phases.'))
+    sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
 
-    active = models.BooleanField(
-        default=True, help_text=_('Whether this phase is in use or has '
-                                  'been discarded.'))
+    active = models.BooleanField(default=True, help_text=_('Whether this phase is in use or has been discarded.'))
 
-    editable = models.BooleanField(
-        default=True, help_text=_('Whether the project owner can change '
-                                  'the details of the project.'))
+    editable = models.BooleanField(default=True,
+                                   help_text=_('Whether the project owner can change the details of the project.'))
 
-    viewable = models.BooleanField(
-        default=True, help_text=_('Whether this phase, and projects in '
-                                  'it show up at the website'))
+    viewable = models.BooleanField(default=True,
+                                   help_text=_('Whether this phase, and projects in it show up at the website'))
 
     class Meta():
         ordering = ['sequence']

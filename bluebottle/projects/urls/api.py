@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from .views import (
+from ..views import (
     ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
     ManageProjectDetail, ManageProjectList, ProjectDetail,
     ProjectDetailFieldList, ProjectList, ProjectThemeDetail, ProjectThemeList,

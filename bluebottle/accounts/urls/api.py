@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url
 
 from surlex.dj import surl
 
-from .views import (
+from ..views import (
     UserProfileDetail, CurrentUser, UserSettingsDetail, UserCreate,
     UserActivate, PasswordReset, PasswordSet)
 

@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url, include
 from surlex.dj import surl
-from .views import (ManageOrganizationList, ManageOrganizationDetail, ManageOrganizationDocumentList,
+from ..views import (ManageOrganizationList, ManageOrganizationDetail, ManageOrganizationDocumentList,
                     ManageOrganizationDocumentDetail, OrganizationDetail, OrganizationList)
 
 urlpatterns = patterns('',

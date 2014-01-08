@@ -172,31 +172,3 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 class SkillList(generics.ListAPIView):
     model = Skill
     serializer_class = SkillSerializer
-
-
-class ProjectSupportView(APIView):
-    """ View to return the number of projects supported by a user through tasksk. """
-
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request, format=None):
-        user_id = request.GET.get('user', None)
-        user = get_object_or_404(get_user_model(), pk=user_id)
-
-        num_supported = Task.supported_projects.by_user(user).count()
-        tasks_realized = Task.objects.filter(author=user, status=Task.TaskStatuses.realized).count()
-
-        # hours spent on tasks
-        # import pdb; pdb.set_trace()
-        times_needed = TaskMember.objects.filter(
-                status=TaskMember.TaskMemberStatuses.realized,
-                member=user
-            ).values_list('task__time_needed', flat=True)
-        times_needed = sum([int(t) for t in times_needed if t.isdigit()])
-
-        result = {
-            'projects_supported': num_supported,
-            'tasks_realized': tasks_realized,
-            'hours': times_needed,
-        }
-        return Response(result)

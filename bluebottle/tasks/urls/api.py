@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url, include
 from surlex.dj import surl
 from ..views import (TaskDetail, TaskList, TaskWallPostList, TaskWallPostDetail, TaskMemberList, TaskMemberDetail,
-                    TaskFileList, TaskFileDetail, TaskPreviewList, SkillList, ProjectSupportView)
+                    TaskFileList, TaskFileDetail, TaskPreviewList, SkillList)
 
 
 urlpatterns = patterns('',
@@ -24,7 +24,4 @@ urlpatterns = patterns('',
     # Task WallPost Urls
     surl(r'^wallposts/$', TaskWallPostList.as_view(), name='task-wallpost-list'),
     surl(r'^wallposts/<pk:#>$', TaskWallPostDetail.as_view(), name='task-wallpost-detail'),
-
-    # Number of supported projects through tasks
-    surl(r'^project-supports/$', ProjectSupportView.as_view(), name='task-project-support'),
 )

@@ -21,17 +21,17 @@
                             {% block_verbatim my_menu %}
 
                                 <li>
-                                    {{#linkTo "userProfile" }}
+                                    {{#link-to "userProfile" }}
                                         {% trans "Edit my profile & settings" %}
-                                    {{/linkTo }}
+                                    {{/link-to }}
                                 </li>
 
                                 {% if 'projects' in bb_apps %}
                                 {% block_verbatim 'my-projects-menu-link' %}
                                     <li>
-                                        {{#linkTo 'myProjectList'}}
+                                        {{#link-to 'myProjectList'}}
                                             {% trans "My Projects" %}
-                                        {{/linkTo}}
+                                        {{/link-to}}
                                     </li>
                                 {% endblock_verbatim %}
                                 {% endif %}
@@ -67,7 +67,7 @@
                 {% block_verbatim anonymous_user %}
 
                     <li class="nav-signup-login">
-                        {{#linkTo "signup" class="nav-signup"}}{% trans "Sign up" %}{{/linkTo}}
+                        {{#link-to "signup" class="nav-signup"}}{% trans "Sign up" %}{{/link-to}}
                         &#124;
                         <a {{action 'openInBox' "login"}} class="nav-login">{%  trans "Log in" %}</a>
                     </li>

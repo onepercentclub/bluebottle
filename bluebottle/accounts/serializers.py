@@ -3,7 +3,7 @@ from django import forms
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer, TagSerializer
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code
 from bluebottle.geo.models import Country
@@ -53,6 +53,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     skills = serializers.PrimaryKeyRelatedField(many=True)
     favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
     favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
+    tags = TagSerializer()
 
     class Meta:
         model = BlueBottleUser
@@ -61,7 +62,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         #           * interested in countries
         #           * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'skills', 'favourite_countries', 'favourite_themes')
+                  'availability', 'date_joined', 'location', 'skills', 'favourite_countries', 'favourite_themes', 'tags')
 
 
 # Thanks to Neamar Tucote for this code:

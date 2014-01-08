@@ -29,14 +29,14 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     actions = ('set_failed', 'toggle_campaign')
 
-    list_filter = ('phase', )
+    list_filter = ('status', )
     list_display = ('get_title_display', 'get_owner_display', 'created')
 
     search_fields = ('title', 'owner__first_name', 'owner__last_name', 'partner_organization__name')
 
     raw_id_fields = ('owner',)
 
-    fields = ('title', 'slug', 'owner', 'phase', 'pitch', 'image','description', 'reach',
+    fields = ('title', 'slug', 'owner', 'status', 'pitch', 'image','description', 'reach',
               'latitude', 'longitude', 'country', 'video_url', 'money_needed', 'tags')
 
     prepopulated_fields = {"slug": ("title",)}

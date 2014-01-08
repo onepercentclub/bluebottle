@@ -1,17 +1,3 @@
-App.AnimateProgressMixin = Em.Mixin.create({
-    didInsertElement: function(){
-        var donated = this.get('controller.campaign.money_donated');
-        var asked = this.get('controller.campaign.money_asked');
-        this.$('.slider-progress').css('width', '0px');
-        var width = 0;
-        if (asked > 0) {
-            width = 100 * donated / asked;
-            width += '%';
-        }
-        this.$('.slider-progress').animate({'width': width}, 3000);
-    }
-});
-
 App.ProjectMembersView = Em.View.extend({
     templateName: 'project_members'
 });
@@ -36,7 +22,7 @@ App.ProjectListView = Em.View.extend(App.ScrollInView, {
     templateName: 'project_list'
 });
 
-App.ProjectPreviewView = Em.View.extend(App.AnimateProgressMixin, {
+App.ProjectPreviewView = Em.View.extend({
     templateName: 'project_preview'
 });
 
@@ -57,7 +43,7 @@ App.ProjectPlanView = Em.View.extend(App.ScrollInView, {
 });
 
 
-App.ProjectView = Em.View.extend(App.AnimateProgressMixin, {
+App.ProjectView = Em.View.extend({
     templateName: 'project',
 
     didInsertElement: function(){

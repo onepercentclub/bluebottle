@@ -49,7 +49,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
-                  'phase', 'meta_data', 'image', 'details')
+                  'status', 'meta_data', 'image', 'details')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
@@ -60,7 +60,7 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('id', 'title', 'image', 'phase', 'country')
+        fields = ('id', 'title', 'image', 'status', 'country')
 
 
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -68,7 +68,6 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail')
-    phase = serializers.CharField(read_only=True)
     tags = TagSerializer()
     organization = serializers.PrimaryKeyRelatedField(
         source='organization', required=False)
@@ -80,7 +79,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
 
     class Meta:
         model = Project
-        fields = ('id', 'created', 'title', 'url', 'phase', 'image', 'pitch',
+        fields = ('id', 'created', 'title', 'url', 'status', 'image', 'pitch',
                   'tags', 'description', 'country', 'latitude', 'longitude',
                   'reach', 'organization', 'image', 'video_html', 'video_url',
                   'money_needed', 'editable', 'details')

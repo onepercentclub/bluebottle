@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url, include
 from surlex.dj import surl
-from .views import (TaskDetail, TaskList, TaskWallPostList, TaskWallPostDetail, TaskMemberList, TaskMemberDetail,
+from ..views import (TaskDetail, TaskList, TaskWallPostList, TaskWallPostDetail, TaskMemberList, TaskMemberDetail,
                     TaskFileList, TaskFileDetail, TaskPreviewList, SkillList)
 
 

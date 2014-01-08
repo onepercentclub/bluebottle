@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url
 from surlex.dj import surl
 
-from .views import (WallPostDetail, TextWallPostList, MediaWallPostList, MediaWallPostPhotoList,
+from ..views import (WallPostDetail, TextWallPostList, MediaWallPostList, MediaWallPostPhotoList,
                     MediaWallPostPhotoDetail, ReactionList, ReactionDetail, WallPostList)
 
 urlpatterns = patterns('',

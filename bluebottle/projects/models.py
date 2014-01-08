@@ -38,20 +38,15 @@ class ProjectPhase(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=400, blank=True)
-    sequence = models.IntegerField(
-        unique=True, help_text=_('For ordering phases.'))
+    sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
 
-    active = models.BooleanField(
-        default=True, help_text=_('Whether this phase is in use or has '
-                                  'been discarded.'))
+    active = models.BooleanField(default=True, help_text=_('Whether this phase is in use or has been discarded.'))
 
-    editable = models.BooleanField(
-        default=True, help_text=_('Whether the project owner can change '
-                                  'the details of the project.'))
+    editable = models.BooleanField(default=True,
+                                   help_text=_('Whether the project owner can change the details of the project.'))
 
-    viewable = models.BooleanField(
-        default=True, help_text=_('Whether this phase, and projects in '
-                                  'it show up at the website'))
+    viewable = models.BooleanField(default=True,
+                                   help_text=_('Whether this phase, and projects in it show up at the website'))
 
     class Meta():
         ordering = ['sequence']
@@ -88,7 +83,7 @@ class Project(models.Model):
         _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
 
-    phase = models.CharField(max_length=30, choices=settings.PROJECT_PHASES)
+    status = models.ForeignKey(ProjectPhase)
 
     # Basics
     title = models.CharField(_('title'), max_length=255, unique=True)
@@ -203,9 +198,7 @@ class Project(models.Model):
 
     @property
     def editable(self):
-        if self.phase in ('plan-new', 'plan-needs-work', 'plan-approved', 'campaign-running'):
-            return True
-        return False
+        return self.status.editable
 
 
 class ProjectDetailField(models.Model):

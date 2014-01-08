@@ -6,12 +6,20 @@ from django.conf.urls.static import static
 
 urlpatterns = patterns('',
     # The api urls are in the / url namespace so that they're not redirected to /en/.
-    url(r'^api/users/', include('bluebottle.accounts.urls_api')),
-    url(r'^api/geo/', include('bluebottle.geo.urls_api')),
-    url(r'^api/projects/', include('bluebottle.projects.urls_api')),
-    url(r'^api/metadata/', include('bluebottle.utils.urls_api')),
-    url(r'^documents/', include('bluebottle.utils.urls')),
+    url(r'^api/users/', include('bluebottle.accounts.urls.api')),
+    url(r'^api/geo/', include('bluebottle.geo.urls.api')),
+    url(r'^api/metadata/', include('bluebottle.utils.urls.api')),
+    url(r'^documents/', include('bluebottle.utils.urls.main')),
 )
+
+for app in settings.INSTALLED_APPS:
+    if app[:11] == 'bluebottle.':
+        app = app[11:]
+        if app not in ['common', 'accounts']:
+            urlpatterns += patterns('',
+                url(r'^api/%s/' % app, include('bluebottle.%s.urls.api' % app)),
+            )
+
 
 urlpatterns += patterns('loginas.views',
     url(r"^login/user/(?P<user_id>.+)/$", "user_login", name="loginas-user-login"),

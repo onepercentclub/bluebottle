@@ -150,8 +150,6 @@ class Project(models.Model):
                 counter += 1
             self.slug = original_slug
 
-        if not self.phase:
-            self.phase = 'plan-new'
         super(Project, self).save(*args, **kwargs)
 
     def get_absolute_url(self):

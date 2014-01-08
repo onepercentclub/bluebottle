@@ -133,6 +133,11 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     contribution = models.TextField(_("contribution"), blank=True)
     tags = TaggableManager(verbose_name=_("tags"), blank=True)
 
+    # TODO: these should be fields on the specific model (when splitting to AbstractbBaseUser)
+    skills = models.ManyToManyField('tasks.Skill', blank=True, null=True)
+    favourite_countries = models.ManyToManyField('geo.Country', blank=True, null=True)
+    favourite_themes = models.ManyToManyField('projects.ProjectTheme', blank=True, null=True)
+
     objects = BlueBottleUserManager()
 
     USERNAME_FIELD = 'email'

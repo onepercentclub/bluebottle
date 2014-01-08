@@ -1,0 +1,72 @@
+{% load bb_ember i18n %}
+
+{% tplhandlebars "viewProfile" %}
+    {# TODO: styling #}
+
+    <div class="l-section account-header">
+        <div class="l-wrapper">
+            <figure class="account-avatar">
+                <img {{bindAttr src="getAvatar"}} width="100%" alt="Photo" />
+            </figure>
+
+            <header class="account-title">
+                {{full_name}}
+            </header>
+
+            <ul class="tabs three">
+                {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
+                <li class="l-one-third">
+                    {{user_statistics.projects_supported}} {% trans "projects supported" %}
+                </li>
+                <li>
+                    {{user_statistics.tasks_realized}} {% trans "tasks realized" %}
+                </li>
+                <li>
+                    {{user_statistics.hours_spent}} {% trans "hours spent on" %} <em>y</em> {% trans "tasks" %}
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="l-section">
+
+        <section class="l-wrapper detail">
+
+            <div class="l-half">
+                <h2>{% trans "About" %}</h2>
+                <p>{{about}}</p>
+
+                <h3>{% trans "Is a ...organization... member because" %}</h3>
+                <p>{{why}}</p>
+
+                <a {{bindAttr href="website" }}>{{website}}</a>
+                {# <p>{{ date_joined }}</p> #}
+            </div>
+
+            <div class="l-half">
+                <dl>
+                    <dt>{% trans "Location" %}</dt>
+                    <dd>{{location}}</dd>
+
+                    <dt>{% trans "Fav themes" %}</dt>
+                    <dd>TODO</dd>
+
+                    <dt>{% trans "Fav countries" %}</dt>
+                    <dd>TODO</dd>
+
+                    <dt>{% trans "Time available" %}</dt>
+                    <dd>{{availability}}</dd>
+
+                    <dt>{% trans "Expertise" %}</dt>
+                    <dd>TODO</dd>
+
+                    <dt>{% trans "Tags" %}</dt>
+                    <dd>TODO</dd>
+                </dl>
+            </div>
+
+        </section>
+
+    </div>
+
+{% endtplhandlebars %}

@@ -29,7 +29,7 @@
     <link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
 
     {% endblock %}
-    
+
 
     {# Stylesheets #}
     {% compress css %}
@@ -123,9 +123,9 @@
                     <!-- logo -->
                     <div id="logo">
                         {% block_verbatim nav_logo %}
-                            {{#linkTo 'home' class="logo-link"}}
+                            {{#link-to 'home' class="logo-link"}}
                                 <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
-                            {{/linkTo}}
+                            {{/link-to}}
                         {% endblock_verbatim %}
                     </div>
                     <!-- end: logo -->
@@ -311,7 +311,7 @@
                             <div class="footer-join-us">
                                 <h3>{% blocktrans %}Join Bluebottle{% endblocktrans %}</h3>
                                 <p>{% blocktrans %}Join our project!{% endblocktrans %}</p>
-                                {{#linkTo 'signup' classNames="btn btn-primary"}}{% blocktrans %}Join Bluebottle{% endblocktrans %}{{/linkTo}}
+                                {{#link-to 'signup' classNames="btn btn-primary"}}{% blocktrans %}Join Bluebottle{% endblocktrans %}{{/link-to}}
                             </div>
                         {% endblock_verbatim %}
                     {{/unless}}

@@ -38,9 +38,9 @@ class SupportedProjectsManager(models.Manager):
         """
         statuses = TaskMember.TaskMemberStatuses
         valid_statuses = [statuses.applied, statuses.accepted, statuses.realized] # NOTE: should applied be in here too?
-        projects = Project.objects.filter(task__taskmember=user, task__taskmember__status__in=valid_statuses).distinct('id')
+        projects = Project.objects.filter(task__taskmember=user, task__taskmember__status__in=valid_statuses).distinct()
         # order is required to play nice with distinct
-        return projects.order_by('id')
+        return projects
 
 
 class Task(models.Model):

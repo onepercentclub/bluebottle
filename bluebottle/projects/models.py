@@ -150,8 +150,9 @@ class Project(models.Model):
                 counter += 1
             self.slug = original_slug
 
-        if not self.phase:
-            self.phase = 'plan-new'
+        if not self.status:
+            self.status = ProjectPhase.objects.order_by('sequence')[0]
+
         super(Project, self).save(*args, **kwargs)
 
     def get_absolute_url(self):

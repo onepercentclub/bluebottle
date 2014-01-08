@@ -16,13 +16,13 @@
             <ul class="tabs three">
                 {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
                 <li class="l-one-third">
-                    {{projects_supported}} {% trans "projects supported" %}
+                    {{user_statistics.projects_supported}} {% trans "projects supported" %}
                 </li>
                 <li>
-                    {{tasks_realized}} {% trans "tasks realized" %}
+                    {{user_statistics.tasks_realized}} {% trans "tasks realized" %}
                 </li>
                 <li>
-                    {{hours_spent}} {% trans "hours spent on" %} <em>y</em> {% trans "tasks" %}
+                    {{user_statistics.hours_spent}} {% trans "hours spent on" %} <em>y</em> {% trans "tasks" %}
                 </li>
             </ul>
         </div>

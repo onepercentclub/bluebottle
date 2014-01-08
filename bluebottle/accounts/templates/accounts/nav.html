@@ -7,7 +7,6 @@
         <ul class="nav-actions">
             {{#if controllers.currentUser.isAuthenticated }}
                 {% block_verbatim user_logged_in %}
-
                     <li class="nav-member">
 
                         {% block_verbatim profile_anchor %}
@@ -37,15 +36,11 @@
                                 {% endblock_verbatim %}
                                 {% endif %}
 
-                                {% comment %} TODO: link to public profile
-                                    <li>
-                                        <a href="#">
-                                            {# {{#link-to "viewProfile" }} #}
-                                                {% trans "View my profile" %}
-                                            {# {{/link-to}} #}
-                                        </a>
-                                    </li>
-                                {% endcomment %}
+                                <li>
+                                    {{#link-to "viewProfile" controllers.currentUser.id_for_ember }}
+                                        {% trans "View my profile" %}
+                                    {{/link-to}}
+                                </li>
 
                                 <li>
                                     {% block logout_anchor %}

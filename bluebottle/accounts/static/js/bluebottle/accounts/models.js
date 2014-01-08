@@ -56,6 +56,11 @@ App.User = DS.Model.extend({
     }.property('date_joined')
 });
 
+// TODO: split this of
+App.User.reopen({
+    user_statistics: DS.attr('object')
+});
+
 /*
  A data model representing a user's settings.
 

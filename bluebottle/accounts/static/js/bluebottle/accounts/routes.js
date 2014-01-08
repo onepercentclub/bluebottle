@@ -65,26 +65,6 @@ App.ViewProfileRoute = Em.Route.extend({
             route.transitionTo('error.notFound');
         });
         return model;
-    },
-
-    setupController: function(controller, model) {
-        this._super(controller, model);
-
-        controller.set('projects_supported', 0);
-
-        // statistics related to tasks
-        Em.$.ajax({
-            url: "/api/tasks/project-supports/",
-            type: 'GET',
-            data: {'user': model.get('id')}
-        }).then(function(response){
-            var initial = controller.get('projects_supported');
-            controller.set('projects_supported', initial + response.projects_supported);
-            controller.set('tasks_realized', response.tasks_realized);
-            controller.set('hours_spent', response.hours);
-        });
-
-        // TODO: statistics related to donations
     }
 });
 

@@ -83,7 +83,7 @@ class Project(models.Model):
         _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
 
-    phase = models.CharField(max_length=30, choices=settings.PROJECT_PHASES)
+    status = models.ForeignKey(ProjectPhase)
 
     # Basics
     title = models.CharField(_('title'), max_length=255, unique=True)
@@ -198,9 +198,7 @@ class Project(models.Model):
 
     @property
     def editable(self):
-        if self.phase in ('plan-new', 'plan-needs-work', 'plan-approved', 'campaign-running'):
-            return True
-        return False
+        return self.status.editable
 
     class Meta:
         ordering = ['title']

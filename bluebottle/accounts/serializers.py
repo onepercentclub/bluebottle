@@ -42,12 +42,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
+    # TODO: extend this serializer with abstract base model
     url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail')
     picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
     username = serializers.CharField(read_only=True)
 
     website = URLField(required=False)
+
+    skills = serializers.PrimaryKeyRelatedField(many=True)
+    favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
+    favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
 
     class Meta:
         model = BlueBottleUser
@@ -56,7 +61,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         #           * interested in countries
         #           * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location')
+                  'availability', 'date_joined', 'location', 'skills', 'favourite_countries', 'favourite_themes')
 
 
 # Thanks to Neamar Tucote for this code:

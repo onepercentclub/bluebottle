@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.generics import ListCreateAPIView, get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -177,7 +177,7 @@ class SkillList(generics.ListAPIView):
 class ProjectSupportView(APIView):
     """ View to return the number of projects supported by a user through tasksk. """
 
-    # TODO: permissions
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
         user_id = request.GET.get('user', None)

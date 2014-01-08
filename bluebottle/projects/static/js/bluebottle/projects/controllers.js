@@ -70,7 +70,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
                 'page_size': this.get('pageSize'),
                 'page': this.get('page'),
                 'ordering': this.get('ordering'),
-                'phase': this.get('phase'),
+                'status': this.get('status'),
                 'country': this.get('country'),
                 'text': this.get('text'),
                 'theme': this.get('theme')
@@ -78,7 +78,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
             var projects = App.ProjectPreview.find(query);
             list.set('model', projects);
         }
-    }.observes('text', 'country', 'theme', 'phase', 'page', 'ordering'),
+    }.observes('text', 'country', 'theme', 'status', 'ordering'),
 
     actions: {
         nextPage: function(){

@@ -7,9 +7,15 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.geo.models import Country
 from bluebottle.projects.models import (
     Project, ProjectTheme, ProjectBudgetLine, ProjectDetailField,
-    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail)
+    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail, ProjectPhase)
 from bluebottle.utils.serializers import MetaField
 
+
+class ProjectPhaseSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectPhase
+        fields = ('id','name','description','sequence','active','editable','viewable')
 
 class ProjectCountrySerializer(serializers.ModelSerializer):
     subregion = serializers.CharField(source='subregion.name')

@@ -34,7 +34,7 @@ install_requires = [
 #    'django-docdata==0.1',
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
-#    'django-filter==0.6',
+    'django-filter==0.6',
     'django-fluent-contents==0.9a1',
 #    'django-fluent-dashboard==0.3.2',
     'django-iban==0.2.1',

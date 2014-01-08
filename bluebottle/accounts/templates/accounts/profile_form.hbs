@@ -1,5 +1,5 @@
-
-{% load bb_ember i18n %}
+{% load templatetag_handlebars %}
+{% load bb_ember i18n static %}
 
 {% tplhandlebars "userProfile" %}
 
@@ -14,12 +14,7 @@
                     <p>{% trans "Override block form_meta from accounts/profile_form.html." %}</p>
                 {% endblock form_meta %}
             </legend>
-
-            {{ skills.length }}
-            {{#each skill in skills }}
-                {{ skill.name }}<br/>
-            {{ /each }}
-
+            {{ view }}
             {% block_verbatim fieldset1 %}
                 <fieldset>
                     <ul>
@@ -39,20 +34,10 @@
                             {# TODO: Error Handling #}
                         </li>
 
-                        <li class="control-group">
-                            <label class="control-label">
-                                {% trans "Profile Picture" %}
-                            </label>
+                        {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
 
-                            <div class="controls file-upload">
-                                <figure class="member-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
-                                <a class="btn-link btn-upload">
-                                    {{view App.UploadFile contentBinding="this" name="picture" id="picture" accept="image/*" fileBinding="picture"}}
-                                    <span class="flaticon solid upload-document-1"></span>
-                                    {% trans "Upload picture" %}
-                                </a>
-                            </div>
-                        </li>
+                        {{ bb-select hint="Select your skills" label="Skills" errors=errors.text contentBind=skills }}
+
                     </ul>
                 </fieldset>
             {% endblock_verbatim fieldset1 %}

@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 
 urlpatterns = patterns('',
     # The api urls are in the / url namespace so that they're not redirected to /en/.
+    url(r'^api/users/', include('bluebottle.accounts.urls_api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls.api')),
     url(r'^documents/', include('bluebottle.utils.urls.main')),
 )

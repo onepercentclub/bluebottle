@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     depends_on = (
         ('geo', '0001_initial'),
         ('projects', '0001_initial'),
-        ('tasks', '0001_initial'),
+        ('tasks', '0003_auto__del_skills__add_skill__add_field_task_skill'),
     )
 
     def forwards(self, orm):

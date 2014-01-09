@@ -41,18 +41,21 @@
 	    <div class="l-section account-body">
 	        <section class="l-wrapper">
 
-	            <div class="l-half">
+	            <div class="account-info">
 	                <h2 class="account-about-header">{% trans "About" %}</h2>
 	                <p>{{about}}</p>
 
 	                <h3 class="account-why-header">{% trans "Is a ...organization... member because" %}</h3>
 	                <p>{{why}}</p>
-
-	                <a {{bindAttr href="website" }}>{{website}}</a>
-	                {# <p>{{ date_joined }}</p> #}
+					
+					<p class="account-links">
+		                <a class="account-website" href="#"><span class="flaticon stroke link-1"></span> TODO</a>
+		                <a class="account-facebook" href="#"><span class="flaticon social facebook-1"></span> TODO</a>
+		                <a class="account-twitter" href="#"><span class="flaticon social twitter-1"></span> TODO</a>
+					</p>
 	            </div>
 
-	            <div class="l-half account-details">
+	            <div class="account-details">
 	                <dl>
 	                    <dt><span class="flaticon solid location-pin-1"></span> {% trans "Location" %}</dt>
 	                    <dd>{{location}}&nbsp;</dd>

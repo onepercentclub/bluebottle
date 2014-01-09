@@ -15,7 +15,6 @@ class ProjectFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Project
 
     owner = factory.SubFactory(BlueBottleUserFactory)
-    phase = settings.PROJECT_PHASES[0][1][0][0]
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
 
 

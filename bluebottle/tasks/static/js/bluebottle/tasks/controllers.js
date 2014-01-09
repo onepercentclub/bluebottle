@@ -130,11 +130,8 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
 });
 
-App.ProjectTaskController = App.TaskController.extend({});
-
-
-App.ProjectTaskIndexController = Em.ArrayController.extend({
-    needs: ['projectTask', 'currentUser'],
+App.TaskIndexController = Em.ArrayController.extend({
+    needs: ['task', 'currentUser'],
     perPage: 5,
     page: 1,
 
@@ -155,7 +152,7 @@ App.ProjectTaskIndexController = Em.ArrayController.extend({
         showMore: function() {
             var controller = this;
             var page = this.incrementProperty('page');
-            var id = this.get('controllers.projectTask.model.id');
+            var id = this.get('controllers.task.model.id');
             App.WallPost.find({'parent_type': 'task', 'parent_id': id, page: page}).then(function(items){
                 controller.get('model').pushObjects(items.toArray());
             });
@@ -163,12 +160,12 @@ App.ProjectTaskIndexController = Em.ArrayController.extend({
     },
     isOwner: function() {
         var username = this.get('controllers.currentUser.username');
-        var ownername = this.get('controllers.projectTask.model.owner.username');
+        var ownername = this.get('controllers.task.model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.projectTask.model.owner', 'controllers.currentUser.username')
+    }.property('controllers.task.model.owner', 'controllers.currentUser.username')
 
 });
 
@@ -192,8 +189,8 @@ App.TaskMemberController = Em.ObjectController.extend({
 });
 
 
-App.ProjectTaskNewController = Em.ObjectController.extend({
-    needs: ['project', 'currentUser', 'projectTasksIndex'],
+App.TaskNewController = Em.ObjectController.extend({
+    needs: ['project', 'currentUser', 'tasksIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
@@ -209,7 +206,7 @@ App.ProjectTaskNewController = Em.ObjectController.extend({
 });
 
 
-App.TaskEditController = App.ProjectTaskNewController.extend({
+App.TaskEditController = App.TaskNewController.extend({
     updateTask: function(event){
         var controller = this;
         var task = this.get('content');

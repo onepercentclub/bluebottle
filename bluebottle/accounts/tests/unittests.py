@@ -1,4 +1,5 @@
-from django.core import mail
+from django.conf import settings
+from django.core import mail, management
 from django.test import TestCase
 
 
@@ -7,6 +8,7 @@ from rest_framework import status
 
 
 from bluebottle.utils.tests import UserTestsMixin
+from django.utils.unittest.case import skipUnless
 from bluebottle.geo.tests import GeoTestsMixin
 
 
@@ -226,7 +228,7 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         response = self.client.get(new_user_activation_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.client.logout()
-        
+
         # Test: resetting the password should now be allowed.
         response = self.client.put(self.user_password_reset_api_url, json.dumps({'email': new_user_email}), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -258,7 +260,7 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         # Test: check that trying to reuse the password reset link doesn't work.
         response = self.client.put(password_set_url, json.dumps(passwords), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
-        
+
 
 class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
     """
@@ -280,12 +282,98 @@ class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
 
         response = self.client.get('/api/', follow=False)
         self.assertTrue(response.status_code, 200)
-        
+
         response = self.client.get('/', follow=False)
         self.assertTrue(response.status_code, 200)
-        
+
     def test_no_redirect_for_anonymous_user(self):
         self.client.logout()  # Just to be sure.
-    
+
         response = self.client.get('/nl/', follow=False)
         self.assertTrue(response.status_code, 200)
+
+
+class UserProfileUpdateTests(UserTestsMixin, TestCase):
+    """
+    Integration tests for the User API with dependencies on different bluebottle apps.
+    """
+    def setUp(self):
+        self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
+        self.another_user = self.create_user()
+        self.current_user_api_url = '/api/users/current'
+        self.user_create_api_url = '/api/users/'
+        self.user_profile_api_url = '/api/users/profiles/'
+        self.user_settings_api_url = '/api/users/settings/'
+        self.user_activation_api_url = '/api/users/activate/'
+        self.user_password_reset_api_url = '/api/users/passwordreset'
+        self.user_password_set_api_url = '/api/users/passwordset/'
+
+    @skipUnless('bluebottle.tasks' in settings.INSTALLED_APPS, 'Tasks and skills are not enabled')
+    def test_user_profile_skills(self):
+        """
+        Test retrieving a public user profile by id.
+        """
+        # load the skills data
+        management.call_command('loaddata', 'skills.json')
+
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.some_user.id)
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.some_user.id)
+
+        # Profile should not be able to be updated by anonymous users.
+        new_data = {'skills': [1, 2]}
+        response = self.client.put(user_profile_url, json.dumps(new_data), 'application/json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+        # Profile should be able to be updated by logged in user.
+        self.client.login(username=self.some_user.email, password='password')
+        response = self.client.put(user_profile_url, json.dumps(new_data), 'application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(set(response.data['skills']), set(new_data.get('skills')))
+
+        self.client.logout()
+
+    @skipUnless('bluebottle.geo' in settings.INSTALLED_APPS, 'Geo app is not enabled')
+    def test_user_favourite_countries(self):
+        management.call_command('loaddata', 'region_subregion_country_data.json')
+
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.some_user.id)
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.some_user.id)
+
+        # Profile should not be able to be updated by anonymous users.
+        new_data = {'favourite_countries': [1, 2]}
+        response = self.client.put(user_profile_url, json.dumps(new_data), 'application/json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+        # Profile should be able to be updated by logged in user.
+        self.client.login(username=self.some_user.email, password='password')
+        response = self.client.put(user_profile_url, json.dumps(new_data), 'application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(set(response.data['favourite_countries']), set(new_data.get('favourite_countries')))
+
+        self.client.logout()
+
+    @skipUnless('bluebottle.projects' in settings.INSTALLED_APPS, 'Projects app is not enabled')
+    def test_user_favourite_themes(self):
+        management.call_command('loaddata', 'project_themes.json')
+
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.some_user.id)
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.some_user.id)
+
+        # Profile should not be able to be updated by anonymous users.
+        new_data = {'favourite_themes': [1, 2]}
+        response = self.client.put(user_profile_url, json.dumps(new_data), 'application/json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+        # Profile should be able to be updated by logged in user.
+        self.client.login(username=self.some_user.email, password='password')
+        response = self.client.put(user_profile_url, json.dumps(new_data), 'application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(set(response.data['favourite_themes']), set(new_data.get('favourite_themes')))
+
+        self.client.logout()

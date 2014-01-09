@@ -6,7 +6,7 @@
 
 	<li class="reaction">
 	    <header class="reaction-header">
-        
+
             <div class="reaction-member">
 
                 <a {{action openInBigBox "memberProfile" author}} class="member">
@@ -15,7 +15,7 @@
                     </span>
                     <strong class="member-name">{{ author.full_name }}</strong>
                 </a>
-            
+
             </div>
 
             <div class="reaction-meta">
@@ -24,15 +24,15 @@
                     <a {{ action "deleteReaction" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
                 {{/if}}
             </div>
- 
+
 	    </header>
-            
+
         <div class="reaction-content">
             <div class="text">{{{ text }}}</div>
         </div>
-        
-       
-        
+
+
+
 	</li>
 
 {% endtplhandlebars %}
@@ -47,7 +47,7 @@
             {{/each}}
         </ul>
     {{/if}}
-    
+
     {{#if controllers.currentUser.isAuthenticated }}
     <form class="reaction-form">
         <fieldset>
@@ -61,14 +61,14 @@
                     <span class="error">{{this}}</span>
                 {{/each}}
                 {{view "Em.TextArea" placeholder="Comment"  valueBinding="newReaction.text" name="reaction" class="newReaction"}}
-                
+
                 <button class="btn" type="submit" id="reaction-post">Post</button>
             </li>
             </ul>
         </fieldset>
     </form>
     {{else}}
-        <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#linkTo "signup"}}{% trans "member" %}{{/linkTo}} {% trans "to leave a reaction" %}.</div>
+        <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#link-to "signup"}}{% trans "member" %}{{/link-to}} {% trans "to leave a reaction" %}.</div>
     {{/if}}
 
 {% endtplhandlebars %}

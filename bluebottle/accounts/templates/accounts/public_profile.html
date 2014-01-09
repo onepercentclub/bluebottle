@@ -3,6 +3,112 @@
 {% tplhandlebars "viewProfile" %}
     {# TODO: styling #}
 
+	<!-- new profile page -->
+	<div id="public-profile-page">
+	    <div class="l-section account-header">
+	        <div class="l-wrapper">
+				
+				<div class="account-personal">
+		            <figure class="account-avatar">
+		                <img {{bindAttr src="getAvatar"}} width="100%" alt="Photo" />
+		            </figure>
+
+		            <h2 class="account-title">{{full_name}}</h2>
+					<a class="account-edit-link" href="#"><span class="flaticon solid settings-1"></span> Edit profile</a>
+				</div>
+			
+	            <ul class="account-achievements">
+	                {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
+	                <li>
+	                    <strong>{{user_statistics.projects_supported}}</strong><br /> 
+						{% trans "projects" %}<br />
+						{% trans "supported" %}
+	                </li>
+	                <li>
+	                    <strong>{{user_statistics.tasks_realized}}</strong><br /> 
+						{% trans "tasks" %}<br />
+						{% trans "realized" %}
+	                </li>
+	                <li>
+	                    <strong>{{user_statistics.hours_spent}}</strong><br />
+						{% trans "hours spent" %}<br /> 
+						{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}
+	                </li>
+	            </ul>
+	        </div>
+	    </div>	
+		
+	    <div class="l-section account-body">
+	        <section class="l-wrapper">
+
+	            <div class="l-half">
+	                <h2 class="account-about-header">{% trans "About" %}</h2>
+	                <p>{{about}}</p>
+
+	                <h3 class="account-why-header">{% trans "Is a ...organization... member because" %}</h3>
+	                <p>{{why}}</p>
+
+	                <a {{bindAttr href="website" }}>{{website}}</a>
+	                {# <p>{{ date_joined }}</p> #}
+	            </div>
+
+	            <div class="l-half account-details">
+	                <dl>
+	                    <dt><span class="flaticon solid location-pin-1"></span> {% trans "Location" %}</dt>
+	                    <dd>{{location}}&nbsp;</dd>
+
+	                    <dt><span class="flaticon solid tree-1"></span> {% trans "Fav themes" %}</dt>
+	                    <dd>TODO&nbsp;</dd>
+
+	                    <dt><span class="flaticon solid earth-1"></span>{% trans "Fav countries" %}</dt>
+	                    <dd>TODO&nbsp;</dd>
+
+	                    <dt><span class="flaticon solid stopwatch-1"></span>{% trans "Time available" %}</dt>
+	                    <dd>{{availability}}&nbsp;</dd>
+
+	                    <dt><span class="flaticon solid skill-1"></span>{% trans "Expertise" %}</dt>
+	                    <dd>TODO&nbsp;</dd>
+
+	                    <dt><span class="flaticon solid tag-2"></span>{% trans "Tags" %}</dt>
+	                    <dd>TODO&nbsp;</dd>
+	                </dl>
+	            </div>
+
+	        </section>
+
+	    </div>
+		
+	    <div class="l-section account-statistics">
+	        <section class="l-wrapper">
+
+				<h3 class="account-statistics-header">20 projects supported</h3>
+				
+				<table>
+					<tbody>
+						<tr>
+							<td class="account-statistics-image">
+								<img src="http://placehold.it/100x100" alt="project title">
+							</td>
+							<td>
+								<span class="flaticon stroke wallet-1"></span>
+								<span class="account-statistics-action">Made a single donation to:</span><br />
+								<span class="account-statistics-subject">Help the children in the Mmanza Community to school!</span>
+							</td>
+							<td>
+								<span class="flaticon stroke location-pin-1"></span>								
+								Brazil
+							</td>
+							<td>
+								02/12/13
+							</td>
+						</tr>
+					</tbody>
+				</table>
+	        </section>
+	    </div>		
+	</div>
+
+	<!-- old profile page
     <div class="l-section account-header">
         <div class="l-wrapper">
             <figure class="account-avatar">
@@ -10,7 +116,7 @@
             </figure>
 
             <header class="account-title">
-                {{full_name}}
+                <h3>{{full_name}}</h3>
             </header>
 
             <ul class="tabs three">
@@ -68,5 +174,6 @@
         </section>
 
     </div>
+		-->
 
 {% endtplhandlebars %}

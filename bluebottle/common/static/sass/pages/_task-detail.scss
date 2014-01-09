@@ -230,7 +230,8 @@
 		.task-action {
 		    @include grid(16,1,1);
 		    float: right;
-    
+			margin-top: $base-margin * 2;
+
 		    .btn {
 		        font-family: $font-family-bold;
 		        white-space: nowrap;

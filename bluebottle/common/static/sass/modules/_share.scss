@@ -31,7 +31,7 @@
         &.share-facebook a {
             
             &:hover {
-                background-color: #45619d;
+                background-color: $facebook-blue;
             }
             
         }
@@ -39,7 +39,7 @@
         &.share-twitter a {
             
             &:hover {
-                background-color: #33b9e2;
+                background-color: $twitter-blue;
             }
         }
                 

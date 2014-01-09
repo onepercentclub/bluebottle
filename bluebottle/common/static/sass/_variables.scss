@@ -25,6 +25,7 @@ $color-deselect:					#bfbfbf !default;
 
 // Typography
 // --------------------------------
+
 $font-family:						'Futura W01 Book', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-heavy:					'Futura W02 Heavy', 'Trebuchet MS', Helvetica, Arial, sans-serif;			
 $font-family-bold:					'Futura W01 Bold', 'Trebuchet MS', Helvetica, Arial, sans-serif;
@@ -86,3 +87,9 @@ $base-padding:						1em !default;
 // Icons
 // ----------------------------------
 $icons:								sprite-map("sprites/icons/*.png", $spacing: 30px) !default;
+
+
+// Social
+// ----------------------------------
+$facebook-blue:						#45619d !default;					
+$twitter-blue:						#33b9e2 !default;

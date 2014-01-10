@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 
 from bluebottle.projects.models import (
-    Project, ProjectTheme, ProjectDetailField, ProjectBudgetLine)
+    Project, ProjectTheme, ProjectDetailField, ProjectBudgetLine, ProjectPhase)
 from .accounts import BlueBottleUserFactory
 
 # Suppress debug information for Factory Boy
@@ -25,6 +25,13 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
     name_nl = name
     slug = name
     description = 'ProjectTheme factory model'
+
+
+class ProjectPhaseFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = ProjectPhase
+
+    name = factory.Sequence(lambda n: 'Phase_{0}'.format(n))
+    sequence = factory.Sequence(lambda n: n)
 
 
 class ProjectDetailFieldFactory(factory.DjangoModelFactory):

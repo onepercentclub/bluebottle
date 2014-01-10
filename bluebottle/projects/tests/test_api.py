@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
-    ProjectBudgetLineFactory)
+    ProjectBudgetLineFactory, ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
@@ -27,6 +27,10 @@ class ProjectEndpointTestCase(TestCase):
         self.theme_1 = ProjectThemeFactory.create()
         self.theme_2 = ProjectThemeFactory.create()
         self.theme_3 = ProjectThemeFactory.create()
+
+        self.phase_1 = ProjectPhaseFactory.create()
+        self.phase_2 = ProjectPhaseFactory.create()
+        self.phase_3 = ProjectPhaseFactory.create()
 
         self.detail_field_1 = ProjectDetailFieldFactory.create()
         self.detail_field_2 = ProjectDetailFieldFactory.create()
@@ -61,7 +65,7 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('image', item)
             self.assertIn('meta_data', item)
             self.assertIn('owner', item)
-            self.assertIn('phase', item)
+            self.assertIn('status', item)
 
 
 class TestProjectDetail(ProjectEndpointTestCase):
@@ -87,7 +91,7 @@ class TestProjectDetail(ProjectEndpointTestCase):
         self.assertIn('image', data)
         self.assertIn('meta_data', data)
         self.assertIn('owner', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
 
 
 class TestProjectPreviewList(ProjectEndpointTestCase):
@@ -112,7 +116,7 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
             self.assertIn('id', item)
             self.assertIn('title', item)
             self.assertIn('image', item)
-            self.assertIn('phase', item)
+            self.assertIn('status', item)
             self.assertIn('country', item)
 
 
@@ -137,7 +141,7 @@ class TestProjectPreviewDetail(ProjectEndpointTestCase):
         self.assertIn('id', data)
         self.assertIn('title', data)
         self.assertIn('image', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
         self.assertIn('country', data)
 
 
@@ -245,7 +249,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
             self.assertIn('created', item)
             self.assertIn('title', item)
             self.assertIn('url', item)
-            self.assertIn('phase', item)
+            self.assertIn('status', item)
             self.assertIn('image', item)
             self.assertIn('pitch', item)
             self.assertIn('tags', item)
@@ -280,7 +284,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertIn('created', data)
         self.assertIn('title', data)
         self.assertIn('url', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
         self.assertIn('image', data)
         self.assertIn('pitch', data)
         self.assertIn('tags', data)
@@ -349,7 +353,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('created', data)
         self.assertIn('title', data)
         self.assertIn('url', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
         self.assertIn('image', data)
         self.assertIn('pitch', data)
         self.assertIn('tags', data)

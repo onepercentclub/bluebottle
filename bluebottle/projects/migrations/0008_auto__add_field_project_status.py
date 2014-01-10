@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 from django.core import management
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Project.status'
         # Load the fixtures to prevent FK constraint errors
         management.call_command('loaddata', 'project_phases.json')
+
+        # Adding field 'Project.status'
         db.add_column(u'projects_project', 'status',
                       self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['projects.ProjectPhase']),
                       keep_default=False)
-
 
     def backwards(self, orm):
         # Deleting field 'Project.status'

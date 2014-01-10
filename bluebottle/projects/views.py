@@ -6,10 +6,10 @@ from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Project, ProjectTheme
+from .models import Project, ProjectTheme, ProjectPhase
 from .serializers import (
     ManageProjectSerializer, ProjectPreviewSerializer, ProjectThemeSerializer,
-    ProjectSerializer)
+    ProjectSerializer, ProjectPhaseSerializer)
 from .permissions import IsProjectOwner, IsProjectOwnerOrReadOnly
 
 
@@ -43,6 +43,10 @@ class ProjectPreviewList(generics.ListAPIView):
         if theme:
             qs = qs.filter(projectplan__theme_id=theme)
 
+        status = self.request.QUERY_PARAMS.get('status', None)
+        if status:
+            qs = qs.filter(Q(status_id=status))
+
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
@@ -50,7 +54,6 @@ class ProjectPreviewList(generics.ListAPIView):
                            Q(description__icontains=text))
 
         return qs.all()
-
 
 class ProjectPreviewDetail(generics.RetrieveAPIView):
     model = Project
@@ -60,15 +63,47 @@ class ProjectPreviewDetail(generics.RetrieveAPIView):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
 
+class ProjectPhaseList(generics.ListAPIView):
+    model = ProjectPhase
+    serializer_class = ProjectPhaseSerializer
+    paginate_by = 10
+    filter_fields = ('viewable',)
+
+    def get_query(self):
+        qs = ProjectPhase.objects
+
+        name = self.request.QUERY_PARAMS.get('name',None)
+        text = self.rquest.QUERY_PARAMS.get('text')
+
+        qs = qs.order_by('sequence')
+
+        if name:
+            qs = qs.filter(Q(name__icontains=name))
+
+        if text:
+            qs = qs.filter(Q(description__icontains=text))
+
+
+        return qs.all()
+
+class ProjectPhaseDetail(generics.RetrieveAPIView):
+    model = ProjectPhase
+    serializer_class = ProjectPhaseSerializer
+
+    # def get_queryset(self):
+    #     qs = super(ProjectPhase, self).get_queryset()
+    #     return qs
 
 class ProjectList(generics.ListAPIView):
     model = Project
     serializer_class = ProjectSerializer
     paginate_by = 10
-    filter_fields = ('phase', )
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
+        status = self.request.QUERY_PARAMS.get('status', None)
+        if status:
+            qs = qs.filter(Q(status_id=status))
         return qs
 
 

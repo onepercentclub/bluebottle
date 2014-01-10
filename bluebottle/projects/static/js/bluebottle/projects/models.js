@@ -127,6 +127,16 @@ App.Project = DS.Model.extend({
 });
 
 
+App.ProjectPhase = DS.Model.extend({
+    url: 'projects/phases',
+    name: DS.attr('string'),
+    description: DS.attr('string'),
+    sequence: DS.attr('number'),
+    active: DS.attr('boolean'),
+    editable: DS.attr('boolean'),
+    viewable: DS.attr('boolean')
+});
+
 App.ProjectPreview = App.Project.extend({
     url: 'projects/previews',
     image: DS.attr('string'),

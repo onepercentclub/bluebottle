@@ -331,6 +331,55 @@
 
 
 {% tplhandlebars "project/index" %}
+	{{!-- New Project wall posts --}}
+    <div class="l-section" id="wallposts">
+        <section class="l-wrapper">
+			
+			<div class="wallposts-list">
+				
+				{# TODO: only show this to owners of the project #}
+				<div class="wallpost-action">
+					<a href="#" class="wallpost-post-update">
+						<span class=""></span>
+						Post a new update on wall
+					</a>
+				</div>
+				
+			    {{#if controllers.currentUser.isAuthenticated }}	
+				<div class="wallpost-action">
+					<a href="#" class="wallpost-post-comment">
+						<span class=""></span>
+						Post a comment on wall
+					</a>
+				</div>
+				{{/if}}
+				
+                {{#each item in controller itemController="wallPost"}}
+                    {{#if item.isLoaded}}
+                        {{#if item.isSystemWallPost}}
+                            {{view "App.SystemWallPostView"}}
+                        {{else}}
+
+                            {{view "App.MediaWallPostView"}}
+                        {{/if}}
+                    {{/if}}
+                {{/each}}
+
+                {{#if canLoadMore}}
+                    <a {{action "showMore"}} class="btn-link btn-more">
+                        <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
+                    </a>
+                {{/if}}
+								
+			</div>
+			
+			<div class="wallposts-important">
+				
+			</div>
+			
+		</section>
+	</div>
+	
     {{!-- Project Wall Post List template --}}
 
     <div id="l-section">
@@ -375,7 +424,6 @@
 
         </section>
     </div>
-
 {% endtplhandlebars %}
 
 

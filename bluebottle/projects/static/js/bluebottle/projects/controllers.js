@@ -78,7 +78,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
             var projects = App.ProjectPreview.find(query);
             list.set('model', projects);
         }
-    }.observes('text', 'country', 'theme', 'status', 'ordering'),
+    }.observes('text', 'country', 'theme', 'status', 'page', 'ordering'),
 
     actions: {
         nextPage: function(){

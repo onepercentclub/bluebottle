@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="modal" id="loginModal">
-    <form id="login-form" action="{% url 'login' %}" method="post">
+    <form id="login-form" action="{% url 'accounts:login' %}" method="post">
         
         <div class="modal-header">
             {% block login_header %}

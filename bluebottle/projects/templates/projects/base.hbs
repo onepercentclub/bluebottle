@@ -337,21 +337,24 @@
 			
 			<div class="wallposts-list">
 				
-				{# TODO: only show this to owners of the project #}
-				<div class="wallpost-action">
-					<a href="#" class="wallpost-post-update">
-						<span class=""></span>
-						Post a new update on wall
-					</a>
-				</div>
+			    {{#if controllers.currentUser.isAuthenticated }}
+									
+					{{#if isProjectOwner}}
+						<div class="wallpost-action">
+							<a href="#" class="wallpost-post-update">
+								<span class="flaticon solid comment-1"></span>
+								Post a new update on wall
+							</a>
+						</div>
+					{{/if}}
 				
-			    {{#if controllers.currentUser.isAuthenticated }}	
-				<div class="wallpost-action">
-					<a href="#" class="wallpost-post-comment">
-						<span class=""></span>
-						Post a comment on wall
-					</a>
-				</div>
+					<div class="wallpost-action">
+						<a href="#" class="wallpost-post-comment">
+							<span class="flaticon solid comment-1"></span>
+							Post a comment on wall
+						</a>
+					</div>
+					
 				{{/if}}
 				
                 {{#each item in controller itemController="wallPost"}}
@@ -359,7 +362,6 @@
                         {{#if item.isSystemWallPost}}
                             {{view "App.SystemWallPostView"}}
                         {{else}}
-
                             {{view "App.MediaWallPostView"}}
                         {{/if}}
                     {{/if}}
@@ -374,14 +376,15 @@
 			</div>
 			
 			<div class="wallposts-important">
-				
+									
+				{# TODO: render the important wall posts here #}
+									
 			</div>
 			
 		</section>
 	</div>
 	
-    {{!-- Project Wall Post List template --}}
-
+    {{!--}}
     <div id="l-section">
         <section class="l-wrapper">
             <div class="l-content" id="wallposts">
@@ -424,6 +427,7 @@
 
         </section>
     </div>
+	{{--}}
 {% endtplhandlebars %}
 
 

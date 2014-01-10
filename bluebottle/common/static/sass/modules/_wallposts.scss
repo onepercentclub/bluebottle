@@ -263,6 +263,7 @@
 
 			.wallpost-timestamp {
 				color: $gray-light;
+				font-size: $font-size-small;
 			}
 			
 			.wallpost-edit {
@@ -274,6 +275,7 @@
 
 		.wallpost-title {
 			text-transform: none;
+			color: $black;
 		}
 	}
 	
@@ -285,7 +287,7 @@
 		position: relative;
 		
 		&:after {
-			left: 25%;
+			left: 50px;
 			bottom: 100%;
 			border: solid transparent;
 			content: " ";
@@ -297,12 +299,10 @@
 			border-width: 10px;
 			margin-left: -10px;
 		}
-		
-		.reaction-form {
-			fieldset {
-				margin: 0;
-			}
-		}
+	}
+	
+	&.wallpost-system {
+		background-color: $color-secondary;
 	}
 	
 }

@@ -10,7 +10,7 @@
     
     fieldset {
         padding: 0;
-        margin: $base-margin;
+        margin: 0;
         
         ul, li {
             position: relative;
@@ -82,67 +82,95 @@
         margin-bottom: 1px;
         background-color: $gray-lighter;
         padding: $base-padding;
-        
-        header {
-            @include clear;
+			
+//        header {
+//            @include clear;
             
-            .reaction-member {
-                @include grid(28,0,0);
-                
-                .member-avatar {
-                    @include grid(9,0,2);
-                    position: absolute;
-                    left: 0;
-                }
-            
-                .member-name {
-                    @include prepend(10);
-                    width: 100%;
-                    color: $gray;
-                }
-            }
-            
-            .reaction-meta {
-                @include grid(20,1,0);
-                text-align: right;
-                color: $gray;
-                font-style: normal;
-                font-size: $font-size-smallest;
-                text-transform: uppercase; 
-                
-                .manage-delete {
-                    color: $gray;
-                
-                    &:hover {
-                        color: $color-text;
-                    }
-                }
-            }
-        }
-        
-        &:hover {
-            
-            .manage {
-                display: block;
-            }
-        }
-        
-        .reaction-content {
-            @include clear;
-            @include prepend(6);
-            vertical-align: baseline;
-            word-wrap: break-word;
-            
-            .text {
-                margin: 0;
-                padding: 0;
-            }
-            
-            p {
-                margin: 0;
-                padding: 0;
-                margin-bottom: $base-margin/2;
-            }
-        }
+//            .reaction-member {
+////                @include grid(29,0,0);
+//                
+//                .member-avatar {
+//                    @include grid(9,0,2);
+//                    position: absolute;
+//                    left: 0;
+//                }
+//            
+//                .member-name {
+//                    @include prepend(10);
+//                    width: 100%;
+//                    color: $color-primary;
+//					text-transform: none;
+//                }
+//            }
+//            
+//            .reaction-meta {
+//				
+//                @include grid(20,1,0);
+//                text-align: right;
+//                color: $gray;
+//                font-style: normal;
+//                font-size: $font-size-smallest;
+//                text-transform: uppercase; 
+//                
+//                .manage-delete {
+//                    color: $gray;
+//                
+//                    &:hover {
+//                        color: $color-text;
+//                    }
+//                }
+//            }
+//        }
+//        
+//        &:hover {
+//            
+//            .manage {
+//                display: block;
+//            }
+//        }
+//        
+//        .reaction-content {
+//			
+//            @include clear;
+//            @include prepend(6);
+//            vertical-align: baseline;
+//            word-wrap: break-word;
+//            
+//            .text {
+//                margin: 0;
+//                padding: 0;
+//            }
+//            
+//            p {
+//                margin: 0;
+//                padding: 0;
+//                margin-bottom: $base-margin/2;
+//            }
+//        }
+
+		.reaction-avatar {
+			@include grid(7,0,1);
+		}
+		.reaction-body {
+			@include grid(38,0,0);	
+			
+			.member-name {
+				color: $color-primary;
+			}
+			.text {
+				margin: 0;
+			}	
+		}
     }
+	.reactions-pagination {
+		
+		@include resetlist;
+		padding: $base-padding 0;
+		background-color: $gray-lighter;
+		
+		a {
+			@include prepend(8);
+			color: $black;
+		}
+	}
 }

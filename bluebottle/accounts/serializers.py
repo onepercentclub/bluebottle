@@ -3,12 +3,15 @@ from django import forms
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
-from bluebottle.bluebottle_utils.serializers import URLField
-from bluebottle.bluebottle_utils.validators import validate_postal_code
+from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer, TagSerializer
+from bluebottle.utils.serializers import URLField
+from bluebottle.utils.validators import validate_postal_code
 from bluebottle.geo.models import Country
 
 from .models import BlueBottleUser
+
+# TODO: move imports to retain modularity
+from bluebottle.tasks.models import Task, TaskMember
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
@@ -38,7 +41,30 @@ class CurrentUserSerializer(UserPreviewSerializer):
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+
+# TODO: move to retain modularity
+class UserStatisticsMixin(object):
+    def get_user_statistics(self, user):
+        num_supported = Task.supported_projects.by_user(user).count()
+        tasks_realized = Task.objects.filter(author=user, status=Task.TaskStatuses.realized).count()
+
+        # hours spent on tasks
+        # import pdb; pdb.set_trace()
+        times_needed = TaskMember.objects.filter(
+                status=TaskMember.TaskMemberStatuses.realized,
+                member=user
+            ).values_list('task__time_needed', flat=True)
+        times_needed = sum([int(t) for t in times_needed if t.isdigit()])
+
+        result = {
+            'projects_supported': num_supported,
+            'tasks_realized': tasks_realized,
+            'hours_spent': times_needed,
+        }
+        return result
+
+
+class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -49,14 +75,20 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     website = URLField(required=False)
 
+    # TODO: extend this serializer with abstract base model
+    skills = serializers.PrimaryKeyRelatedField(many=True)
+    favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
+    favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
+    tags = TagSerializer()
+
+    user_statistics = serializers.SerializerMethodField('get_user_statistics')
+
     class Meta:
         model = BlueBottleUser
-        # TODO: Add * Your skills,
-        #           * interested in themes
-        #           * interested in countries
-        #           * interested in target groups
+        #TODO: add       * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location')
+                  'availability', 'date_joined', 'location', 'skills', 'favourite_countries', 'favourite_themes',
+                  'tags', 'user_statistics')
 
 
 # Thanks to Neamar Tucote for this code:

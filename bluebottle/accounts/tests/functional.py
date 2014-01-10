@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core import mail
 from django.utils.unittest.case import skipUnless, skipIf
 
-from bluebottle.tests.utils import SeleniumTestCase, css_dict
+from bluebottle.test.utils import SeleniumTestCase, css_dict
 from bluebottle.geo.models import Region
 
 import re

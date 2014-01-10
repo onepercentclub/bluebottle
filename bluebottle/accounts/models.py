@@ -16,7 +16,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-from bluebottle.bluebottle_utils.models import Address
+from bluebottle.utils.models import Address
 
 
 # TODO: Make this generic for all user file uploads.
@@ -132,6 +132,11 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     available_time = models.TextField(_("available_time"), blank=True)
     contribution = models.TextField(_("contribution"), blank=True)
     tags = TaggableManager(verbose_name=_("tags"), blank=True)
+
+    # TODO: these should be fields on the specific model (when splitting to AbstractbBaseUser)
+    skills = models.ManyToManyField('tasks.Skill', blank=True, null=True)
+    favourite_countries = models.ManyToManyField('geo.Country', blank=True, null=True)
+    favourite_themes = models.ManyToManyField('projects.ProjectTheme', blank=True, null=True)
 
     objects = BlueBottleUserManager()
 

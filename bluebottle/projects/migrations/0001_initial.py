@@ -14,9 +14,6 @@ class Migration(SchemaMigration):
 
 
     def forwards(self, orm):
-        # Load the fixtures to prevent FK constraint errors
-        management.call_command('loaddata', 'project_themes.json')
-
         # Adding model 'ProjectTheme'
         db.create_table(u'projects_projecttheme', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -26,7 +23,8 @@ class Migration(SchemaMigration):
             ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
 
-
+        # Load the fixtures to prevent FK constraint errors
+        management.call_command('loaddata', 'project_themes.json')
 
         db.send_create_signal(u'projects', ['ProjectTheme'])
 

@@ -9,6 +9,7 @@ from bluebottle.test.factory_models.projects import (
     ProjectBudgetLineFactory, ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
+from ..models import ProjectPhase
 
 class ProjectEndpointTestCase(TestCase):
     """
@@ -20,22 +21,56 @@ class ProjectEndpointTestCase(TestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
 
-        self.project_1 = ProjectFactory.create(owner=self.user)
-        self.project_2 = ProjectFactory.create(owner=self.user)
-        self.project_3 = ProjectFactory.create(owner=self.user)
+        bools = [True,False]
+
+        all_phases = [ProjectPhaseFactory(viewable=i,editable=j,active=k)
+                     for i in bools for j in bools for k in bools]
+                                         
+        self.project_1 = ProjectFactory.create(owner=self.user,status=all_phases[0])
+        self.project_2 = ProjectFactory.create(owner=self.user,status=all_phases[0])
+        self.project_3 = ProjectFactory.create(owner=self.user,status=all_phases[5])
 
         self.theme_1 = ProjectThemeFactory.create()
         self.theme_2 = ProjectThemeFactory.create()
         self.theme_3 = ProjectThemeFactory.create()
 
-        self.phase_1 = ProjectPhaseFactory.create()
-        self.phase_2 = ProjectPhaseFactory.create()
-        self.phase_3 = ProjectPhaseFactory.create()
-
         self.detail_field_1 = ProjectDetailFieldFactory.create()
         self.detail_field_2 = ProjectDetailFieldFactory.create()
         self.detail_field_3 = ProjectDetailFieldFactory.create()
 
+class TestProjectPhaseList(ProjectEndpointTestCase):
+    """
+    Test case for the ``ProjectPhase`` API view. Returns all the Phases
+    that can be assigned to a project.
+
+    Endpoing: /api/projects/phases/
+    """
+    def test_api_phases_list_endpoint(self):
+        """
+        Tests that the list of project phases can be obtaine from its
+        endpoint.
+        """
+        
+        response = self.client.get(reverse('project_phase_list'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        available_phases = ProjectPhase.objects.all()
+
+        self.assertEqual(data['count'], len(available_phases),
+                         "Failed to load all the available phases")
+
+        for item in data['results']:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertIn('description', item)
+            self.assertIn('sequence', item)
+            self.assertIn('active', item)
+            self.assertIn('editable', item)
+            self.assertIn('viewable', item)
+    
 
 class TestProjectList(ProjectEndpointTestCase):
     """
@@ -53,8 +88,8 @@ class TestProjectList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        # Check that it is returning our 3 factory-model projects.
-        self.assertEqual(data['count'], 3)
+        # Check that it is returning our 2 viewable factory-model projects.
+        self.assertEqual(data['count'], 2)
 
         # Check sanity on the JSON response.
         for item in data['results']:
@@ -66,6 +101,10 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('meta_data', item)
             self.assertIn('owner', item)
             self.assertIn('status', item)
+            
+            #Ensure that non-viewable status are filtered out
+            phase = ProjectPhase.objects.get(id=item['status'])
+            self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
 
 
 class TestProjectDetail(ProjectEndpointTestCase):
@@ -110,7 +149,7 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['count'], 2, "Projects with non-viewable status were returned")
 
         for item in data['results']:
             self.assertIn('id', item)
@@ -118,6 +157,9 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
             self.assertIn('image', item)
             self.assertIn('status', item)
             self.assertIn('country', item)
+
+            phase = ProjectPhase.objects.get(id=item['status'])
+            self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
 
 
 class TestProjectPreviewDetail(ProjectEndpointTestCase):

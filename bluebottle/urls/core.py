@@ -14,7 +14,7 @@ urlpatterns = patterns('',
 for app in settings.INSTALLED_APPS:
     if app[:11] == 'bluebottle.':
         app = app[11:]
-        if app not in ['common', 'accounts']:
+        if app not in ['common', 'accounts', 'contentplugins', 'utils']:
             urlpatterns += patterns('',
                 url(r'^api/%s/' % app, include('bluebottle.%s.urls.api' % app)),
             )

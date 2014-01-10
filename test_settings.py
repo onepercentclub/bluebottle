@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     'bluebottle.organizations',
     'bluebottle.pages',
     'bluebottle.projects',
+    'bluebottle.tasks',
 )
 
 MIDDLEWARE_CLASSES = [

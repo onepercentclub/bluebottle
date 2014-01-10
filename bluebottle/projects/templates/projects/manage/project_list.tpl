@@ -18,10 +18,10 @@
                         <p></p>
                     </header>
 
-                    {{#linkTo "myProject" 'new' tagName="button" class="btn btn-primary btn-iconed"}}
+                    {{#link-to "myProject" 'new' tagName="button" class="btn btn-primary btn-iconed"}}
                         <span class="flaticon solid lightbulb-3"></span>
                         {% trans "Pitch a new smart idea" %}
-                    {{/linkTo}}
+                    {{/link-to}}
                 </div>
             {{/if}}
 
@@ -49,10 +49,10 @@
 				        	{% trans "Phase" %}: <strong>{{ project.phase }}</strong>
                             <br/>
 	                        {{#if project.editable}}
-	                            {{#linkTo "myProject" project tagName="a" class="btn btn-iconed right"}}
+	                            {{#link-to "myProject" project tagName="a" class="btn btn-iconed right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Edit" %}
-	                            {{/linkTo}}
+	                            {{/link-to}}
 
                             {{else}}
 	                                <span class="flaticon solid lock-1"></span>

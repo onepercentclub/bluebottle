@@ -535,7 +535,7 @@ Please add 5% administration fee to your budget. The total amount, including the
         <article class="l-content">
             <header class="page-header">
                 <h2>{% trans "Yeah! Your plan has been approved." %}</h2>
-                <p>{% trans "You can start your " %} {{#linkTo "myProjectCampaign"}}{% trans "Campaign" %}{{/linkTo}}</p>
+                <p>{% trans "You can start your " %} {{#link-to "myProjectCampaign"}}{% trans "Campaign" %}{{/link-to}}</p>
             </header>
         </article>
     </div>
@@ -554,7 +554,7 @@ Please add 5% administration fee to your budget. The total amount, including the
         </legend>
     </fieldset>
 
-    {{#linkTo "myProjectPitch.basics" class="btn btn-iconed btn-next"}}<span class="flaticon solid right-2"></span>{% trans "Next" %}{{/linkTo}}
+    {{#link-to "myProjectPitch.basics" class="btn btn-iconed btn-next"}}<span class="flaticon solid right-2"></span>{% trans "Next" %}{{/link-to}}
 
 {% endtplhandlebars %}
 
@@ -570,29 +570,29 @@ Please add 5% administration fee to your budget. The total amount, including the
 
             <ul class="manage-project-nav">
                 <li>
-                    {{#linkTo "myProjectPitch.basics"}}
+                    {{#link-to "myProjectPitch.basics"}}
                         <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
                         {% trans "Project Basics" %}
-                    {{/linkTo}}
+                    {{/link-to}}
                 </li>
                 <li>
-                    {{#linkTo "myProjectPitch.location"}}
+                    {{#link-to "myProjectPitch.location"}}
                         <em {{bindAttr class="validLocation:is-finished:is-unfinished"}}></em>
                         {% trans "Location" %}
-                    {{/linkTo}}
+                    {{/link-to}}
                 </li>
                 <li>
-                    {{#linkTo "myProjectPitch.media"}}
+                    {{#link-to "myProjectPitch.media"}}
                         <em {{bindAttr class="validMedia:is-finished:is-unfinished"}}></em>
                         {% trans "Media" %}
-                    {{/linkTo}}
+                    {{/link-to}}
                 </li>
             </ul>
 
-            {{#linkTo "myProjectPitch.submit" class="btn btn-iconed btn-primary btn-submit"}}
+            {{#link-to "myProjectPitch.submit" class="btn btn-iconed btn-primary btn-submit"}}
                 <span class="flaticon solid right-2"></span>
                 {% trans "Submit Pitch" %}
-            {{/linkTo}}
+            {{/link-to}}
         </div>
 
         <form class="l-content">
@@ -717,7 +717,7 @@ Please add 5% administration fee to your budget. The total amount, including the
             {{#if validBasics}}
                 <h3><span class="flaticon solid checkmark-1"></span> Basics are ok!<br/></h3>
             {{else}}
-                <h3>{{#linkTo "myProjectPitch.basics"}}Basics{{/linkTo}} still need work!</h3>
+                <h3>{{#link-to "myProjectPitch.basics"}}Basics{{/link-to}} still need work!</h3>
                 {{#unless title}}
                     <span class="flaticon solid exclamation-point-2"></span> <strong>Title</strong> is missing<br/>
                 {{/unless}}
@@ -737,7 +737,7 @@ Please add 5% administration fee to your budget. The total amount, including the
             {{#if validLocation}}
                 <h3><span class="flaticon solid checkmark-1"></span> Location is ok!</h3>
             {{else}}
-                <h3>{{#linkTo "myProjectPitch.basics"}}Basics{{/linkTo}} still need work!</h3>
+                <h3>{{#link-to "myProjectPitch.basics"}}Basics{{/link-to}} still need work!</h3>
                 {{#unless latitude}}
                     <span class="flaticon solid exclamation-point-2"></span> <strong>Map location</strong> is missing<br/>
                 {{/unless}}
@@ -748,7 +748,7 @@ Please add 5% administration fee to your budget. The total amount, including the
             {{#if validMedia}}
                 <h3><span class="flaticon solid checkmark-1"></span> Media is ok!</h3>
             {{else}}
-                <h3>{{#linkTo "myProjectPitch.media"}}Media{{/linkTo}} still need work!</h3>
+                <h3>{{#link-to "myProjectPitch.media"}}Media{{/link-to}} still need work!</h3>
                 <span class="flaticon solid exclamation-point-2"></span> <strong>Image</strong> is missing<br/>
             {{/if}}
         </div>
@@ -807,7 +807,7 @@ Please add 5% administration fee to your budget. The total amount, including the
         <article class="l-content">
             <header class="l-page-header">
                 <h2>{% trans "Yeah! Your pitch has been approved" %}</h2>
-                <p>{% trans "You can write your {{#linkTo myProject}}Project Plan{{/linkTo}}!" %}</p>
+                <p>{% trans "You can write your {{#link-to myProject}}Project Plan{{/link-to}}!" %}</p>
             </header>
         </article>
     </div>

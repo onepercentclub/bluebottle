@@ -118,7 +118,7 @@
 			color: $gray;
 			text-decoration: none;
 			&:hover {
-				color: $gray;
+				color: $gray-darkest;
 			}
 		}
 	
@@ -300,6 +300,7 @@
 			
 			&:hover {
 				color: $gray-darker;
+				border: 1px solid $gray-dark;
 			}
 			
 			strong, .flaticon {

@@ -38,6 +38,10 @@ App.SystemWallPostView = Em.View.extend({
 });
 
 
+App.ImportantWallPostView = Em.View.extend({
+    templateName: 'important_wallpost'
+});
+
 App.ProjectWallPostView = Em.View.extend({
     templateName: 'project_wallpost',
 

@@ -331,8 +331,60 @@
 
 
 {% tplhandlebars "project/index" %}
-    {{!-- Project Wall Post List template --}}
+	{{!-- New Project wall posts --}}
+    <div class="l-section" id="wallposts">
+        <section class="l-wrapper">
+			
+			<div class="wallposts-list">
+				
+			    {{#if controllers.currentUser.isAuthenticated }}
+									
+					{{#if isProjectOwner}}
+						<div class="wallpost-action">
+							<a href="#" class="wallpost-post-update">
+								<span class="flaticon solid comment-1"></span>
+								Post a new update on wall
+							</a>
+						</div>
+					{{/if}}
+				
+					<div class="wallpost-action">
+						<a href="#" class="wallpost-post-comment">
+							<span class="flaticon solid comment-1"></span>
+							Post a comment on wall
+						</a>
+					</div>
+					
+				{{/if}}
+				
+                {{#each item in controller itemController="wallPost"}}
+                    {{#if item.isLoaded}}
+                        {{#if item.isSystemWallPost}}
+                            {{view "App.SystemWallPostView"}}
+                        {{else}}
+                            {{view "App.MediaWallPostView"}}
+                        {{/if}}
+                    {{/if}}
+                {{/each}}
 
+                {{#if canLoadMore}}
+                    <a {{action "showMore"}} class="btn-link btn-more">
+                        <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
+                    </a>
+                {{/if}}
+								
+			</div>
+			
+			<div class="wallposts-important">
+									
+				{# TODO: render the important wall posts here #}
+									
+			</div>
+			
+		</section>
+	</div>
+	
+    {{!--}}
     <div id="l-section">
         <section class="l-wrapper">
             <div class="l-content" id="wallposts">
@@ -375,7 +427,7 @@
 
         </section>
     </div>
-
+	{{--}}
 {% endtplhandlebars %}
 
 

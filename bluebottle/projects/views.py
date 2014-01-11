@@ -21,7 +21,7 @@ class ProjectPreviewList(generics.ListAPIView):
     max_paginate_by = 100
 
     def get_queryset(self):
-        qs = Project.objects
+        qs = Project.objects.filter(status__viewable=True)
 
         # For some reason the query fails if the country filter is defined before this.
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
@@ -104,7 +104,7 @@ class ProjectList(generics.ListAPIView):
         status = self.request.QUERY_PARAMS.get('status', None)
         if status:
             qs = qs.filter(Q(status_id=status))
-        return qs
+        return qs.filter(status__viewable=True)
 
 
 class ProjectDetail(generics.RetrieveAPIView):

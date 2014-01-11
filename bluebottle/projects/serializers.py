@@ -80,7 +80,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
     details = ProjectDetailSerializer(many=True, required=False, source='projectdetail_set')
-
+    status=serializers.PrimaryKeyRelatedField(read_only=True)
     image = ImageSerializer(required=False)
 
     class Meta:

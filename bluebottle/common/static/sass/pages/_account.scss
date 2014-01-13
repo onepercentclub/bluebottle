@@ -99,6 +99,26 @@
 //    }
 //}
 
+
+.account-achievements {
+
+	margin-top: $base-margin * 2;	
+	
+	li {
+		float: left;
+		@include grid(16,0,1);
+		@include resetlist();
+		text-transform: uppercase;
+		font-size: $font-size-smallest;
+		strong {
+			font-size: $font-size-larger;
+		}
+		.account-achievement-icon {
+			float: left;
+			margin-right: $base-margin;
+		}
+	}
+}
 .account-header {
 	
 	background-color: $gray-lighter;
@@ -129,29 +149,16 @@
 			border: 1px solid $gray;
 			margin-right: $base-margin;
 		}	
-	}
+	}	
 	.account-achievements {
-	
+
 		@include grid(28,0,0);
 		@include resetlist();
-		margin-top: $base-margin * 2;	
-		li {
-			float: left;
-			@include grid(16,0,1);
-			@include resetlist();
-			text-transform: uppercase;
-			font-size: $font-size-smallest;
-			strong {
-				font-size: $font-size-larger;
-			}
-			.account-achievement-icon {
-				float: left;
-				margin-right: $base-margin;
-			}
-		}
-	}
-		
+
+	}	
 }
+
+
 
 .account-body {
 	
@@ -307,5 +314,49 @@
 				color: $gray-darkest;
 			}
 		}
+	}
+}
+
+/* profile preview modal */
+#profile-preview {
+	
+	.member-name {
+		text-transform: none;
+	}
+	.member-since {
+		text-transform: uppercase;
+	}
+	.account-achievements {
+		@include clear;
+		li {
+			@include grid(16,0,0);
+			@include resetlist();
+		}
+	}
+	
+	.profile-preview-actions {
+		
+		@include clear;
+		$padding: $base-padding*2 $base-padding;
+		background-color: $gray-lighter;
+		
+		a {
+			text-decoration:none;
+		}
+		.close-link {
+			float: left;
+			color: $gray;
+		}
+		.go-to-profile {
+			float: right;
+			text-align: right;
+			color: $color-primary;
+		}
+	}
+}
+
+#public-profile-page {
+	.account-achievements {
+		margin: $base-margin*2 0;
 	}
 }

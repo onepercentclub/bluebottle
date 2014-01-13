@@ -105,6 +105,11 @@ App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
 
 
 App.UserModalController = Ember.ObjectController.extend({
+	// actions: function() {
+	// 	goToProfile: function() {
+	// 		
+	// 	}
+	// },
     loadProfile: function() {
         var model = this.get('model');
         var id = model.get('id');

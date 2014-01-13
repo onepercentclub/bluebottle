@@ -251,6 +251,8 @@ class BlueBottleUser(BlueBottleBaseUser):
     This is the standard user model. If extra profile fields are required, provide your own user
     model extending ``BlueBottleBaseUser``.
     """
+    class Meta:
+        swappable = 'AUTH_USER_MODEL'
 
 
 # Ensures that UserProfile and User instances stay in sync.

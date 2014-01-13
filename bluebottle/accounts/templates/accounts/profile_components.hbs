@@ -1,0 +1,24 @@
+{% load templatetag_handlebars %}
+
+
+{% tplhandlebars "components/bb-multiple-selected-items" %}
+{{#bb-form-field label=customLabel}}
+  {{available_label}}
+    {{view App.ItemSelectView contentBinding=availableItems valueBinding=selectedItem }}
+{{/bb-form-field}}
+
+{{ selected_label}}
+
+<ul>
+{{#each item in selectedItems }}
+  <li class="">
+    <a {{action 'removeItem'  item}}>x</a>
+    <span>{{item.name}}</span>
+  </li>
+{{/each}}
+</ul>
+
+{% endtplhandlebars %}
+
+
+

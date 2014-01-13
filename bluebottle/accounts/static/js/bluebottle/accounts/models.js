@@ -32,6 +32,8 @@ App.User = DS.Model.extend({
     email: DS.attr('string'),
     password: DS.attr('string'),
 
+    skills: DS.hasMany('App.Skill'),
+
     getPicture: function() {
         if (this.get('picture')) {
             return this.get('picture.large')
@@ -55,8 +57,10 @@ App.User = DS.Model.extend({
 
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
-    }.property('date_joined')
+    }.property('date_joined'),
+
 });
+
 
 // TODO: split this of
 App.User.reopen({

@@ -104,3 +104,4 @@ App.SkillSelectView = Em.Select.extend({
     optionLabelPath: "content.name",
     prompt: "Pick a skill"
 });
+

@@ -66,7 +66,6 @@ class SkillSerializer(serializers.ModelSerializer):
         model = Skill
         fields = ('id', 'name')
 
-
 # Task WallPost serializers
 
 class TaskWallPostSerializer(TextWallPostSerializer):

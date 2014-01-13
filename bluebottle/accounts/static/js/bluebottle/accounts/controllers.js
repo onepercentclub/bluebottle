@@ -56,7 +56,13 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     updateCurrentUser: function(record) {
         var currentUser = App.CurrentUser.find('current');
         currentUser.reload();
-    }
+    },
+
+    allSkills: function() {
+        return App.Skill.find();
+    }.property(),
+
+
 });
 
 

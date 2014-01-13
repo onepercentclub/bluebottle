@@ -34,6 +34,8 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
         });
     },
 
+
+
     /**
      * Changes from default:
      * - Don't call sideload() because DRF2 doesn't support it.
@@ -98,6 +100,32 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
                 this._addAttribute(data, record, name, attribute.type);
             }
         }, this);
+    },
+
+    addHasMany: function(hash, record, key, relationship){
+
+        //Er moet een check op voor "embedded" zodat dit alleen gedaan wordt voor "niet embeddded" items
+
+
+        console.log("Hash: ", hash);
+        console.log("Record: ", record);
+        console.log("Key: ", key);
+        console.log("Relationship: ", relationship);
+        console.log("Relationship key: ", relationship.key);
+        console.log("Relationship key: ", key);
+
+        var skill_ids = record.get(relationship.key).map(function(item){
+            console.log("Item: ", item);
+            return item.id;
+        });
+        console.log("Skill ids: ", skill_ids);
+        hash[key] = skill_ids;
+
+        // console.log("Record attributes");
+        // record.eachAttribute(function(name, attribute){
+        //     console.log(name);
+        //     console.log(attribute);
+        // });
     }
 });
 
@@ -338,7 +366,15 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
         };
 
         get(this, 'serializer').extractMany(loader, payload, type);
-    }
+    },
+
+    /**
+        Temp
+    */
+    dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
+      relationship.childReference.parent = relationship.parentReference;
+      this._dirtyTree(dirtySet, record);
+    },
 });
 
 

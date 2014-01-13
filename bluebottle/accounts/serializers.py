@@ -11,7 +11,7 @@ from bluebottle.geo.models import Country
 from .models import BlueBottleUser
 
 # TODO: move imports to retain modularity
-from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.tasks.models import Task, TaskMember, Skill
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):
@@ -65,6 +65,13 @@ class UserStatisticsMixin(object):
         return result
 
 
+class SkillSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Skill
+        fields = ('id', 'name')
+
+
 class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
@@ -76,6 +83,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
 
     website = URLField(required=False)
 
+    # TODO: extend this serializer with abstract base model
     skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills')
     favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
     favourite_themes = serializers.PrimaryKeyRelatedField(many=True)

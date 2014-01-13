@@ -33,14 +33,16 @@
 
                             {# TODO: Error Handling #}
                         </li>
+                      
+                       {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills available_label="Available skills" }}
+
+                       {{bb-multiple-selected-items selected_label="Selected Themes" selectedItems=themes availableItems=allThemes available_label="Available Themes" }}
 
                         {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
 
-                        {{ bb-select hint="Select your skills" label="Skills" errors=errors.text contentBind=skills }}
-
                     </ul>
                 </fieldset>
-            {% endblock_verbatim fieldset1 %}
+            {% endblock_verbatim fieldset1 %} 
 
             {% block_verbatim fieldset2 %}
                 <fieldset>

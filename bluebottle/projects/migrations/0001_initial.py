@@ -2,7 +2,7 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
+from django.core import management
 
 
 class Migration(SchemaMigration):
@@ -11,7 +11,6 @@ class Migration(SchemaMigration):
         ('organizations', '0001_initial'),
         ('geo', '0001_initial'),
     )
-
 
 
     def forwards(self, orm):
@@ -23,6 +22,10 @@ class Migration(SchemaMigration):
             ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=100)),
             ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
+
+        # Load the fixtures to prevent FK constraint errors
+        management.call_command('loaddata', 'project_themes.json')
+
         db.send_create_signal(u'projects', ['ProjectTheme'])
 
         # Adding model 'Project'

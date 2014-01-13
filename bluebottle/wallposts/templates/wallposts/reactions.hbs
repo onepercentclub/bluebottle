@@ -5,8 +5,36 @@
 {% tplhandlebars "wallpost_reaction" %}
 
 	<li class="reaction">
+        <div class="reaction-avatar">
+
+            <a {{action openInBigBox "memberProfile" author}} class="member">
+                <span class="member-avatar">
+                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.full_name }}" />
+                </span>
+            </a>
+
+        </div>
+		<div class="reaction-body">
+            <strong class="member-name">{{ author.full_name }}</strong>
+
+	        <span class="timestamp">{{ localize created formatting="X" }}</span>
+			{{!--}}
+	        {{#if isAuthor}}
+	            <a {{ action "deleteReaction" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
+	        {{/if}}
+			{{--}}
+
+		    <div class="reaction-content">
+		        <div class="text">{{{ text }}}</div>
+		    </div>
+		</div>	
+	</li>
+
+	{# TODO: remove old code? #}
+	{{!--}}
+	<li class="reaction">
 	    <header class="reaction-header">
-        
+
             <div class="reaction-member">
 
                 <a {{action openInBigBox "memberProfile" author}} class="member">
@@ -15,26 +43,22 @@
                     </span>
                     <strong class="member-name">{{ author.full_name }}</strong>
                 </a>
-            
+
             </div>
 
-            <div class="reaction-meta">
-                <em class="timestamp">{{ localize created formatting="X" }}</em>
-                {{#if isAuthor}}
-                    <a {{ action "deleteReaction" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
-                {{/if}}
-            </div>
- 
+            <em class="timestamp">{{ localize created formatting="X" }}</em>
+            {{#if isAuthor}}
+                <a {{ action "deleteReaction" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
+            {{/if}}
+
 	    </header>
-            
+
         <div class="reaction-content">
             <div class="text">{{{ text }}}</div>
         </div>
-        
-       
-        
+		
 	</li>
-
+	{{--}}
 {% endtplhandlebars %}
 
 
@@ -45,9 +69,16 @@
             {{#each controller itemController="wallPostReaction"}}
                 {{view "App.WallPostReactionView" content=this}}
             {{/each}}
+			{# TODO: Make the pagination dynamic - only on more than 2 #}
+			<li class="reactions-pagination">
+				<a href="#">Show 4 more comments</a>
+				<span class="flaticon solid down-circle-2"></span>
+			</li>
         </ul>
     {{/if}}
-    
+	
+	
+
     {{#if controllers.currentUser.isAuthenticated }}
     <form class="reaction-form">
         <fieldset>
@@ -60,15 +91,16 @@
                 {{#each errors.text}}
                     <span class="error">{{this}}</span>
                 {{/each}}
-                {{view "Em.TextArea" placeholder="Comment"  valueBinding="newReaction.text" name="reaction" class="newReaction"}}
-                
+				{# TODO: Make the placeholder first name dynamic #}
+                {{view "Em.TextArea" placeholder="Hey Bart, you can leave a comment" valueBinding="newReaction.text" name="reaction" class="newReaction"}}
+
                 <button class="btn" type="submit" id="reaction-post">Post</button>
             </li>
             </ul>
         </fieldset>
     </form>
     {{else}}
-        <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#linkTo "signup"}}{% trans "member" %}{{/linkTo}} {% trans "to leave a reaction" %}.</div>
+        <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#link-to "signup"}}{% trans "member" %}{{/link-to}} {% trans "to leave a reaction" %}.</div>
     {{/if}}
 
 {% endtplhandlebars %}

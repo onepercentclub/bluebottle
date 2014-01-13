@@ -27,7 +27,7 @@
 
     <li class="project-item">
 
-        {{#linkTo 'project' getProject }}
+        {{#link-to 'project' getProject }}
             <span class="project-header">
 
                 <figure class="project-image">
@@ -41,31 +41,9 @@
             </span>
 
             <span {{bindAttr class=":project-status phase"}}>
-                {{#if isPhasePlan}}
-                    <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "New" %}</strong> <em>{% trans "Smart Idea" %}</em></span>
-                {{/if}}
-
-                {{#if isPhaseCampaign}}
-                    {{#if campaign.money_asked}}
-                        <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
-                        <span class="project-fund-amount"><strong>&euro;{{localize campaign.money_needed}}</strong> <em>{% trans "To go" %}</em></span>
-                    {{/if}}
-                    {{#if campaign.deadline }}
-                        <span class="project-days-left"><span class="flaticon solid clock-1"></span> <strong>{{campaign.daysToGo}}</strong> <em>{% trans "days" %}</em></span>
-                    {{/if}}
-                {{/if}}
-
-                {{#if isPhaseAct}}
-                    <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "Project funded" %}</strong> <em>{% trans "Being realized" %}</em></span>
-                {{/if}}
-
-                {{#if isPhaseResults}}
-                    <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "Project funded" %}</strong> <em>{% trans "Being realized" %}</em></span>
-                {{/if}}
-
-                {{#if isPhaseRealized}}
-                    <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "Project realized" %}</strong> <em>{% trans "See results" %}</em></span>
-                {{/if}}
+                
+                <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{{{phaseName}}}</strong></span>
+                
             </span>
 
             <span class="project-description">
@@ -74,7 +52,7 @@
                 <span class="project-view">{% trans "View project" %}</span>
             </span>
 
-        {{/linkTo}}
+        {{/link-to}}
 
         {{#if taskCount}}
             <a class="project-tasks"><span class="flaticon solid wrench-1"></span> <strong>{{taskCount}}</strong> <em>{% trans "task(s) available" %}</em></a>
@@ -102,7 +80,7 @@
             {{/if}}
         </section>
     </div>
-    
+
 {% endtplhandlebars %}
 
 
@@ -124,7 +102,7 @@
                     <span class="flaticon stroke tag-2"></span>
                 </div>
                 <div class="control">
-                    {{view App.ProjectPhaseSelectView valueBinding="phase" }}
+                    {{view App.ProjectPhaseSelectView valueBinding="status" }}
                     <span class="flaticon stroke flag-1"></span>
                 </div>
             </form>
@@ -134,14 +112,14 @@
     <div class="l-section">
         <section class="l-wrapper">
             <article id="search-navigation">
-                
+
                 <header>
                     <h2>{% trans "Results" %} <em>{{controllers.projectList.model.meta.total}}</em></h2>
                     <a {{action 'clearForm'}} class="search-reset">
                         <span class="flaticon solid x-2"></span> {% trans "Reset Search Filter" %}
                     </a>
                 </header>
-                
+
                 <div class="search-sort">
                     {% trans "Sort:" %}
                     <a {{action 'sortOrder' 'popularity'}} {{bindAttr class="orderedByPopularity:active"}}>{% trans "Most popular" %}</a>
@@ -154,7 +132,7 @@
                     <a {{action 'sortOrder' 'money_needed'}} {{bindAttr class="orderedByNeeded:active"}}>{% trans "Almost funded" %}</a>
                     <a {{action 'sortOrder' 'deadline'}} {{bindAttr class="orderedByDeadline:active"}}>{% trans "Near deadline" %}</a>
                 </div>
-                
+
                 <div class="search-pagination">
                     <span class="search-showing">{% trans "Showing" %} {{rangeStart}}-{{rangeEnd}}</span>
                     <span class="search-pages-control">
@@ -165,7 +143,7 @@
                         {{else}}
                             <span class="previous-page"><span class="flaticon solid left-circle-2"></span></span>
                         {{/if}}
-                        
+
                         {{#if hasNextPage}}
                             <a {{action 'nextPage'}} class="next-page">
                                 <span class="flaticon solid right-circle-2"></span>
@@ -175,7 +153,7 @@
                         {{/if}}
                     </span>
                 </div>
-                
+
             </article>
         </section>
     </div>
@@ -273,12 +251,12 @@
 
     <nav class="l-section" id="project-actions">
         <div class="l-wrapper">
-        
+
             <ul class="tabs four">
                 {% if 'wallposts' in bb_apps %}
                 {% block_verbatim 'project_wallpost_tab' %}
                     <li class="tab-updates">
-                        {{#linkTo 'project.index'}}
+                        {{#link-to 'project.index'}}
                             <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
                             <strong class="tab-title">
                                 {% trans "Updates" %}
@@ -293,7 +271,7 @@
                                     <em class="tab-subtitle">{% trans "No updates" %}</em>
                                 {{/if}}
                             </strong>
-                        {{/linkTo}}
+                        {{/link-to}}
                     </li>
                 {% endblock_verbatim %}
                 {% endif %}
@@ -301,27 +279,27 @@
                 {% block_verbatim 'project_task_tab' %}
                     <li class="tab-tasks">
                         {{#if taskCount}}
-                            {{#linkTo 'projectTasks'}}
+                            {{#link-to 'projectTasks'}}
                                 <span class="tab-icon">{{taskCount}}</span>
                                 <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "Skills needed" %}</em></strong>
-                            {{/linkTo}}
+                            {{/link-to}}
                         {{else}}
-                            {{#linkTo 'projectTasks'}}
+                            {{#link-to 'projectTasks'}}
                                 <span class="tab-icon">0</span>
                                 <strong class="tab-title">Tasks <em class="tab-subtitle">{% trans "No skills needed" %}</em></strong>
-                            {{/linkTo}}
+                            {{/link-to}}
                         {{/if}}
                     </li>
                 {% endblock_verbatim %}
                 {% endif %}
                 <li class="tab-plan">
-                    {{#linkTo "projectPlan"}}
+                    {{#link-to "projectPlan"}}
                         <span class="tab-icon"><span class="flaticon solid document-2"></span></span>
                         <strong class="tab-title">Project Plan <em class="tab-subtitle">{% trans "Read full plan" %}</em></strong>
-                    {{/linkTo}}
+                    {{/link-to}}
                 </li>
             </ul>
-            
+
         </div>
     </nav>
 
@@ -331,8 +309,60 @@
 
 
 {% tplhandlebars "project/index" %}
-    {{!-- Project Wall Post List template --}}
+	{{!-- New Project wall posts --}}
+    <div class="l-section" id="wallposts">
+        <section class="l-wrapper">
+			
+			<div class="wallposts-list">
+				
+			    {{#if controllers.currentUser.isAuthenticated }}
+									
+					{{#if isProjectOwner}}
+						<div class="wallpost-action">
+							<a href="#" class="wallpost-post-update">
+								<span class="flaticon solid comment-1"></span>
+								Post a new update on wall
+							</a>
+						</div>
+					{{/if}}
+				
+					<div class="wallpost-action">
+						<a href="#" class="wallpost-post-comment">
+							<span class="flaticon solid comment-1"></span>
+							Post a comment on wall
+						</a>
+					</div>
+					
+				{{/if}}
+				
+                {{#each item in controller itemController="wallPost"}}
+                    {{#if item.isLoaded}}
+                        {{#if item.isSystemWallPost}}
+                            {{view "App.SystemWallPostView"}}
+                        {{else}}
+                            {{view "App.MediaWallPostView"}}
+                        {{/if}}
+                    {{/if}}
+                {{/each}}
 
+                {{#if canLoadMore}}
+                    <a {{action "showMore"}} class="btn-link btn-more">
+                        <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
+                    </a>
+                {{/if}}
+								
+			</div>
+			
+			<div class="wallposts-important">
+									
+				{# TODO: render the important wall posts here #}
+									
+			</div>
+			
+		</section>
+	</div>
+	
+    {{!--}}
     <div id="l-section">
         <section class="l-wrapper">
             <div class="l-content" id="wallposts">
@@ -369,13 +399,13 @@
                     {{/if}}
                 {{else}}
                     <h3>{% trans "Write a comment" %}</h3>
-                    <a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#linkTo "signup"}}{% trans "member" %}{{/linkTo}} {% trans "to leave a comment" %}.</p>
+                    <a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#link-to "signup"}}{% trans "member" %}{{/link-to}} {% trans "to leave a comment" %}.</p>
                 {{/if}}
             </sidebar>
 
         </section>
     </div>
-
+	{{--}}
 {% endtplhandlebars %}
 
 
@@ -455,54 +485,54 @@
         <td class="fund-history-total">&euro;{{donation.amount}},-</td>
         <td class="fund-history-date">{{donation.time_since}}</td>
     </tr>
-	
+
 {% endtplhandlebars %}
 
 
 {% tplhandlebars "project_plan" %}
-    
+
     <div class="l-section" id="project-plan">
         <section class="l-wrapper">
-        
+
                 <header>
                     <h1>{% trans "Project Plan" %}</h1>
                 </header>
-               
+
                 {{#if description}}
                     <article>
                         <h2>{% trans "Why, what and how?" %}</h2>
                         <p>{{{description}}}</p>
                     </article>
                 {{/if}}
-                
+
                 {{#if effects}}
                     <article>
                         <h2>{% trans "Effects" %}</h2>
                             <p>{{{effects}}}</p>
                     </article>
                 {{/if}}
-                
+
                 {{#if future}}
                     <article>
                         <h2>{% trans "Future" %}</h2>
                         <p>{{{future}}}</p>
                     </article>
                 {{/if}}
-                    
+
                 {{#if forWho}}
                     <article>
                         <h2>{% trans "For who?" %}</h2>
                         <p>{{{forWho}}}</p>
                     </article>
                 {{/if}}
-                
+
                 {{#if reached}}
                     <article>
                         <h2>{% trans "People reached" %}</h2>
                         <p>{{{reached}}}</p>
                     </article>
                 {{/if}}
-    
+
                 {{#if country.name}}
                     <article>
                         <h2>{% trans "Location" %}</h2>
@@ -510,7 +540,7 @@
                         <img {{bindAttr src="view.staticMap"}} />
                     </article>
                 {{/if}}
-                
+
                 {{#if organization.name}}
                     <article>
                         <h2>{% trans "Organisation" %}</h2>
@@ -536,7 +566,7 @@
                             </dl>
                         {{/if}}
                         </ul>
-                    </article>    
+                    </article>
                 {{/if}}
 
                 {{#if budgetLines.length}}
@@ -550,7 +580,7 @@
                         {{/each}}
                     </article>
                 {{/if}}
-                
+
         </section>
     </div>
 

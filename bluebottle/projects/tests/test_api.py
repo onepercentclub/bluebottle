@@ -6,9 +6,10 @@ from django.core.urlresolvers import reverse
 from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
-    ProjectBudgetLineFactory)
+    ProjectBudgetLineFactory, ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
+from ..models import ProjectPhase
 
 class ProjectEndpointTestCase(TestCase):
     """
@@ -20,9 +21,14 @@ class ProjectEndpointTestCase(TestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
 
-        self.project_1 = ProjectFactory.create(owner=self.user)
-        self.project_2 = ProjectFactory.create(owner=self.user)
-        self.project_3 = ProjectFactory.create(owner=self.user)
+        bools = [True,False]
+
+        all_phases = [ProjectPhaseFactory(viewable=i,editable=j,active=k)
+                     for i in bools for j in bools for k in bools]
+                                         
+        self.project_1 = ProjectFactory.create(owner=self.user,status=all_phases[0])
+        self.project_2 = ProjectFactory.create(owner=self.user,status=all_phases[0])
+        self.project_3 = ProjectFactory.create(owner=self.user,status=all_phases[5])
 
         self.theme_1 = ProjectThemeFactory.create()
         self.theme_2 = ProjectThemeFactory.create()
@@ -32,6 +38,39 @@ class ProjectEndpointTestCase(TestCase):
         self.detail_field_2 = ProjectDetailFieldFactory.create()
         self.detail_field_3 = ProjectDetailFieldFactory.create()
 
+class TestProjectPhaseList(ProjectEndpointTestCase):
+    """
+    Test case for the ``ProjectPhase`` API view. Returns all the Phases
+    that can be assigned to a project.
+
+    Endpoing: /api/projects/phases/
+    """
+    def test_api_phases_list_endpoint(self):
+        """
+        Tests that the list of project phases can be obtaine from its
+        endpoint.
+        """
+        
+        response = self.client.get(reverse('project_phase_list'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        available_phases = ProjectPhase.objects.all()
+
+        self.assertEqual(data['count'], len(available_phases),
+                         "Failed to load all the available phases")
+
+        for item in data['results']:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertIn('description', item)
+            self.assertIn('sequence', item)
+            self.assertIn('active', item)
+            self.assertIn('editable', item)
+            self.assertIn('viewable', item)
+    
 
 class TestProjectList(ProjectEndpointTestCase):
     """
@@ -49,8 +88,8 @@ class TestProjectList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        # Check that it is returning our 3 factory-model projects.
-        self.assertEqual(data['count'], 3)
+        # Check that it is returning our 2 viewable factory-model projects.
+        self.assertEqual(data['count'], 2)
 
         # Check sanity on the JSON response.
         for item in data['results']:
@@ -61,7 +100,11 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('image', item)
             self.assertIn('meta_data', item)
             self.assertIn('owner', item)
-            self.assertIn('phase', item)
+            self.assertIn('status', item)
+            
+            #Ensure that non-viewable status are filtered out
+            phase = ProjectPhase.objects.get(id=item['status'])
+            self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
 
 
 class TestProjectDetail(ProjectEndpointTestCase):
@@ -87,7 +130,7 @@ class TestProjectDetail(ProjectEndpointTestCase):
         self.assertIn('image', data)
         self.assertIn('meta_data', data)
         self.assertIn('owner', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
 
 
 class TestProjectPreviewList(ProjectEndpointTestCase):
@@ -106,14 +149,17 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['count'], 2, "Projects with non-viewable status were returned")
 
         for item in data['results']:
             self.assertIn('id', item)
             self.assertIn('title', item)
             self.assertIn('image', item)
-            self.assertIn('phase', item)
+            self.assertIn('status', item)
             self.assertIn('country', item)
+
+            phase = ProjectPhase.objects.get(id=item['status'])
+            self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
 
 
 class TestProjectPreviewDetail(ProjectEndpointTestCase):
@@ -137,7 +183,7 @@ class TestProjectPreviewDetail(ProjectEndpointTestCase):
         self.assertIn('id', data)
         self.assertIn('title', data)
         self.assertIn('image', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
         self.assertIn('country', data)
 
 
@@ -245,7 +291,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
             self.assertIn('created', item)
             self.assertIn('title', item)
             self.assertIn('url', item)
-            self.assertIn('phase', item)
+            self.assertIn('status', item)
             self.assertIn('image', item)
             self.assertIn('pitch', item)
             self.assertIn('tags', item)
@@ -280,7 +326,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertIn('created', data)
         self.assertIn('title', data)
         self.assertIn('url', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
         self.assertIn('image', data)
         self.assertIn('pitch', data)
         self.assertIn('tags', data)
@@ -349,7 +395,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('created', data)
         self.assertIn('title', data)
         self.assertIn('url', data)
-        self.assertIn('phase', data)
+        self.assertIn('status', data)
         self.assertIn('image', data)
         self.assertIn('pitch', data)
         self.assertIn('tags', data)

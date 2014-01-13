@@ -127,8 +127,7 @@ class Project(models.Model):
     money_donated = models.PositiveIntegerField(default=0, null=True)
     money_needed = models.PositiveIntegerField(default=0, null=True)
 
-    organization = models.ForeignKey(
-        'organizations.Organization', null=True, blank=True)
+    organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
 
     objects = ProjectManager()
 
@@ -150,8 +149,15 @@ class Project(models.Model):
                 counter += 1
             self.slug = original_slug
 
-        if not self.phase:
-            self.phase = 'plan-new'
+        # Ouch ugly stuff here! FIXME!
+        try:
+            self.status
+        except ProjectPhase.DoesNotExist:
+            if not len(ProjectPhase.objects.order_by('sequence')):
+                from django.core import management
+                management.call_command('loaddata', 'project_phases.json')
+            self.status = ProjectPhase.objects.order_by('sequence')[0]
+
         super(Project, self).save(*args, **kwargs)
 
     def get_absolute_url(self):

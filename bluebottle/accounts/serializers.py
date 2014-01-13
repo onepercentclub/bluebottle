@@ -75,7 +75,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
 
     website = URLField(required=False)
 
-    # TODO: extend this serializer with abstract base model
+    # TODO: extend this serializer with abstract base model and move the fields
     skills = serializers.PrimaryKeyRelatedField(many=True)
     favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
     favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
@@ -88,7 +88,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
         #TODO: add       * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
                   'availability', 'date_joined', 'location', 'skills', 'favourite_countries', 'favourite_themes',
-                  'tags', 'user_statistics')
+                  'tags', 'user_statistics', 'facebook', 'twitter')
 
 
 # Thanks to Neamar Tucote for this code:

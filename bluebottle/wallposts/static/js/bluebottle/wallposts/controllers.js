@@ -156,16 +156,16 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
 
 App.TaskWallPostMixin = Em.Mixin.create({
 
-    needs: ['currentUser', 'projectTask', 'projectTaskIndex'],
+    needs: ['currentUser', 'task', 'taskIndex'],
     type: 'task',
 
     parentId: function(){
-        return this.get('controllers.projectTask.model.id');
-    }.property('controllers.projectTask.model.id'),
+        return this.get('controllers.task.model.id');
+    }.property('controllers.task.model.id'),
 
     wallPostList: function(){
-        return this.get('controllers.projectTaskIndex.model');
-    }.property('controllers.projectTaskIndex.model')
+        return this.get('controllers.task.model');
+    }.property('controllers.task.model')
 
 })
 

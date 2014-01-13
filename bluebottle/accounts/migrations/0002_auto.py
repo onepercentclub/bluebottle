@@ -7,6 +7,12 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('geo', '0001_initial'),
+        ('projects', '0001_initial'),
+        ('tasks', '0003_auto__del_skills__add_skill__add_field_task_skill'),
+    )
+
     def forwards(self, orm):
         # Adding M2M table for field favourite_countries on 'BlueBottleUser'
         m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_favourite_countries')

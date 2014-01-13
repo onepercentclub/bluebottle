@@ -16,50 +16,50 @@
                     <h4><span class="flaticon solid notebook-1"></span> {% trans "Project Story" %} </h4>
                     <ul class="manage-project-nav">
                         <li>
-                            {{#linkTo "myProject.basics"}}
+                            {{#link-to "myProject.basics"}}
                                 <em {{bindAttr class="validBasics:is-finished:is-unfinished"}}></em>
                                 {% trans "Basics" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         <li>
-                            {{#linkTo "myProject.description"}}
+                            {{#link-to "myProject.description"}}
                                 <em {{bindAttr class="validDescription:is-finished:is-unfinished"}}></em>
                                 {% trans "Description" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         <li>
-                            {{#linkTo "myProject.details"}}
+                            {{#link-to "myProject.details"}}
                                 <em {{bindAttr class="validDetails:is-finished:is-unfinished"}}></em>
                                 {% trans "Details" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         <li>
-                            {{#linkTo "myProject.location"}}
+                            {{#link-to "myProject.location"}}
                                 <em {{bindAttr class="validLocation:is-finished:is-unfinished"}}></em>
                                 {% trans "Location" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         <li>
-                            {{#linkTo "myProject.media"}}
+                            {{#link-to "myProject.media"}}
                                 <em {{bindAttr class="validMedia:is-finished:is-unfinished"}}></em>
                                 {% trans "Media" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                     </ul>
 
                     <h4><span class="flaticon solid briefcase-1"></span> {% trans "Organisation" %}</h4>
                     <ul class="manage-project-nav">
                         <li>
-                            {{#linkTo "myProject.organisation"}}
+                            {{#link-to "myProject.organisation"}}
                                 <em {{bindAttr class="organization.validProfile:is-finished:is-unfinished"}}></em>
                                 {% trans "Organisation Profile" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         <li>
-                            {{#linkTo "myProject.legal"}}
+                            {{#link-to "myProject.legal"}}
                                 <em {{bindAttr class="organization.validLegalStatus:is-finished:is-unfinished"}}></em>
                                 {% trans "Legal Status" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                     </ul>
 
@@ -67,31 +67,31 @@
                     <h4><span class="flaticon solid wallet-1"></span> {% trans "Crowdfunding" %}</h4>
                     <ul class="manage-project-nav">
                         <li>
-                            {{#linkTo "myProject.campaign"}}
+                            {{#link-to "myProject.campaign"}}
                                 <em {{bindAttr class="validCampaign:is-finished:is-unfinished"}}></em>
                                 {% trans "Start Campaign" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         <li>
-                            {{#linkTo "myProject.budget"}}
+                            {{#link-to "myProject.budget"}}
                                 <em {{bindAttr class="validBudget:is-finished:is-unfinished"}}></em>
                                 {% trans "Budget" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         {{#if organization}}
                         <li>
-                            {{#linkTo "myProject.bank"}}
+                            {{#link-to "myProject.bank"}}
                                 <em {{bindAttr class="organization.validBank:is-finished:is-unfinished"}}></em>
                                 {% trans "Bank details" %}
-                            {{/linkTo}}
+                            {{/link-to}}
                         </li>
                         {{/if}}
                     </ul>
 
-                    {{#linkTo "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
+                    {{#link-to "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
                         <span class="flaticon solid right-2"></span>
                         {% trans "Submit Plan" %}
-                    {{/linkTo}}
+                    {{/link-to}}
 
                 </nav>
 

@@ -95,8 +95,9 @@ App.Task = DS.Model.extend({
     }.property('status'),
 
 	hasMoreThanOneMember: function() {
-		return this.get('members').length > 1
-	},
+		console.log(this.get("members.length"));
+		return this.get('members.length') > 1
+	}.property('members.length'),
 
     timeNeeded: function(){
         var times = App.TimeNeededList;

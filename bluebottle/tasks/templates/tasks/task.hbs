@@ -113,11 +113,22 @@
 				        {{#if members}}
 						<li class="member-assigned">
 							<h4>{% trans "Assigned" %} <span class="flaticon solid question-2"></span></h4>
+							{{#if hasMoreThanOneMember}}
+							<ul>
+								{{#each members}}
+									<li>
+								        <a {{action 'openInBigBox' 'userModal' this.member }} class="member">
+								            <span class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></span>
+								        </a>
+									</li>
+								{{/each}}
+							</ul>
+							{{else}}
 							<ul>
 								{{#each members}}
                                     <li>
                                         <a {{action 'openInBigBox' 'userModal' this.member }} class="member single">
-                                            <figure class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}} /></figure>
+                                            <figure class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></figure>
                                             <div class="member-details">
                                                 <strong class="member-name">{{this.member.full_name}}</strong>
                                                 <em class="member-created">{{localize this.created formatting="X"}}</em>
@@ -126,6 +137,7 @@
                                     </li>
 								{{/each}}
 							</ul>
+							{{/if}}
 						</li>
 				        {{/if}}
 				    </ul>

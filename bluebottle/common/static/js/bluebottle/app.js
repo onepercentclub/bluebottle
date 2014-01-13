@@ -416,13 +416,6 @@ App.ApplicationRoute = Em.Route.extend({
                 });
             });
         },
-        showNews: function(news_id) {
-            var route = this;
-            App.News.find(news_id).then(function(news) {
-                route.transitionTo('newsItem', news);
-                window.scrollTo(0, 0);
-            });
-        },
         showPage: function(page_id) {
             var route = this;
             App.Page.find(page_id).then(function(page) {

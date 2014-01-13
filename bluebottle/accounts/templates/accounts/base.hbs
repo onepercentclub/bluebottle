@@ -1,19 +1,20 @@
 {% load bb_ember i18n static %}
 
 
-{% include "accounts/signup.html" %}
-{% include "accounts/login.html" %}
-{% include "accounts/password_reset.html" %}
+{% include "accounts/signup.hbs" %}
+{% include "accounts/login.hbs" %}
+{% include "accounts/password_reset.hbs" %}
 
 {# Personal profile page #}
-{% include "accounts/profile_nav.html" %}
-{% include "accounts/profile_form.html" %}
-{% include "accounts/account_settings.html" %}
+{% include "accounts/profile_nav.hbs" %}
+{% include "accounts/profile_form.hbs" %}
+{% include "accounts/account_settings.hbs" %}
 
 {# Public profile page #}
+
 {# TODO: resolve ambiguous naming #}
-{% include "accounts/profile_public.html" %}
-{% include "accounts/public_profile.html" %}
+{% include "accounts/profile_public.hbs" %}
+{% include "accounts/public_profile.hbs" %}
 
 
 {% block extra_templates %}{% endblock %}

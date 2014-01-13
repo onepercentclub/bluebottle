@@ -52,8 +52,6 @@ App.TextWallPostNewController = Em.ObjectController.extend({
 
     init: function() {
         this._super();
-        console.log(this.get('parentType'));
-        console.log(this.get('parentId'));
         this.createNewWallPost();
     },
     actions: {
@@ -128,10 +126,7 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
                         controller.set('files', Em.A());
                     }
                     var list = controller.get('wallPostList');
-                    console.log(list.toString());
-                    console.log(list.length);
                     list.unshiftObject(record);
-                    console.log(list.length);
                     controller.createNewWallPost()
                 });
             });

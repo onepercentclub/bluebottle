@@ -70,7 +70,14 @@ App.MediaWallPostView = App.WallPostView.extend({
 App.TextWallPostNewView = Em.View.extend({
     templateName: 'textWallPostNew',
     tagName: 'form',
-    elementId: 'wallpost-form'
+    elementId: 'wallpost-form',
+    toggleForm: function(){
+        this.$('.wallpost-form').slideToggle();
+    },
+    hideForm: function(){
+        this.$('.wallpost-form').hide();
+    }.property('id')
+
 });
 
 App.MediaWallPostNewView = App.TextWallPostNewView.extend({

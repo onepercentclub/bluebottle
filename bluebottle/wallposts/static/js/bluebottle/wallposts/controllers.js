@@ -46,25 +46,21 @@ App.TextWallPostNewController = Em.ObjectController.extend({
 
     needs: ['currentUser'],
 
-    parentId: function(){
-        return Em.K();
-    }.property(),
-
     wallPostList: function(){
         return Em.K();
     }.property(),
 
-    type: Em.K(),
-
     init: function() {
         this._super();
+        console.log(this.get('parentType'));
+        console.log(this.get('parentId'));
         this.createNewWallPost();
     },
     actions: {
         saveWallPost: function() {
             var wallPost = this.get('model');
             wallPost.set('parent_id', this.get('parentId'));
-            wallPost.set('parent_type', this.get('type'));
+            wallPost.set('parent_type', this.get('parentType'));
             wallPost.set('type', 'text');
 
             var controller = this;
@@ -81,7 +77,14 @@ App.TextWallPostNewController = Em.ObjectController.extend({
     },
 
     createNewWallPost: function() {
+        // Make sure we keep parent id/type
+        var parentType = this.get('parentType');
+        var parentId = this.get('parentId');
+
         this.set('model', App.TextWallPost.createRecord());
+
+        this.set('parentType', parentType);
+        this.set('parentId', parentId);
     }
 });
 
@@ -92,7 +95,14 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
     files: Em.A(),
 
     createNewWallPost: function() {
+        // Make sure we keep parent id/type
+        var parentType = this.get('parentType');
+        var parentId = this.get('parentId');
+
         this.set('model', App.MediaWallPost.createRecord());
+
+        this.set('parentType', parentType);
+        this.set('parentId', parentId);
     },
 
     actions: {
@@ -102,7 +112,7 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
             var controller = this;
 
             wallPost.set('parent_id', this.get('parentId'));
-            wallPost.set('parent_type', this.get('type'));
+            wallPost.set('parent_type', this.get('parentType'));
             wallPost.set('type', 'media');
 
             wallPost.on('didCreate', function(record) {
@@ -118,7 +128,10 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
                         controller.set('files', Em.A());
                     }
                     var list = controller.get('wallPostList');
+                    console.log(list.toString());
+                    console.log(list.length);
                     list.unshiftObject(record);
+                    console.log(list.length);
                     controller.createNewWallPost()
                 });
             });
@@ -167,7 +180,7 @@ App.TaskWallPostMixin = Em.Mixin.create({
         return this.get('controllers.task.model');
     }.property('controllers.task.model')
 
-})
+});
 
 App.TaskTextWallPostNewController = App.TextWallPostNewController.extend(App.TaskWallPostMixin, {});
 App.TaskMediaWallPostNewController = App.MediaWallPostNewController.extend(App.TaskWallPostMixin, {});
@@ -187,7 +200,7 @@ App.ProjectWallPostMixin = Em.Mixin.create({
     wallPostList: function(){
         return this.get('controllers.projectIndex.model');
     }.property('controllers.projectIndex.model')
-})
+});
 
 App.ProjectTextWallPostNewController = App.TextWallPostNewController.extend(App.ProjectWallPostMixin, {});
 App.ProjectMediaWallPostNewController = App.MediaWallPostNewController.extend(App.ProjectWallPostMixin, {});

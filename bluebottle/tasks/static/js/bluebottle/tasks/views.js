@@ -15,8 +15,8 @@ App.TaskPreviewView = Em.View.extend({
 App.ProjectTaskListView = Em.View.extend(App.ScrollInView, {});
 
 
-App.ProjectTaskView = Em.View.extend(App.ScrollInView, {
-    templateName: 'task'
+App.TaskIndexView = Em.View.extend({
+    templateName: 'wall'
 });
 
 

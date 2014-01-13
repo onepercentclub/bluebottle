@@ -26,6 +26,8 @@ App.User = DS.Model.extend({
     date_joined: DS.attr('date'),
     file: DS.attr('string'),
 
+    skills: DS.hasMany('App.Skill'),
+
     // post-only fields (i.e. only used for user creation)
     email: DS.attr('string'),
     password: DS.attr('string'),

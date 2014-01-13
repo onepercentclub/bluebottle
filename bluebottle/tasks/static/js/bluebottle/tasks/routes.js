@@ -36,14 +36,6 @@ App.TaskRoute = Em.Route.extend({
     model: function(params) {
         return App.Task.find(params.task_id);
     },
-    setupController: function(controller, model) {
-        this._super(controller, model);
-
-        var wallPostController = this.controllerFor('taskWallPostList');
-        wallPostController.set('model', model.get('wallposts'));
-        wallPostController.set('items', Em.A());
-        wallPostController.set('page', 0);
-    },
     actions: {
         applyForTask: function(task) {
             var route = this;
@@ -152,15 +144,27 @@ App.TaskRoute = Em.Route.extend({
 
 
 App.TaskIndexRoute = Em.Route.extend({
+
     // This way the ArrayController won't hold an immutable array thus it can be extended with more wallposts.
     setupController: function(controller, model) {
         // Only reload wall-posts if switched to another project.
-        var parent_id = this.modelFor('task').get('id');
-        if (controller.get('parent_id') != parent_id){
+        var parentId = this.modelFor('task').get('id');
+
+
+        // Set some variables for WallPostNew controllers
+        model = controller.get('model');
+        this.controllerFor('mediaWallPostNew').set('parentId', parentId);
+        this.controllerFor('mediaWallPostNew').set('parentType', 'task');
+        this.controllerFor('mediaWallPostNew').set('wallPostList', model);
+        this.controllerFor('textWallPostNew').set('parentId', parentId);
+        this.controllerFor('textWallPostNew').set('parentType', 'task');
+        this.controllerFor('textWallPostNew').set('wallPostList', model);
+
+        if (controller.get('parentId') != parentId){
             controller.set('page', 1);
-            controller.set('parent_id', parent_id);
+            controller.set('parentId', parentId);
             var store = this.get('store');
-            store.find('wallPost', {'parent_type': 'task', 'parent_id': parent_id}).then(function(items){
+            store.find('wallPost', {'parent_type': 'task', 'parent_id': parentId}).then(function(items){
                 controller.set('meta', items.get('meta'));
                 controller.set('model', items.toArray());
             });

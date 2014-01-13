@@ -52,6 +52,9 @@ App.ProjectView = Em.View.extend({
     }
 });
 
+App.ProjectIndexView = Em.View.extend({
+    templateName: 'wall'
+});
 
 /* Form Elements */
 

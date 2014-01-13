@@ -34,9 +34,7 @@
                             {# TODO: Error Handling #}
                         </li>
                       
-                       {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills available_label="Available skills" }}
-
-                       {{bb-multiple-selected-items selected_label="Selected Themes" selectedItems=themes availableItems=allThemes available_label="Available Themes" }}
+                       {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills type="Skill" available_label="Available skills" }}
 
                         {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
 

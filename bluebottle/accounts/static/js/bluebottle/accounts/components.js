@@ -1,9 +1,9 @@
 
 App.BbMultipleSelectedItemsComponent = Ember.Component.extend({
 	itemSelected: function(){
-		console.log("itemSelected");
-		console.log(this.get("selectedItem"));
-		var item = App.Skill.find(this.get("selectedItem") );
+		var type = this.get("type");
+		var obj = App[type];
+		var item = obj.find(this.get("selectedItem") );
 		this.get("selectedItems").addObject(item);
 
 	}.observes("selectedItem"),

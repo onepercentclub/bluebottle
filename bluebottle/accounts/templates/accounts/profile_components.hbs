@@ -15,6 +15,9 @@
     <a {{action 'removeItem'  item}}>x</a>
     <span>{{item.name}}</span>
   </li>
+
+{{else}}
+<li>No items selected</li>
 {{/each}}
 </ul>
 

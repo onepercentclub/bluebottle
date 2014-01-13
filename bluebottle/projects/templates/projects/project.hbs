@@ -18,15 +18,18 @@
                         {{#if country.name}}<span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>{{/if}}
                         {{#if theme.title}}<span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.title}}</span>{{/if}}
                     </div>
+					{# no social icons in the project template #}
+					{{!--}}
                     {{view App.SocialShareView}}
+					{{--}}
                     <h1 class="project-title">{{title}}</h1>
                     <p class="project-description">{{pitch}}</p>
                 </article>
 
             </div>
         </section>
-
-
+		
+		{{!--}}
         {{#if isFundable}}
             <section class="l-wrapper">
                 <div class="project-status">
@@ -83,6 +86,9 @@
                 </div>
             </section>
         {{/if}}
+		{{--}}
+		
+		
     </div>
 
     <div class="l-section" id="project-members">

@@ -27,6 +27,7 @@ from .serializers import (CurrentUserSerializer, UserProfileSerializer, UserSett
 class UserProfileDetail(generics.RetrieveUpdateAPIView):
     model = BlueBottleUser
     serializer_class = UserProfileSerializer
+    # suggestion: get_user_profile_serializer() similar to get_user_model()
     permission_classes = (IsCurrentUserOrReadOnly,)
 
 

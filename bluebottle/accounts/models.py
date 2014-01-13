@@ -74,7 +74,7 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
-class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
+class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.
     """
@@ -133,11 +133,6 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     contribution = models.TextField(_("contribution"), blank=True)
     tags = TaggableManager(verbose_name=_("tags"), blank=True)
 
-    # TODO: these should be fields on the specific model (when splitting to AbstractbBaseUser)
-    skills = models.ManyToManyField('tasks.Skill', blank=True, null=True)
-    favourite_countries = models.ManyToManyField('geo.Country', blank=True, null=True)
-    favourite_themes = models.ManyToManyField('projects.ProjectTheme', blank=True, null=True)
-
     objects = BlueBottleUserManager()
 
     USERNAME_FIELD = 'email'
@@ -147,6 +142,7 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     slug_field = 'username'
 
     class Meta:
+        abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')
 
@@ -229,6 +225,18 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
             return addresses[0]
         else:
             return None
+
+
+class BlueBottleUser(BlueBottleBaseUser):
+    """
+    This is the standard user model. If certain profile fields are not required, provide your own user
+    model extending ``BlueBottleBaseUser``.
+    """
+
+    # TODO: these should be fields on the specific model (when splitting to AbstractbBaseUser)
+    skills = models.ManyToManyField('tasks.Skill', blank=True, null=True)
+    favourite_countries = models.ManyToManyField('geo.Country', blank=True, null=True)
+    favourite_themes = models.ManyToManyField('projects.ProjectTheme', blank=True, null=True)
 
 
 # Ensures that UserProfile and User instances stay in sync.

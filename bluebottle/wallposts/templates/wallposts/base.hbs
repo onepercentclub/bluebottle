@@ -197,6 +197,7 @@
 
             <div class="text">{{{text}}}</div>
 
+			{{!--}}
             {{#if photos.length}}
                 <ul class="photo-viewer">
                     {{#each photo in photos}}
@@ -204,6 +205,23 @@
                     {{/each}}
                 </ul>
             {{/if}}
+			{{--}}
+			
+			<div class="wallpost-photos">
+				<figure class="wallpost-photos-cover">
+					<img {{bindAttr src="coverPhoto.photo" alt="coverPhoto.name"}}>
+				</figure>
+				
+				<ul class="wallpost-photos">
+					{{#each normalPhotos}}	
+					<li>
+						<a href="#">
+							<img {{bindAttr src="this.photo" alt="this.name"}}>
+						</a>
+					</li>
+					{{/each}}
+				</ul>
+			</div>
 	    </div>
 
         <div class="wallpost-reactions">

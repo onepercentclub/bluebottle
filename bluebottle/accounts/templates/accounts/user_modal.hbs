@@ -2,11 +2,12 @@
 
 {% tplhandlebars "user_modal" %}
 <div id="profile-preview">
+	<a class="close" rel="close">&times;</a>
     <div class="modal-header">
         <figure class="profile-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
 
         <header class="profile-header">
-            <h3>{{ first_name }} {{ last_name }}</h3>
+            <h3 class="member-name">{{ full_name }}</h3>
             <p class="member-since">
                 {% trans "Member since" %}
                 {{user_since}}
@@ -14,9 +15,8 @@
         </header>
     </div>
 
-	<div class="profile-badges">
+	<div class="model-body profile-badges">
         <ul class="account-achievements">
-            {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
             <li>
 				<img class="account-achievement-icon" src="http://placehold.it/75x75">
                 <strong>{{user_statistics.projects_supported}}</strong><br /> 
@@ -37,10 +37,18 @@
             </li>
         </ul>
 	</div>
-
+	
+	<div class="modal-footer profile-preview-actions">
+		<a {{action 'closeAllModals'}} class="close-link" rel="close">&times; Close</a>
+		{{#link-to "viewProfile" id class="go-to-profile" rel="close"}}
+			View full profile &rsaquo;
+		{{/link-to}}
+	</div>
+	{{!--}}
     <div class="modal-body">
         {% block profile_model_content %}
         {% endblock profile_model_content %}
     </div>
+	{{--}}
 </div>
 {% endtplhandlebars %}

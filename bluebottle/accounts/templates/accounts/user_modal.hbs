@@ -1,15 +1,18 @@
 {% load bb_ember i18n %}
 
 {% tplhandlebars "user_modal" %}
+
 <div id="profile-preview">
 	<a class="close" rel="close">&times;</a>
     <div class="modal-header">
-        <figure class="profile-avatar">
+        
+		<figure class="profile-avatar">
 			<img {{bindAttr src="getAvatar"}} />
 		</figure>
 
         <header class="profile-header">
-            <h3 class="member-name">{{ full_name }}</h3>
+           	
+			<h3 class="member-name">{{ full_name }}</h3>
         
 		    <p class="member-since">
                 {% trans "Member since" %}
@@ -22,7 +25,6 @@
 
 	<div class="modal-body">
 	    <ul class="account-achievements">
-	        {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
 	        <li>
 				<img class="account-achievement-icon" src="http://placehold.it/75x75">
 	            <strong>{{user_statistics.projects_supported}}</strong><br /> 
@@ -51,6 +53,7 @@
 		{{/link-to}}
 	</div>
 	
+	{# TODO: remove this code? #}
 	{{!--}}
     <div class="modal-body">
         {% block profile_model_content %}
@@ -58,5 +61,6 @@
     </div>
 	{{--}}
 </div>
+
 {% endtplhandlebars %}
 	

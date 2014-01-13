@@ -70,7 +70,16 @@ App.WallPost = DS.Model.extend({
             }
         }
         return false;
-    }.property('related_type', 'isSystemWallPost', 'related_object')
+    }.property('related_type', 'isSystemWallPost', 'related_object'),
+	
+	coverPhoto: function() {
+		return this.get("photos")[0]
+	}.property("photos"),
+	
+	normalPhotos: function() {
+		return this.get("photos").slice(1,-1)
+	}.property("photos")
+	
 });
 
 

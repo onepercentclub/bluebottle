@@ -72,6 +72,7 @@
 #project-detail {
     background-color: $gray-darkest;
     color: $color-text-light;
+	padding: $base-padding 0;
     
     .project-image img {
        border: 1px solid $gray-lighter; 

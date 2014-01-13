@@ -47,13 +47,6 @@ App.User = DS.Model.extend({
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
 
-    full_name: function() {
-        if (!this.get('first_name') && !this.get('last_name')) {
-            return this.get('username');
-        }
-        return this.get('first_name') + ' ' + this.get('last_name');
-    }.property('first_name', 'last_name'),
-
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
     }.property('date_joined'),
@@ -67,10 +60,6 @@ App.User = DS.Model.extend({
     }.property('facebook')
 });
 
-// TODO: split this of
-App.User.reopen({
-    user_statistics: DS.attr('object')
-});
 
 /*
  A data model representing a user's settings.

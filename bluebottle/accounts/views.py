@@ -6,6 +6,7 @@ from django.conf import settings
 from django.template import loader
 from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
+from django.utils.importlib import import_module
 from django.utils.http import base36_to_int, int_to_base36
 
 from registration import signals
@@ -17,28 +18,33 @@ from rest_framework import views
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
 
-from .models import BlueBottleUser
-from .serializers import (CurrentUserSerializer, UserProfileSerializer, UserSettingsSerializer, UserCreateSerializer,
-                          PasswordResetSerializer, PasswordSetSerializer)
+from .serializers import (CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
+                          PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
 
 # API views
 
 class UserProfileDetail(generics.RetrieveUpdateAPIView):
-    model = BlueBottleUser
-    serializer_class = UserProfileSerializer
-    # suggestion: get_user_profile_serializer() similar to get_user_model()
+    model = BB_USER_MODEL
     permission_classes = (IsCurrentUserOrReadOnly,)
+
+    def get_serializer_class(self):
+        dotted_path = self.model._meta.default_serializer
+        bits = dotted_path.split('.')
+        module_name = '.'.join(bits[:-1])
+        module = import_module(module_name)
+        cls_name = bits[-1]
+        return getattr(module, cls_name)
 
 
 class UserSettingsDetail(generics.RetrieveUpdateAPIView):
-    model = BlueBottleUser
+    model = BB_USER_MODEL
     serializer_class = UserSettingsSerializer
     permission_classes = (IsCurrentUser,)
 
 
 class CurrentUser(generics.RetrieveAPIView):
-    model = BlueBottleUser
+    model = BB_USER_MODEL
     serializer_class = CurrentUserSerializer
 
     def get_object(self, queryset=None):
@@ -48,7 +54,7 @@ class CurrentUser(generics.RetrieveAPIView):
 
 
 class UserCreate(generics.CreateAPIView):
-    model = BlueBottleUser
+    model = BB_USER_MODEL
     serializer_class = UserCreateSerializer
 
     def get_name(self):

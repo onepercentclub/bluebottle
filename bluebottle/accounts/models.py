@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.mail.message import EmailMessage
 from django.db import models
+import django.db.models.options as options
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
@@ -17,6 +18,16 @@ from sorl.thumbnail import ImageField
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 from bluebottle.utils.models import Address
+
+
+"""
+    When extending the user model, the serializer should extend too.
+    We provide a default base serializer in sync with the base user model
+    The Django Meta attribute seems the best place for this configuration, so we
+    have to add this.
+"""
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
 # TODO: Make this generic for all user file uploads.
@@ -141,7 +152,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     objects = BlueBottleUserManager()
 
     USERNAME_FIELD = 'email'
-    # Only email and password is requires to create a user account but this is how you'd require other fields.
+    # Only email and password is required to create a user account but this is how you'd require other fields.
     # REQUIRED_FIELDS = ['first_name', 'last_name']
 
     slug_field = 'username'
@@ -150,6 +161,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')
+        # specifying the serializer here allows us to leave the urls/views untouched while
+        # modifying the serializer for the user model
+        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
@@ -234,14 +248,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
 class BlueBottleUser(BlueBottleBaseUser):
     """
-    This is the standard user model. If certain profile fields are not required, provide your own user
+    This is the standard user model. If extra profile fields are required, provide your own user
     model extending ``BlueBottleBaseUser``.
     """
-
-    # TODO: these should be fields on the specific model (when splitting to AbstractbBaseUser)
-    skills = models.ManyToManyField('tasks.Skill', blank=True, null=True)
-    favourite_countries = models.ManyToManyField('geo.Country', blank=True, null=True)
-    favourite_themes = models.ManyToManyField('projects.ProjectTheme', blank=True, null=True)
 
 
 # Ensures that UserProfile and User instances stay in sync.
@@ -250,7 +259,10 @@ def create_user_address(sender, instance, created, **kwargs):
     if created:
         UserAddress.objects.create(user=instance)
 
-post_save.connect(create_user_address, sender=BlueBottleUser)
+# This is not possible with the unknown user model at this stage. In Django 1.7+ the sender
+# can be specified as dotted python path, then settings.AUTH_USER_MODEL can be used.
+if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
+    post_save.connect(create_user_address, sender=BlueBottleUser)
 
 
 class UserAddress(Address):

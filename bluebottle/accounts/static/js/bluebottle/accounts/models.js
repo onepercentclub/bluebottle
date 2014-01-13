@@ -23,6 +23,9 @@ App.User = DS.Model.extend({
     picture: DS.attr('image'),
 
     website: DS.attr('string'),
+    facebook: DS.attr('string'),
+    twitter: DS.attr('string'),
+
     date_joined: DS.attr('date'),
     file: DS.attr('string'),
 
@@ -53,7 +56,15 @@ App.User = DS.Model.extend({
 
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
-    }.property('date_joined')
+    }.property('date_joined'),
+
+    get_twitter: function() {
+        return '//twitter.com/' + this.get('twitter');
+    }.property('twitter'),
+
+    get_facebook: function() {
+        return '//www.facebook.com/' + this.get('facebook');
+    }.property('facebook')
 });
 
 // TODO: split this of

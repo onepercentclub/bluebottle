@@ -118,6 +118,11 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     about = models.TextField(_("about"), max_length=265, blank=True)
     why = models.TextField(_("why"), max_length=265, blank=True)
     availability = models.CharField(_("availability"), max_length=25, blank=True, choices=Availability.choices)
+    # max length is not entirely clear, however over 50 characters throws errors on facebook
+    facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
+    # max length: see https://support.twitter.com/articles/14609-changing-your-username
+    twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
+
 
     # Private Settings
     primary_language = models.CharField(_("primary language"), max_length=5, help_text=_("Language used for website and emails."), choices=settings.LANGUAGES)

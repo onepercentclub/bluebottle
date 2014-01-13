@@ -26,13 +26,15 @@ App.User = DS.Model.extend({
     date_joined: DS.attr('date'),
     file: DS.attr('string'),
 
+    skills: DS.hasMany('App.Skill'),
+
     // post-only fields (i.e. only used for user creation)
     email: DS.attr('string'),
     password: DS.attr('string'),
 
     getPicture: function() {
         if (this.get('picture')) {
-            return MEDIA_URL + this.get('picture.large')
+            return this.get('picture.large')
         }
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
@@ -54,7 +56,11 @@ App.User = DS.Model.extend({
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
     }.property('date_joined')
+});
 
+// TODO: split this of
+App.User.reopen({
+    user_statistics: DS.attr('object')
 });
 
 /*
@@ -67,7 +73,7 @@ App.User = DS.Model.extend({
 // TODO: fix date issue
 // http://stackoverflow.com/questions/15695809/what-is-the-best-way-to-modify-the-date-format-when-ember-data-does-serializatio
 // https://github.com/toranb/ember-data-django-rest-adapter/issues/26
-// DS.RESTAdapter.registerTransform("isodate", { 
+// DS.RESTAdapter.registerTransform("isodate", {
 //   deserialize: function(serialized) {
 //     return serialized;
 //   },

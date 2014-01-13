@@ -85,7 +85,8 @@ class BlueBottleAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
-        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'availability', 'location', 'website')}),
+        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'availability', 'location', 'website',
+                                   'skills', 'favourite_countries', 'favourite_themes')}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
         (_("Data from old website"), {'fields': ('available_time', 'contribution', 'tags')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
@@ -100,6 +101,8 @@ class BlueBottleAdmin(UserAdmin):
     )
 
     readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
+
+    filter_horizontal = ('skills', 'favourite_countries', 'favourite_themes')
 
     # This post describes how you could put the address closer to the 'Personal Info' section.
     # https://groups.google.com/d/msg/django-users/yUq2Nvx_4eM/30_EkjePrOAJ

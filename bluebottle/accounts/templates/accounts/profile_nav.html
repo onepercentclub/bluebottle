@@ -7,44 +7,45 @@
 
     <div class="l-section account-header">
         <nav class="l-wrapper">
-        
+
             {% block_verbatim profile_nav %}
                 <figure class="account-avatar"><img {{bindAttr src="controllers.currentUser.getAvatar"}} /></figure>
-                
+
                 <header class="account-title">
                     <h2>{% blocktrans %}My 1%{% endblocktrans %}  <em class="account-subtitle">{% trans "Profile" %}</em></h2>
                 </header>
-                
+
                 <a {{action openInBigBox "userModal" controllers.currentUser.content}} class="account-preview btn-link">
                     <span class="flaticon solid eye-1"></span>
                     {% trans "Preview my profile" %}
                 </a>
-                
+
                 <ul class="tabs three">
-                
+
                     {% block_verbatim profile_nav_tabs %}
                     <li class="tab-item tab-first">
-                        {{#linkTo 'userProfile'}}
+                        {{#link-to 'userProfile'}}
                             <span class="tab-icon"><span class="flaticon solid user-2"></span></span>
                             <strong class="tab-title">{% trans "Profile" %} <em class="tab-subtitle">{% trans "Public info" %}</em></strong>
-                        {{/linkTo}}
+                        {{/link-to}}
                     </li>
-    
+
                     <li class="tab-item">
-                        {{#linkTo 'userSettings'}}
+                        {{#link-to 'userSettings'}}
                             <span class="tab-icon"><span class="flaticon solid settings-2"></span></span>
                             <strong class="tab-title">{% trans "Account" %} <em class="tab-subtitle">{% trans "Settings" %}</em></strong>
-                        {{/linkTo}}
+                        {{/link-to}}
                     </li>
-                    
+
                     {% endblock_verbatim profile_nav_tabs %}
+
                 </ul>
-            
+
             {% endblock_verbatim profile_nav %}
-            
+
         </nav>
     </div>
-    
+
     <div class="l-section account-details">
         <section class="l-wrapper">
             <div class="l-content">
@@ -53,7 +54,7 @@
             </div>
         </section>
     </div>
-    
+
 </div>
 
 {% endtplhandlebars %}

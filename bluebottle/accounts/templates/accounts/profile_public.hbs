@@ -1,0 +1,22 @@
+{% load bb_ember i18n %}
+
+{% tplhandlebars "user_modal" %}
+<div id="profile-preview">
+    <div class="modal-header">
+        <figure class="profile-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
+
+        <header class="profile-header">
+            <h3>{{ first_name }} {{ last_name }}</h3>
+            <p class="member-since">
+                {% trans "Member since" %}
+                {{user_since}}
+            </p>
+        </header>
+    </div>
+
+    <div class="modal-body">
+        {% block profile_model_content %}
+        {% endblock profile_model_content %}
+    </div>
+</div>
+{% endtplhandlebars %}

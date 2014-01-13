@@ -70,19 +70,21 @@ App.ProjectIndexRoute = Em.Route.extend({
             controller.set('page', 1);
 
             // Set some variables for WallPostNew controllers
-            model = controller.get('model');
             this.controllerFor('mediaWallPostNew').set('parentId', parentId);
             this.controllerFor('mediaWallPostNew').set('parentType', 'project');
-            this.controllerFor('mediaWallPostNew').set('wallPostList', model);
             this.controllerFor('textWallPostNew').set('parentId', parentId);
             this.controllerFor('textWallPostNew').set('parentType', 'project');
-            this.controllerFor('textWallPostNew').set('wallPostList', model);
 
             // Load wall-posts for this project
             var store = this.get('store');
             store.find('wallPost', {'parent_type': 'project', 'parent_id': parentId}).then(function(items){
                 controller.set('meta', items.get('meta'));
                 controller.set('model', items.toArray());
+
+                // Set the list for WallPostNew controllers
+                model = controller.get('model');
+                controller.controllerFor('mediaWallPostNew').set('wallPostList', model);
+                controller.controllerFor('textWallPostNew').set('wallPostList', model);
             });
         }
     }

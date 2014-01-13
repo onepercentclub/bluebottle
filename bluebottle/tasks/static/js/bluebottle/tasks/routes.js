@@ -150,23 +150,27 @@ App.TaskIndexRoute = Em.Route.extend({
         // Only reload wall-posts if switched to another project.
         var parentId = this.modelFor('task').get('id');
 
-
-        // Set some variables for WallPostNew controllers
-        model = controller.get('model');
-        this.controllerFor('mediaWallPostNew').set('parentId', parentId);
-        this.controllerFor('mediaWallPostNew').set('parentType', 'task');
-        this.controllerFor('mediaWallPostNew').set('wallPostList', model);
-        this.controllerFor('textWallPostNew').set('parentId', parentId);
-        this.controllerFor('textWallPostNew').set('parentType', 'task');
-        this.controllerFor('textWallPostNew').set('wallPostList', model);
-
         if (controller.get('parentId') != parentId){
             controller.set('page', 1);
             controller.set('parentId', parentId);
+            var route = this;
+            var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
+            var textWallPostNewController = this.controllerFor('textWallPostNew');
+
             var store = this.get('store');
             store.find('wallPost', {'parent_type': 'task', 'parent_id': parentId}).then(function(items){
                 controller.set('meta', items.get('meta'));
                 controller.set('model', items.toArray());
+
+                // Set some variables for WallPostNew controllers
+                model = controller.get('model');
+                mediaWallPostNewController.set('parentId', parentId);
+                mediaWallPostNewController.set('parentType', 'task');
+                mediaWallPostNewController.set('wallPostList', model);
+
+                textWallPostNewController.set('parentId', parentId);
+                textWallPostNewController.set('parentType', 'task');
+                textWallPostNewController.set('wallPostList', model);
             });
         }
     }

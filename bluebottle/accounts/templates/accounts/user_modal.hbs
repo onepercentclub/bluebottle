@@ -2,12 +2,11 @@
 
 {% tplhandlebars "user_modal" %}
 <div id="profile-preview">
-	<a class="close" rel="close">&times;</a>
     <div class="modal-header">
         <figure class="profile-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
 
         <header class="profile-header">
-            <h3 class="member-name">{{ full_name }}</h3>
+            <h3>{{ first_name }} {{ last_name }}</h3>
             <p class="member-since">
                 {% trans "Member since" %}
                 {{user_since}}
@@ -15,40 +14,9 @@
         </header>
     </div>
 
-	<div class="model-body profile-badges">
-        <ul class="account-achievements">
-            <li>
-				<img class="account-achievement-icon" src="http://placehold.it/75x75">
-                <strong>{{user_statistics.projects_supported}}</strong><br /> 
-				{% trans "projects" %}<br />
-				{% trans "supported" %}
-            </li>
-            <li>
-				<img class="account-achievement-icon" src="http://placehold.it/75x75">
-                <strong>{{user_statistics.tasks_realized}}</strong><br /> 
-				{% trans "tasks" %}<br />
-				{% trans "realized" %}
-            </li>
-            <li>
-				<img class="account-achievement-icon" src="http://placehold.it/75x75">
-                <strong>{{user_statistics.hours_spent}}</strong><br />
-				{% trans "hours spent" %}<br /> 
-				{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}
-            </li>
-        </ul>
-	</div>
-	
-	<div class="modal-footer profile-preview-actions">
-		<a {{action 'closeAllModals'}} class="close-link" rel="close">&times; Close</a>
-		{{#link-to "viewProfile" id class="go-to-profile" rel="close"}}
-			View full profile &rsaquo;
-		{{/link-to}}
-	</div>
-	{{!--}}
     <div class="modal-body">
         {% block profile_model_content %}
         {% endblock profile_model_content %}
     </div>
-	{{--}}
 </div>
 {% endtplhandlebars %}

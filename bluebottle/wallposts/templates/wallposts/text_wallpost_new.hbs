@@ -1,0 +1,27 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "textWallPostNew" %}
+
+    <fieldset>
+       <ul>
+            <li class="control-group">
+                <label for="wallpost-update" class="control-label">{% trans "Comment" %}</label>
+
+                <div class="controls">
+                    {{view Ember.TextArea valueBinding="text" cols="50" rows="4" name="wallpost-update" id="wallpost-update"}}
+                </div>
+
+                {{#if errors.text }}
+                    <div class="has-errors">{{#each errors.text}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+
+    <button class="btn btn-iconed" {{action "saveWallPost"}}><span class="flaticon solid thinking-comment-1"></span>{% trans "Comment" %}</button>
+
+{% endtplhandlebars %}
+
+

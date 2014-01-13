@@ -15,6 +15,11 @@
                 {% endblock form_meta %}
             </legend>
 
+            {{ skills.length }}
+            {{#each skill in skills }}
+                {{ skill.name }}<br/>
+            {{ /each }}
+
             {% block_verbatim fieldset1 %}
                 <fieldset>
                     <ul>

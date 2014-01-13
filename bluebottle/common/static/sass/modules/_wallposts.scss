@@ -217,6 +217,9 @@
 		padding: $base-padding;
 		text-align: center;
 		margin-bottom: $base-margin;
+        .wallpost-form {
+            display: none;
+        }
 		.wallpost-post-update {
 			color: $color-primary;
 		}

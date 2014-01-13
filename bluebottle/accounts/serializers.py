@@ -13,6 +13,7 @@ from .models import BlueBottleUser
 # TODO: move imports to retain modularity
 from bluebottle.tasks.models import Task, TaskMember
 
+
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually embedded into other serializers.
@@ -75,8 +76,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
 
     website = URLField(required=False)
 
-    # TODO: extend this serializer with abstract base model
-    skills = serializers.PrimaryKeyRelatedField(many=True)
+    skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills')
     favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
     favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
     tags = TagSerializer()
@@ -87,7 +87,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
         model = BlueBottleUser
         #TODO: add       * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'skills', 'favourite_countries', 'favourite_themes',
+                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_countries', 'favourite_themes',
                   'tags', 'user_statistics')
 
 

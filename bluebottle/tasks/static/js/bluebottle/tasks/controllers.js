@@ -135,7 +135,6 @@ App.TaskIndexController = Em.ArrayController.extend({
     perPage: 5,
     page: 1,
 
-
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
@@ -158,14 +157,15 @@ App.TaskIndexController = Em.ArrayController.extend({
             });
         }
     },
-    isOwner: function() {
+
+    canAddMediaWallPost: function() {
         var username = this.get('controllers.currentUser.username');
-        var ownername = this.get('controllers.task.model.owner.username');
+        var ownername = this.get('controllers.task.model.author.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.task.model.owner', 'controllers.currentUser.username')
+    }.property('controllers.task.model.author', 'controllers.currentUser.username')
 
 });
 

@@ -148,6 +148,8 @@ App.ProjectIndexController = Em.ArrayController.extend({
     perPage: 5,
     page: 1,
 
+    parentType: 'project',
+
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
@@ -164,13 +166,14 @@ App.ProjectIndexController = Em.ArrayController.extend({
         showMore: function() {
             var controller = this;
             var page = this.incrementProperty('page');
-            var id = this.get('controllers.project.model.id');
-            App.WallPost.find({'parent_type': 'project', 'parent_id': id, page: page}).then(function(items){
+            var parent_id = this.get('parentId');
+            var parent_type = this.get('parentId');
+            App.WallPost.find({'parent_type': parent_type, 'parent_id': parent_id, page: page}).then(function(items){
                 controller.get('model').pushObjects(items.toArray());
             });
         }
     },
-    isProjectOwner: function() {
+    canAddMediaWallPost: function() {
         var username = this.get('controllers.currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {

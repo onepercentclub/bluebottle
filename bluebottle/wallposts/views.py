@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 import django_filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import permissions
@@ -35,12 +36,22 @@ class WallPostList(ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
+        print parent_type
+        print parent_id
+
+        white_listed_apps = ['projects', 'tasks', 'fundraisers']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(name=parent_type)
+        queryset = queryset.filter(content_type=content_type)
+
         if parent_type == 'project' and parent_id:
             try:
                 project = Project.objects.get(slug=parent_id)
             except Project.DoesNotExist:
                 return WallPost.objects.none()
             queryset = queryset.filter(object_id=project.id)
+
+        else:
+            queryset = queryset.filter(object_id=parent_id)
 
         queryset = queryset.order_by('-created')
         return queryset

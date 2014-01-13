@@ -71,12 +71,17 @@ App.TextWallPostNewView = Em.View.extend({
     templateName: 'textWallPostNew',
     tagName: 'form',
     elementId: 'wallpost-form',
-    toggleForm: function(){
-        this.$('.wallpost-form').slideToggle();
+    actions: {
+        toggleForm: function(){
+            this.$('.wallpost-form').slideToggle();
+        }
     },
     hideForm: function(){
-        this.$('.wallpost-form').hide();
-    }.property('id')
+        // Close the form if a Wallpost is created.
+        if (this.get('controller.model.id')){
+            this.$('.wallpost-form').slideUp();
+        }
+    }.observes('controller.model.id')
 
 });
 

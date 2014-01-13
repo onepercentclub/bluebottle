@@ -85,7 +85,7 @@
             <ul>
             <li {{bindAttr class="errors.text.length:error"}}>
                 <span class="member-avatar">
-                    <img {{bindAttr src="controllers.currentUser.avatar" title="controllers.currentUser.fullname"}} alt="You" />
+                    <img {{bindAttr src="controllers.currentUser.getAvatar" title="controllers.currentUser.fullname"}} alt="You" />
                 </span>
 
                 {{#each errors.text}}

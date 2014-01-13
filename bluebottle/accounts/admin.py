@@ -1,11 +1,15 @@
 from django import forms
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from .models import BlueBottleUser, UserAddress
+from .models import UserAddress
 
+
+BB_USER_MODEL = get_user_model()
 
 class UserAddressAdmin(admin.StackedInline):
     model = UserAddress
@@ -29,15 +33,15 @@ class BlueBottleUserCreationForm(forms.ModelForm):
                                 help_text=_("Enter the same password as above, for verification."))
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         fields = ("email",)
 
     def clean_email(self):
         # Since BlueBottleUser.email is unique, this check is redundant but it sets a nicer error message than the ORM.
         email = self.cleaned_data["email"]
         try:
-            BlueBottleUser._default_manager.get(email=email)
-        except BlueBottleUser.DoesNotExist:
+            BB_USER_MODEL._default_manager.get(email=email)
+        except BB_USER_MODEL.DoesNotExist:
             return email
         raise forms.ValidationError(self.error_messages['duplicate_email'])
 
@@ -66,7 +70,7 @@ class BlueBottleUserChangeForm(forms.ModelForm):
                                                      "using <a href=\"password/\">this form</a>."))
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
 
     def __init__(self, *args, **kwargs):
         super(BlueBottleUserChangeForm, self).__init__(*args, **kwargs)
@@ -81,12 +85,12 @@ class BlueBottleUserChangeForm(forms.ModelForm):
         return self.initial["password"]
 
 
-class BlueBottleAdmin(UserAdmin):
+class BlueBottleUserAdmin(UserAdmin):
+    # TODO: this should be easier to override
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
-        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'availability', 'location', 'website',
-                                   'skills', 'favourite_countries', 'favourite_themes')}),
+        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'availability', 'location', 'website')}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
         (_("Data from old website"), {'fields': ('available_time', 'contribution', 'tags')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
@@ -101,8 +105,6 @@ class BlueBottleAdmin(UserAdmin):
     )
 
     readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
-
-    filter_horizontal = ('skills', 'favourite_countries', 'favourite_themes')
 
     # This post describes how you could put the address closer to the 'Personal Info' section.
     # https://groups.google.com/d/msg/django-users/yUq2Nvx_4eM/30_EkjePrOAJ
@@ -121,5 +123,5 @@ class BlueBottleAdmin(UserAdmin):
 
     login_as_user.allow_tags = True
 
-
-admin.site.register(BlueBottleUser, BlueBottleAdmin)
+if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
+    admin.site.register(BB_USER_MODEL, BlueBottleUserAdmin)

@@ -4,11 +4,14 @@
 <div id="profile-preview">
 	<a class="close" rel="close">&times;</a>
     <div class="modal-header">
-        <figure class="profile-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
+        <figure class="profile-avatar">
+			<img {{bindAttr src="getAvatar"}} />
+		</figure>
 
         <header class="profile-header">
             <h3 class="member-name">{{ full_name }}</h3>
-            <p class="member-since">
+        
+		    <p class="member-since">
                 {% trans "Member since" %}
                 {{user_since}}
             </p>
@@ -43,7 +46,9 @@
 	
 	<div class="modal-footer profile-preview-actions">
 		<a class="close-link" rel="close">&times; Close</a>
-		{{#link-to "viewProfile" id class="go-to-profile" rel="close"}}View full profile &rsaquo;{{/link-to}}
+		{{#link-to "viewProfile" id class="go-to-profile" rel="close"}}
+			View full profile &rsaquo;
+		{{/link-to}}
 	</div>
 	
 	{{!--}}

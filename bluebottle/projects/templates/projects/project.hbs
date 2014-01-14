@@ -28,8 +28,9 @@
 
             </div>
         </section>
-				
-		{% if fund in bb_apps %}
+
+        {% if 'projects' in bb_apps %}
+        {% block_verbatim 'project-funding' %}		
         {{#if isFundable}}
             <section class="l-wrapper">
                 <div class="project-status">
@@ -54,7 +55,11 @@
                             {% trans "raised" %}
                         </p>
 
-                        <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
+                        <div class="project-fund-amount-slider">
+							<strong style="width: 0%;" class="slider-progress is-in-progress">
+								<em class="slider-percentage">0%</em>
+							</strong>
+						</div>
                     </div>
 
                     <div class="project-action">
@@ -85,9 +90,9 @@
                     {{/if}}
                 </div>
             </section>
-        {{/if}}
-		{% endif %}		
-		
+        {{/if}}		
+        {% endblock_verbatim %}
+        {% endif %}
     </div>
 
     <div class="l-section" id="project-members">

@@ -298,7 +298,7 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend({
     needs: ['currentUser'],
 
-    actions: {
+    events: {
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
             if (!user.get('id_for_ember')) {
@@ -414,13 +414,6 @@ App.ApplicationRoute = Em.Route.extend({
                     route.transitionTo('project', project);
                     route.transitionTo('projectTask', task);
                 });
-            });
-        },
-        showNews: function(news_id) {
-            var route = this;
-            App.News.find(news_id).then(function(news) {
-                route.transitionTo('newsItem', news);
-                window.scrollTo(0, 0);
             });
         },
         showPage: function(page_id) {

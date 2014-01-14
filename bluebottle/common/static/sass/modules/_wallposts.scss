@@ -213,12 +213,22 @@
 		@include grid(24,1,0);		
 	}
 	.wallpost-action {
+		
 		border: 3px dashed $gray-light;
 		padding: $base-padding;
 		text-align: center;
 		margin-bottom: $base-margin;
+		
         .wallpost-form {
+			
             display: none;
+			
+			.errors {
+				p {
+					color: red;
+					text-align: left;
+				}
+			}
 			.form-wallpost-photos {
 				margin-top: $base-margin;
 				@include clear;
@@ -234,7 +244,9 @@
 				}
 			}
 			.tabs {
+				
 				margin: 0;
+				
 				.tab-item {
 					&.active {
 						background: $gray-dark;

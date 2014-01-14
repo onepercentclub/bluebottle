@@ -23,7 +23,7 @@
 	                <span class="wallpost-timestamp">{{ localize created formatting="X" }}</span>
 	            {{/if}}
 	            {{#if isAuthor}}
-	                <a {{ action "editWallPost" target="view" }} class="flaticon stroke pencil-2 wallpost-edit"></a>
+	                <a {{ action "editWallPost" this }} class="flaticon stroke pencil-2 wallpost-edit"></a>
 	            {{/if}}
 	        </div>
 

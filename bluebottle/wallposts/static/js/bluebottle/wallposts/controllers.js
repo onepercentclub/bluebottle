@@ -22,12 +22,21 @@ App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
             var model = this.get('model');
             model.deleteRecord();
             model.save();
-        }
+        },
+		editWallPost: function() {
+			console.log("edit");
+		}
     }
 });
 
 App.TaskWallPostListController = Em.ArrayController.extend({
-    needs: ['currentUser']
+    needs: ['currentUser'],
+	
+	actions: {
+		editWallPost: function() {
+			console.log("edit");
+		}
+	}
 });
 
 

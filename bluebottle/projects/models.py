@@ -33,6 +33,9 @@ class ProjectTheme(models.Model):
         return self.name
 
     def save(self, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+
         super(ProjectTheme, self).save(**kwargs)
 
 
@@ -160,8 +163,8 @@ class Project(models.Model):
         return reverse('project_detail', kwargs={'slug': self.slug})
 
     def get_absolute_frontend_url(self):
+        """ Insert the hashbang, after the language string """
         url = self.get_absolute_url()
-        # insert the hashbang, after the language string
         bits = url.split('/')
         url = '/'.join(bits[:2] + ['#!'] + bits[2:])
         return url

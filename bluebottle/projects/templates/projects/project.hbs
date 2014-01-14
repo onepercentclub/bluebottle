@@ -28,6 +28,8 @@
 
             </div>
         </section>
+
+		{% if fund in bb_apps %}
         {{#if isFundable}}
             <section class="l-wrapper">
                 <div class="project-status">
@@ -84,6 +86,8 @@
                 </div>
             </section>
         {{/if}}
+		{% endif %}
+		
     </div>
 
     <div class="l-section" id="project-members">

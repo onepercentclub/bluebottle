@@ -188,6 +188,16 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property('status')
 });
 
+App.MyTaskMemberController = Em.ObjectController.extend({
+    actions: {
+        editTimeSpent: function() {
+            this.set('isEditing', true);
+            console.log(this.get('itemController'));
+        }
+    },
+
+    isEditing: false
+});
 
 App.TaskNewController = Em.ObjectController.extend({
     needs: ['project', 'currentUser', 'tasksIndex'],

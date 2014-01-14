@@ -112,20 +112,13 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
         console.log("Key: ", key);
         console.log("Relationship: ", relationship);
         console.log("Relationship key: ", relationship.key);
-        console.log("Relationship key: ", key);
 
-        var skill_ids = record.get(relationship.key).map(function(item){
+        var ids = record.get(relationship.key).map(function(item){
             console.log("Item: ", item);
             return item.id;
         });
-        console.log("Skill ids: ", skill_ids);
-        hash[key] = skill_ids;
-
-        // console.log("Record attributes");
-        // record.eachAttribute(function(name, attribute){
-        //     console.log(name);
-        //     console.log(attribute);
-        // });
+        console.log("Ids: ", ids);
+        hash[key] = ids;
     }
 });
 

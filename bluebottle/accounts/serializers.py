@@ -85,7 +85,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
 
     # TODO: extend this serializer with abstract base model
     skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills')
-    favourite_countries = serializers.PrimaryKeyRelatedField(many=True)
+    favourite_country_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_countries")
     favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
     tags = TagSerializer()
 
@@ -95,7 +95,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
         model = BlueBottleUser
         #TODO: add       * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_countries', 'favourite_themes',
+                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_themes',
                   'tags', 'user_statistics')
 
 

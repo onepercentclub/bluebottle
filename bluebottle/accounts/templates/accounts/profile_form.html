@@ -36,11 +36,7 @@
                       
                        {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills type="Skill" available_label="Available skills" }}
 
-                       {{#each country in favourite_countries}}
-                            {{ country }} 
-                       {{/each}}
-
-                        {{bb-multiple-selected-items selected_label="Selected Countries" selectedItems=favourite_countries availableItems=allCountries type="Country" available_label="Available Countries" }}
+                      
 
                         {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
 

@@ -140,7 +140,7 @@ class TaskMember(models.Model):
 
     motivation = models.TextField(_("Motivation"), help_text=_("Motivation by applicant."), blank=True)
     comment = models.TextField(_("Comment"), help_text=_("Comment by task owner."), blank=True)
-    time_spent = models.PositiveSmallIntegerField(_('time spent'), default=0, help_text=_("Time spent executing this task."))
+    time_spent = models.PositiveSmallIntegerField(_('"time spent'), default=0, help_text=_("Time spent executing this task."))
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))

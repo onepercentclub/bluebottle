@@ -76,8 +76,9 @@ App.WallPost = DS.Model.extend({
 		return this.get("photos").toArray()[0];
 	}.property("photos"),
 	
-	normalPhotos: function() {
-		return this.get("photos").slice(1,-1)
+	otherPhotos: function() {
+		var photos = this.get("photos").toArray();
+		return photos.slice(1,photos.length);
 	}.property("photos")
 	
 });

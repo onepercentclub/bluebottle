@@ -219,6 +219,48 @@
 		margin-bottom: $base-margin;
         .wallpost-form {
             display: none;
+			.form-wallpost-photos {
+				margin-top: $base-margin;
+				@include clear;
+				.form-wallpost-photo {
+					position: relative;
+					@include grid(12,0,1);
+					.manage-delete {
+						position: absolute;
+						top: -8px;
+						right: -8px;
+						text-decoration: none;
+					}
+				}
+			}
+			.tabs {
+				margin: 0;
+				.tab-item {
+					&.active {
+						background: $gray-dark;
+						a {
+							color: $white;							
+						}
+					}
+				}
+			}
+			.btn-upload {
+				float: right;
+				color: $white;
+			}
+			.btn-save {
+				background-color: $color-primary;
+			}
+			.btn-cancel {
+				background-color: $color-secondary;
+			}
+			.video-container, .photos-container {
+				background: $gray-dark;
+				padding: $base-padding;
+			}
+			.video-container {
+				display: none;
+			}
         }
 		.wallpost-post-update {
 			color: $color-primary;

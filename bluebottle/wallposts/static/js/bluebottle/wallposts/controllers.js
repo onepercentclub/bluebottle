@@ -71,7 +71,24 @@ App.TextWallPostNewController = Em.ObjectController.extend({
                 controller.set('errors', record.get('errors'));
             });
             wallPost.save();
-        }
+        },
+		
+		showImages: function(event) {
+			console.log(event);
+			$(".photos-tab").addClass("active");
+			$(".video-tab").removeClass("active");
+
+			$(".video-container").hide();
+			$(".photos-container").show();
+		},
+		
+		showVideo: function() {
+			$(".photos-tab").removeClass("active");
+			$(".video-tab").addClass("active");
+
+			$(".video-container").show();
+			$(".photos-container").hide();			
+		},
     },
 
     createNewWallPost: function() {

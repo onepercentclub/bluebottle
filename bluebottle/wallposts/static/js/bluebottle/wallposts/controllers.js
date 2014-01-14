@@ -135,6 +135,7 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
             });
             wallPost.save();
         }
+		
     },
 
     addFile: function(file) {

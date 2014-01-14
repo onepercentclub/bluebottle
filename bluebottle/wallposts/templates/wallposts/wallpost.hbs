@@ -41,8 +41,17 @@
 
 	        {{#if photos.length}}
 	            <ul class="photo-viewer">
-	                {{#each photo in photos}}
-	                    <li class="photo"><a {{bindAttr href="photo.photo.full"}} title="picture"><img {{bindAttr src="photo.photo.small"}} /></a></li>
+					<li class="photo cover">
+						<a {{bindAttr href="coverPhoto.photo.full"}} title="picture">
+							<img {{bindAttr src="coverPhoto.photo.full"}}>
+						</a>
+					</li>
+					{{#each photo in normalPhotos}}
+	                    <li class="photo">
+							<a {{bindAttr href="photo.photo.full"}} title="picture">
+								<img {{bindAttr src="photo.photo.small"}} />
+							</a>
+						</li>
 	                {{/each}}
 	            </ul>
 	        {{/if}}

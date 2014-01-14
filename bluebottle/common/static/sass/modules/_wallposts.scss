@@ -323,7 +323,13 @@
 			color: $black;
 		}
 	}
-	
+	.wallpost-content {
+		.photo-viewer {
+			.cover {
+				@include grid(48,0,0);
+			}
+		}
+	}
 	.wallpost-reactions {
 		
 		margin: -$base-margin;

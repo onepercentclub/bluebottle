@@ -74,7 +74,7 @@ App = Em.Application.create({
         });
 
 	App.ProjectPhase.find().then(function(data){
-	    
+
 	    var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
 
 	    App.ProjectPhaseSelectView.reopen({
@@ -182,7 +182,7 @@ App.Adapter = DS.DRF2Adapter.extend({
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
         "homepage": "homepage",
-        "pages/contact": "pages/contact"
+        "pages/contact": "pages/contact",
     }
 });
 

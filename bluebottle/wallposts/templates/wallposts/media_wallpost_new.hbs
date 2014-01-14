@@ -13,12 +13,9 @@
             <fieldset>
                 <ul>
                     <li class="control-group">
-                        <label class="control-label" for="wallpost-title">
-                            {% trans "Name of your update." %}
-                        </label>
 
                         <div class="controls">
-                            {{view Ember.TextField valueBinding="title" placeholder="Keep it short and simple" id="wallpost-title" name="wallpost-title" classBinding="errors.title.length:error"}}
+                            {{view Ember.TextField valueBinding="title" placeholder="Title of your wallpost" id="wallpost-title" name="wallpost-title" classBinding="errors.title.length:error"}}
                         </div>
 
                         {{#if errors.title }}
@@ -27,12 +24,9 @@
                     </li>
 
                     <li class="control-group">
-                        <label class="control-label" for="wallpost-update">
-                            {% trans "Your update." %}
-                        </label>
 
                         <div class="controls">
-                            {{view Ember.TextArea valueBinding="text" placeholder="Tell something about the progress, context or yourself!" cols="50" rows="4" name="wallpost-update" id="wallpost-update" classBinding="errors.text.length:error"}}
+                            {{view Ember.TextArea valueBinding="text" cols="50" rows="4" name="wallpost-update" id="wallpost-update" classBinding="errors.text.length:error"}}
                         </div>
 
                         {{#if errors.text }}
@@ -87,8 +81,10 @@
                     </li>
                 </ul>
             </fieldset>
+			
+            <button class="btn btn-iconed" {{action 'saveWallPost' target='controller'}}>{% trans "Cancel" %}</button>
 
-            <button class="btn btn-iconed" {{action 'saveWallPost' target='controller'}}><span class="flaticon solid thinking-comment-1"></span>{% trans "Post Update" %}</button>
+            <button class="btn btn-iconed" {{action 'saveWallPost' target='controller'}}>{% trans "Post" %}</button>
 
         </div>
     </div>

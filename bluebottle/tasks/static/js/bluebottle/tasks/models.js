@@ -15,6 +15,10 @@ App.Adapter.map('App.TaskPreview', {
 App.Adapter.map('App.TaskMember', {
     member: {embedded: 'load'}
 });
+App.Adapter.map('App.MyTaskMember', {
+    member: {embedded: false},
+    task: {embedded: 'load'}
+});
 App.Adapter.map('App.TaskFile', {
     author: {embedded: 'load'}
 });
@@ -44,6 +48,14 @@ App.TaskMember = DS.Model.extend({
     isStatusRealized: function(){
         return (this.get('status') == 'realized');
     }.property('status')
+});
+
+App.MyTaskMember = App.TaskMember.extend({
+    url: 'tasks/members/my-task',
+
+    task: DS.belongsTo('App.TaskPreview'),
+    time_spent: DS.attr('number')
+    // TODO: validation, time_spent can't be greater than 8
 });
 
 App.TaskFile = DS.Model.extend({

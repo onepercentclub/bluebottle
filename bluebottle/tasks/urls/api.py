@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url, include
 from surlex.dj import surl
 from ..views import (TaskDetail, TaskList, TaskWallPostList, TaskWallPostDetail, TaskMemberList, TaskMemberDetail,
-                    TaskFileList, TaskFileDetail, TaskPreviewList, SkillList)
+                    TaskFileList, TaskFileDetail, TaskPreviewList, SkillList, MyTaskMemberList)
 
 
 urlpatterns = patterns('',
@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     # Task Members
     url(r'^members/$', TaskMemberList.as_view(), name='task-member-list'),
     surl(r'^members/<pk:#>$', TaskMemberDetail.as_view(), name='task-member-detail'),
+    url(r'^members/my-tasks/$', MyTaskMemberList.as_view(), name='my-task-member-list'),
 
     # Task Files
     url(r'^files/$', TaskFileList.as_view(), name='task-member-list'),

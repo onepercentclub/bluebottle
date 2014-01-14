@@ -16,7 +16,9 @@ from bluebottle.wallposts.models import WallPost
 
 from .models import Task, TaskMember, TaskFile, Skill
 from .permissions import  IsTaskAuthorOrReadOnly
-from .serializers import TaskSerializer, TaskMemberSerializer, TaskWallPostSerializer, TaskFileSerializer, TaskPreviewSerializer, SkillSerializer
+from .serializers import (
+    TaskSerializer, TaskMemberSerializer, TaskWallPostSerializer, TaskFileSerializer, TaskPreviewSerializer,
+    SkillSerializer, MyTaskMemberSerializer)
 
 
 class TaskPreviewList(generics.ListAPIView):
@@ -141,6 +143,16 @@ class TaskMemberList(generics.ListCreateAPIView):
         # When creating a task member it should always be by the request.user and have status 'applied'
         obj.member = self.request.user
         obj.status = TaskMember.TaskMemberStatuses.applied
+
+
+class MyTaskMemberList(generics.ListAPIView):
+    model = TaskMember
+    serializer_class = MyTaskMemberSerializer
+
+    def get_queryset(self):
+        queryset = super(MyTaskMemberList, self).get_queryset()
+        # valid_statuses = [TaskMember.TaskMemberStatuses.accepted, TaskMember.TaskMemberStatuses.realized]
+        return queryset.filter(member=self.request.user)#, status__in=valid_statuses)
 
 
 class TaskMemberDetail(generics.RetrieveUpdateAPIView):

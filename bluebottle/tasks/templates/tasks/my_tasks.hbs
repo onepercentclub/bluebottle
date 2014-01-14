@@ -1,0 +1,31 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "myTaskList" %}
+
+    <div class="l-section">
+        <section class="l-wrapper">
+            {{#if model.isLoaded}}
+                <ul id="search-results">
+                    {{#each taskMember in model}}
+
+                        <dl>
+                            <dt>{% trans "Task" %}</dt>
+                            <dd>{{taskMember.task.title}} ({{taskMember.task.project.title}})</dd>
+                            <dt>{% trans "Status" %}</dt>
+                            <dd>{{taskMember.status}}</dd>
+                            <dt>{% trans "Time spent" %}</dt>
+                            <dd>{{taskMember.time_spent}}</dd>
+                        </dl>
+
+                    {{else}}
+                        <li class="no-results">{% trans "No tasks found." %}</li>
+                    {{/each}}
+                </ul>
+            {{else}}
+                <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading your tasks..." %}</strong></div>
+            {{/if}}
+        </section>
+    </div>
+
+{% endtplhandlebars %}

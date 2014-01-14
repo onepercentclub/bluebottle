@@ -29,7 +29,7 @@
             </div>
         </section>
         {% if 'fund' in bb_apps %}
-            {% block_verbatim 'project-funding' %}
+        {% block_verbatim 'project-funding' %}		
             {{#if isFundable}}
                 <section class="l-wrapper">
                     <div class="project-status">
@@ -76,6 +76,7 @@
                             <em>{% trans "completed" %}</em>
                         {% endcomment %}
                         </div>
+
                         {{#if campaign}}
                             <div class="project-fund l-one-third">
                                 <p class="project-fund-amount">

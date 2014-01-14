@@ -7,15 +7,21 @@
         <section class="l-wrapper">
             {{#if model.isLoaded}}
                 <ul id="search-results">
-                    {{#each taskMember in model}}
+                    {{#each itemController="myTaskMember"}}
 
                         <dl>
                             <dt>{% trans "Task" %}</dt>
-                            <dd>{{taskMember.task.title}} ({{taskMember.task.project.title}})</dd>
+                            <dd>{{task.title}} ({{task.project.title}})</dd>
                             <dt>{% trans "Status" %}</dt>
-                            <dd>{{taskMember.status}}</dd>
-                            <dt>{% trans "Time spent" %}</dt>
-                            <dd>{{taskMember.time_spent}}</dd>
+                            <dd>{{status}}</dd>
+                            <dt>{% trans "Time spent (in hours)" %}</dt>
+                            <dd>
+                                {{#if isEditing}}
+                                    <input class="edit" {{bind-attr value=task.time_needed}}>
+                                {{else}}
+                                    <label {{action 'editTimeSpent' on="doubleClick"}}>{{time_spent}}</label>
+                                {{/if}}
+                            </dd>
                         </dl>
 
                     {{else}}

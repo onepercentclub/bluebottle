@@ -12,6 +12,7 @@
 	            <a {{action openInBigBox "userModal" author}} class="member">
 	                <figure class="member-avatar">
 	                    <img {{bindAttr src="author.getAvatar" alt="author.full_name"}} />
+						{# TODO: only show this when the wall post is from the author of the parent #}
 						<span class="member-function">Initiator</span>
 	                </figure>
 	            </a>

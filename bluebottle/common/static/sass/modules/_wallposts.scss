@@ -230,11 +230,15 @@
 				}
 			}
 			.form-wallpost-photos {
+				
 				margin-top: $base-margin;
 				@include clear;
+				
 				.form-wallpost-photo {
+				
 					position: relative;
 					@include grid(12,0,1);
+				
 					.manage-delete {
 						position: absolute;
 						top: -8px;
@@ -255,6 +259,9 @@
 						}
 					}
 				}
+			}
+			.btn {
+				padding: $base-padding/4 $base-padding/2;
 			}
 			.btn-upload {
 				float: right;
@@ -319,7 +326,7 @@
 			}
 
 			.wallpost-timestamp {
-				color: $gray-light;
+				color: $gray;
 				font-size: $font-size-small;
 			}
 			
@@ -349,18 +356,20 @@
 		margin-bottom: 0;
 		position: relative;
 		
-		&:after {
-			left: 50px;
-			bottom: 100%;
-			border: solid transparent;
-			content: " ";
-			height: 0;
-			width: 0;
-			position: absolute;
-			pointer-events: none;
-			border-bottom-color: $gray-lighter;
-			border-width: 10px;
-			margin-left: -10px;
+		.reactions {
+			&:after {
+				left: 50px;
+				bottom: 100%;
+				border: solid transparent;
+				content: " ";
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-bottom-color: $gray-lighter;
+				border-width: 10px;
+				margin-left: -10px;
+			}	
 		}
 	}
 	
@@ -368,4 +377,46 @@
 		background-color: $color-secondary;
 	}
 	
+	&.important {
+		
+		border: 1px solid $color-primary;
+		
+		.wallpost-author {
+			color: $color-secondary;
+		}
+		.wallpost-title {
+			color: $color-primary;
+		}
+	}
+	.wallpost-buttons {
+		
+		margin: 0 (-$base-margin);
+		padding: $base-padding;
+		background-color: $color-primary;
+		color: $white;
+		text-transform: uppercase;
+		
+		.btn {
+			padding: $base-padding/4 $base-padding/2;
+			vertical-align: middle;
+		}
+		.wallpost-action-decline {
+			color: $black;
+			&:hover {
+				color: $black;
+			}
+		}
+	}
+	.file-link {
+		
+		margin: 0 $base-margin;
+		color: $gray;
+		
+		a {
+			color: $gray;			
+		}
+	}
+	.btn-spacer {
+		margin: 0 $base-margin/2;
+	}
 }

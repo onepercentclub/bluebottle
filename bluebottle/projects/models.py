@@ -24,13 +24,16 @@ class ProjectTheme(models.Model):
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
 
-    def __unicode__(self):
-        return self.name
-
     class Meta:
         ordering = ['name']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
+
+    def __unicode__(self):
+        return self.name
+
+    def save(self, **kwargs):
+        super(ProjectTheme, self).save(**kwargs)
 
 
 class ProjectPhase(models.Model):
@@ -116,16 +119,8 @@ class Project(models.Model):
     video_url = models.URLField(
         _('video'), max_length=100, blank=True, null=True, default='',
         help_text=_('Do you have a video pitch or a short movie that '
-                    "explains your project. Cool! We can't wait to see it. "
+                    "explains your project? Cool! We can't wait to see it! "
                     "You can paste the link to YouTube or Vimeo video here"))
-
-    # Crowd funding
-    currency = models.CharField(max_length='10', default='EUR')
-
-    # For convenience and performance we also store money donated and needed here.
-    money_asked = models.PositiveIntegerField(default=0, null=True)
-    money_donated = models.PositiveIntegerField(default=0, null=True)
-    money_needed = models.PositiveIntegerField(default=0, null=True)
 
     organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
 
@@ -145,7 +140,7 @@ class Project(models.Model):
             counter = 2
             qs = Project.objects
             while qs.filter(slug=original_slug).exists():
-                original_slug = '%s-%d' % (original_slug, counter)
+                original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1
             self.slug = original_slug
 

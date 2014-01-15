@@ -33,20 +33,6 @@
 
                             {# TODO: Error Handling #}
                         </li>
-                      
-                       {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills type="Skill" available_label="Available skills"}}
-
-                       {{bb-multiple-selected-items selected_label="Selected Countries" selectedItems=favourite_countries availableItems=allCountries type="Country" available_label="Available Countries"}}
-
-                       {{bb-multiple-selected-items selected_label="Selected Themes" selectedItems=favourite_themes availableItems=allThemes type="Theme" available_label="Available Themes"}}
-
-                    <fieldset>
-                        <ul>
-                            {{#bb-form-field hint='Add some tags' label='Tags' errors=errors.tags}}
-                                {{view App.TagWidget tagsBinding="tags" classBinding="errors.tags.length:error"}}
-                            {{/bb-form-field}}
-                        </ul>
-                    </fieldset>
 
                     {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
 

@@ -28,12 +28,6 @@
                             {{/link-to}}
                         </li>
                         <li>
-                            {{#link-to "myProject.details"}}
-                                <em {{bindAttr class="validDetails:is-finished:is-unfinished"}}></em>
-                                {% trans "Details" %}
-                            {{/link-to}}
-                        </li>
-                        <li>
                             {{#link-to "myProject.location"}}
                                 <em {{bindAttr class="validLocation:is-finished:is-unfinished"}}></em>
                                 {% trans "Location" %}
@@ -63,7 +57,7 @@
                         </li>
                     </ul>
 
-
+                    {{!--
                     <h4><span class="flaticon solid wallet-1"></span> {% trans "Crowdfunding" %}</h4>
                     <ul class="manage-project-nav">
                         <li>
@@ -87,6 +81,7 @@
                         </li>
                         {{/if}}
                     </ul>
+                    --}}
 
                     {{#link-to "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
                         <span class="flaticon solid right-2"></span>

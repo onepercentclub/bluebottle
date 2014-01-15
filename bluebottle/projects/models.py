@@ -206,6 +206,10 @@ class Project(models.Model):
     def editable(self):
         return self.status.editable
 
+    @property
+    def viewable(self):
+        return self.status.viewable
+
 
 class ProjectDetailField(models.Model):
     class Types(DjangoChoices):

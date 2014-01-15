@@ -1,18 +1,19 @@
-from bluebottle.projects.models import ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail, ProjectTheme
+import logging
+
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 
-
-from babel.numbers import format_currency
 from sorl.thumbnail.admin import AdminImageMixin
-import logging
 
-from .models import Project
+from .models import (
+    Project, ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute,
+    ProjectDetailFieldValue, ProjectDetail, ProjectTheme)
 
 
 logger = logging.getLogger(__name__)
+
 
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
@@ -40,8 +41,9 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     raw_id_fields = ('owner',)
 
-    fields = ('title', 'slug', 'owner', 'status', 'pitch', 'image','description', 'reach',
-              'latitude', 'longitude', 'country', 'video_url', 'money_needed', 'tags')
+    fields = ('title', 'slug', 'owner', 'status', 'pitch', 'image',
+              'description', 'reach', 'latitude', 'longitude', 'country',
+              'video_url', 'tags')
 
     prepopulated_fields = {"slug": ("title",)}
 

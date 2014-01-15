@@ -15,7 +15,9 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectPhase
-        fields = ('id','name','description','sequence','active','editable','viewable')
+        fields = ('id', 'name', 'description', 'sequence', 'active',
+                  'editable', 'viewable')
+
 
 class ProjectCountrySerializer(serializers.ModelSerializer):
     subregion = serializers.CharField(source='subregion.name')
@@ -79,7 +81,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status=serializers.PrimaryKeyRelatedField(read_only=True)
+    status = serializers.PrimaryKeyRelatedField(read_only=True)
     image = ImageSerializer(required=False)
 
     pitch = serializers.CharField(required=False)
@@ -89,7 +91,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
         fields = ('id', 'created', 'title', 'url', 'status', 'image', 'pitch',
                   'tags', 'description', 'country', 'latitude', 'longitude',
                   'reach', 'organization', 'image', 'video_html', 'video_url',
-                  'money_needed', 'editable', 'viewable')
+                  'editable', 'viewable')
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):

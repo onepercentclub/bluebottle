@@ -78,7 +78,7 @@ class ProjectManager(models.Manager):
         return qs
 
 
-class Project(models.Model):
+class BaseProject(models.Model):
     """ The base Project model. """
 
     owner = models.ForeignKey(
@@ -89,7 +89,6 @@ class Project(models.Model):
         _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
 
-    status = models.ForeignKey(ProjectPhase)
 
     # Basics
     title = models.CharField(_('title'), max_length=255, unique=True)
@@ -97,33 +96,19 @@ class Project(models.Model):
     pitch = models.TextField(
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
 
-    tags = TaggableManager(
-        blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
+    status = models.ForeignKey(ProjectPhase)
 
     # Extended Description
     description = models.TextField(
         _('why, what and how'), help_text=_('Blow us away with the details!'),
         blank=True)
-    reach = models.PositiveIntegerField(
-        _('Reach'), help_text=_('How many people do you expect to reach?'),
-        blank=True, null=True)
 
-    # Location
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
 
     # Media
     image = ImageField(
         _('image'), max_length=255, blank=True, upload_to='project_images/',
         help_text=_('Main project picture'))
-    video_url = models.URLField(
-        _('video'), max_length=100, blank=True, null=True, default='',
-        help_text=_('Do you have a video pitch or a short movie that '
-                    "explains your project? Cool! We can't wait to see it! "
-                    "You can paste the link to YouTube or Vimeo video here"))
 
     organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
 
@@ -170,6 +155,7 @@ class Project(models.Model):
         url = '/'.join(bits[:2] + ['#!'] + bits[2:])
         return url
 
+    # TODO: move to mixin
     def get_meta_title(self, **kwargs):
         return u'{name_project} | {country}'.format(
             name_project=self.title,
@@ -209,13 +195,40 @@ class Project(models.Model):
     def viewable(self):
         return self.status.viewable
 
+class CoreProject(BaseProject):
+    pass
 
-class StandardProject(Project):
+    class Meta:
+        swappable = 'PROJECTS_PROJECT_MODEL'
+        db_table = 'projects_project'
+
+class Project(BaseProject):
     """
     Standard Project model. If there are any extra fields required, provide
     your own Project model by extending ``BaseProject``.
     """
-    swappable = 'STANDARD_PROJECT_MODEL'
+    tags = TaggableManager(
+        blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
+
+    # Location
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
+
+
+    reach = models.PositiveIntegerField(
+        _('Reach'), help_text=_('How many people do you expect to reach?'),
+        blank=True, null=True)
+
+    video_url = models.URLField(
+        _('video'), max_length=100, blank=True, null=True, default='',
+        help_text=_('Do you have a video pitch or a short movie that '
+                    "explains your project? Cool! We can't wait to see it! "
+                    "You can paste the link to YouTube or Vimeo video here"))
+
+    class Meta:
+        swappable = 'PROJECTS_PROJECT_MODEL'
 
 
 class ProjectDetailField(models.Model):
@@ -249,7 +262,7 @@ class ProjectDetailFieldAttribute(models.Model):
 
 
 class ProjectDetail(models.Model):
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     field = models.ForeignKey(ProjectDetailField)
     value = models.TextField()
 
@@ -263,7 +276,7 @@ class ProjectBudgetLine(models.Model):
     This is the budget for the amount asked from this
     website.
     """
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     description = models.CharField(_('description'), max_length=255, default='')
     currency = models.CharField(max_length=3, default='EUR')
     amount = models.PositiveIntegerField(_('amount (in cents)'))

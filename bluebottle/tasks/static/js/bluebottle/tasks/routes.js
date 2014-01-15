@@ -3,8 +3,7 @@ App.Router.map(function(){
         this.route('search');
     });
 
-    // route disabled for now, let the backend handle the hours spent
-    // this.resource('myTaskList', {path: '/my/tasks'});
+    this.resource('myTaskList', {path: '/my/tasks'});
     this.resource('task', {path: '/tasks/:task_id'}, function(){
 
     });

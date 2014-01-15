@@ -49,6 +49,14 @@ App.User = DS.Model.extend({
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
 
+    getName: function() {
+        if (this.get('first_name')) {
+            return this.get('first_name')
+        }
+        return this.get('username')
+    }.property('first_name'),
+
+
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
     }.property('date_joined'),

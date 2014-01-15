@@ -18,11 +18,9 @@
             <strong class="member-name">{{ author.full_name }}</strong>
 
 	        <span class="timestamp">{{ localize created formatting="X" }}</span>
-			{{!--}}
 	        {{#if isAuthor}}
-	            <a {{ action "deleteReaction" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
+	            <a {{ action "deleteReaction" target="view" title="Delete"}} class="reaction-delete">&times;</a>
 	        {{/if}}
-			{{--}}
 
 		    <div class="reaction-content">
 		        <div class="text">{{{ text }}}</div>
@@ -30,35 +28,6 @@
 		</div>	
 	</li>
 
-	{# TODO: remove old code? #}
-	{{!--}}
-	<li class="reaction">
-	    <header class="reaction-header">
-
-            <div class="reaction-member">
-
-                <a {{action openInBigBox "memberProfile" author}} class="member">
-                    <span class="member-avatar">
-                        <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.full_name }}" />
-                    </span>
-                    <strong class="member-name">{{ author.full_name }}</strong>
-                </a>
-
-            </div>
-
-            <em class="timestamp">{{ localize created formatting="X" }}</em>
-            {{#if isAuthor}}
-                <a {{ action "deleteReaction" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
-            {{/if}}
-
-	    </header>
-
-        <div class="reaction-content">
-            <div class="text">{{{ text }}}</div>
-        </div>
-		
-	</li>
-	{{--}}
 {% endtplhandlebars %}
 
 
@@ -80,25 +49,24 @@
 	
 
     {{#if controllers.currentUser.isAuthenticated }}
-    <form class="reaction-form">
-        <fieldset>
-            <ul>
-            <li {{bindAttr class="errors.text.length:error"}}>
-                <span class="member-avatar">
-                    <img {{bindAttr src="controllers.currentUser.getAvatar" title="controllers.currentUser.fullname"}} alt="You" />
-                </span>
+        <form class="reaction-form">
+            <fieldset>
+                <ul>
+                <li {{bindAttr class="errors.text.length:error"}}>
+                    <span class="member-avatar">
+                        <img {{bindAttr src="controllers.currentUser.getAvatar" title="controllers.currentUser.fullname"}} alt="You" />
+                    </span>
 
-                {{#each errors.text}}
-                    <span class="error">{{this}}</span>
-                {{/each}}
-				{# TODO: Make the placeholder first name dynamic #}
-                {{view "Em.TextArea" placeholder="Hey Bart, you can leave a comment" valueBinding="newReaction.text" name="reaction" class="newReaction"}}
+                    {{#each errors.text}}
+                        <span class="error">{{this}}</span>
+                    {{/each}}
+                    {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="newReaction"}}
 
-                <button class="btn" type="submit" id="reaction-post">Post</button>
-            </li>
-            </ul>
-        </fieldset>
-    </form>
+                    <button class="btn" type="submit" id="reaction-post">Post</button>
+                </li>
+                </ul>
+            </fieldset>
+        </form>
     {{else}}
         <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#link-to "signup"}}{% trans "member" %}{{/link-to}} {% trans "to leave a reaction" %}.</div>
     {{/if}}

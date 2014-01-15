@@ -4,8 +4,8 @@
 
 {% tplhandlebars "project_members" %}
 
-    <ul class="member-list">
-        <li class="member-initiator">
+    <ul class="project-member-list">
+        <li class="project-member-initiator">
             <ul>
                 <li>
                     <a {{action 'openInBigBox' 'userModal' owner }} class="member">
@@ -19,7 +19,7 @@
         </li>
 
         {{#if team_member}}
-            <li class="member-coaches">
+            <li class="project-member-coaches">
                 <h4>{% trans "Coach" %}</h4>
                 <ul>
                     <li>

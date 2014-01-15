@@ -7,14 +7,10 @@
 <div class="l-section account-header">
     <nav class="l-wrapper">
 
-        <figure class="account-avatar"><img {{bindAttr src="controllers.currentUser.getAvatar"}} /></figure>
-
         <header class="account-title">
-            <h2>{% blocktrans %}My 1%{% endblocktrans %}
+            <h2>{% trans "My Projects"%}
             {{#if title}}
-                <em class="account-subtitle">{{ title }}</em>
-			{{else}}
-			    <em class="account-subtitle">{% trans "Projects" %}</em>
+                : <em class="account-subtitle">{{ title }}</em>
 			{{/if}}
             </h2>
         </header>

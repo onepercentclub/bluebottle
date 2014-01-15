@@ -36,6 +36,18 @@
                                 {% endblock_verbatim %}
                                 {% endif %}
 
+                                {% comment %}
+                                    {% if 'tasks' in bb_apps %}
+                                        {% block_verbatim 'my-tasks-menu-link' %}
+                                            <li>
+                                                {{#link-to 'myTaskList'}}
+                                                    {% trans "My Tasks" %}
+                                                {{/link-to}}
+                                            </li>
+                                        {% endblock_verbatim %}
+                                    {% endif %}
+                                {% endcomment %}
+
                                 <li>
                                     {{#link-to "viewProfile" controllers.currentUser.id_for_ember }}
                                         {% trans "View my profile" %}

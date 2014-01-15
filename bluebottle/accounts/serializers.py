@@ -1,14 +1,20 @@
 from django.conf import settings
 from django import forms
+from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
-from bluebottle.bluebottle_utils.serializers import URLField
-from bluebottle.bluebottle_utils.validators import validate_postal_code
+from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer,
+                                                    TaggableSerializerMixin)
+from bluebottle.utils.serializers import URLField
+from bluebottle.utils.validators import validate_postal_code
 from bluebottle.geo.models import Country
 
-from .models import BlueBottleUser
+
+BB_USER_MODEL = get_user_model()
+
+# TODO: move imports to retain modularity
+from bluebottle.tasks.models import Task, TaskMember, Skill
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
@@ -21,7 +27,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     avatar = SorlImageField('picture', '133x133', crop='center', colorspace="GRAY")
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'username', 'avatar',)
 
 
@@ -34,11 +40,34 @@ class CurrentUserSerializer(UserPreviewSerializer):
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+
+# TODO: move to retain modularity
+class UserStatisticsMixin(object):
+    def get_user_statistics(self, user):
+        num_supported = Task.supported_projects.by_user(user).count()
+        tasks_realized = Task.objects.filter(author=user, status=Task.TaskStatuses.realized).count()
+
+        # hours spent on tasks
+        # import pdb; pdb.set_trace()
+        times_needed = TaskMember.objects.filter(
+                status=TaskMember.TaskMemberStatuses.realized,
+                member=user
+            ).values_list('task__time_needed', flat=True)
+        times_needed = sum([int(t) for t in times_needed if t.isdigit()])
+
+        result = {
+            'projects_supported': num_supported,
+            'tasks_realized': tasks_realized,
+            'hours_spent': times_needed,
+        }
+        return result
+
+
+class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -49,15 +78,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     website = URLField(required=False)
 
-    class Meta:
-        model = BlueBottleUser
-        # TODO: Add * Your skills,
-        #           * interested in themes
-        #           * interested in countries
-        #           * interested in target groups
-        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location')
+    # TODO: extend this serializer with abstract base model
+    skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills')
+    favourite_country_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_countries")
+    favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_themes")
+    tags = TagSerializer()
 
+    user_statistics = serializers.SerializerMethodField('get_user_statistics')
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
+                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_theme_ids',
+                  'tags', 'user_statistics')
 
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
@@ -111,7 +144,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         return attrs
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         # TODO: Add * password update using password field.
         #           * Facebook connect
         fields = ('id', 'email', 'share_time_knowledge', 'share_money', 'newsletter', 'gender', 'birthdate',
@@ -145,7 +178,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password')
 
 

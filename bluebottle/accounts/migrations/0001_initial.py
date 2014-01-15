@@ -11,10 +11,6 @@ class Migration(SchemaMigration):
         ('geo', '0001_initial'),
     )
 
-    needed_by = (
-        ('social_auth', '0001_initial'),
-    )
-
     def forwards(self, orm):
         # Adding model 'BlueBottleUser'
         db.create_table(u'accounts_bluebottleuser', (
@@ -38,6 +34,8 @@ class Migration(SchemaMigration):
             ('about', self.gf('django.db.models.fields.TextField')(max_length=265, blank=True)),
             ('why', self.gf('django.db.models.fields.TextField')(max_length=265, blank=True)),
             ('availability', self.gf('django.db.models.fields.CharField')(max_length=25, blank=True)),
+            ('facebook', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
+            ('twitter', self.gf('django.db.models.fields.CharField')(max_length=15, blank=True)),
             ('primary_language', self.gf('django.db.models.fields.CharField')(max_length=5)),
             ('share_time_knowledge', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('share_money', self.gf('django.db.models.fields.BooleanField')(default=False)),
@@ -108,6 +106,7 @@ class Migration(SchemaMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
+            'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -125,6 +124,7 @@ class Migration(SchemaMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
             'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),

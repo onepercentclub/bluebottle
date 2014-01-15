@@ -1,0 +1,100 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "project_plan" %}
+
+    <div class="l-section" id="project-plan">
+        <section class="l-wrapper">
+
+                <header>
+                    <h1>{% trans "Project Plan" %}</h1>
+                </header>
+
+                {{#if description}}
+                    <article>
+                        <h2>{% trans "Why, what and how?" %}</h2>
+                        <p>{{{description}}}</p>
+                    </article>
+                {{/if}}
+
+                {{#if effects}}
+                    <article>
+                        <h2>{% trans "Effects" %}</h2>
+                            <p>{{{effects}}}</p>
+                    </article>
+                {{/if}}
+
+                {{#if future}}
+                    <article>
+                        <h2>{% trans "Future" %}</h2>
+                        <p>{{{future}}}</p>
+                    </article>
+                {{/if}}
+
+                {{#if forWho}}
+                    <article>
+                        <h2>{% trans "For who?" %}</h2>
+                        <p>{{{forWho}}}</p>
+                    </article>
+                {{/if}}
+
+                {{#if reached}}
+                    <article>
+                        <h2>{% trans "People reached" %}</h2>
+                        <p>{{{reached}}}</p>
+                    </article>
+                {{/if}}
+
+                {{#if country.name}}
+                    <article>
+                        <h2>{% trans "Location" %}</h2>
+                        <p>{{country.name}}, {{country.subregion}}</p>
+                        <img {{bindAttr src="view.staticMap"}} />
+                    </article>
+                {{/if}}
+
+                {{#if organization.name}}
+                    <article>
+                        <h2>{% trans "Organisation" %}</h2>
+                        <h3>{{organization.name}}</h3>
+                        <p>{{organization.description}}</p>
+
+                        {{#if organization.website}}
+                            <dl>
+                                <dt><span class="flaticon solid link-1"></span> Website</dt>
+                                <dd><a {{bindAttr href=organization.websiteUrl}} target="_blank">{{organization.website}}</a></dd>
+                            </dl>
+                        {{/if}}
+                        {{#if organization.twitter}}
+                            <dl>
+                                <dt><span class="flaticon social twitter-3"></span> Twitter</dt>
+                                <dd><a {{bindAttr href=organization.twitterUrl}} target="_blank">{{organization.twitter}}</a></dd>
+                            </dl>
+                        {{/if}}
+                        {{#if organization.facebook}}
+                            <dl>
+                                <dt><span class="flaticon social facebook-3"></span> Facebook</dt>
+                                <dd><a {{bindAttr href=organization.facebookUrl}} target="_blank">{{organization.facebook}}</a></dd>
+                            </dl>
+                        {{/if}}
+                        </ul>
+                    </article>
+                {{/if}}
+
+                {{#if budgetLines.length}}
+                    <article>
+                        <h2>{% trans "Budget" %}</h2>
+                        {{#each line in budgetLines}}
+                            <dl>
+                                <dd>{{line.description}}</dd>
+                                <dt align="right">&euro;{{line.amount}}</dt>
+                            </dl>
+                        {{/each}}
+                    </article>
+                {{/if}}
+
+        </section>
+    </div>
+
+{% endtplhandlebars %}

@@ -42,7 +42,7 @@
 
 
 {% block_verbatim app_templates %}
-    
+
     {% tplhandlebars "language" %}
         <a {{action "selectLanguage" view.content.code }}{{bindAttr title=view.content.name}}>{{ view.content.code }}</a>
     {% endtplhandlebars %}
@@ -56,27 +56,27 @@
                 <!-- global header -->
                 <div id="header" class="l-section">
                     <header class="l-wrapper">
-                            
+
                         <!-- logo -->
                         <div id="logo">
-                            {{#linkTo 'home' class="logo-link"}}
+                            {{#link-to 'home' class="logo-link"}}
                             <object type="image/svg+xml" data="/static/assets/images/global/onepercentclub-white.svg" class="logo-image"><img src="{% static "images/global/onepercentclub-white.png" %}" alt="1%Club" class="logo-image" /></object>
-                            {{/linkTo}}
+                            {{/link-to}}
                         </div>
                         <!-- end: logo -->
 
                         <!-- main navigation -->
                         <nav id="nav">
-                        
+
                             <ul class="nav-main">
                                 <li class="nav-main-item"><a {{action 'showPage' 'about'}} href="/#!/pages/about">{% trans "Menu item 1" %}</a></li>
                                 <li class="nav-main-item"><a {{action 'showPage' 'get-involved'}} href="/#!/pages/get-involved">{% trans "Menu item 2" %}</a></li>
                             </ul>
-                        
+
                             {% include "accounts/nav.html" %}
                         </div>
                         <!-- end: main navigation -->
-                        
+
                         {{#if display_message}}
 
                             <div {{bindAttr class=":message isError"}}>
@@ -102,7 +102,7 @@
                     {{outlet}}
                 </div>
                 <!-- end: main content -->
-                
+
             </div>
             {{partial "footer" }}
 
@@ -153,7 +153,7 @@
                                         {% trans "Meet the team" %}
                                     </a>
                                 </li>
-                                
+
                                 <li>
                                     <a {{action 'showPage' 'partners'}} href="/#!/pages/partners">
                                         {% trans "Partners" %}
@@ -190,7 +190,7 @@
                                         {% trans "1%Github" %}
                                     </a>
                                 </li>
-                                
+
                             </ul>
                         </li>
                     </ul>
@@ -219,12 +219,12 @@
                                 <li><i class="flaticon solid right-2"></i> {% trans "Share your skills or money" %}</li>
                                 <li><i class="flaticon solid right-2"></i> {% trans "See direct results" %}</li>
                             </ul>
-                            {{#linkTo 'signup' classNames="btn btn-primary"}}{% trans "Join BlueBottle" %}{{/linkTo}}
+                            {{#link-to 'signup' classNames="btn btn-primary"}}{% trans "Join BlueBottle" %}{{/link-to}}
                         </div>
                     {{/unless}}
                 </section>
             </div>
-          
+
             <div class="l-section copyright">
                 <div class="l-wrapper">
                     <ul>
@@ -238,7 +238,7 @@
                     </ul>
                 </div>
             </div>
-            
+
         </div>
     {% endtplhandlebars %}
 {% endblock_verbatim app_templates %}

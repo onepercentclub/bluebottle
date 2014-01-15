@@ -23,16 +23,26 @@ App.User = DS.Model.extend({
     picture: DS.attr('image'),
 
     website: DS.attr('string'),
+    facebook: DS.attr('string'),
+    twitter: DS.attr('string'),
+
     date_joined: DS.attr('date'),
     file: DS.attr('string'),
+
+    skills: DS.hasMany('App.Skill'),
 
     // post-only fields (i.e. only used for user creation)
     email: DS.attr('string'),
     password: DS.attr('string'),
 
+    favourite_countries: DS.hasMany("App.Country"),
+    favourite_themes: DS.hasMany("App.Theme"),
+
+    tags: DS.hasMany("App.Tag", {embedded: "always"}),
+
     getPicture: function() {
         if (this.get('picture')) {
-            return MEDIA_URL + this.get('picture.large')
+            return this.get('picture.large')
         }
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
@@ -44,18 +54,35 @@ App.User = DS.Model.extend({
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
 
-    full_name: function() {
-        if (!this.get('first_name') && !this.get('last_name')) {
-            return this.get('username');
+    getName: function() {
+        if (this.get('first_name')) {
+            return this.get('first_name')
         }
-        return this.get('first_name') + ' ' + this.get('last_name');
-    }.property('first_name', 'last_name'),
+        return this.get('username')
+    }.property('first_name'),
+
 
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
-    }.property('date_joined')
+    }.property('date_joined'),
+
+    get_twitter: function() {
+        return '//twitter.com/' + this.get('twitter');
+    }.property('twitter'),
+
+    get_facebook: function() {
+        return '//www.facebook.com/' + this.get('facebook');
+    }.property('facebook')
 
 });
+
+
+
+// TODO: split this of
+App.User.reopen({
+    user_statistics: DS.attr('object')
+});
+
 
 /*
  A data model representing a user's settings.
@@ -67,7 +94,7 @@ App.User = DS.Model.extend({
 // TODO: fix date issue
 // http://stackoverflow.com/questions/15695809/what-is-the-best-way-to-modify-the-date-format-when-ember-data-does-serializatio
 // https://github.com/toranb/ember-data-django-rest-adapter/issues/26
-// DS.RESTAdapter.registerTransform("isodate", { 
+// DS.RESTAdapter.registerTransform("isodate", {
 //   deserialize: function(serialized) {
 //     return serialized;
 //   },

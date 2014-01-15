@@ -1,0 +1,422 @@
+//
+// Wallposts
+// --------------------------------------------------
+
+//#wallpost-form {
+//    @include clear;
+//	
+//	fieldset {
+//        padding: 0;
+//        background-color: $gray-lighter;
+//        padding: $base-padding $base-padding*2;
+//	}
+//	
+//    ul {
+//        padding: 0;
+//    }
+//    
+//    .control-group {
+//	    
+//	    .control-label {
+//	        display: none;
+//		    @include grid(48,1,1);
+//	    }
+//	    
+//	    .controls {
+//		    @include clear;
+//		    @include grid(48,0,0);
+//	    }
+//    }
+//    
+//    .form-wallpost-photos {
+//        @include clear;
+//
+//        .form-wallpost-photo {
+//            display: block;
+//            @include grid(12,0,1);
+//            margin-top: $base-margin;
+//            margin-bottom: $base-margin;
+//            @include allowmanage;
+//        }
+//    }
+//    
+//    .btn-submit {
+//        float: right;
+//    }
+//}
+
+//#wallposts {
+//	@include clear;
+//	padding-top: $base-padding*2;
+//	
+//	.wallpost {
+//	    @include clear;
+//	    position: relative;
+//	    padding: $base-padding 0 $base-padding/2 0;
+//	    
+//	    header {
+//            position: relative;
+//            
+//            .wallpost-member {
+//                @include clear;
+//                
+//                .member-avatar {
+//                    @include grid(12,2,4);
+//                    position: absolute;
+//                    left: 0;
+//                    background: red;
+//                }
+//            
+//                .member-name {
+//                    @include prepend(12);
+//                }
+//            }
+//            
+//            .wallpost-meta {
+//                position: absolute;
+//                top: 0;
+//                right: 0;
+//                float: right;
+//                text-align: right;
+//                color: $gray;
+//                font-style: normal;
+//                font-size: $font-size-smallest;
+//                text-transform: uppercase;
+//            }
+//            
+//            .timestamp {
+//                font-style: normal;
+//            }
+//                            
+//            .manage-delete {
+//                color: $gray;
+//                
+//                &:hover {
+//                    color: $color-text;
+//                }
+//            }
+//            
+//        }
+//        
+//        &:hover {
+//            
+//            header .manage {
+//                display: block;
+//            }
+//            
+//        }
+//	    
+//        .wallpost-content {
+//            @include grid(48,12,0);
+//            margin-bottom: $base-margin/2;
+//            word-wrap: break-word;
+//        
+//            p {
+//                margin: 0;
+//                padding: 0;
+//                display: inline;
+//            }   
+//        
+//            br {
+//                display: none !important;
+//            }
+//        }
+//        
+//        .wallpost-reactions {
+//            @include clear;
+//            @include grid(48,12,0);
+//        }
+//        
+//        .login-box {
+//            opacity: 0;
+//            @include transition(opacity 0.2s ease-out);
+//            color: $gray;
+//            padding-bottom: $base-padding;
+//        }
+//        
+//        &:hover .login-box {
+//            opacity: 1;
+//        }
+//        
+//        &.wallpost-system {
+//            
+//            .wallpost-member {
+//                padding-bottom: $base-padding;
+//                @include grid(48,12,0);
+//                
+//                .member {
+//                    display: inline;
+//                    float: none;
+//                    
+//                    .member-name {
+//                        font-family: $base-font-family;
+//                        margin: 0;
+//                    }
+//                }
+//            }
+//            
+//            .wallpost-fundraiser-link {
+//            	text-decoration: none;
+//            	font-family: $font-family-heavy;
+//            	color: $gray-dark;
+//            	
+//            	&:hover, &:active {
+//	            	color: $color-primary;
+//            	}
+//            }
+//
+//            .wallpost-system-type {
+//                position: absolute;
+//                left: 0;
+//                top: 0;
+//                @include prepend(2);
+//                color: $gray-light;
+//                text-transform: uppercase;
+//                
+//                .flaticon {
+//                    margin-right: $base-margin/4;
+//                }
+//            }
+//            .wallpost-system-message {
+//                padding-bottom: $base-padding;
+//                @include grid(48,12,0);
+//
+//                color: $gray-light;
+//                text-transform: uppercase;
+//
+//            }
+//            .login-box {
+//                display: none;
+//            }
+//        }
+//	}
+//	
+//	.btn-more {
+//	    margin-top: $base-margin;
+//	    padding-top: $base-padding;
+//    	@include grid(48,12,0);
+//    	text-align: center;
+//    	
+//    	small {
+//        	color: $gray;
+//    	}
+//	}
+//}
+
+#wallposts {
+	background: $gray-lighter;
+
+	.wallposts-list {
+		@include grid(24,0,1);
+	}
+	.wallposts-important {
+		@include grid(24,1,0);		
+	}
+	.wallpost-action {
+		
+		border: 3px dashed $gray-light;
+		padding: $base-padding;
+		text-align: center;
+		margin-bottom: $base-margin;
+		
+        .wallpost-form {
+			
+            display: none;
+			
+			.errors {
+				p {
+					color: red;
+					text-align: left;
+				}
+			}
+			.form-wallpost-photos {
+				
+				margin-top: $base-margin;
+				@include clear;
+				
+				.form-wallpost-photo {
+				
+					position: relative;
+					@include grid(12,0,1);
+				
+					.manage-delete {
+						position: absolute;
+						top: -8px;
+						right: -8px;
+						text-decoration: none;
+					}
+				}
+			}
+			.tabs {
+				
+				margin: 0;
+				
+				.tab-item {
+					&.active {
+						background: $gray-dark;
+						a {
+							color: $white;							
+						}
+					}
+				}
+			}
+			.btn {
+				padding: $base-padding/4 $base-padding/2;
+			}
+			.btn-upload {
+				float: right;
+				color: $white;
+			}
+			.btn-save {
+				background-color: $color-primary;
+			}
+			.btn-cancel {
+				background-color: $color-secondary;
+			}
+			.video-container, .photos-container {
+				background: $gray-dark;
+				padding: $base-padding;
+			}
+			.video-container {
+				display: none;
+			}
+        }
+		.wallpost-post-update {
+			color: $color-primary;
+		}
+		.wallpost-post-comment {
+			color: $color-secondary;
+		}
+	}
+}
+
+.wallpost {
+
+	background: $white;
+	padding: $base-padding;
+	padding-bottom: 0;
+	margin-bottom: $base-margin;
+
+	.wallpost-header {
+
+		@include clear;
+		margin-bottom: $base-margin;
+		
+		.wallpost-member {
+
+			width: 100px;
+			float: left;
+			margin-right: $base-margin;
+
+			.member-function {
+				display: block;
+				text-align: center;
+				text-transform: uppercase;
+				background: $gray-lighter;
+				color: $white;
+			}
+		}
+
+		.wallpost-meta {
+
+			.wallpost-author {
+				text-transform: none;
+				color: $color-primary;
+				display: inline;
+			}
+
+			.wallpost-timestamp {
+				color: $gray;
+				font-size: $font-size-small;
+			}
+			
+			.wallpost-edit {
+				float: right;
+				text-decoration: none;
+				padding: $base-padding / 2;
+			}
+		}
+
+		.wallpost-title {
+			text-transform: none;
+			color: $black;
+		}
+	}
+	.wallpost-content {
+		.photo-viewer {
+			.cover {
+				@include grid(48,0,0);
+			}
+		}
+	}
+	.wallpost-reactions {
+		
+		margin: -$base-margin;
+		margin-top: 0;
+		margin-bottom: 0;
+		position: relative;
+		
+		.reactions {
+			&:after {
+				left: 50px;
+				bottom: 100%;
+				border: solid transparent;
+				content: " ";
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-bottom-color: $gray-lighter;
+				border-width: 10px;
+				margin-left: -10px;
+			}	
+		}
+	}
+	
+	&.wallpost-system {
+		background-color: $color-secondary;
+	}
+	
+	&.important {
+		
+		border: 1px solid $color-primary;
+		
+		.wallpost-author {
+			color: $color-secondary;
+		}
+		.wallpost-title {
+			color: $color-primary;
+		}
+	}
+	.wallpost-buttons {
+		
+		margin: 0 (-$base-margin);
+		padding: $base-padding;
+		background-color: $color-primary;
+		color: $white;
+		text-transform: uppercase;
+		
+		.btn {
+			padding: $base-padding/4 $base-padding/2;
+			vertical-align: middle;
+		}
+		.wallpost-action-decline {
+			color: $black;
+			&:hover {
+				color: $black;
+			}
+		}
+	}
+	.file-link {
+		
+		margin: 0 $base-margin;
+		color: $gray;
+		
+		a {
+			color: $gray;			
+		}
+	}
+	.btn-spacer {
+		margin: 0 $base-margin/2;
+	}
+}

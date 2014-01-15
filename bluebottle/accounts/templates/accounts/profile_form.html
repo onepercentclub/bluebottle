@@ -1,5 +1,5 @@
-
-{% load bb_ember i18n %}
+{% load templatetag_handlebars %}
+{% load bb_ember i18n static %}
 
 {% tplhandlebars "userProfile" %}
 
@@ -14,7 +14,7 @@
                     <p>{% trans "Override block form_meta from accounts/profile_form.html." %}</p>
                 {% endblock form_meta %}
             </legend>
-
+            {{ view }}
             {% block_verbatim fieldset1 %}
                 <fieldset>
                     <ul>
@@ -33,24 +33,16 @@
 
                             {# TODO: Error Handling #}
                         </li>
+                      
+                       {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills type="Skill" available_label="Available skills" }}
 
-                        <li class="control-group">
-                            <label class="control-label">
-                                {% trans "Profile Picture" %}
-                            </label>
+                      
 
-                            <div class="controls file-upload">
-                                <figure class="member-avatar"><img {{bindAttr src="getAvatar"}} /></figure>
-                                <a class="btn-link btn-upload">
-                                    {{view App.UploadFile contentBinding="this" name="picture" id="picture" accept="image/*" fileBinding="picture"}}
-                                    <span class="flaticon solid upload-document-1"></span>
-                                    {% trans "Upload picture" %}
-                                </a>
-                            </div>
-                        </li>
+                        {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
+
                     </ul>
                 </fieldset>
-            {% endblock_verbatim fieldset1 %}
+            {% endblock_verbatim fieldset1 %} 
 
             {% block_verbatim fieldset2 %}
                 <fieldset>

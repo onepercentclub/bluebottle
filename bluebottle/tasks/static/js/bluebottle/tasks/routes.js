@@ -2,6 +2,9 @@ App.Router.map(function(){
     this.resource('taskList', {path: '/tasks'}, function() {
         this.route('search');
     });
+
+    // route disabled for now, let the backend handle the hours spent
+    // this.resource('myTaskList', {path: '/my/tasks'});
     this.resource('task', {path: '/tasks/:task_id'}, function(){
 
     });
@@ -193,3 +196,19 @@ App.TaskEditRoute = Em.Route.extend({
         return App.Task.find(params.task_id);
     }
 });
+
+/**
+ * My Tasks: manage your tasks
+ *
+ */
+
+App.MyTaskListRoute = Em.Route.extend(App.ScrollToTop, {
+    model: function(params) {
+        return App.MyTaskMember.find();
+    }
+<<<<<<< HEAD
+});
+=======
+})
+>>>>>>> 10741f681732a44d2c86e700800ab62aab5dfd4f
+

@@ -38,8 +38,7 @@ class SupportedProjectsManager(models.Manager):
         """
         statuses = TaskMember.TaskMemberStatuses
         valid_statuses = [statuses.applied, statuses.accepted, statuses.realized] # NOTE: should applied be in here too?
-        projects = Project.objects.filter(task__taskmember=user, task__taskmember__status__in=valid_statuses).distinct()
-        # order is required to play nice with distinct
+        projects = Project.objects.filter(task__taskmember__member=user, task__taskmember__status__in=valid_statuses).distinct()
         return projects
 
 
@@ -141,9 +140,16 @@ class TaskMember(models.Model):
 
     motivation = models.TextField(_("Motivation"), help_text=_("Motivation by applicant."), blank=True)
     comment = models.TextField(_("Comment"), help_text=_("Comment by task owner."), blank=True)
+    time_spent = models.PositiveSmallIntegerField(_('time spent'), default=0, help_text=_("Time spent executing this task."))
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
+
+    _initial_status = None
+
+    def __init__(self, *args, **kwargs):
+        super(TaskMember, self).__init__(*args, **kwargs)
+        self._initial_status = self.status
 
 
 class TaskFile(models.Model):
@@ -162,3 +168,11 @@ class TaskFile(models.Model):
 def log_task_status(sender, instance, **kwargs):
     if instance.status != instance._original_status:
         instance.date_status_change = now()
+
+@receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
+def set_hours_spent_taskmember(sender, instance, **kwargs):
+    if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
+        hours_spent = instance.task.time_needed
+        if hours_spent > 8:
+            hours_spent = 8
+        instance.time_spent = hours_spent

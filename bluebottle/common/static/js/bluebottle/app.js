@@ -74,7 +74,7 @@ App = Em.Application.create({
         });
 
 	App.ProjectPhase.find().then(function(data){
-	    
+
 	    var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
 
 	    App.ProjectPhaseSelectView.reopen({

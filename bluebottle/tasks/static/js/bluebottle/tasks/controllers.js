@@ -210,6 +210,9 @@ App.TaskNewController = Em.ObjectController.extend({
         });
         task.on('becameInvalid', function(record) {
             // controller.set('errors', record.get('errors'));
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
             record.transitionTo('loaded.created.uncommitted');
         });
 

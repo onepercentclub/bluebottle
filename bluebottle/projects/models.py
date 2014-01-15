@@ -130,6 +130,7 @@ class Project(models.Model):
     objects = ProjectManager()
 
     class Meta:
+        abstract = True
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')

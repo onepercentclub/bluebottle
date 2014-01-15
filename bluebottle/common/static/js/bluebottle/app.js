@@ -47,7 +47,6 @@ App = Em.Application.create({
 
         this.setLocale(locale);
         this.initSelectViews();
-        this.initProjectDetailFields();
     },
 
     initSelectViews: function() {
@@ -81,10 +80,6 @@ App = Em.Application.create({
             content: list
             });
         });
-    },
-
-    initProjectDetailFields: function(){
-        App.ProjectDetailField.find();
     },
 
     setLocale: function(locale) {

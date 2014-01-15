@@ -78,11 +78,11 @@ App.Editable = Ember.Mixin.create({
             });
 
             model.one('didUpdate', function(){
-                //controller.send('goToNextStep');
+                controller.send('goToNextStep');
             });
 
             model.one('didCreate', function(){
-                ///controller.send('goToNextStep');
+                controller.send('goToNextStep');
             });
 
             model.save();

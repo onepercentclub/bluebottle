@@ -204,7 +204,7 @@ App.ProjectDonation = DS.Model.extend({
 
 App.Theme = DS.Model.extend({
     url:'projects/themes',
-    title: DS.attr('string')
+    name: DS.attr('string'),
 });
 
 App.ThemeList = [

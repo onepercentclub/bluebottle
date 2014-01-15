@@ -3,7 +3,7 @@ from django import forms
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer, TagSerializer
+from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer, TaggableSerializerMixin)
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code
 from bluebottle.geo.models import Country
@@ -65,14 +65,7 @@ class UserStatisticsMixin(object):
         return result
 
 
-class SkillSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Skill
-        fields = ('id', 'name')
-
-
-class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
+class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -86,7 +79,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
     # TODO: extend this serializer with abstract base model
     skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills')
     favourite_country_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_countries")
-    favourite_themes = serializers.PrimaryKeyRelatedField(many=True)
+    favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_themes")
     tags = TagSerializer()
 
     user_statistics = serializers.SerializerMethodField('get_user_statistics')
@@ -95,7 +88,7 @@ class UserProfileSerializer(UserStatisticsMixin, serializers.ModelSerializer):
         model = BlueBottleUser
         #TODO: add       * interested in target groups
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_themes',
+                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_theme_ids',
                   'tags', 'user_statistics')
 
 

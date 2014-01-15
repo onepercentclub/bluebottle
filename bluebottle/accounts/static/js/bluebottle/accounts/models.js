@@ -33,7 +33,9 @@ App.User = DS.Model.extend({
     password: DS.attr('string'),
 
     favourite_countries: DS.hasMany("App.Country"),
+    favourite_themes: DS.hasMany("App.Theme"),
 
+    tags: DS.hasMany("App.Tag", {embedded: "always"}),
 
     getPicture: function() {
         if (this.get('picture')) {
@@ -61,6 +63,7 @@ App.User = DS.Model.extend({
     }.property('date_joined'),
 
 });
+
 
 
 // TODO: split this of

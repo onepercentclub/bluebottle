@@ -102,24 +102,39 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
         }, this);
     },
 
+    
+    
+    /**
+    Customize the serializer to also send PrimaryRelatedFields ids.
+    http://stackoverflow.com/questions/16128525/customizing-what-ember-data-sends-to-the-server
+    */
     addHasMany: function(hash, record, key, relationship){
 
-        //Er moet een check op voor "embedded" zodat dit alleen gedaan wordt voor "niet embeddded" items
-
-
-        console.log("Hash: ", hash);
+        /*console.log("Hash: ", hash);
         console.log("Record: ", record);
         console.log("Key: ", key);
         console.log("Relationship: ", relationship);
-        console.log("Relationship key: ", relationship.key);
+        console.log("Relationship key: ", relationship.key);*/
 
         var ids = record.get(relationship.key).map(function(item){
-            console.log("Item: ", item);
             return item.id;
         });
-        console.log("Ids: ", ids);
-        hash[key] = ids;
-    }
+
+        if (relationship.key != "tags") {
+            hash[key] = ids;
+        } else {
+            
+            var tags = record.get(relationship.key).map(function(item){
+                //console.log("Item: ", item);
+                return {"id" : item.id };
+            });
+            //console.log("Tags", tags);
+            hash[relationship.key] = tags;
+        }
+    },
+    
+
+
 });
 
 
@@ -362,11 +377,14 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
     },
 
     /**
-        Temp
+        Taken from Stackoverflow to mark changed hasMany Ember relations as dirty
     */
     dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
-      relationship.childReference.parent = relationship.parentReference;
-      this._dirtyTree(dirtySet, record);
+        /*console.log("dirtyset: ", dirtySet);
+        console.log("record: ", record);
+        console.log("relationship", relationship);*/
+        relationship.childReference.parent = relationship.parentReference;
+        this._dirtyTree(dirtySet, record);
     },
 });
 

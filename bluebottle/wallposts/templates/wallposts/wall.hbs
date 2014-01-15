@@ -41,7 +41,103 @@
 
 			<div class="wallposts-important">
 
-				{# TODO: render the important wall posts here #}
+				{# TODO: make dynamic and refactor into seperate view file #}
+				
+				<article class="wallpost important">
+
+				    <header class="wallpost-header">
+
+				        <div class="wallpost-member">
+				            <a {{action openInBigBox "userModal" author}} class="member">
+				                <figure class="member-avatar">
+				                    <img src="http://placehold.it/200x200" alt="author.full_name"}} />
+				                </figure>
+				            </a>
+				        </div>
+
+				        <div class="wallpost-meta">
+							<h3 class="wallpost-author">Frans Twisk</h3>
+				            <span class="wallpost-timestamp">21 days ago</span>
+				        </div>
+
+						<h2 class="wallpost-title">
+							Request to apply for this task
+						</h2>
+				    </header>
+
+				    <div class="wallpost-content">
+
+				        <div class="text">
+				        	<strong>Motivation:</strong> Fusce quam enim, vehicula euismod porttitor vitae, facilisis a purus. Maecenas augue metus, consectetur eleifend posuere in.
+							
+				        </div>
+						
+				    </div>
+					
+					<div class="wallpost-buttons">
+						<a class="btn wallpost-action-accept" href="#">Accept</a>
+						 <span class="btn-spacer">or</span> 
+						<a class="wallpost-action-decline" href="#">Decline</a>
+					</div>
+				</article>
+
+				<article class="wallpost important">
+
+				    <header class="wallpost-header">
+
+				        <div class="wallpost-member">
+				            <a {{action openInBigBox "userModal" author}} class="member">
+				                <figure class="member-avatar">
+				                    <img src="http://placehold.it/200x200" alt="author.full_name"}} />
+				                </figure>
+				            </a>
+				        </div>
+
+				        <div class="wallpost-meta">
+							<h3 class="wallpost-author">Frans Twisk</h3>
+				            <span class="wallpost-timestamp">21 days ago</span>
+				        </div>
+
+						<h2 class="wallpost-title">
+							Request to finish this task
+						</h2>
+				    </header>
+
+				    <div class="wallpost-content">
+
+				        <div class="text">
+				        	<p class="wallpost-result">
+								<strong>Result:</strong> 
+								<span class="file-link flaticon stroke document-1"> <a class="">Filename.pdf</a></span>
+								<span class="file-link flaticon stroke document-1"> <a class="">Filename.pdf</a></span>
+							</p>
+							
+				        	<p>
+								<strong>Remark:</strong> 
+								Fusce quam enim, vehicula euismod porttitor vitae, facilisis a purus. Maecenas augue metus, consectetur eleifend posuere in.
+							</p>
+				        	<p>
+								<strong>Hours spent:</strong> 
+								8 hours
+							</p>
+				        </div>
+						
+				    </div>
+					
+					<div class="wallpost-buttons">
+						<a class="btn wallpost-action-accept" href="#">Accept</a>
+						 <span class="btn-spacer">or</span> 
+						<a class="btn wallpost-action-accept-and-close" href="#">Accept and close</a>
+						 <span class="btn-spacer">or</span> 
+						<a class="wallpost-action-decline" href="#">Decline</a>
+					</div>
+					
+				    <div class="wallpost-reactions">
+				        {{render "wallPostReactionList" reactions}}
+				    </div>
+					
+
+				</article>				
 
 			</div>
 

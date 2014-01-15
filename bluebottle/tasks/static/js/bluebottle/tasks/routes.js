@@ -205,9 +205,5 @@ App.MyTaskListRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         return App.MyTaskMember.find();
     }
-<<<<<<< HEAD
 });
-=======
-})
->>>>>>> 10741f681732a44d2c86e700800ab62aab5dfd4f
 

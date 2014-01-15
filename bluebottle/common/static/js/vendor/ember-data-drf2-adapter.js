@@ -34,6 +34,8 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
         });
     },
 
+
+
     /**
      * Changes from default:
      * - Don't call sideload() because DRF2 doesn't support it.
@@ -98,7 +100,41 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
                 this._addAttribute(data, record, name, attribute.type);
             }
         }, this);
-    }
+    },
+
+    
+    
+    /**
+    Customize the serializer to also send PrimaryRelatedFields ids.
+    http://stackoverflow.com/questions/16128525/customizing-what-ember-data-sends-to-the-server
+    */
+    addHasMany: function(hash, record, key, relationship){
+
+        /*console.log("Hash: ", hash);
+        console.log("Record: ", record);
+        console.log("Key: ", key);
+        console.log("Relationship: ", relationship);
+        console.log("Relationship key: ", relationship.key);*/
+
+        var ids = record.get(relationship.key).map(function(item){
+            return item.id;
+        });
+
+        if (relationship.key != "tags") {
+            hash[key] = ids;
+        } else {
+            
+            var tags = record.get(relationship.key).map(function(item){
+                //console.log("Item: ", item);
+                return {"id" : item.id };
+            });
+            //console.log("Tags", tags);
+            hash[relationship.key] = tags;
+        }
+    },
+    
+
+
 });
 
 
@@ -338,7 +374,18 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
         };
 
         get(this, 'serializer').extractMany(loader, payload, type);
-    }
+    },
+
+    /**
+        Taken from Stackoverflow to mark changed hasMany Ember relations as dirty
+    */
+    dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
+        /*console.log("dirtyset: ", dirtySet);
+        console.log("record: ", record);
+        console.log("relationship", relationship);*/
+        relationship.childReference.parent = relationship.parentReference;
+        this._dirtyTree(dirtySet, record);
+    },
 });
 
 

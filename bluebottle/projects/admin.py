@@ -1,4 +1,4 @@
-from bluebottle.projects.models import ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail
+from bluebottle.projects.models import ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail, ProjectTheme
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
@@ -13,6 +13,10 @@ from .models import Project
 
 
 logger = logging.getLogger(__name__)
+
+class ProjectThemeAdmin(admin.ModelAdmin):
+    model = ProjectTheme
+admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
 class ProjectDetailAdmin(admin.StackedInline):

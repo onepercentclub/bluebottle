@@ -93,11 +93,11 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
-    title = serializers.Field(source='name')
+    #title = serializers.Field(source='name')
 
     class Meta:
         model = ProjectTheme
-        fields = ('id', 'title')
+        fields = ('id', 'name')
         
         
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):

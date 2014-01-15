@@ -33,8 +33,12 @@
 
                             {# TODO: Error Handling #}
                         </li>
+                      
+                       {{bb-multiple-selected-items selected_label="Selected skills" selectedItems=skills availableItems=allSkills type="Skill" available_label="Available skills" }}
 
-                    {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
+                      
+
+                        {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
 
                     </ul>
                 </fieldset>

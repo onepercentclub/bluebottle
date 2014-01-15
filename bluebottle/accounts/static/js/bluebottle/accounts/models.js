@@ -35,7 +35,10 @@ App.User = DS.Model.extend({
     email: DS.attr('string'),
     password: DS.attr('string'),
 
-    skills: DS.hasMany('App.Skill'),
+    favourite_countries: DS.hasMany("App.Country"),
+    favourite_themes: DS.hasMany("App.Theme"),
+
+    tags: DS.hasMany("App.Tag", {embedded: "always"}),
 
     getPicture: function() {
         if (this.get('picture')) {

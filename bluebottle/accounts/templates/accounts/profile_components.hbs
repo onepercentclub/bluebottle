@@ -1,26 +1,25 @@
-{% load templatetag_handlebars %}
+{% load bb_ember %}
+{% load i18n %}
 
 
 {% tplhandlebars "components/bb-multiple-selected-items" %}
-{{#bb-form-field label=customLabel}}
-  {{available_label}}
-    {{view App.ItemSelectView contentBinding=availableItems valueBinding=selectedItem }}
-{{/bb-form-field}}
+    {{#bb-form-field label=label}}
 
-{{ selected_label}}
+        {{view App.ItemSelectView contentBinding=availableItems valueBinding=selectedItem }}
 
-<ul>
-{{#each item in selectedItems }}
-  <li class="">
-    <a {{action 'removeItem'  item}}>x</a>
-    <span>{{item.name}}</span>
-  </li>
+        <ul>
+        {{#each item in selectedItems }}
+            <li>
+                <a {{action 'removeItem' item}}><em class="flaticon solid x-1 delete"></em></a>
+                <span>{{item.name}}</span>
+            </li>
 
-{{else}}
-<li>No items selected</li>
-{{/each}}
-</ul>
+        {{else}}
+            <li>{% trans "No items selected" %}</li>
+        {{/each}}
+        </ul>
 
+    {{/bb-form-field}}
 {% endtplhandlebars %}
 
 

@@ -4,7 +4,8 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer,
+                                                    TaggableSerializerMixin)
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code
 from bluebottle.geo.models import Country
@@ -52,8 +53,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'facebook', 'twitter')
-
+                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_theme_ids',
+                  'tags', 'user_statistics')
 
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ

@@ -184,3 +184,4 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 class SkillList(generics.ListAPIView):
     model = Skill
     serializer_class = SkillSerializer
+

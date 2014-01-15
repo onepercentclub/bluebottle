@@ -3,7 +3,8 @@ App.Router.map(function(){
         this.route('search');
     });
 
-    this.resource('myTaskList', {path: '/my/tasks'});
+    // route disabled for now, let the backend handle the hours spent
+    // this.resource('myTaskList', {path: '/my/tasks'});
     this.resource('task', {path: '/tasks/:task_id'}, function(){
 
     });
@@ -205,5 +206,5 @@ App.MyTaskListRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         return App.MyTaskMember.find();
     }
-})
+});
 

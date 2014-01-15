@@ -54,7 +54,8 @@ App.UserProfileRoute = Em.Route.extend({
     exit: function() {
         this._super();
         this.controllerFor('userProfile').stopEditing();
-    }
+    },
+
 });
 
 App.ViewProfileRoute = Em.Route.extend({

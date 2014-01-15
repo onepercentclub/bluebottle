@@ -27,7 +27,7 @@ App.TaskMenuView = Em.View.extend({
 
 
 
-App.ProjectTaskNewView = Em.View.extend(App.ScrollInView, {
+App.TaskNewView = Em.View.extend(App.ScrollInView, {
     templateName: 'task_new',
 
     submit: function(e) {
@@ -104,3 +104,4 @@ App.SkillSelectView = Em.Select.extend({
     optionLabelPath: "content.name",
     prompt: "Pick a skill"
 });
+

@@ -66,7 +66,6 @@ class SkillSerializer(serializers.ModelSerializer):
         model = Skill
         fields = ('id', 'name')
 
-
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField()

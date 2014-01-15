@@ -1,10 +1,6 @@
 import factory
-import logging
 
 from django.contrib.auth import get_user_model
-
-# Suppress debug information for Factory Boy
-logging.getLogger('factory').setLevel(logging.WARN)
 
 
 BB_USER_MODEL = get_user_model()

@@ -21,7 +21,7 @@
     <fieldset>
         <ul>
             {{#bb-form-field hint='Select one of the themes.' label='Theme' errors=errors.theme}}
-                {{view App.ThemeSelectView valueBinding="theme" classBinding="errors.theme.length:error"}}
+                {{view App.ThemeSelectView selectionBinding="theme" classBinding="errors.theme.length:error"}}
             {{/bb-form-field}}
         </ul>
     </fieldset>

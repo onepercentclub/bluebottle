@@ -210,8 +210,12 @@ LOGGING = {
     }
 }
 
-# BlueBottle user account model.
+
+# BlueBottle generic models. Override this in your settings if you need to
+# extend any of those models when you are extending BlueBottle for your own
+# purposes.
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
+STANDARD_PROJECT_MODEL = 'projects.StandardProject'
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

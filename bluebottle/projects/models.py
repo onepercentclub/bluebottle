@@ -148,13 +148,13 @@ class Project(models.Model):
             self.slug = original_slug
 
         # Ouch ugly stuff here! FIXME!
-        try:
-            self.status
-        except ProjectPhase.DoesNotExist:
-            if not len(ProjectPhase.objects.order_by('sequence')):
-                from django.core import management
-                management.call_command('loaddata', 'project_phases.json')
-            self.status = ProjectPhase.objects.order_by('sequence')[0]
+        # try:
+        #     self.status
+        # except ProjectPhase.DoesNotExist:
+        #     if not len(ProjectPhase.objects.order_by('sequence')):
+        #         from django.core import management
+        #         management.call_command('loaddata', 'project_phases.json')
+        #     self.status = ProjectPhase.objects.order_by('sequence')[0]
 
         super(Project, self).save(*args, **kwargs)
 
@@ -207,6 +207,14 @@ class Project(models.Model):
     @property
     def viewable(self):
         return self.status.viewable
+
+
+class StandardProject(Project):
+    """
+    Standard Project model. If there are any extra fields required, provide
+    your own Project model by extending ``BaseProject``.
+    """
+    swappable = 'STANDARD_PROJECT_MODEL'
 
 
 class ProjectDetailField(models.Model):

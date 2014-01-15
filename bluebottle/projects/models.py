@@ -42,7 +42,7 @@ class ProjectTheme(models.Model):
 class ProjectPhase(models.Model):
     """ Phase of a project """
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.CharField(max_length=400, blank=True)
     sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
 

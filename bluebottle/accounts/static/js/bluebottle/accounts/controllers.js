@@ -64,8 +64,11 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
 
     allCountries: function(){
         return App.Country.find();
-    }.property()
+    }.property(),
 
+    allThemes: function(){
+        return App.Theme.find();
+    }.property()
 
 });
 

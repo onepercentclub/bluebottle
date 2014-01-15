@@ -95,12 +95,17 @@ App.Project = DS.Model.extend({
     reach: DS.attr('number'),
 
     // Location
-    country: DS.belongsTo('App.ProjectCountry'),
+    country: DS.belongsTo('App.Country'),
     latitude: DS.attr('string'),
     longitude: DS.attr('string'),
 
     // Media
     image: DS.attr('image'),
+    video_url: DS.attr('string'),
+    video_html: DS.attr('string'),
+
+    viewable: DS.attr('boolean'),
+    editable: DS.attr('boolean'),
 
     // Budget
     budgetLines: DS.hasMany('App.BudgetLine'),
@@ -198,7 +203,7 @@ App.ProjectDonation = DS.Model.extend({
 
 App.Theme = DS.Model.extend({
     url:'projects/themes',
-    name: DS.attr('string'),
+    name: DS.attr('string')
 });
 
 App.ThemeList = [
@@ -227,27 +232,12 @@ App.BudgetLine = DS.Model.extend({
 App.MyProject = App.Project.extend({
     url: 'projects/manage',
 
-    // Basics
-    title: DS.attr('string'),
-    pitch: DS.attr('string'),
-    theme: DS.attr('string'),
-    need: DS.attr('string'),
-    tags: DS.hasMany('App.Tag'),
-
-    extras: DS.hasMany('App.MyProjectDetail'),
-
-    editable: DS.attr('boolean'),
-
     validBasics: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
             return true;
         }
         return false;
     }.property('title', 'pitch', 'theme', 'tags'),
-
-    // Description
-    description: DS.attr('string'),
-    reach: DS.attr('number'),
 
     validDescription: function(){
         if (this.get('description') && this.get('reach')){
@@ -256,16 +246,6 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('description', 'reach'),
 
-    // Media
-    image: DS.attr('image'),
-    video_url: DS.attr('string'),
-    video_html: DS.attr('string'),
-
-
-    // Location
-    country: DS.attr('string'),
-    latitude: DS.attr('string'),
-    longitude: DS.attr('string'),
 
     validLocation: function(){
         if (this.get('country') &&  this.get('latitude') && this.get('longitude')){

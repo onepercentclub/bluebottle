@@ -1,15 +1,12 @@
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDetailField
-from bluebottle.projects.serializers import (
-    ProjectBudgetLineSerializer, ProjectDetailFieldSerializer)
 from django.db.models.query_utils import Q
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Project, ProjectTheme, ProjectPhase
+from .models import Project, ProjectTheme, ProjectPhase, ProjectBudgetLine, ProjectDetailField
 from .serializers import (
     ManageProjectSerializer, ProjectPreviewSerializer, ProjectThemeSerializer,
-    ProjectSerializer, ProjectPhaseSerializer)
+    ProjectSerializer, ProjectPhaseSerializer, ProjectBudgetLineSerializer, ProjectDetailFieldSerializer)
 from .permissions import IsProjectOwner, IsProjectOwnerOrReadOnly
 
 

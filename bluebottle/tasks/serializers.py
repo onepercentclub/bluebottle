@@ -48,7 +48,7 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
     tags = TagSerializer()
     meta_data = MetaField(
-        title = 'get_meta_title', 
+        title = 'get_meta_title',
         fb_title = 'get_fb_title',
         tweet = 'get_tweet',
         image_source = 'project__projectplan__image',
@@ -65,6 +65,23 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ('id', 'name')
+
+class MyTaskPreviewSerializer(serializers.ModelSerializer):
+    project = ProjectPreviewSerializer()
+    skill = serializers.PrimaryKeyRelatedField()
+
+    class Meta:
+        model = Task
+        fields = ('id', 'title', 'skill', 'project', 'time_needed')
+
+
+class MyTaskMemberSerializer(TaskMemberSerializer):
+    task = MyTaskPreviewSerializer()
+    member = serializers.PrimaryKeyRelatedField()
+
+    class Meta(TaskMemberSerializer.Meta):
+        fields = TaskMemberSerializer.Meta.fields + ('time_spent',)
+
 
 # Task WallPost serializers
 

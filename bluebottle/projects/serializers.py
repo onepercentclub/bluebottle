@@ -38,7 +38,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserPreviewSerializer()
     image = ImageSerializer(required=False)
-    details = ProjectDetailSerializer(many=True, required=False, source='projectdetail_set')
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -55,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
-                  'status', 'meta_data', 'image', 'details')
+                  'status', 'meta_data', 'image')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
@@ -79,16 +78,18 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
         source='organization', required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
-    details = ProjectDetailSerializer(many=True, required=False, source='projectdetail_set')
+    viewable = serializers.BooleanField(read_only=True)
     status=serializers.PrimaryKeyRelatedField(read_only=True)
     image = ImageSerializer(required=False)
+
+    pitch = serializers.CharField(required=False)
 
     class Meta:
         model = Project
         fields = ('id', 'created', 'title', 'url', 'status', 'image', 'pitch',
                   'tags', 'description', 'country', 'latitude', 'longitude',
                   'reach', 'organization', 'image', 'video_html', 'video_url',
-                  'money_needed', 'editable', 'details')
+                  'money_needed', 'editable', 'viewable')
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):

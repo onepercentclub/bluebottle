@@ -2,6 +2,8 @@ App.Router.map(function(){
     this.resource('taskList', {path: '/tasks'}, function() {
         this.route('search');
     });
+
+    this.resource('myTaskList', {path: '/my/tasks'});
     this.resource('task', {path: '/tasks/:task_id'}, function(){
 
     });
@@ -193,3 +195,15 @@ App.TaskEditRoute = Em.Route.extend({
         return App.Task.find(params.task_id);
     }
 });
+
+/**
+ * My Tasks: manage your tasks
+ *
+ */
+
+App.MyTaskListRoute = Em.Route.extend(App.ScrollToTop, {
+    model: function(params) {
+        return App.MyTaskMember.find();
+    }
+});
+

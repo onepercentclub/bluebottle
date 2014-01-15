@@ -7,50 +7,28 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
-    depends_on = (
-        ('geo', '0001_initial'),
-        ('projects', '0001_initial'),
-        ('tasks', '0003_auto__del_skills__add_skill__add_field_task_skill'),
-    )
-
     def forwards(self, orm):
-        # Adding M2M table for field favourite_countries on 'BlueBottleUser'
-        m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_favourite_countries')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('bluebottleuser', models.ForeignKey(orm[u'accounts.bluebottleuser'], null=False)),
-            ('country', models.ForeignKey(orm[u'geo.country'], null=False))
+        # Adding model 'NewsItem'
+        db.create_table(u'news_newsitem', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=200)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50)),
+            ('main_image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=100, blank=True)),
+            ('language', self.gf('django.db.models.fields.CharField')(max_length=5)),
+            ('status', self.gf('django.db.models.fields.CharField')(default='draft', max_length=20, db_index=True)),
+            ('publication_date', self.gf('django.db.models.fields.DateTimeField')(null=True, db_index=True)),
+            ('publication_end_date', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
+            ('allow_comments', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounts.BlueBottleUser'])),
+            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
         ))
-        db.create_unique(m2m_table_name, ['bluebottleuser_id', 'country_id'])
-
-        # Adding M2M table for field favourite_themes on 'BlueBottleUser'
-        m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_favourite_themes')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('bluebottleuser', models.ForeignKey(orm[u'accounts.bluebottleuser'], null=False)),
-            ('projecttheme', models.ForeignKey(orm[u'projects.projecttheme'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['bluebottleuser_id', 'projecttheme_id'])
-
-        # Adding M2M table for field skills on 'BlueBottleUser'
-        m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_skills')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('bluebottleuser', models.ForeignKey(orm[u'accounts.bluebottleuser'], null=False)),
-            ('skill', models.ForeignKey(orm[u'tasks.skill'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['bluebottleuser_id', 'skill_id'])
+        db.send_create_signal(u'news', ['NewsItem'])
 
 
     def backwards(self, orm):
-        # Removing M2M table for field favourite_countries on 'BlueBottleUser'
-        db.delete_table(db.shorten_name(u'accounts_bluebottleuser_favourite_countries'))
-
-        # Removing M2M table for field favourite_themes on 'BlueBottleUser'
-        db.delete_table(db.shorten_name(u'accounts_bluebottleuser_favourite_themes'))
-
-        # Removing M2M table for field skills on 'BlueBottleUser'
-        db.delete_table(db.shorten_name(u'accounts_bluebottleuser_skills'))
+        # Deleting model 'NewsItem'
+        db.delete_table(u'news_newsitem')
 
 
     models = {
@@ -91,18 +69,6 @@ class Migration(SchemaMigration):
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
             'why': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'})
         },
-        u'accounts.useraddress': {
-            'Meta': {'object_name': 'UserAddress'},
-            'address_type': ('django.db.models.fields.CharField', [], {'default': "'primary'", 'max_length': '10', 'blank': 'True'}),
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['accounts.BlueBottleUser']"})
-        },
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -122,6 +88,15 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
+        'fluent_contents.placeholder': {
+            'Meta': {'unique_together': "(('parent_type', 'parent_id', 'slot'),)", 'object_name': 'Placeholder'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'parent_id': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
+            'parent_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True', 'blank': 'True'}),
+            'role': ('django.db.models.fields.CharField', [], {'default': "'m'", 'max_length': '1'}),
+            'slot': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'})
         },
         u'geo.country': {
             'Meta': {'ordering': "['name']", 'object_name': 'Country'},
@@ -145,6 +120,21 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'numeric_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '3'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
+        },
+        u'news.newsitem': {
+            'Meta': {'object_name': 'NewsItem'},
+            'allow_comments': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['accounts.BlueBottleUser']"}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
+            'main_image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '100', 'blank': 'True'}),
+            'modification_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'publication_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'db_index': 'True'}),
+            'publication_end_date': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
+            'status': ('django.db.models.fields.CharField', [], {'default': "'draft'", 'max_length': '20', 'db_index': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '200'})
         },
         u'projects.projecttheme': {
             'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
@@ -176,4 +166,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['accounts']
+    complete_apps = ['news']

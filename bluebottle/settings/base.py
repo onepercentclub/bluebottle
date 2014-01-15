@@ -149,6 +149,7 @@ INSTALLED_APPS = (
     'bluebottle.pages',
     'bluebottle.projects',
     'bluebottle.organizations',
+    'bluebottle.tasks',
 
     # Modules required by BlueBottle
     'fluent_contents',

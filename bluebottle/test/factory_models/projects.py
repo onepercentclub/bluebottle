@@ -1,8 +1,6 @@
 import factory
 import logging
 
-from django.conf import settings
-
 from bluebottle.projects.models import (
     Project, ProjectTheme, ProjectDetailField, ProjectBudgetLine, ProjectPhase)
 from .accounts import BlueBottleUserFactory

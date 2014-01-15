@@ -79,6 +79,7 @@ INSTALLED_APPS = (
     'bluebottle.organizations',
     'bluebottle.wallposts',
     'bluebottle.tasks',
+    'bluebottle.news',
     )
 
 MIDDLEWARE_CLASSES = [

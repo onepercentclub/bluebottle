@@ -450,3 +450,16 @@ DS.DRF2Adapter.registerTransform("object", {
         return Ember.isNone(deserialized) ? null : deserialized;
     }
 });
+
+
+// Send empty string ("") if string value is null.
+
+DS.DRF2Adapter.registerTransform("string", {
+    deserialize: function(serialized) {
+      return Ember.isNone(serialized) ? null : String(serialized);
+    },
+
+    serialize: function(deserialized) {
+      return Ember.isNone(deserialized) ? "" : String(deserialized);
+    }
+});

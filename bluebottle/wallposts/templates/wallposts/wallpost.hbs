@@ -12,6 +12,7 @@
 	            <a {{action openInBigBox "userModal" author}} class="member">
 	                <figure class="member-avatar">
 	                    <img {{bindAttr src="author.getAvatar" alt="author.full_name"}} />
+						{# TODO: only show this when the wall post is from the author of the parent #}
 						<span class="member-function">Initiator</span>
 	                </figure>
 	            </a>
@@ -23,7 +24,7 @@
 	                <span class="wallpost-timestamp">{{ localize created formatting="X" }}</span>
 	            {{/if}}
 	            {{#if isAuthor}}
-	                <a {{ action "editWallPost" target="view" }} class="flaticon stroke pencil-2 wallpost-edit"></a>
+	                <a {{ action "editWallPost" this }} class="flaticon stroke pencil-2 wallpost-edit"></a>
 	            {{/if}}
 	        </div>
 
@@ -41,8 +42,17 @@
 
 	        {{#if photos.length}}
 	            <ul class="photo-viewer">
-	                {{#each photo in photos}}
-	                    <li class="photo"><a {{bindAttr href="photo.photo.full"}} title="picture"><img {{bindAttr src="photo.photo.small"}} /></a></li>
+					<li class="photo cover">
+						<a {{bindAttr href="coverPhoto.photo.full"}} title="picture">
+							<img {{bindAttr src="coverPhoto.photo.full"}}>
+						</a>
+					</li>
+					{{#each photo in otherPhotos}}
+	                    <li class="photo">
+							<a {{bindAttr href="photo.photo.full"}} title="picture">
+								<img {{bindAttr src="photo.photo.small"}} />
+							</a>
+						</li>
 	                {{/each}}
 	            </ul>
 	        {{/if}}

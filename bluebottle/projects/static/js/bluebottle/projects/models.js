@@ -108,13 +108,11 @@ App.Project = DS.Model.extend({
     extras: DS.hasMany('App.MyProjectDetail'),
 
     phaseName: function(){
-
-	return this.get('status').get('name');
+	    return this.get('status').get('name');
     }.property('phaseName'),
 
     phaseNum: function(){
-
-	return this.get('status').get('sequence');
+    	return this.get('status').get('sequence');
     }.property('phaseNum'),
 
     isPhasePlan: Em.computed.equal('phaseNum', 5),
@@ -124,10 +122,6 @@ App.Project = DS.Model.extend({
     isPhaseResults: Em.computed.equal('phaseNum', 8),
 
     isPhaseCampaing: Em.computed.equal('phaseNum', 6),
-
-    isPhaseAct: function(){
-	return true;
-    }.property('isPhaseAct'),
 
     getProject: function(){
         return App.Project.find(this.get('id'));
@@ -289,7 +283,7 @@ App.MyProject = App.Project.extend({
     }.property('image'),
 
     // Crowd funding
-    moneyNeeded: DS.attr('string'),
+    moneyNeeded: DS.attr('number', {defaultValue: 0}),
     budgetLines: DS.hasMany('App.MyProjectBudgetLine'),
 
     totalBudget: function(){

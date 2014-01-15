@@ -298,7 +298,7 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend({
     needs: ['currentUser'],
 
-    events: {
+    actions: {
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
             if (!user.get('id_for_ember')) {

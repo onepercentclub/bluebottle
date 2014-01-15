@@ -1,16 +1,13 @@
 import factory
-import logging
 
 from bluebottle.projects.models import (
-    Project, ProjectTheme, ProjectDetailField, ProjectBudgetLine, ProjectPhase)
+    StandardProject, ProjectTheme, ProjectDetailField, ProjectBudgetLine,
+    ProjectPhase)
 from .accounts import BlueBottleUserFactory
-
-# Suppress debug information for Factory Boy
-logging.getLogger('factory').setLevel(logging.WARN)
 
 
 class ProjectFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Project
+    FACTORY_FOR = StandardProject
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))

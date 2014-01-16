@@ -49,7 +49,7 @@
 
 {% tplhandlebars "components/bb-select-name" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view Em.Select contentBinding=options optionValuePath="content.name" optionLabelPath="content.name" selectedValueBinding=valueBinding classBinding="errors.length:error"}}
+        {{view Em.Select contentBinding=options optionValuePath="content.name" optionLabelPath="content.name" selectionBinding=selectionBinding classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 

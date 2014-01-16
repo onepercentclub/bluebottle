@@ -135,16 +135,7 @@ class BaseProject(models.Model):
                 counter += 1
             self.slug = original_slug
 
-        # Ouch ugly stuff here! FIXME!
-        # try:
-        #     self.status
-        # except ProjectPhase.DoesNotExist:
-        #     if not len(ProjectPhase.objects.order_by('sequence')):
-        #         from django.core import management
-        #         management.call_command('loaddata', 'project_phases.json')
-        #     self.status = ProjectPhase.objects.order_by('sequence')[0]
-
-        super(Project, self).save(*args, **kwargs)
+        super(BaseProject, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """
@@ -197,12 +188,14 @@ class BaseProject(models.Model):
     def viewable(self):
         return self.status.viewable
 
+
 class CoreProject(BaseProject):
     pass
 
     class Meta:
         swappable = 'PROJECTS_PROJECT_MODEL'
         db_table = 'projects_project'
+
 
 class Project(BaseProject):
     """

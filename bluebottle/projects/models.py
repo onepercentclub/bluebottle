@@ -98,6 +98,8 @@ class BaseProject(models.Model):
 
     status = models.ForeignKey(ProjectPhase)
 
+    theme = models.ForeignKey('ProjectTheme')
+
     # Extended Description
     description = models.TextField(
         _('why, what and how'), help_text=_('Blow us away with the details!'),

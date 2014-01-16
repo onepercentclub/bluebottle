@@ -19,6 +19,7 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
                   'editable', 'viewable')
 
 
+
 class ProjectCountrySerializer(serializers.ModelSerializer):
     subregion = serializers.CharField(source='subregion.name')
 
@@ -88,7 +89,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
 
     class Meta:
         model = Project
-        fields = ('id', 'created', 'title', 'url', 'status', 'image', 'pitch',
+        fields = ('id', 'created', 'title', 'url', 'status', 'image', 'pitch', 'theme',
                   'tags', 'description', 'country', 'latitude', 'longitude',
                   'reach', 'organization', 'image', 'video_html', 'video_url',
                   'editable', 'viewable')

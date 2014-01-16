@@ -4,7 +4,7 @@ App.Adapter.map('App.Project', {
     owner: {embedded: 'load'},
     country: {embedded: 'load'},
     meta: {embedded: 'load'},
-    extras: {embedded: 'load'}
+    tags: {embedded: 'load'}
 });
 
 App.Adapter.map('App.ProjectPreview', {
@@ -26,47 +26,11 @@ App.Adapter.map('App.ProjectDonation', {
     member: {embedded: 'both'}
 });
 
-App.Adapter.map('App.ProjectDetailField', {
-    options: {embedded: 'load'},
-    attributes: {embedded: 'load'}
-});
-
 /* Models */
 
 App.ProjectCountry = DS.Model.extend({
     name: DS.attr('string'),
     subregion: DS.attr('string')
-});
-
-
-// Extra project detail fields definition for this project
-App.ProjectDetailFieldAttribute = DS.Model.extend({
-    attribute: DS.attr('string'),
-    value: DS.attr('string')
-});
-
-App.ProjectDetailFieldValue = DS.Model.extend({
-    text: DS.attr('string'),
-    value: DS.attr('string')
-});
-
-App.ProjectDetailField = DS.Model.extend({
-    url: 'projects/fields',
-
-    name: DS.attr('string'),
-    type: DS.attr('string'),
-    description: DS.attr('string'),
-
-    attributes: DS.hasMany('App.ProjectDetailFieldAttribute'),
-    options: DS.hasMany('App.ProjectDetailFieldValue')
-});
-
-App.MyProjectDetail = DS.Model.extend({
-
-    value: DS.attr('string'),
-//
-//    project: DS.belongsTo('App.MyProject'),
-//    field: DS.belongsTo('App.ProjectDetailField')
 });
 
 
@@ -79,19 +43,15 @@ App.Project = DS.Model.extend({
     created: DS.attr('date'),
 
     owner: DS.belongsTo('App.UserPreview'),
-
     // Basics
     title: DS.attr('string'),
     pitch: DS.attr('string'),
     theme: DS.belongsTo('App.Theme'),
-    need: DS.attr('string'),
     tags: DS.hasMany('App.Tag'),
 
     // Description
     description: DS.attr('string'),
     effects: DS.attr('string'),
-    future: DS.attr('string'),
-    for_who: DS.attr('string'),
     reach: DS.attr('number'),
 
     // Location
@@ -107,10 +67,6 @@ App.Project = DS.Model.extend({
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
 
-    // Budget
-    budgetLines: DS.hasMany('App.BudgetLine'),
-
-    extras: DS.hasMany('App.MyProjectDetail'),
 
     phaseName: function(){
 	    return this.get('status').get('name');
@@ -206,11 +162,6 @@ App.Theme = DS.Model.extend({
     name: DS.attr('string')
 });
 
-App.ThemeList = [
-    {id: "0", title: gettext("--loading--")}
-];
-
-
 /* Project Manage Models */
 
 App.MyProjectBudgetLine = DS.Model.extend({
@@ -231,6 +182,8 @@ App.BudgetLine = DS.Model.extend({
 
 App.MyProject = App.Project.extend({
     url: 'projects/manage',
+
+    country: DS.belongsTo('App.Country'),
 
     validBasics: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
@@ -262,23 +215,6 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('image'),
 
-    // Crowd funding
-    moneyNeeded: DS.attr('number', {defaultValue: 0}),
-    budgetLines: DS.hasMany('App.MyProjectBudgetLine'),
-
-    totalBudget: function(){
-        var lines = this.get('budgetLines');
-        return lines.reduce(function(prev, line){
-            return (prev || 0) + (line.get('amount')/1 || 0);
-        });
-    }.property('budgetLines.@each.amount'),
-
-    validBudget: function(){
-        if (this.get('totalBudget') > 0 &&  this.get('totalBudget') <= 5000 ){
-            return true;
-        }
-        return false;
-    }.property('totalBudget'),
 
     created: DS.attr('date'),
 

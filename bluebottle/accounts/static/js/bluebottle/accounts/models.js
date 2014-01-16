@@ -73,14 +73,6 @@ App.User = DS.Model.extend({
     get_facebook: function() {
         return '//www.facebook.com/' + this.get('facebook');
     }.property('facebook')
-
-});
-
-
-
-// TODO: split this of
-App.User.reopen({
-    user_statistics: DS.attr('object')
 });
 
 

@@ -24,19 +24,25 @@ class ProjectTheme(models.Model):
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
 
-    def __unicode__(self):
-        return self.name
-
     class Meta:
         ordering = ['name']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
 
+    def __unicode__(self):
+        return self.name
+
+    def save(self, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+        super(ProjectTheme, self).save(**kwargs)
+
 
 class ProjectPhase(models.Model):
     """ Phase of a project """
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.CharField(max_length=400, blank=True)
     sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
 
@@ -72,7 +78,7 @@ class ProjectManager(models.Manager):
         return qs
 
 
-class Project(models.Model):
+class BaseProject(models.Model):
     """ The base Project model. """
 
     owner = models.ForeignKey(
@@ -83,7 +89,6 @@ class Project(models.Model):
         _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
 
-    status = models.ForeignKey(ProjectPhase)
 
     # Basics
     title = models.CharField(_('title'), max_length=255, unique=True)
@@ -91,47 +96,28 @@ class Project(models.Model):
     pitch = models.TextField(
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
 
-    tags = TaggableManager(
-        blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
+    status = models.ForeignKey(ProjectPhase)
+
+    theme = models.ForeignKey('ProjectTheme')
 
     # Extended Description
     description = models.TextField(
         _('why, what and how'), help_text=_('Blow us away with the details!'),
         blank=True)
-    reach = models.PositiveIntegerField(
-        _('Reach'), help_text=_('How many people do you expect to reach?'),
-        blank=True, null=True)
 
-    # Location
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
 
     # Media
     image = ImageField(
         _('image'), max_length=255, blank=True, upload_to='project_images/',
         help_text=_('Main project picture'))
-    video_url = models.URLField(
-        _('video'), max_length=100, blank=True, null=True, default='',
-        help_text=_('Do you have a video pitch or a short movie that '
-                    "explains your project. Cool! We can't wait to see it. "
-                    "You can paste the link to YouTube or Vimeo video here"))
-
-    # Crowd funding
-    currency = models.CharField(max_length='10', default='EUR')
-
-    # For convenience and performance we also store money donated and needed here.
-    money_asked = models.PositiveIntegerField(default=0, null=True)
-    money_donated = models.PositiveIntegerField(default=0, null=True)
-    money_needed = models.PositiveIntegerField(default=0, null=True)
 
     organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
 
     objects = ProjectManager()
 
     class Meta:
+        abstract = True
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')
@@ -145,18 +131,18 @@ class Project(models.Model):
             counter = 2
             qs = Project.objects
             while qs.filter(slug=original_slug).exists():
-                original_slug = '%s-%d' % (original_slug, counter)
+                original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1
             self.slug = original_slug
 
         # Ouch ugly stuff here! FIXME!
-        try:
-            self.status
-        except ProjectPhase.DoesNotExist:
-            if not len(ProjectPhase.objects.order_by('sequence')):
-                from django.core import management
-                management.call_command('loaddata', 'project_phases.json')
-            self.status = ProjectPhase.objects.order_by('sequence')[0]
+        # try:
+        #     self.status
+        # except ProjectPhase.DoesNotExist:
+        #     if not len(ProjectPhase.objects.order_by('sequence')):
+        #         from django.core import management
+        #         management.call_command('loaddata', 'project_phases.json')
+        #     self.status = ProjectPhase.objects.order_by('sequence')[0]
 
         super(Project, self).save(*args, **kwargs)
 
@@ -165,12 +151,13 @@ class Project(models.Model):
         return reverse('project_detail', kwargs={'slug': self.slug})
 
     def get_absolute_frontend_url(self):
+        """ Insert the hashbang, after the language string """
         url = self.get_absolute_url()
-        # insert the hashbang, after the language string
         bits = url.split('/')
         url = '/'.join(bits[:2] + ['#!'] + bits[2:])
         return url
 
+    # TODO: move to mixin
     def get_meta_title(self, **kwargs):
         return u'{name_project} | {country}'.format(
             name_project=self.title,
@@ -210,6 +197,41 @@ class Project(models.Model):
     def viewable(self):
         return self.status.viewable
 
+class CoreProject(BaseProject):
+    pass
+
+    class Meta:
+        swappable = 'PROJECTS_PROJECT_MODEL'
+        db_table = 'projects_project'
+
+class Project(BaseProject):
+    """
+    Standard Project model. If there are any extra fields required, provide
+    your own Project model by extending ``BaseProject``.
+    """
+    tags = TaggableManager(
+        blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
+
+    # Location
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
+
+
+    reach = models.PositiveIntegerField(
+        _('Reach'), help_text=_('How many people do you expect to reach?'),
+        blank=True, null=True)
+
+    video_url = models.URLField(
+        _('video'), max_length=100, blank=True, null=True, default='',
+        help_text=_('Do you have a video pitch or a short movie that '
+                    "explains your project? Cool! We can't wait to see it! "
+                    "You can paste the link to YouTube or Vimeo video here"))
+
+    class Meta:
+        swappable = 'PROJECTS_PROJECT_MODEL'
+
 
 class ProjectDetailField(models.Model):
     class Types(DjangoChoices):
@@ -242,7 +264,7 @@ class ProjectDetailFieldAttribute(models.Model):
 
 
 class ProjectDetail(models.Model):
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     field = models.ForeignKey(ProjectDetailField)
     value = models.TextField()
 
@@ -256,7 +278,7 @@ class ProjectBudgetLine(models.Model):
     This is the budget for the amount asked from this
     website.
     """
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     description = models.CharField(_('description'), max_length=255, default='')
     currency = models.CharField(max_length=3, default='EUR')
     amount = models.PositiveIntegerField(_('amount (in cents)'))

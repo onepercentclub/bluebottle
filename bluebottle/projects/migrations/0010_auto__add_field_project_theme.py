@@ -2,27 +2,21 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.utils.text import slugify
+from django.db import models
 
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'ProjectDetailField.slug'
-        db.add_column(u'projects_projectdetailfield', 'slug',
-                      self.gf('django.db.models.fields.CharField')(default='temp', max_length=30),
+        # Adding field 'Project.theme'
+        db.add_column(u'projects_project', 'theme',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.ProjectTheme'], null=True),
                       keep_default=False)
-        fields = orm.ProjectDetailField.objects.all()
-        for field in fields:
-            field.slug = slugify(field.name)
-            field.save()
-        db.create_unique(u'projects_projectdetailfield', 'slug')
-
 
 
     def backwards(self, orm):
-        # Deleting field 'ProjectDetailField.slug'
-        db.delete_column(u'projects_projectdetailfield', 'slug')
+        # Deleting field 'Project.theme'
+        db.delete_column(u'projects_project', 'theme_id')
 
 
     models = {
@@ -36,6 +30,7 @@ class Migration(SchemaMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
+            'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -53,6 +48,7 @@ class Migration(SchemaMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
             'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),
@@ -152,10 +148,11 @@ class Migration(SchemaMigration):
             'money_needed': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0', 'null': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['organizations.Organization']", 'null': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['accounts.BlueBottleUser']"}),
-            'phase': ('django.db.models.fields.CharField', [], {'max_length': '30'}),
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
+            'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectPhase']"}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectTheme']", 'null': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'null': 'True', 'blank': 'True'})
@@ -201,7 +198,7 @@ class Migration(SchemaMigration):
             'value': ('django.db.models.fields.CharField', [], {'max_length': '200'})
         },
         u'projects.projectphase': {
-            'Meta': {'object_name': 'ProjectPhase'},
+            'Meta': {'ordering': "['sequence']", 'object_name': 'ProjectPhase'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '400', 'blank': 'True'}),
             'editable': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),

@@ -65,7 +65,7 @@ class Task(models.Model):
 
     people_needed = models.PositiveIntegerField(_("people needed"), default=1, help_text=_("How many people are needed for this task?"))
 
-    project = models.ForeignKey('projects.Project')
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='author')
     created = CreationDateTimeField(_("created"), help_text=_("When this task was created?"))
     updated = ModificationDateTimeField(_("updated"))

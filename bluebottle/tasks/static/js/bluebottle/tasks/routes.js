@@ -3,7 +3,8 @@ App.Router.map(function(){
         this.route('search');
     });
 
-    this.resource('myTaskList', {path: '/my/tasks'});
+    // route disabled for now, let the backend handle the hours spent
+    // this.resource('myTaskList', {path: '/my/tasks'});
     this.resource('task', {path: '/tasks/:task_id'}, function(){
 
     });
@@ -29,6 +30,8 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
                     controller.get('content').pushObject(record);
                 }
             });
+            // var taskCount = controller.get('content').get('length');
+            // controller.set('taskCount', taskCount);
         });
     }
 });
@@ -179,13 +182,9 @@ App.TaskIndexRoute = Em.Route.extend({
 });
 
 
-App.ProjectTaskNewRoute = Em.Route.extend({
-
-    setupController: function(controller, model) {
-        this._super(controller, model);
-        var store = this.get('store');
-        var model = store.createRecord(App.Task);
-        controller.set('content', model);
+App.TaskNewRoute = Em.Route.extend({
+    model: function(params) {
+        return this.get('store').createRecord(App.Task);
     }
 });
 

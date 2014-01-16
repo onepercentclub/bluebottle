@@ -47,7 +47,6 @@ App = Em.Application.create({
 
         this.setLocale(locale);
         this.initSelectViews();
-        this.initProjectDetailFields();
     },
 
     initSelectViews: function() {
@@ -73,25 +72,14 @@ App = Em.Application.create({
             });
         });
 
-	App.ProjectPhase.find().then(function(data){
+        App.ProjectPhase.find().then(function(data){
 
-	    var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
+            var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
 
-	    App.ProjectPhaseSelectView.reopen({
-		content: list
-	    });
-	});
-
-        // Get a filtered list of countries that can apply for a project ('oda' countries).
-        var filteredList = App.Country.filter(function(item) {return item.get('oda')});
-
-        App.ProjectCountrySelectView.reopen({
-            content: filteredList
+            App.ProjectPhaseSelectView.reopen({
+            content: list
+            });
         });
-    },
-
-    initProjectDetailFields: function(){
-        App.ProjectDetailField.find();
     },
 
     setLocale: function(locale) {
@@ -299,7 +287,7 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend({
     needs: ['currentUser'],
 
-    events: {
+    actions: {
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
             if (!user.get('id_for_ember')) {

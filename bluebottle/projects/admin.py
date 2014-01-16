@@ -1,18 +1,22 @@
-from bluebottle.projects.models import ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail, ProjectTheme
+import logging
+
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 
-
-from babel.numbers import format_currency
 from sorl.thumbnail.admin import AdminImageMixin
-import logging
 
-from .models import Project
+from . import get_project_model
+
+from .models import (
+    Project, ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute,
+    ProjectDetailFieldValue, ProjectDetail, ProjectTheme)
 
 
 logger = logging.getLogger(__name__)
+
+PROJECT_MODEL = get_project_model()
 
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
@@ -25,7 +29,7 @@ class ProjectDetailAdmin(admin.StackedInline):
     can_delete = False
 
 
-class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
+class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
@@ -40,14 +44,15 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     raw_id_fields = ('owner',)
 
-    fields = ('title', 'slug', 'owner', 'status', 'pitch', 'image','description', 'reach',
-              'latitude', 'longitude', 'country', 'video_url', 'money_needed', 'tags')
+    fields = ('title', 'slug', 'owner', 'status', 'pitch', 'image',
+              'description', 'reach', 'latitude', 'longitude', 'country',
+              'video_url', 'tags')
 
     prepopulated_fields = {"slug": ("title",)}
 
     def queryset(self, request):
         # Optimization: Select related fields that are used in admin specific display fields.
-        queryset = super(ProjectAdmin, self).queryset(request)
+        queryset = super(BaseProjectAdmin, self).queryset(request)
         return queryset.select_related('projectpitch', 'projectplan', 'projectcampaign', 'owner',
                                        'partner_organization')
 
@@ -84,7 +89,9 @@ class ProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     project_owner.allow_tags = True
 
-admin.site.register(Project, ProjectAdmin)
+# if you want to display more fields, unregister the model first, define a new admin class
+# (possibly inheriting from BaseProjectAdmin), and then re-register it
+admin.site.register(PROJECT_MODEL, BaseProjectAdmin)
 
 
 class ProjectPhaseAdmin(admin.ModelAdmin):

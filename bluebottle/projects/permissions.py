@@ -1,6 +1,8 @@
 from rest_framework import permissions
 
-from .models import Project
+from . import get_project_model
+
+PROJECT_MODEL = get_project_model()
 
 
 class IsProjectOwner(permissions.BasePermission):
@@ -8,7 +10,7 @@ class IsProjectOwner(permissions.BasePermission):
     Allows access only to project owner.
     """
     def has_object_permission(self, request, view, obj):
-        if isinstance(obj, Project):
+        if isinstance(obj, PROJECT_MODEL):
             return obj.owner == request.user
         return obj.project.owner == request.user
 
@@ -19,7 +21,7 @@ class IsOwner(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         # Test for project model object-level permissions.
-        return isinstance(obj, Project) and obj.owner == request.user
+        return isinstance(obj, PROJECT_MODEL) and obj.owner == request.user
 
 
 class IsProjectOwnerOrReadOnly(permissions.BasePermission):
@@ -33,9 +35,9 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
             project_slug = request.QUERY_PARAMS.get('project', None)
         if project_slug:
             try:
-                project = Project.objects.get(slug=project_slug)
+                project = PROJECT_MODEL.objects.get(slug=project_slug)
                 return project
-            except Project.DoesNotExist:
+            except PROJECT_MODEL.DoesNotExist:
                 return None
         else:
             return None
@@ -44,9 +46,9 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
         project_pk = view.kwargs.get('pk', None)
         if project_pk:
             try:
-                project = Project.objects.get(pk=project_pk)
+                project = PROJECT_MODEL.objects.get(pk=project_pk)
                 return project
-            except Project.DoesNotExist:
+            except PROJECT_MODEL.DoesNotExist:
                 return None
         else:
             return None
@@ -73,7 +75,7 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Test for project model object-level permissions.
-        if isinstance(obj, Project):
+        if isinstance(obj, PROJECT_MODEL):
             return obj.owner == request.user
         else:
             return obj.project.owner == request.user

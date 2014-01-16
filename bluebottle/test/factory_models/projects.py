@@ -8,13 +8,6 @@ from .accounts import BlueBottleUserFactory
 PROJECT_MODEL = get_project_model()
 
 
-class ProjectFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = PROJECT_MODEL
-
-    owner = factory.SubFactory(BlueBottleUserFactory)
-    title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
-
-
 class ProjectThemeFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ProjectTheme
 
@@ -29,6 +22,15 @@ class ProjectPhaseFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Phase_{0}'.format(n))
     sequence = factory.Sequence(lambda n: n)
+
+
+class ProjectFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = PROJECT_MODEL
+
+    owner = factory.SubFactory(BlueBottleUserFactory)
+    title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
+    status = factory.SubFactory(ProjectPhaseFactory)
+    theme = factory.SubFactory(ProjectThemeFactory)
 
 
 class ProjectDetailFieldFactory(factory.DjangoModelFactory):

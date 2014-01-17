@@ -1,29 +1,37 @@
-from bluebottle.projects.models import Project
-from bluebottle.accounts.serializers import UserPreviewSerializer
-from bluebottle.bluebottle_drf2.serializers import OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer
 from django.contrib.contenttypes.models import ContentType
-from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
-from .models import WallPost, SystemWallPost, MediaWallPost, TextWallPost, MediaWallPostPhoto, Reaction
+from rest_framework import serializers
 
+from bluebottle.accounts.serializers import UserPreviewSerializer
+from bluebottle.bluebottle_drf2.serializers import (
+    OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
+from bluebottle.projects import get_project_model
 
-# Serializer to serialize all wall-posts for an object into an array of ids
-# Add a field like so:
-# wallpost_ids = WallPostListSerializer()
+from .models import (
+    WallPost, SystemWallPost, MediaWallPost, TextWallPost, MediaWallPostPhoto,
+    Reaction)
+
+PROJECT_MODEL = get_project_model()
+
 
 class WallPostListSerializer(serializers.Field):
-
+    """
+    Serializer to serialize all wall-posts for an object into an array of ids
+    Add a field like so:
+    wallpost_ids = WallPostListSerializer()
+    """
     def field_to_native(self, obj, field_name):
         content_type = ContentType.objects.get_for_model(obj)
-        list = WallPost.objects.filter(object_id=obj.id).filter(content_type=content_type)
-        list = list.values_list('id', flat=True).order_by('-created').all()
-        return list
+        wallposts = WallPost.objects.filter(object_id=obj.id).filter(content_type=content_type)
 
+        return wallposts.values_list('id', flat=True).order_by('-created').all()
 
-# Serializer for WallPost Reactions.
 
 class ReactionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for WallPost Reactions.
+    """
     author = UserPreviewSerializer()
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField()
@@ -71,8 +79,8 @@ class WallPostParentIdField(serializers.IntegerField):
         if not value.isnumeric():
             # Assume a project slug here
             try:
-                project = Project.objects.get(slug=value)
-            except Project.DoesNotExist:
+                project = PROJECT_MODEL.objects.get(slug=value)
+            except PROJECT_MODEL.DoesNotExist:
                 raise ValidationError("No project with that slug")
             value = project.id
         return value
@@ -128,8 +136,6 @@ class TextWallPostSerializer(WallPostSerializerBase):
     class Meta:
         model = TextWallPost
         fields = WallPostSerializerBase.Meta.fields + ('text',)
-
-
 
 
 class WallPostRelatedField(serializers.RelatedField):

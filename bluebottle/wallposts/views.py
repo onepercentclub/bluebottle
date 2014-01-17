@@ -3,16 +3,18 @@ import django_filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import permissions
 
-from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly, AllowNone
+from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
-from bluebottle.projects.models import Project
+from bluebottle.projects import get_project_model
 
 from .models import TextWallPost, MediaWallPost, MediaWallPostPhoto
 from .permissions import IsConnectedWallPostAuthorOrReadOnly
 from .serializers import TextWallPostSerializer, MediaWallPostSerializer, MediaWallPostPhotoSerializer
 from .models import WallPost, Reaction
 from .serializers import ReactionSerializer, WallPostSerializer
+
+PROJECT_MODEL = get_project_model()
 
 
 class WallPostFilter(django_filters.FilterSet):
@@ -45,8 +47,8 @@ class WallPostList(ListAPIView):
 
         if parent_type == 'project' and parent_id:
             try:
-                project = Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
+                project = PROJECT_MODEL.objects.get(slug=parent_id)
+            except PROJECT_MODEL.DoesNotExist:
                 return WallPost.objects.none()
             queryset = queryset.filter(object_id=project.id)
 
@@ -72,8 +74,8 @@ class TextWallPostList(ListCreateAPIView):
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
         if parent_type == 'project' and parent_id:
             try:
-                project = Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
+                project = PROJECT_MODEL.objects.get(slug=parent_id)
+            except PROJECT_MODEL.DoesNotExist:
                 return WallPost.objects.none()
             queryset = queryset.filter(object_id=project.id)
 

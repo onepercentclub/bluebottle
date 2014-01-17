@@ -46,7 +46,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     }.property('center'),
     zoom_level:  3,
     map: null,
-    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><p class="project-location"><em>{{location}}</em></p><img class="project-thumbnail" src="{{image}}" alt="{{title}}" /><p class="project-description">{{description}}</p></div>',
+    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><img class="project-thumbnail" src="{{image}}" alt="{{title}}" /><p class="project-description">{{description}}</p></div>',
     active_info_window: null,
 
     initMap: function(){
@@ -105,23 +105,23 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var html = template(data);
         var latLng = new google.maps.LatLng(project.get('latitude'), project.get('longitude'));
 
-        var info_window = new InfoBox({
-				content: html,
-				disableAutoPan: false,
-				maxWidth: 200,
-				alignBottom: true,
-				pixelOffset: new google.maps.Size(0, -22),
-				zIndex: null,
-				boxClass: "info-windows",
-				closeBoxURL: "",
-				pane: "floatPane",
-				enableEventPropagation: false,
-				infoBoxClearance: "10px",
-				position: latLng
-			});
-//        var info_window = new google.maps.InfoWindow({
-//    		content: html
-//	    });
+		var info_window = new InfoBox({
+			content: html,
+			disableAutoPan: false,
+			maxWidth: 200,
+			alignBottom: true,
+			pixelOffset: new google.maps.Size(0, -22),
+			zIndex: null,
+			boxClass: "info-windows",
+			closeBoxURL: "",
+			pane: "floatPane",
+			enableEventPropagation: false,
+			infoBoxClearance: "10px",
+			position: latLng
+		});
+	    //        	var info_window = new google.maps.InfoWindow({
+	    //    			content: html
+	    // });
         var marker = new google.maps.Marker({
 		    position: latLng,
 		    map: view.map,

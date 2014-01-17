@@ -110,11 +110,13 @@
 #project-members {
     padding: $base-padding 0;
     background-color: $gray-darker;
+	
 	.task-list {
-		@include grid(24,0,0);
+		@include grid(24,0,1);
 	}
+	
 	.member-list {
-	    @include grid(24,0,0);		
+	    @include grid(24,1,0);		
 	}
 }
 

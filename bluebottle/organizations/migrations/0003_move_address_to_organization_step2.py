@@ -1,37 +1,38 @@
-# -*- coding: utf-8 -*-
 import datetime
 from south.db import db
-from south.v2 import SchemaMigration
+from south.v2 import DataMigration
 from django.db import models
 
 
-class Migration(SchemaMigration):
+class Migration(DataMigration):
 
     def forwards(self, orm):
-        for organization in orm.Organization.objects.all():
-            addresses = organization.organizationaddress_set.all()
-            if addresses:
-                address = addresses[0]
-                organization.address_line1 = address.line1
-                organization.address_line2 = address.line2
-                organization.city = address.city
-                organization.state = address.state
-                organization.country = address.country
-                organization.postal_code = address.postal_code
-                organization.save()
-                organization.organizationaddress_set.all().delete()
+        if not db.dry_run:
+            for organization in orm.Organization.objects.all():
+                addresses = organization.organizationaddress_set.all()
+                if addresses:
+                    address = addresses[0]
+                    organization.address_line1 = address.line1
+                    organization.address_line2 = address.line2
+                    organization.city = address.city
+                    organization.state = address.state
+                    organization.country = address.country
+                    organization.postal_code = address.postal_code
+                    organization.save()
+                    organization.organizationaddress_set.all().delete()
 
     def backwards(self, orm):
-        for organization in orm.Organization.objects.all():
-            address = orm.OrganizationAddress()
-            address.organization = organization
-            address.line1 = organization.address_line1
-            address.line2 = organization.address_line2
-            address.city = organization.city
-            address.state = organization.state
-            address.country = organization.country
-            address.postal_code = organization.postal_code
-            address.save()
+        if not db.dry_run:
+            for organization in orm.Organization.objects.all():
+                address = orm.OrganizationAddress()
+                address.organization = organization
+                address.line1 = organization.address_line1
+                address.line2 = organization.address_line2
+                address.city = organization.city
+                address.state = organization.state
+                address.country = organization.country
+                address.postal_code = organization.postal_code
+                address.save()
 
     models = {
         u'accounts.bluebottleuser': {

@@ -124,7 +124,8 @@ class BaseProject(models.Model):
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2
-            qs = Project.objects
+            qs = self.__class__.objects
+
             while qs.filter(slug=original_slug).exists():
                 original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1

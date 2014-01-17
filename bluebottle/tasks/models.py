@@ -5,12 +5,16 @@ from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import (
+    ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+from taggit_autocomplete_modified.managers import (
+    TaggableManagerAutocomplete as TaggableManager)
 
 from bluebottle.utils.utils import clean_for_hashtag
-from bluebottle.projects.models import Project
+from bluebottle.projects import get_project_model
+
+PROJECT_MODEL = get_project_model()
 
 
 class Skill(models.Model):
@@ -28,17 +32,23 @@ class Skill(models.Model):
 
 class SupportedProjectsManager(models.Manager):
     """
-    Manager to retrieve user statistics related to supported projects through tasks.
+    Manager to retrieve user statistics related to supported projects through
+    tasks.
     """
     def by_user(self, user):
         """
-        Fetches the projects supported by `user` by being a taskmember in the related tasks.
+        Fetches the projects supported by `user` by being a taskmember in the
+        related tasks.
 
-        Usage: Task.supported_projects.by_user(user) returns the projects queryset.
+        Usage: Task.supported_projects.by_user(user) returns the projects
+        queryset.
         """
         statuses = TaskMember.TaskMemberStatuses
-        valid_statuses = [statuses.applied, statuses.accepted, statuses.realized] # NOTE: should applied be in here too?
-        projects = Project.objects.filter(task__taskmember__member=user, task__taskmember__status__in=valid_statuses).distinct()
+        valid_statuses = [
+            statuses.applied, statuses.accepted, statuses.realized] # NOTE: should applied be in here too?
+        projects = PROJECT_MODEL.objects.filter(
+            task__taskmember__member=user,
+            task__taskmember__status__in=valid_statuses).distinct()
         return projects
 
 
@@ -58,16 +68,23 @@ class Task(models.Model):
 
     expertise = models.CharField(_("old expertise"), max_length=200)
     skill = models.ForeignKey(Skill, verbose_name=_("Skill needed"), null=True)
-    time_needed = models.CharField(_("time_needed"), max_length=200, help_text=_("Estimated number of hours needed to perform this task."))
+    time_needed = models.CharField(
+        _("time_needed"), max_length=200,
+        help_text=_("Estimated number of hours needed to perform this task."))
 
-    status = models.CharField(_("status"), max_length=20, choices=TaskStatuses.choices, default=TaskStatuses.open)
+    status = models.CharField(
+        _("status"), max_length=20, choices=TaskStatuses.choices,
+        default=TaskStatuses.open)
     date_status_change = models.DateTimeField(_("status since"), blank=True, null=True)
 
-    people_needed = models.PositiveIntegerField(_("people needed"), default=1, help_text=_("How many people are needed for this task?"))
+    people_needed = models.PositiveIntegerField(
+        _("people needed"), default=1,
+        help_text=_("How many people are needed for this task?"))
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='author')
-    created = CreationDateTimeField(_("created"), help_text=_("When this task was created?"))
+    created = CreationDateTimeField(
+        _("created"), help_text=_("When this task was created?"))
     updated = ModificationDateTimeField(_("updated"))
 
     tags = TaggableManager(blank=True, verbose_name=_("tags"))
@@ -96,7 +113,7 @@ class Task(models.Model):
     def get_fb_title(self, **kwargs):
         project = self.project
         country = project.country.name if project.country else ''
-        return _(u"Share your skills: {task_name} in {country}").format(task_name = self.title, country = country)
+        return _(u"Share your skills: {task_name} in {country}").format(task_name=self.title, country=country)
 
     def get_tweet(self, **kwargs):
         project = self.project
@@ -113,12 +130,11 @@ class Task(models.Model):
         expertise_hashtag = clean_for_hashtag(expertise)
 
         tweet = _(u"Share your skills: {task_name} in {country} {{URL}}"
-                   " #{expertise} via @{twitter_handle}").format(
-                    task_name = self.title,
-                    country = country,
-                    expertise = expertise_hashtag,
-                    twitter_handle = twitter_handle
-                )
+                  u" #{expertise} via @{twitter_handle}").format(
+                      task_name=self.title,
+                      country=country,
+                      expertise=expertise_hashtag,
+                      twitter_handle=twitter_handle)
         return tweet
 
     class Meta:
@@ -136,11 +152,14 @@ class TaskMember(models.Model):
 
     task = models.ForeignKey('Task')
     member = models.ForeignKey(settings.AUTH_USER_MODEL)
-    status = models.CharField(_("status"), max_length=20, choices=TaskMemberStatuses.choices)
+    status = models.CharField(
+        _("status"), max_length=20, choices=TaskMemberStatuses.choices)
 
-    motivation = models.TextField(_("Motivation"), help_text=_("Motivation by applicant."), blank=True)
+    motivation = models.TextField(
+        _("Motivation"), help_text=_("Motivation by applicant."), blank=True)
     comment = models.TextField(_("Comment"), help_text=_("Comment by task owner."), blank=True)
-    time_spent = models.PositiveSmallIntegerField(_('"time spent'), default=0, help_text=_("Time spent executing this task."))
+    time_spent = models.PositiveSmallIntegerField(
+        _('"time spent'), default=0, help_text=_("Time spent executing this task."))
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))

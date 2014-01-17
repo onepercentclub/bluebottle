@@ -46,7 +46,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     }.property('center'),
     zoom_level:  3,
     map: null,
-    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><img class="project-thumbnail" src="{{image}}" alt="{{title}}" /><p class="project-description">{{description}}</p></div>',
+    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{pitch}}</p></div></div>',
     active_info_window: null,
 
     initMap: function(){
@@ -110,7 +110,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 			disableAutoPan: false,
 			maxWidth: 200,
 			alignBottom: true,
-			pixelOffset: new google.maps.Size(0, -22),
+			pixelOffset: new google.maps.Size(-200, -60),
 			zIndex: null,
 			boxClass: "info-windows",
 			closeBoxURL: "",

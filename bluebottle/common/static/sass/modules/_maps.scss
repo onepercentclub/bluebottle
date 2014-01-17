@@ -1,5 +1,62 @@
-.maps-infobox {
-	.project-title {
-		padding: $base-padding;
+.bb-map-container {
+	position: relative;
+	.shadows-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 10;
+		@include box-shadow(inset 0 0 10px #333);		
 	}
+	.bb-project-map {
+	    margin: 10px auto;
+	    width: 100%;
+	    height:500px;
+		img {
+		    max-width: none;		
+		}
+		.info-windows {
+			overflow: visible !important;
+		}
+		.maps-infobox {
+			width: 400px;
+			@include clear;
+			.project-title {
+				padding: $base-padding / 2;
+				background-color: $gray-dark;
+				color: white;
+				font-size: $font-size-large;
+				font-weight: bold;
+			}
+			.project-description-container {
+				@include clear;
+				background-color: $color-primary;
+				.project-thumbnail {
+					@include grid(12,0,0);
+					img {
+						max-width: 100%;
+					}
+				}
+				.project-description {
+					@include grid(36,0,0);
+					padding: $base-padding;
+					color: $white;
+				}
+			}
+			&:after {
+				left: 50%;
+				top: 100%;
+				border: solid transparent;
+				content: " ";
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-top-color: $color-primary;
+				border-width: 10px;
+				margin-left: -10px;
+			}	
+		}
+	}	
 }

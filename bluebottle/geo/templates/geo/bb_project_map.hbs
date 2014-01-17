@@ -4,44 +4,9 @@
 
 {% tplhandlebars "components/bb-project-map" %}
 
-    <style>
-        .bb-project-map {
-            margin: 10px auto;
-            background-color: #003;
-            width: 900px;
-            height:500px;
-        }
-        .bb-project-map img {
-            max-width: none;
-        }
-        .maps-infobox {
-            background-color: #eee;
-            box-shadow: 3px 3px 3px rgba(0,0,0,0.5)
-;
-        }
-        .maps-infobox p, .maps-infobox h2 {
-            margin: 0px;
-            padding: 0px 4px;
-        }
-
-        .maps-infobox .project-title {
-                margin: 0;
-        }
-        .maps-infobox .project-description {
-                width: 200px;
-                overflow: hidden;
-        }
-        .maps-infobox .project-description .project-thumbnail {
-                float: left;
-                margin-right: 10px;
-        }
-        .project-thumbnail {
-            width: 100%;
-        }
-        .maps-infobox .project-link {
-                text-align: right;
-        }
-    </style>
-    <div class="bb-project-map" id="map-canvas"></div>
+<div class="bb-map-container">
+	<div class="shadows-overlay"></div>
+    <div class="bb-project-map"></div>
+</div>
 
 {% endtplhandlebars %}

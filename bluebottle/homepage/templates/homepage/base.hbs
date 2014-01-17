@@ -12,13 +12,7 @@
             No slides
         {{/if }}
 
-        {{#if projects }}
-            {{#each project in projects}}
-                {{view App.HomeProjectListView }}
-            {{/each}}
-        {{else}}
-            No projects
-        {{/if }}
+        {{bb-project-map}}
 
         {{#if quotes }}
             {{#each quote in quotes}}

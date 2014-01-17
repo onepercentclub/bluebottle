@@ -11,7 +11,7 @@
         </h3>
         <div class="toolbox-content">
             <p>{% trans "Do you need someone to help writing your business plan?" %}</p>
-            {{#link-to "projectTaskNew" project.getProject tagName="button" class="btn btn-iconed"}}
+            {{#link-to "taskNew" project.getProject tagName="button" class="btn btn-iconed"}}
                 <em class="flaticon solid wrench-1"></em>
                 {% trans "Create a new task" %}
             {{/link-to}}

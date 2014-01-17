@@ -105,25 +105,23 @@
             color: $gray-light;
         }
     }
-    
-    #project-members {
-        background-color: $gray-darker;
-    }
 }
 
 #project-members {
     padding: $base-padding 0;
     background-color: $gray-darker;
-    
-    .project-member-list {
-        @include grid(48,1,1);
-    }
+	.task-list {
+		@include grid(24,0,0);
+	}
+	.member-list {
+	    @include grid(24,0,0);		
+	}
 }
 
 #project-actions {
     border-top: 1px solid $gray-light;
     background-color: $gray-lighter;
-    
+
     .tabs {
         @include grid(48,1,1);
     }

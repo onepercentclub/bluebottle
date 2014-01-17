@@ -46,7 +46,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
     }.property('center'),
     zoom_level:  3,
     map: null,
-    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><p class="project-location"><em>{{location}}</em></p><img class="project-thumbnail" src="{{image}}" alt="{{title}}" /><p class="project-description">{{description}}</p></div>',
+	markers: [],
+    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{pitch}}</p></div></div>',
     active_info_window: null,
 
     initMap: function(){
@@ -86,7 +87,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
     placeMarkers: function() {
         var comp = this;
-        console.log(this.get('projects').toString());
+		
         this.get('projects').forEach(function(project){
             comp.placeMarker(project);
         });
@@ -101,41 +102,46 @@ App.BbProjectMapComponent = Ember.Component.extend({
             'image': project.get('image'),
             'location': project.get('country.name'),
         }
-
+		
         var html = template(data);
         var latLng = new google.maps.LatLng(project.get('latitude'), project.get('longitude'));
 
-        var info_window = new InfoBox({
-				content: html,
-				disableAutoPan: false,
-				maxWidth: 200,
-				alignBottom: true,
-				pixelOffset: new google.maps.Size(0, -22),
-				zIndex: null,
-				boxClass: "info-windows",
-				closeBoxURL: "",
-				pane: "floatPane",
-				enableEventPropagation: false,
-				infoBoxClearance: "10px",
-				position: latLng
-			});
-//        var info_window = new google.maps.InfoWindow({
-//    		content: html
-//	    });
+		var info_window = new InfoBox({
+			content: html,
+			disableAutoPan: false,
+			maxWidth: 200,
+			alignBottom: true,
+			pixelOffset: new google.maps.Size(-200, -30),
+			zIndex: null,
+			boxClass: "info-windows",
+			closeBoxURL: "",
+			pane: "floatPane",
+			enableEventPropagation: false,
+			infoBoxClearance: "10px",
+			position: latLng
+		});
+
         var marker = new google.maps.Marker({
 		    position: latLng,
 		    map: view.map,
 		    title: project.get('title'),
-		    icon: "/static/assets/images/icons/marker.png"
+		    icon: "/static/assets/images/icons/map-location.png"
 	    });
-
+		
 	    google.maps.event.addListener(marker, 'click', function() {
+			view.markers.forEach(function(m) {
+				m.setIcon("/static/assets/images/icons/map-location.png");
+			});
+		    this.setIcon("/static/assets/images/icons/map-location-active.png");
             if (view.active_info_window) {
                 view.active_info_window.close();
             }
             info_window.open(view.map, marker);
             view.active_info_window = info_window;
-        });
+        });	
+
+
+		view.markers.push(marker);
     },
     didInsertElement: function() {
 	    this.initMap();

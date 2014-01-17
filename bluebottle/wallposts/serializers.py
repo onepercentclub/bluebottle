@@ -60,13 +60,10 @@ class WallPostContentTypeField(serializers.SlugRelatedField):
     Field to save content_type on wall-posts.
     """
 
-    # To avoid stale apps in ContentType we white-list the apps we want to use.
-    # This avoids errors like "get() returned more than one ContentType -- it returned 2!".
-    white_listed_apps = ['projects', 'tasks', 'fundraisers']
-
-    def initialize(self, parent, field_name):
-        super(WallPostContentTypeField, self).initialize(parent, field_name)
-        self.queryset = self.queryset.filter(app_label__in=self.white_listed_apps)
+    def from_native(self, data):
+        if data == 'project':
+            data = ContentType.objects.get_for_model(PROJECT_MODEL).model
+        return super(WallPostContentTypeField, self).from_native(data)
 
 
 class WallPostParentIdField(serializers.IntegerField):

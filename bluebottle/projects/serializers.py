@@ -5,10 +5,13 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, EuroField, TagSerializer, ImageSerializer, OEmbedField,
     TaggableSerializerMixin)
 from bluebottle.geo.models import Country
+from bluebottle.projects import get_project_model
 from bluebottle.projects.models import (
-    Project, ProjectTheme, ProjectBudgetLine, ProjectDetailField,
-    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail, ProjectPhase)
+    ProjectTheme, ProjectBudgetLine, ProjectDetailField, ProjectDetail,
+    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectPhase)
 from bluebottle.utils.serializers import MetaField
+
+PROJECT_MODEL = get_project_model()
 
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
@@ -51,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
     class Meta:
-        model = Project
+        model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
                   'status', 'meta_data', 'image')
 
@@ -63,7 +66,7 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
     pitch = serializers.CharField(source='pitch')
 
     class Meta:
-        model = Project
+        model = PROJECT_MODEL
         fields = ('id', 'title', 'image', 'status', 'country', 'latitude', 'longitude')
 
 
@@ -83,7 +86,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     pitch = serializers.CharField(required=False)
 
     class Meta:
-        model = Project
+        model = PROJECT_MODEL
         exclude = ('owner', 'slug')
 
 

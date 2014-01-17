@@ -1,10 +1,10 @@
-from django.conf import settings
-from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
-
 from admin_tools.dashboard.modules import DashboardModule
-from .models import Project
+
+from . import get_project_model
+
+PROJECT_MODEL = get_project_model()
 
 
 class RecentProjects(DashboardModule):
@@ -17,7 +17,7 @@ class RecentProjects(DashboardModule):
         super(RecentProjects, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = Project.objects.order_by('-created')
+        qs = PROJECT_MODEL.objects.order_by('-created')
         self.children = qs[:self.limit]
         if not len(self.children):
             self.pre_content = _('No recent projects.')
@@ -29,12 +29,12 @@ class SubmittedProjects(DashboardModule):
     template = 'admin_tools/dashboard/submitted_plans.html'
     limit = 10
 
-    def __init__(self, title=None, limit=10,**kwargs):
+    def __init__(self, title=None, limit=10, **kwargs):
         kwargs.update({'limit': limit})
         super(SubmittedProjects, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = Project.objects.order_by('created')
+        qs = PROJECT_MODEL.objects.order_by('created')
         qs = qs.filter(phase='plan-submitted')
 
         self.children = qs[:self.limit]
@@ -48,12 +48,12 @@ class StartedCampaigns(DashboardModule):
     template = 'admin_tools/dashboard/started_campaigns.html'
     limit = 10
 
-    def __init__(self, title=None, limit=10,**kwargs):
+    def __init__(self, title=None, limit=10, **kwargs):
         kwargs.update({'limit': limit})
         super(StartedCampaigns, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = Project.objects.order_by('-created')
+        qs = PROJECT_MODEL.objects.order_by('-created')
         qs = qs.filter(phase='campaign-running')
 
         self.children = qs[:self.limit]

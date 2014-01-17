@@ -1,5 +1,6 @@
-from .model import HomePage
 from rest_framework import generics, response
+
+from .model import HomePage
 from .serializers import HomePageSerializer
 
 
@@ -11,5 +12,3 @@ class HomePageDetail(generics.GenericAPIView):
         homepage = HomePage().get(language)
         serialized = HomePageSerializer().to_native(homepage)
         return response.Response(serialized)
-
-

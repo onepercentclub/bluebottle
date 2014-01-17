@@ -12,12 +12,8 @@ from bluebottle.utils.serializers import MetaField
 
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectPhase
-        fields = ('id', 'name', 'description', 'sequence', 'active',
-                  'editable', 'viewable')
-
 
 
 class ProjectCountrySerializer(serializers.ModelSerializer):
@@ -72,7 +68,6 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
 
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail')
@@ -82,21 +77,17 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(read_only=True)
+    status = serializers.PrimaryKeyRelatedField()
     image = ImageSerializer(required=False)
 
     pitch = serializers.CharField(required=False)
 
     class Meta:
         model = Project
-        fields = ('id', 'created', 'title', 'url', 'status', 'image', 'pitch', 'theme',
-                  'tags', 'description', 'country', 'latitude', 'longitude',
-                  'reach', 'organization', 'image', 'video_html', 'video_url',
-                  'editable', 'viewable')
+        exclude = ('owner', 'slug')
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
-    #title = serializers.Field(source='name')
 
     class Meta:
         model = ProjectTheme
@@ -127,7 +118,6 @@ class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailFieldSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     options = ProjectDetailFieldValueSerializer(many=True, source='projectdetailfieldvalue_set')
     attributes = ProjectDetailFieldAttributeSerializer(many=True, source='projectdetailfieldattribute_set')

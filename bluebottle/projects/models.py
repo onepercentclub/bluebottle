@@ -85,27 +85,21 @@ class BaseProject(models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')
 
+    # Basics
     created = CreationDateTimeField(
         _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
-
-
-    # Basics
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
-
     status = models.ForeignKey(ProjectPhase)
-
-    theme = models.ForeignKey('ProjectTheme')
+    theme = models.ForeignKey(ProjectTheme)
 
     # Extended Description
     description = models.TextField(
         _('why, what and how'), help_text=_('Blow us away with the details!'),
         blank=True)
-
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
 
     # Media
     image = ImageField(
@@ -113,6 +107,7 @@ class BaseProject(models.Model):
         help_text=_('Main project picture'))
 
     organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
+    country = models.ForeignKey('geo.Country', blank=True, null=True)
 
     objects = ProjectManager()
 
@@ -187,14 +182,6 @@ class BaseProject(models.Model):
     @property
     def viewable(self):
         return self.status.viewable
-
-
-class CoreProject(BaseProject):
-    pass
-
-    class Meta:
-        swappable = 'PROJECTS_PROJECT_MODEL'
-        db_table = 'projects_project'
 
 
 class Project(BaseProject):

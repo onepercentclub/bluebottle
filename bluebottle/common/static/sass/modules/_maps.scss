@@ -1,15 +1,8 @@
 .bb-map-container {
 	position: relative;
-	.shadows-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		z-index: 10;
-		@include box-shadow(inset 0 0 10px #333);		
-	}
 	.bb-project-map {
+		overflow: visible;
+
 	    margin: 10px auto;
 	    width: 100%;
 	    height:500px;
@@ -54,8 +47,8 @@
 				position: absolute;
 				pointer-events: none;
 				border-top-color: $color-primary;
-				border-width: 10px;
-				margin-left: -10px;
+				border-width: 6px;
+				margin-left: -6px;
 			}	
 		}
 	}	

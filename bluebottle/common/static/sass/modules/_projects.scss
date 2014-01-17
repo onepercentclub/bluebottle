@@ -396,22 +396,6 @@
 	}
 }
 
-.project-preview {
-	
-	.image {
-	
-	}
-	
-	.project-info {
-    	
-	}
-	
-	project-status {
-    	
-	}
-	
-}
-
 
 //
 // Projects in vertical list
@@ -531,6 +515,41 @@
 		
 		img {
 			width: 100%;
+		}
+	}
+}
+
+// task list for in project view
+.task-list {
+	
+	.task {
+		
+		border: 1px solid $gray-light;
+		background-color: $gray-dark;
+		
+		@include grid(24,0,0);
+		
+		.task-status {
+			@include grid(12,0,0);
+			background-color: $gray-light;
+			color: $gray-dark;
+			text-transform: uppercase;
+		}
+		
+		.task-content {
+			@include grid(36,0,0);
+			color: $gray-light;
+			
+			.task-name {
+				color: $white;
+			}
+			
+			.task-time-needed {
+				@include grid(16,0,0);
+			}
+			.task-time-deadline {
+				@include grid(16,0,0);
+			}
 		}
 	}
 }

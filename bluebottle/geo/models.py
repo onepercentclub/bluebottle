@@ -14,12 +14,19 @@ class GeoBaseModel(models.Model):
     name = models.CharField(_("name"), max_length=100)
     # https://en.wikipedia.org/wiki/ISO_3166-1_numeric
     # http://unstats.un.org/unsd/methods/m49/m49alpha.htm
-    numeric_code = models.CharField(_("numeric code"), max_length=3, unique=True, validators=[NumericCodeValidator],
+    numeric_code = models.CharField(_("numeric code"), max_length=3, blank=True, null=True, unique=True, validators=[NumericCodeValidator],
         help_text=_("ISO 3166-1 or M.49 numeric code")
     )
 
     def __unicode__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+
+        if self.numeric_code == '':
+            self.numeric_code = None
+
+        super(GeoBaseModel, self).save(*args, **kwargs)
 
     class Meta:
         abstract = True

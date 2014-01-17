@@ -7,7 +7,7 @@ PROJECT_MODEL = get_project_model()
 
 class IsProjectOwner(permissions.BasePermission):
     """
-    Allows access only to project owner.
+    Permissions class used to allow access only to project owner.
     """
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, PROJECT_MODEL):
@@ -26,7 +26,11 @@ class IsOwner(permissions.BasePermission):
 
 class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     """
-    Allows access only to project owner.
+    Permissions class used to allow access only to project owner for those
+    methods which are not specified in ``SAFE_METHODS``.
+
+    Ideally, this will grant only-reading access for all users and restrict
+    data changes permissions to the project owner only.
     """
     def _get_project_from_request(self, request):
         if request.DATA:
@@ -55,8 +59,10 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Read permissions are allowed to any request, so we'll always allow
-        # GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
+        # GET, HEAD or OPTIONS requests. However, DELETE is a special case
+        # because it needs to reference the object which is going to be deleted
+        # and thus check that object permissions, so we'll let it pass also.
+        if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
         # Test for objects/lists related to a Project (e.g WallPosts).

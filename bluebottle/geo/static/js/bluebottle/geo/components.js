@@ -87,7 +87,6 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
     placeMarkers: function() {
         var comp = this;
-		
         this.get('projects').forEach(function(project){
             comp.placeMarker(project);
         });

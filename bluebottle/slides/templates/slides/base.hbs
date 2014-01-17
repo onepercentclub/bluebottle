@@ -25,6 +25,14 @@
 				            {{/if}}
 				        </article>
 
+		                {{#if image}}
+							<div class="l-half carousel-video">
+	                			<div class="image">
+                                    <img {{bindAttr src=image}} />
+                                </div>
+							</div>
+						{{/if}}
+
 		        	</div>
 
 		        	<div class="carousel-image"></div>

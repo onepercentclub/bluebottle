@@ -32,7 +32,7 @@
 
                         <span class="project-header">
                             <figure class="project-image">
-                                <img {{bindAttr src="project.image.square" alt="project.pitch.title"}} />
+                                <img {{bindAttr src="project.image.square" alt="project.title"}} />
                             </figure>
                             <h2 class="project-title">
                                 {{ project.title }}
@@ -46,7 +46,7 @@
                         </span>
 
 				        <div class="project-actions">
-				        	{% trans "Phase" %}: <strong>{{ project.phase }}</strong>
+				        	{% trans "Phase" %}: <strong>{{ project.status.name }}</strong>
                             <br/>
 	                        {{#if project.editable}}
 	                            {{#link-to "myProject" project tagName="a" class="btn btn-iconed right"}}

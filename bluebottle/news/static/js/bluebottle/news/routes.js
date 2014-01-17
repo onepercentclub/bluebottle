@@ -11,6 +11,10 @@ App.NewsRoute = Em.Route.extend({
     model: function(params) {
         return App.NewsItemPreview.find({language: App.get('language')});
     },
+    setupController: function(controller, model){
+        this._super(controller, model);
+        this.controllerFor('application').set('latestNews', model);
+    },
     events: {
         showNews: function(news_id) {
             var route = this;

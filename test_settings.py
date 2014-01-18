@@ -104,7 +104,8 @@ TEMPLATE_LOADERS = [
 TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     # Makes the 'request' variable (the current HttpRequest) available in templates.
     'django.core.context_processors.request',
-    'django.core.context_processors.i18n'
+    'django.core.context_processors.i18n',
+    'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
@@ -158,3 +159,4 @@ TWITTER_HANDLES = {
 }
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
+PROJECTS_PROJECT_MODEL = 'projects.Project'

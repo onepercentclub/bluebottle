@@ -58,6 +58,17 @@
 	                                <span class="flaticon solid lock-1"></span>
 	                                {% trans "Project is locked" %}
 	                        {{/if}}
+	                        {{#if project.viewable}}
+	                            {{#link-to "project" project.id}}
+	                                <span class="flaticon solid pencil-3"></span>
+	                                {% trans "Post update" %}
+	                            {{/link-to}}
+                                <br/>
+	                            {{#link-to "taskNew" project.id}}
+	                                <span class="flaticon solid pencil-3"></span>
+	                                {% trans "Create task" %}
+	                            {{/link-to}}
+	                        {{/if}}
 
 				        </div>
 				    </li>

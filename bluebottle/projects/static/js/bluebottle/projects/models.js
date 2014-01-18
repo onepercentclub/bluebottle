@@ -39,7 +39,7 @@ App.Project = DS.Model.extend({
 
     // Model fields
     slug: DS.attr('string'),
-    status: DS.belongsTo('App.ProjectPhase'),//DS.attr('string'),
+    status: DS.belongsTo('App.ProjectPhase'),
     created: DS.attr('date'),
 
     owner: DS.belongsTo('App.UserPreview'),
@@ -76,7 +76,7 @@ App.Project = DS.Model.extend({
     	return this.get('status').get('sequence');
     }.property('phaseNum'),
 
-    isPhasePlan: Em.computed.equal('phaseNum', 5),
+    isPhasePlan: Em.computed.lte('phaseNum', 5),
 
     isPhaseAct: Em.computed.equal('phaseNum', 9),
 
@@ -218,6 +218,19 @@ App.MyProject = App.Project.extend({
 
     created: DS.attr('date'),
 
-    organization: DS.belongsTo('App.MyOrganization')
+    organization: DS.belongsTo('App.MyOrganization'),
+
+    canSubmit: function(){
+        if (!this.get('status')) {
+            return true;
+        }
+        if (this.get('isPhasePlan')) {
+            return true;
+        }
+        if (this.get('isPhasePlan')) {
+            return true;
+        }
+        return false;
+    }.property('status')
 
 });

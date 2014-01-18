@@ -83,10 +83,12 @@
                     </ul>
                     --}}
 
-                    {{#link-to "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
-                        <span class="flaticon solid right-2"></span>
-                        {% trans "Submit Plan" %}
-                    {{/link-to}}
+                    {{#if canSubmit}}
+                        {{#link-to "myProject.submit" class="btn btn-iconed btn-primary btn-submit"}}
+                            <span class="flaticon solid right-2"></span>
+                            {% trans "Submit Plan" %}
+                        {{/link-to}}
+                    {{/if}}
 
                 </nav>
 

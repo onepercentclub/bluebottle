@@ -20,6 +20,6 @@ urlpatterns = patterns(
     url(r'^members/my-tasks/$', MyTaskMemberList.as_view(), name='my_task_member_list'),
 
     # Task Files
-    url(r'^files/$', TaskFileList.as_view(), name='task-member-list'),
-    surl(r'^files/<pk:#>$', TaskFileDetail.as_view(), name='task-member-detail'),
+    url(r'^files/$', TaskFileList.as_view(), name='task_member_list'),
+    url(r'^files/(?P<pk>\d+)$', TaskFileDetail.as_view(), name='task_member_detail'),
 )

@@ -44,6 +44,7 @@ class SupportedProjectsManager(models.Manager):
         queryset.
         """
         statuses = TaskMember.TaskMemberStatuses
+
         valid_statuses = [
             statuses.applied, statuses.accepted, statuses.realized] # NOTE: should applied be in here too?
         projects = PROJECT_MODEL.objects.filter(

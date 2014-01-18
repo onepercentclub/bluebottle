@@ -1,9 +1,8 @@
 from django.conf.urls import patterns, url
 
 from ..views import (
-    TaskDetail, TaskList, TaskWallPostList, TaskWallPostDetail, TaskMemberList,
-    TaskMemberDetail, TaskFileList, TaskFileDetail, TaskPreviewList, SkillList,
-    MyTaskMemberList)
+    TaskDetail, TaskList, TaskMemberList,TaskMemberDetail, TaskFileList,
+    TaskFileDetail, TaskPreviewList, SkillList, MyTaskMemberList)
 
 
 urlpatterns = patterns(
@@ -21,10 +20,6 @@ urlpatterns = patterns(
     url(r'^members/my-tasks/$', MyTaskMemberList.as_view(), name='my_task_member_list'),
 
     # Task Files
-    url(r'^files/$', TaskFileList.as_view(), name='task_member_list'),
-    url(r'^files/(?P<pk>\d+)$', TaskFileDetail.as_view(), name='task_member_detail'),
-
-    # Task WallPost Urls
-    url(r'^wallposts/$', TaskWallPostList.as_view(), name='task_wallpost_list'),
-    url(r'^wallposts/(?P<pk>\d+)$', TaskWallPostDetail.as_view(), name='task_wallpost_detail'),
+    url(r'^files/$', TaskFileList.as_view(), name='task-member-list'),
+    surl(r'^files/<pk:#>$', TaskFileDetail.as_view(), name='task-member-detail'),
 )

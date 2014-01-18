@@ -60,6 +60,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var mapOptions = {
             zoom: 2,
             center: point,
+            scrollwheel: false,
             panControl: false,
             zoomControl: true,
             mapTypeControl: false,

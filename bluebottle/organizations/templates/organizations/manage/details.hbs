@@ -1,0 +1,178 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_organisation" %}
+
+    <legend>
+        <strong>{% trans "Organisation" %}</strong>
+    </legend>
+
+    {{#if hasMultipleOrganizations}}
+        {% trans "It appears that you already have an (other) organisation. Select it below or fill out the form to create a new one." %}
+        {{#each org in organizations}}
+            <br />
+            <a {{action 'selectOrganization' org}}>{{org.name}}</a> {{org.description}}
+        {{/each}}
+    {{/if}}
+
+    <fieldset>
+        <ul>
+            <li class="control-group has-popover" data-content="{% trans "Name of your organisation" %}">
+                <label class="control-label">{% trans "Name" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.name" classBinding="organization.errors.name.length:error"}}
+                </div>
+
+                {{#if organization.errors.name }}
+                    <div class="has-errors">{{#each organization.errors.name }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Describe your organisation" %}">
+                <label class="control-label">{% trans "Description" %}</label>
+                <div class="controls">
+                    {{view Em.TextArea valueBinding="organization.description" classBinding="organization.errors.description.length:error"}}
+                </div>
+
+                {{#if organization.errors.description }}
+                    <div class="has-errors">{{#each organization.errors.description }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+    <fieldset>
+        <legend>
+            <strong>{% trans "Address" %}</strong>
+        </legend>
+        <ul>
+            <li class="control-group has-popover" data-content="{% trans "Street, house number, the place in your city" %}">
+                <label class="control-label">{% trans "Address line 1" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.address_line1" classBinding="organization.errors.address_line1.length:error"}}
+                </div>
+
+                {{#if organization.errors.address_line1 }}
+                    <div class="has-errors">{{#each organization.errors.address_line1 }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "More about your address" %}">
+                <label class="control-label">{% trans "Address line 2" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.address_line2" classBinding="organization.errors.address_line2.length:error"}}
+                </div>
+
+                {{#if organization.errors.address_line2 }}
+                    <div class="has-errors">{{#each organization.errors.address_line2 }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+
+            <li class="control-group has-popover" data-content="{% trans "City or village.." %}">
+                <label class="control-label">{% trans "City" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.city" classBinding="organization.errors.city.length:error"}}
+                </div>
+
+                {{#if organization.errors.city }}
+                    <div class="has-errors">{{#each organization.errors.city }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Postal code" %}">
+                <label class="control-label">{% trans "Postal code" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.postal_code" classBinding="organization.errors.postal_code.length:error"}}
+                </div>
+
+                {{#if organization.errors.postal_code }}
+                    <div class="has-errors">{{#each organization.errors.postal_code }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Country or territory" %}">
+                <label class="control-label">{% trans "Country" %}</label>
+                <div class="controls">
+                    {{view App.CountrySelectView valueBinding="organization.country" classBinding="organization.errors.country.length:error"}}
+                </div>
+
+                {{#if organization.errors.country }}
+                    <div class="has-errors">{{#each organization.errors.country }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+    <fieldset>
+        <legend>
+            <strong>{% trans "Online" %}</strong>
+        </legend>
+        <ul>
+
+            <li class="control-group has-popover" data-content="{% trans "Does your organization have a website?" %}">
+                <label class="control-label">{% trans "Website" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.website" classBinding="organization.errors.website.length:error"}}
+                </div>
+
+                {{#if organization.errors.website }}
+                    <div class="has-errors">{{#each organization.errors.website }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Email address" %}">
+                <label class="control-label">{% trans "Email" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.email" classBinding="organization.errors.email.length:error"}}
+                </div>
+
+                {{#if organization.errors.email }}
+                    <div class="has-errors">{{#each organization.errors.email }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Does your organization have a twitter account?" %}">
+                <label class="control-label">{% trans "Twitter" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.twitter" placeholder="@twitteraccount" classBinding="organization.errors.twitter.length:error"}}
+                </div>
+
+                {{#if organization.errors.twitter }}
+                    <div class="has-errors">{{#each organization.errors.twitter }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Does your organization have a facebook group?" %}">
+                <label class="control-label">{% trans "Facebook" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.facebook" placeholder="https://www.facebook.com/<groupname>" classBinding="organization.errors.facebook.length:error"}}
+                </div>
+
+                {{#if organization.errors.facebook }}
+                    <div class="has-errors">{{#each organization.errors.facebook }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "Can we reach you on Skype?" %}">
+                <label class="control-label">{% trans "Skype" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.skype" placeholder="skype name" classBinding="organization.errors.skype.length:error"}}
+                </div>
+
+                {{#if organization.errors.skype }}
+                    <div class="has-errors">{{#each organization.errors.skype }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+
+    {{#if shouldSave}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
+    {{else}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
+    {{/if}}
+
+{% endtplhandlebars %}
+

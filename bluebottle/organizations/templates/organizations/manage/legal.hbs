@@ -1,0 +1,60 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "my_project_legal" %}
+
+    <legend>
+        <strong>{% trans "Legal status" %}</strong>
+        <p>{% trans "Please upload an excerpt of your official registration to show that your NGO is registered." %}</p>
+    </legend>
+
+
+    <fieldset>
+        <ul>
+            <li class="control-group has-popover" data-content="{% trans "What is the legal status of your organization? Include the registration number." %}">
+                <label class="control-label">{% trans "Legal status" %}</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.legalStatus" placeholder="Legal status" classBinding="organization.errors.legalStatus.length:error"}}
+                </div>
+
+                {{#if organization.errors.legalStatus }}
+                    <div class="has-errors">{{#each organization.errors.legalStatus }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
+                <label class="control-label">
+                    {% trans "Documents" %} ({{organization.documents.length}})<br />
+                    <small>
+                        {% trans ".jpg, .png or .pdf" %}
+                    </small>
+                </label>
+
+                <div class="controls manage-project-files">
+                    <a class="btn btn-iconed btn-upload">
+                        {{view App.UploadMultipleFiles name="documents" multiple=true}}
+                        <span class="flaticon solid upload-document-1"></span>
+                        {% trans "Upload scan(s)" %}
+                    </a>
+                    <br />
+                    {{#each doc in organization.documents}}
+                        <a {{action removeFile doc}}><span class="flaticon solid minus-2"></span></a>
+                        <a {{bindAttr href=doc.file.url}}>
+                            {{doc.file.name}} <small>{{doc.file.size}}</small><br/>
+                        </a>
+                    {{/each}}
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    {{#if shouldSave}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
+    {{else}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
+    {{/if}}
+
+{% endtplhandlebars %}
+
+

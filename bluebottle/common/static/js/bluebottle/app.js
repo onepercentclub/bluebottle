@@ -16,12 +16,19 @@ App = Em.Application.create({
     ready: function() {
         // Read language string from url.
         var language = window.location.pathname.split('/')[1];
-        App.CurrentUser.find('current').then(function(user){
-            var primaryLanguage = user.get('primary_language');
-            if (primaryLanguage && primaryLanguage != language) {
-                document.location = '/' + primaryLanguage + document.location.hash;
+        App.CurrentUser.find('current').then(
+            function(user){
+                var primaryLanguage = user.get('primary_language');
+                if (primaryLanguage && primaryLanguage != language) {
+                    document.location = '/' + primaryLanguage + document.location.hash;
+                }
+            },
+            function(data){
+                // FOr now redirect all visitors that are not authenticated.
+                document.location = '/token/missing';
             }
-        });
+        );
+
         // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
         this.set('language', language);
 
@@ -285,7 +292,6 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Em.Route.extend({
-    needs: ['currentUser'],
 
     actions: {
         selectLanguage: function(language) {

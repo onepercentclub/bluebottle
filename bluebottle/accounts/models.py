@@ -253,6 +253,7 @@ class BlueBottleUser(BlueBottleBaseUser):
     """
     class Meta:
         swappable = 'AUTH_USER_MODEL'
+        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'
 
 
 # Ensures that UserProfile and User instances stay in sync.

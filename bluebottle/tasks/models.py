@@ -80,7 +80,6 @@ class BaseTask(models.Model):
         ordering = ['-created']
         verbose_name = _(u'task')
         verbose_name_plural = _(u'tasks')
-        default_serializer = 'bluebottle.tasks.serializers.TaskSerializer'
 
     def __unicode__(self):
         return self.title
@@ -163,6 +162,7 @@ class Task(BaseTask):
 
     class Meta:
         swappable = 'TASKS_TASK_MODEL'
+        default_serializer = 'bluebottle.tasks.serializers.TaskSerializer'
 
 
 class TaskMember(models.Model):

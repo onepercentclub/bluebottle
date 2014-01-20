@@ -1,59 +1,37 @@
 from django.test import TestCase
 from django.utils import timezone
+
 from rest_framework import status
+
 from bluebottle.utils.tests import generate_random_slug
-from bluebottle.projects.tests import ProjectTestsMixin
-from .models import Task
+from bluebottle.tasks import get_task_model
+
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
+
 import json
 
-
-class TaskTestsMixin(ProjectTestsMixin):
-    """ Mixin base class for tests using tasks. """
-
-    def create_task(self, owner=None, project=None, title='', description='', status='open'):
-        """
-        Create a 'default' task with some standard values but allow for overrides.
-        The returned object is saved to the database.
-        """
-
-        if not owner:
-            # Create a new user with a random username
-            owner = self.create_user()
-
-        if not project:
-            # Create a new project
-            owner = self.create_project()
-
-        if not title:
-            title = generate_random_slug()
-
-        if not description:
-            title = generate_random_slug()
-
-        task = Task(
-            owner=owner, title=title, status=status, project=project
-        )
-
-        task.save()
-
-        return task
+BB_TASK_MODEL = get_task_model()
 
 
-class TaskApiIntegrationTests(TestCase, TaskTestsMixin):
+
+class TaskApiIntegrationTests(TestCase):
     """ Tests for tasks. """
 
     def setUp(self):
-        self.some_user = self.create_user()
-        self.another_user = self.create_user()
+        self.some_user = BlueBottleUserFactory.create()
+        self.another_user = BlueBottleUserFactory.create()
 
-        self.some_project = self.create_project(owner=self.some_user)
-        self.another_project = self.create_project(owner=self.another_user)
+        self.some_project = ProjectFactory.create(owner=self.some_user)
+        self.another_project = ProjectFactory.create(owner=self.another_user)
 
         self.task_url = '/api/tasks/'
         self.task_members_url = '/api/tasks/members/'
 
     def test_create_task(self):
 
+        print self.some_user.email
         self.client.login(username=self.some_user.email, password='password')
 
         # Get the list of tasks for some project should return none (count = 0)

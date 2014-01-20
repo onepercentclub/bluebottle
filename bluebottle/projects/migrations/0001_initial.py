@@ -5,7 +5,6 @@ from south.v2 import SchemaMigration
 from django.conf import settings
 from django.db import models
 
-
 class Migration(SchemaMigration):
 
     depends_on = (
@@ -194,7 +193,7 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
         settings.AUTH_USER_MODEL.lower(): {
-            'Meta': {'object_name': 'BookingUser', 'db_table': "'accounts_bluebottleuser'"},
+            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1], 'db_table': "'accounts_bluebottleuser'"},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.TextField', [], {'blank': 'True'}),

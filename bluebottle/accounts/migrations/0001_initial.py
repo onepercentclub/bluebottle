@@ -2,8 +2,10 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
+from django.conf import settings
 from django.db import models
 
+user_model = settings.AUTH_USER_MODEL.lower()
 
 class Migration(SchemaMigration):
 
@@ -46,13 +48,17 @@ class Migration(SchemaMigration):
             ('available_time', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('contribution', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
-        db.send_create_signal(u'accounts', ['BlueBottleUser'])
+
+        app, model = settings.AUTH_USER_MODEL.split('.')
+        db.send_create_signal(app, [model])
+
+        # FIXME: migration can take values of app, model and then in project-specific migrations we don't have to do the renaming
 
         # Adding M2M table for field groups on 'BlueBottleUser'
         m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_groups')
         db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('bluebottleuser', models.ForeignKey(orm[u'accounts.bluebottleuser'], null=False)),
+            ('bluebottleuser', models.ForeignKey(orm[user_model], null=False)),
             ('group', models.ForeignKey(orm[u'auth.group'], null=False))
         ))
         db.create_unique(m2m_table_name, ['bluebottleuser_id', 'group_id'])
@@ -61,7 +67,7 @@ class Migration(SchemaMigration):
         m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_user_permissions')
         db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('bluebottleuser', models.ForeignKey(orm[u'accounts.bluebottleuser'], null=False)),
+            ('bluebottleuser', models.ForeignKey(orm[user_model], null=False)),
             ('permission', models.ForeignKey(orm[u'auth.permission'], null=False))
         ))
         db.create_unique(m2m_table_name, ['bluebottleuser_id', 'permission_id'])
@@ -76,7 +82,7 @@ class Migration(SchemaMigration):
             ('country', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['geo.Country'], null=True, blank=True)),
             ('postal_code', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
             ('address_type', self.gf('django.db.models.fields.CharField')(default='primary', max_length=10, blank=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounts.BlueBottleUser'])),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
         ))
         db.send_create_signal(u'accounts', ['UserAddress'])
 
@@ -96,8 +102,8 @@ class Migration(SchemaMigration):
 
 
     models = {
-        u'accounts.bluebottleuser': {
-            'Meta': {'object_name': 'BlueBottleUser'},
+        user_model: {
+            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1]},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
@@ -142,7 +148,7 @@ class Migration(SchemaMigration):
             'line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['accounts.BlueBottleUser']"})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.AUTH_USER_MODEL})
         },
         u'auth.group': {
             'Meta': {'object_name': 'Group'},

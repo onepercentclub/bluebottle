@@ -7,7 +7,16 @@ from django.db import models
 
 USE_DEFAULT_TASK_MODEL = settings.TASKS_TASK_MODEL == 'tasks_task'
 
+task_model = settings.TASKS_TASK_MODEL.lower()
+user_model = settings.AUTH_USER_MODEL.lower()
+project_model = settings.PROJECTS_PROJECT_MODEL.lower()
+
 class Migration(SchemaMigration):
+
+    depends_on = (
+        ('accounts', '0001_initial'),
+        ('projects', '0001_initial'),
+    )
 
     def forwards(self, orm):
         # Adding model 'Skill'
@@ -25,7 +34,7 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('description', self.gf('django.db.models.fields.TextField')()),
-            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.Project'])),
+            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.PROJECTS_PROJECT_MODEL])),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(related_name='author', to=orm[settings.AUTH_USER_MODEL])),
             ('status', self.gf('django.db.models.fields.CharField')(default='open', max_length=20)),
             ('deadline', self.gf('django.db.models.fields.DateTimeField')()),
@@ -91,7 +100,7 @@ class Migration(SchemaMigration):
 
     models = {
         settings.AUTH_USER_MODEL.lower(): {
-            'Meta': {'object_name': 'BlueBottleUser'},
+            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1]},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
@@ -169,7 +178,7 @@ class Migration(SchemaMigration):
             'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
-        u'organizations.organization': {
+        u'organizations.organization': { # FIXME: abstract shenanigans
             'Meta': {'ordering': "['name']", 'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
@@ -203,8 +212,8 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
         },
-        u'projects.project': {
-            'Meta': {'object_name': 'Project'},
+        project_model: {
+            'Meta': {'object_name': settings.PROJECTS_PROJECT_MODEL.split('.')[-1]},
             'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
@@ -212,7 +221,7 @@ class Migration(SchemaMigration):
             'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'blank': 'True'}),
             'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
             'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
-            'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['organizations.Organization']", 'null': 'True', 'blank': 'True'}),
+            'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['organizations.Organization']", 'null': 'True', 'blank': 'True'}), # FIXME needs to use settings
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
@@ -261,14 +270,14 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
             'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
         },
-        settings.TASKS_TASK_MODEL: {
-            'Meta': {'object_name': 'Task'},
+        task_model: {
+            'Meta': {'object_name': settings.TASKS_TASK_MODEL.split('.')[-1]},
             'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'author'", 'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deadline': ('django.db.models.fields.DateTimeField', [], {}),
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.PROJECTS_PROJECT_MODEL}),
             'skill': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['tasks.Skill']", 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'default': "'open'", 'max_length': '20'}),
             'time_needed': ('django.db.models.fields.CharField', [], {'max_length': '200'}),

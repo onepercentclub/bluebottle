@@ -190,6 +190,12 @@ App.Adapter.configure("plurals", {
 App.ApplicationController = Ember.Controller.extend({
     needs: ['currentUser'],
     display_message: false,
+		news: [],
+		
+		init: function() {
+			this._super();
+			this.set('news', App.NewsItem.find());
+		},
 
     displayMessage: (function() {
         if (this.get('display_message') == true) {

@@ -9,13 +9,13 @@
 
             <a {{action openInBigBox "memberProfile" author}} class="member">
                 <span class="member-avatar">
-                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.full_name }}" />
+                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.fullname }}" />
                 </span>
             </a>
 
         </div>
 		<div class="reaction-body">
-            <strong class="member-name">{{ author.full_name }}</strong>
+            <strong class="member-name">{{ author.fullname }}</strong>
 
 	        <span class="timestamp">{{ localize created formatting="X" }}</span>
 	        {{#if isAuthor}}

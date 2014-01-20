@@ -207,6 +207,7 @@
 	background: $gray-lighter;
 
 	.wallposts-list {
+		margin: $base-margin 0;
 		@include grid(24,0,1);
 	}
 	.wallposts-important {

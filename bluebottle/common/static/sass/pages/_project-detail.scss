@@ -7,8 +7,8 @@
     padding-top: $base-padding;
     
     .project-meta {
-//        float: left;
         font-family: $font-family-heavy;
+		@include clear;
 		.project-location, .project-deadline, .project-theme {
 			@include grid(16,0,0);
 		}
@@ -21,6 +21,7 @@
     .project-title {
         clear: both;
         font-size: $font-size-larger;
+		margin: $base-margin/2 0;
     }
     
     .project-status {

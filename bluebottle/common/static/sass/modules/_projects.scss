@@ -294,8 +294,8 @@
     }
 	
 	.project-meta {
+		@include clear;
 		.project-location, .project-deadline, .project-theme {
-			display: block;
 			@include grid(16,0,0);
 		}
 	}

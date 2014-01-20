@@ -59,12 +59,12 @@
 	                                {% trans "Project is locked" %}
 	                        {{/if}}
 	                        {{#if project.viewable}}
-	                            {{#link-to "project" project.id}}
+	                            {{#link-to "project" project.id class="btn btn-iconed right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Post update" %}
 	                            {{/link-to}}
                                 <br/>
-	                            {{#link-to "taskNew" project.id}}
+	                            {{#link-to "taskNew" project.id class="btn btn-iconed right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Create task" %}
 	                            {{/link-to}}

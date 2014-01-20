@@ -3,6 +3,10 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
 
     nextStep: 'myProject.legal',
 
+    hasMultipleOrganizations: function(){
+        return (this.get('organizations.length') > 1);
+    }.property('organizations'),
+
     shouldSave: function(){
         // Determine if any part is dirty, project or organization.
         if (this.get('isDirty')) {

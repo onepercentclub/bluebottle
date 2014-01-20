@@ -127,9 +127,9 @@ setup(
     zip_safe=False,
 
     # Metadata for PyPI.
-    description='Bluebottle, the crowdsourcing framework initiated by the 1%CLUB.',
+    description='Bluebottle, the crowdsourcing framework initiated by the 1%Club.',
     long_description='\n\n'.join([readme, changes]),
-    author='1%CLUB',
+    author='1%Club',
     author_email='info@onepercentclub.com',
     platforms=['any'],
     url='https://github.com/onepercentclub/bluebottle',

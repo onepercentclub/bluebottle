@@ -33,7 +33,9 @@
 
     {# Stylesheets #}
     {% compress css %}
+		{% block screen_css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" media="screen" />
+		{% endblock screen_css %}
     {% endcompress %}
 
     {# Scripts #}

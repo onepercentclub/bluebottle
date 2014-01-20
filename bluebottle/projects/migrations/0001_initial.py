@@ -40,7 +40,7 @@ class Migration(SchemaMigration):
 
         project_fields = (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(related_name='owner', to=orm['members.BookingUser'])),
+            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(related_name='owner', to=orm[settings.AUTH_USER_MODEL])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('title', self.gf('django.db.models.fields.CharField')(unique=True, max_length=255)),
@@ -64,8 +64,7 @@ class Migration(SchemaMigration):
 
         db.create_table('projects_project', project_fields)
         app, model = settings.PROJECTS_PROJECT_MODEL.split('.')
-        if app == 'projects':
-            db.send_create_signal(u'projects', [model])
+        db.send_create_signal(app, [model])
 
         # Adding model 'ProjectDetailField'
         db.create_table(u'projects_projectdetailfield', (
@@ -194,7 +193,7 @@ class Migration(SchemaMigration):
             'numeric_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '3'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
-        u'members.bookinguser': {
+        settings.AUTH_USER_MODEL.lower(): {
             'Meta': {'object_name': 'BookingUser', 'db_table': "'accounts_bluebottleuser'"},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
@@ -276,7 +275,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'blank': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['organizations.Organization']", 'null': 'True', 'blank': 'True'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['members.BookingUser']"}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectPhase']"}),

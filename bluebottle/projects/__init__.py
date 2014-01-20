@@ -19,6 +19,6 @@ def get_project_model():
     if project_model is None:
         raise ImproperlyConfigured(
             "PROJECTS_PROJECT_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.AUTH_USER_MODEL))
+            "installed".format(settings.PROJECTS_PROJECT_MODEL))
 
     return project_model

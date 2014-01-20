@@ -17,6 +17,8 @@ class Migration(SchemaMigration):
         ('accounts', '0001_initial'),
         ('projects', '0001_initial'),
     )
+    if project_model != 'projects.project':
+        depends_on += ((project_model.split('.')[0], '0001_initial'),)
 
     def forwards(self, orm):
         # Adding model 'Skill'
@@ -29,7 +31,6 @@ class Migration(SchemaMigration):
         db.send_create_signal(u'tasks', ['Skill'])
 
         # Adding model 'Task'
-
         task_fields = (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=100)),
@@ -100,7 +101,7 @@ class Migration(SchemaMigration):
 
     models = {
         settings.AUTH_USER_MODEL.lower(): {
-            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1]},
+            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1], 'db_table': "'accounts_bluebottleuser'"},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
@@ -213,7 +214,7 @@ class Migration(SchemaMigration):
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
         },
         project_model: {
-            'Meta': {'object_name': settings.PROJECTS_PROJECT_MODEL.split('.')[-1]},
+            'Meta': {'object_name': settings.PROJECTS_PROJECT_MODEL.split('.')[-1], 'db_table': "'projects_project'"},
             'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),

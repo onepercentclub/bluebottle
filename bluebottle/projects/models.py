@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.comments import get_model
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -61,23 +62,6 @@ class ProjectPhase(models.Model):
         return '{0} - {1}'.format(self.sequence,  self.name)
 
 
-class ProjectManager(models.Manager):
-    def order_by(self, field):
-
-        if field == 'deadline':
-            qs = self.get_query_set()
-            qs = qs.order_by('projectcampaign__deadline')
-            return qs
-
-        if field == 'newest':
-            qs = self.get_query_set()
-            qs = qs.order_by('projectcampaign__money_needed')
-            return qs
-
-        qs = super(ProjectManager, self).order_by(field)
-        return qs
-
-
 class BaseProject(models.Model):
     """ The base Project model. """
 
@@ -109,8 +93,6 @@ class BaseProject(models.Model):
     organization = models.ForeignKey('organizations.Organization', null=True, blank=True)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
 
-    objects = ProjectManager()
-
     class Meta:
         abstract = True
         ordering = ['title']
@@ -124,7 +106,8 @@ class BaseProject(models.Model):
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2
-            qs = Project.objects
+            qs = self.__class__.objects
+
             while qs.filter(slug=original_slug).exists():
                 original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1

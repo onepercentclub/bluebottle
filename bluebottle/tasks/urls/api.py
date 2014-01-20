@@ -1,28 +1,25 @@
-from django.conf.urls import patterns, url, include
-from surlex.dj import surl
-from ..views import (TaskDetail, TaskList, TaskWallPostList, TaskWallPostDetail, TaskMemberList, TaskMemberDetail,
-                    TaskFileList, TaskFileDetail, TaskPreviewList, SkillList, MyTaskMemberList)
+from django.conf.urls import patterns, url
+
+from ..views import (
+    TaskDetail, TaskList, TaskMemberList,TaskMemberDetail, TaskFileList,
+    TaskFileDetail, TaskPreviewList, SkillList, MyTaskMemberList)
 
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
+    url(r'^$', TaskList.as_view(), name='task_list'),
+    url(r'^(?P<pk>\d+)$', TaskDetail.as_view(), name='task_detail'),
 
-    url(r'^$', TaskList.as_view(), name='task-list'),
-    surl(r'^<pk:#>$', TaskDetail.as_view(), name='task-detail'),
+    url(r'^previews/$', TaskPreviewList.as_view(), name='task_preview_list'),
 
-    url(r'^previews/$', TaskPreviewList.as_view(), name='task-preview-list'),
-
-    url(r'^skills/$', SkillList.as_view(), name='task-skill-list'),
+    url(r'^skills/$', SkillList.as_view(), name='task_skill_list'),
 
     # Task Members
-    url(r'^members/$', TaskMemberList.as_view(), name='task-member-list'),
-    surl(r'^members/<pk:#>$', TaskMemberDetail.as_view(), name='task-member-detail'),
-    url(r'^members/my-tasks/$', MyTaskMemberList.as_view(), name='my-task-member-list'),
+    url(r'^members/$', TaskMemberList.as_view(), name='task_member_list'),
+    url(r'^members/(?P<pk>\d+)$', TaskMemberDetail.as_view(), name='task_member_detail'),
+    url(r'^members/my-tasks/$', MyTaskMemberList.as_view(), name='my_task_member_list'),
 
     # Task Files
-    url(r'^files/$', TaskFileList.as_view(), name='task-member-list'),
-    surl(r'^files/<pk:#>$', TaskFileDetail.as_view(), name='task-member-detail'),
-
-    # Task WallPost Urls
-    surl(r'^wallposts/$', TaskWallPostList.as_view(), name='task-wallpost-list'),
-    surl(r'^wallposts/<pk:#>$', TaskWallPostDetail.as_view(), name='task-wallpost-detail'),
+    url(r'^files/$', TaskFileList.as_view(), name='task_member_list'),
+    url(r'^files/(?P<pk>\d+)$', TaskFileDetail.as_view(), name='task_member_detail'),
 )

@@ -222,7 +222,6 @@ App.MyProjectLocationController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.media'
 });
 
-App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {});
 
 App.MyProjectMediaController = Em.ObjectController.extend(App.Editable, {
     // TODO: Different nextStep if bluebottle.organizations isn't installed.
@@ -290,9 +289,11 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
         submitPlan: function(e){
             var controller = this;
             var model = this.get('model');
-            model.set('status', 'submitted');
+            // Go to second status/phase
+            model.set('status', App.ProjectPhase.find().objectAt(1));
+            model.transitionTo('loaded.updated.uncommitted');
             model.on('didUpdate', function(){
-                controller.transitionToRoute('MyProjectReview');
+                controller.transitionToRoute('myProjectReview');
             });
             model.save();
         }

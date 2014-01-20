@@ -5,11 +5,14 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, EuroField, TagSerializer, ImageSerializer, OEmbedField,
     TaggableSerializerMixin)
 from bluebottle.geo.models import Country
+
+from bluebottle.projects import get_project_model
 from bluebottle.projects.models import (
-    Project, ProjectTheme, ProjectBudgetLine, ProjectDetailField,
-    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectDetail, ProjectPhase)
+    ProjectTheme, ProjectBudgetLine, ProjectDetailField, ProjectDetail,
+    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectPhase)
 from bluebottle.utils.serializers import MetaField
 
+PROJECT_MODEL = get_project_model()
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
     class Meta:
-        model = Project
+        model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
                   'status', 'meta_data', 'image')
 
@@ -63,7 +66,7 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
     pitch = serializers.CharField(source='pitch')
 
     class Meta:
-        model = Project
+        model = PROJECT_MODEL
         fields = ('id', 'title', 'image', 'status', 'country', 'latitude', 'longitude')
 
 
@@ -77,13 +80,19 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField()
+    status = serializers.PrimaryKeyRelatedField(required=False)
     image = ImageSerializer(required=False)
-
     pitch = serializers.CharField(required=False)
 
+    def validate_status(self, attrs, source):
+        value = attrs.get(source, None)
+        if not value:
+            value = ProjectPhase.objects.order_by('sequence').all()[0]
+        attrs[source] = value
+        return attrs
+
     class Meta:
-        model = Project
+        model = PROJECT_MODEL
         exclude = ('owner', 'slug')
 
 

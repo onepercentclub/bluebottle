@@ -60,6 +60,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var mapOptions = {
             zoom: 2,
             center: point,
+            scrollwheel: false,
             panControl: false,
             zoomControl: true,
             mapTypeControl: false,
@@ -87,7 +88,6 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
     placeMarkers: function() {
         var comp = this;
-		
         this.get('projects').forEach(function(project){
             comp.placeMarker(project);
         });

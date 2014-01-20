@@ -34,9 +34,10 @@ App.Router.map(function(){
         this.route('budget');
 
         this.route('submit');
+
     });
 
-    this.resource('partner', {path: '/pp/:partner_organization_id'});
+    this.resource('myProjectReview', {path: '/my/projects/:id/review'});
 
 });
 
@@ -204,3 +205,4 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
+App.MyProjectReviewRoute = App.MyProjectRoute.extend({});

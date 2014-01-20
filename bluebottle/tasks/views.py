@@ -93,45 +93,6 @@ class TaskDetail(generics.RetrieveUpdateAPIView):
     serializer_class = TaskSerializer
 
 
-class TaskWallPostMixin(object):
-
-    def get_queryset(self):
-        queryset = super(TaskWallPostMixin, self).get_queryset()
-        task_type = ContentType.objects.get_for_model(Task)
-        queryset = queryset.filter(content_type=task_type)
-        task_id = self.request.QUERY_PARAMS.get('task', None)
-        if task_id:
-            queryset = queryset.filter(object_id=task_id)
-        queryset = queryset.order_by("-created")
-        return queryset
-
-    def pre_save(self, obj):
-        # task_id = self.request.QUERY_PARAMS.get('task', None)
-        # task = Task.objects.get(pk=task_id)
-        # obj.content_object = task
-
-        task_type = ContentType.objects.get_for_model(Task)
-        obj.content_type_id = task_type.id
-
-        if not obj.author:
-            obj.author = self.request.user
-        else:
-            obj.editor = self.request.user
-        obj.ip_address = get_client_ip(self.request)
-
-
-class TaskWallPostList(TaskWallPostMixin, ListCreateAPIView):
-    model = WallPost
-    serializer_class = TaskWallPostSerializer
-    paginate_by = 4
-
-
-class TaskWallPostDetail(TaskWallPostMixin, RetrieveUpdateDeleteAPIView):
-    model = WallPost
-    serializer_class = TaskWallPostSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
-
-
 class TaskMemberList(generics.ListCreateAPIView):
     model = TaskMember
     serializer_class = TaskMemberSerializer

@@ -214,14 +214,21 @@
 	}
 	.wallpost-action {
 		
-		border: 3px dashed $gray-light;
+		border: 1px dashed $gray-light;
 		padding: $base-padding;
 		text-align: center;
 		margin-bottom: $base-margin;
+		a {
+			text-decoration: none;
+		}
 		
         .wallpost-form {
 			
             display: none;
+			
+			fieldset {
+				background: transparent;
+			}
 			
 			.errors {
 				p {

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from bluebottle.accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, EuroField, TagSerializer, ImageSerializer, OEmbedField,
@@ -11,6 +10,7 @@ from bluebottle.projects.models import (
     ProjectTheme, ProjectBudgetLine, ProjectDetailField, ProjectDetail,
     ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectPhase)
 from bluebottle.utils.serializers import MetaField
+from bluebottle.geo.serializers import CountrySerializer
 
 PROJECT_MODEL = get_project_model()
 
@@ -40,6 +40,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserPreviewSerializer()
     image = ImageSerializer(required=False)
+    country = CountrySerializer()
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -56,7 +57,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
-                  'status', 'meta_data', 'image')
+                  'status', 'meta_data', 'image', 'country', 'theme')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):

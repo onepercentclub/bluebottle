@@ -14,16 +14,20 @@
             <div class="l-half">
 
                 <article class="project-info">
+					
                     <div class="project-meta">
-                        {{#if country.name}}<span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>{{/if}}
-                        {{#if theme.title}}<span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.title}}</span>{{/if}}
+						<span class="project-deadline"><span class="flaticon stroke time-1"></span> {{daysToGo}}</span>
+                        <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
+                        <span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.name}}</span>
                     </div>
+					
 					{# no social icons in the project template #}
 					{{!--}}
                     {{view App.SocialShareView}}
 					{{--}}
                     <h1 class="project-title">{{title}}</h1>
                     <p class="project-description">{{pitch}}</p>
+					<p class="project-plan-link">{{#link-to 'projectPlan'}}<span class="flaticon solid book-4"></span> {% trans "Read full project plan" %}{{/link-to}}
                 </article>
 
             </div>
@@ -75,33 +79,6 @@
 	        </li>
 		</ul>
 		{{--}}
-		
-		{# task list view #}
-		<ul class="task-list">
-			{{#each tasks}}
-				<li class="task">
-					<div class="task-status">
-						{{#if owner}}
-							<span class="task-status-label">{{status}}</span>
-							<figure class="member-avatar">
-								<img {{bindAttr src="owner.getAvatar"}} />
-							</figure>
-						{{else}}
-							<span class="task-status-label">{{status}} task</span>
-							<span class="flaticon solid work-1"></span>
-						{{/if}}
-					</div>
-					
-					<div class="task-content">
-						<strong class="task-name">{{name}}</strong>
-						<span class="task-expoertise">{{expertise}}</span>
-					
-						<span class="task-time-needed flaticon stroke time-1">{{timeNeeded}}</span>
-						<span class="task-deadline flaticon stroke calendar-2">{{deadline}}</span>
-					</div>
-				</li>
-			{{/each}}
-		</ul>
 		
         {% if 'fund' in bb_apps %}
         {% block_verbatim 'project-funding' %}

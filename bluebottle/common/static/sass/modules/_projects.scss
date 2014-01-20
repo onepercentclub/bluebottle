@@ -292,6 +292,13 @@
             }
         }
     }
+	
+	.project-meta {
+		.project-location, .project-deadline, .project-theme {
+			display: block;
+			@include grid(16,0,0);
+		}
+	}
     
     .project-description {
         display: none;

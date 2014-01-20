@@ -7,8 +7,11 @@
     padding-top: $base-padding;
     
     .project-meta {
-        float: left;
+//        float: left;
         font-family: $font-family-heavy;
+		.project-location, .project-deadline, .project-theme {
+			@include grid(16,0,0);
+		}
     }
     
     #share {

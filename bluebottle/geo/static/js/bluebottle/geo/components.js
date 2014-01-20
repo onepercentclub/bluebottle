@@ -91,6 +91,11 @@ App.BbProjectMapComponent = Ember.Component.extend({
         this.get('projects').forEach(function(project){
             comp.placeMarker(project);
         });
+		
+		var mcOptions = {
+			maxZoom: 10,
+		}
+		var markerCluster = new MarkerClusterer(this.map, this.markers, mcOptions);
     },
 
     placeMarker: function(project){

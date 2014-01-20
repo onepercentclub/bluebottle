@@ -1,5 +1,9 @@
 from rest_framework import permissions
-from .models import Task, TaskMember
+from .models import TaskMember
+
+from . import get_task_model
+
+BB_TASK_MODEL = get_task_model()
 
 
 class IsTaskAuthorOrReadOnly(permissions.BasePermission):
@@ -14,8 +18,8 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
             task_id = request.QUERY_PARAMS.get('task', None)
         if task_id:
             try:
-                task = Task.objects.get(pk=task_id)
-            except Task.DoesNotExist:
+                task = BB_TASK_MODEL.objects.get(pk=task_id)
+            except BB_TASK_MODEL.DoesNotExist:
                 return None
         else:
             return None
@@ -37,7 +41,7 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
             return True
 
         # Test for project model object-level permissions.
-        if isinstance(obj, Task):
+        if isinstance(obj, BB_TASK_MODEL):
             return obj.author == request.user
 
         if isinstance(obj, TaskMember):

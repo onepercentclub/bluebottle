@@ -1,7 +1,8 @@
 from admin_tools.dashboard.modules import DashboardModule
 from django.utils.translation import ugettext_lazy as _
-from .models import Task
+from bluebottle.tasks import get_task_model
 
+BB_TASK_MODEL = get_task_model()
 
 class RecentTasks(DashboardModule):
     """
@@ -17,7 +18,7 @@ class RecentTasks(DashboardModule):
         super(RecentTasks, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = Task.objects.order_by('-created')
+        qs = BB_TASK_MODEL.objects.order_by('-created')
 
         self.children = qs[:self.limit]
         if not len(self.children):

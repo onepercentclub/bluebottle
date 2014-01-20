@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+# import django.db.models.options as options
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.timezone import now
@@ -13,6 +14,15 @@ from taggit_autocomplete_modified.managers import (
 
 from bluebottle.utils.utils import clean_for_hashtag
 from bluebottle.projects import get_project_model
+
+"""
+    When extending the user model, the serializer should extend too.
+    We provide a default base serializer in sync with the base user model
+    The Django Meta attribute seems the best place for this configuration, so we
+    have to add this.
+"""
+
+# options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 PROJECT_MODEL = get_project_model()
 
@@ -70,6 +80,7 @@ class BaseTask(models.Model):
         ordering = ['-created']
         verbose_name = _(u'task')
         verbose_name_plural = _(u'tasks')
+        default_serializer = 'bluebottle.tasks.serializers.TaskSerializer'
 
     def __unicode__(self):
         return self.title
@@ -113,6 +124,7 @@ class Task(BaseTask):
 
     supported_projects = SupportedProjectsManager()
 
+    # TODO: move this to some Meta mixin class
     def get_meta_title(self, **kwargs):
         project = self.project
         country = project.country.name if project.country else ''

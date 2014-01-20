@@ -1,28 +1,20 @@
-from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Sum
 from django.db.models.query_utils import Q
 from rest_framework import generics
-from rest_framework.generics import ListCreateAPIView, get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
-from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView
-from bluebottle.utils.utils import get_client_ip
+from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.projects.permissions import IsProjectOwnerOrReadOnly
-from bluebottle.wallposts.models import WallPost
 
-from .models import Task, TaskMember, TaskFile, Skill
+from .models import TaskMember, TaskFile, Skill
 from .permissions import  IsTaskAuthorOrReadOnly
 from .serializers import (
-    TaskSerializer, TaskMemberSerializer, TaskWallPostSerializer, TaskFileSerializer, TaskPreviewSerializer,
-    SkillSerializer, MyTaskMemberSerializer)
+    TaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
+    SkillSerializer, MyTaskMemberSerializer, BB_TASK_MODEL)
 
 
 class TaskPreviewList(generics.ListAPIView):
-    model = Task
+    model = BB_TASK_MODEL
     serializer_class = TaskPreviewSerializer
     paginate_by = 8
     filter_fields = ('status', 'skill', )
@@ -47,17 +39,16 @@ class TaskPreviewList(generics.ListAPIView):
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
 
-        qs = qs.exclude(status=Task.TaskStatuses.closed)
+        qs = qs.exclude(status=BB_TASK_MODEL.TaskStatuses.closed)
 
         return qs
 
 
-class TaskList(generics.ListCreateAPIView):
-    model = Task
-    serializer_class = TaskSerializer
+class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
+    model = BB_TASK_MODEL
     paginate_by = 8
     permission_classes = (IsProjectOwnerOrReadOnly,)
-    filter_fields = ('status', 'expertise', )
+    filter_fields = ('status', )
 
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()
@@ -79,7 +70,7 @@ class TaskList(generics.ListCreateAPIView):
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
 
-        qs = qs.exclude(status=Task.TaskStatuses.closed)
+        qs = qs.exclude(status=BB_TASK_MODEL.TaskStatuses.closed)
 
         return qs
 
@@ -87,10 +78,9 @@ class TaskList(generics.ListCreateAPIView):
         obj.author = self.request.user
 
 
-class TaskDetail(generics.RetrieveUpdateAPIView):
-    model = Task
+class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
+    model = BB_TASK_MODEL
     permission_classes = (IsAuthorOrReadOnly, )
-    serializer_class = TaskSerializer
 
 
 class TaskMemberList(generics.ListCreateAPIView):

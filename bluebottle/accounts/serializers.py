@@ -6,15 +6,17 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer,
                                                     TaggableSerializerMixin)
+from bluebottle.geo.models import Country
+from bluebottle.tasks import get_task_model
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code
-from bluebottle.geo.models import Country
 
 
 BB_USER_MODEL = get_user_model()
+BB_TASK_MODEL = get_task_model()
 
 # TODO: move imports to retain modularity
-from bluebottle.tasks.models import Task, TaskMember, Skill
+from bluebottle.tasks.models import TaskMember, Skill
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
@@ -48,8 +50,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
 # TODO: move to retain modularity
 class UserStatisticsMixin(object):
     def get_user_statistics(self, user):
-        num_supported = Task.supported_projects.by_user(user).count()
-        tasks_realized = Task.objects.filter(author=user, status=Task.TaskStatuses.realized).count()
+        num_supported = BB_TASK_MODEL.supported_projects.by_user(user).count()
+        tasks_realized = BB_TASK_MODEL.objects.filter(author=user, status=BB_TASK_MODEL.TaskStatuses.realized).count()
 
         # hours spent on tasks
         # import pdb; pdb.set_trace()

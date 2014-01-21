@@ -2,8 +2,10 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
+from django.conf import settings
 from django.db import models
 
+user_model = settings.AUTH_USER_MODEL.lower()
 
 class Migration(SchemaMigration):
 
@@ -46,9 +48,13 @@ class Migration(SchemaMigration):
             ('available_time', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('contribution', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
-        db.send_create_signal(u'accounts', ['BlueBottleUser'])
+
+        app, model = settings.AUTH_USER_MODEL.split('.')
+        db.send_create_signal(app, [model])
+
 
         # Adding M2M table for field groups on 'BlueBottleUser'
+        # we cannot use user_model here, because it doesn't exist yet
         m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_groups')
         db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
@@ -96,7 +102,7 @@ class Migration(SchemaMigration):
 
 
     models = {
-        u'accounts.bluebottleuser': {
+        'accounts.bluebottleuser': {
             'Meta': {'object_name': 'BlueBottleUser'},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),

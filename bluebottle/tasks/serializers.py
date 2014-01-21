@@ -6,7 +6,10 @@ from bluebottle.utils.serializers import MetaField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
-from .models import Task, TaskMember, TaskFile, Skill
+from . import get_task_model
+from .models import TaskMember, TaskFile, Skill
+
+BB_TASK_MODEL = get_task_model()
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
@@ -14,7 +17,7 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField()
 
     class Meta:
-        model = Task
+        model = BB_TASK_MODEL
         fields = ('id', 'title', 'description', 'location', 'skill', 'status', 'created', 'project', 'deadline', 'time_needed')
 
 
@@ -55,7 +58,7 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
         )
 
     class Meta:
-        model = Task
+        model = BB_TASK_MODEL
         fields = ('id', 'title', 'project', 'description', 'end_goal', 'members', 'files', 'location', 'skill',
                   'time_needed', 'author', 'status', 'created', 'deadline', 'tags', 'meta_data')
 
@@ -71,7 +74,7 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField()
 
     class Meta:
-        model = Task
+        model = BB_TASK_MODEL
         fields = ('id', 'title', 'skill', 'project', 'time_needed')
 
 
@@ -89,7 +92,7 @@ class TaskWallPostSerializer(TextWallPostSerializer):
     """ TextWallPostSerializer with task specific customizations. """
 
     url = serializers.HyperlinkedIdentityField(view_name='task-twallpost-detail')
-    task = PrimaryKeyGenericRelatedField(Task)
+    task = PrimaryKeyGenericRelatedField(BB_TASK_MODEL)
 
     class Meta(TextWallPostSerializer.Meta):
         # Add the project slug field.

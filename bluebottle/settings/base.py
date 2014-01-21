@@ -216,6 +216,7 @@ LOGGING = {
 # purposes.
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
 PROJECTS_PROJECT_MODEL = 'projects.Project'
+TASKS_TASK_MODEL = 'tasks.Task'
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

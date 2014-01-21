@@ -47,7 +47,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     zoom_level:  3,
     map: null,
 	markers: [],
-    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><div class="project-description"><p>{{pitch}}</p><p><span class="location"><span class="flaticon solid location-pin-1"></span> Location</span><span class="tags"><span class="flaticon solid tag-2"></span> Tags</span></p></div></div>',
+    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><div class="project-description"><p>{{pitch}}</p><p><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div></div>',
     active_info_window: null,
 
     initMap: function(){
@@ -103,6 +103,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
             'description': project.get('description'),
             'image': project.get('image'),
             'location': project.get('country.name'),
+			'theme_name': project.get('theme.name'),
+			'pitch': project.get('pitch')
         }
 		
         var html = template(data);

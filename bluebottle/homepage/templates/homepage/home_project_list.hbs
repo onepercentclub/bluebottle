@@ -1,0 +1,62 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "home_project_list" %}
+
+    <div class="l-section home-projects">
+        <section class="l-wrapper">
+
+            <div class="project-slider l-full">
+
+	        	<header class="section-header">
+	            	<h1>{% trans "Choose your project" %}</h1>
+					<p>{% trans "Support it with your time, knowledge or money and receive real-time updates." %}</p>
+	        	</header>
+
+                <div class="project-preview">
+
+                    <figure class="image l-half">
+                        <img {{bindAttr src="project.image" }} width="100%" alt="Project Photo" />
+                    </figure>
+
+                    <article class="project-info l-half">
+                        <div class="project-meta">
+		                    <span class="project-location">
+                                <span class="flaticon solid location-pin-1"></span>
+                                {{project.country.name}}
+                            </span>
+		                    <span class="project-theme">
+                                <span class="flaticon solid tag-1"></span>
+                                {{project.theme.name}}
+                            </span>
+		                </div>
+
+                        <h2 class="project-title">
+                            {{#linkTo 'project' project.id }}
+                                {{project.title}}
+                            {{/linkTo}}
+                        </h2>
+                        <p class="project-description">{{project.pitch}}</p>
+                    </article>
+
+                    <div class="project-status l-full">
+
+                        <div class="project-action l-one-third">
+                            {{#link-to 'project' project.id class="btn btn-primary btn-iconed"}}
+                                <span class="flaticon solid wallet-1"></span> {% trans "Project" %}
+                            {{/link-to}}
+                        </div>
+
+					</div>
+                </div>
+
+                <span {{action previousProject}} class="project-slider-prev">{% trans "Previous project" %}</span>
+                <span {{action nextProject}} class="project-slider-next">{% trans "Next project" %}</span>
+
+            </div>
+        </section>
+    </div>
+
+{% endtplhandlebars %}
+

@@ -1,0 +1,31 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "home"%}
+
+    <div id="home">
+        {{#if slides }}
+            {{view App.SlideListView }}
+        {{else}}
+            No slides
+        {{/if }}
+
+		{{#if projects}}
+			{{view App.HomeProjectListView }}		
+		{{else}}
+			No Projects
+		{{/if}}
+
+        {{bb-project-map}}
+
+        {{#if quotes }}
+            {{#each quote in quotes}}
+                {{view App.QuoteListView }}
+            {{/each}}
+        {{else}}
+            No quotes
+        {{/if }}
+    </div>
+
+{% endtplhandlebars %}

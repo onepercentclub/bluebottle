@@ -3,12 +3,11 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from bluebottle.utils.tests import generate_random_slug
 from bluebottle.tasks import get_task_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import SkillFactory
 
 import json
 
@@ -20,18 +19,22 @@ class TaskApiIntegrationTests(TestCase):
     """ Tests for tasks. """
 
     def setUp(self):
-        self.some_user = BlueBottleUserFactory.create()
-        self.another_user = BlueBottleUserFactory.create()
+        self.some_user = BlueBottleUserFactory.create(password='password')
+        self.another_user = BlueBottleUserFactory.create(password='password')
 
         self.some_project = ProjectFactory.create(owner=self.some_user)
         self.another_project = ProjectFactory.create(owner=self.another_user)
+
+        self.skill1 = SkillFactory.create()
+        self.skill2 = SkillFactory.create()
+        self.skill3 = SkillFactory.create()
+        self.skill4 = SkillFactory.create()
 
         self.task_url = '/api/tasks/'
         self.task_members_url = '/api/tasks/members/'
 
     def test_create_task(self):
 
-        print self.some_user.email
         self.client.login(username=self.some_user.email, password='password')
 
         # Get the list of tasks for some project should return none (count = 0)
@@ -43,16 +46,17 @@ class TaskApiIntegrationTests(TestCase):
 
         # Now let's create a task.
         some_task_data = {'project': self.some_project.slug, 'title': 'A nice task!',
-                          'description': 'Well, this is nice', 'time_needed': 5, 'skill': '1',
+                          'description': 'Well, this is nice', 'time_needed': 5, 'skill': '%d' % self.skill1.id,
                           'location': 'Overthere', 'deadline' : future_date, 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, some_task_data)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
         some_task_url = "{0}{1}".format(self.task_url, response.data['id'])
 
         # Create a task for a project you don't own should fail...
         another_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
-                          'description': 'Wie kan in engels vertalen?', 'time_needed': 5, 'skill': '4',
+                          'description': 'Wie kan in engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill2.id,
                           'location': 'Tiel', 'deadline' : future_date, 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
@@ -67,7 +71,7 @@ class TaskApiIntegrationTests(TestCase):
 
         # Another user that owns another project can create a task for that.
         another_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
-                          'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '12',
+                          'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill3.id,
                           'location': 'Tiel', 'deadline' : future_date, 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -76,7 +80,7 @@ class TaskApiIntegrationTests(TestCase):
         # Go wild! Add another task to that project add some tags this time
         # Because we have a nesting here we should properly encode it as json
         third_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
-                           'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '3',
+                           'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill4.id,
                            'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace',
                            'tags': [{'id': 'spanish'}, {'id': 'translate'}]}
         response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
@@ -102,7 +106,7 @@ class TaskApiIntegrationTests(TestCase):
 
         # let's create a task.
         some_task_data = {'project': self.some_project.slug, 'title': 'A nice task!',
-                          'description': 'Well, this is nice', 'time_needed': 5, 'skill': '4',
+                          'description': 'Well, this is nice', 'time_needed': 5, 'skill': '%d' % self.skill1.id,
                           'location': 'Overthere', 'deadline': future_date, 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, some_task_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)

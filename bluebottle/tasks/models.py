@@ -57,6 +57,7 @@ class BaseTask(models.Model):
     status = models.CharField(
         _("status"), max_length=20, choices=TaskStatuses.choices,
         default=TaskStatuses.open)
+    date_status_change = models.DateTimeField(_('date status change'), blank=True, null=True)
 
     deadline = models.DateTimeField()
     tags = TaggableManager(blank=True, verbose_name=_("tags"))

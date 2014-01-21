@@ -5,11 +5,12 @@ from south.v2 import SchemaMigration
 from django.conf import settings
 from django.db import models
 
-USE_DEFAULT_TASK_MODEL = settings.TASKS_TASK_MODEL == 'tasks_task'
-
 task_model = settings.TASKS_TASK_MODEL.lower()
 user_model = settings.AUTH_USER_MODEL.lower()
 project_model = settings.PROJECTS_PROJECT_MODEL.lower()
+
+USE_DEFAULT_TASK_MODEL = task_model == 'tasks.task'
+
 
 class Migration(SchemaMigration):
 
@@ -38,6 +39,7 @@ class Migration(SchemaMigration):
             ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.PROJECTS_PROJECT_MODEL])),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(related_name='author', to=orm[settings.AUTH_USER_MODEL])),
             ('status', self.gf('django.db.models.fields.CharField')(default='open', max_length=20)),
+            ('date_status_change', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
             ('deadline', self.gf('django.db.models.fields.DateTimeField')()),
             ('time_needed', self.gf('django.db.models.fields.CharField')(max_length=200)),
             ('skill', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['tasks.Skill'], null=True)),

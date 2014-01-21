@@ -3,9 +3,11 @@ from django.contrib import admin
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
-from .models import Task, TaskMember, TaskFile, Skill
+from . import get_task_model
+from .models import TaskMember, TaskFile, Skill
 
 BB_USER_MODEL = get_user_model()
+BB_TASK_MODEL = get_task_model()
 
 class TaskMemberAdminInline(admin.StackedInline):
     model = TaskMember
@@ -30,7 +32,7 @@ class TaskForm(ModelForm):
     owner = ModelChoiceField(queryset=BB_USER_MODEL.objects.order_by('email'))
 
     class Meta:
-        model = Task
+        model = BB_TASK_MODEL
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -52,7 +54,7 @@ class TaskAdmin(admin.ModelAdmin):
     # ordering
     fields = (
         'title', 'description', 'end_goal', 'location',
-        'expertise', 'skill', 'time_needed',
+        'skill', 'time_needed',
         'status', 'date_status_change',
         'people_needed',
         'project', 'author',
@@ -60,10 +62,10 @@ class TaskAdmin(admin.ModelAdmin):
         'deadline',
     )
 
-admin.site.register(Task, TaskAdmin)
+admin.site.register(BB_TASK_MODEL, TaskAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    model=Skill
+    model = Skill
 
 admin.site.register(Skill, SkillAdmin)

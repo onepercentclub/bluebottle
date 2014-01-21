@@ -33,7 +33,6 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     data changes permissions to the project owner only.
     """
     def _get_project_from_request(self, request):
-
         if request.DATA:
             project_slug = request.DATA.get('project', None)
         else:

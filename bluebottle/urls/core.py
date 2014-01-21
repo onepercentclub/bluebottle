@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
 
+
 urlpatterns = patterns('',
     # The api urls are in the / url namespace so that they're not redirected to /en/.
     url(r'^api/users/', include('bluebottle.accounts.urls.api')),

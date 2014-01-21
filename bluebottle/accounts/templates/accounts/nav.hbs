@@ -59,10 +59,14 @@
                                         <a href="{% url 'accounts:logout' %}?next=/{{ LANGUAGE_CODE }}/">Logout</a>
                                     {% endblock logout_anchor %}
                                 </li>
+								
+								{% block_verbatim language_switcher %}
 
                                 <li class="nav-member-switch-language">
                                     {% trans "Language" %} {{view "App.LanguageSwitchView"}}
                                 </li>
+								
+								{% endblock_verbatim %}
 
                             {% endblock_verbatim my_menu %}
                         </ul>

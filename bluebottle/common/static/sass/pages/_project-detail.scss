@@ -7,8 +7,11 @@
     padding-top: $base-padding;
     
     .project-meta {
-        float: left;
         font-family: $font-family-heavy;
+		@include clear;
+		.project-location, .project-deadline, .project-theme {
+			@include grid(16,0,0);
+		}
     }
     
     #share {
@@ -18,6 +21,7 @@
     .project-title {
         clear: both;
         font-size: $font-size-larger;
+		margin: $base-margin/2 0;
     }
     
     .project-status {
@@ -110,11 +114,13 @@
 #project-members {
     padding: $base-padding 0;
     background-color: $gray-darker;
+	
 	.task-list {
-		@include grid(24,0,0);
+		@include grid(24,0,1);
 	}
+	
 	.member-list {
-	    @include grid(24,0,0);		
+	    @include grid(24,1,0);		
 	}
 }
 

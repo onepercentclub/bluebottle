@@ -10,7 +10,7 @@
 }
 
 #logo {
-    @include grid(6,0,0);
+    @include grid(6,1,0);
     
     .logo-link {
 	    display: block;

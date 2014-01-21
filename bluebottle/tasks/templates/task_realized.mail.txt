@@ -3,19 +3,17 @@
 
 {% block content %}
 {% blocktrans with sender_name=sender.mail_name receiver_name=receiver.mail_name task_title=task.title site_name=site.name %}
-
 Hi {{ receiver_name }},
 
-Woohoo, you’re the one! The project owner, {{ sender_name }}, assigned the task to you!
-Good luck and please keep us updated about the progress!
+You made it! The project owner, {{ sender_name }}, has marked the task "{{ task_title }}" as realized. Good job!
 
-Start right away? Leave a short first reaction!
+You can still add a short reaction!
 
-Go to task: {{ site }}{{ link }}.
+Go to {{ site }}{{ link }}
 
-Good luck!
+Thank you!
 
-{{ site_name }}
+{{ site.name }}
 {% endblocktrans %}
 {% endblock %}
 

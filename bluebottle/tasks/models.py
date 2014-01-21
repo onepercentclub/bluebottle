@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 # import django.db.models.options as options
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
@@ -184,7 +184,7 @@ class TaskMember(models.Model):
         _("Motivation"), help_text=_("Motivation by applicant."), blank=True)
     comment = models.TextField(_("Comment"), help_text=_("Comment by task owner."), blank=True)
     time_spent = models.PositiveSmallIntegerField(
-        _('"time spent'), default=0, help_text=_("Time spent executing this task."))
+        _('time spent'), default=0, help_text=_("Time spent executing this task."))
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
@@ -221,3 +221,16 @@ def set_hours_spent_taskmember(sender, instance, **kwargs):
         if hours_spent > 8:
             hours_spent = 8
         instance.time_spent = hours_spent
+
+
+# emailing when a task is realized
+def send_mail_task_realized(sender, instance, **kwargs):
+    """ Notify the taskmembers of the task realization """
+    from .mails import send_mail_task_realized as _send_mail_task_realized
+
+    task = instance
+    if task._original_status != task.status and task.status == BaseTask.TaskStatuses.realized:
+        _send_mail_task_realized(task)
+
+if settings.TASKS_TASK_MODEL == 'tasks.Task':
+    post_save.connect(send_mail_task_realized, sender=Task, weak=False, dispatch_uid='send-task-realized-mail')

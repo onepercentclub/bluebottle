@@ -2,13 +2,13 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with sender_name=sender.first_name receiver_name=receiver.first_name task_title=task.title motivation=motivation %}
+{% blocktrans with sender_name=sender.mail_name receiver_name=receiver.mail_name task_title=task.title motivation=motivation site_name=site.name %}
 Hello {{ receiver_name }},<br/>
 <br/>
 {{ sender_name }} applied for your task <a href="{{ site }}{{ link }}">{{ task_title }}</a>.<br />
 Be sure to follow this up a.s.a.p.! <br/>
 <br/>
-<a href="{{ site }}{{ link }}">Go to 1%Task</a>.
+<a href="{{ site }}{{ link }}">Go to task</a>.
 <br/>
 As motivation {{ sender_name }} wrote:<br/>
 <br/><br/>
@@ -16,7 +16,7 @@ As motivation {{ sender_name }} wrote:<br/>
 <br/><br/>
 Good luck!<br/>
 <br/>
-1%Club
+{{ site_name }}
 {% endblocktrans %}
 {% endblock %}
 

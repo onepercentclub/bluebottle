@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with sender_name=sender.first_name receiver_name=receiver.first_name task_title=task.title %}
+{% blocktrans with sender_name=sender.mail_name receiver_name=receiver.mail_name task_title=task.title site_name=site.name %}
 Hi {{ receiver_name }},<br/>
 <br/>
 Woohoo, you’re the one! The project owner, {{ sender_name }}, assigned the 1%Task <a href="{{ site }}{{ link }}">{{ task_title }}</a> to you!
@@ -11,12 +11,12 @@ Good luck and please keep us updated about the progress!
 <br/><br/>
 Start right away? Leave a short first reaction!
 <br/><br/>
-<a href="{{ site }}{{ link }}">Go to 1%Task</a>.
+<a href="{{ site }}{{ link }}">Go to task</a>.
 <br/>
 <br/>
 Good luck!<br/>
 <br/>
-1%Club
+{{ site_name }}
 {% endblocktrans %}
 {% endblock %}
 

@@ -245,6 +245,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         else:
             return None
 
+    @property
+    def mail_name(self):
+        return self.first_name
+
 
 class BlueBottleUser(BlueBottleBaseUser):
     """

@@ -11,11 +11,19 @@ from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
 
 
+class SkillFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = Skill
+
+    name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
+    name_nl = factory.LazyAttribute(lambda o: o.name)
+
+
 class TaskFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Task
 
     author = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)
+    skill = factory.SubFactory(SkillFactory)
     title = factory.Sequence(lambda n: 'Task_{0}'.format(n))
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
 
@@ -25,10 +33,3 @@ class TaskMemberFactory(factory.DjangoModelFactory):
 
     task = factory.SubFactory(TaskFactory)
     member = factory.SubFactory(BlueBottleUserFactory)
-
-
-class SkillFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Skill
-
-    name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
-    name_nl = factory.Sequence(lambda n: 'Skill_{0}'.format(n))

@@ -254,8 +254,9 @@
 	
 	#wallposts {
 		
-		background-color: $white;
+		background-color: $gray-light;
 		padding: $base-padding;
+		color: $black;
 		
 		.wallposts-timeline {
 			@include grid(32,1,1);
@@ -265,6 +266,13 @@
 		.wallposts-important {
 			@include grid(32,1,1);
 			float: right;
+		}
+		
+		.wallpost-action {
+			border: 1px dashed $gray;
+		}
+		.wallpost-author, .wallpost-title {
+			color: $color-primary;
 		}
 	}
 }

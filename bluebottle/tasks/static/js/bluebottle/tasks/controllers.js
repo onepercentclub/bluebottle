@@ -126,15 +126,17 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
             }
         });
         return isMember;
-    }.property('members.@each.member.username', 'controllers.currentUser.username')
+    }.property('members.@each.member.username', 'controllers.currentUser.username'),
+});
 
+
+App.TaskActivityController = App.TaskController.extend({
 });
 
 App.TaskIndexController = Em.ArrayController.extend({
     needs: ['task', 'currentUser'],
     perPage: 5,
     page: 1,
-
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));

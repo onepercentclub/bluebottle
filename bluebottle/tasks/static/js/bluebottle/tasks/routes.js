@@ -41,13 +41,14 @@ App.TaskRoute = Em.Route.extend({
     model: function(params) {
         return App.Task.find(params.task_id);
     },
+
     actions: {
-        applyForTask: function(task) {
+        applyForTask: function() {
             var route = this;
             var store = route.get('store');
             var taskMember = store.createRecord(App.TaskMember);
+            var task = this.modelFor('task');
             var view = App.TaskMemberApplyView.create();
-
 
             Bootstrap.ModalPane.popup({
                 heading: gettext('Apply for task'),
@@ -57,10 +58,13 @@ App.TaskRoute = Em.Route.extend({
                 callback: function(opts, e) {
                     e.preventDefault();
                     if (opts.primary) {
-                        taskMember.set('task', task);
                         taskMember.set('motivation', view.get('motivation'));
+                        taskMember.set('task', task);
                         taskMember.set('created', new Date());
                         taskMember.save();
+                    }
+                    if (opts.secondary) {
+                        taskMember.deleteRecord();
                     }
                 }
             });
@@ -97,22 +101,6 @@ App.TaskRoute = Em.Route.extend({
                 }
             });
         },
-        showMoreWallPosts: function() {
-            var controller = this.get('controller');
-            var wallPostController = this.controllerFor('taskWallPostList');
-            wallPostController.set('canLoadMore', false);
-            var page = wallPostController.incrementProperty('page');
-            var task = controller.get('model');
-            var wps = App.TaskWallPost.find({task: task.get('id'), page: page});
-            wps.addObserver('isLoaded', function() {
-                wps.forEach(function(record) {
-                    if (record.get('isLoaded')) {
-                        wallPostController.get('content').pushObject(record);
-                    }
-                });
-                wallPostController.set('canLoadMore', true);
-            });
-        },
         editTaskMember: function(taskMember) {
             var route = this;
             var controller = this.controllerFor('taskMemberEdit');
@@ -140,45 +128,17 @@ App.TaskRoute = Em.Route.extend({
                     }
                 }
             });
-        },
-        stopWorkingOnTask: function(task) {
-            alert('Not implemented. Sorry!');
         }
     }
 });
 
 
-App.TaskIndexRoute = Em.Route.extend({
+App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
 
-    // This way the ArrayController won't hold an immutable array thus it can be extended with more wallposts.
-    setupController: function(controller, model) {
-        // Only reload wall-posts if switched to another project.
-        var parentId = this.modelFor('task').get('id');
-
-        if (controller.get('parentId') != parentId){
-            controller.set('page', 1);
-            controller.set('parentId', parentId);
-            var route = this;
-            var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
-            var textWallPostNewController = this.controllerFor('textWallPostNew');
-
-            var store = this.get('store');
-            store.find('wallPost', {'parent_type': 'task', 'parent_id': parentId}).then(function(items){
-                controller.set('meta', items.get('meta'));
-                controller.set('model', items.toArray());
-
-                // Set some variables for WallPostNew controllers
-                model = controller.get('model');
-                mediaWallPostNewController.set('parentId', parentId);
-                mediaWallPostNewController.set('parentType', 'task');
-                mediaWallPostNewController.set('wallPostList', model);
-
-                textWallPostNewController.set('parentId', parentId);
-                textWallPostNewController.set('parentType', 'task');
-                textWallPostNewController.set('wallPostList', model);
-            });
-        }
-    }
+    parentId: function(){
+        return this.modelFor('task').get('id');
+    }.property(),
+    parentType: 'task'
 });
 
 

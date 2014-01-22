@@ -1,9 +1,12 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
+
+from .mails import send_contact_email
 
 
 class ContactMessage(models.Model):
@@ -28,3 +31,11 @@ class ContactMessage(models.Model):
 
     def __unicode__(self):
         return self.message[0:30]
+
+
+def mail_contact_message(sender, instance, **kwargs):
+    """ Send an e-mail with the contact message content """
+    if kwargs['created']:
+        send_contact_email(instance, settings.CONTACT_EMAIL)
+
+post_save.connect(mail_contact_message, sender=ContactMessage)

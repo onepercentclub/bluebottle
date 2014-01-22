@@ -1,5 +1,5 @@
 App.ContactMessage = DS.Model.extend({
-    url: 'pages/contact',
+    url: 'contact/contact',
 
     name: DS.attr('string'),
     email: DS.attr('string'),

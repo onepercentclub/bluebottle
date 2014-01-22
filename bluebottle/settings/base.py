@@ -250,3 +250,5 @@ TWITTER_HANDLES = {
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 
+# E-MAILS
+CONTACT_EMAIL = 'contact@my-bluebottle-project.com'

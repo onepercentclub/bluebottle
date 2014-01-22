@@ -28,9 +28,13 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     avatar = SorlImageField('picture', '133x133', crop='center', colorspace="GRAY")
 
+    # TODO: Remove first/last name and only use these
+    full_name = serializers.CharField(source='get_full_name')
+    short_name = serializers.CharField(source='get_short_name')
+
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username', 'avatar',)
+        fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
 
 
 class CurrentUserSerializer(UserPreviewSerializer):
@@ -86,11 +90,15 @@ class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serial
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_themes")
     tags = TagSerializer()
 
+    # TODO: Remove first/last name and only use these
+    full_name = serializers.CharField(source='get_full_name')
+    short_name = serializers.CharField(source='get_short_name')
+
     user_statistics = serializers.SerializerMethodField('get_user_statistics')
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
+        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture', 'about', 'why', 'website',
                   'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_theme_ids',
                   'tags', 'user_statistics')
 

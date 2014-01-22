@@ -4,7 +4,6 @@
 
 App.Router.map(function() {
     this.resource('page', {path: '/pages/:page_id'});
-    this.resource('contactMessage', {path: '/contact'});
 });
 
 
@@ -18,15 +17,5 @@ App.PageRoute = Em.Route.extend(App.ScrollToTop, {
             route.transitionTo('error.notFound');
         });
         return model;
-    }
-});
-
-
-/* Contact Page */
-
-App.ContactMessageRoute = Em.Route.extend(App.ScrollToTop, {
-    model: function(params) {
-        var store = this.get('store');
-        return store.createRecord(App.ContactMessage);
     }
 });

@@ -177,7 +177,7 @@ App.Adapter = DS.DRF2Adapter.extend({
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
         "homepage": "homepage",
-        "pages/contact": "pages/contact"
+        "contact/contact": "contact/contact"
     }
 });
 
@@ -191,7 +191,7 @@ App.ApplicationController = Ember.Controller.extend({
     needs: ['currentUser'],
     display_message: false,
 		news: [],
-		
+
 		init: function() {
 			this._super();
 			this.set('news', App.NewsItem.find());

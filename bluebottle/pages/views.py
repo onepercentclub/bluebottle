@@ -7,8 +7,8 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import generics
 
-from .models import ContactMessage, Page
-from .serializers import ContactMessageSerializer, PageSerializer
+from .models import Page
+from .serializers import PageSerializer
 
 
 class PageList(generics.ListAPIView):
@@ -45,12 +45,3 @@ class PageDetail(generics.RetrieveAPIView):
         obj = get_object_or_404(qs, language=self.kwargs['language'], slug=self.kwargs['slug'])
 
         return obj
-
-
-class ContactRequestCreate(generics.CreateAPIView):
-    model = ContactMessage
-    serializer_class = ContactMessageSerializer
-
-    def pre_save(self, obj):
-        if self.request.user.is_authenticated():
-            obj.author = self.request.user

@@ -170,6 +170,7 @@ App.UserPreview = DS.Model.extend({
 App.CurrentUser = App.UserPreview.extend({
     url: 'users',
 
+    email: DS.attr('string'),
     primary_language: DS.attr('string'),
     name: DS.attr('string'),
     // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.

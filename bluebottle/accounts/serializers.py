@@ -44,10 +44,11 @@ class CurrentUserSerializer(UserPreviewSerializer):
     """
     # This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
+    full_name = serializers.Field(source='get_full_name')
 
     class Meta:
         model = BB_USER_MODEL
-        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language')
+        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
 
 
 

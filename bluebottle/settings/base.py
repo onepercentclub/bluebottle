@@ -145,6 +145,7 @@ INSTALLED_APPS = (
     'bluebottle.accounts',
     'bluebottle.utils',
     'bluebottle.common',
+    'bluebottle.contact',
     'bluebottle.geo',
     'bluebottle.pages',
     'bluebottle.projects',
@@ -249,3 +250,5 @@ TWITTER_HANDLES = {
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 
+# E-MAILS
+CONTACT_EMAIL = 'contact@my-bluebottle-project.com'

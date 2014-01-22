@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.comments import get_model
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -79,6 +78,7 @@ class BaseProject(models.Model):
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
     status = models.ForeignKey(ProjectPhase)
     theme = models.ForeignKey(ProjectTheme, null=True)
+    favorite = models.BooleanField(default=True)
 
     # Extended Description
     description = models.TextField(

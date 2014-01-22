@@ -46,6 +46,7 @@ class Migration(SchemaMigration):
             ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=100)),
             ('pitch', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.ProjectPhase'])),
+            ('theme', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.ProjectTheme'], null=True)),
             ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('country', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['geo.Country'], null=True, blank=True)),
             ('image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255, blank=True)),
@@ -278,8 +279,10 @@ class Migration(SchemaMigration):
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectPhase']"}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectTheme']", 'null': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+
         },
         u'projects.projectbudgetline': {
             'Meta': {'object_name': 'ProjectBudgetLine'},
@@ -360,5 +363,16 @@ class Migration(SchemaMigration):
             'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
         }
     }
+
+    if settings.PROJECTS_PROJECT_MODEL == 'projects.Project':
+        extra_fields = {
+            'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectTheme']", 'null': 'True'}),
+            'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'null': 'True', 'blank': 'True'})
+        }
+
+        models[settings.PROJECTS_PROJECT_MODEL.lower()].update(**extra_fields)
 
     complete_apps = ['projects']

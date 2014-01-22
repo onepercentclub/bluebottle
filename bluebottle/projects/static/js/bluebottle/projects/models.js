@@ -10,7 +10,7 @@ App.Adapter.map('App.Project', {
 App.Adapter.map('App.ProjectPreview', {
     campaign: {embedded: 'load'},
     country: {embedded: 'load'},
-	theme: {embedded: 'load'}
+    theme: {embedded: 'load'}
 });
 
 App.Adapter.map('App.MyProject', {
@@ -74,11 +74,11 @@ App.Project = DS.Model.extend({
 
 
     phaseName: function(){
-	    return this.get('status').get('name');
+        return this.get('status').get('name');
     }.property('phaseName'),
 
     phaseNum: function(){
-    	return this.get('status').get('sequence');
+        return this.get('status').get('sequence');
     }.property('phaseNum'),
 
     isPhasePlan: Em.computed.lte('phaseNum', 5),
@@ -120,7 +120,7 @@ App.ProjectPreview = App.Project.extend({
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
     pitch: DS.attr('string'),
-	theme: DS.belongsTo('App.ProjectTheme')
+    theme: DS.belongsTo('App.ProjectTheme')
 });
 
 

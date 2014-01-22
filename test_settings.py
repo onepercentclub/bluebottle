@@ -3,6 +3,7 @@ import os
 
 SITE_ID = 1
 TIME_ZONE = 'Europe/Amsterdam'
+USE_TZ = True
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -75,6 +76,8 @@ INSTALLED_APPS = (
     'bluebottle.pages',
     'bluebottle.projects',
     'bluebottle.tasks',
+
+
 )
 
 MIDDLEWARE_CLASSES = [
@@ -120,7 +123,7 @@ HTML_ACTIVATION_EMAIL = True  # Note this setting is from our forked version.
 
 SOUTH_TESTS_MIGRATE = False # Make south shut up during tests
 
-SELENIUM_TESTS = True
+SELENIUM_TESTS = False
 SELENIUM_WEBDRIVER = 'phantomjs'  # Can be any of chrome, firefox, phantomjs
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -160,3 +163,4 @@ TWITTER_HANDLES = {
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 PROJECTS_PROJECT_MODEL = 'projects.Project'
+TASKS_TASK_MODEL = 'tasks.Task'

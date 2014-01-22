@@ -2,7 +2,7 @@
 .bb-project-map {
 	
 	overflow: visible;
-    margin: 10px auto;
+    margin: $base-margin * 2 0;
     width: 100%;
     height: 500px;
 	
@@ -27,7 +27,7 @@
 		@include box-shadow(inset 0 -10px 10px -10px #333);
 		z-index: 10;
 		overflow: hidden;
-	};
+	}
 	
 	img {
 	    max-width: none;		
@@ -57,10 +57,12 @@
 			@include clear;
 			background-color: $color-primary;
 			font-size: $font-size-large;
+			color: $white;
 			
 			.project-thumbnail {
 			
 				@include grid(12,0,0);
+				
 				img {
 					max-width: 100%;
 				}
@@ -69,10 +71,17 @@
 			.project-description {
 				@include grid(36,0,0);
 				padding: $base-padding;
-				color: $white;
+				overflow: hidden;
+				max-height: 110px;
+				text-overflow: ellipsis;
+			}
+			
+			.project-meta {
+				@include prepend(12);
+				padding: 0 $base-padding;
 				.tags, .location {
 					@include grid(24,0,0);
-				}					
+				}									
 			}
 
 		}

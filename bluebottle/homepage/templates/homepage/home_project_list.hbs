@@ -17,7 +17,7 @@
                 <div class="project-preview">
 
                     <figure class="image l-half">
-                        <img {{bindAttr src="project.image" }} width="100%" alt="Project Photo" />
+                        <img {{bindAttr src="project.image.large" }} width="100%" alt="Project Photo" />
                     </figure>
 
                     <article class="project-info l-half">
@@ -43,7 +43,7 @@
                     <div class="project-status l-full">
 
                         <div class="project-action l-one-third">
-                            {{#link-to 'project' project.id class="btn btn-primary btn-iconed"}}
+                            {{#link-to 'project' project class="btn btn-primary btn-iconed"}}
                                 <span class="flaticon solid wallet-1"></span> {% trans "Project" %}
                             {{/link-to}}
                         </div>

@@ -9,7 +9,8 @@ App.Adapter.map('App.Project', {
 
 App.Adapter.map('App.ProjectPreview', {
     campaign: {embedded: 'load'},
-    country: {embedded: 'load'}
+    country: {embedded: 'load'},
+	theme: {embedded: 'load'}
 });
 
 App.Adapter.map('App.MyProject', {
@@ -31,6 +32,10 @@ App.Adapter.map('App.ProjectDonation', {
 App.ProjectCountry = DS.Model.extend({
     name: DS.attr('string'),
     subregion: DS.attr('string')
+});
+
+App.ProjectTheme = DS.Model.extend({
+    name: DS.attr('string'),
 });
 
 
@@ -114,7 +119,8 @@ App.ProjectPreview = App.Project.extend({
     url: 'projects/previews',
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
-    pitch: DS.attr('string')
+    pitch: DS.attr('string'),
+	theme: DS.belongsTo('App.ProjectTheme')
 });
 
 

@@ -14,8 +14,12 @@ App.HomeBannerView = Ember.View.extend({
 
 
 App.HomeProjectListView = Ember.View.extend({
-    templateName: 'home_project_list'
-
+    templateName: 'home_project_list',
+	
+    didInsertElement: function() {
+        var controller = this.get('controller');
+        controller.loadProject();
+    },
 });
 
 

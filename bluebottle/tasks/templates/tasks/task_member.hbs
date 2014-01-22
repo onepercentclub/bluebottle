@@ -2,13 +2,13 @@
 {% load i18n %}
 {% load static %}
 
-{% tplhandlebars "task_member_edit" %}
+{% tplhandlebars "task_member" %}
 
     {{# if motivation}}
-    <p>
-        <strong>{{member.short_name}} {% trans "said:" %}</strong><br />
-        <blockquote>{{ motivation }}</blockquote>
-    </p>
+        <p>
+            <strong>{{member.short_name}} {% trans "said:" %}</strong><br />
+            <blockquote>{{ motivation }}</blockquote>
+        </p>
     {{/if}}
 
     {{#view Em.RadioButtonGroup class="radio-select four" name="status" selectedValueBinding="status"}}

@@ -27,10 +27,12 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         super(UserPreviewSerializer, self).__init__(*args, **kwargs)
 
     avatar = SorlImageField('picture', '133x133', crop='center', colorspace="GRAY")
+    full_name = serializers.CharField(source='get_full_name')
+    short_name = serializers.CharField(source='get_short_name')
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username', 'avatar',)
+        fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
 
 
 class CurrentUserSerializer(UserPreviewSerializer):

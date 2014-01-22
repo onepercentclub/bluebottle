@@ -224,7 +224,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         The user is identified by their email address.
         """
-        return self.email
+        return self.first_name
 
     def email_user(self, subject, message, from_email=None):
         """

@@ -37,9 +37,7 @@
                         <a href="#" class="task-read-more"><span class="flaticon solid down-circle-4"></span> {% trans "Read more" %}</a>
                         {{--}}
                     </article>
-
                 </div>
-
 
                 <sidebar class="l-sidebar">
 
@@ -88,74 +86,80 @@
                     </div>
 
                 </sidebar>
-            </section>
 
+            </section>
         </div>
-        	<div class="l-section" id="task-members">
-		<section class="l-wrapper">
-			<div class="task-members-list">
-				<ul class="member-list">
-					<li class="member-initiator">
-						<ul>
-							<li>
-								<a {{action 'openInBigBox' 'userModal' owner }} class="member">
-									<figure class="member-avatar"><img {{bindAttr src="author.getAvatar"}} /></figure>
-									<h4>{% trans "Initiator" %} <span class="flaticon solid question-2"></span></h4>
-									<strong class="member-name">{{author.full_name}}</strong>
-									<em class="member-organisation">{{author.organization}}</em>
-								</a>
-							</li>
-						</ul>
-					</li>
-					{{#if members}}
-					<li class="member-assigned">
-						<h4>{% trans "Assigned" %} <span class="flaticon solid question-2"></span></h4>
-						{{#if hasMoreThanOneMember}}
-						<ul>
-							{{#each members}}
-							<li>
-								<a {{action 'openInBigBox' 'userModal' this.member }} class="member">
-									<span class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></span>
-								</a>
-							</li>
-							{{/each}}
-						</ul>
-						{{else}}
-						<ul>
-							{{#each members}}
-							<li>
-								<a {{action 'openInBigBox' 'userModal' this.member }} class="member single">
-									<figure class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></figure>
-									<div class="member-details">
-										<strong class="member-name">{{this.member.full_name}}</strong>
-										<em class="member-created">{{localize this.created formatting="X"}}</em>
-									</div>
-								</a>
-							</li>
-							{{/each}}
-						</ul>
-						{{/if}}
-					</li>
-					{{/if}}
-				</ul>
-			</div>
-			<div class="task-action">
-                {{#if canEdit}}
-                    {{#link-to 'taskEdit' model class="btn btn-primary btn-iconed"}}
-                        <span class="flaticon stroke work-1"></span>
-                        {% trans 'Edit task' %}
-                    {{/link-to}}
-                {{else}}
-                    {{#unless isMember}}
-                        <a {{action applyForTask this }} class="btn btn-primary btn-iconed"}}>
+        <div class="l-section" id="task-members">
+            <section class="l-wrapper">
+                <div class="task-members-list">
+                    <ul class="member-list">
+                        <li class="member-initiator">
+                            <ul>
+                                <li>
+                                    <a {{action 'openInBigBox' 'userModal' owner }} class="member">
+                                        <figure class="member-avatar"><img {{bindAttr src="author.getAvatar"}} /></figure>
+                                        <h4>{% trans "Initiator" %} <span class="flaticon solid question-2"></span></h4>
+                                        <strong class="member-name">{{author.full_name}}</strong>
+                                        <em class="member-organisation">{{author.organization}}</em>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+
+                        {{#if members}}
+                            <li class="member-assigned">
+                                <h4>{% trans "Assigned" %} <span class="flaticon solid question-2"></span></h4>
+                                {{#if hasMoreThanOneMember}}
+                                    <ul>
+                                        {{#each members}}
+                                            {{#if isAccepted}}
+                                                <li>
+                                                    <a {{action 'openInBigBox' 'userModal' member }} class="member">
+                                                        <span class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></span>
+                                                    </a>
+                                                </li>
+                                            {{/if}}
+                                        {{/each}}
+                                    </ul>
+                                    {{else}}
+                                    <ul>
+                                        {{#each members}}
+                                            {{#if isAccepted}}
+                                                <li>
+                                                    <a {{action 'openInBigBox' 'userModal' this.member }} class="member single">
+                                                        <figure class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></figure>
+                                                        <div class="member-details">
+                                                            <strong class="member-name">{{this.member.full_name}}</strong>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                            {{/if}}
+                                        {{/each}}
+                                    </ul>
+                                {{/if}}
+                            </li>
+                        {{/if}}
+                    </ul>
+                </div>
+                <div class="task-action">
+                    {{#if canEdit}}
+                        {{#link-to 'taskEdit' model class="btn btn-primary btn-iconed"}}
                             <span class="flaticon stroke work-1"></span>
-                            {% trans "Apply for task" %}
-                        </a>
-                    {{/unless}}
-                {{/if}}
-			</div>
-		</section>
-	</div>
+                            {% trans 'Edit task' %}
+                        {{/link-to}}
+                    {{else}}
+                        {{#unless isMember}}
+                            <a {{action applyForTask this }} class="btn btn-primary btn-iconed"}}>
+                                <span class="flaticon stroke work-1"></span>
+                                {% trans "Apply for task" %}
+                            </a>
+                        {{/unless}}
+                    {{/if}}
+                </div>
+            </section>
+        </div>
+    </div>
 
     <div class="l-section" id="wallposts">
         <section class="l-wrapper">
@@ -163,5 +167,6 @@
             {{render 'taskActivity' model}}
 		</section>
 	</div>
+
 
 {% endtplhandlebars %}

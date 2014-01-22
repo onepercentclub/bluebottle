@@ -177,7 +177,7 @@ App.Adapter = DS.DRF2Adapter.extend({
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
         "homepage": "homepage",
-        "pages/contact": "pages/contact"
+        "contact/contact": "contact/contact"
     }
 });
 
@@ -200,7 +200,7 @@ App.ApplicationController = Ember.Controller.extend({
 
     hideMessage: function() {
         this.set('display_message', false);
-    },
+    }
 });
 
 // Embedded Model Mapping
@@ -388,26 +388,11 @@ App.ApplicationRoute = Em.Route.extend({
         closeAllModals: function(){
             $('[rel=close]').click();
         },
-        showProject: function(project_id) {
-            var route = this;
-            App.Project.find(project_id).then(function(project) {
-                route.transitionTo('project', project);
-            });
-        },
         showProjectTaskList: function(project_id) {
             var route = this;
             App.Project.find(project_id).then(function(project) {
                 route.transitionTo('project', project);
                 route.transitionTo('projectTaskList');
-            });
-        },
-        showTask: function(task) {
-            var route = this;
-            App.Task.find(task.get('id')).then(function(task) {
-                App.Project.find(task.get('project.id')).then(function(project) {
-                    route.transitionTo('project', project);
-                    route.transitionTo('projectTask', task);
-                });
             });
         },
         showPage: function(page_id) {

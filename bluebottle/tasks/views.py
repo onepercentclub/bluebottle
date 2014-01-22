@@ -26,6 +26,10 @@ class TaskPreviewList(generics.ListAPIView):
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
 
+        country = self.request.QUERY_PARAMS.get('country', None)
+        if country:
+            qs = qs.filter(project__country=country)
+
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |

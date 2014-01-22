@@ -9,10 +9,7 @@
         {% block_verbatim profile_form %}
         
             <legend>
-                {% block form_meta %}
-                    <strong>{% trans "Edit your profile" %}</strong>
-                    <p>{% trans "Override block form_meta from accounts/profile_form.html." %}</p>
-                {% endblock form_meta %}
+                <strong>{% trans "Edit your profile" %}</strong>
             </legend>
             {{ view }}
             {% block_verbatim fieldset1 %}
@@ -30,13 +27,9 @@
                                 {{view Em.TextField valueBinding="last_name" placeholder="{% trans "Surname" %}" 
                                 class="inline-append" classBinding="errors.last_name.length:error"}}
                             </div>
-
-                            {# TODO: Error Handling #}
                         </li>
-
-                    {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
-
-                    </ul>
+                        {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
+                </ul>
                 </fieldset>
             {% endblock_verbatim fieldset1 %} 
 
@@ -47,7 +40,7 @@
                             
                             <li class="control-group">
                                 <label class="control-label">
-                                    {% trans "One (of many possible) profile fields" %}
+                                    {% trans "About me" %}
                                 </label>
 
                                 <div class="controls">

@@ -13,8 +13,14 @@ App.User = DS.Model.extend({
     url: 'users/profiles',
 
     username: DS.attr('string'),
+    // TODO: loose these in favour of short/full name
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
+
+    full_name: DS.attr('string'),
+    short_name: DS.attr('string'),
+
+
     about: DS.attr('string'),
     why: DS.attr('string'),
     availability: DS.attr('string'),
@@ -127,20 +133,20 @@ App.UserSettings = DS.Model.extend({
 
 
 App.UserPreview = DS.Model.extend({
-    // There is no url for UserPreview because it's embedded.
-    url: undefined,
+    // We use the same  url as for full User as we almost never use this.
+    url: 'users/profiles',
 
     username: DS.attr('string'),
+
+    // TODO: loose these in favour of short/full name
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
-    avatar: DS.attr('string'),
 
-    full_name: function() {
-        if (!this.get('first_name') && !this.get('last_name')) {
-            return this.get('username');
-        }
-        return this.get('first_name') + ' ' + this.get('last_name');
-    }.property('first_name', 'last_name'),
+    full_name: DS.attr('string'),
+    short_name: DS.attr('string'),
+
+    name: DS.attr('string'),
+    avatar: DS.attr('string'),
 
     getAvatar: function() {
         if (this.get('avatar')) {
@@ -163,18 +169,23 @@ App.UserPreview = DS.Model.extend({
  */
 App.CurrentUser = App.UserPreview.extend({
     url: 'users',
+
+    email: DS.attr('string'),
+    primary_language: DS.attr('string'),
+    name: DS.attr('string'),
+    // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
+    // App.UserSettingsModel.find(App.CurrentUser.find('current').get('id_for_ember'));
+    id_for_ember: DS.attr('number'),
+
     getUser: function(){
         return App.User.find(this.get('id_for_ember'));
     }.property('id_for_ember'),
-    primary_language: DS.attr('string'),
-
+    getUserPreview: function(){
+        return App.UserPreview.find(this.get('id_for_ember'));
+    }.property('id_for_ember'),
     isAuthenticated: function(){
         return (this.get('username')) ? true : false;
-    }.property('username'),
-
-    // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
-    // App.UserSettingsModel.find(App.CurrentUser.find('current').get('id_for_ember'));
-    id_for_ember: DS.attr('number')
+    }.property('username')
 });
 
 

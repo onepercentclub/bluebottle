@@ -207,7 +207,15 @@ App.ApplicationController = Ember.Controller.extend({
 
     hideMessage: function() {
         this.set('display_message', false);
-    }
+    },
+	
+	actions: {
+        showNews: function(news) {
+            var controller = this;
+            controller.transitionToRoute('newsItem', news);
+            window.scrollTo(0, 0);
+        }
+	}
 });
 
 // Embedded Model Mapping

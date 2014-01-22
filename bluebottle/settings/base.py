@@ -145,6 +145,7 @@ INSTALLED_APPS = (
     'bluebottle.accounts',
     'bluebottle.utils',
     'bluebottle.common',
+    'bluebottle.contact',
     'bluebottle.geo',
     'bluebottle.pages',
     'bluebottle.projects',

@@ -163,6 +163,8 @@ App.UserPreview = DS.Model.extend({
  */
 App.CurrentUser = App.UserPreview.extend({
     url: 'users',
+    email: DS.attr('string'),
+
     getUser: function(){
         return App.User.find(this.get('id_for_ember'));
     }.property('id_for_ember'),

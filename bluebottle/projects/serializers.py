@@ -26,6 +26,12 @@ class ProjectCountrySerializer(serializers.ModelSerializer):
         model = Country
         fields = ('id', 'name', 'subregion')
 
+class ProjectThemeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectTheme
+        fields = ('id', 'name')
+        
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
 
@@ -65,10 +71,11 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
     image = SorlImageField('image', '400x300', crop='center')
     country = ProjectCountrySerializer(source='country')
     pitch = serializers.CharField(source='pitch')
+    theme = ProjectThemeSerializer(source='theme')
 
     class Meta:
         model = PROJECT_MODEL
-        fields = ('id', 'title', 'image', 'status', 'country', 'latitude', 'longitude')
+        fields = ('id', 'title', 'image', 'status', 'country', 'latitude', 'longitude', 'pitch', 'theme')
 
 
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -97,12 +104,6 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
         exclude = ('owner', 'slug')
 
 
-class ProjectThemeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProjectTheme
-        fields = ('id', 'name')
-        
         
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
     amount = EuroField()

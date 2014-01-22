@@ -34,10 +34,9 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	        ]
 	    }
 	],
-	initialized: false,
     projects: function(){
         return App.ProjectPreview.find();
-    }.property("initialized"),
+    }.property(),
     center: [52.3722499, 4.907800400000042],
     getCenter: function(){
         return new google.maps.LatLng(52.3722499, 4.907800400000042);
@@ -147,11 +146,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 		view.markers.push(marker);
     },
     didInsertElement: function() {
-		if (!this.get('initialized')) {
-			console.log(this.get('initialized'))
-		    this.initMap();
-	        this.placeMarkers();			
-		}
-		this.set('initialized', true);
+	    this.initMap();
+        this.placeMarkers();			
     }
 });

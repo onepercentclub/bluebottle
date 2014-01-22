@@ -9,6 +9,10 @@
         <section class="l-wrapper">
             <form id="search-form">
                 <div class="control">
+                    <span class="flaticon solid earth-1"></span>
+                    {{view App.CountrySelectView valueBinding="country" }}
+                </div>
+                <div class="control">
                     <span class="flaticon stroke wrench-1"></span>
                     {{view App.SkillSelectView valueBinding="skill" }}
                 </div>

@@ -137,6 +137,9 @@ class ManageProjectList(generics.ListCreateAPIView):
         return queryset
 
     def pre_save(self, obj):
+        """
+        Set the project owner and the status of the project.
+        """
         obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
         obj.owner = self.request.user
 

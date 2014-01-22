@@ -7,7 +7,7 @@ Hi {{ receiver_name }},
 
 You made it! The project owner, {{ sender_name }}, has marked the task "{{ task_title }}" as realized. Good job!
 
-You can still add a short reaction!
+You can still add a short comment!
 
 Go to {{ site }}{{ link }}
 

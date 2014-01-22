@@ -1,9 +1,13 @@
+from django.core.urlresolvers import reverse
+from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext, ugettext_lazy as _
+
 from admin_tools.dashboard.modules import DashboardModule
-from django.utils.translation import ugettext_lazy as _
+
 from bluebottle.tasks import get_task_model
 
 
-BB_TASK_MODEL = get_task_model()
+TASK_MODEL = get_task_model()
 
 
 class TaskModule(DashboardModule):
@@ -27,12 +31,17 @@ class TaskModule(DashboardModule):
         super(TaskModule, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = BB_TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+        qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
 
         self.children = qs[:self.limit]
         if not len(self.children):
             self.pre_content = _('No tasks found.')
         self._initialized = True
+
+    @property
+    def post_content(self):
+        url = reverse('admin:{0}_{1}_changelist'.format(TASK_MODEL._meta.app_label, TASK_MODEL._meta.module_name))
+        return mark_safe('<a href="{0}">{1}</a>'.format(url, ugettext('View all tasks')))
 
 
 class RecentTasks(TaskModule):

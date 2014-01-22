@@ -1,4 +1,6 @@
-from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
+from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from admin_tools.dashboard.modules import DashboardModule
 from . import get_project_model
@@ -34,6 +36,11 @@ class ProjectModule(DashboardModule):
         if not len(self.children):
             self.pre_content = _('No projects found.')
         self._initialized = True
+
+    @property
+    def post_content(self):
+        url = reverse('admin:{0}_{1}_changelist'.format(PROJECT_MODEL._meta.app_label, PROJECT_MODEL._meta.module_name))
+        return mark_safe('<a href="{0}">{1}</a>'.format(url, ugettext('View all projects')))
 
 
 class RecentProjects(ProjectModule):

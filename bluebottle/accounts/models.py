@@ -246,8 +246,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             return None
 
     @property
-    def mail_name(self):
-        return self.first_name
+    def short_name(self):
+        return self.get_short_name()
 
 
 class BlueBottleUser(BlueBottleBaseUser):

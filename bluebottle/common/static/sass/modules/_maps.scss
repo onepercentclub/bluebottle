@@ -43,12 +43,12 @@
 		@include clear;
 		font-weight: bold;
 		z-index: 10;
+		font-size: $font-size-large;
 		
 		.project-title {
 			padding: $base-padding / 2;
 			background-color: $gray-dark;
 			color: white;
-			font-size: $font-size-large;
 			font-weight: bold;
 			text-align: center;
 		}
@@ -57,12 +57,13 @@
 			
 			@include clear;
 			background-color: $color-primary;
-			font-size: $font-size-large;
 			color: $white;
 			
 			.project-thumbnail {
 			
 				@include grid(12,0,0);
+				position: absolute;
+				left: 0;
 				
 				img {
 					max-width: 100%;
@@ -70,7 +71,7 @@
 			}
 			
 			.project-description {
-				@include grid(36,0,0);
+				@include prepend(12);
 				padding: $base-padding;
 				overflow: hidden;
 				max-height: 110px;
@@ -80,6 +81,8 @@
 			.project-meta {
 				@include prepend(12);
 				padding: 0 $base-padding;
+				font-weight: bold;
+				@include clear;
 				.tags, .location {
 					@include grid(24,0,0);
 				}									

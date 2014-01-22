@@ -280,6 +280,7 @@ class Migration(SchemaMigration):
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectPhase']"}),
             'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+
         },
         u'projects.projectbudgetline': {
             'Meta': {'object_name': 'ProjectBudgetLine'},
@@ -360,5 +361,16 @@ class Migration(SchemaMigration):
             'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
         }
     }
+
+    if settings.PROJECTS_PROJECT_MODEL == 'projects.Project':
+        extra_fields = {
+            'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectTheme']", 'null': 'True'}),
+            'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'null': 'True', 'blank': 'True'})
+        }
+
+        models[settings.PROJECTS_PROJECT_MODEL.lower()].update(**extra_fields)
 
     complete_apps = ['projects']

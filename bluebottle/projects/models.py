@@ -78,7 +78,7 @@ class BaseProject(models.Model):
     pitch = models.TextField(
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
     status = models.ForeignKey(ProjectPhase)
-    theme = models.ForeignKey(ProjectTheme)
+    theme = models.ForeignKey(ProjectTheme, null=True)
 
     # Extended Description
     description = models.TextField(

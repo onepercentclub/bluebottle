@@ -46,6 +46,7 @@ class Migration(SchemaMigration):
             ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=100)),
             ('pitch', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.ProjectPhase'])),
+            ('theme', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.ProjectTheme'], null=True)),
             ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('country', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['geo.Country'], null=True, blank=True)),
             ('image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255, blank=True)),
@@ -278,6 +279,7 @@ class Migration(SchemaMigration):
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectPhase']"}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectTheme']", 'null': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
 

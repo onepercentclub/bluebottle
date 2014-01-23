@@ -11,7 +11,7 @@ class HomePage(object):
         self.quotes = Quote.objects.published().filter(language=language)
         self.slides = Slide.objects.published().filter(language=language)
 
-        projects = PROJECT_MODEL.objects.filter(status__viewable=True).order_by('?')
+        projects = PROJECT_MODEL.objects.filter(status__viewable=True, favorite=True).order_by('?')
         if len(projects) > 4:
             self.projects = projects[0:4]
         elif len(projects) > 0:

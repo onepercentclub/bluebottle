@@ -315,3 +315,11 @@ App.MapPicker = Em.View.extend({
 
 });
 
+App.CustomDatePicker = App.DatePicker.extend({
+    init: function(){
+        this._super();
+        if (this.get("minDate") != undefined) {
+            this.config.minDate = this.get("minDate");
+        }
+    }
+});

@@ -58,6 +58,14 @@
 			border-bottom: 2px solid $white;
 		}
 	}
+	.edit-task {
+		text-align: right;
+		padding: $base-padding 0;
+		a {
+			text-decoration: none;
+		}
+		
+	}
 	
 //	.task-status {
 //		display: block;

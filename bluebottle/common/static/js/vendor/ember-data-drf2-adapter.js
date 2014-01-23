@@ -371,7 +371,7 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
         Taken from Stackoverflow to mark changed hasMany Ember relations as dirty
     */
     dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
-        // FIXME: Dirty trick to keep things working for adding TaskMember / WallPostPhotos
+        // FIXME: Dirty trick to keep things working for adding TaskMember / WallPostPhotos / Org documents
         if(record.constructor.toString() == 'App.User') {
             relationship.childReference.parent = relationship.parentReference;
             this._dirtyTree(dirtySet, record);

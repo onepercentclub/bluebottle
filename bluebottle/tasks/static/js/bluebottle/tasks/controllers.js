@@ -128,11 +128,22 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
             }
         });
         return isMember;
-    }.property('members.@each.member.username', 'controllers.currentUser.username'),
+    }.property('members.@each.member.username', 'controllers.currentUser.username')
 });
 
 
 App.TaskActivityController = App.TaskController.extend({
+    needs: ['task', 'currentUser'],
+
+    canEditTask: function() {
+        var user = this.get('controllers.currentUser.username');
+        var author_name = this.get('controllers.task.author.username');
+        if (username) {
+            return (username == author_name);
+        }
+        return isMember;
+    }.property('controllers.task.author', 'controllers.currentUser.username')
+
 });
 
 App.TaskIndexController = Em.ArrayController.extend({

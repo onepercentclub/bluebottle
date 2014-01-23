@@ -1,10 +1,9 @@
-from django.conf.urls import patterns
-
-from surlex.dj import surl
+from django.conf.urls import patterns, url
 
 from ..views import PageDetail, PageList
 
-urlpatterns = patterns('',
-    surl(r'^<language:s>/pages/$', PageList.as_view(), name='page-list'),
-    surl(r'^<language:s>/pages/<slug:s>$', PageDetail.as_view(), name='page-detail'),
+urlpatterns = patterns(
+    '',
+    url(r'^(?P<language>[-\w]+)/pages/$', PageList.as_view(), name='page_list'),
+    url(r'^(?P<language>[-\w]+)/pages/<slug:s>$', PageDetail.as_view(), name='page_detail'),
 )

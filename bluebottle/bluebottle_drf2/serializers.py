@@ -322,6 +322,8 @@ class PhotoSerializer(serializers.ImageField):
 class PrivateFileSerializer(FileSerializer):
 
     def field_to_native(self, obj, field_name):
+        if not obj:
+            return None
         value = getattr(obj, self.source or field_name)
         content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
         pk = obj.pk

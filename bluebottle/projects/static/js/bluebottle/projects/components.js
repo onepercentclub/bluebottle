@@ -20,3 +20,8 @@ App.BbProgressbarComponent = Ember.Component.extend({
     }
 });
 
+
+App.BbDatepickerComponent = Ember.Component.extend({
+});
+
+

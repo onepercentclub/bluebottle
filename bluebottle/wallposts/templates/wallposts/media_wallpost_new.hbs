@@ -20,7 +20,7 @@
                         {{view Ember.TextField valueBinding="title" placeholder="Title of your wallpost" id="wallpost-title" name="wallpost-title" classBinding="errors.title.length:error"}}
 
                     {{#if errors.title }}
-                        <div class="errors">{{#each errors.title }}<p>{{this}}</p>{{/each}}</div>
+                        <div class="has-errors">{{#each errors.title }}<p>{{this}}</p>{{/each}}</div>
                     {{/if}}
                 </li>
 				

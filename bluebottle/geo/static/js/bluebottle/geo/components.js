@@ -46,6 +46,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	markers: [],
     info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{pitch}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div></div>',
     active_info_window: null,
+	icon: '/static/assets/images/marker.png',
 
     initMap: function(){
 		console.log("init");
@@ -113,7 +114,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 			disableAutoPan: false,
 			maxWidth: 200,
 			alignBottom: true,
-			pixelOffset: new google.maps.Size(-200, -30),
+			pixelOffset: new google.maps.Size(-200, -50),
 			zIndex: null,
 			boxClass: "info-windows",
 			closeBoxURL: "",
@@ -127,14 +128,14 @@ App.BbProjectMapComponent = Ember.Component.extend({
 		    position: latLng,
 		    map: view.map,
 		    title: project.get('title'),
-		    icon: "/static/assets/images/icons/map-location.png"
+		    icon: this.get('icon')
 	    });
 		
 	    google.maps.event.addListener(marker, 'click', function() {
-			view.markers.forEach(function(m) {
-				m.setIcon("/static/assets/images/icons/map-location.png");
-			});
-		    this.setIcon("/static/assets/images/icons/map-location-active.png");
+			// view.markers.forEach(function(m) {
+			// 	m.setIcon("/static/assets/images/icons/map-location.png");
+			// });
+			// 		    this.setIcon("/static/assets/images/icons/map-location-active.png");
             if (view.active_info_window) {
                 view.active_info_window.close();
             }

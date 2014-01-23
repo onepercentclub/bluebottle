@@ -107,7 +107,7 @@
                                 <li>
                                     <a {{action 'openInBigBox' 'userModal' owner }} class="member">
                                         <figure class="member-avatar"><img {{bindAttr src="author.getAvatar"}} /></figure>
-                                        <h4>{% trans "Initiator" %} <span class="flaticon solid question-2"></span></h4>
+                                        <h4>{% trans "Initiator" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
                                         <strong class="member-name">{{author.full_name}}</strong>
                                         <em class="member-organisation">{{author.organization}}</em>
                                     </a>
@@ -116,12 +116,12 @@
                         </li>
 
 
-                        {{#if members}}
+                        {{#if acceptedMembers}}
                             <li class="member-assigned">
-                                <h4>{% trans "Assigned" %} <span class="flaticon solid question-2"></span></h4>
+                                <h4>{% trans "Assigned" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
                                 {{#if hasMoreThanOneMember}}
                                     <ul>
-                                        {{#each members}}
+                                        {{#each acceptedMembers}}
                                             {{#if isAccepted}}
                                                 <li>
                                                     <a {{action 'openInBigBox' 'userModal' member }} class="member">
@@ -133,7 +133,7 @@
                                     </ul>
                                     {{else}}
                                     <ul>
-                                        {{#each members}}
+                                        {{#each acceptedMembers}}
                                             {{#if isAccepted}}
                                                 <li>
                                                     <a {{action 'openInBigBox' 'userModal' this.member }} class="member single">

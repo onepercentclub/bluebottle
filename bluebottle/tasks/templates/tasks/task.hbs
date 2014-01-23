@@ -105,7 +105,7 @@
                         <li class="member-initiator">
                             <ul>
                                 <li>
-                                    <a {{action 'openInBigBox' 'userModal' owner }} class="member">
+                                    <a {{action 'openInBigBox' 'userModal' author }} class="member">
                                         <figure class="member-avatar"><img {{bindAttr src="author.getAvatar"}} /></figure>
                                         <h4>{% trans "Initiator" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
                                         <strong class="member-name">{{author.full_name}}</strong>
@@ -136,7 +136,7 @@
                                         {{#each acceptedMembers}}
                                             {{#if isAccepted}}
                                                 <li>
-                                                    <a {{action 'openInBigBox' 'userModal' this.member }} class="member single">
+                                                    <a {{action 'openInBigBox' 'userModal' member }} class="member single">
                                                         <figure class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></figure>
                                                         <div class="member-details">
                                                             <strong class="member-name">{{this.member.full_name}}</strong>

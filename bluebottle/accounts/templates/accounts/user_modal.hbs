@@ -1,4 +1,4 @@
-{% load bb_ember i18n %}
+{% load bb_ember i18n static %}
 
 {% tplhandlebars "user_modal" %}
 <div id="profile-preview">
@@ -24,20 +24,20 @@
 	    <ul class="account-achievements">
 	        {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
 	        <li>
-				<img class="account-achievement-icon" src="http://placehold.it/75x75">
-	            <strong>{{user_statistics.projects_supported}}</strong><br /> 
+				<img class="account-achievement-icon" src="{% get_static_prefix %}images/project.svg" width="75" />
+	            <strong>{{user_statistics.projects_supported}}</strong>
 				{% trans "projects" %}<br />
 				{% trans "supported" %}
 	        </li>
 	        <li>
-				<img class="account-achievement-icon" src="http://placehold.it/75x75">
-	            <strong>{{user_statistics.tasks_realized}}</strong><br /> 
+				<img class="account-achievement-icon" src="{% get_static_prefix %}images/task.svg" width="75" />
+	            <strong>{{user_statistics.tasks_realized}}</strong>
 				{% trans "tasks" %}<br />
 				{% trans "realized" %}
 	        </li>
 	        <li>
-				<img class="account-achievement-icon" src="http://placehold.it/75x75">
-	            <strong>{{user_statistics.hours_spent}}</strong><br />
+				<img class="account-achievement-icon" src="{% get_static_prefix %}images/time.svg" width="75" />
+	            <strong>{{user_statistics.hours_spent}}</strong>
 				{% trans "hours spent" %}<br /> 
 				{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}
 	        </li>

@@ -22,24 +22,24 @@
 
 	            <ul class="account-achievements">
 	                {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
-	                <li>
-						<img class="account-achievement-icon" src="http://placehold.it/75x75">
-	                    <strong>{{user_statistics.projects_supported}}</strong><br />
+			        <li>
+						<img class="account-achievement-icon" src="{% get_static_prefix %}images/project.svg">
+			            <strong>{{user_statistics.projects_supported}}</strong>
 						{% trans "projects" %}<br />
 						{% trans "supported" %}
-	                </li>
-	                <li>
-						<img class="account-achievement-icon" src="http://placehold.it/75x75">
-	                    <strong>{{user_statistics.tasks_realized}}</strong><br />
+			        </li>
+			        <li>
+						<img class="account-achievement-icon" src="{% get_static_prefix %}images/task.svg">
+			            <strong>{{user_statistics.tasks_realized}}</strong>
 						{% trans "tasks" %}<br />
 						{% trans "realized" %}
-	                </li>
-	                <li>
-						<img class="account-achievement-icon" src="http://placehold.it/75x75">
-	                    <strong>{{user_statistics.hours_spent}}</strong><br />
-						{% trans "hours spent" %}<br />
+			        </li>
+			        <li>
+						<img class="account-achievement-icon" src="{% get_static_prefix %}images/time.svg">
+			            <strong>{{user_statistics.hours_spent}}</strong>
+						{% trans "hours spent" %}<br /> 
 						{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}
-	                </li>
+			        </li>
 	            </ul>
 	        </div>
 	    </div>

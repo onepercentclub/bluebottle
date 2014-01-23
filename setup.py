@@ -62,7 +62,7 @@ install_requires = [
 #    'requests==1.2.3',
 #    'selenium==2.33.0',
     'sorl-thumbnail==11.12',
-#    'splinter==0.5.3',
+    'splinter==0.5.4',
 #    'suds-jurko==0.4.1.jurko.5.-development-',
     'surlex==0.1.2',
     'transifex-client==0.9',

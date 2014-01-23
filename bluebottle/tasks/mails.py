@@ -26,7 +26,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         # Compose the mail
         # Set the language for the receiver
         translation.activate(receiver.primary_language)
-        subject = _('%(sender)s applied for your task.') % {'sender': sender.mail_name}
+        subject = _('%(sender)s applied for your task.') % {'sender': sender.get_short_name()}
         ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
                        'motivation': task_member.motivation})
         text_content = render_to_string('task_member_applied.mail.txt', context_instance=ctx)
@@ -44,7 +44,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         # Compose the mail
         # Set the language for the receiver
         translation.activate(receiver.primary_language)
-        subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.mail_name}
+        subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.get_short_name()}
         context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
         text_content = get_template('task_member_rejected.mail.txt').render(context)
         html_content = get_template('task_member_rejected.mail.html').render(context)
@@ -61,7 +61,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         # Compose the mail
         # Set the language for the receiver
         translation.activate(receiver.primary_language)
-        subject = _('%(sender)s accepted you to complete the tasks you applied for.') % {'sender': sender.mail_name}
+        subject = _('%(sender)s accepted you to complete the tasks you applied for.') % {'sender': sender.get_short_name()}
         context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
         text_content = get_template('task_member_accepted.mail.txt').render(context)
         html_content = get_template('task_member_accepted.mail.html').render(context)

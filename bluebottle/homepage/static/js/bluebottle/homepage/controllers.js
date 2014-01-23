@@ -4,30 +4,33 @@ App.HomeController = Ember.ObjectController.extend({
 	project: null,
     isCampaignHomePage: false,
 	projectIndex: 1,
+
+    actions: {
+        nextProject: function() { // TODO: similar thing for fundraisers?
+            var projects = this.get('projects');
+
+            this.incrementProperty('projectIndex');
+
+            if (this.get('projectIndex') >= projects.get('length')) {
+                this.set('projectIndex', 0);
+            }
+
+            this.loadProject();
+        },
+
+        previousProject: function() {
+            var projects = this.get('projects');
+
+            this.decrementProperty('projectIndex');
+
+            if (this.get('projectIndex') < 0) {
+                this.set('projectIndex', projects.get('length') - 1);
+            }
+
+            this.loadProject();
+        }
+    },
 	
-    nextProject: function() { // TODO: similar thing for fundraisers?
-        var projects = this.get('projects');
-
-        this.incrementProperty('projectIndex');
-
-        if (this.get('projectIndex') >= projects.get('length')) {
-            this.set('projectIndex', 0);
-        }
-
-        this.loadProject();
-    },
-
-    previousProject: function() {
-        var projects = this.get('projects');
-
-        this.decrementProperty('projectIndex');
-
-        if (this.get('projectIndex') < 0) {
-            this.set('projectIndex', projects.get('length') - 1);
-        }
-
-        this.loadProject();
-    },
 
     loadProject: function() {
         var controller = this;

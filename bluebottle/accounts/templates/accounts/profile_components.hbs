@@ -5,7 +5,7 @@
 {% tplhandlebars "components/bb-multiple-selected-items" %}
     {{#bb-form-field label=label}}
 
-        {{view App.ItemSelectView contentBinding=availableItems valueBinding=selectedItem }}
+        {{view App.ItemSelectView contentBinding=availableItems valueBinding=selectedItem promptBinding=prompt}}
 
         <ul>
         {{#each item in selectedItems }}

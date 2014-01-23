@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from bluebottle.accounts.serializers import UserPreviewSerializer
 from bluebottle.utils.serializers import MetaField
-from .models import ContactMessage, Page
+from .models import Page
 
 
 class PageContentsField(serializers.Field):
@@ -28,12 +28,3 @@ class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = ('title', 'id', 'body', 'language', 'meta_data')
-
-
-class ContactMessageSerializer(serializers.ModelSerializer):
-
-    author = UserPreviewSerializer()
-
-    class Meta:
-        model = ContactMessage
-        fields = ('id', 'author', 'name', 'email', 'message', 'creation_date')

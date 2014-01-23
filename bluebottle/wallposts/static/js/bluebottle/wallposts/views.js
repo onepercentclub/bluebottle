@@ -3,6 +3,10 @@
  Views
  */
 
+App.WallView = Em.View.extend({
+    templateName: 'wall'
+});
+
 App.WallPostView = Em.View.extend({
 
     templateName: 'wallPost',

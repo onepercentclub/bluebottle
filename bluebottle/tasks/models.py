@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-# import django.db.models.options as options
+import django.db.models.options as options
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
@@ -22,7 +22,7 @@ from bluebottle.projects import get_project_model
     have to add this.
 """
 
-# options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 PROJECT_MODEL = get_project_model()
 

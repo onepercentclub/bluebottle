@@ -58,6 +58,7 @@ App.TaskSearchFormController = Em.ObjectController.extend({
         this.set('model.text', '');
         this.set('model.skill', null);
         this.set('model.status', null);
+        this.set('model.country', null);
     },
 
     updateSearch: function(sender, key){
@@ -73,13 +74,14 @@ App.TaskSearchFormController = Em.ObjectController.extend({
                 'page': this.get('page'),
                 'ordering': this.get('ordering'),
                 'status': this.get('status'),
+                'country': this.get('country'),
                 'text': this.get('text'),
                 'skill': this.get('skill.id')
             };
             var tasks = App.TaskPreview.find(query);
             list.set('model', tasks);
         }
-    }.observes('text', 'skill', 'status', 'page', 'ordering')
+    }.observes('text', 'skill', 'status', 'country', 'page', 'ordering')
 
 
 });
@@ -126,15 +128,17 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
             }
         });
         return isMember;
-    }.property('members.@each.member.username', 'controllers.currentUser.username')
+    }.property('members.@each.member.username', 'controllers.currentUser.username'),
+});
 
+
+App.TaskActivityController = App.TaskController.extend({
 });
 
 App.TaskIndexController = Em.ArrayController.extend({
     needs: ['task', 'currentUser'],
     perPage: 5,
     page: 1,
-
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));

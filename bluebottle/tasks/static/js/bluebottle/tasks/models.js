@@ -14,16 +14,15 @@ App.Adapter.map('App.TaskPreview', {
 });
 App.Adapter.map('App.TaskMember', {
     member: {embedded: 'load'}
+    //task: {embedded: 'load'}
 });
 App.Adapter.map('App.MyTaskMember', {
-    member: {embedded: false},
+    member: {embedded: 'load'},
     task: {embedded: 'load'}
 });
 App.Adapter.map('App.TaskFile', {
     author: {embedded: 'load'}
 });
-
-
 
 
 /*
@@ -38,6 +37,8 @@ App.TaskMember = DS.Model.extend({
     status: DS.attr('string', {defaultValue: 'applied'}),
     motivation: DS.attr('string'),
     task: DS.belongsTo('App.Task'),
+
+
     isStatusApplied: function(){
         return (this.get('status') == 'applied');
     }.property('status'),
@@ -49,7 +50,11 @@ App.TaskMember = DS.Model.extend({
     }.property('status'),
     isStatusRealized: function(){
         return (this.get('status') == 'realized');
+    }.property('status'),
+    isAccepted: function(){
+        return (this.get('isStatusAccepted') || this.get('isStatusRealized'));
     }.property('status')
+
 });
 
 App.MyTaskMember = App.TaskMember.extend({
@@ -109,7 +114,6 @@ App.Task = DS.Model.extend({
     }.property('status'),
 
 	hasMoreThanOneMember: function() {
-		console.log(this.get("members.length"));
 		return this.get('members.length') > 1
 	}.property('members.length'),
 

@@ -3,6 +3,7 @@ import os
 
 SITE_ID = 1
 TIME_ZONE = 'Europe/Amsterdam'
+USE_TZ = True
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -143,3 +144,4 @@ USE_EMBER_STYLE_ATTRS = True
 INCLUDE_TEST_MODELS = True
 
 PROJECTS_PROJECT_MODEL = 'projects.Project'
+TASKS_TASK_MODEL = 'tasks.Task'

@@ -28,9 +28,13 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     avatar = SorlImageField('picture', '133x133', crop='center', colorspace="GRAY")
 
+    # TODO: Remove first/last name and only use these
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    short_name = serializers.CharField(source='get_short_name', read_only=True)
+
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username', 'avatar',)
+        fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
 
 
 class CurrentUserSerializer(UserPreviewSerializer):
@@ -40,10 +44,11 @@ class CurrentUserSerializer(UserPreviewSerializer):
     """
     # This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
+    full_name = serializers.Field(source='get_full_name')
 
     class Meta:
         model = BB_USER_MODEL
-        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language')
+        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
 
 
 
@@ -79,19 +84,18 @@ class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serial
     username = serializers.CharField(read_only=True)
 
     website = URLField(required=False)
-
-    # TODO: extend this serializer with abstract base model
-    skill_ids = serializers.PrimaryKeyRelatedField(many=True, source='skills')
-    favourite_country_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_countries")
-    favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True, source="favourite_themes")
     tags = TagSerializer()
+
+    # TODO: Remove first/last name and only use these
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    short_name = serializers.CharField(source='get_short_name', read_only=True)
 
     user_statistics = serializers.SerializerMethodField('get_user_statistics')
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'skill_ids', 'favourite_country_ids', 'favourite_theme_ids',
+        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture', 'about', 'why', 'website',
+                  'availability', 'date_joined', 'location',
                   'tags', 'user_statistics')
 
 # Thanks to Neamar Tucote for this code:

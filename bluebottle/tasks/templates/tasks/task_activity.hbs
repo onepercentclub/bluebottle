@@ -15,7 +15,7 @@
                     <div class="wallpost-member">
                         <a {{action openInBigBox "userModal" member}} class="member">
                             <figure class="member-avatar">
-                                <img src="http://placehold.it/200x200" alt="member.full_name"}} />
+                                <img {{bindAttr src=member.getAvatar}} alt="member.full_name"}} />
                             </figure>
                         </a>
                     </div>
@@ -25,7 +25,7 @@
                     </div>
 
                     <h2 class="wallpost-title">
-                        Request to apply for this task
+                        Status: {{status}}
                     </h2>
                 </header>
 

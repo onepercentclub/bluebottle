@@ -37,11 +37,11 @@ class ProjectPreviewList(generics.ListAPIView):
 
         country = self.request.QUERY_PARAMS.get('country', None)
         if country:
-            qs = qs.filter(projectplan__country=country)
+            qs = qs.filter(country=country)
 
         theme = self.request.QUERY_PARAMS.get('theme', None)
         if theme:
-            qs = qs.filter(projectplan__theme_id=theme)
+            qs = qs.filter(theme_id=theme)
 
         status = self.request.QUERY_PARAMS.get('status', None)
         if status:

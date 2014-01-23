@@ -372,7 +372,6 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
     */
     dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
         // FIXME: Dirty trick to keep things working for adding TaskMember
-        console.log(record.constructor.toString());
         if(record.constructor.toString() != 'App.Task' && record.constructor.toString() != 'App.MyOrganization') {
             relationship.childReference.parent = relationship.parentReference;
             this._dirtyTree(dirtySet, record);

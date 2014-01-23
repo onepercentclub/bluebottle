@@ -1,42 +1,39 @@
-var mapStyle = [
-    {
-        featureType: "administrative",
-        elementType: "geometry",
-        stylers: [
-            { visibility: "off" },
-        ]
-    },  {
-        elementType: "labels",
-        stylers: [
-            { visibility: "off" },
-        ]
-    },{
-        featureType: "road",
-        stylers: [
-            { visibility: "off" }
-        ]
-    },{
-        featureType: "poi",
-        stylers: [
-            { visibility: "off" }
-        ]
-    },{
-        featureType: "landscape",
-        elementType: "geometry.fill",
-        stylers: [
-            { color: "#AAAAAA" }
-        ]
-    },{
-        featureType: "water",
-        stylers: [
-            { color: "#FFFFFF" },
-        ]
-    },{
-    }
-];
-
 App.BbProjectMapComponent = Ember.Component.extend({
-
+	mapStyle: [
+	    {
+	        featureType: "administrative",
+	        elementType: "geometry",
+	        stylers: [
+	            { visibility: "off" },
+	        ]
+	    },  {
+	        elementType: "labels",
+	        stylers: [
+	            { visibility: "off" },
+	        ]
+	    },{
+	        featureType: "road",
+	        stylers: [
+	            { visibility: "off" }
+	        ]
+	    },{
+	        featureType: "poi",
+	        stylers: [
+	            { visibility: "off" }
+	        ]
+	    },{
+	        featureType: "landscape",
+	        elementType: "geometry.fill",
+	        stylers: [
+	            { color: "#AAAAAA" }
+	        ]
+	    },{
+	        featureType: "water",
+	        stylers: [
+	            { color: "#FFFFFF" },
+	        ]
+	    }
+	],
     projects: function(){
         return App.ProjectPreview.find();
     }.property(),
@@ -51,11 +48,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
     active_info_window: null,
 
     initMap: function(){
+		console.log("init");
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
         var point = new google.maps.LatLng(22, 10);
-        var MyMapType = new google.maps.StyledMapType(mapStyle, {name: 'Grey'});
+        var MyMapType = new google.maps.StyledMapType(this.get("mapStyle"), {name: 'Grey'});
 
         var mapOptions = {
             zoom: 2,
@@ -149,7 +147,6 @@ App.BbProjectMapComponent = Ember.Component.extend({
     },
     didInsertElement: function() {
 	    this.initMap();
-
-        this.placeMarkers();
+        this.placeMarkers();			
     }
 });

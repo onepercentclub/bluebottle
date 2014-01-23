@@ -5,7 +5,7 @@
 {% tplhandlebars "task" %}
 
     <div id="task-detail">
-        <div class="l-section">
+        <div class="l-section" id="task-details">
             <section class="l-wrapper">
 
                 <div class="l-content">
@@ -40,6 +40,15 @@
                 </div>
 
                 <sidebar class="l-sidebar">
+					
+					{{#if canEdit}}
+					<div class="edit-task">
+                    {{#link-to 'taskEdit' model}}
+                        <span class="flaticon solid settings-1"></span>
+                        {% trans 'Edit' %}
+                    {{/link-to}}
+					</div>
+					{{/if}}
 
                     {{view App.SocialShareView classNames="task-share"}}
 

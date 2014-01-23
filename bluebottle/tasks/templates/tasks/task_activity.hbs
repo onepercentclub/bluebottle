@@ -1,0 +1,52 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "taskActivity" %}
+    <div class="wallposts-important">
+
+        {{#each members}}
+
+            <article class="wallpost important">
+
+                <header class="wallpost-header">
+
+                    <div class="wallpost-member">
+                        <a {{action openInBigBox "userModal" member}} class="member">
+                            <figure class="member-avatar">
+                                <img src="http://placehold.it/200x200" alt="member.full_name"}} />
+                            </figure>
+                        </a>
+                    </div>
+
+                    <div class="wallpost-meta">
+                        <h3 class="wallpost-author">{{member.full_name}}</h3>
+                    </div>
+
+                    <h2 class="wallpost-title">
+                        Request to apply for this task
+                    </h2>
+                </header>
+
+                <div class="wallpost-content">
+
+                    <div class="text">
+                        <strong>Motivation:</strong> {{motivation}}
+
+                    </div>
+
+                </div>
+
+                <div class="wallpost-buttons">
+                    <a class="btn wallpost-action-accept" href="#">Accept</a>
+                     <span class="btn-spacer">or</span>
+                    <a class="wallpost-action-decline" href="#">Decline</a>
+                </div>
+            </article>
+        {{else}}
+            no members yet
+        {{/each}}
+
+    </div>
+{% endtplhandlebars %}

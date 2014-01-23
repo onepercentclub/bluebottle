@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.mail.message import EmailMessage
 from django.db import models
+import django.db.models.options as options
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
@@ -16,7 +17,17 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-from bluebottle.bluebottle_utils.models import Address
+from bluebottle.utils.models import Address
+
+
+"""
+    When extending the user model, the serializer should extend too.
+    We provide a default base serializer in sync with the base user model
+    The Django Meta attribute seems the best place for this configuration, so we
+    have to add this.
+"""
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
 # TODO: Make this generic for all user file uploads.
@@ -74,7 +85,7 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
-class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
+class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.
     """
@@ -118,6 +129,11 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     about = models.TextField(_("about"), max_length=265, blank=True)
     why = models.TextField(_("why"), max_length=265, blank=True)
     availability = models.CharField(_("availability"), max_length=25, blank=True, choices=Availability.choices)
+    # max length is not entirely clear, however over 50 characters throws errors on facebook
+    facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
+    # max length: see https://support.twitter.com/articles/14609-changing-your-username
+    twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
+
 
     # Private Settings
     primary_language = models.CharField(_("primary language"), max_length=5, help_text=_("Language used for website and emails."), choices=settings.LANGUAGES)
@@ -136,14 +152,18 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
     objects = BlueBottleUserManager()
 
     USERNAME_FIELD = 'email'
-    # Only email and password is requires to create a user account but this is how you'd require other fields.
+    # Only email and password is required to create a user account but this is how you'd require other fields.
     # REQUIRED_FIELDS = ['first_name', 'last_name']
 
     slug_field = 'username'
 
     class Meta:
+        abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')
+        # specifying the serializer here allows us to leave the urls/views untouched while
+        # modifying the serializer for the user model
+        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
@@ -204,7 +224,7 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
         """
         The user is identified by their email address.
         """
-        return self.email
+        return self.first_name
 
     def email_user(self, subject, message, from_email=None):
         """
@@ -225,6 +245,20 @@ class BlueBottleUser(AbstractBaseUser, PermissionsMixin):
         else:
             return None
 
+    @property
+    def short_name(self):
+        return self.get_short_name()
+
+
+class BlueBottleUser(BlueBottleBaseUser):
+    """
+    This is the standard user model. If extra profile fields are required, provide your own user
+    model extending ``BlueBottleBaseUser``.
+    """
+    class Meta:
+        swappable = 'AUTH_USER_MODEL'
+        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'
+
 
 # Ensures that UserProfile and User instances stay in sync.
 def create_user_address(sender, instance, created, **kwargs):
@@ -232,7 +266,10 @@ def create_user_address(sender, instance, created, **kwargs):
     if created:
         UserAddress.objects.create(user=instance)
 
-post_save.connect(create_user_address, sender=BlueBottleUser)
+# This is not possible with the unknown user model at this stage. In Django 1.7+ the sender
+# can be specified as dotted python path, then settings.AUTH_USER_MODEL can be used.
+if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
+    post_save.connect(create_user_address, sender=BlueBottleUser)
 
 
 class UserAddress(Address):

@@ -1,0 +1,80 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_submit" %}
+
+    <legend>
+        <strong>{% trans "Submit Plan" %}</strong>
+    </legend>
+
+    <fieldset>
+
+        <div class="fieldset-content">
+
+            <h3>{% trans "Check!" %}</h3>
+            {% blocktrans %}
+                Make sure that you filled out the entire form and that all items to the left have a <span class="flaticon solid checkmark-2"></span> check sign.
+                If one of the items still shows a circle then that still needs some work.
+            {% endblocktrans %}
+        </div>
+
+        <ul>
+            <li class="control-group has-popover" data-content="{% trans "Agree to the terms to submit the plan" %}">
+                <div class="controls wide">
+                    <label class="checkbox wide">{{view Em.Checkbox checkedBinding="agreed" classBinding="errors.agreed.length:error"}} <span>{% trans "I agree to the " %} <a {{action showPage 'terms-and-conditions'}}>{% trans "general terms and conditions" %}</a></span></label>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    {{#if agreed}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-submit :btn-primary"}} {{action submitPlan}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
+    {{else}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-submit :disabled"}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
+    {{/if}}
+
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "my_project_review" %}
+
+    <div class="l-wrapper">
+        <article class="l-content">
+            <header class="page-header">
+                <h2>{% trans "Your plan is in review now" %}</h2>
+                <p>We'll get back to you soon!</p>
+            </header>
+        </article>
+    </div>
+
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "my_project_rejected" %}
+
+
+    <div class="l-wrapper">
+        <article class="l-content">
+            <header class="page-header">
+                <h2>{% trans "We're sorry, your plan has been rejected." %}</h2>
+                <p>{% trans "Please contact us if you need support to define your smart idea." %}</p>
+            </header>
+        </article>
+    </div>
+
+
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "map_picker" %}
+
+    <div class="map-picker"></div>
+    <div class="map-look-up">
+        {{view Em.TextField valueBinding="view.lookup" placeholder="Search your location."}}
+        <button {{action lookUpLocation target="view"}}> Search</button>
+    </div>
+
+{% endtplhandlebars %}
+

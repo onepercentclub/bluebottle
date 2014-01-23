@@ -16,28 +16,27 @@ from rest_framework import status
 from rest_framework import views
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
+from bluebottle.utils.serializers import DefaultSerializerMixin
 
-from .models import BlueBottleUser
-from .serializers import (CurrentUserSerializer, UserProfileSerializer, UserSettingsSerializer, UserCreateSerializer,
-                          PasswordResetSerializer, PasswordSetSerializer)
+from .serializers import (CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
+                          PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
 
 # API views
 
-class UserProfileDetail(generics.RetrieveUpdateAPIView):
-    model = BlueBottleUser
-    serializer_class = UserProfileSerializer
+class UserProfileDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
+    model = BB_USER_MODEL
     permission_classes = (IsCurrentUserOrReadOnly,)
 
 
 class UserSettingsDetail(generics.RetrieveUpdateAPIView):
-    model = BlueBottleUser
+    model = BB_USER_MODEL
     serializer_class = UserSettingsSerializer
     permission_classes = (IsCurrentUser,)
 
 
 class CurrentUser(generics.RetrieveAPIView):
-    model = BlueBottleUser
+    model = BB_USER_MODEL
     serializer_class = CurrentUserSerializer
 
     def get_object(self, queryset=None):
@@ -47,7 +46,7 @@ class CurrentUser(generics.RetrieveAPIView):
 
 
 class UserCreate(generics.CreateAPIView):
-    model = BlueBottleUser
+    model = BB_USER_MODEL
     serializer_class = UserCreateSerializer
 
     def get_name(self):

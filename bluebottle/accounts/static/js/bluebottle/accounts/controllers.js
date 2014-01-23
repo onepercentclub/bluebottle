@@ -56,7 +56,23 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     updateCurrentUser: function(record) {
         var currentUser = App.CurrentUser.find('current');
         currentUser.reload();
-    }
+    },
+
+    allSkills: function() {
+        return App.Skill.find();
+    }.property(),
+
+    allCountries: function(){
+        return App.Country.find();
+    }.property(),
+
+    allThemes: function(){
+        return App.Theme.find();
+    }.property(),
+
+    allOffices: function(){
+        return App.Office.find();
+    }.property()
 });
 
 
@@ -105,6 +121,11 @@ App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
 
 
 App.UserModalController = Ember.ObjectController.extend({
+	// actions: function() {
+	// 	goToProfile: function() {
+	// 		
+	// 	}
+	// },
     loadProfile: function() {
         var model = this.get('model');
         var id = model.get('id');

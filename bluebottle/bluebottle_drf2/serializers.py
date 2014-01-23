@@ -322,6 +322,8 @@ class PhotoSerializer(serializers.ImageField):
 class PrivateFileSerializer(FileSerializer):
 
     def field_to_native(self, obj, field_name):
+        if not obj:
+            return None
         value = getattr(obj, self.source or field_name)
         content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
         pk = obj.pk
@@ -368,7 +370,8 @@ class TaggableSerializerMixin(object):
         # If there are tags sent to the API then store them and wipe them from data
         # to avoid DRF2 nested serializer trying to store them.
         instance = super(TaggableSerializerMixin, self).from_native(data, files)
-        if 'tags' in data:
+
+        if data and 'tags' in data:
             self.tag_list = data['tags']
         if instance:
             return self.full_clean(instance)

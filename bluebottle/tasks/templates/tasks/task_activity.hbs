@@ -5,9 +5,9 @@
 
 {% tplhandlebars "taskActivity" %}
     <div class="wallposts-important">
-		<h3>Pending requests</h3>
+		<h3>{% trans "Task members" %}</h3>
 		<div class="task-pending-requests">
-        {{#each notAcceptedMembers}}
+        {{#each members}}
 
             <article class="wallpost important">
 
@@ -40,11 +40,18 @@
                 </div>
 
                 {{#if controller.controllers.task.canEdit}}
-                    <div class="wallpost-buttons">
-                        <a class="btn wallpost-action-accept" {{action 'editTaskMember' this}}>
-                            {% trans "Manage" %}
+                    {{#if isStatusApplied}}
+                        <div class="wallpost-buttons">
+                            <a class="btn wallpost-action-accept" {{action 'editTaskMember' this}}>
+                                {% trans "Accept" %}
+                            </a>
+                            {% trans "Application pending..." %}
+                        </div>
+                    {{else}}
+                        <a class="wallpost-action-decline" {{action 'editTaskMember' this}}>
+                            {% trans "Edit status" %}
                         </a>
-                    </div>
+                    {{/if}}
                 {{/if}}
 
                 {{!--

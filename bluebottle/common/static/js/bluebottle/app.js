@@ -25,10 +25,6 @@ App = Em.Application.create({
                 if (primaryLanguage && primaryLanguage != language) {
                     document.location = '/' + primaryLanguage + document.location.hash;
                 }
-            },
-            function(data){
-                // FOr now redirect all visitors that are not authenticated.
-                document.location = '/token/missing';
             }
         );
 

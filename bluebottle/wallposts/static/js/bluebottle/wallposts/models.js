@@ -79,8 +79,11 @@ App.WallPost = DS.Model.extend({
 	otherPhotos: function() {
 		var photos = this.get("photos").toArray();
 		return photos.slice(1,photos.length);
-	}.property("photos")
-	
+	}.property("photos"),
+
+    isInitiator: function(){
+        return (this.get('type') == 'media');
+    }.property('type')
 });
 
 

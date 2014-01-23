@@ -131,21 +131,28 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
     }.property('members.@each.member.username', 'controllers.currentUser.username'),
 	
 	acceptedMembers: function() {
-		return this.get("model").get("members").filter(function(member) {
-			return this.get("isStatusAccepted");
-		})
-	}.property("members.@each.member.isStatusAccepted"),
+		return this.get('model').get('members').filterBy('isStatusAccepted', true);
+	}.property('members.@each.member.isStatusAccepted'),
 
 	notAcceptedMembers: function() {
-		return this.get("model").get("members").filter(function(member) {
-			return !this.get("isStatusAccepted");
-		})
-	}.property("members.@each.member.isStatusAccepted"),
+		return this.get('model').get('members').filterBy('isStatusAccepted', false);
+	}.property('members.@each.member.isStatusAccepted')
 
 });
 
 
 App.TaskActivityController = App.TaskController.extend({
+    needs: ['task', 'currentUser'],
+
+    canEditTask: function() {
+        var user = this.get('controllers.currentUser.username');
+        var author_name = this.get('controllers.task.author.username');
+        if (username) {
+            return (username == author_name);
+        }
+        return false;
+    }.property('controllers.task.author', 'controllers.currentUser.username')
+
 });
 
 App.TaskIndexController = Em.ArrayController.extend({

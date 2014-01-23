@@ -9,13 +9,13 @@
 
             <a {{action openInBigBox "memberProfile" author}} class="member">
                 <span class="member-avatar">
-                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.fullname }}" />
+                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.full_name }}" />
                 </span>
             </a>
 
         </div>
 		<div class="reaction-body">
-            <strong class="member-name">{{ author.fullname }}</strong>
+            <strong class="member-name">{{ author.full_name }}</strong>
 
 	        <span class="timestamp">{{ localize created formatting="X" }}</span>
 	        {{#if isAuthor}}
@@ -38,14 +38,6 @@
             {{#each controller itemController="wallPostReaction"}}
                 {{view "App.WallPostReactionView" content=this}}
             {{/each}}
-
-            {# TODO: Make the pagination dynamic - only on more than 2 #}
-            {{!--
-			<li class="reactions-pagination">
-				<a href="#">Show 4 more comments</a>
-				<span class="flaticon solid down-circle-2"></span>
-			</li>
-			--}}
         </ul>
     {{/if}}
 	
@@ -65,7 +57,7 @@
                     {{/each}}
                     {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="newReaction"}}
 
-                    <button class="btn" type="submit" id="reaction-post">Post</button>
+                    <button class="btn reaction-post" type="submit">Post</button>
                 </li>
                 </ul>
             </fieldset>

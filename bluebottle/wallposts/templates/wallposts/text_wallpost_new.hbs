@@ -4,23 +4,33 @@
 
 {% tplhandlebars "textWallPostNew" %}
 
-    <fieldset>
-       <ul>
-            <li class="control-group">
-                <label for="wallpost-update" class="control-label">{% trans "Comment" %}</label>
+	<div class="wallpost-action">
+	    <a {{action 'toggleForm' target='view'}}class="wallpost-post-update">
+	        <span class="flaticon solid comment-1"></span>
+	        {% trans "Post a new comment on wall" %}
+	    </a>
 
-                <div class="controls">
-                    {{view Ember.TextArea valueBinding="text" cols="50" rows="4" name="wallpost-update" id="wallpost-update"}}
-                </div>
+        <div class="wallpost-form">
+            <fieldset>
+                <ul>
+                    <li class="control-group">
 
-                {{#if errors.text }}
-                    <div class="has-errors">{{#each errors.text}}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-            </li>
-        </ul>
-    </fieldset>
+                        {{view Ember.TextArea valueBinding="text" cols="50" rows="4" name="wallpost-update" id="wallpost-update" classBinding="errors.text.length:error" placeholder="Your comment"}}
 
-    <button class="btn btn-iconed" {{action "saveWallPost"}}><span class="flaticon solid thinking-comment-1"></span>{% trans "Comment" %}</button>
+                        {{#if errors.text }}
+                            <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
+                </ul>
+            </fieldset>
+
+            <button class="btn btn-save" {{action 'saveWallPost' target='controller'}}>{% trans "Post" %}</button>
+
+            <button class="btn btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
+
+
+        </div>
+    </div>
 
 {% endtplhandlebars %}
 

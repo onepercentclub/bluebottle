@@ -4,7 +4,8 @@
 
 {% tplhandlebars "textWallPostNew" %}
 
-    <!-- <fieldset>
+	{{!--}}
+    <fieldset>
        <ul>
             <li class="control-group">
                 <label for="wallpost-update" class="control-label">{% trans "Comment" %}</label>
@@ -18,14 +19,14 @@
                 {{/if}}
             </li>
         </ul>
-    </fieldset> -->
+    </fieldset>
+	{{--}}
 		
 	<div class="wallpost-action">
 	    <a {{action 'toggleForm' target='view'}}class="wallpost-post-update">
 	        <span class="flaticon solid comment-1"></span>
 	        {% trans "Post a new comment on wall" %}
 	    </a>
-
 	</div>
 	
     <div class="wallpost-form">

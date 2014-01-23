@@ -7,7 +7,7 @@
     <div class="wallposts-important">
 		<h3>Pending requests</h3>
 		<div class="task-pending-requests">
-	        {{#each members}}
+	        {{#each notAcceptedMembers}}
 
 	            <article class="wallpost important">
 
@@ -46,7 +46,7 @@
 	                </div>
 	            </article>
 	        {{else}}
-	            no members yet
+	            <p>{% trans "There are no pending requests" %}</p>
 	        {{/each}}
 		</div>
 		

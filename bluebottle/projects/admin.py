@@ -10,7 +10,7 @@ from sorl.thumbnail.admin import AdminImageMixin
 from . import get_project_model
 
 from .models import (
-    Project, ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute,
+    ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute,
     ProjectDetailFieldValue, ProjectDetail, ProjectTheme)
 
 
@@ -18,8 +18,10 @@ logger = logging.getLogger(__name__)
 
 PROJECT_MODEL = get_project_model()
 
+
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
+
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
@@ -44,11 +46,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     raw_id_fields = ('owner',)
 
-    fields = ('title', 'slug', 'owner', 'status', 'pitch', 'image',
-              'description', 'reach', 'latitude', 'longitude', 'country',
-              'video_url', 'tags')
-
-    prepopulated_fields = {"slug": ("title",)}
+    prepopulated_fields = {'slug': ('title',)}
 
     def queryset(self, request):
         # Optimization: Select related fields that are used in admin specific display fields.
@@ -77,15 +75,15 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     def project_organization(self, obj):
         object = obj.projectplan.organization
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
-        return "<a href='%s'>%s</a>" % (str(url), object.name)
+        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+        return "<a href='{0}'>{1}</a>".format(str(url), object.name)
 
     project_organization.allow_tags = True
 
     def project_owner(self, obj):
         object = obj.owner
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
-        return "<a href='%s'>%s</a>" % (str(url), object.first_name + ' ' + object.last_name)
+        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+        return "<a href='{0}'>{1}</a>".format(str(url), object.first_name + ' ' + object.last_name)
 
     project_owner.allow_tags = True
 
@@ -126,6 +124,6 @@ class ProjectDetailFieldAdmin(admin.ModelAdmin):
     list_display_links = ['name']
     list_display = ['name', 'type', 'description']
 
-    prepopulated_fields = {"slug": ("name",)}
+    prepopulated_fields = {'slug': ('name',)}
 
 admin.site.register(ProjectDetailField, ProjectDetailFieldAdmin)

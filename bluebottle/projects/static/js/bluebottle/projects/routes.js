@@ -206,3 +206,10 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
+
+App.ProjectPlanRoute = Em.Route.extend({
+    model: function(){
+        var project = this.modelFor("project");
+        return project;
+    }
+});

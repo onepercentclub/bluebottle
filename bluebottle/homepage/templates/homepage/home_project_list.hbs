@@ -16,11 +16,11 @@
 
                 <div class="project-preview">
 
-                    <figure class="image l-half">
+                    <figure class="project-image">
                         <img {{bindAttr src="project.image.large" }} width="100%" alt="Project Photo" />
                     </figure>
 
-                    <article class="project-info l-half">
+                    <article class="project-info">
                         <div class="project-meta">
 		                    <span class="project-location">
                                 <span class="flaticon solid location-pin-1"></span>
@@ -38,17 +38,14 @@
                             {{/linkTo}}
                         </h2>
                         <p class="project-description">{{project.pitch}}</p>
-                    </article>
 
-                    <div class="project-status l-full">
-
-                        <div class="project-action l-one-third">
+                        <div class="project-action">
                             {{#link-to 'project' project class="btn btn-primary btn-iconed"}}
-                                <span class="flaticon solid wallet-1"></span> {% trans "Project" %}
+                                <span class="flaticon solid wallet-1"></span> {% trans "View project" %}
                             {{/link-to}}
                         </div>
+                    </article>
 
-					</div>
                 </div>
 
                 <span {{action previousProject}} class="project-slider-prev">{% trans "Previous project" %}</span>

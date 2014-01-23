@@ -9,13 +9,13 @@
 
             <a {{action openInBigBox "memberProfile" author}} class="member">
                 <span class="member-avatar">
-                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.fullname }}" />
+                    <img {{ bindAttr src="author.getAvatar" }} alt="{{ author.full_name }}" />
                 </span>
             </a>
 
         </div>
 		<div class="reaction-body">
-            <strong class="member-name">{{ author.fullname }}</strong>
+            <strong class="member-name">{{ author.full_name }}</strong>
 
 	        <span class="timestamp">{{ localize created formatting="X" }}</span>
 	        {{#if isAuthor}}
@@ -57,7 +57,7 @@
                     {{/each}}
                     {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="newReaction"}}
 
-                    <button class="btn" type="submit" id="reaction-post">Post</button>
+                    <button class="btn reaction-post" type="submit">Post</button>
                 </li>
                 </ul>
             </fieldset>

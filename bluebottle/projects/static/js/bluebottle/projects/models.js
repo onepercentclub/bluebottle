@@ -196,7 +196,7 @@ App.MyProject = App.Project.extend({
             return true;
         }
         return false;
-    }.property('title', 'pitch', 'theme', 'tags'),
+    }.property('title', 'pitch', 'theme', 'tags.length'),
 
     validDescription: function(){
         if (this.get('description') && this.get('reach')){

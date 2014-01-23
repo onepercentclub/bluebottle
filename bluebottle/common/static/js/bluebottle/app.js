@@ -19,13 +19,12 @@ App = Em.Application.create({
         App.CurrentUser.find('current').then(
             function(user){
                 var primaryLanguage = user.get('primary_language');
+                if (primaryLanguage == 'en_US') {
+                    primaryLanguage = 'en-us';
+                }
                 if (primaryLanguage && primaryLanguage != language) {
                     document.location = '/' + primaryLanguage + document.location.hash;
                 }
-            },
-            function(data){
-                // FOr now redirect all visitors that are not authenticated.
-                document.location = '/token/missing';
             }
         );
 
@@ -94,7 +93,7 @@ App = Em.Application.create({
             locale = this.get('locale');
         }
 
-        if (locale != 'en-US') {
+        if (locale != 'en-us') {
             if (locale == 'nl') {
                 locale = 'nl-NL';
             }
@@ -115,20 +114,25 @@ App = Em.Application.create({
                     Globalize.culture(locale);
                     App.set('locale', locale);
                 });
-            $.getScript('/static/assets/js/vendor/jquery-ui/i18n/jquery.ui.datepicker-' + locale.substr(0, 2) + '.js')
-                .fail(function() {
-                    if (window.console) {
-                        console.log("No jquery.ui.datepicker file for : "+ locale);
-                    }
-                    // Specified locale file not available. Use default locale.
-                    locale = App.get('locale');
-                    Globalize.culture(locale);
-                    App.set('locale', locale);
-                })
-                .success(function() {
-                    // Specs loaded. Enable locale.
-                    App.set('locale', locale);
-                });
+            if (locale == 'en-US') {
+                Globalize.culture(locale);
+            } else {
+                $.getScript('/static/assets/js/vendor/jquery-ui/i18n/jquery.ui.datepicker-' + locale.substr(0, 2) + '.js')
+                    .fail(function() {
+                        if (window.console) {
+                            console.log("No jquery.ui.datepicker file for : "+ locale);
+                        }
+                        // Specified locale file not available. Use default locale.
+                        locale = App.get('locale');
+                        Globalize.culture(locale);
+                        App.set('locale', locale);
+                    })
+                    .success(function() {
+                        // Specs loaded. Enable locale.
+                        App.set('locale', locale);
+                    });
+
+            }
         } else {
             Globalize.culture(locale);
             App.set('locale', locale);

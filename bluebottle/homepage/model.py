@@ -7,11 +7,14 @@ PROJECT_MODEL = get_project_model()
 
 class HomePage(object):
     def get(self, language):
+        # FIXME: Hack to make sure quotes and slides load.
+        if language == 'en-us':
+            language = 'en_US'
         self.id = 1
         self.quotes = Quote.objects.published().filter(language=language)
         self.slides = Slide.objects.published().filter(language=language)
 
-        projects = PROJECT_MODEL.objects.filter(status__viewable=True, favorite=True).order_by('?')
+        projects = PROJECT_MODEL.objects.filter(status__viewable=True).order_by('?')
         if len(projects) > 4:
             self.projects = projects[0:4]
         elif len(projects) > 0:

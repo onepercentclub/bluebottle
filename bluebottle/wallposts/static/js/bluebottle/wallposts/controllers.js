@@ -18,11 +18,6 @@ App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
     }.property('model'),
 
     actions: {
-        deleteRecordOnServer: function(){
-            var model = this.get('model');
-            model.deleteRecord();
-            model.save();
-        },
 		editWallPost: function() {
 			console.log("edit");
 		}
@@ -97,7 +92,7 @@ App.TextWallPostNewController = Em.ObjectController.extend({
 
 			$(".video-container").show();
 			$(".photos-container").hide();			
-		},
+		}
     },
 
     createNewWallPost: function() {

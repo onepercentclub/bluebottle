@@ -22,7 +22,7 @@
             <li class="control-group has-popover" data-content="{% trans "Name of your organisation" %}">
                 <label class="control-label">{% trans "Name" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.name" classBinding="organization.errors.name.length:error"}}
+                    {{view Em.TextField valueBinding="organization.name" classBinding="organization.errors.name.length:error" maxlength=255}}
                 </div>
 
                 {{#if organization.errors.name }}
@@ -33,7 +33,8 @@
             <li class="control-group has-popover" data-content="{% trans "Describe your organisation" %}">
                 <label class="control-label">{% trans "Description" %}</label>
                 <div class="controls">
-                    {{view Em.TextArea valueBinding="organization.description" classBinding="organization.errors.description.length:error"}}
+                    {{view Em.TextArea valueBinding="organization.description" classBinding="organization.errors.description.length:error"
+                        maxlength=800 }}
                 </div>
 
                 {{#if organization.errors.description }}
@@ -50,7 +51,8 @@
             <li class="control-group has-popover" data-content="{% trans "Street, house number, the place in your city" %}">
                 <label class="control-label">{% trans "Address line 1" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.address_line1" classBinding="organization.errors.address_line1.length:error"}}
+                    {{view Em.TextField valueBinding="organization.address_line1" classBinding="organization.errors.address_line1.length:error"
+                        maxlength=100 }}
                 </div>
 
                 {{#if organization.errors.address_line1 }}
@@ -62,7 +64,8 @@
             <li class="control-group has-popover" data-content="{% trans "More about your address" %}">
                 <label class="control-label">{% trans "Address line 2" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.address_line2" classBinding="organization.errors.address_line2.length:error"}}
+                    {{view Em.TextField valueBinding="organization.address_line2" classBinding="organization.errors.address_line2.length:error"
+                        maxlength=100 }}
                 </div>
 
                 {{#if organization.errors.address_line2 }}
@@ -74,7 +77,8 @@
             <li class="control-group has-popover" data-content="{% trans "City or village.." %}">
                 <label class="control-label">{% trans "City" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.city" classBinding="organization.errors.city.length:error"}}
+                    {{view Em.TextField valueBinding="organization.city" classBinding="organization.errors.city.length:error"
+                        maxlength=100 }}
                 </div>
 
                 {{#if organization.errors.city }}
@@ -85,7 +89,8 @@
             <li class="control-group has-popover" data-content="{% trans "Postal code" %}">
                 <label class="control-label">{% trans "Postal code" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.postal_code" classBinding="organization.errors.postal_code.length:error"}}
+                    {{view Em.TextField valueBinding="organization.postal_code" classBinding="organization.errors.postal_code.length:error"
+                        maxlength=20}}
                 </div>
 
                 {{#if organization.errors.postal_code }}
@@ -136,7 +141,8 @@
             <li class="control-group has-popover" data-content="{% trans "Does your organization have a twitter account?" %}">
                 <label class="control-label">{% trans "Twitter" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.twitter" placeholder="@twitteraccount" classBinding="organization.errors.twitter.length:error"}}
+                    {{view Em.TextField valueBinding="organization.twitter" placeholder="@twitteraccount" classBinding="organization.errors.twitter.length:error"
+                        maxlength=255}}
                 </div>
 
                 {{#if organization.errors.twitter }}
@@ -147,7 +153,8 @@
             <li class="control-group has-popover" data-content="{% trans "Does your organization have a facebook group?" %}">
                 <label class="control-label">{% trans "Facebook" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.facebook" placeholder="https://www.facebook.com/<groupname>" classBinding="organization.errors.facebook.length:error"}}
+                    {{view Em.TextField valueBinding="organization.facebook" placeholder="https://www.facebook.com/<groupname>" classBinding="organization.errors.facebook.length:error"
+                        maxlength=255}}
                 </div>
 
                 {{#if organization.errors.facebook }}
@@ -158,7 +165,8 @@
             <li class="control-group has-popover" data-content="{% trans "Can we reach you on Skype?" %}">
                 <label class="control-label">{% trans "Skype" %}</label>
                 <div class="controls">
-                    {{view Em.TextField valueBinding="organization.skype" placeholder="skype name" classBinding="organization.errors.skype.length:error"}}
+                    {{view Em.TextField valueBinding="organization.skype" placeholder="skype name" classBinding="organization.errors.skype.length:error"
+                        maxlength=255 }}
                 </div>
 
                 {{#if organization.errors.skype }}

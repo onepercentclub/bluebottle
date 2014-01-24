@@ -10,7 +10,8 @@
                 <p>{% trans "These are the details we currently have for you – update or change them below." %}</p>
             {% endblock form_meta %}
         </legend>
-            
+
+        {% block_verbatim email_fieldsets %}
         <fieldset>
             <ul>
                 <li class="control-group">
@@ -29,6 +30,8 @@
                 </li>
             </ul>
         </fieldset>
+        {% endblock_verbatim email_fieldsets %}
+
 
         {% block_verbatim fieldsets %}
             <fieldset>

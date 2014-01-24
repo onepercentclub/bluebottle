@@ -3,7 +3,7 @@ App.HomeController = Ember.ObjectController.extend({
     needs: ['currentUser'],
 	project: null,
     isCampaignHomePage: false,
-	projectIndex: 1,
+	projectIndex: 0,
 
     actions: {
         nextProject: function() { // TODO: similar thing for fundraisers?

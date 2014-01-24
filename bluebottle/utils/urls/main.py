@@ -1,7 +1,8 @@
-from django.conf.urls import patterns
-from surlex.dj import surl
+from django.conf.urls import patterns, url
+
 from ..views import DocumentDownloadView
 
-urlpatterns = patterns('',
-    surl(r'^<content_type:#>/<pk:#>$', DocumentDownloadView.as_view(), name='document-download-detail'),
+urlpatterns = patterns(
+    '',
+    url(r'^(?P<content_type>\d+)/(?P<pk>\d+)$', DocumentDownloadView.as_view(), name='document_download_detail'),
 )

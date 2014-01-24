@@ -11,3 +11,8 @@ App.CountryCodeSelectView = Em.Select.extend({
     optionLabelPath: "content.name",
     prompt: gettext("Pick a country")
 });
+
+
+App.ProjectMapPopupView = Em.View.extend({
+    templateName: 'project-map-popup'
+});

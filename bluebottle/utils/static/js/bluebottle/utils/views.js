@@ -12,24 +12,28 @@ App.TagField = Em.TextField.extend({
 
 App.TagWidget = Em.View.extend({
     templateName: 'tag_widget',
-    addTag: function(){
-        if (this.get('new_tag')) {
-            var new_tag = this.get('new_tag').toLowerCase();
-            var tags = this.get('tags');
-            // Try to create a new tag, it will fail if it's already in the local store, so catch that.
-            try {
-                var tag = App.Tag.createRecord({'id': new_tag});
-            } catch(err) {
-                var tag = App.Tag.find(new_tag);
+    actions: {
+        addTag: function(){
+            if (this.get('new_tag')) {
+                var new_tag = this.get('new_tag').toLowerCase();
+                var tags = this.get('tags');
+                // Try to create a new tag, it will fail if it's already in the local store, so catch that.
+                try {
+                    var tag = App.Tag.createRecord({'id': new_tag});
+                } catch(err) {
+                    var tag = App.Tag.find(new_tag);
+                }
+                tag.transitionTo('created.loaded.saved');
+                tags.pushObject(tag);
+                this.set('new_tag', '');
             }
-            tags.pushObject(tag);
-            this.set('new_tag', '');
+        },
+        removeTag: function(tag) {
+            var tags = this.get('tags');
+            tags.removeObject(tag);
         }
     },
-    removeTag: function(tag) {
-        var tags = this.get('tags');
-        tags.removeObject(tag);
-    },
+
     didInsertElement: function(){
         this.$('.tag').typeahead({
             source: function (query, process) {

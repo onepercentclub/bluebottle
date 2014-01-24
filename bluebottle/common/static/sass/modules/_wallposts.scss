@@ -211,7 +211,27 @@
 		@include grid(24,0,1);
 	}
 	.wallposts-important {
-		@include grid(24,1,0);		
+		@include grid(24,1,0);	
+		.task-files {
+			ul {
+				margin: $base-margin 0;
+				li {
+					@include resetlist;		
+					@include clear;
+					.task-file-filename, .task-file-author, .task-file-created {
+						@include grid(16,0,1);
+					}
+					.task-file-author {
+						a {
+							color: $gray-dark;
+						}
+					}
+					.task-file-created {
+						font-size: $font-size-small;
+					}		
+				}				
+			}
+		}	
 	}
 	.wallpost-action {
 		

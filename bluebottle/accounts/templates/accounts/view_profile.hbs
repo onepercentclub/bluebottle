@@ -22,20 +22,17 @@
 
 	            <ul class="account-achievements">
 	                {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
-			        <li>
-						<img class="account-achievement-icon" src="{% get_static_prefix %}images/project.svg">
+			        <li class="account-achievements-projects">
 			            <strong>{{user_statistics.projects_supported}}</strong>
 						{% trans "projects" %}<br />
 						{% trans "supported" %}
 			        </li>
-			        <li>
-						<img class="account-achievement-icon" src="{% get_static_prefix %}images/task.svg">
+			        <li class="account-achievements-tasks">
 			            <strong>{{user_statistics.tasks_realized}}</strong>
 						{% trans "tasks" %}<br />
 						{% trans "realized" %}
 			        </li>
-			        <li>
-						<img class="account-achievement-icon" src="{% get_static_prefix %}images/time.svg">
+			        <li class="account-achievements-time">
 			            <strong>{{user_statistics.hours_spent}}</strong>
 						{% trans "hours spent" %}<br /> 
 						{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}
@@ -89,6 +86,8 @@
 
 	    </div>
 
+		{{!--
+
 	    <div class="l-section account-statistics">
 	        <section class="l-wrapper">
 
@@ -105,7 +104,7 @@
 						</a>
 					</div>
 				</div>
-
+				
 				{# TODO: make this table dynamic. Now it's just mockup #}
 
 				<table>
@@ -207,6 +206,8 @@
 
 	        </section>
 	    </div>
+			
+		--}}
 		
 	</div>
 

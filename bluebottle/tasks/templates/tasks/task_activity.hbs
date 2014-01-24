@@ -5,6 +5,49 @@
 
 {% tplhandlebars "taskActivity" %}
     <div class="wallposts-important">
+		<h3>{% trans "Task files" %}</h3>
+		<div class="task-pending-requests">
+        {{#each files}}
+
+            <article class="wallpost important">
+
+                <header class="wallpost-header">
+
+                    <div class="wallpost-member">
+                        <a {{action openInBigBox "userModal" author}} class="member">
+                            <figure class="member-avatar">
+                                <img {{bindAttr src=author.getAvatar}} alt="author.full_name"}} />
+                            </figure>
+                        </a>
+                    </div>
+
+                    <div class="wallpost-meta">
+                        <h3 class="wallpost-author">{{author.full_name}}</h3>
+                    </div>
+
+                    <h2 class="wallpost-title">
+                        {% trans "File" %}
+                    </h2>
+                    <a {{bindAttr href=this.file.url}} target="file" class="item">
+                        <em class="flaticon solid download-document-1"></em>
+                        <strong class="file-name">{{this.title}}</strong>
+                        <small class="file-size">({{this.file.size}})</small>
+                    </a>
+
+                </header>
+
+            </article>
+        {{else}}
+            {% trans "No files yet" %}<br/>
+        {{/each}}
+
+        {{#if controllers.task.canUpload}}
+            <a {{action 'uploadFile' this}} class="btn btn-iconed btn-upload">
+                <span class="flaticon solid upload-document-1"></span>
+                {% trans "Upload a file" %}
+            </a>
+        {{/if}}
+
 		<h3>{% trans "Task members" %}</h3>
 		<div class="task-pending-requests">
         {{#each members}}
@@ -63,7 +106,9 @@
                 --}}
             </article>
         {{else}}
-            {% trans "No members yet" %}
+            {% trans "No members yet" %}<br/>
         {{/each}}
+
+
     </div>
 {% endtplhandlebars %}

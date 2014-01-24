@@ -16,10 +16,10 @@
         </header>
 
         {{#if id}}
-            <a {{action "showProject" id href=true}} class="account-preview btn-link">
+            {{#link-to 'project' id href=true class="account-preview btn-link"}}
                 <span class="flaticon solid eye-1"></span>
                 {% trans "View project" %}
-            </a>
+            {{/link-to}}
         {{/if}}
     </nav>
 </div>

@@ -44,12 +44,11 @@ App.BbProjectMapComponent = Ember.Component.extend({
     zoom_level:  3,
     map: null,
 	markers: [],
-    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{pitch}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div></div>',
+    info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{pitch}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
 	icon: '/static/assets/images/marker.png',
 
     initMap: function(){
-		console.log("init");
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
@@ -66,14 +65,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
             scaleControl: false,
             streetViewControl: false,
             overviewMapControl: false,
-            disableAutoPan: true,
-//            mapTypeControlOptions: {
-//                mapTypeIds: [
-//                    'bb',
-//                    'terrain',
-//                    'satellite'
-//                ]
-//            }
+            //disableAutoPan: true,
         };
         view.map = new google.maps.Map(view.$('.bb-project-map').get(0), mapOptions);
         view.map.mapTypes.set('bb', MyMapType);
@@ -96,8 +88,15 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
     placeMarker: function(project){
         var view = this;
+
+        // TODO: Use hbs template for popups.
+        // var popupView = App.ProjectMapPopupView.create();
+        // popupView.set('project', project);
+        // var html = popupView.renderToBuffer().buffer;
+
         var template = Handlebars.compile(view.info_box_template);
         var data = {
+            'id': project.get('id'),
             'title': project.get('title'),
             'description': project.get('description'),
             'image': project.get('image'),
@@ -105,8 +104,9 @@ App.BbProjectMapComponent = Ember.Component.extend({
 			'theme_name': project.get('theme.name'),
 			'pitch': project.get('pitch')
         }
-		
+
         var html = template(data);
+
         var latLng = new google.maps.LatLng(project.get('latitude'), project.get('longitude'));
 
 		var info_window = new InfoBox({

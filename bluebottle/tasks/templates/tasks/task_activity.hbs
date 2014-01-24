@@ -38,10 +38,10 @@
 
             </article>
         {{else}}
-            {% trans "No files yet" %}
+            {% trans "No files yet" %}<br/>
         {{/each}}
 
-        {{#if controllers.task.isMember}}
+        {{#if controllers.task.canUpload}}
             <a {{action 'uploadFile' this}} class="btn btn-iconed btn-upload">
                 <span class="flaticon solid upload-document-1"></span>
                 {% trans "Upload a file" %}
@@ -106,7 +106,7 @@
                 --}}
             </article>
         {{else}}
-            {% trans "No files yet" %}
+            {% trans "No members yet" %}<br/>
         {{/each}}
 
 

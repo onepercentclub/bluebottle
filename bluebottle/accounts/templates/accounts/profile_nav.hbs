@@ -6,7 +6,8 @@
 <div id="account">
 
     <div class="l-section account-header">
-        <nav class="l-wrapper">
+		<div class="l-wrapper">
+			<nav class="l-content">
 
             {% block_verbatim profile_nav %}
                 <figure class="account-avatar"><img {{bindAttr src="controllers.currentUser.getAvatar"}} /></figure>
@@ -43,7 +44,8 @@
 
             {% endblock_verbatim profile_nav %}
 
-        </nav>
+        	</nav>
+		</div>
     </div>
 
     <div class="l-section account-details">

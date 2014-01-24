@@ -59,9 +59,11 @@ form#manage-project-new {
                 }
                 
                 .is-unfinished {
-    	            background-image: $icons;
-    				background-repeat: no-repeat;
-    				background-position: sprite-position($icons, dashboard-is-unfinished, 0, 0);
+					@extend .flaticon.solid;
+					@extend .flaticon.solid.exclamation-point-2;
+//    	            background-image: $icons;
+//    				background-repeat: no-repeat;
+//    				background-position: sprite-position($icons, dashboard-is-unfinished, 0, 0);
                 }
                 
                 .is-in-progress {
@@ -71,10 +73,12 @@ form#manage-project-new {
                 }
                 
                 .is-finished {
-                    color: $color-secondary;
-    	            background-image: $icons;
-    				background-repeat: no-repeat;
-    				background-position: sprite-position($icons, dashboard-is-finished, 0, 0);
+					@extend .flaticon.solid;
+					@extend .flaticon.solid.checkmark-2;
+//                    color: $color-secondary;
+//    	            background-image: $icons;
+//    				background-repeat: no-repeat;
+//    				background-position: sprite-position($icons, dashboard-is-finished, 0, 0);
                 }
                 
                 &.active {

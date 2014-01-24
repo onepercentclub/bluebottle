@@ -68,6 +68,11 @@ App.TaskFileNewView = Em.View.extend({
     templateName: 'task_file_new',
     tagName: 'form',
 
+    submit: function(){
+        e.preventDefault();
+        this.get('controller').uploadTaskFile();
+    },
+
     addFile: function(e) {
         e.preventDefault();
         this.get('controller').uploadTaskFile();

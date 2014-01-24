@@ -33,6 +33,10 @@ class ProjectModule(DashboardModule):
         qs = PROJECT_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
 
         self.children = qs[:self.limit]
+        for c in self.children:
+            c.admin_url = reverse('admin:{0}_{1}_change'.format(
+                PROJECT_MODEL._meta.app_label, PROJECT_MODEL._meta.module_name), args=(c.pk,))
+
         if not len(self.children):
             self.pre_content = _('No projects found.')
         self._initialized = True

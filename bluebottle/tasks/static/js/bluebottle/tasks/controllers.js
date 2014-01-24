@@ -129,7 +129,11 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         });
         return isMember;
     }.property('members.@each.member.username', 'controllers.currentUser.username'),
-	
+
+    canUpload: function(){
+        return (this.get('isMember') || this.get('isAuthor'));
+    }.property('isMember', 'isAuthor'),
+
 	acceptedMembers: function() {
 		return this.get('model').get('members').filterBy('isStatusAccepted', true);
 	}.property('members.@each.member.isStatusAccepted'),

@@ -19,9 +19,7 @@ App = Em.Application.create({
         App.CurrentUser.find('current').then(
             function(user){
                 var primaryLanguage = user.get('primary_language');
-                if (primaryLanguage == 'en_US') {
-                    primaryLanguage = 'en-us';
-                }
+                primaryLanguage = primaryLanguage.replace('_', '-').toLowerCase();
                 if (primaryLanguage && primaryLanguage != language) {
                     document.location = '/' + primaryLanguage + document.location.hash;
                 }

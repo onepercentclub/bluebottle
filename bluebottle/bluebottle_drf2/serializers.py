@@ -325,11 +325,11 @@ class PrivateFileSerializer(FileSerializer):
         if not obj:
             return None
         value = getattr(obj, self.source or field_name)
-        content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
-        pk = obj.pk
-        url = reverse('document-download-detail', kwargs={'content_type': content_type, 'pk': pk})
         if not value:
             return None
+        content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
+        pk = obj.pk
+        url = reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': pk})
         return {'name': os.path.basename(value.name),
                 'url': url,
                 'size': defaultfilters.filesizeformat(value.size)}

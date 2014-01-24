@@ -28,7 +28,7 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     slug = serializers.SlugField(required=False)
 
-    #documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
+    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
     registration = PrivateFileSerializer(required=False)
 
     name = serializers.CharField(required=True)
@@ -58,6 +58,6 @@ class ManageOrganizationSerializer(OrganizationSerializer):
                   'legal_status', 'registration',
                   'address_line1', 'address_line2', 'city', 'state', 'country', 'postal_code',
                   'account_bank_name', 'account_bank_address', 'account_bank_country', 'account_iban', 'account_bic',
-                  'account_number', 'account_name', 'account_city', 'account_other')
+                  'account_number', 'account_name', 'account_city', 'account_other', 'documents')
 
 

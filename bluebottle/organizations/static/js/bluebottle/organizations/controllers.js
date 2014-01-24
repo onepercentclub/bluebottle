@@ -24,7 +24,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
             var model = this.get('model');
             var organization = model.get('organization');
             var transaction =  this.get('transaction');
-
             organization.one('didUpdate', function(){
                 // Updated organization info.
                 controller.transitionToRoute(controller.get('nextStep'));

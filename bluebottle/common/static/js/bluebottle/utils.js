@@ -72,8 +72,6 @@ App.Editable = Ember.Mixin.create({
             var controller = this;
             var model = this.get('model');
 
-            console.log('ctrl ' + controller.toString());
-
             model.one('becameInvalid', function(record) {
                 controller.set('saving', false);
                 model.set('errors', record.get('errors'));

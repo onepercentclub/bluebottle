@@ -64,7 +64,7 @@ install_requires = [
     'sorl-thumbnail==11.12',
     'splinter==0.5.4',
 #    'suds-jurko==0.4.1.jurko.5.-development-',
-    'surlex==0.1.2',
+#    'surlex==0.1.2',
     'transifex-client==0.9',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',

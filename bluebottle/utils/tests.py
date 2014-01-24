@@ -158,7 +158,7 @@ class MetaTestCase(TestCase):
 
         # set up the client
         self.client = Client()
-        self.url = reverse('meta-test', kwargs={'pk': self.object.id})
+        self.url = reverse('meta_test', kwargs={'pk': self.object.id})
 
     def test_content_items_correctly_created(self):
         """ Test that the setUp function creates the correct items """

@@ -1,15 +1,17 @@
-from django.conf.urls import patterns, url, include
-from surlex.dj import surl
-from ..views import (ManageOrganizationList, ManageOrganizationDetail, ManageOrganizationDocumentList,
-                    ManageOrganizationDocumentDetail, OrganizationDetail, OrganizationList)
+from django.conf.urls import patterns, url
 
-urlpatterns = patterns('',
-    url(r'^$', OrganizationList.as_view(), name='organization-list'),
-    surl(r'^<pk:#>$', OrganizationDetail.as_view(), name='organization-detail'),
-    surl(r'^manage/$', ManageOrganizationList.as_view(), name='manage-organization-list'),
-    surl(r'^manage/<pk:#>$', ManageOrganizationDetail.as_view(), name='manage-organization-detail'),
+from ..views import (
+    ManageOrganizationList, ManageOrganizationDetail, ManageOrganizationDocumentList,
+    ManageOrganizationDocumentDetail, OrganizationDetail, OrganizationList)
 
-    url(r'^documents/manage/$', ManageOrganizationDocumentList.as_view(), name='manage-organization-document-list'),
-    surl(r'^documents/manage/<pk:#>$', ManageOrganizationDocumentDetail.as_view(), name='manage-organization-document-detail'),
+urlpatterns = patterns(
+    '',
+    url(r'^$', OrganizationList.as_view(), name='organization_list'),
+    url(r'^(?P<pk>\d+)$', OrganizationDetail.as_view(), name='organization_detail'),
+    url(r'^manage/$', ManageOrganizationList.as_view(), name='manage_organization_list'),
+    url(r'^manage/(?P<pk>\d+)$', ManageOrganizationDetail.as_view(), name='manage_organization_detail'),
 
+    url(r'^documents/manage/$', ManageOrganizationDocumentList.as_view(), name='manage_organization_document_list'),
+    url(r'^documents/manage/(?P<pk>\d+)$', ManageOrganizationDocumentDetail.as_view(),
+        name='manage_organization_document_detail'),
 )

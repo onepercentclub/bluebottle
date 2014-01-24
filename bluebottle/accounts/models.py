@@ -133,6 +133,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
     # max length: see https://support.twitter.com/articles/14609-changing-your-username
     twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
+    skypename = models.CharField(_('skype profile'), max_length=32, blank=True)
 
 
     # Private Settings

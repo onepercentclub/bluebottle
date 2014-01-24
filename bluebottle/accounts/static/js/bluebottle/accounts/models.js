@@ -31,6 +31,7 @@ App.User = DS.Model.extend({
     website: DS.attr('string'),
     facebook: DS.attr('string'),
     twitter: DS.attr('string'),
+    skypename: DS.attr('string'),
 
     date_joined: DS.attr('date'),
     file: DS.attr('string'),

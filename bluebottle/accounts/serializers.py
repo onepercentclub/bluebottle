@@ -95,7 +95,7 @@ class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serial
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location',
+                  'availability', 'date_joined', 'location', 'twitter', 'facebook', 'skypename',
                   'tags', 'user_statistics')
 
 # Thanks to Neamar Tucote for this code:

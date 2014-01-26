@@ -46,7 +46,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	markers: [],
     info_box_template: '<div class="maps-infobox"><h2 class="project-title">{{title}}</h2><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{pitch}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
-	icon: '/static/assets/images/marker.png',
+	icon: '/static/assets/images/icons/marker.png',
 
     initMap: function(){
         var view = this;
@@ -64,8 +64,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
             mapTypeControl: false,
             scaleControl: false,
             streetViewControl: false,
-            overviewMapControl: false,
-            //disableAutoPan: true,
+            overviewMapControl: false
         };
         view.map = new google.maps.Map(view.$('.bb-project-map').get(0), mapOptions);
         view.map.mapTypes.set('bb', MyMapType);
@@ -90,9 +89,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var view = this;
 
         // TODO: Use hbs template for popups.
-        // var popupView = App.ProjectMapPopupView.create();
-        // popupView.set('project', project);
-        // var html = popupView.renderToBuffer().buffer;
+        var popupView = App.ProjectMapPopupView.create();
+        var template = Ember.Handlebars.compile('{{view App.ProjectMapPopupView}}');
 
         var template = Handlebars.compile(view.info_box_template);
         var data = {
@@ -147,7 +145,13 @@ App.BbProjectMapComponent = Ember.Component.extend({
 		view.markers.push(marker);
     },
     didInsertElement: function() {
+        var view = this;
 	    this.initMap();
-        this.placeMarkers();			
+        // To make sure 
+        this.get('markers').forEach(function(marker){
+            marker.setMap(null);
+            view.get('markers').removeObject(marker);
+        });
+        this.placeMarkers();
     }
 });

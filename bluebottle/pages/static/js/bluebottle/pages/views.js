@@ -32,16 +32,7 @@ App.GoTo = Ember.Mixin.create({
 
 
 App.PageView = Ember.View.extend(App.GoTo, {
-    template: Ember.TEMPLATES['page'],
-
-    showTitle: function(){
-        // Don't show title for styled pages
-        if (this.get('controller.id') == 'about')return false;
-        if (this.get('controller.id') == 'get-involved')return false;
-        if (this.get('controller.id') == 'business')return false;
-        if (this.get('controller.id') == 'fmo')return false;
-        return true;
-    }.property('controller.id'),
+    templateName: 'page',
 
     classNames: 'page static-page'.w(),
 
@@ -93,60 +84,5 @@ App.PageView = Ember.View.extend(App.GoTo, {
             fluid: true,
             delay: 10000
         });
-        if (this.get('controller.id') == 'meet-team') {
-            var typeKeys = [72, 69, 76, 76, 79],
-                something_index = 0,
-                handler = function (e) {
-                    if (e.keyCode === typeKeys[something_index++]) {
-                        if (something_index === typeKeys.length) {
-                            $(document).unbind("keydown", handler);
-                            var snd = new Audio('/static/assets/media/hello.mp3');
-                            var moust = $('<span style="transform: rotate(5deg);position:absolute;top:-700px;left:40px;width:50px;height:17px;background:url(/static/assets/images/sprites/lionel.png)"><span>')
-                            $('div.image').css('position', 'relative');
-
-                            var loc = [
-                                {top: '124px', left: '113px', rotate: -5}, // AC
-                                {top: '126px', left: '134px', rotate: 12}, // BL
-                                {top: '114px', left: '126px', rotate: -5}, // MP
-                                {top: '114px', left: '92px', rotate: -10}, //NJ
-                                {top: '126px', left: '94px', rotate: 23}, //NE
-                                {top: '89px', left: '124px', rotate: 0}, //LG
-                                {top: '114px', left: '113px', rotate: -11}, //NT
-                                {top: '117px', left: '112px', rotate: -9}, //LM
-                                {top: '124px', left: '123px', rotate: 0}, // MG
-                                {top: '118px', left: '126px', rotate: 3}, // MH
-                                {top: '123px', left: '109px', rotate: -3}, // SS
-                                {top: '1000px', left: '-1000px', rotate: 7}
-                            ];
-
-                            var t = 0;
-                            var m = [];
-                            $('div.image').each(function(crew){
-                                m[t] = moust.clone();
-                                $(this).append(m[t]);
-                                if (loc[t] != undefined) {
-                                    var degree = loc[t].rotate;
-                                    m[t].fadeOut(0);
-                                    m[t].fadeIn(1000);
-                                    m[t].css({
-                                        '-webkit-transform': 'rotate(' + degree + 'deg)',
-                                        '-moz-transform': 'rotate(' + degree + 'deg)',
-                                        '-ms-transform': 'rotate(' + degree + 'deg)',
-                                        '-o-transform': 'rotate(' + degree + 'deg)',
-                                        'transform': 'rotate(' + degree + 'deg)',
-                                        'zoom': 1
-                                    }, 5000);
-                                    m[t].animate(loc[t], 10000);
-                                }
-                                t++;
-                            });
-                            snd.play()
-                        }
-                    } else {
-                        something_index = 0;
-                    }
-                };
-            $(document).bind("keydown", handler);
-        }
     }
 });

@@ -35,11 +35,10 @@ class ReactionSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField()
-    url = serializers.HyperlinkedIdentityField(view_name="wallpost-reaction-detail")
 
     class Meta:
         model = Reaction
-        fields = ('created', 'author', 'text', 'id', 'wallpost', 'url')
+        fields = ('created', 'author', 'text', 'id', 'wallpost')
 
 
 # Serializers for WallPosts.

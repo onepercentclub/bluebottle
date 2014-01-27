@@ -31,7 +31,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'body', 'language', 'slug'),
+            'fields': ('title', 'body', 'language', 'slug', 'full_page'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date'),

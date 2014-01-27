@@ -64,7 +64,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
             mapTypeControl: false,
             scaleControl: false,
             streetViewControl: false,
-            overviewMapControl: false
+            overviewMapControl: false,
+            minZoom: 2
         };
         view.map = new google.maps.Map(view.$('.bb-project-map').get(0), mapOptions);
         view.map.mapTypes.set('bb', MyMapType);
@@ -78,11 +79,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
     placeMarkers: function() {
         var comp = this;
+        var bounds = new google.maps.LatLngBounds();
         this.get('projects').forEach(function(project){
-            comp.placeMarker(project);
+            bounds.extend(comp.placeMarker(project));
         });
-		
-		var markerCluster = new MarkerClusterer(this.map, this.markers, {maxZoom: 10});
+		var markerCluster = new MarkerClusterer(this.get("map"), this.markers, {maxZoom: 10});
+        this.map.fitBounds(bounds);
     },
 
     placeMarker: function(project){
@@ -128,7 +130,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 		    title: project.get('title'),
 		    icon: this.get('icon')
 	    });
-		
+        		
 	    google.maps.event.addListener(marker, 'click', function() {
 			// view.markers.forEach(function(m) {
 			// 	m.setIcon("/static/assets/images/icons/map-location.png");
@@ -140,9 +142,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
             info_window.open(view.map, marker);
             view.active_info_window = info_window;
         });	
-
-
-		view.markers.push(marker);
+        
+        return marker.position;
     },
     didInsertElement: function() {
         var view = this;

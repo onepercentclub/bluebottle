@@ -183,7 +183,7 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
         organizations_model: {
-            'Meta': {'object_name': settings.PROJECTS_PROJECT_MODEL.split('.')[-1], 'db_table': "'organizations_organization'"},
+            'Meta': {'object_name': settings.ORGANIZATIONS_ORGANIZATION_MODEL.split('.')[-1], 'db_table': "'organizations_organization'"},
             'address_line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'address_line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),

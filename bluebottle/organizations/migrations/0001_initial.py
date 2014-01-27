@@ -12,7 +12,7 @@ organizations_model = settings.ORGANIZATIONS_ORGANIZATION_MODEL.lower()
 class Migration(SchemaMigration):
 
     depends_on = (
-        (settings.AUTH_USER_MODEL.split('.')[0], '0001_initial'),
+        ('accounts', '0001_initial'),
         ('geo', '0001_initial'),
     )
 
@@ -93,8 +93,6 @@ class Migration(SchemaMigration):
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
             'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'favourite_countries': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
-            'favourite_themes': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['projects.ProjectTheme']", 'null': 'True', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'full_name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
@@ -113,7 +111,6 @@ class Migration(SchemaMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'skills': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['tasks.Skill']", 'null': 'True', 'blank': 'True'}),
             'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -166,7 +163,7 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
         organizations_model: {
-            'Meta': {'object_name': settings.PROJECTS_PROJECT_MODEL.split('.')[-1], 'db_table': "'organizations_organization'"},
+            'Meta': {'object_name': settings.ORGANIZATIONS_ORGANIZATION_MODEL.split('.')[-1], 'db_table': "'organizations_organization'"},
             'address_line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'address_line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),

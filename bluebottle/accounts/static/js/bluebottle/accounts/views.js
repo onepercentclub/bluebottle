@@ -24,3 +24,9 @@ App.LoginView = Em.View.extend({
         return  String(window.location);
     }.property()
 });
+
+App.ItemSelectView = Em.Select.extend({
+    optionValuePath: "content.id",
+    optionLabelPath: "content.name",
+    prompt: "Pick an item"
+});

@@ -1,0 +1,114 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "taskActivity" %}
+    <div class="wallposts-important">
+		<h3>{% trans "Task files" %}</h3>
+		<div class="task-pending-requests">
+        {{#each files}}
+
+            <article class="wallpost important">
+
+                <header class="wallpost-header">
+
+                    <div class="wallpost-member">
+                        <a {{action openInBigBox "userModal" author}} class="member">
+                            <figure class="member-avatar">
+                                <img {{bindAttr src=author.getAvatar}} alt="author.full_name"}} />
+                            </figure>
+                        </a>
+                    </div>
+
+                    <div class="wallpost-meta">
+                        <h3 class="wallpost-author">{{author.full_name}}</h3>
+                    </div>
+
+                    <h2 class="wallpost-title">
+                        {% trans "File" %}
+                    </h2>
+                    <a {{bindAttr href=this.file.url}} target="file" class="item">
+                        <em class="flaticon solid download-document-1"></em>
+                        <strong class="file-name">{{this.title}}</strong>
+                        <small class="file-size">({{this.file.size}})</small>
+                    </a>
+
+                </header>
+
+            </article>
+        {{else}}
+            {% trans "No files yet" %}<br/>
+        {{/each}}
+
+        {{#if controllers.task.canUpload}}
+            <a {{action 'uploadFile' this}} class="btn btn-iconed btn-upload">
+                <span class="flaticon solid upload-document-1"></span>
+                {% trans "Upload a file" %}
+            </a>
+        {{/if}}
+
+		<h3>{% trans "Task members" %}</h3>
+		<div class="task-pending-requests">
+        {{#each members}}
+
+            <article class="wallpost important">
+
+                <header class="wallpost-header">
+
+                    <div class="wallpost-member">
+                        <a {{action openInBigBox "userModal" member}} class="member">
+                            <figure class="member-avatar">
+                                <img {{bindAttr src=member.getAvatar}} alt="member.full_name"}} />
+                            </figure>
+                        </a>
+                    </div>
+
+                    <div class="wallpost-meta">
+                        <h3 class="wallpost-author">{{member.full_name}}</h3>
+                    </div>
+
+                    <h2 class="wallpost-title">
+                        {% trans "Status" %}: {{status}}
+                    </h2>
+                </header>
+
+                <div class="wallpost-content">
+
+                    <div class="text">
+                        <strong>{% trans "Motivation" %}:</strong> {{motivation}}
+
+                    </div>
+
+                </div>
+
+                {{#if controller.controllers.task.canEdit}}
+                    {{#if isStatusApplied}}
+                        <div class="wallpost-buttons">
+                            <a class="btn wallpost-action-accept" {{action 'editTaskMember' this}}>
+                                {% trans "Accept" %}
+                            </a>
+                            {% trans "Application pending..." %}
+                        </div>
+                    {{else}}
+                        <a class="wallpost-action-decline" {{action 'editTaskMember' this}}>
+                            {% trans "Edit status" %}
+                        </a>
+                    {{/if}}
+                {{/if}}
+
+                {{!--
+                <div class="wallpost-buttons">
+                    <a class="btn wallpost-action-accept" href="#">Accept</a>
+                     <span class="btn-spacer">or</span>
+                    <a class="wallpost-action-decline" href="#">Decline</a>
+                </div>
+                --}}
+            </article>
+        {{else}}
+            {% trans "No members yet" %}<br/>
+        {{/each}}
+
+
+    </div>
+{% endtplhandlebars %}

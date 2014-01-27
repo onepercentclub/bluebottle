@@ -5,20 +5,21 @@ Functional tests using Selenium.
 See: ``docs/testing/selenium.rst`` for details.
 """
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.contrib.sites.models import Site
 from django.conf import settings
 from django.core import mail
 from django.utils.unittest.case import skipUnless, skipIf
 
-from bluebottle.tests.utils import SeleniumTestCase, css_dict
+from bluebottle.test.utils import SeleniumTestCase, css_dict
 from bluebottle.geo.models import Region
 
 import re
 import datetime
 
 
-from ..models import BlueBottleUser
+BB_USER_MODEL = get_user_model()
 
 @skipIf(getattr(settings, 'SKIP_BB_FUNCTIONAL_TESTS', False),
     'Functional bluebottle core tests disabled.') # Different templates!
@@ -70,7 +71,7 @@ class AccountSeleniumTests(SeleniumTestCase):
 
         # Make sure we have an empty mailbox and the user doesn't exist yet.
         self.assertEqual(len(mail.outbox), 0)
-        self.assertEqual(BlueBottleUser.objects.filter(email='johndoe@example.com').count(), 0)
+        self.assertEqual(BB_USER_MODEL.objects.filter(email='johndoe@example.com').count(), 0)
 
         # Click the signup button within the form.
         form.find_by_css('button').first.click()
@@ -79,8 +80,8 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertTrue(self.browser.is_text_present("'THANK YOU' NOTE FOR SIGNING UP."))
 
         # And a user should be created.
-        self.assertEqual(BlueBottleUser.objects.filter(email='johndoe@example.com').count(), 1)
-        user = BlueBottleUser.objects.get(email='johndoe@example.com')
+        self.assertEqual(BB_USER_MODEL.objects.filter(email='johndoe@example.com').count(), 1)
+        user = BB_USER_MODEL.objects.get(email='johndoe@example.com')
         self.assertFalse(user.is_active)
 
         # Force English as primary language here
@@ -121,7 +122,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertTrue(self.browser.is_text_present('Hurray!'))
 
         # Reload the user.
-        user = BlueBottleUser.objects.get(pk=user.pk)
+        user = BB_USER_MODEL.objects.get(pk=user.pk)
         self.assertTrue(user.is_active)
 
     def test_homepage(self):
@@ -132,7 +133,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         Test user can login.
         """
         # Create and activate user.
-        user = BlueBottleUser.objects.create_user('johndoe@example.com', 'secret', primary_language='en')
+        user = BB_USER_MODEL.objects.create_user('johndoe@example.com', 'secret', primary_language='en')
 
         self.assertTrue(self.visit_homepage())
 
@@ -154,7 +155,7 @@ class AccountSeleniumTests(SeleniumTestCase):
     @skipIf(settings.SELENIUM_WEBDRIVER=='firefox', 'Firefox does not support mouse interactions.')
     def test_edit_profile(self):
         # Create and activate user.
-        user = BlueBottleUser.objects.create_user('johndoe@example.com', 'secret')
+        user = BB_USER_MODEL.objects.create_user('johndoe@example.com', 'secret')
 
         self.login(user.email, 'secret')
 
@@ -179,7 +180,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertTrue(self.browser.is_text_present('Profile saved'))
 
         # Reload the user.
-        user = BlueBottleUser.objects.get(pk=user.pk)
+        user = BB_USER_MODEL.objects.get(pk=user.pk)
         self.assertEqual(user.first_name, 'John')
         self.assertEqual(user.last_name, 'Doe')
         self.assertEqual(user.about, 'I am John Doe.')
@@ -188,7 +189,7 @@ class AccountSeleniumTests(SeleniumTestCase):
     @skipIf(settings.SELENIUM_WEBDRIVER=='firefox', 'Firefox does not support mouse interactions.')
     def test_edit_account(self):
         # Create and activate user.
-        user = BlueBottleUser.objects.create_user('johndoe@example.com', 'secret')
+        user = BB_USER_MODEL.objects.create_user('johndoe@example.com', 'secret')
         # Create a country.
         region = Region.objects.create(name='Europe', numeric_code='150')
         subregion = region.subregion_set.create(name='Western Europe', numeric_code='155')
@@ -243,7 +244,7 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertTrue(self.browser.is_text_present('Account settings saved'))
 
         # Reload and validate the user.
-        user = BlueBottleUser.objects.get(pk=user.pk)
+        user = BB_USER_MODEL.objects.get(pk=user.pk)
         self.assertEqual(user.email, 'doejohn@example.com')
         self.assertEqual(user.gender, 'male')
 
@@ -259,7 +260,7 @@ class AccountSeleniumTests(SeleniumTestCase):
     def test_forgot_password(self):
         # Create and activate user.
         old_password = 'secret'
-        user = BlueBottleUser.objects.create_user('johndoe@example.com', old_password)
+        user = BB_USER_MODEL.objects.create_user('johndoe@example.com', old_password)
         self.assertTrue(check_password(old_password, user.password))
 
         self.assertTrue(self.visit_homepage())
@@ -327,6 +328,6 @@ class AccountSeleniumTests(SeleniumTestCase):
         self.assertTrue(self.browser.is_text_present('LOG IN TO', wait_time=10))
 
         # Reload and validate user password in the database.
-        user = BlueBottleUser.objects.get(pk=user.pk)
+        user = BB_USER_MODEL.objects.get(pk=user.pk)
         self.assertFalse(check_password(old_password, user.password))
         self.assertTrue(check_password(new_password, user.password))

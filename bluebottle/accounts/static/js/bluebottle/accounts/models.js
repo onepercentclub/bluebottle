@@ -13,8 +13,14 @@ App.User = DS.Model.extend({
     url: 'users/profiles',
 
     username: DS.attr('string'),
+    // TODO: loose these in favour of short/full name
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
+
+    full_name: DS.attr('string'),
+    short_name: DS.attr('string'),
+
+
     about: DS.attr('string'),
     why: DS.attr('string'),
     availability: DS.attr('string'),
@@ -23,16 +29,27 @@ App.User = DS.Model.extend({
     picture: DS.attr('image'),
 
     website: DS.attr('string'),
+    facebook: DS.attr('string'),
+    twitter: DS.attr('string'),
+    skypename: DS.attr('string'),
+
     date_joined: DS.attr('date'),
     file: DS.attr('string'),
+
+    skills: DS.hasMany('App.Skill'),
 
     // post-only fields (i.e. only used for user creation)
     email: DS.attr('string'),
     password: DS.attr('string'),
 
+    favourite_countries: DS.hasMany("App.Country"),
+    favourite_themes: DS.hasMany("App.Theme"),
+
+    tags: DS.hasMany("App.Tag", {embedded: "always"}),
+
     getPicture: function() {
         if (this.get('picture')) {
-            return MEDIA_URL + this.get('picture.large')
+            return this.get('picture.large')
         }
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
@@ -44,18 +61,35 @@ App.User = DS.Model.extend({
         return STATIC_URL + 'images/default-avatar.png'
     }.property('picture'),
 
-    full_name: function() {
-        if (!this.get('first_name') && !this.get('last_name')) {
-            return this.get('username');
+    getName: function() {
+        if (this.get('first_name')) {
+            return this.get('first_name')
         }
-        return this.get('first_name') + ' ' + this.get('last_name');
-    }.property('first_name', 'last_name'),
+        return this.get('username')
+    }.property('first_name'),
+
 
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');
-    }.property('date_joined')
+    }.property('date_joined'),
+
+    get_twitter: function() {
+        return '//twitter.com/' + this.get('twitter');
+    }.property('twitter'),
+
+    get_facebook: function() {
+        return '//www.facebook.com/' + this.get('facebook');
+    }.property('facebook')
 
 });
+
+
+
+// TODO: split this of
+App.User.reopen({
+    user_statistics: DS.attr('object')
+});
+
 
 /*
  A data model representing a user's settings.
@@ -67,7 +101,7 @@ App.User = DS.Model.extend({
 // TODO: fix date issue
 // http://stackoverflow.com/questions/15695809/what-is-the-best-way-to-modify-the-date-format-when-ember-data-does-serializatio
 // https://github.com/toranb/ember-data-django-rest-adapter/issues/26
-// DS.RESTAdapter.registerTransform("isodate", { 
+// DS.RESTAdapter.registerTransform("isodate", {
 //   deserialize: function(serialized) {
 //     return serialized;
 //   },
@@ -100,20 +134,20 @@ App.UserSettings = DS.Model.extend({
 
 
 App.UserPreview = DS.Model.extend({
-    // There is no url for UserPreview because it's embedded.
-    url: undefined,
+    // We use the same  url as for full User as we almost never use this.
+    url: 'users/profiles',
 
     username: DS.attr('string'),
+
+    // TODO: loose these in favour of short/full name
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
-    avatar: DS.attr('string'),
 
-    full_name: function() {
-        if (!this.get('first_name') && !this.get('last_name')) {
-            return this.get('username');
-        }
-        return this.get('first_name') + ' ' + this.get('last_name');
-    }.property('first_name', 'last_name'),
+    full_name: DS.attr('string'),
+    short_name: DS.attr('string'),
+
+    name: DS.attr('string'),
+    avatar: DS.attr('string'),
 
     getAvatar: function() {
         if (this.get('avatar')) {
@@ -136,18 +170,23 @@ App.UserPreview = DS.Model.extend({
  */
 App.CurrentUser = App.UserPreview.extend({
     url: 'users',
+
+    email: DS.attr('string'),
+    primary_language: DS.attr('string'),
+    name: DS.attr('string'),
+    // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
+    // App.UserSettingsModel.find(App.CurrentUser.find('current').get('id_for_ember'));
+    id_for_ember: DS.attr('number'),
+
     getUser: function(){
         return App.User.find(this.get('id_for_ember'));
     }.property('id_for_ember'),
-    primary_language: DS.attr('string'),
-
+    getUserPreview: function(){
+        return App.UserPreview.find(this.get('id_for_ember'));
+    }.property('id_for_ember'),
     isAuthenticated: function(){
         return (this.get('username')) ? true : false;
-    }.property('username'),
-
-    // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
-    // App.UserSettingsModel.find(App.CurrentUser.find('current').get('id_for_ember'));
-    id_for_ember: DS.attr('number')
+    }.property('username')
 });
 
 

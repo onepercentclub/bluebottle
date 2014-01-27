@@ -3,7 +3,7 @@ import factory
 from bluebottle.projects import get_project_model
 from bluebottle.projects.models import (
     ProjectTheme, ProjectDetailField, ProjectBudgetLine, ProjectPhase)
-from .accounts import BlueBottleUserFactory
+from .accounts_factories import BlueBottleUserFactory
 
 PROJECT_MODEL = get_project_model()
 

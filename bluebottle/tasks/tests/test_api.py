@@ -5,14 +5,13 @@ from rest_framework import status
 
 from bluebottle.tasks import get_task_model
 
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
+from bluebottle.test.factory_models.accounts_factories import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects_factories import ProjectFactory
+from bluebottle.test.factory_models.tasks_factories import SkillFactory
 
 import json
 
 BB_TASK_MODEL = get_task_model()
-
 
 
 class TaskApiIntegrationTests(TestCase):

@@ -208,10 +208,10 @@
 
 	.wallposts-list {
 		margin: $base-margin 0;
-		@include grid(24,0,1);
+		@include grid(24,1,1);
 	}
 	.wallposts-important {
-		@include grid(24,1,0);	
+		@include grid(24,1,1);	
 		.task-files {
 			ul {
 				margin: $base-margin 0;

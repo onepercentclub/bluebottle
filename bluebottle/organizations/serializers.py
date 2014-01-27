@@ -28,7 +28,7 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     slug = serializers.SlugField(required=False)
 
-    #documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
+    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
     registration = PrivateFileSerializer(required=False)
 
     name = serializers.CharField(required=True)
@@ -39,6 +39,10 @@ class ManageOrganizationSerializer(OrganizationSerializer):
     facebook = serializers.CharField(required=False)
     skype = serializers.CharField(required=False)
     legal_status = serializers.CharField(required=False)
+
+    class Meta:
+        model = Organization
+        exclude = ('deleted',)
 
     def validate_account_iban(self, attrs, source):
         value = attrs[source]
@@ -51,13 +55,3 @@ class ManageOrganizationSerializer(OrganizationSerializer):
         if value:
             swift_bic_validator(value)
         return attrs
-
-    class Meta:
-        model = Organization
-        fields = ('id', 'name', 'slug', 'description', 'website', 'email', 'twitter', 'facebook', 'skype',
-                  'legal_status', 'registration',
-                  'address_line1', 'address_line2', 'city', 'state', 'country', 'postal_code',
-                  'account_bank_name', 'account_bank_address', 'account_bank_country', 'account_iban', 'account_bic',
-                  'account_number', 'account_name', 'account_city', 'account_other')
-
-

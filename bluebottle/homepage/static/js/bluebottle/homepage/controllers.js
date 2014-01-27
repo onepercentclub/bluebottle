@@ -5,6 +5,7 @@ App.HomeController = Ember.ObjectController.extend({
     isCampaignHomePage: false,
 	projectIndex: 0,
     nextProject: null,
+    width: 0,
     actions: {
         nextProject: function() { // TODO: similar thing for fundraisers?
             var projects = this.get('projects');
@@ -29,9 +30,7 @@ App.HomeController = Ember.ObjectController.extend({
 	    this.slideProject();
 
 	}else{
-
-	    //First time!
-
+        
 	    $('#project-slide-b').animate({opacity: 'toggle'},0);
 	    this.set('nextProject', project);
 
@@ -39,34 +38,35 @@ App.HomeController = Ember.ObjectController.extend({
 
     }.observes('project'),
 
-    slideProject: function(){
+    slideProject: function() {
 
-	var slide = $('#project-slide-a');
-	var nextSlide = $('#project-slide-b');
-	var duration = 500;
+    	var slide = $('#project-slide-a');
+    	var nextSlide = $('#project-slide-b');
+    	var duration = 500;
 
-	var project = this.get('project');
+    	var project = this.get('project');
 	
-	controller = this;
+    	controller = this;
 
-	var callback = function(){
+    	var callback = function(){
 
-	    var project = controller.get('project');
+    	    var project = controller.get('project');
 
-	    controller.set('nextProject', project);
+    	    controller.set('nextProject', project);
 	    
-	    slide.animate({opacity: 'toggle'}, 0);
-	    slide.animate({'margin-left': '0px'}, 0);
-	    nextSlide.animate({width: 'toggle'}, 0);
-	};
+    	    slide.animate({opacity: 'toggle'}, 0);
+    	    slide.animate({'margin-left': '0px'}, 0);
+    	    nextSlide.animate({width: 'toggle'}, 0);
+    	};
 
-	slide.animate(
-	    {'margin-left': '+=1200'},
-	    duration,
-	    function(){
-		slide.animate({opacity: 'toggle'},0);
-		nextSlide.animate({width: 'toggle'},duration,callback);
-	    });
+        slide.css("width", $(slide).width());
+    	slide.animate(
+    	    {'margin-left': '+=1200'},
+    	    duration,
+    	    function(){
+    		    slide.animate({opacity: 'toggle'},0);
+    		    nextSlide.animate({width: 'toggle'},duration,callback);
+    	    });
 	
 	
 	

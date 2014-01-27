@@ -255,6 +255,7 @@
         display: none;
 		border: 1px dashed $gray-light;
 		padding: $base-padding;
+		@include clear;
 		
 		fieldset {
 			background: transparent;

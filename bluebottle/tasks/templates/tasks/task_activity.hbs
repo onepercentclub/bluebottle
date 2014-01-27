@@ -5,10 +5,34 @@
 
 {% tplhandlebars "taskActivity" %}
     <div class="wallposts-important">
-		<h3>{% trans "Task files" %}</h3>
-		<div class="task-pending-requests">
-        {{#each files}}
+		<h3>{% trans "Files" %}</h3>
+		
+		<div class="task-files">
+			<ul>	
+		        {{#each files}}
+				<li>
+					<span class="task-file-filename">
+						<span class="flaticon stroke document-1"></span> 
+						<a {{bindAttr href="this.file.url"}}>
+							{{this.title}}
+						</a>
+					</span>
+					<span class="task-file-author">by 
+						{{#link-to "viewProfile" author}}
+							{{author.full_name}}
+						{{/link-to}}
+					</span>
+						
+					<span class="task-file-created">
+						{{localize created formatting="X"}}
+					</span>
+				</li>
+				{{/each}}
+			<ul>
+		</div>		
 
+		{{!--}}
+        {{#each files}}
             <article class="wallpost important">
 
                 <header class="wallpost-header">
@@ -37,15 +61,19 @@
                 </header>
 
             </article>
+
         {{else}}
             {% trans "No files yet" %}<br/>
         {{/each}}
-
+		{{--}}
+		
         {{#if controllers.task.canUpload}}
-            <a {{action 'uploadFile' this}} class="btn btn-iconed btn-upload">
-                <span class="flaticon solid upload-document-1"></span>
-                {% trans "Upload a file" %}
+		<span class="task-file-upload">
+			<span class="flaticon solid plus-2"></span>
+            <a {{action 'uploadFile' this}}>
+                {% trans "Add file" %}
             </a>
+		</span>
         {{/if}}
 
 		<h3>{% trans "Task members" %}</h3>

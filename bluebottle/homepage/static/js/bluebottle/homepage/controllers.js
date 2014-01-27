@@ -4,7 +4,7 @@ App.HomeController = Ember.ObjectController.extend({
 	project: null,
     isCampaignHomePage: false,
 	projectIndex: 0,
-
+    nextProject: null,
     actions: {
         nextProject: function() { // TODO: similar thing for fundraisers?
             var projects = this.get('projects');
@@ -17,20 +17,60 @@ App.HomeController = Ember.ObjectController.extend({
 
             this.loadProject();
         },
-
-        previousProject: function() {
-            var projects = this.get('projects');
-
-            this.decrementProperty('projectIndex');
-
-            if (this.get('projectIndex') < 0) {
-                this.set('projectIndex', projects.get('length') - 1);
-            }
-
-            this.loadProject();
-        }
     },
 	
+    projectTransition: function(){
+
+	var project = this.get('project');
+	var nextProject = this.get('nextProject');
+
+	if(nextProject){
+
+	    this.slideProject();
+
+	}else{
+
+	    //First time!
+
+	    $('#project-slide-b').animate({opacity: 'toggle'},0);
+	    this.set('nextProject', project);
+
+	}
+
+    }.observes('project'),
+
+    slideProject: function(){
+
+	var slide = $('#project-slide-a');
+	var nextSlide = $('#project-slide-b');
+	var duration = 500;
+
+	var project = this.get('project');
+	
+	controller = this;
+
+	var callback = function(){
+
+	    var project = controller.get('project');
+
+	    controller.set('nextProject', project);
+	    
+	    slide.animate({opacity: 'toggle'}, 0);
+	    slide.animate({'margin-left': '0px'}, 0);
+	    nextSlide.animate({width: 'toggle'}, 0);
+	};
+
+	slide.animate(
+	    {'margin-left': '+=1200'},
+	    duration,
+	    function(){
+		slide.animate({opacity: 'toggle'},0);
+		nextSlide.animate({width: 'toggle'},duration,callback);
+	    });
+	
+	
+	
+    },
 
     loadProject: function() {
         var controller = this;
@@ -42,5 +82,5 @@ App.HomeController = Ember.ObjectController.extend({
 
     loadQuote: function() {
         this.set('quote', this.get('quotes').objectAt(this.get('quoteIndex')));
-    },
+    }
 });

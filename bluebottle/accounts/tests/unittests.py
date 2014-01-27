@@ -1,4 +1,5 @@
-from django.core import mail
+from django.conf import settings
+from django.core import mail, management
 from django.test import TestCase
 
 
@@ -7,6 +8,7 @@ from rest_framework import status
 
 
 from bluebottle.utils.tests import UserTestsMixin
+from django.utils.unittest.case import skipUnless
 from bluebottle.geo.tests import GeoTestsMixin
 
 
@@ -226,7 +228,7 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         response = self.client.get(new_user_activation_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.client.logout()
-        
+
         # Test: resetting the password should now be allowed.
         response = self.client.put(self.user_password_reset_api_url, json.dumps({'email': new_user_email}), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -258,7 +260,7 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         # Test: check that trying to reuse the password reset link doesn't work.
         response = self.client.put(password_set_url, json.dumps(passwords), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
-        
+
 
 class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
     """
@@ -280,12 +282,29 @@ class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
 
         response = self.client.get('/api/', follow=False)
         self.assertTrue(response.status_code, 200)
-        
+
         response = self.client.get('/', follow=False)
         self.assertTrue(response.status_code, 200)
-        
+
     def test_no_redirect_for_anonymous_user(self):
         self.client.logout()  # Just to be sure.
-    
+
         response = self.client.get('/nl/', follow=False)
         self.assertTrue(response.status_code, 200)
+
+
+class UserProfileUpdateTests(UserTestsMixin, TestCase):
+    """
+    Integration tests for the User API with dependencies on different bluebottle apps.
+    """
+    def setUp(self):
+        self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
+        self.another_user = self.create_user()
+        self.current_user_api_url = '/api/users/current'
+        self.user_create_api_url = '/api/users/'
+        self.user_profile_api_url = '/api/users/profiles/'
+        self.user_settings_api_url = '/api/users/settings/'
+        self.user_activation_api_url = '/api/users/activate/'
+        self.user_password_reset_api_url = '/api/users/passwordreset'
+        self.user_password_set_api_url = '/api/users/passwordset/'
+

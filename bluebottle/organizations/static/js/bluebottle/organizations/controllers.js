@@ -3,6 +3,10 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
 
     nextStep: 'myProject.legal',
 
+    hasMultipleOrganizations: function(){
+        return (this.get('organizations.length') > 1);
+    }.property('organizations'),
+
     shouldSave: function(){
         // Determine if any part is dirty, project or organization.
         if (this.get('isDirty')) {
@@ -20,7 +24,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
             var model = this.get('model');
             var organization = model.get('organization');
             var transaction =  this.get('transaction');
-
             organization.one('didUpdate', function(){
                 // Updated organization info.
                 controller.transitionToRoute(controller.get('nextStep'));

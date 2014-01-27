@@ -11,8 +11,8 @@ App.Router.map(function(){
         this.resource('projectPlan', {path: '/plan'});
         this.resource('projectTasks', {path: '/tasks'}, function(){
             this.resource('projectTask', {path: '/:task_id'}, function(){});
-            this.resource('projectTaskNew', {path: '/new'});
-            this.resource('projectTaskEdit', {path: '/:task_id/edit'});
+            this.resource('taskNew', {path: '/new'});
+            this.resource('taskEdit', {path: '/:task_id/edit'});
         });
     });
 
@@ -34,9 +34,10 @@ App.Router.map(function(){
         this.route('budget');
 
         this.route('submit');
+
     });
 
-    this.resource('partner', {path: '/pp/:partner_organization_id'});
+    this.resource('myProjectReview', {path: '/my/projects/:id/review'});
 
 });
 
@@ -65,16 +66,26 @@ App.ProjectIndexRoute = Em.Route.extend({
     // This way the ArrayController won't hold an immutable array thus it can be extended with more wallposts.
     setupController: function(controller, model) {
         // Only reload wall-posts if switched to another project.
-        var parent_id = this.modelFor('project').get('id');
-        if (controller.get('parent_id') != parent_id){
+        var parentId = this.modelFor('project').get('id');
+        if (controller.get('parentId') != parentId){
             controller.set('page', 1);
-            controller.set('parent_id', parent_id);
+
+            // Set some variables for WallPostNew controllers
+            this.controllerFor('mediaWallPostNew').set('parentId', parentId);
+            this.controllerFor('mediaWallPostNew').set('parentType', 'project');
+            this.controllerFor('textWallPostNew').set('parentId', parentId);
+            this.controllerFor('textWallPostNew').set('parentType', 'project');
 
             // Load wall-posts for this project
             var store = this.get('store');
-            store.find('wallPost', {'parent_type': 'project', 'parent_id': parent_id}).then(function(items){
+            store.find('wallPost', {'parent_type': 'project', 'parent_id': parentId}).then(function(items){
                 controller.set('meta', items.get('meta'));
                 controller.set('model', items.toArray());
+
+                // Set the list for WallPostNew controllers
+                model = controller.get('model');
+                controller.controllerFor('mediaWallPostNew').set('wallPostList', model);
+                controller.controllerFor('textWallPostNew').set('wallPostList', model);
             });
         }
     }
@@ -194,3 +205,11 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
+App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
+
+App.ProjectPlanRoute = Em.Route.extend({
+    model: function(){
+        var project = this.modelFor("project");
+        return project;
+    }
+});

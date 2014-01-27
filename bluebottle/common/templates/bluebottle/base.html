@@ -15,7 +15,7 @@
 
     {% block defaults_js %}
         <script type="text/javascript">
-            var default_title = '{% blocktrans %}1%Club - Share a little. Change the world{%  endblocktrans %}';
+            var default_title = '{% blocktrans %}1%Club - Share a little. Change the world{% endblocktrans %}';
             var default_description = '{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}';
             var default_keywords = '{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}';
         </script>
@@ -29,12 +29,21 @@
     <link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
 
     {% endblock %}
-    
+
 
     {# Stylesheets #}
     {% compress css %}
+		{% block screen_css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" media="screen" />
+		{% endblock screen_css %}
     {% endcompress %}
+
+    <!-- avoid hardcoding these urls -->
+    <script type="text/javascript">
+        var STATIC_URL = '{{ STATIC_URL }}';
+        var MEDIA_URL = '{{ MEDIA_URL }}';
+        var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
+    </script>
 
     {# Scripts #}
     {% compress js %}
@@ -85,6 +94,7 @@
                 <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/controllers.js"></script>
                 <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/views.js"></script>
                 <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/models.js"></script>
+                <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/components.js"></script>
             {% endfor %}
 
         {% endblock %}
@@ -96,13 +106,11 @@
         {% endfor %}
     {% endblock handlebars_templates %}
 
-    <!-- avoid hardcoding these urls -->
-    <script type="text/javascript">
-        var STATIC_URL = '{{ STATIC_URL }}';
-        var MEDIA_URL = '{{ MEDIA_URL }}';
-    </script>
 
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script src="{{ STATIC_URL }}js/infobox.js"></script>
+    <script src="{{ STATIC_URL }}js/marker_clusterer.js"></script>
+
 
     {% block htmlheader %}{% endblock %}
 
@@ -123,9 +131,9 @@
                     <!-- logo -->
                     <div id="logo">
                         {% block_verbatim nav_logo %}
-                            {{#linkTo 'home' class="logo-link"}}
+                            {{#link-to 'home' class="logo-link"}}
                                 <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
-                            {{/linkTo}}
+                            {{/link-to}}
                         {% endblock_verbatim %}
                     </div>
                     <!-- end: logo -->
@@ -150,7 +158,7 @@
                                 {% if 'tasks' in bb_apps %}
                                     {% block_verbatim nav_main_tasks %}
                                         <li class="nav-main-item">
-                                            {{#link-to 'tasktList'}}
+                                            {{#link-to 'taskList'}}
                                                 {% blocktrans %}Tasks{% endblocktrans %}
                                             {{/link-to}}
                                         </li>
@@ -160,7 +168,7 @@
                             </ul>
                         {%  endblock_verbatim %}
 
-                        {% include "accounts/nav.html" %}
+                        {% include "accounts/nav.hbs" %}
                     <//nav>
                     <!-- end: main navigation -->
 
@@ -195,152 +203,7 @@
 
     {% endtplhandlebars %}
 
-
-    {% tplhandlebars "_footer" %}
-
-
-        <div class="l-section" id="footer" >
-            <div class="l-wrapper">
-                <section class="footer-content">
-                    <ul class="footer-menu">
-                        <li>
-                            {% block_verbatim  'footer_block1' %}
-                                <h3>{% blocktrans %}Get involved{% endblocktrans %}</h3>
-                                <ul>
-                                    <li>
-                                        <a {{action 'showPage' 'about'}} href="/#!/pages/about">
-                                            {% blocktrans %}About{% endblocktrans %}
-                                        </a>
-                                    </li>
-                                </ul>
-                            {% endblock_verbatim %}
-                        </li>
-
-                        <li>
-                            {% block_verbatim  'footer_block2' %}
-                                <h3>{% blocktrans %}About Bluebottle{% endblocktrans %}</h3>
-                                <ul>
-                                    <li>
-                                        <a {{action 'showPage' 'faq'}} href="/#!/pages/faq">{% trans "Frequently Asked Questions" %}</a>
-                                    </li>
-                                    <li>
-                                        <a {{action 'showPage' 'work'}} href="/#!/pages/work">
-                                            {% blocktrans %}Work at Bluebottle{% endblocktrans %}
-                                        </a>
-                                    </li>
-                                    <li>
-                                        {% trans "Contact" %}
-                                    </li>
-                                </ul>
-                            {% endblock_verbatim %}
-
-                        </li>
-
-                        <li>
-                            {% block_verbatim  'footer_block3' %}
-                                <h3>{% trans "Discover More" %}</h3>
-                                <ul>
-                                    <li>
-                                        <a {{action 'showPage' 'more'}} href="/#!/pages/more">
-                                            {% trans "More about Bluebottle" %}
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a  href="http://github.com/onepercentclub/bluebottle">
-                                            {% trans "Github" %}
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            {% endblock_verbatim %}
-                        </li>
-
-                        <li>
-                            {% block_verbatim  'footer_block4' %}
-                                <h3>{% blocktrans %}Social{% endblocktrans %}</h3>
-                                <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fonepercentclub&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=false&amp;font&amp;colorscheme=light&amp;action=like&amp;height=21&amp;appId=265978350087756" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:90px; height:21px;" allowTransparency="true"></iframe>
-                                <iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/tweet_button.html?url=http%3A%2F%2Fonepercentclub.com&text=" style="width:115px; height:21px;"></iframe>
-                                <ul class="footer-social-links">
-                                    <li>
-                                        <a href="http://www.facebook.com/onepercentclub" target="_blank">
-                                            <span class="flaticon social facebook-1"></span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="http://twitter.com/1percentclub" target="_blank">
-                                            <span class="flaticon social twitter-1"></span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="http://www.flickr.com/photos/1procentclub/" target="_blank">
-                                            <span class="flaticon social flickr-1"></span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="http://www.linkedin.com/groups?gid=1071287&trk=hb_side_g" target="_blank">
-                                            <span class="flaticon social linkedin-1"></span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="http://www.youtube.com/user/1Procentclub" target="_blank">
-                                            <span class="flaticon social youtube-1"></span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            {% endblock_verbatim %}
-                        </li>
-                    </ul>
-
-                    <hr />
-
-                    <div class="footer-news">
-                        <h3>{% blocktrans %}1%News{% endblocktrans %}</h3>
-                        <ul>
-                        {{#each news}}
-                            <li>
-                                <a {{action 'showNews' this.id}}>
-                                    <span class="flaticon solid right-2"></span> {{ title }}
-                                </a>
-                            </li>
-                        {{/each}}
-                        </ul>
-                    </div>
-
-                    {{#unless controllers.currentUser.isAuthenticated}}
-                        {% block_verbatim  'footer_join' %}
-                            <div class="footer-join-us">
-                                <h3>{% blocktrans %}Join Bluebottle{% endblocktrans %}</h3>
-                                <p>{% blocktrans %}Join our project!{% endblocktrans %}</p>
-                                {{#linkTo 'signup' classNames="btn btn-primary"}}{% blocktrans %}Join Bluebottle{% endblocktrans %}{{/linkTo}}
-                            </div>
-                        {% endblock_verbatim %}
-                    {{/unless}}
-
-                </section>
-            </div>
-
-            <div class="l-section copyright">
-                <div class="l-wrapper">
-                    {% block_verbatim  'footer_copyright' %}
-                        <ul>
-                            <li>
-                                &copy;2013 Bluebottle
-                            </li>
-                            <li>
-                                <a {{action 'showPage' 'terms-and-conditions'}} href="/#!/pages/terms-and-conditions">{% trans "General Conditions" %}</a>&nbsp;
-                                <a {{action 'showPage' 'privacy'}} href="/#!/pages/privacy">{% trans "Privacy Policy" %}</a>
-                            </li>
-                            <li>
-                                {% trans "Give us feedback" %}
-                            </li>
-                        </ul>
-                    {% endblock_verbatim %}
-                </div>
-            </div>
-
-        </div>
-
-    {% endtplhandlebars %}
+	{% include "bluebottle/footer.hbs" %}
 
 </head>
 <body id="body">

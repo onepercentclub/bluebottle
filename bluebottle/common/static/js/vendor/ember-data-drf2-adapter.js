@@ -34,6 +34,8 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
         });
     },
 
+
+
     /**
      * Changes from default:
      * - Don't call sideload() because DRF2 doesn't support it.
@@ -98,7 +100,32 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
                 this._addAttribute(data, record, name, attribute.type);
             }
         }, this);
+    },
+
+    
+    
+    /**
+    Customize the serializer to also send PrimaryRelatedFields ids.
+    http://stackoverflow.com/questions/16128525/customizing-what-ember-data-sends-to-the-server
+    */
+
+    addHasMany: function(hash, record, key, relationship){
+
+        var ids = record.get(relationship.key).map(function(item){
+            return item.id;
+        });
+
+        if (relationship.key != "tags") {
+            hash[key] = ids;
+        } else {
+
+            var tags = record.get(relationship.key).map(function(item){
+                return {"id" : item.id };
+            });
+            hash[relationship.key] = tags;
+        }
     }
+
 });
 
 
@@ -338,6 +365,17 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
         };
 
         get(this, 'serializer').extractMany(loader, payload, type);
+    },
+
+    /**
+        Taken from Stackoverflow to mark changed hasMany Ember relations as dirty
+    */
+    dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
+        // FIXME: Dirty trick to keep things working for adding TaskMember / WallPostPhotos / Org documents
+        if(record.constructor.toString() == 'App.User') {
+            relationship.childReference.parent = relationship.parentReference;
+            this._dirtyTree(dirtySet, record);
+        }
     }
 });
 
@@ -412,5 +450,18 @@ DS.DRF2Adapter.registerTransform("object", {
     
     serialize: function(deserialized) {
         return Ember.isNone(deserialized) ? null : deserialized;
+    }
+});
+
+
+// Send empty string ("") if string value is null.
+
+DS.DRF2Adapter.registerTransform("string", {
+    deserialize: function(serialized) {
+      return Ember.isNone(serialized) ? null : String(serialized);
+    },
+
+    serialize: function(deserialized) {
+      return Ember.isNone(deserialized) ? "" : String(deserialized);
     }
 });

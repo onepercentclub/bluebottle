@@ -1,0 +1,27 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "_my_project_top" %}
+
+<div class="l-section account-header">
+    <nav class="l-wrapper">
+
+        <header class="account-title">
+            <h2>{% trans "My Projects"%}
+            {{#if title}}
+                : <em class="account-subtitle">{{ title }}</em>
+			{{/if}}
+            </h2>
+        </header>
+
+        {{#if id}}
+            {{#link-to 'project' id href=true class="account-preview btn-link"}}
+                <span class="flaticon solid eye-1"></span>
+                {% trans "View project" %}
+            {{/link-to}}
+        {{/if}}
+    </nav>
+</div>
+
+{% endtplhandlebars %}

@@ -4,6 +4,7 @@ import re
 from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
+from django.utils.importlib import import_module
 from django_tools.middlewares import ThreadLocal
 from rest_framework import serializers
 from taggit.managers import _TaggableManager
@@ -264,6 +265,14 @@ class MetaField(serializers.Field):
         return None
 
 
+class DefaultSerializerMixin(object):
+    def get_serializer_class(self):
+        dotted_path = self.model._meta.default_serializer
+        bits = dotted_path.split('.')
+        module_name = '.'.join(bits[:-1])
+        module = import_module(module_name)
+        cls_name = bits[-1]
+        return getattr(module, cls_name)
 
 
 #### TESTS #############

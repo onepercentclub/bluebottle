@@ -1,17 +1,3 @@
-App.AnimateProgressMixin = Em.Mixin.create({
-    didInsertElement: function(){
-        var donated = this.get('controller.campaign.money_donated');
-        var asked = this.get('controller.campaign.money_asked');
-        this.$('.slider-progress').css('width', '0px');
-        var width = 0;
-        if (asked > 0) {
-            width = 100 * donated / asked;
-            width += '%';
-        }
-        this.$('.slider-progress').animate({'width': width}, 3000);
-    }
-});
-
 App.ProjectMembersView = Em.View.extend({
     templateName: 'project_members'
 });
@@ -36,7 +22,7 @@ App.ProjectListView = Em.View.extend(App.ScrollInView, {
     templateName: 'project_list'
 });
 
-App.ProjectPreviewView = Em.View.extend(App.AnimateProgressMixin, {
+App.ProjectPreviewView = Em.View.extend({
     templateName: 'project_preview'
 });
 
@@ -57,7 +43,7 @@ App.ProjectPlanView = Em.View.extend(App.ScrollInView, {
 });
 
 
-App.ProjectView = Em.View.extend(App.AnimateProgressMixin, {
+App.ProjectView = Em.View.extend({
     templateName: 'project',
 
     didInsertElement: function(){
@@ -66,6 +52,9 @@ App.ProjectView = Em.View.extend(App.AnimateProgressMixin, {
     }
 });
 
+App.ProjectIndexView = Em.View.extend({
+    templateName: 'project_wall'
+});
 
 /* Form Elements */
 
@@ -81,18 +70,9 @@ App.ProjectOrderSelectView = Em.Select.extend({
     optionLabelPath: "content.title"
 });
 
-App.ProjectPhaseList = [
-    {value: 'plan', title: gettext("Writing Plan")},
-    {value: 'campaign', title: gettext("Campaign")},
-    {value: 'act', title: gettext("Act")},
-    {value: 'results', title: gettext("Results")},
-    {value: 'realized', title: gettext("Realised")}
-];
-
 App.ProjectPhaseSelectView = Em.Select.extend({
-    content: App.ProjectPhaseList,
-    optionValuePath: "content.value",
-    optionLabelPath: "content.title",
+    optionValuePath: "content.id",
+    optionLabelPath: "content.name",
     prompt: gettext("Pick a phase")
 
 });
@@ -114,7 +94,11 @@ App.GenericFieldView = Em.View.extend({
         }
         return 'generic_textarea';
 
-    }.property('controller.model.type')
+    }.property('controller.model.type'),
+
+    value: function(){
+        return this.get('controller.extras').firstObject.get('value');
+    }.property('controller.extras', 'controller.model.id')
 
 });
 
@@ -134,9 +118,8 @@ App.MyProjectView = Em.View.extend({
 
 
 App.ThemeSelectView = Em.Select.extend({
-    content: App.ThemeList,
     optionValuePath: "content.id",
-    optionLabelPath: "content.title",
+    optionLabelPath: "content.name",
     prompt: "Pick a theme"
 });
 

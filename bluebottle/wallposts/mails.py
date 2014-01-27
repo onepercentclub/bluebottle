@@ -37,13 +37,13 @@ from django.template import Context
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.projects.models import Project
+from bluebottle.projects import get_project_model
 #from bluebottle.tasks.models import Task
 #from bluebottle.mail import send_mail
 
 from .models import TextWallPost, Reaction
 
-
+PROJECT_MODEL = get_project_model()
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 #    site = 'https://' + Site.objects.get_current().domain
 #
 #    # Project Wall Post
-#    if isinstance(post.content_object, Project):
+#    if isinstance(post.content_object, PROJECT_MODEL):
 #        project = post.content_object
 #        project_owner = project.owner
 #
@@ -99,7 +99,7 @@ logger = logging.getLogger(__name__)
 #    post = instance.wallpost
 #
 #    # Project Wall Post
-#    if isinstance(post.content_object, Project):
+#    if isinstance(post.content_object, PROJECT_MODEL):
 #        project = post.content_object
 #        project_owner = project.owner
 #

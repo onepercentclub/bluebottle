@@ -12,24 +12,28 @@ App.TagField = Em.TextField.extend({
 
 App.TagWidget = Em.View.extend({
     templateName: 'tag_widget',
-    addTag: function(){
-        if (this.get('new_tag')) {
-            var new_tag = this.get('new_tag').toLowerCase();
-            var tags = this.get('tags');
-            // Try to create a new tag, it will fail if it's already in the local store, so catch that.
-            try {
-                var tag = App.Tag.createRecord({'id': new_tag});
-            } catch(err) {
-                var tag = App.Tag.find(new_tag);
+    actions: {
+        addTag: function(){
+            if (this.get('new_tag')) {
+                var new_tag = this.get('new_tag').toLowerCase();
+                var tags = this.get('tags');
+                // Try to create a new tag, it will fail if it's already in the local store, so catch that.
+                try {
+                    var tag = App.Tag.createRecord({'id': new_tag});
+                } catch(err) {
+                    var tag = App.Tag.find(new_tag);
+                }
+                tag.transitionTo('created.loaded.saved');
+                tags.pushObject(tag);
+                this.set('new_tag', '');
             }
-            tags.pushObject(tag);
-            this.set('new_tag', '');
+        },
+        removeTag: function(tag) {
+            var tags = this.get('tags');
+            tags.removeObject(tag);
         }
     },
-    removeTag: function(tag) {
-        var tags = this.get('tags');
-        tags.removeObject(tag);
-    },
+
     didInsertElement: function(){
         this.$('.tag').typeahead({
             source: function (query, process) {
@@ -89,47 +93,4 @@ App.SocialShareView = Em.View.extend({
     showDialog: function(shareUrl, urlArgs, type) {
         window.open(shareUrl + urlArgs, type + '-share-dialog', 'width=' + this.get('dialogW') + ',height=' + this.get('dialogH'));
     }
-});
-
-/* Components */
-
-App.BbFormFieldComponent = Em.Component.extend({
-    // Variables that should be translated.
-    translatable: ['label', 'hint', 'placeholder'],
-
-    didInsertElement: function(){
-        var view = this;
-        // Translate all translatables.
-        this.get('translatable').map(function(param){
-            view.set(param, gettext(view.get(param)));
-        });
-    }
-});
-
-App.BbTextFieldComponent = App.BbFormFieldComponent.extend({
-    type: 'text'
-});
-
-App.BbTextAreaComponent = App.BbFormFieldComponent.extend({
-});
-
-App.BbMapPickerComponent = App.BbFormFieldComponent.extend({
-});
-
-App.BbUploadImageComponent = App.BbFormFieldComponent.extend({
-    translatable: ['label', 'hint', 'placeholder', 'buttonLabel'],
-
-    accept: 'image/*',
-    buttonLabel: 'Upload image'
-});
-
-App.BbVideoLinkComponent = App.BbTextFieldComponent.extend({
-});
-
-App.BbRadioComponent = App.BbFormFieldComponent.extend({
-    type: 'radio'
-});
-
-App.BbSelectComponent = App.BbFormFieldComponent.extend({
-
 });

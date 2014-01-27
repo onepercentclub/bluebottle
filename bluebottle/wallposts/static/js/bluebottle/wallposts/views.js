@@ -3,6 +3,10 @@
  Views
  */
 
+App.WallView = Em.View.extend({
+    templateName: 'wall'
+});
+
 App.WallPostView = Em.View.extend({
 
     templateName: 'wallPost',
@@ -70,7 +74,19 @@ App.MediaWallPostView = App.WallPostView.extend({
 App.TextWallPostNewView = Em.View.extend({
     templateName: 'textWallPostNew',
     tagName: 'form',
-    elementId: 'wallpost-form'
+    elementId: 'wallpost-form',
+    actions: {
+        toggleForm: function(){
+            this.$('.wallpost-form').slideToggle();
+        }
+    },
+    hideForm: function(){
+        // Close the form if a Wallpost is created.
+        if (this.get('controller.model.id')){
+            this.$('.wallpost-form').slideUp();
+        }
+    }.observes('controller.model.id')
+
 });
 
 App.MediaWallPostNewView = App.TextWallPostNewView.extend({

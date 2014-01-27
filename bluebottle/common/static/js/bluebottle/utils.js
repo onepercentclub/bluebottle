@@ -75,6 +75,10 @@ App.Editable = Ember.Mixin.create({
             model.one('becameInvalid', function(record) {
                 controller.set('saving', false);
                 model.set('errors', record.get('errors'));
+                // Ember-data currently has no clear way of dealing with the state
+                // loaded.created.invalid on server side validation, so we transition
+                // to the uncommitted state to allow resubmission
+                model.transitionTo('loaded.created.uncommitted');
             });
 
             model.one('didUpdate', function(){
@@ -311,3 +315,11 @@ App.MapPicker = Em.View.extend({
 
 });
 
+App.CustomDatePicker = App.DatePicker.extend({
+    init: function(){
+        this._super();
+        if (this.get("minDate") != undefined) {
+            this.config.minDate = this.get("minDate");
+        }
+    }
+});

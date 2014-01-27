@@ -1,0 +1,33 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "task_member_edit" %}
+
+    {{# if motivation}}
+    <p>
+        <strong>{{member.short_name}} {% trans "said:" %}</strong><br />
+        <blockquote>{{ motivation }}</blockquote>
+    </p>
+    {{/if}}
+
+    {{#view Em.RadioButtonGroup class="radio-select four" name="status" selectedValueBinding="status"}}
+        <label for="status_applied" class="radio">
+            {{view view.RadioButton value="applied" id="status_applied"}}
+            <span>{% trans "Applied" %}</span>
+        </label>
+        <label for="status_accepted" class="radio">
+            {{view view.RadioButton value="accepted" id="status_accepted"}}
+            <span>{% trans "Start" %}</span>
+        </label>
+        <label for="status_rejected" class="radio">
+            {{view view.RadioButton value="rejected" id="status_rejected"}}
+            <span>{% trans "Reject" %}</span>
+        </label>
+        <label for="status_realised" class="radio">
+            {{view view.RadioButton value="realized" id="status_realised"}}
+            <span>{% trans "Realised" %}</span>
+        </label>
+    {{/view}}
+
+{% endtplhandlebars %}

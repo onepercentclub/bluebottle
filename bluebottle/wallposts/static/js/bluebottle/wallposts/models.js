@@ -29,7 +29,7 @@ App.Adapter.map('App.WallPostReaction', {
 App.WallPostPhoto = DS.Model.extend({
     url: 'wallposts/photos',
     photo: DS.attr('image'),
-    mediawallpost: DS.belongsTo('App.MediaWallPost')
+    mediawallpost: DS.belongsTo('App.MediaWallPost'),	
 });
 
 // This is union of all different wallposts.
@@ -70,7 +70,20 @@ App.WallPost = DS.Model.extend({
             }
         }
         return false;
-    }.property('related_type', 'isSystemWallPost', 'related_object')
+    }.property('related_type', 'isSystemWallPost', 'related_object'),
+	
+	coverPhoto: function() {
+		return this.get("photos").toArray()[0];
+	}.property("photos"),
+	
+	otherPhotos: function() {
+		var photos = this.get("photos").toArray();
+		return photos.slice(1,photos.length);
+	}.property("photos"),
+
+    isInitiator: function(){
+        return (this.get('type') == 'media');
+    }.property('type')
 });
 
 

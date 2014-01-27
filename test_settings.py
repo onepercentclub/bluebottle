@@ -3,6 +3,7 @@ import os
 
 SITE_ID = 1
 TIME_ZONE = 'Europe/Amsterdam'
+USE_TZ = True
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -74,6 +75,9 @@ INSTALLED_APPS = (
     'bluebottle.organizations',
     'bluebottle.pages',
     'bluebottle.projects',
+    'bluebottle.tasks',
+
+
 )
 
 MIDDLEWARE_CLASSES = [
@@ -103,7 +107,8 @@ TEMPLATE_LOADERS = [
 TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     # Makes the 'request' variable (the current HttpRequest) available in templates.
     'django.core.context_processors.request',
-    'django.core.context_processors.i18n'
+    'django.core.context_processors.i18n',
+    'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
@@ -118,7 +123,7 @@ HTML_ACTIVATION_EMAIL = True  # Note this setting is from our forked version.
 
 SOUTH_TESTS_MIGRATE = False # Make south shut up during tests
 
-SELENIUM_TESTS = True
+SELENIUM_TESTS = False
 SELENIUM_WEBDRIVER = 'phantomjs'  # Can be any of chrome, firefox, phantomjs
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -157,3 +162,5 @@ TWITTER_HANDLES = {
 }
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
+PROJECTS_PROJECT_MODEL = 'projects.Project'
+TASKS_TASK_MODEL = 'tasks.Task'

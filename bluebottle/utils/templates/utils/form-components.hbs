@@ -19,15 +19,15 @@
 {% tplhandlebars "components/bb-text-area" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
         {{view Em.TextArea valueBinding=valueBinding placeholderBinding=placeholder maxlengthBinding=maxlength
-               classBinding="errors.length:error"}}
+               rowsBinding=rows colsBinding=cols classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
 
 {% tplhandlebars "components/bb-text-field" %}
-    {{#bb-form-field hint=hint label=label errors=errors}}
+    {{#bb-form-field hint=hint label=label errors=errors contentBinding=contentBinding}}
         {{view Em.TextField step=step valueBinding=valueBinding placeholderBinding=placeholder
-               classBinding="errors.length:error" typeBinding=type}}
+            maxlengthBinding=maxlength classBinding="errors.length:error" typeBinding=type}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
@@ -47,10 +47,22 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
+{% tplhandlebars "components/bb-select-name" %}
+    {{#bb-form-field hint=hint label=label errors=errors}}
+        {{view Em.Select contentBinding=options optionValuePath="content.name" optionLabelPath="content.name" selectionBinding=selectionBinding classBinding="errors.length:error" promptBinding=prompt}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}
+
 
 {% tplhandlebars "components/bb-map-picker" %}
     {{#bb-form-field hint=hint label=label errors=errors className='wide'}}
         {{view App.MapPicker longitudeBinding=longitudeBinding latitudeBinding=latitudeBinding classBinding="errors.length:error"}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}
+
+{% tplhandlebars "components/bb-date-picker" %}
+    {{#bb-form-field hint=hint label=label errors=errors}}
+        {{view App.DatePicker valueBinding=valueBinding minDate=minDate classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
@@ -80,3 +92,8 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
+{% tplhandlebars "components/bb-datepicker" %}
+    {{#bb-form-field hint=hint label=label errors=errors}}
+        {{ view App.CustomDatePicker minDateBinding=minDate valueBinding=valueBinding}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}

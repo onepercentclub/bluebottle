@@ -8,10 +8,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from fluent_contents.models import Placeholder
-from fluent_contents.rendering import render_content_items, render_placeholder
+from fluent_contents.rendering import render_placeholder
 
-from .models import Page, ContactMessage
+from .models import Page
 
 
 class PageAdmin(PlaceholderFieldAdmin):
@@ -138,13 +137,3 @@ class PageAdmin(PlaceholderFieldAdmin):
     make_published.short_description = _("Mark selected entries as published")
 
 admin.site.register(Page, PageAdmin)
-
-
-class ContactMessageAdmin(admin.ModelAdmin):
-    model = ContactMessage
-    list_display = ('message', 'name', 'email', 'creation_date', 'status')
-    list_filter = ('status', )
-    search_fields = ('message', 'name', 'email')
-    raw_id_fields = ('author', )
-
-admin.site.register(ContactMessage, ContactMessageAdmin)

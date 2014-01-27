@@ -16,12 +16,16 @@ App = Em.Application.create({
     ready: function() {
         // Read language string from url.
         var language = window.location.pathname.split('/')[1];
-        App.CurrentUser.find('current').then(function(user){
-            var primaryLanguage = user.get('primary_language');
-            if (primaryLanguage && primaryLanguage != language) {
-                document.location = '/' + primaryLanguage + document.location.hash;
+        App.CurrentUser.find('current').then(
+            function(user){
+                var primaryLanguage = user.get('primary_language');
+                primaryLanguage = primaryLanguage.replace('_', '-').toLowerCase();
+                if (primaryLanguage && primaryLanguage != language) {
+                    document.location = '/' + primaryLanguage + document.location.hash;
+                }
             }
-        });
+        );
+
         // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
         this.set('language', language);
 
@@ -47,7 +51,6 @@ App = Em.Application.create({
 
         this.setLocale(locale);
         this.initSelectViews();
-        this.initProjectDetailFields();
     },
 
     initSelectViews: function() {
@@ -67,16 +70,20 @@ App = Em.Application.create({
             });
         });
 
-        // Get a filtered list of countries that can apply for a project ('oda' countries).
-        var filteredList = App.Country.filter(function(item) {return item.get('oda')});
-
-        App.ProjectCountrySelectView.reopen({
-            content: filteredList
+        App.Skill.find().then(function(list) {
+            App.SkillSelectView.reopen({
+                content: list
+            });
         });
-    },
 
-    initProjectDetailFields: function(){
-        App.ProjectDetailField.find();
+        App.ProjectPhase.find().then(function(data){
+
+            var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
+
+            App.ProjectPhaseSelectView.reopen({
+            content: list
+            });
+        });
     },
 
     setLocale: function(locale) {
@@ -84,7 +91,7 @@ App = Em.Application.create({
             locale = this.get('locale');
         }
 
-        if (locale != 'en-US') {
+        if (locale != 'en-us') {
             if (locale == 'nl') {
                 locale = 'nl-NL';
             }
@@ -105,20 +112,25 @@ App = Em.Application.create({
                     Globalize.culture(locale);
                     App.set('locale', locale);
                 });
-            $.getScript('/static/assets/js/vendor/jquery-ui/i18n/jquery.ui.datepicker-' + locale.substr(0, 2) + '.js')
-                .fail(function() {
-                    if (window.console) {
-                        console.log("No jquery.ui.datepicker file for : "+ locale);
-                    }
-                    // Specified locale file not available. Use default locale.
-                    locale = App.get('locale');
-                    Globalize.culture(locale);
-                    App.set('locale', locale);
-                })
-                .success(function() {
-                    // Specs loaded. Enable locale.
-                    App.set('locale', locale);
-                });
+            if (locale == 'en-US') {
+                Globalize.culture(locale);
+            } else {
+                $.getScript('/static/assets/js/vendor/jquery-ui/i18n/jquery.ui.datepicker-' + locale.substr(0, 2) + '.js')
+                    .fail(function() {
+                        if (window.console) {
+                            console.log("No jquery.ui.datepicker file for : "+ locale);
+                        }
+                        // Specified locale file not available. Use default locale.
+                        locale = App.get('locale');
+                        Globalize.culture(locale);
+                        App.set('locale', locale);
+                    })
+                    .success(function() {
+                        // Specs loaded. Enable locale.
+                        App.set('locale', locale);
+                    });
+
+            }
         } else {
             Globalize.culture(locale);
             App.set('locale', locale);
@@ -167,19 +179,19 @@ App.Adapter = DS.DRF2Adapter.extend({
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
         "homepage": "homepage",
-        "pages/contact": "pages/contact"
+        "contact/contact": "contact/contact"
     }
 });
 
 // Assigning plurals for model properties doesn't seem to work with extend, it does this way:
 App.Adapter.configure("plurals", {
-    "address": "addresses"
+    "address": "addresses",
+    "favourite_country" : "favourite_countries"
 });
 
 App.ApplicationController = Ember.Controller.extend({
     needs: ['currentUser'],
     display_message: false,
-
     displayMessage: (function() {
         if (this.get('display_message') == true) {
             Ember.run.later(this, function() {
@@ -233,7 +245,7 @@ App.Router.reopen({
     didTransition: function(infos) {
         this._super(infos);
         if (window._gaq === undefined) { return; }
-        
+
         Ember.run.next(function(){
             _gaq.push(['_trackPageview', window.location.hash.substr(1)]);
         });
@@ -281,7 +293,6 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Em.Route.extend({
-    needs: ['currentUser'],
 
     actions: {
         selectLanguage: function(language) {
@@ -343,7 +354,7 @@ App.ApplicationRoute = Em.Route.extend({
             var view = App[name.classify() + 'View'].create();
             view.set('controller', controller);
 
-            var modalPaneTemplate = ['<div class="modal-body"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
+            var modalPaneTemplate = "{{view view.bodyViewClass}}";
 
             Bootstrap.ModalPane.popup({
                 classNames: ['modal', 'large'],
@@ -377,35 +388,13 @@ App.ApplicationRoute = Em.Route.extend({
 
         },
         closeAllModals: function(){
-            $('.close-modal').click();
-        },
-        showProject: function(project_id) {
-            var route = this;
-            App.Project.find(project_id).then(function(project) {
-                route.transitionTo('project', project);
-            });
+            $('[rel=close]').click();
         },
         showProjectTaskList: function(project_id) {
             var route = this;
             App.Project.find(project_id).then(function(project) {
                 route.transitionTo('project', project);
                 route.transitionTo('projectTaskList');
-            });
-        },
-        showTask: function(task) {
-            var route = this;
-            App.Task.find(task.get('id')).then(function(task) {
-                App.Project.find(task.get('project.id')).then(function(project) {
-                    route.transitionTo('project', project);
-                    route.transitionTo('projectTask', task);
-                });
-            });
-        },
-        showNews: function(news_id) {
-            var route = this;
-            App.News.find(news_id).then(function(news) {
-                route.transitionTo('newsItem', news);
-                window.scrollTo(0, 0);
             });
         },
         showPage: function(page_id) {

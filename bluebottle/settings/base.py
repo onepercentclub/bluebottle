@@ -145,10 +145,12 @@ INSTALLED_APPS = (
     'bluebottle.accounts',
     'bluebottle.utils',
     'bluebottle.common',
+    'bluebottle.contact',
     'bluebottle.geo',
     'bluebottle.pages',
     'bluebottle.projects',
     'bluebottle.organizations',
+    'bluebottle.tasks',
 
     # Modules required by BlueBottle
     'fluent_contents',
@@ -209,8 +211,13 @@ LOGGING = {
     }
 }
 
-# BlueBottle user account model.
+
+# BlueBottle generic models. Override this in your settings if you need to
+# extend any of those models when you are extending BlueBottle for your own
+# purposes.
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
+PROJECTS_PROJECT_MODEL = 'projects.Project'
+TASKS_TASK_MODEL = 'tasks.Task'
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True
@@ -243,3 +250,5 @@ TWITTER_HANDLES = {
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 
+# E-MAILS
+CONTACT_EMAIL = 'contact@my-bluebottle-project.com'

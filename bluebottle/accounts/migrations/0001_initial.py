@@ -2,8 +2,10 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
+from django.conf import settings
 from django.db import models
 
+user_model = settings.AUTH_USER_MODEL.lower()
 
 class Migration(SchemaMigration):
 
@@ -34,6 +36,8 @@ class Migration(SchemaMigration):
             ('about', self.gf('django.db.models.fields.TextField')(max_length=265, blank=True)),
             ('why', self.gf('django.db.models.fields.TextField')(max_length=265, blank=True)),
             ('availability', self.gf('django.db.models.fields.CharField')(max_length=25, blank=True)),
+            ('facebook', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
+            ('twitter', self.gf('django.db.models.fields.CharField')(max_length=15, blank=True)),
             ('primary_language', self.gf('django.db.models.fields.CharField')(max_length=5)),
             ('share_time_knowledge', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('share_money', self.gf('django.db.models.fields.BooleanField')(default=False)),
@@ -44,9 +48,13 @@ class Migration(SchemaMigration):
             ('available_time', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('contribution', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
-        db.send_create_signal(u'accounts', ['BlueBottleUser'])
+
+        app, model = settings.AUTH_USER_MODEL.split('.')
+        db.send_create_signal(app, [model])
+
 
         # Adding M2M table for field groups on 'BlueBottleUser'
+        # we cannot use user_model here, because it doesn't exist yet
         m2m_table_name = db.shorten_name(u'accounts_bluebottleuser_groups')
         db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
@@ -94,7 +102,7 @@ class Migration(SchemaMigration):
 
 
     models = {
-        u'accounts.bluebottleuser': {
+        'accounts.bluebottleuser': {
             'Meta': {'object_name': 'BlueBottleUser'},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
@@ -104,6 +112,7 @@ class Migration(SchemaMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
+            'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -121,6 +130,7 @@ class Migration(SchemaMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
             'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),

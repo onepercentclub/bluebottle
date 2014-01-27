@@ -1,17 +1,20 @@
+from django.contrib.contenttypes.models import ContentType
 import django_filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import permissions
 
-from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly, AllowNone
+from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
-from bluebottle.projects.models import Project
+from bluebottle.projects import get_project_model
 
 from .models import TextWallPost, MediaWallPost, MediaWallPostPhoto
 from .permissions import IsConnectedWallPostAuthorOrReadOnly
 from .serializers import TextWallPostSerializer, MediaWallPostSerializer, MediaWallPostPhotoSerializer
 from .models import WallPost, Reaction
 from .serializers import ReactionSerializer, WallPostSerializer
+
+PROJECT_MODEL = get_project_model()
 
 
 class WallPostFilter(django_filters.FilterSet):
@@ -35,12 +38,24 @@ class WallPostList(ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
+
+        if parent_type == 'project':
+            content_type = ContentType.objects.get_for_model(PROJECT_MODEL)
+        else:
+            white_listed_apps = ['projects', 'tasks', 'fundraisers']
+            content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(name=parent_type)
+
+        queryset = queryset.filter(content_type=content_type)
+
         if parent_type == 'project' and parent_id:
             try:
-                project = Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
+                project = PROJECT_MODEL.objects.get(slug=parent_id)
+            except PROJECT_MODEL.DoesNotExist:
                 return WallPost.objects.none()
             queryset = queryset.filter(object_id=project.id)
+
+        else:
+            queryset = queryset.filter(object_id=parent_id)
 
         queryset = queryset.order_by('-created')
         return queryset
@@ -61,8 +76,8 @@ class TextWallPostList(ListCreateAPIView):
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
         if parent_type == 'project' and parent_id:
             try:
-                project = Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
+                project = PROJECT_MODEL.objects.get(slug=parent_id)
+            except PROJECT_MODEL.DoesNotExist:
                 return WallPost.objects.none()
             queryset = queryset.filter(object_id=project.id)
 

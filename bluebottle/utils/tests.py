@@ -1,9 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.db.models import loading
 from django.test import TestCase
 from django.test.utils import override_settings
-
-from bluebottle.accounts.models import BlueBottleUser
 
 from .models import MetaDataModel
 from .utils import clean_for_hashtag
@@ -11,6 +10,7 @@ from .utils import clean_for_hashtag
 import uuid
 import unittest
 
+BB_USER_MODEL = get_user_model()
 
 def generate_random_slug():
     return str(uuid.uuid4())[:30]
@@ -30,10 +30,10 @@ class UserTestsMixin(object):
         # If auto-generated, make sure it's unique.
         if not email:
             email = generate_random_email()
-            while BlueBottleUser.objects.filter(email=email).exists():
+            while BB_USER_MODEL.objects.filter(email=email).exists():
                 email = generate_random_email()
 
-        user = BlueBottleUser.objects.create_user(email=email, **extra_fields)
+        user = BB_USER_MODEL.objects.create_user(email=email, **extra_fields)
 
         if not password:
             user.set_password('password')
@@ -75,7 +75,7 @@ class CustomSettingsTestCase(TestCase):
 
 class HashTagTestCase(unittest.TestCase):
     def test_clean_text_for_hashtag(self):
-        """ 
+        """
         Test that non-alphanumeric characters are excluded and proper joining is done
         """
         text = 'foo bar'
@@ -101,12 +101,12 @@ import json
 
 class MetaTestCase(TestCase):
     def setUp(self):
-        """ 
+        """
         The complex work is using the fluent_contents stuff.
 
         Setting the 'contents' of the MetaDataModel requires setting the
         PictureItem, TextItem, OEmbedItem manually and creating a Placeholder to
-        group these ContentItems on the parent.  
+        group these ContentItems on the parent.
         """
 
         # Create the MetaDataModel instance
@@ -158,7 +158,7 @@ class MetaTestCase(TestCase):
 
         # set up the client
         self.client = Client()
-        self.url = reverse('meta-test', kwargs={'pk': self.object.id})
+        self.url = reverse('meta_test', kwargs={'pk': self.object.id})
 
     def test_content_items_correctly_created(self):
         """ Test that the setUp function creates the correct items """
@@ -168,7 +168,7 @@ class MetaTestCase(TestCase):
         self.assertEqual(len(items), 4, 'Error in the setUp function: not all items are correctly created.')
 
     def test_return_metadata(self):
-        """ 
+        """
         Verify that the MetaField functions work and can correctly retrieve
         the desired meta data.
         """
@@ -201,7 +201,7 @@ class MetaTestCase(TestCase):
         meta_data = item.get('meta_data2')
 
         # this image has to be processed by sorl.thumbnail
-        # the filename differs (hash or something similar), and 'cache' 
+        # the filename differs (hash or something similar), and 'cache'
         # should be in the url
 
         # FIXME!
@@ -209,7 +209,7 @@ class MetaTestCase(TestCase):
         # self.assertIn('cache', meta_data['image'])
 
     def test_url_tag_in_tweet(self):
-        """ 
+        """
         Test that {URL} is present by default in tweets, to be replaced by
         Ember
         """

@@ -1,103 +1,103 @@
-//
+
 // Account page (overwrites modules)
 // --------------------------------------------------
 
-//.account-header {
-//    background-color: $gray-lighter;
-//    position: relative;
-//    
-//    .account-avatar {
-//        @include grid(6,1,1);
-//        margin-top: $base-margin*2;
-//        margin-bottom: $base-margin*2;
-//    }
-//    
-//    .account-title {
-//        @include grid(32,1,0);
-//        margin-top: $base-margin;
-//        
-//        h2 {
-//            width: 100%;
-//            color: $color-heading;
-//            float: left;
-//            white-space: nowrap;
-//            overflow: hidden;
-//            text-overflow: ellipsis;
-//        }
-//        
-//        .account-subtitle {
-//            color: $gray;
+.account-header {
+    background-color: $gray-lighter;
+    position: relative;
+    
+    .account-avatar {
+        @include grid(6,1,1);
+        margin-top: $base-margin*2;
+        margin-bottom: $base-margin*2;
+    }
+    
+    .account-title {
+        @include grid(32,1,0);
+        margin-top: $base-margin;
+        
+        h2 {
+            width: 100%;
+            color: $color-heading;
+            float: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .account-subtitle {
+            color: $gray;
 //            font-family: $base-font-family;
 //            padding-left: $base-padding;
 //            margin-left: $base-margin/4;
 //            background: image-url("list-item.png") transparent no-repeat 0 50%;
-//        }
-//    }
-//    
-//    .account-preview {
-//        @include grid(10,1,1);
-//        font-size: $font-size-small;
-//        color: $gray;
-//        float: right;
-//        margin-top: $base-margin*2;
-//        text-align: right;
-//        display: inline-block;
-//    }
-//    
-//    .tabs {
-//        @include grid(48,7,1);
-//        position: absolute;
-//        bottom: 0;
-//    }
-//    
-//}
-//
-//// Project Picker Monthly
-//#project-select {
-//    
-//    width: $min-width - 100px;
-//    margin-left: -($min-width - 100px)/2;
-//    
-//    .modal-header {
-//        background-color: $gray-lighter;
-//    }
-//    
-//    #search {
-//        
-//    }
-//    
-//    .modal-body {
-//        padding: 0;
-//    }
-//
-//    #search-form .control, #search-results li {
-//        @include grid(16,0,1);
-//    }
-//}
-//
-//// Donation history list
-//.fund-history {
-//    
-//    .fund-history-date {
-//        
-//    }
-//    
-//    .fund-history-type {
-//        
-//    }
-//    
-//    .fund-history-total {
-//        font-family: $font-family-heavy;
-//    }
-//    
-//    .fund-history-project {
-//        width: 75%;
-//    }
-//    
-//    .fund-history-amount {
-//        width: 25%;
-//    }
-//}
+        }
+    }
+    
+    .account-preview {
+        @include grid(10,1,1);
+        font-size: $font-size-small;
+        color: $gray;
+        float: right;
+        margin-top: $base-margin*2;
+        text-align: right;
+        display: inline-block;
+    }
+    
+    .tabs {
+        @include grid(48,7,1);
+        position: absolute;
+        bottom: 0;
+    }
+    
+}
+
+// Project Picker Monthly
+#project-select {
+    
+    width: $min-width - 100px;
+    margin-left: -($min-width - 100px)/2;
+    
+    .modal-header {
+        background-color: $gray-lighter;
+    }
+    
+    #search {
+        
+    }
+    
+    .modal-body {
+        padding: 0;
+    }
+
+    #search-form .control, #search-results li {
+        @include grid(16,0,1);
+    }
+}
+
+// Donation history list
+.fund-history {
+    
+    .fund-history-date {
+        
+    }
+    
+    .fund-history-type {
+        
+    }
+    
+    .fund-history-total {
+        font-family: $font-family-heavy;
+    }
+    
+    .fund-history-project {
+        width: 75%;
+    }
+    
+    .fund-history-amount {
+        width: 25%;
+    }
+}
 
 
 .account-achievements {
@@ -206,20 +206,18 @@
 	}
 	.account-links {
 		font-size: $font-size-small;
-		a {
-			@include grid(20,0,1);
+		.account-facebook, .account-twitter, .account-website {
+			@include grid(16,0,1);
 			text-decoration: none;
 		}
 		.account-facebook {
-			@include grid(14,0,1);
 			color: $facebook-blue;
 			&:hover {
 				color: darken($facebook-blue, 20%);
 			}
 		}
 		.account-twitter {
-			@include grid(14,0,1);
-			color: $twitter-blue;
+			color: $twitter-blue;			
 			&:hover {
 				color: darken($twitter-blue, 20%);
 			}
@@ -326,13 +324,13 @@
 	.member-since {
 		text-transform: uppercase;
 	}
-	.account-achievements {
-		@include clear;
-		li {
-			@include grid(16,0,0);
-			@include resetlist();
-		}
-	}
+//	.account-achievements {
+//		@include clear;
+//		li {
+//			@include grid(16,0,0);
+//			@include resetlist();
+//		}
+//	}
 	
 	.profile-preview-actions {
 		

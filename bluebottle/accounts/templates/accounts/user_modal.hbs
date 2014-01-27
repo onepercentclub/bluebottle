@@ -23,17 +23,17 @@
 	<div class="modal-body">
 	    <ul class="account-achievements">
 	        {# FIXME: translation marking is pretty pointless here, can't take advantage of blocktrans... #}
-	        <li class="accounts-achievements-projects">
+	        <li class="account-achievements-projects">
 	            <strong>{{user_statistics.projects_supported}}</strong>
 				{% trans "projects" %}<br />
 				{% trans "supported" %}
 	        </li>
-	        <li class="accounts-achievements-tasks">
+	        <li class="account-achievements-tasks">
 	            <strong>{{user_statistics.tasks_realized}}</strong>
 				{% trans "tasks" %}<br />
 				{% trans "realized" %}
 	        </li>
-	        <li class="accounts-achievements-time">
+	        <li class="account-achievements-time">
 	            <strong>{{user_statistics.hours_spent}}</strong>
 				{% trans "hours spent" %}<br /> 
 				{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}

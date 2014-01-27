@@ -36,19 +36,19 @@
 		position: relative;
 		@include grid(12,0,2);	
 		
-		&:after {
-			left: 100%;
-			top: 4.5em;
-			border: solid transparent;
-			content: " ";
-			height: 0;
-			width: 0;
-			position: absolute;
-			pointer-events: none;
-			border-left-color: $white;
-			border-width: 10px;
-			margin-top: -10px;
-		}
+//		&:after {
+//			left: 100%;
+//			top: 4.5em;
+//			border: solid transparent;
+//			content: " ";
+//			height: 0;
+//			width: 0;
+//			position: absolute;
+//			pointer-events: none;
+//			border-left-color: $white;
+//			border-width: 10px;
+//			margin-top: -10px;
+//		}
 		.task-status {
 			padding: $base-padding / 2;
 			text-align: center;

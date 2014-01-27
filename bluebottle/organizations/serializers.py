@@ -28,7 +28,7 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     slug = serializers.SlugField(required=False)
 
-    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
+    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', read_only=True)
     registration = PrivateFileSerializer(required=False)
 
     name = serializers.CharField(required=True)

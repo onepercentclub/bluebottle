@@ -1,5 +1,3 @@
-import logging
-
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
@@ -13,8 +11,6 @@ from .models import (
     ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute,
     ProjectDetailFieldValue, ProjectDetail, ProjectTheme)
 
-
-logger = logging.getLogger(__name__)
 
 PROJECT_MODEL = get_project_model()
 

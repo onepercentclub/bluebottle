@@ -102,8 +102,8 @@ DS.DRF2Serializer = DS.RESTSerializer.extend({
         }, this);
     },
 
-    
-    
+
+
     /**
     Customize the serializer to also send PrimaryRelatedFields ids.
     http://stackoverflow.com/questions/16128525/customizing-what-ember-data-sends-to-the-server
@@ -170,13 +170,17 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
         if (hasFile) {
             var formdata = new FormData();
             for (key in data) {
+                var dataType = typeof data[key];
                 if (data[key] !== undefined) {
                     if (record.get(key) instanceof File) {
                         formdata.append(key, record.get(key));
                     } else if (Em.typeOf(data[key]) == 'array'){
                         // Take care of nested resources
                         formdata.append(key, JSON.stringify(data[key]));
-                    } else {
+                    // Firefox likes to send null values as the string 'null', which
+                    // doesn't play nice with server side validation
+                    // Solution: don't send null values to the server and leave them empty
+                    } else if(dataType != 'function' && dataType != 'object') {
                         formdata.append(key, data[key]);
                     }
                 }
@@ -229,13 +233,17 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
             var formdata = new FormData();
             for (key in record) {
                 if (data[key] !== undefined) {
+                    var dataType = typeof data[key];
                     if (record.get(key) instanceof File) {
                         var file = record.get(key);
                         formdata.append(key, file);
                     } else if (Em.isArray(record.get(key))){
                         // Take care of nested resources, e.g. tags
                         formdata.append(key, JSON.stringify(data[key]));
-                    } else {
+                    // Firefox likes to send null values as the string 'null', which
+                    // doesn't play nice with server side validation
+                    // Solution: don't send null values to the server and leave them empty
+                    } else if(dataType != 'function' && dataType != 'object') {
                         formdata.append(key, data[key]);
                     }
                 }
@@ -447,7 +455,7 @@ DS.DRF2Adapter.registerTransform("object", {
         }
         return serialized;
     },
-    
+
     serialize: function(deserialized) {
         return Ember.isNone(deserialized) ? null : deserialized;
     }

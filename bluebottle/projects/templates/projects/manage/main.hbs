@@ -88,6 +88,13 @@
                             <span class="flaticon solid right-2"></span>
                             {% trans "Submit Plan" %}
                         {{/link-to}}
+                    {{else}}
+                        {{#link-to "taskNew" id tagName="button" class="btn btn-iconed"}}
+                            <em class="flaticon solid wrench-1"></em>
+                            {% trans "Create a new task" %}
+                        {{/link-to}}
+
+
                     {{/if}}
 
                 </nav>

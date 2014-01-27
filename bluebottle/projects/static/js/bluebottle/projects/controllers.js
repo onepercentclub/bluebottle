@@ -205,7 +205,7 @@ App.MyProjectListController = Em.ArrayController.extend({
 
 });
 
-App.MyProjectController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser']
 
 });

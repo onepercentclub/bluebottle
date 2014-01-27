@@ -30,12 +30,6 @@ App.HomeController = Ember.ObjectController.extend({
 	    this.slideProject();
 
 	}else{
-
-	    //First time!
-        this.set("width", $("#project-slide-a").width());
-        
-        $("#project-slide-a").width(this.get("width"))
-        $("#project-slide-b").width(this.get("width"))
         
 	    $('#project-slide-b').animate({opacity: 'toggle'},0);
 	    this.set('nextProject', project);

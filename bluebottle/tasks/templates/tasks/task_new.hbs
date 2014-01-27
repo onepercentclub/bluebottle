@@ -19,7 +19,7 @@
 	                        </label>
 
 	                        <div class="controls">
-	                            {{view Ember.TextField valueBinding="title" id="task-title" name="task-title" classBinding="errors.title.length:error"}}
+	                            {{view Ember.TextField valueBinding="title" id="task-title" name="task-title" classBinding="errors.title.length:error" placeholder='Be creative! And eh&hellip; avoid the word "help"'}}
 	                        </div>
 
 	                        {{#if errors.title }}
@@ -33,7 +33,7 @@
 	                        </label>
 
 	                        <div class="controls">
-	                            {{view Ember.TextArea valueBinding="description" cols="50" rows="4" name="task-description" id="task-description" classBinding="errors.description.length:error"}}
+	                            {{view Ember.TextArea valueBinding="description" cols="50" rows="4" name="task-description" id="task-description" classBinding="errors.description.length:error" placeholder="What do you need? Give a clear description of the task"}}
 	                        </div>
 
 	                        {{#if errors.description }}
@@ -43,11 +43,11 @@
 
 	                    <li class="control-group">
 	                        <label class="control-label" for="task-end_goal">
-	                            {% trans "End goal" %}
+	                            {% trans "Deliverable" %}
 	                        </label>
 
 	                        <div class="controls">
-	                            {{view Ember.TextArea valueBinding="end_goal" cols="50" rows="2" name="task-end_goal" id="task-end_goal" classBinding="errors.end_goal.length:error"}}
+	                            {{view Ember.TextArea valueBinding="end_goal" cols="50" rows="2" name="task-end_goal" id="task-end_goal" classBinding="errors.end_goal.length:error" placeholder="What do you expect to have in the end?"}}
 	                        </div>
 
 	                        {{#if errors.end_goal }}
@@ -64,7 +64,7 @@
 	                        </label>
 
 	                        <div class="controls">
-	                            {{view App.TaskDeadLineDatePicker valueBinding="deadline" id="task-deadline" name="task-dealine" classBinding="errors.deadline.length:error"}}
+	                            {{view App.TaskDeadLineDatePicker valueBinding="deadline" id="task-deadline" name="task-dealine" classBinding="errors.deadline.length:error" placeholder="When do you need the work to be done or when is your event?"}}
 	                        </div>
 
 	                        {{#if errors.dealine }}
@@ -78,7 +78,7 @@
 	                        </label>
 
 	                        <div class="controls">
-	                            {{view Ember.TextField valueBinding="location" id="task-location" name="task-location" classBinding="errors.location.length:error"}}
+	                            {{view Ember.TextField valueBinding="location" id="task-location" name="task-location" classBinding="errors.location.length:error" placeholder="Can this be done online or on location?"}}
 	                        </div>
 
 	                        {{#if errors.location }}

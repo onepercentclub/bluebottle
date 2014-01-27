@@ -1,18 +1,20 @@
-from django_iban.validators import iban_validator, swift_bic_validator
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.utils.serializers import AddressSerializer, URLField
+from bluebottle.utils.serializers import URLField
 
-from .models import Organization, OrganizationDocument
+from . import get_organization_model
+from .models import OrganizationDocument
+
+
+ORGANIZATION_MODEL = get_organization_model()
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Organization
-        fields = ('id', 'name', 'slug', 'description', 'website', 'twitter', 'facebook', 'skype')
-
+        model = ORGANIZATION_MODEL
+        exclude = ('deleted',)
 
 
 class OrganizationDocumentSerializer(serializers.ModelSerializer):
@@ -29,7 +31,6 @@ class ManageOrganizationSerializer(OrganizationSerializer):
     slug = serializers.SlugField(required=False)
 
     documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
-    registration = PrivateFileSerializer(required=False)
 
     name = serializers.CharField(required=True)
     description = serializers.CharField(required=False)
@@ -41,17 +42,5 @@ class ManageOrganizationSerializer(OrganizationSerializer):
     legal_status = serializers.CharField(required=False)
 
     class Meta:
-        model = Organization
+        model = ORGANIZATION_MODEL
         exclude = ('deleted',)
-
-    def validate_account_iban(self, attrs, source):
-        value = attrs[source]
-        if value:
-            iban_validator(value)
-        return attrs
-
-    def validate_account_bic(self, attrs, source):
-        value = attrs[source]
-        if value:
-            swift_bic_validator(value)
-        return attrs

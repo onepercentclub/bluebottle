@@ -50,7 +50,9 @@
 					</div>
 					{{/if}}
 
+                    {% block_verbatim task_share %}
                     {{view App.SocialShareView classNames="task-share"}}
+                    {% endblock_verbatim task_share %}
 
                     <div class="task-section task-meta">
 

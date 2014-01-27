@@ -24,7 +24,7 @@ install_requires = [
     'South==0.8.1',
     'Sphinx==1.2b1',
 #    'cssmin==0.1.4',
-    'django-admin-tools==0.5.1',
+    'django-admin-tools==0.5.1', # for now replaced by fork
     'django-apptemplates==0.0.1',
 #    'django-celery==3.0.17',
     'django-choices==1.1.11',
@@ -79,6 +79,8 @@ dependency_links = [
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
 
     'https://github.com/onepercentclub/django-docdata/archive/120ae5b8a1da6152d43d4601edc8832268e05515.zip#egg=django-docdata-0.1',
+
+    'https://bitbucket.org/sergei_maertens/django-admin-tools/get/5970496.zip#egg=django-admin-tools-0.5.1',
 ]
 
 # TODO: update

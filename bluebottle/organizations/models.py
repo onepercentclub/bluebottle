@@ -65,8 +65,8 @@ class BaseOrganization(models.Model):
 
 class Organization(BaseOrganization):
     """
-    Standard Project model. If there are any extra fields required, provide
-    your own Project model by extending ``BaseProject``.
+    Standard Organization model. If there are any extra fields required, provide
+    your own Organization model by extending ``BaseOrganization``.
     """
     description = models.TextField(_('description'), blank=True)
     legal_status = models.TextField(
@@ -83,7 +83,7 @@ class OrganizationMember(models.Model):
         owner = ChoiceItem('owner', label=_('Owner'))
         editor = ChoiceItem('editor', label=_('Editor'))
 
-    organization = models.ForeignKey(Organization, verbose_name=_('organization'))
+    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_('organization'))
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
     function = models.CharField(_('function'), max_length=20, choices=MemberFunctions.choices)
 
@@ -95,7 +95,7 @@ class OrganizationMember(models.Model):
 class OrganizationDocument(models.Model):
     """ Document for an Organization """
 
-    organization = models.ForeignKey(Organization, verbose_name=_('organization'))
+    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_('organization'))
     file = models.FileField(
         upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
     author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)

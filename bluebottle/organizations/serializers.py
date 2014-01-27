@@ -30,7 +30,7 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     slug = serializers.SlugField(required=False)
 
-    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', required=False)
+    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', read_only=True)
 
     name = serializers.CharField(required=True)
     description = serializers.CharField(required=False)
@@ -43,4 +43,4 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     class Meta:
         model = ORGANIZATION_MODEL
-        exclude = ('deleted',)
+        exclude = ('deleted', )

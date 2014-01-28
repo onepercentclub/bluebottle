@@ -4,99 +4,60 @@
 
 {% tplhandlebars "home_project_list" %}
 
-    <div class="l-section home-projects">
-        <section class="l-wrapper">
+<div class="l-section home-projects">
+	<section class="l-wrapper">
 
-	    
-            
-	    <div class="project-slider l-full">
+		<div class="project-slider l-full" style="overflow: hidden">
 
-	        	<header class="section-header">
-	            	<h2>{% trans "Choose your project" %}</h2>
-					<p>{% trans "Support it with your time, knowledge or money and receive real-time updates." %}</p>
-	        	</header>
+			<header class="section-header">
+				<h2>{% trans "Choose your project" %}</h2>
+				<p>{% trans "Support it with your time, knowledge or money and receive real-time updates." %}</p>
+			</header>
+		
+			<div class="project-slides" style="width: 20000px">
+				{{#each projects}}
+				<div class="project-preview" style="width: 1100px; float: left">
 
-		<div class="project-preview" id="project-slide-b">
+					<figure class="project-image">
+						<img {{bindAttr src="image" alt="name"}} />
+					</figure>
 
-                    <figure class="project-image">
-                        <img {{bindAttr src="project.image.large" }} width="100%" alt="Project Photo" />
-                    </figure>
+					<article class="project-info">
+						<div class="project-meta">
+							<span class="project-location">
+								<span class="flaticon solid location-pin-1"></span>
+								{{country.name}}
+							</span>
+							<span class="project-theme">
+								<span class="flaticon solid tag-1"></span>
+								{{theme.name}}
+							</span>
+						</div>
 
-                    <article class="project-info">
-                        <div class="project-meta">
-		                    <span class="project-location">
-                                <span class="flaticon solid location-pin-1"></span>
-                                {{project.country.name}}
-                            </span>
-		                    <span class="project-theme">
-                                <span class="flaticon solid tag-1"></span>
-                                {{project.theme.name}}
-                            </span>
-		                </div>
+						<h2 class="project-title">
+							{{#linkTo 'project' this }}
+							{{title}}
+							{{/linkTo}}
+						</h2>
+						<p class="project-description">{{pitch}}</p>
 
-                        <h2 class="project-title">
-                            {{#linkTo 'project' project.id }}
-                                {{project.title}}
-                            {{/linkTo}}
-                        </h2>
-                        <p class="project-description">{{project.pitch}}</p>
+						<div class="project-action">
+							{{#link-to 'project' this class="btn btn-primary btn-iconed"}}
+							<span class="flaticon solid wallet-1"></span> {% trans "View project" %}
+							{{/link-to}}
+						</div>
+					</article>
 
-                        <div class="project-action">
-                            {{#link-to 'project' project class="btn btn-primary btn-iconed"}}
-                                <span class="flaticon solid wallet-1"></span> {% trans "View project" %}
-                            {{/link-to}}
-                        </div>
-                    </article>
+				</div>
+				{{/each}}
+			</div>
 
-                </div>
+			<span {{action prevProject}} class="project-slider-prev">{% trans "Previous project" %}</span>
+			<span {{action nextProject}} class="project-slider-next">{% trans "Next project" %}</span>
 
-		<!-- 
-		     This should have been done using an array and the #each helper
-		     to avoid repetition. Nevertheless, I ran into issues I couldn't
-		     solve like using @first results in a syntax error ?? so I gave
-		     up. It could work with later versions of handlebars ...
-		-->
-
-		<div class="project-preview" id="project-slide-a">
-
-                    <figure class="project-image">
-                        <img {{bindAttr src="project.image.large" }} width="100%" alt="Project Photo" />
-                    </figure>
-
-                    <article class="project-info">
-                        <div class="project-meta">
-		                    <span class="project-location">
-                                <span class="flaticon solid location-pin-1"></span>
-                                {{nextProject.country.name}}
-                            </span>
-		                    <span class="project-theme">
-                                <span class="flaticon solid tag-1"></span>
-                                {{nextProject.theme.name}}
-                            </span>
-		                </div>
-
-                        <h2 class="project-title">
-                            {{#linkTo 'project' nextProject.id }}
-                                {{nextProject.title}}
-                            {{/linkTo}}
-                        </h2>
-                        <p class="project-description">{{nextProject.pitch}}</p>
-
-                        <div class="project-action">
-                            {{#link-to 'project' nextProject class="btn btn-primary btn-iconed"}}
-                                <span class="flaticon solid wallet-1"></span> {% trans "View project" %}
-                            {{/link-to}}
-                        </div>
-                    </article>
-
-                </div>
-
-                <span {{action previousProject}} class="project-slider-prev">{% trans "Previous project" %}</span>
-                <span {{action nextProject}} class="project-slider-next">{% trans "Next project" %}</span>
-
-            </div>
-        </section>
-    </div>
+		</div>
+	</section>
+</div>
 
 {% endtplhandlebars %}
 

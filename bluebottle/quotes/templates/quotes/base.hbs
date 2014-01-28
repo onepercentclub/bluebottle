@@ -4,18 +4,6 @@
 
 
 {% tplhandlebars "quote_list" %}
-   <style type="text/css">
-   /*
-     This CSS is only useful to deal with quotes animated by this template.
-     That is why it is included in this file and not on an external CSS
-     file since it's purpose is directly related to this template.
-   */
-   .quote{
-	overflow-x: hidden;
-	overflow-y: hidden;
-   }
-   </style>
-
 
     <div class="l-section home-quotes">
         <section class="l-wrapper">
@@ -25,7 +13,7 @@
                 	<h1>{% trans "Share a little." %} <em>{%  trans "Change the world." %}</em></h1>
             	</header>
 
-                <div class="quote" id="quote-a">
+                <div class="quote">
                     <figure>
                         <img {{ bindAttr src="quote.user.getAvatar" alt="quote.user.full_name" }} />
                     </figure>
@@ -36,17 +24,7 @@
                     </article>
                 </div>
 
-    		<div class="quote" id="quote-b">
-                    <figure>
-                        <img {{ bindAttr src="next_quote.user.getAvatar" alt="quote.user.full_name" }} />
-                    </figure>
-
-                    <article>
-                        <p class="quote-name">{{ next_quote.user.full_name }}</p>
-                        <p class="quote-content">{{ next_quote.quote }}</p>
-                    </article>
-                </div>
-
+				<div class="quote-actions">
                 {{#linkTo 'projectList' class="btn btn-iconed one"}}
                     <span class="flaticon stroke zoom-2"></span> {% trans "Find projects" %}
                 {{/linkTo}}
@@ -58,6 +36,7 @@
                     <span class="flaticon solid lightbulb-3"></span>
                     {% trans "Pitch a new smart idea" %}
                 {{/link-to}}
+				</div>
             </div>
         </section>
     </div>

@@ -14,17 +14,19 @@ App.HomeBannerView = Ember.View.extend({
 
 
 App.HomeProjectListView = Ember.View.extend({
+    index: 0,
     templateName: 'home_project_list',
 	
     didInsertElement: function() {
         var controller = this.get('controller');
-        controller.loadProject();
-    },
+        var projects_count = $(".project-preview").size();
+        $(".project-slides").width(projects_count * 1100)
+    },    
 });
 
 
 App.HomeQuotesView = Ember.View.extend({
-    templateName: 'home_quotes',
+    templateName: 'quote_list',
 
     didInsertElement: function() {
         var controller = this.get('controller');
@@ -34,17 +36,20 @@ App.HomeQuotesView = Ember.View.extend({
     initQuoteCycle: function() {
         var controller = this.get('controller');
         var view = this;
-
+        
+        controller.loadQuote();
+        
+        
         var quoteIntervalId = setInterval(function() {
             controller.incrementProperty('quoteIndex');
             if (controller.get('quoteIndex') === controller.get('quotes').get('length')) {
                 controller.set('quoteIndex', 0);
             }
-
+        
             controller.loadQuote();
-
+        
         }, 5000);
-
+        
         this.set('quoteIntervalId', quoteIntervalId);
     },
 

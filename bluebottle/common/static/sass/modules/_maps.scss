@@ -44,6 +44,8 @@
 		font-weight: bold;
 		z-index: 10;
 		font-size: $font-size-large;
+		height: 75px;
+		overflow: hidden;
 		a {
 			color: $white;
 		}
@@ -74,9 +76,9 @@
 			
 			.project-description {
 				@include prepend(12);
-				padding: $base-padding;
+				padding: $base-padding / 2 $base-padding;
 				overflow: hidden;
-				max-height: 110px;
+				max-height: 35px;
 				text-overflow: ellipsis;
 			}
 			
@@ -85,8 +87,13 @@
 				padding: 0 $base-padding;
 				font-weight: bold;
 				@include clear;
+				max-height: 26px;
+				overflow: hidden;
 				.tags, .location {
-					@include grid(24,0,0);
+					@include grid(24,0,2);
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					overflow: hidden;
 				}									
 			}
 

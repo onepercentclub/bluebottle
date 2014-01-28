@@ -32,7 +32,11 @@
 
                         <span class="project-header">
                             <figure class="project-image">
+								{{#if project.image.square}}
                                 <img {{bindAttr src="project.image.square" alt="project.title"}} />
+								{{else}}
+								&nbsp;
+								{{/if}}
                             </figure>
                             <h2 class="project-title">
                                 {{ project.title }}

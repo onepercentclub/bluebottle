@@ -12,6 +12,7 @@ class OrganizationFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ORGANIZATION_MODEL
 
     name = factory.Sequence(lambda n: 'Organization_{0}'.format(n))
+    slug = factory.Sequence(lambda n: 'organization_{0}'.format(n))
     address_line1 = "'s Gravenhekje 1a"
     address_line2 = '1011 TG'
     city = 'Amsterdam'

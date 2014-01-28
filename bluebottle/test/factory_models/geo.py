@@ -23,6 +23,5 @@ class CountryFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Country
 
     name = factory.Sequence(lambda n: 'Country_{0}'.format(n))
-    alpha2_code = factory.Sequence(lambda n: 'A{0}'.format(n))
-    alpha3_code = factory.Sequence(lambda n: 'AA{0}'.format(n))
     subregion = SubRegionFactory.create()
+

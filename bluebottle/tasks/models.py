@@ -15,12 +15,6 @@ from taggit_autocomplete_modified.managers import (
 from bluebottle.utils.utils import clean_for_hashtag
 from bluebottle.projects import get_project_model
 
-"""
-    When extending the user model, the serializer should extend too.
-    We provide a default base serializer in sync with the base user model
-    The Django Meta attribute seems the best place for this configuration, so we
-    have to add this.
-"""
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 

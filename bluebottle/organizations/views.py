@@ -1,38 +1,42 @@
+import os
+
 from django.http import HttpResponseForbidden
 from django.views.generic.detail import DetailView
+
 from filetransfers.api import serve_file
 from rest_framework import generics
 
 from bluebottle.utils.utils import get_client_ip
 
-from .models import Organization, OrganizationMember, OrganizationDocument
+from . import get_organization_model
+from .models import OrganizationMember, OrganizationDocument
 from .permissions import IsOrganizationMember
 from .serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
 
 
-
-import os
+ORGANIZATION_MODEL = get_organization_model()
 
 
 class OrganizationList(generics.ListAPIView):
-    model = Organization
+    model = ORGANIZATION_MODEL
     serializer_class = OrganizationSerializer
     paginate_by = 10
 
 
 class OrganizationDetail(generics.RetrieveAPIView):
-    model = Organization
+    model = ORGANIZATION_MODEL
     serializer_class = OrganizationSerializer
 
 
 class ManageOrganizationList(generics.ListCreateAPIView):
-    model = Organization
+    model = ORGANIZATION_MODEL
     serializer_class = ManageOrganizationSerializer
     paginate_by = 10
 
     # Limit the view to only the organizations the current user is member of
     def get_queryset(self):
-        org_ids = OrganizationMember.objects.filter(user=self.request.user).values_list('organization_id', flat=True).all()
+        org_ids = OrganizationMember.objects.filter(
+            user=self.request.user).values_list('organization_id', flat=True).all()
         queryset = super(ManageOrganizationList, self).get_queryset()
         queryset = queryset.filter(id__in=org_ids)
         return queryset
@@ -44,7 +48,7 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
 
 class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):
-    model = Organization
+    model = ORGANIZATION_MODEL
     serializer_class = ManageOrganizationSerializer
     permission_classes = (IsOrganizationMember, )
 
@@ -71,19 +75,22 @@ class ManageOrganizationDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
         obj.ip_address = get_client_ip(self.request)
 
 
-
+#
 # Non API views
+#
 
 # Download private documents
 # OrganizationDocument handled by Bluebottle view
 
 class RegistrationDocumentDownloadView(DetailView):
-    model = Organization
+    model = ORGANIZATION_MODEL
 
-    def get(self, request, pk):
+    def get(self, request, *args, **kwargs):
         obj = self.get_object()
         if request.user.is_staff:
             f = obj.registration.file
             file_name = os.path.basename(f. name)
+
             return serve_file(request, f, save_as=file_name)
+
         return HttpResponseForbidden()

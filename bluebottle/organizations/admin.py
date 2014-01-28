@@ -1,9 +1,11 @@
 from django.contrib import admin
-from django.core.urlresolvers import reverse
 
-
-from .models import Organization, OrganizationDocument, OrganizationMember
+from . import get_organization_model
 from .forms import OrganizationDocumentForm
+from .models import OrganizationDocument, OrganizationMember
+
+
+ORGANIZATION_MODEL = get_organization_model()
 
 
 class OrganizationDocumentInline(admin.StackedInline):
@@ -15,7 +17,7 @@ class OrganizationDocumentInline(admin.StackedInline):
     fields = readonly_fields + ('file', 'author')
 
     def download_url(self, obj):
-        return "<a href='%s'>%s</a>" % (str(obj.document_url), 'Download')
+        return "<a href='{0}'>{1}</a>".format(str(obj.document_url), 'Download')
     download_url.allow_tags = True
 
 
@@ -23,16 +25,16 @@ class OrganizationMemberInline(admin.StackedInline):
     model = OrganizationMember
     raw_id_fields = ('user', )
     extra = 0
+
     
 class OrganizationAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
-    exclude = ('registration',)
+    prepopulated_fields = {'slug': ('name',)}
 
     inlines = (OrganizationMemberInline, OrganizationDocumentInline)
 
     search_fields = ('name', 'description')
 
-admin.site.register(Organization, OrganizationAdmin)
+admin.site.register(ORGANIZATION_MODEL, OrganizationAdmin)
 
 
 class OrganizationMemberAdmin(admin.ModelAdmin):

@@ -8,6 +8,7 @@ from django.db import models
 task_model = settings.TASKS_TASK_MODEL.lower()
 user_model = settings.AUTH_USER_MODEL.lower()
 project_model = settings.PROJECTS_PROJECT_MODEL.lower()
+organizations_model = settings.ORGANIZATIONS_ORGANIZATION_MODEL.lower()
 
 USE_DEFAULT_TASK_MODEL = task_model == 'tasks.task'
 
@@ -102,7 +103,7 @@ class Migration(SchemaMigration):
 
 
     models = {
-        settings.AUTH_USER_MODEL.lower(): {
+        user_model: {
             'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1], 'db_table': "'accounts_bluebottleuser'"},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
@@ -181,33 +182,21 @@ class Migration(SchemaMigration):
             'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
-        u'organizations.organization': { # FIXME: abstract shenanigans
-            'Meta': {'ordering': "['name']", 'object_name': 'Organization'},
-            'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_bank_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [], {'max_length': '11', 'blank': 'True'}),
-            'account_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_iban': ('django_iban.fields.IBANField', [], {'max_length': '34', 'blank': 'True'}),
-            'account_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_number': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_other': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
+        organizations_model: {
+            'Meta': {'object_name': settings.ORGANIZATIONS_ORGANIZATION_MODEL.split('.')[-1], 'db_table': "'organizations_organization'"},
             'address_line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'address_line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'facebook': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'legal_status': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'partner_organizations': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
             'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'registration': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'skype': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
@@ -224,8 +213,8 @@ class Migration(SchemaMigration):
             'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'blank': 'True'}),
             'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
             'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
-            'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['organizations.Organization']", 'null': 'True', 'blank': 'True'}), # FIXME needs to use settings
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
+            'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.ORGANIZATIONS_ORGANIZATION_MODEL), 'null': 'True', 'blank': 'True'}), # FIXME needs to use settings
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
@@ -275,12 +264,12 @@ class Migration(SchemaMigration):
         },
         task_model: {
             'Meta': {'object_name': settings.TASKS_TASK_MODEL.split('.')[-1]},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'author'", 'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'author'", 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deadline': ('django.db.models.fields.DateTimeField', [], {}),
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.PROJECTS_PROJECT_MODEL}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.PROJECTS_PROJECT_MODEL)}),
             'skill': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['tasks.Skill']", 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'default': "'open'", 'max_length': '20'}),
             'time_needed': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
@@ -289,11 +278,11 @@ class Migration(SchemaMigration):
         },
         u'tasks.taskfile': {
             'Meta': {'object_name': 'TaskFile'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.TASKS_TASK_MODEL}),
+            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.TASKS_TASK_MODEL)}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
@@ -302,10 +291,10 @@ class Migration(SchemaMigration):
             'comment': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'member': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.AUTH_USER_MODEL}),
+            'member': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'motivation': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
-            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['%s']" % settings.TASKS_TASK_MODEL}),
+            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.TASKS_TASK_MODEL)}),
             'time_spent': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '0'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         }

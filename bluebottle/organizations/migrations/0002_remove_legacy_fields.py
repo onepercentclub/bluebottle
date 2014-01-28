@@ -1,38 +1,41 @@
+# -*- coding: utf-8 -*-
 import datetime
 from south.db import db
-from south.v2 import DataMigration
-from django.db import models
+from south.v2 import SchemaMigration
+from django.db import models, DatabaseError
 
 
-class Migration(DataMigration):
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        if not db.dry_run:
-            for organization in orm.Organization.objects.all():
-                addresses = organization.organizationaddress_set.all()
-                if addresses:
-                    address = addresses[0]
-                    organization.address_line1 = address.line1
-                    organization.address_line2 = address.line2
-                    organization.city = address.city
-                    organization.state = address.state
-                    organization.country = address.country
-                    organization.postal_code = address.postal_code
-                    organization.save()
-                    organization.organizationaddress_set.all().delete()
+        columns = (
+            'account_bank_name',
+            'account_bank_address',
+            'account_bank_country_id',
+            'account_iban',
+            'account_bic',
+            'account_number',
+            'account_name',
+            'account_city',
+            'account_other'
+        )
+
+        # delete legacy columns
+        for column in columns:
+            # run each delete in a transaction
+            db.start_transaction()
+            try:
+                db.delete_column('organizations_organization', column)
+                db.commit_transaction()
+            except DatabaseError, e:
+                err_msg = e.args[0]
+                db.rollback_transaction()
+                if not 'column "%s" of relation "organizations_organization" does not exist' % column in err_msg:
+                    # re-raise if it's an unexpected exception
+                    raise
 
     def backwards(self, orm):
-        if not db.dry_run:
-            for organization in orm.Organization.objects.all():
-                address = orm.OrganizationAddress()
-                address.organization = organization
-                address.line1 = organization.address_line1
-                address.line2 = organization.address_line2
-                address.city = organization.city
-                address.state = organization.state
-                address.country = organization.country
-                address.postal_code = organization.postal_code
-                address.save()
+        pass
 
     models = {
         u'accounts.bluebottleuser': {
@@ -45,6 +48,7 @@ class Migration(DataMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
+            'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -62,6 +66,8 @@ class Migration(DataMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'skypename': ('django.db.models.fields.CharField', [], {'max_length': '32', 'blank': 'True'}),
+            'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
             'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),
@@ -95,7 +101,7 @@ class Migration(DataMigration):
             'alpha3_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'numeric_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '3'}),
+            'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'oda_recipient': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'subregion': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.SubRegion']"})
         },
@@ -103,26 +109,17 @@ class Migration(DataMigration):
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'numeric_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '3'})
+            'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'})
         },
         u'geo.subregion': {
             'Meta': {'ordering': "['name']", 'object_name': 'SubRegion'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'numeric_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '3'}),
+            'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
         u'organizations.organization': {
-            'Meta': {'ordering': "['name']", 'object_name': 'Organization'},
-            'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_bank_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [], {'max_length': '11', 'blank': 'True'}),
-            'account_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_iban': ('django_iban.fields.IBANField', [], {'max_length': '34', 'blank': 'True'}),
-            'account_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_number': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_other': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
+            'Meta': {'object_name': 'Organization'},
             'address_line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'address_line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
@@ -133,30 +130,17 @@ class Migration(DataMigration):
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'facebook': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'legal_status': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
+            'legal_status': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'partner_organizations': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
             'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'registration': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'skype': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'twitter': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
-        },
-        u'organizations.organizationaddress': {
-            'Meta': {'object_name': 'OrganizationAddress'},
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['organizations.Organization']"}),
-            'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'type': ('django.db.models.fields.CharField', [], {'max_length': '8', 'blank': 'True'})
         },
         u'organizations.organizationdocument': {
             'Meta': {'object_name': 'OrganizationDocument'},

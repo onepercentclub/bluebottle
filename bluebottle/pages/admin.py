@@ -15,7 +15,7 @@ from .models import Page
 
 class PageAdmin(PlaceholderFieldAdmin):
     model = Page
-    list_display = ('title', 'slug', 'status_column', 'modification_date',
+    list_display = ('title', 'slug', 'status_column', 'full_page', 'modification_date',
                     'language')
     list_filter = ('status', 'language', 'slug')
     date_hierarchy = 'publication_date'

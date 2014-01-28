@@ -49,7 +49,7 @@
 				        	{% trans "Phase" %}: <strong>{{ project.status.name }}</strong>
                             <br/>
 	                        {{#if project.editable}}
-	                            {{#link-to "myProject" project tagName="a" class="btn btn-iconed right"}}
+	                            {{#link-to "myProject" project tagName="a" class="btn-link right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Edit" %}
 	                            {{/link-to}}
@@ -59,12 +59,12 @@
 	                                {% trans "Project is locked" %}
 	                        {{/if}}
 	                        {{#if project.viewable}}
-	                            {{#link-to "project" project.id class="btn btn-iconed right"}}
+	                            {{#link-to "project" project.id class="btn-link right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Post update" %}
 	                            {{/link-to}}
                                 <br/>
-	                            {{#link-to "taskNew" project.id class="btn btn-iconed right"}}
+	                            {{#link-to "taskNew" project.id class="btn-link right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Create task" %}
 	                            {{/link-to}}

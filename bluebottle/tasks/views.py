@@ -36,6 +36,10 @@ class TaskPreviewList(generics.ListAPIView):
                            Q(description__icontains=text) |
                            Q(end_goal__icontains=text))
 
+        skill = self.request.QUERY_PARAMS.get('skill', None)
+        if skill:
+            qs = qs.filter(skill=skill)
+
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 
         if ordering == 'newest':

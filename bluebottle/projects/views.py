@@ -156,6 +156,13 @@ class ProjectThemeList(generics.ListAPIView):
     paginate_by = 10
 
 
+class ProjectUsedThemeList(ProjectThemeList):
+    def get_queryset(self):
+        qs = super(ProjectUsedThemeList, self).get_queryset()
+        theme_ids = PROJECT_MODEL.objects.filter(status__viewable=True).values_list('theme', flat=True).distinct()
+        return qs.filter(id__in=theme_ids)
+
+
 class ProjectThemeDetail(generics.RetrieveAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer

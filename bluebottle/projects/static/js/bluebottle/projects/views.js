@@ -123,6 +123,8 @@ App.ThemeSelectView = Em.Select.extend({
     prompt: "Pick a theme"
 });
 
+App.UsedThemeSelectView = App.ThemeSelectView.extend();
+
 App.MyProjectView = Em.View.extend({
     templateName: 'my_project'
 });

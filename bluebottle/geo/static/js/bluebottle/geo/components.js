@@ -44,7 +44,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     zoom_level:  3,
     map: null,
 	markers: [],
-    info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{title}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
+    info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{#link-to "project" this}}{{title}}{{/link-to}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
 	icon: '/static/assets/images/icons/marker.png',
 
@@ -128,9 +128,10 @@ App.BbProjectMapComponent = Ember.Component.extend({
             'image': project.get('image'),
             'location': project.get('country.name'),
 			'theme_name': project.get('theme.name'),
-			'pitch': project.get('pitch')
+			'pitch': project.get('pitch'),
+            'slug': project.get('slug')
         }
-
+        
         var html = template(data);
 
         var latLng = new google.maps.LatLng(project.get('latitude'), project.get('longitude'));

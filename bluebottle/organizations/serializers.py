@@ -43,4 +43,4 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     class Meta:
         model = ORGANIZATION_MODEL
-        exclude = ('deleted', )
+        exclude = ('deleted',)

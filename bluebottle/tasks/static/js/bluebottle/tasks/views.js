@@ -84,7 +84,6 @@ App.TaskDeadLineDatePicker = App.DatePicker.extend({
     config: {minDate: 0, maxDate: "+3M"}
 });
 
-
 /*
  Form Elements
  */
@@ -110,3 +109,5 @@ App.SkillSelectView = Em.Select.extend({
     prompt: "Pick a skill"
 });
 
+
+App.UsedSkillSelectView = App.SkillSelectView.extend();

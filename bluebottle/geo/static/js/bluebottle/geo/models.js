@@ -5,3 +5,6 @@ App.Country = DS.Model.extend({
     oda: DS.attr('boolean')
 });
 
+App.UsedCountry = App.Country.extend({
+	url: "geo/used_countries"
+});

@@ -30,8 +30,6 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
                     controller.get('content').pushObject(record);
                 }
             });
-            // var taskCount = controller.get('content').get('length');
-            // controller.set('taskCount', taskCount);
         });
     }
 });
@@ -133,8 +131,19 @@ App.TaskRoute = Em.Route.extend({
 });
 
 
-App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
+App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
+    setupController: function(controller, model) {
+        this._super(controller, model);
+        App.UsedSkill.find().then(function(skill_list){
+            App.UsedSkillSelectView.reopen({
+                content: skill_list
+            });
+        });
+    }
+});
 
+
+App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
     parentId: function(){
         return this.modelFor('task').get('id');
     }.property(),

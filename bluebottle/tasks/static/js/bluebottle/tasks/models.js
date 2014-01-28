@@ -145,6 +145,12 @@ App.Skill = DS.Model.extend({
 });
 
 
+// model for the skills effectively coupled with a task
+App.UsedSkill = App.Skill.extend({
+    url: 'tasks/used_skills'
+});
+
+
 /*
 Preview model that doesn't contain all the properties.
  */

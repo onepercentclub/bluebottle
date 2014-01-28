@@ -5,7 +5,7 @@ from ..views import (
     ManageProjectDetail, ManageProjectList, ProjectDetail,
     ProjectDetailFieldList, ProjectList, ProjectThemeDetail, ProjectThemeList,
     ProjectPreviewDetail, ProjectPreviewList,
-    ProjectPhaseDetail, ProjectPhaseList)
+    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList)
 
 
 urlpatterns = patterns(
@@ -25,6 +25,7 @@ urlpatterns = patterns(
         name='project_phase'),
 
     url(r'^themes/$', ProjectThemeList.as_view(), name='project_theme_list'),
+    url(r'^used_themes/$', ProjectUsedThemeList.as_view(), name='project_used_theme_list'),
     url(r'^themes/(?P<pk>\d+)$', ProjectThemeDetail.as_view(),
         name='project_theme_detail'),
 

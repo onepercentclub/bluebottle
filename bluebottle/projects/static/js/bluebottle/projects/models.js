@@ -169,6 +169,11 @@ App.Theme = DS.Model.extend({
     name: DS.attr('string')
 });
 
+
+App.UsedTheme = App.Theme.extend({
+    url: 'projects/used_themes'
+});
+
 /* Project Manage Models */
 
 App.MyProjectBudgetLine = DS.Model.extend({

@@ -46,6 +46,18 @@ App.Router.map(function(){
  * Project Routes
  */
 
+App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
+    setupController: function(controller, model) {
+        this._super(controller, model);
+        App.UsedTheme.find().then(function(theme_list){
+            App.UsedThemeSelectView.reopen({
+                content: theme_list
+            });
+        });
+    }
+});
+
+
 App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         // Crap hack because Ember somehow doesn't strip query-params.

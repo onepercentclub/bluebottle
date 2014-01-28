@@ -7,10 +7,11 @@
     <form>
             
         {% block_verbatim profile_form %}
-        
+            {% block_verbatim profile_header %}
             <legend>
                 <strong>{% trans "Edit your profile" %}</strong>
             </legend>
+            {% endblock_verbatim profile_header %}
             {{ view }}
             {% block_verbatim fieldset1 %}
                 <fieldset>

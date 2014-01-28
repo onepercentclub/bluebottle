@@ -53,7 +53,8 @@
 
 					<p class="account-links">
 		                <a class="account-website" {{bind-attr href="website"}}>
-                            <span class="flaticon stroke link-1"></span>{{website}}
+                            <span class="flaticon stroke link-1"></span>
+							{% trans "Website" %}
                         </a>
 		                <a class="account-facebook" {{bind-attr href="get_facebook"}}><span class="flaticon social facebook-1"></span> {% trans "Facebook profile" %}</a>
 		                <a class="account-twitter" {{bind-attr href="get_twitter"}}><span class="flaticon social twitter-1"></span> @{{twitter}}</a>

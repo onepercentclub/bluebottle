@@ -75,6 +75,7 @@ App.MyOrganization = DS.Model.extend({
     state: DS.attr('string', {defaultValue: ""}),
     country: DS.attr('string'),
     postal_code: DS.attr('string', {defaultValue: ""}),
+    phone_number: DS.attr('string', {defaultValue: ""}),
 
     // Internet
     website: DS.attr('string', {defaultValue: ""}),

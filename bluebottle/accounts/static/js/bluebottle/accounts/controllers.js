@@ -56,23 +56,8 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     updateCurrentUser: function(record) {
         var currentUser = App.CurrentUser.find('current');
         currentUser.reload();
-    },
+    }
 
-    allSkills: function() {
-        return App.Skill.find();
-    }.property(),
-
-    allCountries: function(){
-        return App.Country.find();
-    }.property(),
-
-    allThemes: function(){
-        return App.Theme.find();
-    }.property(),
-
-    allOffices: function(){
-        return App.Office.find();
-    }.property()
 });
 
 
@@ -86,7 +71,7 @@ App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
         list.addObject({ name: gettext('School'), value: 'school'});
         list.addObject({ name: gettext('Club / Association'), value: 'group'});
         return list;
-    }).property()
+    }).property(),
 
 });
 

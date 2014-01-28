@@ -7,11 +7,11 @@
     <li class="task-item">
     	{{#link-to 'task' id}}
 
-    	    <h2 class="task-category"><span class="flaticon solid wrench-1"></span> {{task.skill.name}}</h2>
+            <h2 class="task-category"><span class="flaticon solid wrench-1"></span> {{task.skill.name}}</h2>
 
-    	    <span class="task-header">
+            <span class="task-header">
                 <span class="task-image">
-                	<img {{bindAttr src="project.image.square" }} />
+                	<img {{bindAttr src="image" }} />
             	</span>
                 <span class="task-title">
                 	<h3>{{task.title}}</h3>

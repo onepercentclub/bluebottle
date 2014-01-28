@@ -126,7 +126,11 @@ App.Task = DS.Model.extend({
             }
         }
         return hours + ' hours';
-    }.property('time_needed')
+    }.property('time_needed'),
+
+    image: function(){
+        return this.get('project.image.small');
+    }.property('project.image')
 
 });
 
@@ -146,7 +150,11 @@ Preview model that doesn't contain all the properties.
  */
 App.TaskPreview = App.Task.extend({
     url: 'tasks/previews',
-    project: DS.belongsTo('App.ProjectPreview')
+    project: DS.belongsTo('App.ProjectPreview'),
+
+    image: function(){
+        return this.get('project.image');
+    }.property('project.image')
 });
 
 

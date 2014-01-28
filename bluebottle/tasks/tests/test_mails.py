@@ -1,9 +1,9 @@
 from django.core import mail
 from django.test import TestCase
 
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.accounts_factories import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects_factories import ProjectFactory
+from bluebottle.test.factory_models.tasks_factories import TaskFactory, TaskMemberFactory
 
 from bluebottle.tasks import get_task_model
 from bluebottle.tasks.models import TaskMember
@@ -20,19 +20,19 @@ class TaskEmailTests(TestCase):
 
         self.some_project = ProjectFactory.create()
         self.task = TaskFactory(
-            status = BB_TASK_MODEL.TaskStatuses.in_progress,
-            author = self.some_project.owner
+            status=BB_TASK_MODEL.TaskStatuses.in_progress,
+            author=self.some_project.owner
             )
 
         self.taskmember1 = TaskMemberFactory(
-                member = self.some_user,
-                task = self.task,
-                status = TaskMember.TaskMemberStatuses.applied
+                member=self.some_user,
+                task=self.task,
+                status=TaskMember.TaskMemberStatuses.applied
             )
         self.taskmember2 = TaskMemberFactory(
-                member = self.another_user,
-                task = self.task,
-                status = TaskMember.TaskMemberStatuses.applied
+                member=self.another_user,
+                task=self.task,
+                status=TaskMember.TaskMemberStatuses.applied
             )
 
     def test_mail_taskmember_applied_sent(self):

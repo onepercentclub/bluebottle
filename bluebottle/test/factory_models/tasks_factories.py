@@ -7,8 +7,8 @@ import factory.fuzzy
 
 from bluebottle.tasks.models import Task, TaskMember, Skill
 
-from .accounts import BlueBottleUserFactory
-from .projects import ProjectFactory
+from .accounts_factories import BlueBottleUserFactory
+from .projects_factories import ProjectFactory
 
 
 class SkillFactory(factory.DjangoModelFactory):

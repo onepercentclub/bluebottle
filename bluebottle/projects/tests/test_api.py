@@ -4,10 +4,10 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 from bluebottle.projects.models import ProjectBudgetLine
-from bluebottle.test.factory_models.projects import (
+from bluebottle.test.factory_models.projects_factories import (
     ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
     ProjectBudgetLineFactory, ProjectPhaseFactory)
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.accounts_factories import BlueBottleUserFactory
 
 from ..models import ProjectPhase
 

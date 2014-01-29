@@ -300,7 +300,7 @@ App.MapPicker = Em.View.extend({
         var view = this;
         var point = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
         var mapOptions = {
-            zoom: 6,
+            zoom: 2,
             center: point,
             mapTypeId: google.maps.MapTypeId.ROADMAP
           };

@@ -10,7 +10,9 @@ App.HomeBannerView = Ember.View.extend({
             delay: 10000
         });
         
-        $(".home-carousel .carousel-nav li:first-child").addClass("is-active");        
+        setTimeout(function() {
+         $(".home-carousel .carousel-nav li:first-child").addClass("is-active");   
+        }, 200);
     }
 });
 

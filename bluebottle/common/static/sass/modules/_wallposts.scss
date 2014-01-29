@@ -432,12 +432,12 @@
 			padding: $base-padding/4 $base-padding/2;
 			vertical-align: middle;
 		}
-		.wallpost-action-decline {
-			color: $black;
-			&:hover {
-				color: $black;
-			}
-		}
+//		.wallpost-action-decline {
+//			color: $black;
+//			&:hover {
+//				color: $black;
+//			}
+//		}
 	}
 	.file-link {
 		
@@ -450,5 +450,9 @@
 	}
 	.btn-spacer {
 		margin: 0 $base-margin/2;
+	}
+	.wallpost-delete {
+		float: right;
+		text-decoration: none;
 	}
 }

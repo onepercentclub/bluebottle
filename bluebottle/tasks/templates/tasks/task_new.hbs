@@ -13,82 +13,18 @@
     		    </legend>
 	            <fieldset>
 	                <ul>
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-title">
-	                            {% trans "Title of your task" %}
-	                        </label>
+                        {% bb_component 'bb-text-field' label=_('Title of your task') valueBinding='title' errors='errors.people_needed' placeholder=_('Be creative! And eh&hellip; avoid the word "help"') %}
 
-	                        <div class="controls">
-	                            {{view Ember.TextField valueBinding="title" id="task-title" name="task-title" classBinding="errors.title.length:error" placeholder='Be creative! And eh&hellip; avoid the word "help"'}}
-	                        </div>
+                        {% bb_component 'bb-text-area' label=_('Description') valueBinding='description' rows='5' errors='errors.description' placeholder=_('What do you need? Give a clear description of the task') %}
 
-	                        {{#if errors.title }}
-	                            <div class="has-errors">{{#each errors.title }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
+                        {% bb_component 'bb-text-area' label=_('Deliverable') valueBinding='end_goal' rows='3' errors='errors.end_goal' placeholder=_('What do you expect to have in the end?') %}
 
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-description">
-	                            {% trans "Description" %}
-	                        </label>
+                        {% bb_component 'bb-text-field' label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type="'number'" %}
 
-	                        <div class="controls">
-	                            {{view Ember.TextArea valueBinding="description" cols="50" rows="4" name="task-description" id="task-description" classBinding="errors.description.length:error" placeholder="What do you need? Give a clear description of the task"}}
-	                        </div>
+                        {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate="'12M'" valueBinding='deadline' errors='errors.deadline' %}
 
-	                        {{#if errors.description }}
-	                            <div class="has-errors">{{#each errors.description }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
+                        {% bb_component 'bb-text-field' label=_('Location') valueBinding='location' errors='errors.location' placeholder=_('Can this be done online or on location?') %}
 
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-end_goal">
-	                            {% trans "Deliverable" %}
-	                        </label>
-
-	                        <div class="controls">
-	                            {{view Ember.TextArea valueBinding="end_goal" cols="50" rows="2" name="task-end_goal" id="task-end_goal" classBinding="errors.end_goal.length:error" placeholder="What do you expect to have in the end?"}}
-	                        </div>
-
-	                        {{#if errors.end_goal }}
-	                            <div class="has-errors">{{#each errors.end_goal }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
-	                </ul>
-	            </fieldset>
-	            <fieldset>
-	                <ul>
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-deadline">
-	                            {% trans "Dead line" %}
-	                        </label>
-
-	                        <div class="controls">
-	                            {{view App.TaskDeadLineDatePicker valueBinding="deadline" id="task-deadline" name="task-dealine" classBinding="errors.deadline.length:error" placeholder="When do you need the work to be done or when is your event?"}}
-	                        </div>
-
-	                        {{#if errors.dealine }}
-	                            <div class="has-errors">{{#each errors.dealine }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
-
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-location">
-	                            {% trans "Location" %}
-	                        </label>
-
-	                        <div class="controls">
-	                            {{view Ember.TextField valueBinding="location" id="task-location" name="task-location" classBinding="errors.location.length:error" placeholder="Can this be done online or on location?"}}
-	                        </div>
-
-	                        {{#if errors.location }}
-	                            <div class="has-errors">{{#each errors.location }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
-	                </ul>
-	            </fieldset>
-	            <fieldset>
-	                <ul>
 	                    <li class="control-group">
 	                        <label class="control-label" for="task-time-needed">
 	                            {% trans "Time needed (approximately)" %}

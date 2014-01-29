@@ -9,6 +9,8 @@ App.HomeBannerView = Ember.View.extend({
             fluid: true,
             delay: 10000
         });
+        
+        $(".home-carousel .carousel-nav li:first-child").addClass("is-active");        
     }
 });
 
@@ -20,7 +22,7 @@ App.HomeProjectListView = Ember.View.extend({
     didInsertElement: function() {
         var controller = this.get('controller');
         var projects_count = $(".project-preview").size();
-        $(".project-slides").width(projects_count * 1100)
+        $(".project-slides").width(projects_count * 1100);
     },    
 });
 

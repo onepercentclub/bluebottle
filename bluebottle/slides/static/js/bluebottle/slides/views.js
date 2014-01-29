@@ -10,5 +10,8 @@ App.SlideListView = Ember.View.extend({
             fluid: true,
             delay: 10000
         });
+        
+        $(".home-carousel .carousel-nav li:first-child").addClass("is-active");
+        
     }
 });

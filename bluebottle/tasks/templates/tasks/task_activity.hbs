@@ -76,6 +76,7 @@
 		</span>
         {{/if}}
 
+		{{#if members}}
 		<h3>{% trans "Task members" %}</h3>
 		<div class="task-pending-requests">
         {{#each members}}
@@ -119,7 +120,7 @@
                             {% trans "Application pending..." %}
                         </div>
                     {{else}}
-                        <a class="wallpost-action-decline" {{action 'editTaskMember' this}}>
+                        <a class="btn wallpost-action-decline" {{action 'editTaskMember' this}}>
                             {% trans "Edit status" %}
                         </a>
                     {{/if}}
@@ -133,10 +134,8 @@
                 </div>
                 --}}
             </article>
-        {{else}}
-            {% trans "No members yet" %}<br/>
         {{/each}}
-
+		{{/if}}
 
     </div>
 {% endtplhandlebars %}

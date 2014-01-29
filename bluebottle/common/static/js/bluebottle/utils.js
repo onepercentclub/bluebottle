@@ -81,13 +81,16 @@ App.Editable = Ember.Mixin.create({
                 model.transitionTo('loaded.created.uncommitted');
             });
 
-            model.one('didUpdate', function(){
-                controller.send('goToNextStep');
-            });
+            if  (model.get('isNew')) {
+                model.one('didCreate', function(){
+                    controller.send('goToNextStep');
+                });
+            } else {
+                model.one('didUpdate', function(){
+                    controller.send('goToNextStep');
+                });
+            }
 
-            model.one('didCreate', function(){
-                controller.send('goToNextStep');
-            });
 
             model.save();
         }

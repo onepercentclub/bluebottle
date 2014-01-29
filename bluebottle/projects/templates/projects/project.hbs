@@ -164,15 +164,13 @@
                 {% block_verbatim 'project_wallpost_tab' %}
                     <li class="tab-updates">
                         {{#link-to 'project.index'}}
-                            <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
+                            <span class="tab-icon amount">{{wallpost_count}}</span>
                             <strong class="tab-title">
                                 {% trans "Updates" %}
 
-                                {{#if controllers.projectIndex.meta.total}}
+                                {{#if wallpost_count}}
                                     {{#if controllers.projectIndex.firstObject.isLoaded}}
                                         <em class="tab-subtitle">{{localize controllers.projectIndex.firstObject.created formatting="X"}}</em>
-                                    {{else}}
-                                        <em class="tab-subtitle">{% trans "Loading&#8230;" %}</em>
                                     {{/if}}
                                 {{else}}
                                     <em class="tab-subtitle">{% trans "No updates" %}</em>

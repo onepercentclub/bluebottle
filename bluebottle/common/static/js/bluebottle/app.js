@@ -2,7 +2,7 @@ App = Em.Application.create({
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
-    LOG_TRANSITIONS: true,
+    LOG_TRANSITIONS: DEBUG,
 
 
     // We store language & locale here because they need to be available before loading templates.

@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField, HumandReadableChoiceField
+from bluebottle.utils.serializers import MetaField, HumanReadableChoiceField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
@@ -49,7 +49,7 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()
-    status = HumandReadableChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
+    status = HumanReadableChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
 
     tags = TagSerializer()
     meta_data = MetaField(
@@ -62,7 +62,9 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = BB_TASK_MODEL
         fields = ('id', 'title', 'project', 'description', 'end_goal', 'members', 'files', 'location', 'skill',
-                  'time_needed', 'author', 'status', 'created', 'deadline', 'tags', 'meta_data')
+                  'time_needed', 'author', 'status', 'created', 'deadline', 'tags', 'meta_data',
+                  'people_needed'
+        )
 
 
 class SkillSerializer(serializers.ModelSerializer):

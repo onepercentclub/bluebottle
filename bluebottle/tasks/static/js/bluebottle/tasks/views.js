@@ -81,7 +81,7 @@ App.TaskFileNewView = Em.View.extend({
 
 
 App.TaskDeadLineDatePicker = App.DatePicker.extend({
-    config: {minDate: 0, maxDate: "+3M"}
+    config: {minDate: 0, maxDate: "+1Y"}
 });
 
 /*

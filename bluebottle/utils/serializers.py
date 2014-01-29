@@ -276,7 +276,7 @@ class DefaultSerializerMixin(object):
         return getattr(module, cls_name)
 
 
-class HumandReadableChoiceField(serializers.ChoiceField):
+class HumanReadableChoiceField(serializers.ChoiceField):
     def field_to_native(self, obj, field_name):
         """
         Given and object and a field name, returns the value that should be

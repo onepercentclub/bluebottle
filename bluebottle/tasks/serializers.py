@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField
+from bluebottle.utils.serializers import MetaField, HumandReadableChoiceField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
@@ -10,6 +10,7 @@ from . import get_task_model
 from .models import TaskMember, TaskFile, Skill
 
 BB_TASK_MODEL = get_task_model()
+
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
@@ -48,6 +49,7 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()
+    status = HumandReadableChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
 
     tags = TagSerializer()
     meta_data = MetaField(

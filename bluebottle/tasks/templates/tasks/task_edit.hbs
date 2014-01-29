@@ -92,6 +92,19 @@
 	                            <div class="has-errors">{{#each errors.end_goal }}<p>{{this}}</p>{{/each}}</div>
 	                        {{/if}}
 	                    </li>
+			    <li class="control-group">
+	                        <label class="control-label" for="task-people_needed">
+	                            {% trans "People needed" %}
+	                        </label>
+
+	                        <div class="controls">
+	                            {{view Ember.TextField valueBinding="people_needed"  name="task-people_needed" id="task-people_needed" classBinding="errors.people_needed.length:error"}}
+	                        </div>
+
+	                        {{#if errors.people_needed }}
+	                            <div class="has-errors">{{#each errors.people_needed }}<p>{{this}}</p>{{/each}}</div>
+	                        {{/if}}
+	                    </li>
 	                </ul>
 	            </fieldset>
 	            <fieldset>
@@ -147,7 +160,7 @@
 	                        </label>
 
 	                        <div class="controls">
-	                            {{view App.SkillSelectView valueBinding="skill" id="task-skill" name="task-skill" classBinding="errors.skill.length:error"}}
+	                          {{view App.SkillSelectView valueBinding="skill" id="task-skill" name="task-skill" classBinding="errors.skill.length:error"}}
 	                        </div>
 
 	                        {{#if errors.skill }}

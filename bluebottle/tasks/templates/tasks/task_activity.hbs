@@ -117,12 +117,14 @@
                             <a class="btn wallpost-action-accept" {{action 'editTaskMember' this}}>
                                 {% trans "Accept" %}
                             </a>
-                            {% trans "Application pending..." %}
+                            <span class="status">{% trans "Application pending..." %}</span>
                         </div>
                     {{else}}
-                        <a class="btn wallpost-action-decline" {{action 'editTaskMember' this}}>
-                            {% trans "Edit status" %}
-                        </a>
+	                    <div class="wallpost-buttons">
+	                        <a class="btn wallpost-action-decline" {{action 'editTaskMember' this}}>
+	                            {% trans "Edit status" %}
+	                        </a>
+						</div>
                     {{/if}}
                 {{/if}}
 

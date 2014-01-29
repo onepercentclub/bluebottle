@@ -44,7 +44,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     zoom_level:  3,
     map: null,
 	markers: [],
-    info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-description">{{#link-to "project" this}}{{title}}{{/link-to}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
+    info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-title">{{#link-to "project" this}}{{title}}{{/link-to}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
 	icon: '/static/assets/images/icons/marker.png',
 
@@ -159,6 +159,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	    });
         		
 	    google.maps.event.addListener(marker, 'click', function() {
+            this.get("map").panTo(marker.getPosition());
             if (view.active_info_window) {
                 view.active_info_window.close();
             }

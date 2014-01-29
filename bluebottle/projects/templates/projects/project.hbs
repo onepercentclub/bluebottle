@@ -7,32 +7,29 @@
     <div class="l-section detail" id="project-detail">
         <section class="l-wrapper">
 
-            <figure class="project-image l-half">
+            <figure class="project-image">
                 <img {{bindAttr src="image.large"}} width="100%" alt="Photo" />
             </figure>
 
-            <div class="l-half">
-
-                <article class="project-info">
-					
-                    <div class="project-meta">
-						{{!--}}
-						<span class="project-deadline"><span class="flaticon stroke time-1"></span> {{daysToGo}}</span>
-						{{--}}
-                        <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
-                        <span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.name}}</span>
-                    </div>
-					
-					{# no social icons in the project template #}
+            <article class="project-info">
+				
+                <div class="project-meta">
 					{{!--}}
-                    {{view App.SocialShareView}}
+					<span class="project-deadline"><span class="flaticon stroke time-1"></span> {{daysToGo}}</span>
 					{{--}}
-                    <h1 class="project-title">{{title}}</h1>
-                    <p class="project-description">{{pitch}}</p>
-					<p class="project-plan-link"><span class="flaticon solid book-4"></span> {{#link-to 'projectPlan'}}{% trans "Read full project plan" %}{{/link-to}}
-                </article>
-
-            </div>
+                    <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
+                    <span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.name}}</span>
+                </div>
+				
+				{# no social icons in the project template #}
+				{{!--}}
+                {{view App.SocialShareView}}
+				{{--}}
+                <h1 class="project-title">{{title}}</h1>
+                <p class="project-description">{{pitch}}</p>
+				<p><strong>{{daysToGo}}</strong></p>
+				<p class="project-plan-link"><span class="flaticon solid book-4"></span> {{#link-to 'projectPlan'}}{% trans "Read full project plan" %}{{/link-to}}
+            </article>
         </section>
 	</div>
 	

@@ -432,12 +432,10 @@
 			padding: $base-padding/4 $base-padding/2;
 			vertical-align: middle;
 		}
-//		.wallpost-action-decline {
-//			color: $black;
-//			&:hover {
-//				color: $black;
-//			}
-//		}
+		.status {
+			text-transform: none;
+			float: right;
+		}
 	}
 	.file-link {
 		

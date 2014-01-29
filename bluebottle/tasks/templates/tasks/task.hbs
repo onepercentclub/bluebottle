@@ -8,38 +8,32 @@
         <div class="l-section" id="task-details">
             <section class="l-wrapper">
 
-                <div class="l-content">
-
-                    <div class="task-badge">
-
-                        <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> <img {{bindAttr src="project.image.small" alt="project.title"}}>
-
-                    </div>
-
-                    <article class="task-description">
-
-                        <header class="task-header">
-                            <h1 class="task-title">{{title}}</h1>
-                        </header>
-
-                        <p class="task-project">{% trans "For project" %} {{#link-to 'project' project}}{{project.title}}{{/link-to}}</p>
-
-                        {{#if description}}
-                        <p>{{linebreaks description}}</p>
-                        {{/if}}
-
-                        {{#if end_goal}}
-                        <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
-                        {{/if}}
-
-                        {# TODO: commented out until we have pagination #}
-                        {{!--}}
-                        <a href="#" class="task-read-more"><span class="flaticon solid down-circle-4"></span> {% trans "Read more" %}</a>
-                        {{--}}
-                    </article>
+                <div class="task-badge">
+                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> <img {{bindAttr src="project.image.small" alt="project.title"}}>
                 </div>
 
-                <sidebar class="l-sidebar">
+                <article class="task-description">
+                    <header class="task-header">
+                        <h1 class="task-title">{{title}}</h1>
+                    </header>
+
+                    <p class="task-project">{% trans "For project" %} {{#link-to 'project' project}}{{project.title}}{{/link-to}}</p>
+
+                    {{#if description}}
+                    <p>{{linebreaks description}}</p>
+                    {{/if}}
+
+                    {{#if end_goal}}
+                    <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
+                    {{/if}}
+
+                    {# TODO: commented out until we have pagination #}
+                    {{!--}}
+                    <a href="#" class="task-read-more"><span class="flaticon solid down-circle-4"></span> {% trans "Read more" %}</a>
+                    {{--}}
+                </article>
+
+                <sidebar class="task-sidebar">
 					
 					{{#if canEdit}}
 					<div class="edit-task">

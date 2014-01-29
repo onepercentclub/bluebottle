@@ -34,7 +34,7 @@
 	.task-badge {
 		border: 2px solid $white;
 		position: relative;
-		@include grid(12,0,2);	
+		@include grid(8,1,1);	
 		
 //		&:after {
 //			left: 100%;
@@ -57,6 +57,9 @@
 			width: 100%;
 			border-bottom: 2px solid $white;
 		}
+	}
+	.task-sidebar {
+		@include grid(16,0,1)
 	}
 	.edit-task {
 		text-align: right;
@@ -85,7 +88,8 @@
     
 	.task-description {
 		position: relative;
-		@include grid(36,0,0);
+//		@include grid(36,0,0);
+		@include grid(24,0,1);		
 //		border-bottom: 1px solid $gray;
 		margin-bottom: $base-margin * 2;
 		
@@ -228,7 +232,7 @@
 	#task-members {
 		
 		background-color: $gray-darker;
-		padding: $base-padding;
+		padding: $base-padding 0;
 		
 		.task-members-list {
 		    @include grid(32,1,1);
@@ -263,7 +267,7 @@
 	#wallposts {
 		
 		background-color: $gray-light;
-		padding: $base-padding;
+		padding: $base-padding 0;
 		color: $black;
 		
 		.wallposts-timeline {

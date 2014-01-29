@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField
+from bluebottle.utils.serializers import MetaField, HumanReadableChoiceField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
@@ -10,6 +10,7 @@ from . import get_task_model
 from .models import TaskMember, TaskFile, Skill
 
 BB_TASK_MODEL = get_task_model()
+
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
@@ -48,8 +49,8 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()
-    people_needed = serializers.IntegerField(required=False)
- 
+    status = HumanReadableChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
+
     tags = TagSerializer()
     meta_data = MetaField(
         title = 'get_meta_title',
@@ -57,21 +58,6 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
         tweet = 'get_tweet',
         image_source = 'project__projectplan__image',
         )
-
-    def validate_people_needed(self, attrs, source):
-        """Adds prettier error messages to the tasks"""
-        
-        try:
-            int(attrs[source])
-        except ValueError:
-            raise serializers.ValidationError('The value must be a number')
-        except TypeError:
-            raise serializers.ValidationError('The value must be a number')
-        except KeyError:
-            #The field was not provided, it is not required so nothing has to be done
-            pass
-
-        return attrs
 
     class Meta:
         model = BB_TASK_MODEL

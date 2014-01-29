@@ -89,7 +89,8 @@ App.Task = DS.Model.extend({
     members: DS.hasMany('App.TaskMember'),
     files: DS.hasMany('App.TaskFile'),
     skill: DS.belongsTo('App.Skill'),
-    people_needed: DS.attr('number', {defaultValue: '1'}),
+    // NOTE: it really is a number, but this allows us to use proper server side validation
+    people_needed: DS.attr('string', {defaultValue: '1'}),
     location: DS.attr('string', {defaultValue: ''}),
     time_needed: DS.attr('number'),
     status: DS.attr('string', {defaultValue: 'open'}),

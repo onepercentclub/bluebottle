@@ -59,8 +59,6 @@ App.Editable = Ember.Mixin.create({
 
         goToNextStep: function(){
             $("html, body").animate({ scrollTop: 0 }, 600);
-            console.log('goToNextStep');
-            console.log(this.toString());
             if (this.get('nextStep')) {
                 this.transitionToRoute(this.get('nextStep'));
             } else {
@@ -73,9 +71,6 @@ App.Editable = Ember.Mixin.create({
         updateRecordOnServer: function(){
             var controller = this;
             var model = this.get('model');
-
-            console.log('updateRecordOnServer');
-            console.log(this.toString());
 
             model.one('becameInvalid', function(record) {
                 controller.set('saving', false);

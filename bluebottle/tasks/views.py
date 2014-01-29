@@ -40,6 +40,10 @@ class TaskPreviewList(generics.ListAPIView):
         if skill:
             qs = qs.filter(skill=skill)
 
+        status = self.request.QUERY_PARAMS.get('status', None)
+        if status:
+            qs = qs.filter(status=status)
+
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 
         if ordering == 'newest':

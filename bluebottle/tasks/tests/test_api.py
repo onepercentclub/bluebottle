@@ -3,16 +3,18 @@ from django.utils import timezone
 
 from rest_framework import status
 
+from bluebottle.projects import get_project_model
+from bluebottle.projects.models import ProjectPhase
 from bluebottle.tasks import get_task_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory
 
 import json
 
 BB_TASK_MODEL = get_task_model()
-
+BB_PROJECT_MODEL = get_project_model()
 
 
 class TaskApiIntegrationTests(TestCase):
@@ -119,6 +121,53 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEquals(response.data['status'], 'applied')
 
 
+    def test_task_preview_search(self):
+        self.client.login(username=self.some_user.email, password='password')
+
+        # create project phases
+        phase1 = ProjectPhaseFactory.create(viewable=True)
+        phase2 = ProjectPhaseFactory.create(viewable=False)
+
+        self.some_project.status = phase1
+        self.some_project.save()
+        self.another_project.status = phase2
+        self.another_project.save()
+
+        # create tasks for projects
+        self.task1 = TaskFactory.create(
+            status = BB_TASK_MODEL.TaskStatuses.in_progress,
+            author = self.some_project.owner,
+            project = self.some_project,
+            )
+        self.task2 = TaskFactory.create(
+            status = BB_TASK_MODEL.TaskStatuses.open,
+            author = self.another_project.owner,
+            project = self.another_project,
+            )
+
+        self.assertEqual(2, BB_PROJECT_MODEL.objects.count())
+        self.assertEqual(2, BB_TASK_MODEL.objects.count())
+
+        api_url = self.task_url + 'previews/'
+
+        # test that only one task preview is returned
+        response = self.client.get(api_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
+
+        response = self.client.get(api_url, {'status': 'in progress'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
+
+        response = self.client.get(api_url, {'status': 'open'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 0)
+
+        skill = self.task1.skill
+        response = self.client.get(api_url, {'skill': skill.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
 
 # TODO: Test edit task
 # TODO: Test change TaskMember edit status

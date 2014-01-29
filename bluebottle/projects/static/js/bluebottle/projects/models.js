@@ -88,7 +88,11 @@ App.Project = DS.Model.extend({
 
     isPhaseResults: Em.computed.equal('phaseNum', 8),
 
-    isPhaseCampaing: Em.computed.equal('phaseNum', 6),
+    isPhaseCampaign: Em.computed.equal('phaseNum', 6),
+
+    isPhaseNeedsWork: Em.computed.equal('phaseNum', 3),
+
+    isPhasePlanNew: Em.computed.equal('phaseNum', 1),
 
     getProject: function(){
         return App.Project.find(this.get('id'));
@@ -236,10 +240,10 @@ App.MyProject = App.Project.extend({
         if (!this.get('status')) {
             return true;
         }
-        if (this.get('isPhasePlan')) {
+        if (this.get('isPhasePlanNew')) {
             return true;
         }
-        if (this.get('isPhasePlan')) {
+        if (this.get('isPhaseNeedsWork')) {
             return true;
         }
         return false;

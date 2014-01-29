@@ -38,12 +38,11 @@ App.Organization = DS.Model.extend({
         return "";
     }.property('facebook'),
     twitterUrl: function(){
-        var twitter = this.get('facebook');
+        var twitter = this.get('twitter');
         if (twitter) {
-            if (twitter.substr(0, 4) != 'http') {
-                return 'http://' + twitter;
-            }
-            return twitter;
+            //Assumes input was of the form: @handle (conforming to the placeholder text)
+            return 'http://twitter.com/' + twitter.substr(1);
+
         }
         return "";
     }.property('twitter'),

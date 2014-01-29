@@ -67,6 +67,9 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
             raise serializers.ValidationError('The value must be a number')
         except TypeError:
             raise serializers.ValidationError('The value must be a number')
+        except KeyError:
+            #The field was not provided, it is not required so nothing has to be done
+            pass
 
         return attrs
 

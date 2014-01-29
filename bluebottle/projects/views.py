@@ -33,7 +33,7 @@ class ProjectPreviewList(generics.ListAPIView):
         elif ordering == 'title':
             qs = qs.order_by('title')
         elif ordering == 'deadline':
-            qs = qs.order_by('projectcampaign__deadline')
+            qs = qs.order_by('deadline')
 
         country = self.request.QUERY_PARAMS.get('country', None)
         if country:

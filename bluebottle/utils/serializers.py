@@ -6,14 +6,15 @@ from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 from django.utils.importlib import import_module
 from django_tools.middlewares import ThreadLocal
+
 from rest_framework import serializers
+from rest_framework.serializers import get_component
 from taggit.managers import _TaggableManager
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 
 from .validators import validate_postal_code
 from .models import Address
-
 
 from HTMLParser import HTMLParser
 
@@ -273,6 +274,32 @@ class DefaultSerializerMixin(object):
         module = import_module(module_name)
         cls_name = bits[-1]
         return getattr(module, cls_name)
+
+
+class HumanReadableChoiceField(serializers.ChoiceField):
+    def field_to_native(self, obj, field_name):
+        """
+        Given and object and a field name, returns the value that should be
+        serialized for that field. Display the choice label.
+        """
+        if obj is None:
+            return self.empty
+
+        if self.source == '*':
+            return self.to_native(obj)
+
+        source = self.source or field_name
+        value = obj
+
+        components = source.split('.')
+        for component in components:
+            if component == components[-1]: # last item, fetch human readable form
+                component = 'get_{0}_display'.format(component)
+            value = get_component(value, component)
+            if value is None:
+                break
+
+        return self.to_native(value.lower())
 
 
 #### TESTS #############

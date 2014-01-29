@@ -40,6 +40,10 @@ class TaskPreviewList(generics.ListAPIView):
         if skill:
             qs = qs.filter(skill=skill)
 
+        status = self.request.QUERY_PARAMS.get('status', None)
+        if status:
+            qs = qs.filter(status=status)
+
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 
         if ordering == 'newest':
@@ -49,7 +53,7 @@ class TaskPreviewList(generics.ListAPIView):
 
         qs = qs.exclude(status=BB_TASK_MODEL.TaskStatuses.closed)
 
-        return qs
+        return qs.filter(project__status__viewable=True)
 
 
 class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):

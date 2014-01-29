@@ -81,7 +81,7 @@ App.TaskFileNewView = Em.View.extend({
 
 
 App.TaskDeadLineDatePicker = App.DatePicker.extend({
-    config: {minDate: 0, maxDate: "+3M"}
+    config: {minDate: 0, maxDate: "+1Y"}
 });
 
 /*
@@ -91,7 +91,7 @@ App.TaskDeadLineDatePicker = App.DatePicker.extend({
 App.TaskStatusList = [
     {value: 'open', title: "open"},
     {value: 'in progress', title: "in progress"},
-    {value: 'realized', title: "realised"}
+    {value: 'realized', title: "completed"}
 ];
 
 App.TaskStatusSelectView = Em.Select.extend({

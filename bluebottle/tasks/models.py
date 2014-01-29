@@ -41,7 +41,7 @@ class BaseTask(models.Model):
         open = ChoiceItem('open', label=_("Open"))
         in_progress = ChoiceItem('in progress', label=_("In progress"))
         closed = ChoiceItem('closed', label=_("Closed"))
-        realized = ChoiceItem('realized', label=_("Realised"))
+        realized = ChoiceItem('realized', label=_("Completed"))
 
     title = models.CharField(_("title"), max_length=100)
     description = models.TextField(_("description"))

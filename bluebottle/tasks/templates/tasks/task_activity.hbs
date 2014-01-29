@@ -10,6 +10,7 @@
 		<div class="task-files">
 			<ul>	
 		        {{#each files}}
+			{{#if id}}
 				<li>
 					<span class="task-file-filename">
 						<span class="flaticon stroke document-1"></span> 
@@ -27,7 +28,8 @@
 						{{localize created formatting="X"}}
 					</span>
 				</li>
-				{{/each}}
+			{{/if}}
+			{{/each}}
 			<ul>
 		</div>		
 

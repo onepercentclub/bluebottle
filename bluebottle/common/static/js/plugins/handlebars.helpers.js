@@ -25,6 +25,13 @@ Em.Handlebars.registerBoundHelper('localize', function (value, options) {
         }
         return new Handlebars.SafeString(Globalize.format(value, formatting));
     }
+
+    //Usisng typeof here since false can be safely rendered
+    if (Ember.typeOf(value) == 'undefined'){
+
+	return "";
+    }
+    
     return new Handlebars.SafeString(Globalize.format(value));
 });
 

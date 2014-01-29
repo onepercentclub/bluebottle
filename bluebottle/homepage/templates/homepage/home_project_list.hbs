@@ -9,11 +9,13 @@
 
 		<div class="project-slider l-full" style="overflow: hidden">
 
+            {% block_verbatim header_text %}
 			<header class="section-header">
 				<h2>{% trans "Choose your project" %}</h2>
 				<p>{% trans "Support it with your time, knowledge or money and receive real-time updates." %}</p>
 			</header>
-		
+		    {% endblock_verbatim %}
+
 			<div class="project-slides" style="width: 20000px">
 				{{#each projects}}
 				<div class="project-preview" style="width: 1100px; float: left">

@@ -32,10 +32,15 @@
     			{{#linkTo 'taskList' class="btn btn-iconed two"}}
                     <span class="flaticon solid wrench-1"></span> {% trans "Find tasks" %}
                 {{/linkTo}}
+
+                {% block_verbatim pitch_smart_idea %}
                 {{#link-to "myProject" 'new' tagName="button" class="btn btn-primary btn-iconed"}}
                     <span class="flaticon solid lightbulb-3"></span>
                     {% trans "Pitch a new smart idea" %}
                 {{/link-to}}
+                {% endblock_verbatim %}
+
+
 				</div>
             </div>
         </section>

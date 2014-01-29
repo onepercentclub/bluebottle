@@ -68,6 +68,13 @@ App.User = DS.Model.extend({
         return this.get('username')
     }.property('first_name'),
 
+    get_website: function() {
+        if (this.get('website').substr(0,7) != 'http://') {
+            return "http://" + this.get('website');
+        } else {
+            return this.get('website');
+        }
+    }.property('website'),
 
     user_since: function() {
         return Globalize.format(this.get('date_joined'), 'd');

@@ -49,7 +49,7 @@ class TaskPreviewList(generics.ListAPIView):
 
         qs = qs.exclude(status=BB_TASK_MODEL.TaskStatuses.closed)
 
-        return qs
+        return qs.filter(project__status__viewable=True)
 
 
 class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):

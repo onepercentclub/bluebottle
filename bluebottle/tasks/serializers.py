@@ -48,7 +48,8 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()
-
+    people_needed = serializers.IntegerField(required=False)
+ 
     tags = TagSerializer()
     meta_data = MetaField(
         title = 'get_meta_title',
@@ -57,10 +58,24 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
         image_source = 'project__projectplan__image',
         )
 
+    def validate_people_needed(self, attrs, source):
+        """Adds prettier error messages to the tasks"""
+        
+        try:
+            int(attrs[source])
+        except ValueError:
+            raise serializers.ValidationError('The value must be a number')
+        except TypeError:
+            raise serializers.ValidationError('The value must be a number')
+
+        return attrs
+
     class Meta:
         model = BB_TASK_MODEL
         fields = ('id', 'title', 'project', 'description', 'end_goal', 'members', 'files', 'location', 'skill',
-                  'time_needed', 'author', 'status', 'created', 'deadline', 'tags', 'meta_data')
+                  'time_needed', 'author', 'status', 'created', 'deadline', 'tags', 'meta_data',
+                  'people_needed'
+        )
 
 
 class SkillSerializer(serializers.ModelSerializer):

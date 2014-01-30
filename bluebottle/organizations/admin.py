@@ -34,6 +34,8 @@ class OrganizationAdmin(admin.ModelAdmin):
 
     search_fields = ('name', 'description')
 
+    fields = ('name', "description", 'email','phone_number', 'website', 'twitter', 'facebook', 'skype', 'slug')
+
 admin.site.register(ORGANIZATION_MODEL, OrganizationAdmin)
 
 

@@ -33,19 +33,19 @@
                         <span class="project-header">
                             <figure class="project-image">
 								{{#if project.image.square}}
-                                <img {{bindAttr src="project.image.square" alt="project.title"}} />
+                                    <img {{bindAttr src="project.image.square" alt="project.title"}} />
 								{{else}}
-								&nbsp;
+								    &nbsp;
 								{{/if}}
                             </figure>
                             <h2 class="project-title">
-                                {{ project.title }}
-                                {{#if project.isPublic}}
-                                    <a {{action "showProject" project.id href=true}} class="project-preview">
-    	                                <span class="flaticon solid eye-1"></span>
-    	                                {% trans "View public page" %}
-    	                            </a>
-                                {{/if}}
+                                {{#link-to 'project' id}}
+                                    {{ project.title }}
+                                {{/link-to}}
+                                {{#link-to 'project' id}}
+                                    <span class="flaticon solid eye-1"></span>
+                                    {% trans "View public page" %}
+                                {{/link-to}}
                             </h2>
                         </span>
 

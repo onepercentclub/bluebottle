@@ -11,10 +11,10 @@ App.Tag = DS.Model.extend({
 
     unDirtySoWeNeverCommit: function(){
         // Ugly fix to avoid putting tags
-        if (this.get('isDirty')){
-           this.transitionTo('loaded.created.uncommitted');
+        if (this.get('isNew')){
+           this.transitionTo('loaded.updated.saved');
         }
-    }.observes('isDirty')
+    }.observes('isNew')
 
 });
 

@@ -6,7 +6,7 @@ App.WallRouteMixin = Em.Mixin.create({
     // This way the ArrayController won't hold an immutable array thus it can be extended with more wallposts.
     setupController: function(controller, model) {
         // Only reload wall-posts if switched to another project.
-        var parentId = this.get('parentId');
+        var parentId = this.modelFor('project').id;
         var parentType = this.get('parentType');
 
         if (controller.get('parentId') != parentId){

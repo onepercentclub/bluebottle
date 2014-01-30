@@ -68,7 +68,7 @@ class Organization(BaseOrganization):
     Standard Organization model. If there are any extra fields required, provide
     your own Organization model by extending ``BaseOrganization``.
     """
-    description = models.TextField(_('description'), blank=True)
+    description = models.TextField(_('Contact Name'), blank=True)
     legal_status = models.TextField(
         _('legal status'), blank=True, help_text=_('The legal status of the organization (e.g. Foundation).'))
 

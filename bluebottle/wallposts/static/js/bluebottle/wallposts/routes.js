@@ -28,7 +28,7 @@ App.WallRouteMixin = Em.Mixin.create({
                 mediaWallPostNewController.set('wallPostList', model);
 
                 textWallPostNewController.set('parentId', parentId);
-                textWallPostNewController.set('parentType', 'task');
+                textWallPostNewController.set('parentType', parentType);
                 textWallPostNewController.set('wallPostList', model);
             });
         }

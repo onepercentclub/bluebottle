@@ -126,7 +126,7 @@
 
 	.account-personal {
 	
-		@include grid(20,0,0);
+		@include grid(20,0,1);
 	
 		.account-title {
 			margin-top: $base-margin * 1.5;

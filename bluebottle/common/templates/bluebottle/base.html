@@ -217,6 +217,7 @@
     <!-- Scripts -->
     <div id="fb-root"></div>
 
+	{% block google_analytics %}
     {#  Google analytics #}
     <script type="text/javascript">
         var _gaq = _gaq || [];
@@ -226,7 +227,8 @@
         { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
         )();
     </script>
-
+	{% endblock %}
+	
     <!--[if lte IE 9]>
         <script type="text/javascript" src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->

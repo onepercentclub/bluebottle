@@ -7,7 +7,10 @@
     <legend>
         <p>{% trans "Are you sure you want to apply to this task?" %}</p>
     </legend>
+   {% block_verbatim task_member_apply %}
+   {% endblock_verbatim %}
     <fieldset>
+
         <ul>
             <li class="control-group">
                 <label class="control-label wide" for="motivation" >{% trans "Motivation" %}</label>

@@ -10,7 +10,6 @@
 			<ul>
 			{{#each slides }}
 		        <li class="carousel-item" {{bindAttr id=style}}>
-
 		        	<div class="l-wrapper">
 		                {{#if video}}
 							<div class="l-half carousel-video">
@@ -27,7 +26,7 @@
 				        </article>
 
 		                {{#if image}}
-							<div class="l-half carousel-image">
+							<div class="l-half carousel-video">
 	                			<div class="image">
                                     <img {{bindAttr src=image}} />
                                 </div>

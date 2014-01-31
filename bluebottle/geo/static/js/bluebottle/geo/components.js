@@ -52,12 +52,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
-        var point = new google.maps.LatLng(22, 10);
+        // var point = new google.maps.LatLng(22, 10);
         var MyMapType = new google.maps.StyledMapType(this.get("mapStyle"), {name: 'Grey'});
 
         var mapOptions = {
             zoom: 2,
-            center: point,
+            // center: point,
             scrollwheel: false,
             panControl: false,
             zoomControl: true,
@@ -89,27 +89,27 @@ App.BbProjectMapComponent = Ember.Component.extend({
             bounds.extend(marker.position);
         });
         this.get("map").fitBounds(bounds);
-        var clusterStyles = [
-          {
-            textColor: 'white',
-            url: "/static/assets/images/icons/clusterer-small.png",
-            height: 20,
-            width: 20
-          },
-         {
-            textColor: 'white',
-            url: "/static/assets/images/icons/clusterer-medium.png",
-            height: 30,
-            width: 30
-          },
-         {
-            textColor: 'white',
-            url: "/static/assets/images/icons/clusterer-large.png",
-            height: 40,
-            width: 40
-          }
-        ];
-		var markerCluster = new MarkerClusterer(this.get("map"), markers, {maxZoom: 10, styles: clusterStyles});
+        // var clusterStyles = [
+        //   {
+        //     textColor: 'white',
+        //     url: "/static/assets/images/icons/clusterer-small.png",
+        //     height: 20,
+        //     width: 20
+        //   },
+        //  {
+        //     textColor: 'white',
+        //     url: "/static/assets/images/icons/clusterer-medium.png",
+        //     height: 30,
+        //     width: 30
+        //   },
+        //  {
+        //     textColor: 'white',
+        //     url: "/static/assets/images/icons/clusterer-large.png",
+        //     height: 40,
+        //     width: 40
+        //   }
+        // ];
+        // var markerCluster = new MarkerClusterer(this.get("map"), markers, {maxZoom: 10, styles: clusterStyles});
         this.set("markers", markers);
     },
 

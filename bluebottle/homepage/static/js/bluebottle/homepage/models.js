@@ -9,7 +9,10 @@ App.HomePage = DS.Model.extend({
 
     projects: DS.hasMany('App.ProjectPreview'),
     slides: DS.hasMany('App.Slide'),
-    quotes: DS.hasMany('App.Quote')
-
+    quotes: DS.hasMany('App.Quote'),
+    project_count : DS.attr("string"),
+    destination_count : DS.attr("string"),
+    task_count : DS.attr("string"),
+    total_hours : DS.attr("string")
 });
 

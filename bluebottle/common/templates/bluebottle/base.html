@@ -15,18 +15,18 @@
 
     {% block defaults_js %}
         <script type="text/javascript">
-            var default_title = '{% blocktrans %}1%Club - Share a little. Change the world{% endblocktrans %}';
-            var default_description = '{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}';
-            var default_keywords = '{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}';
+            var default_title = '{% blocktrans %}Site meta title{% endblocktrans %}';
+            var default_description = '{% blocktrans %}Site meta description{% endblocktrans %}';
+            var default_keywords = '{% blocktrans %}Site meta keywords{% endblocktrans %}';
         </script>
     {% endblock defaults_js %}
 
     {% block meta %}
-        <meta name="description" content="{% blocktrans %}1%Club is the global crowdfunding and crowdsourcing platform where you can share a little and change the world, in your very own way. Pick any project you like, support it with 1% of your knowledge, money or time and follow the progress online.{% endblocktrans %}" />
-        <meta name="author" content="{% blocktrans %}1%Club{% endblocktrans %}" />
-        <meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
+        <meta name="description" content="{% blocktrans %}Site meta title{% endblocktrans %}" />
+        <meta name="author" content="{% blocktrans %}Site meta description{% endblocktrans %}" />
+        <meta name="keywords" content="{% blocktrans %}Site meta keywords{% endblocktrans %}" />
 
-    <link rel="shortcut icon" href="http://www.onepercentclub.com{{ STATIC_URL }}favicon.ico">
+    <link rel="shortcut icon" href="{{ STATIC_URL }}favicon.ico">
 
     {% endblock %}
 
@@ -139,7 +139,7 @@
                     <div id="logo">
                         {% block_verbatim nav_logo %}
                             {{#link-to 'home' class="logo-link"}}
-                                <object type="image/svg+xml" data="{% static "images/global/onepercentclub-white.svg" %}" class="logo-image"></object>
+                                <object type="image/svg+xml" data="{% static "images/global/logo.svg" %}" class="logo-image"></object>
                             {{/link-to}}
                         {% endblock_verbatim %}
                     </div>

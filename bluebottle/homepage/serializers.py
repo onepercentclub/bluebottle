@@ -9,3 +9,9 @@ class HomePageSerializer(serializers.Serializer):
     quotes = QuoteSerializer(source='quotes')
     slides = SlideSerializer(source='slides')
     projects = ProjectPreviewSerializer(source='projects')
+    project_count = serializers.Field()
+    destination_count = serializers.Field()
+    task_count = serializers.Field()
+    total_hours = serializers.Field()
+
+

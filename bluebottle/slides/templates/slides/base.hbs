@@ -10,14 +10,17 @@
 			<ul>
 			{{#each slides }}
 		        <li class="carousel-item" {{bindAttr id=style}}>
+
 		        	<div class="l-wrapper">
 		                {{#if video}}
+		                    There is video
 							<div class="l-half carousel-video">
-	                			<div class="video">{{{video}}}</div>
+	                			<div class="video">{{video}}</div>
 							</div>
 						{{/if}}
 
                     	<article class="l-half carousel-content">
+                    	    {{ video_url }}
 				            <h1>{{ title }}</h1>
 				            <p>{{{ body }}}</p>
 				            {{#if link_text }}
@@ -26,7 +29,8 @@
 				        </article>
 
 		                {{#if image}}
-							<div class="l-half carousel-video">
+		                    There is an image
+							<div class="l-half carousel-image">
 	                			<div class="image">
                                     <img {{bindAttr src=image}} />
                                 </div>
@@ -35,7 +39,7 @@
 
 		        	</div>
 
-		        	<div class="carousel-image"></div>
+		        	<div class="carousel-image">Empty carousel image</div>
 		        </li>
 		    {{/each }}
 			</ul>

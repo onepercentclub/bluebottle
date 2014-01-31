@@ -17,8 +17,14 @@
 	
 	dl {
 		border-bottom: 1px solid $gray-darker;
-		> dt, dd {
-			width: auto;
+//		> dt, dd {
+//			width: auto;
+//		}
+		dt {
+			@include grid(4,0,1);
+		}
+		dd {
+			@include grid(44,1,0);
 		}
 	}
 		
@@ -69,7 +75,7 @@
 		}
 		
 	}
-	
+
 //	.task-status {
 //		display: block;
 //		@include grid(12,2,4);
@@ -236,7 +242,7 @@
 		
 		.task-members-list {
 		    @include grid(32,1,1);
-			float: left;			
+			float: left;	
 		}
 
 		.task-action {

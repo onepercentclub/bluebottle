@@ -25,13 +25,13 @@ class Address(models.Model):
 # Below is test-only stuff
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
-if 'test' in sys.argv or INCLUDE_TEST_MODELS:
+if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
+    import re
 
     from fluent_contents.models import PlaceholderField
     from fluent_contents.plugins.oembeditem.models import OEmbedItem
     from bluebottle.contentplugins.models import PictureItem
     from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
-
 
     class MetaDataModel(models.Model):
         """
@@ -41,15 +41,14 @@ if 'test' in sys.argv or INCLUDE_TEST_MODELS:
         tags = TaggableManager(blank=True)
         contents = PlaceholderField("blog_contents")
 
-
         def get_first_image(self, **kwargs):
             """
             Get all the content items and filter out those that are pictures.
             Return the url of the first picture.
             """
-            relevant_items = [item for item in self.contents.get_content_items() \
-                        if (isinstance(item, PictureItem) or isinstance(item, OEmbedItem))]
-            
+            relevant_items = [item for item in self.contents.get_content_items()
+                              if (isinstance(item, PictureItem) or isinstance(item, OEmbedItem))]
+
             item = relevant_items.pop(0)
             if isinstance(item, PictureItem):
                 # we're sure we are dealing with a picture, so just return the image url
@@ -68,7 +67,7 @@ if 'test' in sys.argv or INCLUDE_TEST_MODELS:
                 while relevant_items and not match:
                     item = relevant_items.pop(0)
                     match = re.match(regex, item.url)
-                
+
                 if match:
                     # huray, we found a suitable image!
                     return (item.url, True)

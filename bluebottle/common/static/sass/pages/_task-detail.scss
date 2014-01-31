@@ -243,9 +243,6 @@
 		.task-members-list {
 		    @include grid(32,1,1);
 			float: left;	
-			.member-avatar {
-				width: 100%; // fix for responsive image sizes in firefox
-			}		
 		}
 
 		.task-action {

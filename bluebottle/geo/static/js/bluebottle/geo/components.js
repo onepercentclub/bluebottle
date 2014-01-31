@@ -52,12 +52,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
-        var point = new google.maps.LatLng(22, 10);
+        // var point = new google.maps.LatLng(22, 10);
         var MyMapType = new google.maps.StyledMapType(this.get("mapStyle"), {name: 'Grey'});
 
         var mapOptions = {
             zoom: 2,
-            center: point,
+            // center: point,
             scrollwheel: false,
             panControl: false,
             zoomControl: true,

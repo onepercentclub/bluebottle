@@ -97,6 +97,14 @@ App.Task = DS.Model.extend({
     tags: DS.hasMany('App.Tag'),
     wallposts: DS.hasMany('App.WallPost'),
 
+    tags_list: function() {
+    	var arr = [];
+        this.get('tags').forEach(function (item, index, self) {
+            arr.push(item.get('id'));
+        });
+        return arr.join(', ');
+    }.property('tags.@each.id'),
+    
     // Calculate status booleans here so we can use it in all views
     isStatusOpen: function(){
         return this.get('status') == 'open';

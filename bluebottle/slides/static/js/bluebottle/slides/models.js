@@ -15,12 +15,6 @@ App.Slide = DS.Model.extend({
     link_text: DS.attr('string'),
     link_url: DS.attr('string'),
     isFirst: function() {
-        var lowestValue = null;
-        App.Slide.find().forEach(function(slide) {
-            var sequence = slide.get("sequence");
-            if(lowestValue == null || sequence < lowestValue)
-                lowestValue = sequence;
-        });
-        return (this.get('sequence') === lowestValue);
-    }.property('@each.sequence')
+        return (this.get('sequence') == 1);
+    }.property('sequence')
 });

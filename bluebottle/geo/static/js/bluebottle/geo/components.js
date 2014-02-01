@@ -81,7 +81,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var comp = this;
         var bounds = new google.maps.LatLngBounds();
         var markers = [];
-        App.ProjectPreview.find().then(function(records){
+        App.ProjectPreview.find({}).then(function(records){
             records.forEach(function(project){
                 var marker = comp.placeMarker(project);
                 markers.push(marker);

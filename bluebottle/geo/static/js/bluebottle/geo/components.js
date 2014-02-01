@@ -86,9 +86,9 @@ App.BbProjectMapComponent = Ember.Component.extend({
                 var marker = comp.placeMarker(project);
                 markers.push(marker);
                 bounds.extend(marker.position);
+                comp.get("map").fitBounds(bounds);
             });
         });
-        this.get("map").fitBounds(bounds);
         // var clusterStyles = [
         //   {
         //     textColor: 'white',

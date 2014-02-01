@@ -34,9 +34,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	        ]
 	    }
 	],
-    projects: function(){
-        return App.ProjectPreview.find();
-    }.property(),
+
     center: [52.3722499, 4.907800400000042],
     getCenter: function(){
         return new google.maps.LatLng(52.3722499, 4.907800400000042);
@@ -83,10 +81,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var comp = this;
         var bounds = new google.maps.LatLngBounds();
         var markers = [];
-        this.get('projects').forEach(function(project){
-            var marker = comp.placeMarker(project)
-            markers.push(marker);
-            bounds.extend(marker.position);
+        App.ProjectPreview.find().then(function(records){
+            records.forEach(function(project){
+                var marker = comp.placeMarker(project);
+                markers.push(marker);
+                bounds.extend(marker.position);
+            });
         });
         this.get("map").fitBounds(bounds);
         // var clusterStyles = [

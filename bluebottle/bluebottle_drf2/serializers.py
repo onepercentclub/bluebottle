@@ -5,6 +5,7 @@ import json
 import os
 import re
 import types
+from urllib2 import URLError
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -103,6 +104,8 @@ class OEmbedField(serializers.Field):
         try:
             response = providers.request(url, **self.params)
         except ProviderException:
+            return ""
+        except URLError:
             return ""
         else:
             html = full_handler(url, response, **self.params)

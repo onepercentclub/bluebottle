@@ -105,8 +105,12 @@ App.Project = DS.Model.extend({
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
-    }.property('deadline')
+    }.property('deadline'),
 
+    overDeadline: function() {
+        var now = new Date();
+        return now > this.get("deadline");
+    }.property('deadline'),
 });
 
 

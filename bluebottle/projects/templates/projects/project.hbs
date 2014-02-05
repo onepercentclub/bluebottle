@@ -49,6 +49,18 @@
 	        </li>
 		</ul>
 		
+		{{#if deadline}}
+		{{#unless overDeadline}}
+		<div class="project-deadline">
+			<span class="flaticon solid stopwatch-1"></span>
+			<span class="text">
+				<big>{{daysToGo}}</big> day(s) left<br />
+				<small>to support this project</small>
+			</span>
+		</div>
+		{{/unless}}
+		{{/if}}
+		
 		{{!--}}
         <div class="member-initiator">
             <a {{action 'openInBigBox' 'userModal' owner }} class="member">

@@ -175,7 +175,12 @@
 
 #task-previews {
 	position: relative;
-	border-bottom: 1px solid gray;
+	padding: $base-padding;
+	background-color: $gray-lighter;
+	.container {
+		position: relative;
+		border-bottom: 1px solid gray;
+	}
 	.task-previews-show-more {
 		&:focus, &:active {
 			top: auto;
@@ -183,7 +188,7 @@
 		position: absolute;
 		bottom: -12px;
 		right: 0;
-		background: white;
+		background: $gray-lighter;
 		font-size: $font-size-smallest;
 		padding-left: $base-padding;
 		text-decoration: none;
@@ -197,7 +202,7 @@
 		}
 		.task-member-status {
 			@include grid(8,0,0);
-			background-color: $gray-dark;
+			background-color: $color-secondary;
 			text-align: center;
 			color: white;
 			padding: $base-padding 0;
@@ -226,7 +231,7 @@
 		}
 		.task-arrow {
 			@include grid(4,0,0);
-			background: $gray-dark;	
+			background: $color-secondary;	
 			font-size: $font-size-largest;
 			color: white;
 			font-weight: bold;

@@ -15,13 +15,6 @@ App.WallRouteMixin = Em.Mixin.create({
             controller.set('page', 1);
             controller.set('parentId', parentId);
             controller.set('parentType', parentType);
-            // controller.set('parent', parent);
-            if (parentType == 'project') {
-                App.Task.find({project: this.get('parentId')}).then(function(tasks) {
-                    controller.set("allTasks", tasks);
-                    controller.send("showActiveTasks");
-                });
-            }
             var route = this;
             var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
             var textWallPostNewController = this.controllerFor('textWallPostNew');

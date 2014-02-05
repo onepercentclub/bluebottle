@@ -69,7 +69,9 @@ App.TextWallPostNewController = Em.ObjectController.extend({
             wallPost.on('didCreate', function(record) {
                 var list = controller.get('wallPostList');
                 list.unshiftObject(record);
-                controller.createNewWallPost()
+                Ember.run.next(function() {
+                    controller.createNewWallPost();
+                });
             });
             wallPost.on('becameInvalid', function(record) {
                 controller.set('errors', record.get('errors'));

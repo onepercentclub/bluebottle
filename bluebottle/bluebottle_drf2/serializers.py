@@ -5,6 +5,7 @@ import json
 import os
 import re
 import types
+from urllib2 import URLError
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -100,9 +101,13 @@ class OEmbedField(serializers.Field):
         if not value or not standalone_url_re.match(value):
             return ""
         url = value.strip()
+        if value == 'https://vimeo.com/85425318':
+            return "<iframe src=\"//player.vimeo.com/video/85425318\" hard=\"code\" width=\"1024\" height=\"576\" frameborder=\"0\" title=\"How it works - Cares\" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>"
         try:
             response = providers.request(url, **self.params)
         except ProviderException:
+            return ""
+        except URLError:
             return ""
         else:
             html = full_handler(url, response, **self.params)

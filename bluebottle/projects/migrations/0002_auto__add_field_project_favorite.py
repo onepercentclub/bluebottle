@@ -126,7 +126,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
         },
-        project_model: {
+        'projects_project': {
             'Meta': {'object_name': 'Project'},
             'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
@@ -154,14 +154,14 @@ class Migration(SchemaMigration):
             'currency': ('django.db.models.fields.CharField', [], {'default': "'EUR'", 'max_length': '3'}),
             'description': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '255'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.PROJECTS_PROJECT_MODEL)}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         u'projects.projectdetail': {
             'Meta': {'unique_together': "(('project', 'field'),)", 'object_name': 'ProjectDetail'},
             'field': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.ProjectDetailField']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.PROJECTS_PROJECT_MODEL)}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
             'value': ('django.db.models.fields.TextField', [], {})
         },
         u'projects.projectdetailfield': {

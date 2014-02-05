@@ -12,6 +12,7 @@ App.WallRouteMixin = Em.Mixin.create({
         if (controller.get('parentId') != parentId){
             controller.set('page', 1);
             controller.set('parentId', parentId);
+            controller.set('parentType', parentType);
             var route = this;
             var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
             var textWallPostNewController = this.controllerFor('textWallPostNew');

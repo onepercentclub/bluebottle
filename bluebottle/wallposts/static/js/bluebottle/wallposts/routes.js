@@ -2,17 +2,26 @@ App.WallRouteMixin = Em.Mixin.create({
 
     parentId: Em.K(),
     parentType: Em.K(),
-
+    
     // This way the ArrayController won't hold an immutable array thus it can be extended with more wallposts.
     setupController: function(controller, model) {
+        console.log(controller)
         // Only reload wall-posts if switched to another project.
         var parentType = this.get('parentType');
-        var parentId = this.modelFor(parentType).id;
+        var parent = this.modelFor(parentType);
+        var parentId = parent.id;
 
         if (controller.get('parentId') != parentId){
             controller.set('page', 1);
             controller.set('parentId', parentId);
             controller.set('parentType', parentType);
+            // controller.set('parent', parent);
+            if (parentType == 'project') {
+                App.Task.find({project: this.get('parentId')}).then(function(tasks) {
+                    controller.set("allTasks", tasks);
+                    controller.send("showActiveTasks");
+                });
+            }
             var route = this;
             var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
             var textWallPostNewController = this.controllerFor('textWallPostNew');
@@ -33,5 +42,5 @@ App.WallRouteMixin = Em.Mixin.create({
                 textWallPostNewController.set('wallPostList', model);
             });
         }
-    }
+    },
 });

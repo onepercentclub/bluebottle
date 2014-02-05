@@ -147,8 +147,9 @@ App.ProjectIndexController = Em.ArrayController.extend({
     needs: ['project', 'currentUser'],
     perPage: 5,
     page: 1,
-
+    allTasks: null,
     parentType: 'project',
+    showingAll: false,
 
     remainingItemCount: function(){
         if (this.get('meta.total')) {
@@ -171,6 +172,18 @@ App.ProjectIndexController = Em.ArrayController.extend({
             App.WallPost.find({'parent_type': parent_type, 'parent_id': parent_id, page: page}).then(function(items){
                 controller.get('model').pushObjects(items.toArray());
             });
+        },
+        showActiveTasks: function() {
+            this.set("showingAll", false);
+            var now = new Date();
+            var active_tasks = this.get("allTasks").filter(function(item) {
+                return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
+            });
+            this.set("tasks", active_tasks);
+        },
+        showAllTasks: function() {
+            this.set("showingAll", true);
+            this.set("tasks", this.get("allTasks"));
         }
     },
     canAddMediaWallPost: function() {
@@ -304,4 +317,17 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
         this._super();
     }
 });
+
+// App.ProjectIndexController = Em.ObjectController.extend({
+// 
+//     actions: {
+//         showAllTasks: function() {
+//             
+//         },
+//         showActiveTasks: function() {
+//             
+//         }
+//     },
+// 
+// });
 

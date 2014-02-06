@@ -122,6 +122,14 @@ App.Task = DS.Model.extend({
         return this.get('status') == 'realized';
     }.property('status'),
 
+    membersCount: function() {
+		return this.get('members.length')
+    }.property("members.length"),
+    
+    hasMembers: function() {
+        return this.get('members.length') > 0;
+    }.property("members.length"),
+    
 	hasMoreThanOneMember: function() {
 		return this.get('members.length') > 1
 	}.property('members.length'),
@@ -139,7 +147,16 @@ App.Task = DS.Model.extend({
 
     image: function(){
         return this.get('project.image.small');
-    }.property('project.image')
+    }.property('project.image'),
+    
+    daysToGo: function(){
+        // if (!this.get('time')) {
+        //     return null;
+        // }
+        var now = new Date();
+        var microseconds = this.get('deadline').getTime() - now.getTime();
+        return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
+    }.property('deadline')
 
 });
 

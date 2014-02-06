@@ -142,13 +142,13 @@ App.ProjectSupporterListController = Em.ArrayController.extend({
 
 });
 
-
 App.ProjectIndexController = Em.ArrayController.extend({
     needs: ['project', 'currentUser'],
     perPage: 5,
     page: 1,
-
     parentType: 'project',
+    showingAll: false,
+    tasks: null,
 
     remainingItemCount: function(){
         if (this.get('meta.total')) {
@@ -162,17 +162,6 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return totalPages > this.get('page');
     }.property('perPage', 'page', 'meta.total'),
 
-    actions: {
-        showMore: function() {
-            var controller = this;
-            var page = this.incrementProperty('page');
-            var parent_id = this.get('parentId');
-            var parent_type = this.get('parentId');
-            App.WallPost.find({'parent_type': parent_type, 'parent_id': parent_id, page: page}).then(function(items){
-                controller.get('model').pushObjects(items.toArray());
-            });
-        }
-    },
     canAddMediaWallPost: function() {
         var username = this.get('controllers.currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
@@ -180,7 +169,40 @@ App.ProjectIndexController = Em.ArrayController.extend({
             return (username == ownername);
         }
         return false;
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username')
+    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+    
+    getTasks: function() {
+        var controller = this;
+        if (!this.get("showingAll")) {
+            var now = new Date();
+            App.Task.find({project: this.get('parentId')}).then(function(tasks) {
+                controller.set("tasks", tasks.filter(function(item) {
+                    return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
+                })); 
+             });
+        } else {
+            this.set("tasks", App.Task.find({project: this.get('parentId')}));            
+        }
+    }.observes('parentId', 'parentType', 'showingAll'),
+    
+    actions: {
+        showMore: function() {
+            var controller = this;
+            var page = this.incrementProperty('page');
+            var parent_id = this.get('parentId');
+            var parent_type = this.get('parentType');
+            App.WallPost.find({'parent_type': parent_type, 'parent_id': parent_id, page: page}).then(function(items){
+                controller.get('model').pushObjects(items.toArray());
+            });
+        },
+        showActiveTasks: function() {
+            this.set("showingAll", false);
+        },
+        showAllTasks: function() {
+            this.set("showingAll", true);
+        }
+    },
+
 
 });
 
@@ -304,4 +326,17 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
         this._super();
     }
 });
+
+// App.ProjectIndexController = Em.ObjectController.extend({
+// 
+//     actions: {
+//         showAllTasks: function() {
+//             
+//         },
+//         showActiveTasks: function() {
+//             
+//         }
+//     },
+// 
+// });
 

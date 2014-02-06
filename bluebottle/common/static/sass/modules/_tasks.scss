@@ -173,3 +173,80 @@
 	
 }
 
+#task-previews {
+	position: relative;
+	padding: $base-padding;
+	background-color: $gray-lighter;
+	.container {
+		position: relative;
+		border-bottom: 1px solid gray;
+	}
+	.task-previews-show-more {
+		&:focus, &:active {
+			top: auto;
+		}
+		position: absolute;
+		bottom: -12px;
+		right: 0;
+		background: $gray-lighter;
+		font-size: $font-size-smallest;
+		padding-left: $base-padding;
+		text-decoration: none;
+	}
+	.task-preview {
+		@include clear;
+		font-size: $font-size-small;
+		margin-bottom: $base-margin;	
+		.task-member-status, .task-content, .task-arrow {
+			height: 90px;
+		}
+		.task-member-status {
+			@include grid(8,0,0);
+			background-color: $color-secondary;
+			text-align: center;
+			color: white;
+			padding: $base-padding 0;
+			big {
+				font-weight: bold;
+				font-size: $font-size-largest;
+				display: block;
+				line-height: $base-line-height * .75;
+			}
+			small {
+				display: block;
+				font-size: $font-size-smallest;
+				line-height: $base-line-height * .75;
+			}
+		}
+		.task-content {
+			@include grid(36,0,0);
+			padding: $base-padding;
+		}
+		.task-title {
+			margin-top: 0;
+		}
+		.task-theme {
+			font-size: $font-size-small;
+			color: $gray-light;
+		}
+		.task-arrow {
+			@include grid(4,0,0);
+			background: $color-secondary;	
+			font-size: $font-size-largest;
+			color: white;
+			font-weight: bold;
+			text-align: center;
+			.flaticon {
+				display: inline-block;
+				vertical-align: middle;
+				padding: ($base-padding * .75) 0;
+			}
+		}
+		.task-status {
+			color: $color-primary;
+		}
+		.task-status, .task-time-needed, .task-deadline {
+			@include grid(16,0,2);
+		}
+	}
+}

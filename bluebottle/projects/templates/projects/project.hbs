@@ -14,9 +14,7 @@
             <article class="project-info">
 				
                 <div class="project-meta">
-					{{!--}}
 					<span class="project-deadline"><span class="flaticon stroke time-1"></span> {{daysToGo}}</span>
-					{{--}}
                     <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
                     <span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.name}}</span>
                 </div>
@@ -50,6 +48,18 @@
 	            </ul>
 	        </li>
 		</ul>
+		
+		{{#if deadline}}
+		{{#unless overDeadline}}
+		<div class="project-deadline">
+			<span class="flaticon solid stopwatch-1"></span>
+			<span class="text">
+				<big>{{daysToGo}}</big> day(s) left<br />
+				<small>to support this project</small>
+			</span>
+		</div>
+		{{/unless}}
+		{{/if}}
 		
 		{{!--}}
         <div class="member-initiator">

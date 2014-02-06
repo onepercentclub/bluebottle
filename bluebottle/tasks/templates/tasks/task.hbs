@@ -9,7 +9,10 @@
             <section class="l-wrapper">
 
                 <div class="task-badge">
-                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> <img {{bindAttr src="project.image.small" alt="project.title"}}>
+                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> 
+					{{#if image}}
+					<img {{bindAttr src="project.image.small" alt="project.title"}} />
+					{{/if}}
                 </div>
 
                 <article class="task-description">

@@ -174,7 +174,6 @@ App.ProjectIndexController = Em.ArrayController.extend({
     
     getTasks: function() {
         var controller = this;
-        console.log(this.get("showingAll"));
         if (!this.get("showingAll")) {
             var now = new Date();
             App.Task.find({project: this.get('parentId')}).then(function(tasks) {

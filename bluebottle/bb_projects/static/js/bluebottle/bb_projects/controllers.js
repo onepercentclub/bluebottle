@@ -330,16 +330,3 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
     }
 });
 
-// App.ProjectIndexController = Em.ObjectController.extend({
-// 
-//     actions: {
-//         showAllTasks: function() {
-//             
-//         },
-//         showActiveTasks: function() {
-//             
-//         }
-//     },
-// 
-// });
-

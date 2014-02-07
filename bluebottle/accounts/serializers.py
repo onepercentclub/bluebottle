@@ -51,30 +51,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
 
 
-
-# TODO: move to retain modularity
-class UserStatisticsMixin(object):
-    def get_user_statistics(self, user):
-        num_supported = BB_TASK_MODEL.supported_projects.by_user(user).count()
-        tasks_realized = BB_TASK_MODEL.objects.filter(author=user, status=BB_TASK_MODEL.TaskStatuses.realized).count()
-
-        # hours spent on tasks
-        # import pdb; pdb.set_trace()
-        times_needed = TaskMember.objects.filter(
-                status=TaskMember.TaskMemberStatuses.realized,
-                member=user
-            ).values_list('task__time_needed', flat=True)
-        times_needed = sum([int(t) for t in times_needed if t.isdigit()])
-
-        result = {
-            'projects_supported': num_supported,
-            'tasks_realized': tasks_realized,
-            'hours_spent': times_needed,
-        }
-        return result
-
-
-class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serializers.ModelSerializer):
+class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -90,13 +67,10 @@ class UserProfileSerializer(UserStatisticsMixin, TaggableSerializerMixin, serial
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
 
-    user_statistics = serializers.SerializerMethodField('get_user_statistics')
-
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'twitter', 'facebook', 'skypename',
-                  'tags', 'user_statistics')
+                  'availability', 'date_joined', 'location', 'twitter', 'facebook', 'skypename', 'tags')
 
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ

@@ -14,7 +14,7 @@ class TaskMemberAdminInline(admin.StackedInline):
 
     raw_id_fields = ('member', )
     readonly_fields = ('created', )
-    fields =  readonly_fields + ('member', 'status', 'motivation', 'time_spent')
+    fields =  readonly_fields + ('member', 'status', 'motivation') #, 'time_spent')
     extra = 0
 
 

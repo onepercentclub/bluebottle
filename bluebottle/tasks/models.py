@@ -47,7 +47,9 @@ class BaseTask(models.Model):
     description = models.TextField(_("description"))
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='author')
+    #See Django docs on issues with related name and an (abstract) base class:
+    # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(
         _("status"), max_length=20, choices=TaskStatuses.choices,
         default=TaskStatuses.open)

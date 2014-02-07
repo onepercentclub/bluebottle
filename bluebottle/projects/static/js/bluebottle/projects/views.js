@@ -56,6 +56,7 @@ App.ProjectIndexView = Em.View.extend({
     templateName: 'project_wall',
     willInsertElement: function() {
         this.get("controller").getTasks();
+        this.get("controller").set("showingAll", false);
     }
 });
 

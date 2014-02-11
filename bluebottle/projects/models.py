@@ -90,7 +90,6 @@ class BaseProject(models.Model):
         _('image'), max_length=255, blank=True, upload_to='project_images/',
         help_text=_('Main project picture'))
 
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, null=True, blank=True)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
 
     class Meta:

@@ -5,8 +5,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
-from bluebottle.tasks import get_task_model
-from bluebottle.tasks.models import TaskMember
+from bluebottle.bb_tasks import get_task_model
+from bluebottle.bb_tasks.models import TaskMember
 
 BB_TASK_MODEL = get_task_model()
 

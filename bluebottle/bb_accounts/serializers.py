@@ -7,7 +7,7 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer,
                                                     TaggableSerializerMixin)
 from bluebottle.geo.models import Country
-from bluebottle.tasks import get_task_model
+from bluebottle.bb_tasks import get_task_model
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code
 
@@ -16,7 +16,7 @@ BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()
 
 # TODO: move imports to retain modularity
-from bluebottle.tasks.models import TaskMember, Skill
+from bluebottle.bb_tasks.models import TaskMember, Skill
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """

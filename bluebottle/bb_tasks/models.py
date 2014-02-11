@@ -23,9 +23,9 @@ PROJECT_MODEL = get_project_model()
 
 class Skill(models.Model):
 
-    name = models.CharField(_("english name"), max_length=100, unique=True)
-    name_nl = models.CharField(_("dutch name"), max_length=100, unique=True)
-    description = models.TextField(_("description"), blank=True)
+    name = models.CharField(_('english name'), max_length=100, unique=True)
+    name_nl = models.CharField(_('dutch name'), max_length=100, unique=True)
+    description = models.TextField(_('description'), blank=True)
 
     def __unicode__(self):
         return self.name
@@ -38,36 +38,36 @@ class BaseTask(models.Model):
     """ The base Task model """
 
     class TaskStatuses(DjangoChoices):
-        open = ChoiceItem('open', label=_("Open"))
-        in_progress = ChoiceItem('in progress', label=_("In progress"))
-        closed = ChoiceItem('closed', label=_("Closed"))
-        realized = ChoiceItem('realized', label=_("Completed"))
+        open = ChoiceItem('open', label=_('Open'))
+        in_progress = ChoiceItem('in progress', label=_('In progress'))
+        closed = ChoiceItem('closed', label=_('Closed'))
+        realized = ChoiceItem('realized', label=_('Completed'))
 
-    title = models.CharField(_("title"), max_length=100)
-    description = models.TextField(_("description"))
+    title = models.CharField(_('title'), max_length=100)
+    description = models.TextField(_('description'))
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     #See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(
-        _("status"), max_length=20, choices=TaskStatuses.choices,
+        _('status'), max_length=20, choices=TaskStatuses.choices,
         default=TaskStatuses.open)
     date_status_change = models.DateTimeField(_('date status change'), blank=True, null=True)
 
     deadline = models.DateTimeField()
-    tags = TaggableManager(blank=True, verbose_name=_("tags"))
+    tags = TaggableManager(blank=True, verbose_name=_('tags'))
 
     # required resources
     time_needed = models.CharField(
-        _("time_needed"), max_length=200,
-        help_text=_("Estimated number of hours needed to perform this task."))
-    skill = models.ForeignKey(Skill, verbose_name=_("Skill needed"), null=True)
+        _('time_needed'), max_length=200,
+        help_text=_('Estimated number of hours needed to perform this task.'))
+    skill = models.ForeignKey(Skill, verbose_name=_('Skill needed'), null=True)
 
     # internal usage
     created = CreationDateTimeField(
-        _("created"), help_text=_("When this task was created?"))
-    updated = ModificationDateTimeField(_("updated"))
+        _('created'), help_text=_('When this task was created?'))
+    updated = ModificationDateTimeField(_('updated'))
 
 
     objects = models.Manager()
@@ -111,12 +111,12 @@ class SupportedProjectsManager(models.Manager):
 
 class Task(BaseTask):
     """ Default Task model """
-    end_goal = models.TextField(_("end goal"))
-    location = models.CharField(_("location"), max_length=200)
+    end_goal = models.TextField(_('end goal'))
+    location = models.CharField(_('location'), max_length=200)
 
     people_needed = models.PositiveIntegerField(
-        _("people needed"), default=1,
-        help_text=_("How many people are needed for this task?"))
+        _('people needed'), default=1,
+        help_text=_('How many people are needed for this task?'))
 
     supported_projects = SupportedProjectsManager()
 
@@ -124,7 +124,7 @@ class Task(BaseTask):
     def get_meta_title(self, **kwargs):
         project = self.project
         country = project.country.name if project.country else ''
-        return u"%(task_name)s | %(expertise)s | %(country)s" % {
+        return u'%(task_name)s | %(expertise)s | %(country)s' % {
             'task_name': self.title,
             'expertise': self.skill.name if self.skill else '',
             'country': country,
@@ -133,7 +133,7 @@ class Task(BaseTask):
     def get_fb_title(self, **kwargs):
         project = self.project
         country = project.country.name if project.country else ''
-        return _(u"Share your skills: {task_name} in {country}").format(task_name=self.title, country=country)
+        return _(u'Share your skills: {task_name} in {country}').format(task_name=self.title, country=country)
 
     def get_tweet(self, **kwargs):
         project = self.project
@@ -149,8 +149,8 @@ class Task(BaseTask):
         expertise = self.skill.name if self.skill else ''
         expertise_hashtag = clean_for_hashtag(expertise)
 
-        tweet = _(u"Share your skills: {task_name} in {country} {{URL}}"
-                  u" #{expertise} via @{twitter_handle}").format(
+        tweet = _(u'Share your skills: {task_name} in {country} {{URL}}'
+                  u' #{expertise} via @{twitter_handle}').format(
                       task_name=self.title,
                       country=country,
                       expertise=expertise_hashtag,
@@ -165,25 +165,25 @@ class Task(BaseTask):
 class TaskMember(models.Model):
 
     class TaskMemberStatuses(DjangoChoices):
-        applied = ChoiceItem('applied', label=_("Applied"))
-        accepted = ChoiceItem('accepted', label=_("Accepted"))
-        rejected = ChoiceItem('rejected', label=_("Rejected"))
-        stopped = ChoiceItem('stopped', label=_("Stopped"))
-        realized = ChoiceItem('realized', label=_("Realised"))
+        applied = ChoiceItem('applied', label=_('Applied'))
+        accepted = ChoiceItem('accepted', label=_('Accepted'))
+        rejected = ChoiceItem('rejected', label=_('Rejected'))
+        stopped = ChoiceItem('stopped', label=_('Stopped'))
+        realized = ChoiceItem('realized', label=_('Realised'))
 
     task = models.ForeignKey(settings.TASKS_TASK_MODEL)
     member = models.ForeignKey(settings.AUTH_USER_MODEL)
     status = models.CharField(
-        _("status"), max_length=20, choices=TaskMemberStatuses.choices)
+        _('status'), max_length=20, choices=TaskMemberStatuses.choices)
 
     motivation = models.TextField(
-        _("Motivation"), help_text=_("Motivation by applicant."), blank=True)
-    comment = models.TextField(_("Comment"), help_text=_("Comment by task owner."), blank=True)
+        _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
+    comment = models.TextField(_('Comment'), help_text=_('Comment by task owner.'), blank=True)
     time_spent = models.PositiveSmallIntegerField(
-        _('time spent'), default=0, help_text=_("Time spent executing this task."))
+        _('time spent'), default=0, help_text=_('Time spent executing this task.'))
 
-    created = CreationDateTimeField(_("created"))
-    updated = ModificationDateTimeField(_("updated"))
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
 
     _initial_status = None
 
@@ -193,13 +193,12 @@ class TaskMember(models.Model):
 
 
 class TaskFile(models.Model):
-
     task = models.ForeignKey(settings.TASKS_TASK_MODEL)
     author = models.ForeignKey(settings.AUTH_USER_MODEL)
     title = models.CharField(max_length=255)
-    file = models.FileField(_("file"), upload_to='task_files/')
-    created = CreationDateTimeField(_("created"))
-    updated = ModificationDateTimeField(_("Updated"))
+    file = models.FileField(_('file'), upload_to='task_files/')
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('Updated'))
 
 
 ### SIGNALS ###
@@ -209,6 +208,7 @@ def log_task_status(sender, instance, **kwargs):
 
 if settings.TASKS_TASK_MODEL == 'tasks_task':
     pre_save.connect(log_task_status, sender=Task, weak=False, dispatch_uid='log-task-status')
+
 
 @receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
 def set_hours_spent_taskmember(sender, instance, **kwargs):

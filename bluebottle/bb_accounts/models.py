@@ -15,7 +15,6 @@ from django.utils import timezone
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 from bluebottle.utils.models import Address
 
@@ -43,7 +42,6 @@ def generate_picture_filename(instance, filename):
     An example return value is of this method is:
         'profiles/tw/tws9ea4eqaj37xnu24svp2vwndsytzysa.jpg'
     """
-
     # Create the upload directory string.
     char_set = string.ascii_lowercase + string.digits
     random_string = ''.join(random.choice(char_set) for i in range(33))
@@ -90,65 +88,65 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     Custom user model for BlueBottle.
     """
     class Gender(DjangoChoices):
-        male = ChoiceItem('male', label=_("Male"))
-        female = ChoiceItem('female', label=_("Female"))
+        male = ChoiceItem('male', label=_('Male'))
+        female = ChoiceItem('female', label=_('Female'))
 
     class Availability(DjangoChoices):
-        one_to_four_week = ChoiceItem('1-4_hours_week', label=_("1-4 hours per week"))
-        five_to_eight_week = ChoiceItem('5-8_hours_week', label=_("5-8 hours per week"))
-        nine_to_sixteen_week = ChoiceItem('9-16_hours_week', label=_("9-16 hours per week"))
-        one_to_four_month = ChoiceItem('1-4_hours_month', label=_("1-4 hours per month"))
-        five_to_eight_month = ChoiceItem('5-8_hours_month', label=_("5-8 hours per month"))
-        nine_to_sixteen_month = ChoiceItem('9-16_hours_month', label=_("9-16 hours per month"))
-        lots_of_time = ChoiceItem('lots_of_time', label=_("I have all the time in the world. Bring it on :D"))
-        depends_on_task = ChoiceItem('depends', label=_("It depends on the content of the tasks. Challenge me!"))
+        one_to_four_week = ChoiceItem('1-4_hours_week', label=_('1-4 hours per week'))
+        five_to_eight_week = ChoiceItem('5-8_hours_week', label=_('5-8 hours per week'))
+        nine_to_sixteen_week = ChoiceItem('9-16_hours_week', label=_('9-16 hours per week'))
+        one_to_four_month = ChoiceItem('1-4_hours_month', label=_('1-4 hours per month'))
+        five_to_eight_month = ChoiceItem('5-8_hours_month', label=_('5-8 hours per month'))
+        nine_to_sixteen_month = ChoiceItem('9-16_hours_month', label=_('9-16 hours per month'))
+        lots_of_time = ChoiceItem('lots_of_time', label=_('I have all the time in the world. Bring it on :D'))
+        depends_on_task = ChoiceItem('depends', label=_('It depends on the content of the tasks. Challenge me!'))
 
     class UserType(DjangoChoices):
-        person = ChoiceItem('person', label=_("Person"))
-        company = ChoiceItem('company', label=_("Company"))
-        foundation = ChoiceItem('foundation', label=_("Foundation"))
-        school = ChoiceItem('school', label=_("School"))
-        group = ChoiceItem('group', label=_("Club / association"))
+        person = ChoiceItem('person', label=_('Person'))
+        company = ChoiceItem('company', label=_('Company'))
+        foundation = ChoiceItem('foundation', label=_('Foundation'))
+        school = ChoiceItem('school', label=_('School'))
+        group = ChoiceItem('group', label=_('Club / association'))
 
-    email = models.EmailField(_("email address"), max_length=254, unique=True, db_index=True)
-    username = models.SlugField(_("username"), unique=True)
-    is_staff = models.BooleanField(_("staff status"), default=False, help_text=_('Designates whether the user can log into this admin site.'))
-    is_active = models.BooleanField(_("active"), default=False, help_text=_('Designates whether this user should be treated as active. Unselect this instead of deleting accounts.'))
-    date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
+    email = models.EmailField(_('email address'), max_length=254, unique=True, db_index=True)
+    username = models.SlugField(_('username'), unique=True)
+    is_staff = models.BooleanField(
+        _('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.'))
+    is_active = models.BooleanField(
+        _('active'), default=False,
+        help_text=_('Designates whether this user should be treated as active. Unselect this instead of deleting '
+                    'accounts.'))
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     updated = ModificationDateTimeField()
-    deleted = models.DateTimeField(_("deleted"), null=True, blank=True)
-    user_type = models.CharField(_("Member Type"), max_length=25, choices=UserType.choices, default=UserType.person)
+    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+    user_type = models.CharField(_('Member Type'), max_length=25, choices=UserType.choices, default=UserType.person)
 
     # Public Profile
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
-    location = models.CharField(_("location"), max_length=100, blank=True)
-    website = models.URLField(_("website"), blank=True)
+    location = models.CharField(_('location'), max_length=100, blank=True)
+    website = models.URLField(_('website'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
-    picture = ImageField(_("picture"), upload_to='profiles', blank=True)
-    about = models.TextField(_("about"), max_length=265, blank=True)
-    why = models.TextField(_("why"), max_length=265, blank=True)
-    availability = models.CharField(_("availability"), max_length=25, blank=True, choices=Availability.choices)
+    picture = ImageField(_('picture'), upload_to='profiles', blank=True)
+    about = models.TextField(_('about'), max_length=265, blank=True)
+    why = models.TextField(_('why'), max_length=265, blank=True)
+    availability = models.CharField(_('availability'), max_length=25, blank=True, choices=Availability.choices)
     # max length is not entirely clear, however over 50 characters throws errors on facebook
     facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
     # max length: see https://support.twitter.com/articles/14609-changing-your-username
     twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
     skypename = models.CharField(_('skype profile'), max_length=32, blank=True)
 
-
     # Private Settings
-    primary_language = models.CharField(_("primary language"), max_length=5, help_text=_("Language used for website and emails."), choices=settings.LANGUAGES)
-    share_time_knowledge = models.BooleanField(_("share time and knowledge"), default=False)
-    share_money = models.BooleanField(_("share money"), default=False)
-    newsletter = models.BooleanField(_("newsletter"), help_text=_("Subscribe to newsletter."), default=False)
-    phone_number = models.CharField(_("phone number"), max_length=50, blank=True)
-    gender = models.CharField(_("gender"), max_length=6, blank=True, choices=Gender.choices)
-    birthdate = models.DateField(_("birthdate"), null=True, blank=True)
-
-    # TODO Remove these fields when info has been manually migrated to the new fields.
-    available_time = models.TextField(_("available_time"), blank=True)
-    contribution = models.TextField(_("contribution"), blank=True)
-    tags = TaggableManager(verbose_name=_("tags"), blank=True)
+    primary_language = models.CharField(
+        _('primary language'), max_length=5, help_text=_('Language used for website and emails.'),
+        choices=settings.LANGUAGES)
+    share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
+    share_money = models.BooleanField(_('share money'), default=False)
+    newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=False)
+    phone_number = models.CharField(_('phone number'), max_length=50, blank=True)
+    gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
+    birthdate = models.DateField(_('birthdate'), null=True, blank=True)
 
     objects = BlueBottleUserManager()
 
@@ -200,11 +198,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             next_num = 2
             while queryset.filter(username=username):
                 username = original_username
-                end = '%s' % next_num
+                end = str(next_num)
                 end_len = len(end)
+
                 if len(username) + end_len > max_length:
                     username = username[:max_length - end_len]
-                username = '%s%s' % (username, end)
+
+                username = '{0}_{1}'.format(username, end)
                 next_num += 1
 
             # Finally set the generated username.
@@ -218,7 +218,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Returns the first_name plus the last_name, with a space in between.
         """
-        full_name = '%s %s' % (self.first_name, self.last_name)
+        full_name = '{0} {1}'.format(self.first_name, self.last_name)
         return full_name.strip()
 
     def get_short_name(self):
@@ -234,7 +234,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # It's possible to send multi-part text / HTML email by following these instructions:
         # https://docs.djangoproject.com/en/1.5/topics/email/#sending-alternative-content-types
         msg = EmailMessage(subject, message, from_email, [self.email])
-        msg.content_subtype = "html"  # Main content is now text/html
+        msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
     @property
@@ -253,8 +253,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
 class BlueBottleUser(BlueBottleBaseUser):
     """
-    This is the standard user model. If extra profile fields are required, provide your own user
-    model extending ``BlueBottleBaseUser``.
+    This is the standard user model. If extra profile fields are required,
+    provide your own user model extending ``BlueBottleBaseUser``.
     """
     class Meta:
         swappable = 'AUTH_USER_MODEL'
@@ -275,26 +275,13 @@ if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
 
 class UserAddress(Address):
     class AddressType(DjangoChoices):
-        primary = ChoiceItem('primary', label=_("Primary"))
-        secondary = ChoiceItem('secondary', label=_("Secondary"))
+        primary = ChoiceItem('primary', label=_('Primary'))
+        secondary = ChoiceItem('secondary', label=_('Secondary'))
 
-    address_type = models.CharField(_("address type"), max_length=10, blank=True, choices=AddressType.choices, default=AddressType.primary)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"))
+    address_type = models.CharField(
+        _('address type'), max_length=10, blank=True, choices=AddressType.choices, default=AddressType.primary)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
 
     class Meta:
-        verbose_name = _("user address")
-        verbose_name_plural = _("user addresses")
-
-
-# South cannot deal with the taggit_autocomplete field so we're ignoring it. Here's the error message from South:
-# ! Cannot freeze field 'accounts.bluebottleuser.tags'
-# ! (this field has class taggit_autocomplete_modified.managers.TaggableManagerAutocomplete)
-try:
-    from south.modelsinspector import add_ignored_fields
-except ImportError:
-    pass
-else:
-    # South should ignore the tags field as it's a RelatedField.
-    add_ignored_fields((
-        "^taggit_autocomplete_modified\.managers\.TaggableManagerAutocomplete",
-    ))
+        verbose_name = _('user address')
+        verbose_name_plural = _('user addresses')

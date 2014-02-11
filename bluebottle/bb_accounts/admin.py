@@ -6,14 +6,8 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from .models import UserAddress
-
 
 BB_USER_MODEL = get_user_model()
-
-class UserAddressAdmin(admin.StackedInline):
-    model = UserAddress
-    extra = 0
 
 
 class BlueBottleUserCreationForm(forms.ModelForm):
@@ -105,10 +99,6 @@ class BlueBottleUserAdmin(UserAdmin):
     )
 
     readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
-
-    # This post describes how you could put the address closer to the 'Personal Info' section.
-    # https://groups.google.com/d/msg/django-users/yUq2Nvx_4eM/30_EkjePrOAJ
-    inlines = (UserAddressAdmin,)
 
     form = BlueBottleUserChangeForm
     add_form = BlueBottleUserCreationForm

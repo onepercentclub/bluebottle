@@ -2,21 +2,18 @@ import os
 import random
 import string
 
-from django.utils.text import slugify
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.mail.message import EmailMessage
 from django.db import models
-import django.db.models.options as options
-from django.db.models.signals import post_save
-from django.utils.translation import ugettext_lazy as _
+from django.db.models import options as options
 from django.utils import timezone
+from django.utils.text import slugify
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
-
-from bluebottle.utils.models import Address
 
 
 """
@@ -249,39 +246,3 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def short_name(self):
         return self.get_short_name()
-
-
-class BlueBottleUser(BlueBottleBaseUser):
-    """
-    This is the standard user model. If extra profile fields are required,
-    provide your own user model extending ``BlueBottleBaseUser``.
-    """
-    class Meta:
-        swappable = 'AUTH_USER_MODEL'
-        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'
-
-
-# Ensures that UserProfile and User instances stay in sync.
-def create_user_address(sender, instance, created, **kwargs):
-    """ Create a UserAddress whenever a User is created. """
-    if created:
-        UserAddress.objects.create(user=instance)
-
-# This is not possible with the unknown user model at this stage. In Django 1.7+ the sender
-# can be specified as dotted python path, then settings.AUTH_USER_MODEL can be used.
-if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
-    post_save.connect(create_user_address, sender=BlueBottleUser)
-
-
-class UserAddress(Address):
-    class AddressType(DjangoChoices):
-        primary = ChoiceItem('primary', label=_('Primary'))
-        secondary = ChoiceItem('secondary', label=_('Secondary'))
-
-    address_type = models.CharField(
-        _('address type'), max_length=10, blank=True, choices=AddressType.choices, default=AddressType.primary)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
-
-    class Meta:
-        verbose_name = _('user address')
-        verbose_name_plural = _('user addresses')

@@ -6,7 +6,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from admin_tools.dashboard.modules import DashboardModule
 
 
-USER_MODEL = get_user_model()
+BB_USER_MODEL = get_user_model()
 
 
 class UserModule(DashboardModule):
@@ -30,13 +30,13 @@ class UserModule(DashboardModule):
         super(UserModule, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = USER_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+        qs = BB_USER_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
 
         self.children = qs[:self.limit]
 
         for c in self.children:
             c.admin_url = reverse('admin:{0}_{1}_change'.format(
-                USER_MODEL._meta.app_label, USER_MODEL._meta.module_name), args=(c.pk,))
+                BB_USER_MODEL._meta.app_label, BB_USER_MODEL._meta.module_name), args=(c.pk,))
 
         if not len(self.children):
             self.pre_content = _('No users found.')
@@ -44,5 +44,5 @@ class UserModule(DashboardModule):
 
     @property
     def post_content(self):
-        url = reverse('admin:{0}_{1}_changelist'.format(USER_MODEL._meta.app_label, USER_MODEL._meta.module_name))
+        url = reverse('admin:{0}_{1}_changelist'.format(BB_USER_MODEL._meta.app_label, BB_USER_MODEL._meta.module_name))
         return mark_safe('<a href="{0}">{1}</a>'.format(url, ugettext('View all users')))

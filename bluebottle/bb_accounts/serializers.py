@@ -4,19 +4,15 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer,
-                                                    TaggableSerializerMixin)
+from bluebottle.bluebottle_drf2.serializers import (
+    SorlImageField, ImageSerializer, TagSerializer, TaggableSerializerMixin)
 from bluebottle.geo.models import Country
-from bluebottle.bb_tasks import get_task_model
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code
 
 
 BB_USER_MODEL = get_user_model()
-BB_TASK_MODEL = get_task_model()
 
-# TODO: move imports to retain modularity
-from bluebottle.bb_tasks.models import TaskMember, Skill
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
@@ -69,8 +65,10 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location', 'twitter', 'facebook', 'skypename', 'tags')
+        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
+                  'about', 'why', 'website', 'availability', 'date_joined', 'location', 'twitter', 'facebook',
+                  'skypename', 'tags')
+
 
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ

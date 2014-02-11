@@ -11,6 +11,38 @@ from djchoices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 
+class OrganizationMember(models.Model):
+    """ Members from a Organization """
+
+    class MemberFunctions(DjangoChoices):
+        owner = ChoiceItem('owner', label=_('Owner'))
+        editor = ChoiceItem('editor', label=_('Editor'))
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
+    function = models.CharField(_('function'), max_length=20, choices=MemberFunctions.choices)
+
+    class Meta:
+        verbose_name = _('organization member')
+        verbose_name_plural = _('organization members')
+
+
+class OrganizationDocument(models.Model):
+    """ Document for an Organization """
+
+    file = models.FileField(
+        upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('organization document')
+        verbose_name_plural = _('organization documents')
+
+    @property
+    def document_url(self):
+        content_type = ContentType.objects.get_for_model(OrganizationDocument).id
+        return reverse('document-download-detail', kwargs={'content_type': content_type, 'pk': self.pk})
+
+
 class BaseOrganization(models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
@@ -23,6 +55,9 @@ class BaseOrganization(models.Model):
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     partner_organizations = models.TextField(_('partner organizations'), blank=True)
+
+    members = models.ManyToManyField(OrganizationMember, null=True)
+    documents = models.ManyToManyField(OrganizationDocument, null=True)
 
     # Address
     address_line1 = models.CharField(max_length=100, blank=True)
@@ -62,50 +97,4 @@ class BaseOrganization(models.Model):
                 next_slug += 1
             self.slug = slug
 
-
-class Organization(BaseOrganization):
-    """
-    Standard Organization model. If there are any extra fields required, provide
-    your own Organization model by extending ``BaseOrganization``.
-    """
-    description = models.TextField(_('Contact Name'), blank=True)
-    legal_status = models.TextField(
-        _('legal status'), blank=True, help_text=_('The legal status of the organization (e.g. Foundation).'))
-
-    class Meta:
-        swappable = 'ORGANIZATIONS_ORGANIZATION_MODEL'
-
-
-class OrganizationMember(models.Model):
-    """ Members from a Organization """
-
-    class MemberFunctions(DjangoChoices):
-        owner = ChoiceItem('owner', label=_('Owner'))
-        editor = ChoiceItem('editor', label=_('Editor'))
-
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_('organization'))
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
-    function = models.CharField(_('function'), max_length=20, choices=MemberFunctions.choices)
-
-    class Meta:
-        verbose_name = _('organization member')
-        verbose_name_plural = _('organization members')
-
-
-class OrganizationDocument(models.Model):
-    """ Document for an Organization """
-
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_('organization'))
-    file = models.FileField(
-        upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)
-
-    @property
-    def document_url(self):
-        content_type = ContentType.objects.get_for_model(OrganizationDocument).id
-        return reverse('document-download-detail', kwargs={'content_type': content_type, 'pk': self.pk})
-
-    class Meta:
-        verbose_name = _('organization document')
-        verbose_name_plural = _('organization documents')
 

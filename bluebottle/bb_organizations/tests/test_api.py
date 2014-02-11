@@ -3,7 +3,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from bluebottle.organizations.models import Organization
+from bluebottle.bb_organizations.models import Organization
 from bluebottle.test.factory_models.accounts_factories import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations_factories import (
     OrganizationFactory, OrganizationMemberFactory)

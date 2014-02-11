@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from bluebottle.slides.serializers import SlideSerializer
-from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
 from bluebottle.quotes.serializers import QuoteSerializer
 
 

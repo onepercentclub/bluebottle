@@ -5,8 +5,8 @@ from bluebottle.bluebottle_drf2.serializers import (
     TaggableSerializerMixin)
 from bluebottle.geo.models import Country
 
-from bluebottle.projects import get_project_model
-from bluebottle.projects.models import (
+from bluebottle.bb_projects import get_project_model
+from bluebottle.bb_projects.models import (
     ProjectTheme, ProjectBudgetLine, ProjectDetailField, ProjectDetail,
     ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectPhase)
 from bluebottle.utils.serializers import MetaField

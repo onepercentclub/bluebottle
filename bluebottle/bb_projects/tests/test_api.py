@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
-from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.bb_projects.models import ProjectBudgetLine
 from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
     ProjectBudgetLineFactory, ProjectPhaseFactory)

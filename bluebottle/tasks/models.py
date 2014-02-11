@@ -13,7 +13,7 @@ from taggit_autocomplete_modified.managers import (
     TaggableManagerAutocomplete as TaggableManager)
 
 from bluebottle.utils.utils import clean_for_hashtag
-from bluebottle.projects import get_project_model
+from bluebottle.bb_projects import get_project_model
 
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)

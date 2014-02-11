@@ -6,7 +6,7 @@ from rest_framework import serializers
 from bluebottle.accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
-from bluebottle.projects import get_project_model
+from bluebottle.bb_projects import get_project_model
 
 from .models import (
     WallPost, SystemWallPost, MediaWallPost, TextWallPost, MediaWallPostPhoto,

@@ -1,18 +1,18 @@
 from rest_framework import serializers
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, EuroField, TagSerializer, ImageSerializer, OEmbedField,
-    TaggableSerializerMixin)
+    SorlImageField, TagSerializer, ImageSerializer, TaggableSerializerMixin,
+    OEmbedField)
 from bluebottle.geo.models import Country
 
 from bluebottle.bb_projects import get_project_model
-from bluebottle.bb_projects.models import (
-    ProjectTheme, ProjectBudgetLine, ProjectDetailField, ProjectDetail,
-    ProjectDetailFieldAttribute, ProjectDetailFieldValue, ProjectPhase)
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.utils.serializers import MetaField
 from bluebottle.geo.serializers import CountrySerializer
 
+
 PROJECT_MODEL = get_project_model()
+
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,21 +26,13 @@ class ProjectCountrySerializer(serializers.ModelSerializer):
         model = Country
         fields = ('id', 'name', 'subregion')
 
+
 class ProjectThemeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
         
-
-class ProjectDetailSerializer(serializers.ModelSerializer):
-
-    field = serializers.CharField(source='field.slug', read_only=True)
-
-    class Meta:
-        model = ProjectDetail
-        fields = ('field', 'value')
-
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
@@ -102,38 +94,3 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     class Meta:
         model = PROJECT_MODEL
         exclude = ('owner', 'slug')
-
-
-        
-class ProjectBudgetLineSerializer(serializers.ModelSerializer):
-    amount = EuroField()
-    project = serializers.SlugRelatedField(slug_field='slug')
-
-    class Meta:
-        model = ProjectBudgetLine
-        fields = ('id', 'project', 'description', 'amount')
-
-
-class ProjectDetailFieldAttributeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProjectDetailFieldAttribute
-        fields = ('id', 'attribute', 'value')
-
-
-class ProjectDetailFieldValueSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProjectDetailFieldValue
-        fields = ('id', 'value', 'text')
-
-
-class ProjectDetailFieldSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
-    options = ProjectDetailFieldValueSerializer(many=True, source='projectdetailfieldvalue_set')
-    attributes = ProjectDetailFieldAttributeSerializer(many=True, source='projectdetailfieldattribute_set')
-
-    class Meta:
-        model = ProjectDetailField
-        fields = ('id', 'name', 'description', 'type', 'options', 'attributes')
-

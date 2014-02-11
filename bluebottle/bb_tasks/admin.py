@@ -9,14 +9,14 @@ from .models import TaskMember, TaskFile, Skill
 BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()
 
+
 class TaskMemberAdminInline(admin.StackedInline):
     model = TaskMember
 
     raw_id_fields = ('member', )
     readonly_fields = ('created', )
-    fields =  readonly_fields + ('member', 'status', 'motivation') #, 'time_spent')
+    fields = readonly_fields + ('member', 'status', 'motivation')
     extra = 0
-
 
 
 class TaskFileAdminInline(admin.StackedInline):
@@ -24,7 +24,7 @@ class TaskFileAdminInline(admin.StackedInline):
 
     raw_id_fields = ('author', )
     readonly_fields = ('created', )
-    fields =  readonly_fields + ('author', 'file')
+    fields = readonly_fields + ('author', 'file')
     extra = 0
 
 

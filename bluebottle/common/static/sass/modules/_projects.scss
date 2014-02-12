@@ -1,4 +1,4 @@
-//
+
 // Reusable project elements & sections
 // --------------------------------------------------
 
@@ -559,4 +559,96 @@
 			}
 		}
 	}
+}
+
+
+// new project plan
+#project-plan-modal {
+	top: 50%;
+	left: 50%;
+}
+#project-plan {
+	
+	background: $gray-lighter;
+
+	.project-plan-navigation {
+		
+		@include grid(12, 0, 0);
+		
+		position: relative;
+		min-height: 100%;
+			
+		.project-plan-title {
+			position: relative;
+			padding: $base-padding;
+			&:after {
+				left: 100%;
+				top: 60px;
+				border: solid transparent;
+				content: " ";
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-left-color: $gray-lighter;
+				border-width: 10px;
+				margin-top: -10px;
+			}
+		}
+		.project-plan-navigation-links {
+			padding: $base-padding;
+		}
+		
+		ul {
+			li {
+				@include resetlist();
+				text-align: right;
+				padding: $base-padding;
+				a {
+					text-decoration: none;
+				}
+				&.active {
+					background: white;					
+				}
+			}
+			.project-plan-download-pdf {
+				@include clear;
+				margin-top: $base-margin * 2;
+				a {
+					border: 2px solid $color-primary;
+					padding: $base-padding;
+					text-decoration: none;
+					float: right;			
+				}
+			}
+		}
+		
+	}
+	.project-plan-main {
+		@include grid(24,0,0);
+		padding: $base-padding * 2;
+		background: $white;
+		overflow-y: auto;
+		overflow-x: hidden;
+		
+		.project-plan-back-link {
+			float: right;
+			text-decoration: none;
+			text-transform: uppercase;
+			.flaticon {
+				text-align: center;
+				vertical-align: middle;
+				font-size: $font-size-larger;
+				margin: $base-margin/2;
+			}
+		}
+	}
+	
+	
+	.project-plan-map {
+		@include grid(12,0,0);
+		content: " ";
+	}
+	
+	
 }

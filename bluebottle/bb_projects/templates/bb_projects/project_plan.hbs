@@ -3,22 +3,58 @@
 {% load static %}
 
 {% tplhandlebars "project_plan" %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.9/jquery.scrollTo.min.js"></script>
 
     <div class="l-section" id="project-plan">
         <section class="l-wrapper">
 
 			<nav class="project-plan-navigation">
-				<h1>Project plan</h1>
-				<h4>{{title}}</h4>
+				
+				<div class="project-plan-title">
+					<h1>Project plan</h1>
+					<h4>{{title}}</h4>
+				</div>
+				
+				<ul class="project-plan-navigation-links">
+					<li><a class="project-plan-link" href="#header-1">Testing</a></li>
+					<li><a class="project-plan-link" href="#header-2">Testing</a></li>
+					<li><a class="project-plan-link" href="#header-3">Testing</a></li>
+					<li><a class="project-plan-link" href="#header-4">Testing</a></li>
+					<li class="project-plan-download-pdf"><a href="#"><span class="flaticon solid download-document-1"></span> Download as PDF</a><li>
+				</ul>
 			</nav>
 			
 			<article class="project-plan-main">
-				<a class="project-plan-back-link" href="#">Back to project<span class="flaticon stroke close-1"></span></a>
-				<p>Empty for now</p>
+				<a class="project-plan-back-link" href="#">Back to project<span class="flaticon stroke x-1"></span></a>
+				<h3 id="header-1">Why, What and How</h3>
+				<p>{{why}}</p>
+				<h3 id="header-2">Effects</h3>
+				<p>{{effects}}</p>
+				<h3 id="header-3">Header 1</h3>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+				</p>
+				<h3 id="header-4">Header 1</h3>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+				</p>
+				<h3 id="header-1">Header 1</h3>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+				</p>
+				<h3 id="header-2">Header 1</h3>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+				</p>
+				<h3 id="header-3">Header 1</h3>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+				</p>
+				<h3 id="header-4">Header 1</h3>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+				</p>
 			</article>
 			
-			<img src="http://placehold.it/260x1200" alt="maps placeholder">
-
+			<div class="project-plan-map">
+				<img src="http://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=300x1200&maptype=roadmap
+&markers=color:blue%7Clabel:S%7C40.702147,-74.015794&markers=color:green%7Clabel:G%7C40.711614,-74.012318
+&markers=color:red%7Clabel:C%7C40.718217,-73.998284&sensor=false" />
+			</div>
         </section>
     </div>
 

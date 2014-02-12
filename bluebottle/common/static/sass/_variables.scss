@@ -66,8 +66,6 @@ $form-background:					$gray-lighter !default;
 // Buttons
 // ---------------------------------
 
-
-
 // Grid
 // ---------------------------------
 $grid-columns:						48 !default;
@@ -87,8 +85,21 @@ $font-size-smallest:				$base-font-size * 0.75 !default;
 $base-margin:						1em !default;
 $base-padding:						1em !default;
 
-
 // Social
 // ----------------------------------
 $facebook-blue:						#45619d !default;					
 $twitter-blue:						#33b9e2 !default;
+
+// Modules
+// ----------------------------------
+
+// Carousel
+// ----------------------------------
+
+$carousel-background-color: 				$gray-darkest;
+$carousel-nav-section-background-color: 	$gray-lighter;
+$carousel-nav-background-color: 			$gray-lighter;
+
+$carousel-nav-item-border-color:			$white;
+$carousel-nav-item-active-background-color: $gray-lighter;
+$carousel-nav-item-active-color:			$white;

@@ -35,6 +35,18 @@ App.ProjectSearchFormView = Em.View.extend({
 App.ProjectPlanView = Em.View.extend(App.ScrollInView, {
     templateName: 'project_plan',
 
+    didInsertElement: function() {
+        var height = $(window).height();
+        var width = $(window).width();
+        this.$(".project-plan-navigation, .project-plan-main").height(height);
+        $("#project-plan-modal").css({width: width, height: height, "margin-left": -(width / 2), "margin-top": -(height / 2)})  
+        $("#project-plan-modal").modal("hide");
+        var view = this;
+        // view.$(".project-plan-link").click(function(event) {
+        //     event.preventDefault();
+        //     $(".project-plan-main").scrollTo($(this).attr("href"));
+        // })
+    },
     staticMap: function(){
         var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
         return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +

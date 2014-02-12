@@ -254,12 +254,12 @@
 		    &:hover {
 			    
 			    .nav-member-dropdown img {
-    			    border-color: $color-secondary;
+    			    border-color: $header-nav-member-hover-image-border-color;
 			    }
 			    
 			 	.nav-member-dropdown {
-		        	background-color: $white;
-		        	color: $gray-darker;
+		        	background-color: $header-nav-member-hover-dropdown-background-color;
+		        	color: $header-nav-member-hover-dropdown-color;
 					height: 34px;
 					
 					position: relative;
@@ -268,10 +268,10 @@
 					
 					border-width: 2px 2px 0 2px;
 					border-style: solid;
-					border-color: $color-secondary;
+					border-color: $header-nav-member-hover-dropdown-border-color;
 					
 					.flaticon {
-						color: $color-secondary;
+						color: $header-nav-member-hover-dropdown-icon-color;
 					}
 				}
 								
@@ -290,21 +290,21 @@
 		        width: 1.5em;
 		        height: 1.5em;
 		        line-height: 1.5em;
-		        background: $color-primary;
-		        color: $white;
+		        background: $header-nav-cart-count-background-color;
+		        color: $header-nav-cart-count-color;
 		        text-align: center;
 		        @include border-radius(1.5em);
 			}
 	        
 	        a {
 	        	display: inline-block;
-		    	color: $color-primary;
+		    	color: $header-nav-cart-link-color;
 				padding: 0.2em 0;
 				text-decoration: none;
 				font-family: $font-family-heavy;
 				
 				&:hover, &:active {
-					color: $white;
+					color: $header-nav-cart-link-hover-color;
 					
 					.nav-cart-count {
 					}

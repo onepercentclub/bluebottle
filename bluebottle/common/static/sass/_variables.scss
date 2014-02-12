@@ -90,6 +90,42 @@ $base-padding:						1em !default;
 $facebook-blue:						#45619d !default;					
 $twitter-blue:						#33b9e2 !default;
 
+// Buttons
+// ----------------------------------
+
+$button-color:										$white;
+$button-background-color:							$color-secondary;
+$button-border-color:								darken($color-secondary, 5%);
+                                            		
+$button-active-color:								$gray-dark;
+$button-active-background-color:					$gray-darkest;
+$button-active-border-color:						$black;
+                                    				
+$button-iconed-icon-color:							lighten($color-secondary, 5%);
+$button-iconed-icon-background-color:				darken($color-secondary, 5%);
+
+$button-iconed-active-icon-color:					$gray-darker;
+$button-iconed-active-icon-background-color:		darken($black, 5%);
+
+$button-iconed-hover-icon-color:					$white;
+$button-iconed-hover-icon-background-color:			#333;
+
+$button-hover-color:								$white;
+$button-hover-background-color:						$gray-darker;
+$button-hover-border-color:							$black;
+                                            		
+$button-disabled-border-color: 						$gray-light;
+$button-disabled-background-color: 					$gray-light;
+$button-disabled-color: 							$gray-lighter;
+                                            		
+$button-disabled-icon-background-color: 			darken($gray-light, 5%);
+$button-disabled-icon-color: 						$gray-lighter;
+                                            		
+$button-primary-border-color:						darken($color-primary, 5%);
+$button-primary-background-color:					$color-primary;
+$button-primary-icon-color:							lighten($color-primary, 10%);
+$button-primary-icon-background-color:				darken($color-primary, 5%);
+
 // Modules
 // ----------------------------------
 
@@ -103,3 +139,10 @@ $carousel-nav-background-color: 			$gray-lighter;
 $carousel-nav-item-border-color:			$white;
 $carousel-nav-item-active-background-color: $gray-lighter;
 $carousel-nav-item-active-color:			$white;
+
+// Projects
+// ----------------------------------
+
+$project-slider-background-color: 			$white;
+$project-slider-buttons-color:				$gray-lighter;
+$project-slider-buttons-hover-color:		$color-primary;

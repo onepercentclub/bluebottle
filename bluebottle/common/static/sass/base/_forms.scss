@@ -16,7 +16,7 @@ form {
 }
 	
 fieldset {	
-    background-color: $form-background;
+    background-color: $form-background-color;
     padding: $base-padding/2 0;
     margin-bottom: 1px;
 
@@ -35,7 +35,7 @@ fieldset {
 legend {
     position: relative;
 	padding: $base-padding*3/2 $base-padding*2;
-	background-color: $white;
+	background-color: $form-legend-background-color;
 	width: 100%;
 		
 	strong {
@@ -53,7 +53,7 @@ legend {
 
 // Legend inside fieldset
 fieldset legend {
-    background-color: $gray-light;
+    background-color: $form-fieldset-legend-background-color;
       
     strong {
         color: $white;
@@ -230,12 +230,12 @@ input[type=search],
 input[type=email],
 input[type=tel],
 input[type=url] {
-    color: $gray-darker;
-    border: 1px solid $input-border;
+    color: $form-input-color;
+    border: 1px solid $form-input-border-color;
     font-family: $base-font-family;
     width: 100%;
     padding: $base-padding/2 $base-padding;
-    background-color: $white;
+    background-color: $form-input-background-color;
     @include transition(all 0.2s ease-out);
     @include box-shadow(inset 2px 2px 0 rgba($black, 0.05));
     
@@ -244,9 +244,9 @@ input[type=url] {
     }
 
     &:hover, &:focus {
-        border-color: $color-secondary;
+        border-color: $form-input-hover-focus-border-color;
         outline: 0;
-        color: $gray-darker;
+        color: $form-input-hover-focus-color;
         @include box-shadow(none);
         
         & + .flaticon {
@@ -280,21 +280,21 @@ textarea:-moz-placeholder { color: $gray-light; }
         display: inline-block;
         padding: $base-padding/2 $base-padding/2 $base-padding/2 $base-padding;
         margin: 0 $base-margin/4 $base-margin/2 0;
-        color: $white;
+        color: $form-tags-color;
         font-size: $font-size-small;
         text-transform: uppercase;
-        background-color: $color-secondary;
+        background-color: $form-tags-background-color;
         
         .flaticon {
             margin-right: $base-margin/2;
         }
         
         .delete {
-            color: $white;
+            color: $form-tags-delete-color;
             cursor: pointer;
             
             &:hover {
-                color: $color-primary;
+                color: $form-tags-delete-hover-color;
             }
         }
     }
@@ -371,9 +371,9 @@ label.radio {
             
             margin: 0;
             padding: $base-padding/2 $base-padding;
-            color: $white;
-            border: 1px solid darken($gray-light, 5%);
-            background-color: $gray-light;
+            color: $form-radio-select-label-color;
+            border: 1px solid $form-radio-select-label-border-color;
+            background-color: $form-radio-select-label-background-color;
             cursor: pointer;
             @include border-radius(1px);
             text-align: center;
@@ -382,9 +382,9 @@ label.radio {
         
         input[type=radio]:checked + span {
             position: relative;
-            border-color: darken($color-secondary, 5%);
+            border-color: $form-radio-select-input-border-color;
             font-family: $font-family-heavy;
-            background: $color-secondary;
+            background: $form-radio-select-input-background-color;
             z-index: 10;
         }
         
@@ -426,7 +426,7 @@ input[readonly],
 select[readonly],
 textarea[readonly] {
     cursor: not-allowed;
-    background-color: $input-disabled-background;
+    background-color: $form-input-disabled-background-color;
 }
 
 

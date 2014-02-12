@@ -57,7 +57,7 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
     username = serializers.CharField(read_only=True)
 
     website = URLField(required=False)
-    tags = TagSerializer()
+    #tags = TagSerializer()
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -67,7 +67,7 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
                   'about', 'why', 'website', 'availability', 'date_joined', 'location', 'twitter', 'facebook',
-                  'skypename', 'tags')
+                  'skypename')
 
 
 # Thanks to Neamar Tucote for this code:

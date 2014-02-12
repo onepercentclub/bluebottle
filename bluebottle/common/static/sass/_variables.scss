@@ -239,3 +239,47 @@ $tabs-steps-tabitem-inactive-title-color:			$gray-light;
 $tabs-steps-tabitem-inactive-subtitle-color:		$gray-light;
 $tabs-steps-tabitem-last-background-color:			$white;
 $tabs-steps-tabitem-last-active-background-color:	$color-secondary;
+
+// Layout
+// -----------------------------------
+
+// Footer
+// -----------------------------------
+
+$footer-background-color: 							$gray-lighter;
+$footer-heading-color:								$gray-darker;
+$footer-content-color:								$gray;
+$footer-menu-color:									$gray;
+$footer-menu-link-color:							$gray;
+$footer-menu-link-hover-color:						$gray-darker;
+$footer-social-links-background-color:				$gray;
+$footer-social-links-hover-background-color:		$color-text;
+$footer-social-links-icon-color:					$white;
+$footer-copyright-background-color:					$black;
+$footer-copyright-color:							$white;
+$footer-copyright-link-color:						$gray;
+$footer-copyright-link-hover-color:					$gray-lighter;
+$footer-copyright-link-feedback-color:				$color-secondary;
+
+// Header
+// -----------------------------------
+
+$header-background-color:							$black;
+$header-nav-main-color: 							#bfbfbf;
+$header-nav-main-navitem-border-color: 				$black;
+$header-nav-main-navitem-border-bottom-color:       #393939;
+$header-nav-main-navitem-active-border-color:		#393939;
+$header-nav-main-navitem-active-border-bottom-color:$gray-darkest;
+$header-nav-main-navitem-active-color:				$white;
+$header-nav-main-navitem-active-background-color:	$gray-darkest;
+$header-nav-actions-color:							$white;
+$header-nav-signup-login-color:						$color-deselect;
+$header-nav-signup-login-active-color:				$color-text;
+$header-nav-signup-login-active-background-color:	$white;
+$header-nav-signup-color:							$white;
+$header-nav-signup-background-color:				$color-primary;
+$header-nav-login-color:							$white;
+$header-nav-login-background-color:					$color-secondary;
+$header-nav-language-link-color:					$gray-light;
+$header-nav-language-link-hover-color:				$white;
+$header-nav-language-link-hover-border-color:		$white;

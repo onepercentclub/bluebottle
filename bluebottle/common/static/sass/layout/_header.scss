@@ -5,7 +5,7 @@
 #header {
 	@include clear;
 	@include transition(background 0.2s ease-out);
-	background-color: $black;
+	background-color: $header-background-color;
 	box-shadow: inset 0 -1px 0 0 #393939
 }
 
@@ -67,32 +67,32 @@
 
 
 	        white-space: nowrap;
-	        color: #bfbfbf;
+	        color: $header-nav-main-color;
             font-family: $font-family-bold;
 		    display: inline-block;
 		    text-align: center;
 		    text-decoration: none;
-		    border: 1px solid $black;
-		    border-bottom-color: #393939;
+		    border: 1px solid $header-nav-main-navitem-border-color;
+		    border-bottom-color: $header-nav-main-navitem-border-bottom-color;
 		
 		    &:hover, &:active, &.is-active {
-		        border-color:  #393939;
-		        border-bottom-color: $gray-darkest;
-		        color: $white;
-		        background-color: $gray-darkest;
+		        border-color:  $header-nav-main-navitem-active-border-color;
+		        border-bottom-color: $header-nav-main-navitem-active-border-bottom-color;
+		        color: $header-nav-main-navitem-active-color;
+		        background-color: $header-nav-main-navitem-active-background-color;
 		    }
 	    }
 	}
 	
 	.nav-actions {
 	    @include grid(16,0,1);
-	    color: $white;
+	    color: $header-nav-actions-color;
 				
 		.nav-signup-login {
 	        padding: $base-margin 0 0 0;
 		    float: left;
 			text-align: left;
-			color: $color-deselect;
+			color: $header-nav-signup-login-color;
 			white-space: nowrap;
 				
 			a {
@@ -102,19 +102,19 @@
 			    font-family: $font-family-heavy;
 			    
 				&:hover, &:active, &.is-active {
-	            	color: $color-text;
-	            	background-color: $white;
+	            	color: $header-nav-signup-login-active-color;
+	            	background-color: $header-nav-signup-login-active-background-color;
 				}
 			}
 			
 			.nav-signup {
-				color: $white;
-                background-color: $color-primary;
+				color: $header-nav-signup-color;
+                background-color: $header-nav-signup-background-color;
 			}
 			
 			.nav-login {
-				color: $white;
-                background-color: $color-secondary;
+				color: $header-nav-login-color;
+                background-color: $header-nav-login-background-color;
 			}
 			
 		}
@@ -135,12 +135,12 @@
             		margin: 0 $base-margin/6;
             		padding: $base-padding/6 $base-padding/2;
             		border: 1px solid transparent;
-            		color: $gray-light;
+            		color: $header-nav-language-link-color;
             		text-decoration: none;
             		
             		&:hover, &:active {
-                		color: $white;
-                		border-color: $white;
+                		color: $header-nav-language-link-hover-color;
+                		border-color: $header-nav-language-link-hover-border-color;
             		}
         		}
         		

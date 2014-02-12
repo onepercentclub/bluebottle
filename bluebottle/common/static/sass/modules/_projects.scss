@@ -368,20 +368,22 @@
 
 .project-slider {
 	
+	background-color: $project-slider-background-color;
 	.project-slider-prev, .project-slider-next {
 		position: absolute;
 		@include hide-text();
-		@include border-radius(22px);
-		top: 45%;
+		@include border-radius(50%);
+		top: 50%;
+		margin-top: -22px;
 		width: 44px;
 		height: 44px;
 		color: $white;
     	text-align: center;
 		cursor: pointer;
-		background-color: $gray-lighter;
+		background-color: $project-slider-buttons-color;
 
 		&:hover {
-        	background-color: $color-primary;
+        	background-color: $project-slider-buttons-hover-color;
 			color: $white;
 		}
 	}
@@ -400,6 +402,12 @@
 		background-image: $icons;
 		background-repeat: no-repeat;
 		background-position: sprite-position($icons, arrow-right-white, 12px, 6px);
+	}
+	.project-image {
+		@include grid(24,4,0);			
+	}
+	.project-info {
+		@include grid(24,0,4);
 	}
 }
 

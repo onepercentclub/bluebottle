@@ -1,6 +1,10 @@
 from django.test import TestCase
+from django.utils import timezone
+
+from mock import patch
 
 from bluebottle.bb_accounts.models import BlueBottleUser
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class BlueBottleUserManagerTestCase(TestCase):
@@ -28,3 +32,82 @@ class BlueBottleUserManagerTestCase(TestCase):
             'The given email address must be set',
             BlueBottleUser.objects.create_user,
             email='')
+
+
+class BlueBottleUserTestCase(TestCase):
+    """
+    Test case for the implementation of the abstract user model.
+    """
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create()
+
+    @patch('django.utils.timezone.now')
+    def test_update_deleted_timestamp(self, mock):
+        """
+        Tests the ``update_deleted_timestamp`` method, checking that the
+        timestamp is properly set up when the user is not active any more.
+        """
+        timestamp = timezone.now()
+        mock.return_value = timestamp
+
+        self.user.is_active = False
+        self.user.update_deleted_timestamp()
+
+        self.assertEqual(self.user.deleted, timestamp)
+
+    def test_update_deleted_timestamp_active_user(self):
+        """
+        Tests that the ``update_deleted_timestamp`` method resets the timestamp
+        to ``None`` if the user becomes active again.
+        """
+        self.user.is_active = False
+        self.user.update_deleted_timestamp()
+
+        # Now the user is inactive, so ``deleted`` attribute is set. Let's
+        # reactivate it again and check that is reset.
+        self.user.is_active = True
+        self.user.update_deleted_timestamp()
+
+        self.assertIsNone(self.user.deleted)
+
+    def test_generate_username_from_email(self):
+        """
+        Tests the ``generate_username`` method when no username was provided.
+        It should create the username from the name of the user email.
+        """
+        user = BlueBottleUserFactory.create(username='')
+        user.generate_username()
+
+        email_name, domain_part = user.email.strip().rsplit('@', 1)
+
+        self.assertEqual(user.username, email_name)
+
+    def test_generate_username_from_names(self):
+        """
+        Tests the ``generate_username`` method when no username was provided
+        but ``first_name`` and ``last_name`` are defined.
+        """
+        user = BlueBottleUserFactory.create(username='', first_name=u'John', last_name=u'Doe')
+        user.generate_username()
+
+        self.assertEqual(user.username, 'johndoe')
+
+    def test_get_full_name(self):
+        """
+        Tests the ``get_full_name`` method.
+        """
+        self.user.first_name = 'John'
+        self.user.last_name = 'Doe'
+        self.user.save()
+
+        self.assertEqual(self.user.get_full_name(), 'John Doe')
+
+    def test_get_short_name(self):
+        """
+        Tests the ``get_short_name`` method.
+        """
+        self.user.first_name = 'John'
+        self.user.last_name = 'Doe'
+        self.user.save()
+
+        self.assertEqual(self.user.get_short_name(), 'John')

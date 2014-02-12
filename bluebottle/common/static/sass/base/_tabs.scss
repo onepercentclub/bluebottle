@@ -185,11 +185,11 @@
 		}
 		
 		li:last-of-type > a, li:last-of-type > span {
-			background: $white;
+			background: $tabs-steps-tabitem-last-background-color;
 		}
 		
 		li:last-of-type > a.active, li:last-of-type > span.active {
-			background: $color-secondary;
+			background: $tabs-steps-tabitem-last-active-background-color;
 		}
     }
 }

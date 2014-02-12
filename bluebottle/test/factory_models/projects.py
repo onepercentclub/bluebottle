@@ -1,7 +1,7 @@
 import factory
 
-from bluebottle.projects import get_project_model
-from bluebottle.projects.models import (
+from bluebottle.bb_projects import get_project_model
+from bluebottle.bb_projects.models import (
     ProjectTheme, ProjectDetailField, ProjectBudgetLine, ProjectPhase)
 from .accounts import BlueBottleUserFactory
 

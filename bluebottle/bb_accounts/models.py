@@ -16,13 +16,6 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 
-"""
-    When extending the user model, the serializer should extend too.
-    We provide a default base serializer in sync with the base user model
-    The Django Meta attribute seems the best place for this configuration, so we
-    have to add this.
-"""
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
@@ -53,7 +46,8 @@ def generate_picture_filename(instance, filename):
     return os.path.normpath(os.path.join(upload_directory, normalized_filename))
 
 
-# Our custom user model is based on option 3 from Two Scoops of Django - Chapter 16: Dealing With the User Model.
+# Our custom user model is based on option 3 from Two Scoops of Django
+# - Chapter 16: Dealing With the User Model.
 class BlueBottleUserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
@@ -83,6 +77,11 @@ class BlueBottleUserManager(BaseUserManager):
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.
+
+    When extending the user model, the serializer should extend too.
+    We provide a default base serializer in sync with the base user model
+    The Django Meta attribute seems the best place for this configuration, so we
+    have to add this.
     """
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
@@ -246,3 +245,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def short_name(self):
         return self.get_short_name()
+
+
+class BlueBottleUser(BlueBottleBaseUser):
+    """
+    Implements the abstract user model to provide a functional database
+    model in order to run the tests.
+    """
+    class Meta:
+        swappable = 'AUTH_USER_MODEL'
+        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'

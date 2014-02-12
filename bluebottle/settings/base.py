@@ -142,15 +142,15 @@ INSTALLED_APPS = (
 
 
     # BlueBottle applications.
-    'bluebottle.accounts',
+    'bluebottle.bb_accounts',
     'bluebottle.utils',
     'bluebottle.common',
-    'bluebottle.contact',
+    # 'bluebottle.bb_contact',
     'bluebottle.geo',
-    'bluebottle.pages',
-    'bluebottle.projects',
-    'bluebottle.organizations',
-    'bluebottle.tasks',
+    # 'bluebottle.pages',
+    'bluebottle.bb_projects',
+    # 'bluebottle.bb_organizations',
+    # 'bluebottle.bb_tasks',
 
     # Modules required by BlueBottle
     'fluent_contents',
@@ -160,7 +160,6 @@ INSTALLED_APPS = (
 
     'django_wysiwyg',
     'templatetag_handlebars',
-
 )
 
 
@@ -215,10 +214,10 @@ LOGGING = {
 # BlueBottle generic models. Override this in your settings if you need to
 # extend any of those models when you are extending BlueBottle for your own
 # purposes.
-AUTH_USER_MODEL = 'accounts.BlueBottleUser'
-ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-PROJECTS_PROJECT_MODEL = 'projects.Project'
-TASKS_TASK_MODEL = 'tasks.Task'
+AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
+# ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
+# PROJECTS_PROJECT_MODEL = 'projects.Project'
+# TASKS_TASK_MODEL = 'tasks.Task'
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

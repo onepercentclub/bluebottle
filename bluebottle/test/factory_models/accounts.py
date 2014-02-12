@@ -1,13 +1,10 @@
 import factory
 
-from django.contrib.auth import get_user_model
-
-
-BB_USER_MODEL = get_user_model()
+from bluebottle.bb_accounts.models import BlueBottleUser
 
 
 class BlueBottleUserFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = BB_USER_MODEL
+    FACTORY_FOR = BlueBottleUser
 
     username = factory.Sequence(lambda n: 'user_{0}'.format(n))
     email = factory.Sequence(lambda o: '{0}@onepercentclub.com'.format(o))

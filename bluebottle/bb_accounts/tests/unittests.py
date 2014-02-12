@@ -15,6 +15,10 @@ from bluebottle.geo.tests import GeoTestsMixin
 import json
 import re
 
+from bb_accounts.models import BlueBottleBaseUser
+
+
+
 
 class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
     """

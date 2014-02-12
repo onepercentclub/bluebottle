@@ -1,9 +1,10 @@
-import math
-from bluebottle.slides.models import Slide
-from bluebottle.projects import get_project_model
-from bluebottle.quotes.models import Quote
-from bluebottle.tasks.models import Task
 from django.db.models import Q
+
+from bluebottle.slides.models import Slide
+from bluebottle.bb_projects import get_project_model
+from bluebottle.quotes.models import Quote
+from bluebottle.bb_tasks.models import Task
+
 
 PROJECT_MODEL = get_project_model()
 

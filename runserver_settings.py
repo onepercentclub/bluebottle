@@ -149,5 +149,5 @@ USE_EMBER_STYLE_ATTRS = True
 
 INCLUDE_TEST_MODELS = True
 
-PROJECTS_PROJECT_MODEL = 'projects.Project'
-TASKS_TASK_MODEL = 'tasks.Task'
+PROJECTS_PROJECT_MODEL = 'bb_projects.Project'
+TASKS_TASK_MODEL = 'bb_tasks.Task'

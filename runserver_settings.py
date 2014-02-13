@@ -75,14 +75,20 @@ INSTALLED_APPS = (
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
-    'bluebottle.projects',
+    # 'bluebottle.projects',
     'bluebottle.pages',
-    'bluebottle.organizations',
+    # 'bluebottle.organizations',
     'bluebottle.wallposts',
-    'bluebottle.tasks',
+    # 'bluebottle.tasks',
     'bluebottle.news',
     'bluebottle.slides',
     'bluebottle.quotes',
+
+    'bluebottle.bb_accounts',
+    'bluebottle.bb_contact',
+    'bluebottle.bb_organizations',
+    'bluebottle.bb_projects',
+    'bluebottle.bb_tasks',
     )
 
 MIDDLEWARE_CLASSES = [
@@ -115,7 +121,7 @@ TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
-AUTH_USER_MODEL = 'accounts.BlueBottleUser'
+AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
 
 
 ROOT_URLCONF = 'bluebottle.urls'
@@ -143,5 +149,5 @@ USE_EMBER_STYLE_ATTRS = True
 
 INCLUDE_TEST_MODELS = True
 
-PROJECTS_PROJECT_MODEL = 'projects.Project'
-TASKS_TASK_MODEL = 'tasks.Task'
+PROJECTS_PROJECT_MODEL = 'bb_projects.Project'
+TASKS_TASK_MODEL = 'bb_tasks.Task'

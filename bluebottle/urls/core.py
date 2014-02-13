@@ -25,7 +25,7 @@ urlpatterns += patterns('loginas.views',
 )
 
 js_info_dict = {
-    'packages': ('apps.accounts', 'apps.projects'),
+    'packages': ('apps.bb_accounts', 'apps.bb_projects'),
 }
 
 urlpatterns += patterns('',

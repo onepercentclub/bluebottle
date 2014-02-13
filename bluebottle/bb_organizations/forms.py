@@ -1,12 +1,8 @@
 from django import forms
-from django.contrib.admin.widgets import AdminFileWidget
-from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
-from django.utils.encoding import force_text
-from django.utils.html import conditional_escape, format_html
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 
-from .models import Organization, OrganizationDocument
+from .models import OrganizationDocument
 
 # Widgets
 class UploadWidget(forms.FileInput):

@@ -2,13 +2,13 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import get_model
 
-
 def get_project_model():
     """
     Returns the Project model that is active in this BlueBottle project.
 
     (Based on ``django.contrib.auth.get_user_model``)
     """
+
     try:
         app_label, model_name = settings.PROJECTS_PROJECT_MODEL.split('.')
     except ValueError:

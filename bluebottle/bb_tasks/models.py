@@ -6,15 +6,13 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
-from taggit_autocomplete_modified.managers import (
-    TaggableManagerAutocomplete as TaggableManager)
+from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-from bluebottle.bb_projects import get_project_model
-
+#from bluebottle.bb_projects import get_project_model
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
-PROJECT_MODEL = get_project_model()
+#PROJECT_MODEL = get_project_model()
 
 
 class Skill(models.Model):
@@ -107,6 +105,7 @@ class BaseTask(models.Model):
     objects = models.Manager()
 
     class Meta:
+        default_serializer = 'bluebottle.bb_tasks.serializers.TaskSerializer'
         abstract = True
         ordering = ['-created']
         verbose_name = _(u'task')

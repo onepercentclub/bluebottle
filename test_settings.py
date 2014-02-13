@@ -72,10 +72,15 @@ INSTALLED_APPS = (
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
-    'bluebottle.organizations',
+    # 'bluebottle.organizations',
     'bluebottle.pages',
-    'bluebottle.projects',
-    'bluebottle.tasks',
+    # 'bluebottle.projects',
+    # 'bluebottle.tasks',
+    'bluebottle.bb_accounts',
+    'bluebottle.bb_contact',
+    'bluebottle.bb_organization',
+    'bluebottle.bb_projects',
+    'bluebottle.bb_tasks',
 
 
 )

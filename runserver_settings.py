@@ -75,14 +75,20 @@ INSTALLED_APPS = (
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
-    'bluebottle.projects',
+    # 'bluebottle.projects',
     'bluebottle.pages',
-    'bluebottle.organizations',
+    # 'bluebottle.organizations',
     'bluebottle.wallposts',
-    'bluebottle.tasks',
+    # 'bluebottle.tasks',
     'bluebottle.news',
     'bluebottle.slides',
     'bluebottle.quotes',
+
+    'bluebottle.bb_accounts',
+    'bluebottle.bb_contact',
+    'bluebottle.bb_organizations',
+    'bluebottle.bb_projects',
+    'bluebottle.bb_tasks',
     )
 
 MIDDLEWARE_CLASSES = [

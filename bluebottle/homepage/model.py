@@ -3,11 +3,10 @@ from django.db.models import Q
 from bluebottle.slides.models import Slide
 from bluebottle.bb_projects import get_project_model
 from bluebottle.quotes.models import Quote
-from bluebottle.bb_tasks.models import Task
-
+from bluebottle.bb_tasks import get_task_model
 
 PROJECT_MODEL = get_project_model()
-
+TASK_MODEL = get_task_model()
 
 class HomePage(object):
     def get(self, language):
@@ -28,7 +27,7 @@ class HomePage(object):
             Q(status=4) | Q(status=5) ).count()
 
         self.destination_count = projects.distinct("country").count()
-        tasks = Task.objects.filter(
+        tasks = TASK_MODEL.objects.filter(
             Q(status="realized")
         )
 

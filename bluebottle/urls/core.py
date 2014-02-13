@@ -13,10 +13,8 @@ urlpatterns = patterns('',
 
 for app in settings.INSTALLED_APPS:
     if app[:11] == 'bluebottle.':
-        print "CIAO"
         app = app[11:]
-        if app not in ['common', 'accounts', 'contentplugins', 'admin_dashboard',
-                       'tasks', 'settings', 'projects', 'organizations', 'mail', 'contact']:
+        if app not in ['common', 'bb_accounts', 'contentplugins', 'admin_dashboard']:
             urlpatterns += patterns('',
                 url(r'^api/%s/' % app, include('bluebottle.%s.urls.api' % app)),
             )

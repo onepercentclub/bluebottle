@@ -18,11 +18,10 @@ from rest_framework import views
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
 from bluebottle.utils.serializers import DefaultSerializerMixin
 
-from .serializers import (CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
-                          PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
+from .serializers import (
+    CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
+    PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
-
-# API views
 
 class UserProfileDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
     model = BB_USER_MODEL

@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, TagSerializer, TaggableSerializerMixin)
+    SorlImageField, ImageSerializer, TaggableSerializerMixin)
 from bluebottle.geo.models import Country
 from bluebottle.utils.serializers import URLField
 from bluebottle.utils.validators import validate_postal_code

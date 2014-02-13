@@ -56,6 +56,7 @@ install_requires = [
     'html5lib==0.95',
 #    'jsmin==2.0.2',
     'micawber==0.2.6',
+    'mock==1.0.1',
 #    'pycurl==7.19.0',
 #    'pytz==2013b',
 #    'raven==3.3.12',

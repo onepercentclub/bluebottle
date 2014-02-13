@@ -17,6 +17,3 @@ class BaseUserTestCase(TestCase):
         super(BaseUserTestCase, self)._post_teardown()
         settings.INSTALLED_APPS = self._original_installed_apps
         loading.cache.loaded = False
-
-
-

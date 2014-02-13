@@ -1,26 +1,14 @@
-from django.test import TestCase
 from django.utils import timezone
 
 from mock import patch
 
-from bluebottle.bb_accounts.models import BlueBottleUser
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from bluebottle.bb_accounts.tests.baseuser.models import TestBaseUser
 from bluebottle.bb_accounts.tests.baseuser.test import BaseUserTestCase
 
-class BaseUserTests(BaseUserTestCase):
-    def test_demo_test(self):
-        self.assertEquals(TestBaseUser.objects.all().count(), 0)
-        user = TestBaseUser(email="testuser@test.com",
-                            username="testuser",
-                            first_name="first_test",
-                            last_name="last_test")
-        user.save()
-        self.assertEquals(TestBaseUser.objects.all().count(), 1)
 
-
-class BlueBottleUserManagerTestCase(TestCase):
+class BlueBottleUserManagerTestCase(BaseUserTestCase):
     """
     Test case for the model manager of the abstract user model.
     """
@@ -28,7 +16,7 @@ class BlueBottleUserManagerTestCase(TestCase):
         """
         Tests the manager ``create_user`` method.
         """
-        user = BlueBottleUser.objects.create_user(email='john_doe@onepercentclub.com')
+        user = TestBaseUser.objects.create_user(email='john_doe@onepercentclub.com')
 
         self.assertEqual(user.username, 'john_doe')
         self.assertTrue(user.is_active)
@@ -43,11 +31,11 @@ class BlueBottleUserManagerTestCase(TestCase):
         self.assertRaisesMessage(
             ValueError,
             'The given email address must be set',
-            BlueBottleUser.objects.create_user,
+            TestBaseUser.objects.create_user,
             email='')
 
 
-class BlueBottleUserTestCase(TestCase):
+class BlueBottleUserTestCase(BaseUserTestCase):
     """
     Test case for the implementation of the abstract user model.
     """

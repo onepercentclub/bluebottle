@@ -214,7 +214,7 @@ LOGGING = {
 # BlueBottle generic models. Override this in your settings if you need to
 # extend any of those models when you are extending BlueBottle for your own
 # purposes.
-AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
+# AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
 # ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
 # PROJECTS_PROJECT_MODEL = 'projects.Project'
 # TASKS_TASK_MODEL = 'tasks.Task'

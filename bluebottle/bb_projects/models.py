@@ -52,6 +52,7 @@ class ProjectPhase(models.Model):
     class Meta():
         ordering = ['sequence']
 
+
     def __unicode__(self):
         return '{0} - {1}'.format(self.sequence,  self.name)
 

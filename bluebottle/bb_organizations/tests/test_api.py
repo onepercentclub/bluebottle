@@ -3,8 +3,8 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from bluebottle.bb_organizations.models import Organization
-from bluebottle.test.factory_models.accounts_factories import BlueBottleUserFactory
+from bluebottle.bb_organizations.models import BaseOrganization
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations_factories import (
     OrganizationFactory, OrganizationMemberFactory)
 
@@ -108,7 +108,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 201)
 
         # Check the data.
-        organization = Organization.objects.latest('pk')
+        organization = BaseOrganization.objects.latest('pk')
         self.assertEqual(organization.name, post_data['name'])
         self.assertEqual(organization.slug, post_data['slug'])
         self.assertEqual(organization.address_line1, post_data['address_line1'])

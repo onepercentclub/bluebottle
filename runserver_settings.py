@@ -121,7 +121,7 @@ TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
-AUTH_USER_MODEL = 'accounts.BlueBottleUser'
+AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
 
 
 ROOT_URLCONF = 'bluebottle.urls'

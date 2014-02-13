@@ -245,13 +245,3 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def short_name(self):
         return self.get_short_name()
-
-
-class BlueBottleUser(BlueBottleBaseUser):
-    """
-    Implements the abstract user model to provide a functional database
-    model in order to run the tests.
-    """
-    class Meta:
-        swappable = 'AUTH_USER_MODEL'
-        default_serializer = 'bluebottle.accounts.serializers.UserProfileSerializer'

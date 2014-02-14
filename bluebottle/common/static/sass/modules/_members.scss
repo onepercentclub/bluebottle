@@ -27,9 +27,10 @@
     
     .member-name {
         @include transition(all 0.2s ease-out);
-        display: inline-block;
+//        display: inline-block;
         text-transform: uppercase;
         font-family: $font-family-heavy;
+		
     }
     
     .member-organisation, .member-created {
@@ -51,7 +52,7 @@
     position: relative;
     margin: 0;
     padding: 0;
-    white-space: nowrap;
+//    white-space: nowrap;
 
     li {
         @include resetlist;
@@ -84,7 +85,6 @@
         }
 
         &.member-initiator {
-            @include grid(14,0,1);
         
             h4 {
                 position: relative;

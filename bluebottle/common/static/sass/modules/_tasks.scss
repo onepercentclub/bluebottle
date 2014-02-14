@@ -176,6 +176,9 @@
 	position: relative;
 	padding: $base-padding;
 	background-color: $tasks-task-previews-bg-color;
+	h3 {
+		margin-bottom: $base-margin;
+	}
 	.container {
 		position: relative;
 		border-bottom: 1px solid gray;

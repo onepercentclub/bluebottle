@@ -27,6 +27,8 @@
     padding: 0;
     outline: none;
 
+	.close {
+	}
     &.large {
         width: 600px;
         margin-left: -300px;
@@ -45,12 +47,11 @@
     position: absolute;
     top: 0;
     right: 0;
-    padding: $base-padding/4 $base-padding/2;
+	padding: $base-padding/4;
     color: $modal-close-color;
     background-color: $modal-close-background-color;
     text-decoration: none;
     font-size: 2em;
-    height: 1.5em;
     
     &:hover, &:active {
         position: absolute;

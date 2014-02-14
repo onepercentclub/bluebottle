@@ -4,9 +4,11 @@
 
 #task-detail {
 	
-	padding: $base-padding 0;
-	background-color: $gray-darkest;
-	color: $white;
+	#task-details {
+		padding: $base-padding*2 0;
+		background-color: $gray-darkest;
+		color: $white;		
+	}
 	
 	h1, h2, h3 {
 		text-transform: none;
@@ -43,19 +45,6 @@
 		position: relative;
 		@include grid(8,1,1);	
 		
-//		&:after {
-//			left: 100%;
-//			top: 4.5em;
-//			border: solid transparent;
-//			content: " ";
-//			height: 0;
-//			width: 0;
-//			position: absolute;
-//			pointer-events: none;
-//			border-left-color: $white;
-//			border-width: 10px;
-//			margin-top: -10px;
-//		}
 		.task-status {
 			padding: $base-padding / 2;
 			text-align: center;
@@ -70,7 +59,6 @@
 	}
 	.edit-task {
 		text-align: right;
-		padding: $base-padding 0;
 		a {
 			text-decoration: none;
 		}
@@ -249,7 +237,7 @@
 		.task-action {
 		    @include grid(16,1,1);
 		    float: right;
-			margin-top: $base-margin * 2;
+			margin-top: $base-margin;
 
 		    .btn {
 		        font-family: $font-family-bold;
@@ -264,10 +252,10 @@
 		    }
 		}
         .member-initiator {
-            @include grid(18,0,1);		
+            @include grid(24,0,1);		
 		}
         .member-assigned {
-            @include grid(18,0,0);
+            @include grid(24,0,0);
 		}		
 	}
 	

@@ -14,8 +14,8 @@
     }
 }
 
-.project-location, .project-theme {
-	color: $color-secondary;
+.project-location, .project-theme, .project-deadline {
+	color: $projects-project-meta-color;
 	font-family: $font-family-heavy;
 	padding: $base-padding/2 0;
 	margin-right: $base-margin*2;
@@ -27,12 +27,12 @@
 }
 
 .project-days-left {
-	color: $gray-dark;
+	color: $projects-project-days-left-color;
 	text-transform: uppercase;
 	
 	.flaticon {	
 	    font-size: 1em;
-        color: $gray-light;
+        color: $projects-project-days-left-icon-color;
 	}
 
 	strong {
@@ -57,7 +57,7 @@
     } 
     
     .project-fund-amount {
-    	color: $gray-dark;
+    	color: $projects-project-fund-amount-color;
         text-transform: uppercase;
         margin-bottom: $base-margin/2;
     
@@ -91,14 +91,14 @@
     display: block;
     overflow: hidden;
     margin: 0 0 $base-margin/2 0;
-    background-color: $gray-lighter;
+    background-color: $projects-project-fund-amount-slider-bg-color;
     
     .slider-progress {
         position: relative;
         display: block;
         border-radius: 1em 0 0 1em;
-        background-color: $color-secondary;
-        color: $white;
+        background-color: $projects-project-fund-amount-slider-progress-bg-color;
+        color: $projects-project-fund-amount-slider-progress-color;
         text-align: right;
         white-space: nowrap;
         line-height: 1em;
@@ -118,7 +118,7 @@
 .fund-amount-control {
     float: right;
     margin-top: $base-margin;
-    background: $color-secondary;
+    background: $projects-project-fund-amount-control-bg-color;
     text-transform: uppercase;
 
     label {
@@ -135,7 +135,7 @@
     	display: block;
         position: relative;
 		font-family: $font-family-bold;
-		color: $color-text;
+		color: $projects-project-fund-amount-control-currency-color;
 		
         em {
             position: absolute;
@@ -163,12 +163,12 @@
 	height: 54px;
     line-height: 54px;
     //@include rem(font-size, 28px);
-    color: $gray;
+    color: $projects-project-fund-amount-divided-amount-color;
     font-weight: 600;
 }
     
 .fund-amount {
-    color: $gray-light;
+    color: $projects-project-fund-amount-color;
     text-transform: uppercase;
 }
 
@@ -181,17 +181,17 @@
     position: relative;
     margin-top: $base-margin/2;
     margin-bottom: $base-margin/2;
-    background-color: $gray-lighter;
+    background-color: $projects-project-item-bg-color;
     overflow: hidden;
     height: 260px;
-    border: 1px solid $gray;
+    border: 1px solid $projects-project-item-border-color;
 
     &.project-item-small {
         height: 230px;
     }
     
     &:hover {
-        border-color: $black;
+        border-color: $projects-project-item-border-hover-color;
     }
 
     a {
@@ -214,7 +214,7 @@
         position: relative;
         overflow: hidden;
         min-height: 50px;
-        background: $black;
+        background: $projects-project-item-header-bg-color;
         @include transition(all 0.2s ease-out);
         
         .project-title {
@@ -225,11 +225,11 @@
             display: block;
 			padding: $base-padding;
 			background-color: rgba(0, 0, 0, 0.7);
-			color: $white;
+			color: $projects-project-item-title-color;
 			
 			h3 {
 			    font-size: $base-font-size;
-			    color: $white;
+			    color: $projects-project-item-title-color;
 				padding: 0;
 				margin: 0;
 			}
@@ -262,12 +262,12 @@
     .project-status {
         height: 100px;
         padding: 0 $base-padding;
-        background-color: $gray-lighter;
+        background-color: $projects-project-item-status-bg-color;
         display: block;
-        color: $gray-darker;
+        color: $projects-project-item-status-color;
         
         .project-fund-amount-slider {
-            background-color: $white;   
+            background-color: $projects-project-item-fund-amount-slider-bg-color;   
         }
         
         .project-fund-amount {
@@ -302,7 +302,6 @@
     
     .project-description {
         display: none;
-        color: $white;
         font-family: $font-family-heavy;
         width: 100%;
         height: 260px;
@@ -311,7 +310,7 @@
         padding: $base-padding;
         background-color: rgba(0, 0, 0, 0.7);
         font-size: $font-size-small;
-        color: $gray-lighter;
+        color: $projects-project-item-project-description-color;
         overflow: hidden;
         z-index: 100;
         
@@ -321,7 +320,7 @@
             width: 100%;
             bottom: 0;
             left: 0;
-            background-color: $color-secondary;
+            background-color: $projects-project-item-project-view-bg-color;
             text-transform: uppercase;
             padding: $base-padding/2 $base-padding;
         }
@@ -335,13 +334,13 @@
         padding: $base-padding/4;
         text-align: center;
         text-transform: uppercase;
-        background: $white;
-        border: 1px solid $gray-lighter;
-        color: $gray;
+        background: $projects-project-item-tasks-bg-color;
+        border: 1px solid $projects-project-item-tasks-border-color;
+        color: $projects-project-item-tasks-color;
         font-size: $font-size-smallest;
         
         strong {
-            color: $gray-darker;
+            color: $projects-project-item-tasks-strong-color;
             font-weight: bold;
             font-style: normal;
         }
@@ -352,7 +351,7 @@
         
         &:hover, &:active {
             
-            color: $gray-darker;
+            color: $projects-project-item-tasks-hover-color;
             
             strong {
                 
@@ -419,7 +418,7 @@
 .project-list {
 	//padding: $base-padding;
 	list-style: none;
-	background-color: $white;
+	background-color: $projects-project-list-bg-color;
 	margin: $base-margin 0;
 
     .project-list-item {
@@ -431,9 +430,9 @@
         padding: $base-padding $base-padding $base-padding 0;
         margin: 0;
         top: -1px;
-		border-left: 1px solid $white;
-		border-right: 1px solid $white;
-        border-bottom: 1px solid $gray-lighter;
+		border-left: 1px solid $projects-project-list-listitem-border-left-right-color;
+		border-right: 1px solid $projects-project-list-listitem-border-left-right-color;
+        border-bottom: 1px solid $projects-project-list-listitem-border-bottom-color;
         
         .project-header {
             @include grid(32,1,1);
@@ -449,12 +448,12 @@
                 text-transform: uppercase;
                 font-size: $base-font-size;
                 padding: 0;
-                color: $color-heading;
+                color: $projects-project-list-listitem-project-title-color;
             }
             
             .fundraiser-subtitle {
                 font-family: $base-font-family;
-                color: $gray;
+                color: $projects-project-list-listitem-project-subtitle-color;
                 font-size: $font-size-small;
                 
                 em {
@@ -464,7 +463,7 @@
             
             .project-location, .project-status, .project-preview  {
         		margin-top: $base-margin/2;
-                color: $gray;
+                color: $projects-project-list-listitem-project-meta-color;
                 display: block;
             }
             
@@ -476,7 +475,7 @@
         }
         
         .project-actions {
-            color: $gray;
+            color: $projects-project-list-listitem-project-action-color;
             
             .btn {
                 margin-top: $base-margin;
@@ -491,19 +490,19 @@
         }
         
         &:hover, &.is-highlighted {
-            border-color: $gray-lighter !important;
+            border-color: $projects-project-list-listitem-highlight-color !important;
             
             .project-header h2 {
-                color: $color-primary !important;
+                color: $projects-project-list-listitem-highlight-header-color !important;
             }
         }
         
         &:first-of-type {
-		    border-top: 1px solid $white;
+		    border-top: 1px solid $projects-project-list-listitem-first-top-border-color;
         }
 
         &:last-of-type {
-            border-bottom-color: $white;
+            border-bottom-color: $projects-project-list-listitem-last-bottom-border-color;
         }
 	}
 }

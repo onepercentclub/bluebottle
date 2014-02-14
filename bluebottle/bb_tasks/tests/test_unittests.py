@@ -1,4 +1,4 @@
-from bluebottle.bb_tasks.tests.testtask.models import TestTask
+from bluebottle.bb_tasks.tests import TestTask
 from django.test import TestCase
 
 class TestTaskTestCase(TestCase):

@@ -1,13 +1,5 @@
 from .base import *
-
-SECRET_KEY = 'nfjeknfjknsjkfnwjknfklslflaejfleajfeslfjs'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-    },
-}
+from .secrets import *
 
 
 INSTALLED_APPS += (

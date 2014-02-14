@@ -2,7 +2,11 @@ import factory
 
 from bluebottle.bb_projects import get_project_model
 from bluebottle.bb_projects.models import (
-    ProjectTheme, ProjectDetailField, ProjectBudgetLine, ProjectPhase)
+    #ProjectDetailField,
+    #ProjectBudgetLine,
+    ProjectTheme,
+    ProjectPhase)
+
 from .accounts import BlueBottleUserFactory
 
 PROJECT_MODEL = get_project_model()
@@ -33,17 +37,17 @@ class ProjectFactory(factory.DjangoModelFactory):
     theme = factory.SubFactory(ProjectThemeFactory)
 
 
-class ProjectDetailFieldFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectDetailField
+# class ProjectDetailFieldFactory(factory.DjangoModelFactory):
+#     FACTORY_FOR = ProjectDetailField
+#
+#     name = factory.Sequence(lambda n: 'Field_{0}'.format(n))
+#     description = 'DetailField factory model'
+#     slug = name
+#     type = 'text'
 
-    name = factory.Sequence(lambda n: 'Field_{0}'.format(n))
-    description = 'DetailField factory model'
-    slug = name
-    type = 'text'
 
-
-class ProjectBudgetLineFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectBudgetLine
-
-    project = factory.SubFactory(ProjectFactory)
-    amount = 100000
+# class ProjectBudgetLineFactory(factory.DjangoModelFactory):
+#     FACTORY_FOR = ProjectBudgetLine
+#
+#     project = factory.SubFactory(ProjectFactory)
+#     amount = 100000

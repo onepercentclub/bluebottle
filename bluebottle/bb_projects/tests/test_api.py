@@ -3,10 +3,11 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
-from bluebottle.bb_projects.models import ProjectBudgetLine
+#from bluebottle.bb_projects.models import ProjectBudgetLine
 from bluebottle.test.factory_models.projects import (
-    ProjectFactory, ProjectThemeFactory, ProjectDetailFieldFactory,
-    ProjectBudgetLineFactory, ProjectPhaseFactory)
+    #ProjectDetailFieldFactory, ProjectBudgetLineFactory,
+    ProjectFactory, ProjectThemeFactory,
+    ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from ..models import ProjectPhase
@@ -37,9 +38,9 @@ class ProjectEndpointTestCase(TestCase):
         self.project_3 = ProjectFactory.create(
             owner=self.user, status=self.phase_3, theme=self.theme_3)
 
-        self.detail_field_1 = ProjectDetailFieldFactory.create()
-        self.detail_field_2 = ProjectDetailFieldFactory.create()
-        self.detail_field_3 = ProjectDetailFieldFactory.create()
+        # self.detail_field_1 = ProjectDetailFieldFactory.create()
+        # self.detail_field_2 = ProjectDetailFieldFactory.create()
+        # self.detail_field_3 = ProjectDetailFieldFactory.create()
 
 
 class TestProjectPhaseList(ProjectEndpointTestCase):

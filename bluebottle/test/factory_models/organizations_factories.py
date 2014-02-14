@@ -2,8 +2,8 @@ import factory
 
 from bluebottle.bb_organizations import get_organization_model
 from bluebottle.bb_organizations.models import OrganizationMember
-from bluebottle.test.factory_models.geo import CountryFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from .geo import CountryFactory
+from .accounts import BlueBottleUserFactory
 
 ORGANIZATION_MODEL = get_organization_model()
 

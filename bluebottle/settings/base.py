@@ -140,7 +140,6 @@ INSTALLED_APPS = (
     'south',
     'sorl.thumbnail',
 
-
     # BlueBottle applications.
     'bluebottle.bb_accounts',
     'bluebottle.utils',

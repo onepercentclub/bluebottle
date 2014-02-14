@@ -7,6 +7,30 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.bb_accounts.tests.baseuser.models import TestBaseUser
 from bluebottle.bb_accounts.tests.baseuser.test import BaseUserTestCase
 
+class BaseUserTests(BaseUserTestCase):
+    """
+    Demo TestCase for the abstract base user class
+    """
+    def test_demo_test(self):
+        self.assertEquals(TestBaseUser.objects.all().count(), 0)
+        user = TestBaseUser(email="testuser@test.com",
+                            username="testuser",
+                            first_name="first_test",
+                            last_name="last_test")
+        user.save()
+        self.assertEquals(TestBaseUser.objects.all().count(), 1)
+
+        self.assertEquals(user.location, '')
+        self.assertEquals(user.website, '')
+        self.assertEquals(user.about, '')
+        self.assertEquals(user.why, '')
+        self.assertEquals(user.availability, '')
+        self.assertEquals(user.facebook, '')
+        self.assertEquals(user.twitter, '')
+        self.assertEquals(user.skypename, '')
+        self.assertEquals(user.newsletter, False)
+        self.assertEquals(user.phone_number, '')
+        self.assertEquals(user.gender, '')
 
 class BlueBottleUserManagerTestCase(BaseUserTestCase):
     """

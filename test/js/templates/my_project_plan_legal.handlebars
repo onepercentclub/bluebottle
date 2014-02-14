@@ -1,0 +1,50 @@
+<legend>
+        <strong>Legal status</strong>
+        <p>Please upload an excerpt of your official registration to show that your NGO is registered.</p>
+    </legend>
+
+
+    <fieldset>
+        <ul>
+            <li class="control-group has-popover" data-content="What is the legal status of your organization? Include the registration number.">
+                <label class="control-label">Legal status</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="organization.legalStatus" placeholder="Legal status" classBinding="organization.errors.legalStatus.length:error"}}
+                </div>
+
+                {{#if organization.errors.legalStatus}}
+                    <div class="has-errors">{{#each organization.errors.legalStatus}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!">
+                <label class="control-label">
+                    Documents ({{organization.documents.length}})<br>
+                    <small>
+                        .jpg, .png or .pdf
+                    </small>
+                </label>
+
+                <div class="controls manage-project-files">
+                    <a class="btn btn-iconed btn-upload">
+                        {{view App.UploadMultipleFiles name="documents" multiple=true}}
+                        <span class="flaticon solid upload-document-1"></span>
+                        Upload scan(s)
+                    </a>
+                    <br>
+                    {{#each doc in organization.documents}}
+                        <a><span class="flaticon solid minus-2"></span></a>
+                        <a>
+                            {{doc.file.name}} <small>{{doc.file.size}}</small><br>
+                        </a>
+                    {{/each}}
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    {{#if shouldSave}}
+        <button><span class="flaticon solid right-2"></span>Save & Next</button>
+    {{else}}
+        <button><span class="flaticon solid right-2"></span>Next</button>
+    {{/if}}

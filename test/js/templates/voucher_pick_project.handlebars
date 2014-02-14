@@ -1,0 +1,10 @@
+<h2>Pick a project</h2>
+    <ul>
+        {{#each project in projects}}
+            <li>
+                {{#linkTo "voucherRedeem.add" project}}
+                    {{project.title}}
+                {{/linkTo}}
+            </li>
+        {{/each}}
+    </ul>

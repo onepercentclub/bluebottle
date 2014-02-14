@@ -1,0 +1,29 @@
+<div class="l-section"id="page" >
+        {{#if view.showTitle}}
+        	<section class="l-wrapper">
+					<article class="l-content">
+						<header class="page-header">
+		                	<h1>{{title}}</h1>
+						</header>
+						{{{body}}} 
+					</article>
+					
+					<sidebar class="l-sidebar page-nav">
+						<h3>About 1%Club</h3>
+						<ul>
+							<li><a>Our Story</a></li>
+							<li><a>Frequently Asked Questions</a></li>
+							<li><a>Meet the team</a></li>
+							<li><a>Partners</a></li>
+							<li><a>Press</a></li>
+							<li><a>Work at 1%Club</a></li>
+							<li>{{#linkTo contactMessage href=true}}Contact{{/linkTo}}</a></li>
+						</ul>
+					</sidebar>
+					
+        		</div>
+        	</section>
+        {{else}}
+        	{{{body}}}
+        {{/if}}
+    </div>

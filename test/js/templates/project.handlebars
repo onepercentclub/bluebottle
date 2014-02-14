@@ -1,0 +1,135 @@
+{{#if isCampaign}}<div id="project-campaign">{{/if}}
+
+    <div class="l-section detail" id="project-detail">
+        <section class="l-wrapper">
+
+            <figure class="project-image l-half">
+                <img {{bindAttr src="plan.image.large"}} width="100%" alt="Photo"  />
+            </figure>
+
+            <div class="l-half">
+
+                <article class="project-info">
+                    <div class="project-meta">
+                        {{#if plan.country.name}}<span class="project-location"><span class="flaticon solid location-pin-1"></span> {{plan.country.name}}</span>{{/if}}
+                        {{#if plan.theme.title}}<span class="project-theme"><span class="flaticon solid tag-2"></span> {{plan.theme.title}}</span>{{/if}}
+                    </div>
+                    {{view App.SocialShareView}}
+                    <h1 class="project-title">{{plan.title}}</h1>
+                    <p class="project-description">{{plan.pitch}}</p>
+                </article>
+
+            </div>
+        </section>
+
+
+        {{#if isFundable}}
+            <section class="l-wrapper">
+                <div class="project-status">
+
+                    {{#if campaign.deadline}}
+                        {{#if isCampaign}}
+                        <div class="project-days-left">
+                            <strong><span class="flaticon solid stopwatch-1"></span> {{campaign.daysToGo}} <em>days to go!</em></strong>
+                        </div>
+                        {{else}}
+                        <div class="project-days-left">
+                            <strong><span class="flaticon solid clock-1"></span> {{campaign.daysToGo}} <em>days to go</em></strong>
+                        </div>
+                        {{/if}}
+                    {{/if}}
+
+                    <div class="project-fund">
+                        <p class="project-fund-amount">
+                            <strong class="amount-donated">&euro;{{localize campaign.money_donated}}</strong>
+                            of
+                            <strong class="amount-asked">&euro;{{localize campaign.money_asked}}</strong>
+                            raised
+                        </p>
+
+                        <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
+                    </div>
+
+                    <div class="project-action">
+                        <a href="#"><span class="flaticon solid wallet-1"></span> Support project</a>
+                    </div>
+                </div>
+            </section>
+        {{else}}
+            <section class="l-wrapper">
+                <div class="project-status">
+
+                    <div class="project-days-left l-one-third">
+                    
+                    </div>
+
+                    {{#if campaign}}
+                        <div class="project-fund l-one-third">
+                            <p class="project-fund-amount">
+                                <strong class="amount-donated">&euro;{{localize campaign.money_donated}}</strong>
+                                raised
+                            </p>
+
+                            <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
+                        </div>
+                    {{/if}}
+                </div>
+            </section>
+        {{/if}}
+    </div>
+
+    <div class="l-section" id="project-members">
+        <section class="l-wrapper">
+            {{view App.ProjectMembersView}}
+        </section>
+    </div>
+
+    <nav class="l-section" id="project-actions">
+        <div class="l-wrapper">
+        
+            <ul class="tabs four">
+                <li class="tab-updates">
+                    {{#linkTo 'project.index'}}
+                        <span class="tab-icon amount">{{controllers.projectIndex.meta.total}}</span>
+                        <strong class="tab-title">
+                            Updates
+
+                            {{#if controllers.projectIndex.meta.total}}
+                                {{#if controllers.projectIndex.firstObject.isLoaded}}
+                                    <em class="tab-subtitle">{{localize controllers.projectIndex.firstObject.created formatting="X"}}</em>
+                                {{else}}
+                                    <em class="tab-subtitle">Loading&#8230;</em>
+                                {{/if}}
+                            {{else}}
+                                <em class="tab-subtitle">No updates</em>
+                            {{/if}}
+                        </strong>
+                    {{/linkTo}}
+                </li>
+                <li class="tab-tasks">
+                    {{#if taskCount}}
+                        {{#linkTo 'projectTasks'}}
+                            <span class="tab-icon">{{taskCount}}</span>
+                            <strong class="tab-title">Tasks <em class="tab-subtitle">Skills needed</em></strong>
+                        {{/linkTo}}
+                    {{else}}
+                        {{#linkTo 'projectTasks'}}
+                            <span class="tab-icon">0</span>
+                            <strong class="tab-title">Tasks <em class="tab-subtitle">No skills needed</em></strong>
+                        {{/linkTo}}
+                    {{/if}}
+                </li>
+                <li class="tab-plan">
+                    {{#linkTo "projectPlan"}}
+                        <span class="tab-icon"><span class="flaticon solid document-2"></span></span>
+                        <strong class="tab-title">Project Plan <em class="tab-subtitle">Read full plan</em></strong>
+                    {{/linkTo}}
+                </li>
+            </ul>
+            
+        </div>
+    </nav>
+
+    {{outlet}}
+
+    {{#if isCampaign}}</div> {{/if}}

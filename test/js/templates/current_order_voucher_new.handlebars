@@ -1,0 +1,117 @@
+<div class="form-meta">
+        <p class="form-label">Choose value & personalize 1%GIFTCARD</p>
+    </div>
+
+    <fieldset>
+        <ul>
+            <li class="control-group">
+                <label class="control-label">Language</label>
+
+                <div class="controls">
+                    {{#view Em.RadioButtonGroup class="big-radio radio2" name="language" selectedValueBinding="language"}}
+                        {{view view.RadioButton value="en" id="lang_en"}}
+                        <label for="lang_en">English</label>
+
+                        {{view view.RadioButton value="nl" id="lang_nl"}}
+                        <label for="lang_nl">Dutch</label>
+                    {{/view}}
+                </div>
+            </li>
+
+            <li class="control-group">
+                <label class="control-label">Value</label>
+
+                <div class="controls">
+                    {{#view Em.RadioButtonGroup class="big-radio radio4" name="amount" selectedValueBinding="amount"}}
+                        {{view view.RadioButton value=10 id="amount_10"}}
+                        <label for="amount_10">
+                            &euro;10
+                        </label>
+                        {{view view.RadioButton value=25 id="amount_25"}}
+                        <label for="amount_25">
+                            &euro;25
+                        </label>
+                        {{view view.RadioButton value=50 id="amount_50"}}
+                        <label for="amount_50">
+                            &euro;50
+                        </label>
+                        {{view view.RadioButton value=100 id="amount_100"}}
+                        <label for="amount_100">
+                            &euro;100
+                        </label>
+                    {{/view}}
+                </div>
+            </li>
+
+            <li class="control-group">
+                <label class="control-label">Your name</label>
+
+                <div class="controls">
+                    {{view Em.TextField valueBinding="sender_name" classBinding="errors.sender_name.length:error"}}
+                </div>
+
+                {{#if errors.sender_name}}
+                    <div class="has-errors">{{#each errors.sender_name}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group">
+                <label class="control-label">Your email</label>
+
+                <div class="controls">
+                    {{view Em.TextField valueBinding="sender_email" classBinding="errors.sender_email.length:error"}}
+                </div>
+
+                {{#if errors.sender_email}}
+                    <div class="has-errors">{{#each errors.sender_email}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+
+    <hr class="form-divider">
+
+    <fieldset>
+        <legend><strong>This gift card is for:</strong></legend>
+
+        <ul>
+            <li class="control-group">
+                <label class="control-label">Name</label>
+
+                <div class="controls">
+                    {{view Em.TextField valueBinding="receiver_name" classBinding="errors.receiver_name.length:error"}}
+                </div>
+
+                {{#if errors.receiver_name}}
+                    <div class="has-errors">{{#each errors.receiver_name}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group">
+                <label class="control-label">Email</label>
+
+                <div class="controls">
+                    {{view Em.TextField valueBinding="receiver_email" classBinding="errors.receiver_email.length:error"}}
+                </div>
+
+                {{#if errors.receiver_email}}
+                    <div class="has-errors">{{#each errors.receiver_email}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group">
+                <label class="control-label">Personal message</label>
+
+                <div class="controls">
+                    {{view Em.TextArea valueBinding="message" placeholder="Your message that will appear on the digital voucher." classBinding="errors.message.length:error"}}
+                </div>
+
+                {{#if errors.message}}
+                    <div class="has-errors">{{#each errors.message}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+
+    <a>Add</a>
+    <br class="clear">

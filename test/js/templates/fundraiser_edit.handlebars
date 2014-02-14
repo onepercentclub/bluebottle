@@ -1,0 +1,41 @@
+<div class="l-section" id="project-dashboard">
+
+        {{partial "my_fundraiser_top"}}
+
+        <div class="l-wrapper">
+            <div class="l-content">
+                {{#if isOwner}}
+                    <header class="l-page-header">
+                        <h1>Edit fundraiser</h1>
+                    </header>
+
+                    <form id="fundraiser-edit">
+
+                        {{partial "fundraiser_form"}}
+
+                        <button><span class="flaticon solid right-2"></span>Save</button>
+
+                    </form>
+                {{else}}
+                    <header class="l-page-header">
+                        <h1>Edit fundraiser</h1>
+                        <p>
+                            
+                                You can only make a fundraiser if you are logged in and the owner of this fundraiser.
+                            
+                        </p>
+                    </header>
+
+                    <p class="login-signup"><a href="/accounts/login">Login</a> or become a {{#linkTo "signup"}}member{{/linkTo}} to start a fundraiser.</p>
+                {{/if}}
+            </div>
+
+            <sidebar class="l-sidebar">
+                <h2>You rock!</h2>
+                <p>Because you're fundraising for this project:</p>
+
+                {{render "projectPreview" project}}
+
+            </sidebar>
+        </div>
+    </div>

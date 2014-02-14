@@ -1,0 +1,55 @@
+<div class="l-section" id="home-crazy-campaign-fundraisers">
+        <section class="l-wrapper">
+
+            <div class="l-full">
+                <header class="section-header">
+            	    <h1>Our crazy fund-racers</h1>
+            	    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </header>
+                <ul id="fundraiser-results">
+                    {{#each fundraisers}}
+    
+                        <li>
+                            {{#linkTo 'fundRaiser' this}}
+                                {{#if is_funded}}
+                                    <span class="is-funded">
+                                        Fully funded by {{owner.full_name}} and supporters.
+                                    </span>
+                                {{/if}}
+    
+                                <span class="project-header">
+    
+                                    <figure class="project-image">
+                                        <img>
+                                    </figure>
+    
+                                    <span class="project-title">
+                                        <h3>{{title}}</h3>
+                                    </span>
+                                </span>
+    
+                                <span class="project-status">
+    
+                                    <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
+                                    <span class="project-fund-amount">
+                                        {{#if is_funded}}
+                                            <strong>Fully</strong> funded
+                                        {{else}}
+                                            <strong>&euro;{{localize amount_needed}}</strong> <em>To go</em>
+                                        {{/if}}
+                                    </span>
+                                    
+                                    {{#unless is_funded}}
+                                    {{#if deadline}}
+                                        <span class="project-days-left"><span class="flaticon solid clock-1"></span> <strong>{{daysToGo}}</strong> <em>days</em></span>
+                                    {{/if}}
+                                    {{/unless}}
+    
+                                </span>
+                            {{/linkTo}}
+                        </li>
+                    {{/each}}
+                </ul>
+            </div>
+        </section>
+    </div>

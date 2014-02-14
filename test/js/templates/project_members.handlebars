@@ -1,0 +1,32 @@
+<ul class="project-member-list">
+        <li class="project-member-initiator">
+            <ul>
+                <li>
+                    <a {{action 'openInBigBox' 'userModal' owner}} class="member">
+                        <figure class="member-avatar"><img {{bindAttr src="owner.getAvatar"}}  /></figure>
+                        <h4>Initiator</h4>
+                        <strong class="member-name">{{owner.full_name}}</strong>
+                        <em class="member-organisation">{{organization}}</em>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        {{#if team_member}}
+            <li class="project-member-coaches">
+                <h4>Coach</h4>
+                <ul>
+                    <li>
+                        <a class="member">
+                            <span class="member-avatar"><img></span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        {{/if}}
+
+        {{#unless isPhasePlan}}
+            {{render "projectFundRaiserList"}}
+            {{render "projectSupporterList"}}
+        {{/unless}}
+    </ul>

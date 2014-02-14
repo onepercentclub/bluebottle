@@ -1,0 +1,18 @@
+<div class="modal large" id="project-select">
+        <div class="modal-header">
+            {{header}}
+            <a class="close" {{action 'close'}} rel="close">×</a>
+        </div>
+
+        <div class="modal-body">
+            {{yield}}
+        </div>
+        {{#if hasCloseButton}}
+            <div class="modal-footer">
+                <button class="btn btn-iconed btn-close btn-primary">
+                    <span class="flaticon solid x-1"></span>
+                    Close
+                </button>
+            </div>
+        {{/if}}
+    </div>

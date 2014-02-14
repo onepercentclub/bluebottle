@@ -1,0 +1,90 @@
+<div class="l-section" id="page">
+        <section class="l-wrapper">
+        
+            	<article class="l-content">
+                    <header class="page-header">
+                        <h1>Contact</h1>
+                        <p>
+                            
+                            Send us a message or get in touch using the details below. Talk to you soon!
+                            
+                        </p>
+                    </header>
+					
+		            <form id="contact-form">
+		                {{#if isSent}}
+		                	<legend>
+								<strong>Thanks for your message!. We'll get back to you soon.</strong>
+							</legend>
+		                {{else}}
+		                    <fieldset>
+		                        <ul>
+		                            <li class="control-group">
+		                                <label class="control-label">Name</label>
+		                                <div class="controls">
+		                                    {{view Em.TextField valueBinding="name" classBinding="errors.name.length:error"}}
+		                                </div>
+		
+		                                {{#if errors.name}}
+		                                    <div class="has-errors">{{#each errors.name}}<p>{{this}}</p>{{/each}}</div>
+		                                {{/if}}
+		                            </li>
+		
+		                            <li class="control-group">
+		                                <label class="control-label">Email</label>
+		                                <div class="controls">
+		                                    {{view Em.TextField valueBinding="email" classBinding="errors.email.length:error"}}
+		                                </div>
+		
+		                                {{#if errors.email}}
+		                                    <div class="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
+		                                {{/if}}
+		
+		                            </li>
+		
+		                            <li class="control-group">
+		                                <label class="control-label">Message</label>
+		                                <div class="controls">
+		                                    {{view Em.TextArea valueBinding="message" rows="6" classBinding="errors.message.length:error"}}
+		                                </div>
+		
+		                                {{#if errors.message}}
+		                                    <div class="has-errors">{{#each errors.message}}<p>{{this}}</p>{{/each}}</div>
+		                                {{/if}}
+		
+		                            </li>
+		
+		                        </ul>
+		                    </fieldset>
+		                    <button><span class="flaticon solid envelope-1"></span>Send Message</button>
+		                {{/if}}
+		            </form>
+            	</article>
+            	
+	            <sidebar class="l-sidebar">
+	            	<h3>Other ways to contact</h3>
+
+<p>
+    Email:<a href="mailto:info@onepercentclub.com?subject=Contact">info@onepercentclub.com</a><br>
+    Twitter:<a href="https://twitter.com/1percentclub">@1percentclub</a><br>
+    Facebook: <a href="http://www.facebook.com/onepercentclub">/onepercentclub</a>
+</p>
+<p>
+    1%Club Foundation<br>
+    's Gravenhekje 1a<br>
+    1011 TG Amsterdam<br>
+    The Netherlands<br>
+</p>
+<p>
+    Bank: Rabobank (Haarlem)<br>
+    Account number: NL45 RABO 01322070 44(donations)<br>
+    BIC: RABONL2U<br>
+    <br>
+    Chamber of Commerce number 34.26.78.95<br>
+    Phone(+31) 20 715 8980<br>
+</p>
+
+	            </sidebar>
+	            
+        </section>
+    </div>

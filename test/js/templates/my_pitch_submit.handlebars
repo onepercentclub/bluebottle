@@ -1,0 +1,61 @@
+<legend>
+        <strong>Submit Pitch</strong>
+        <p>Send your pitch to us, we'll get back to you soon.</p>
+    </legend>
+
+    <fieldset>
+
+        <div class="manage-project-overview">
+            {{#if validBasics}}
+                <h3><span class="flaticon solid checkmark-1"></span> Basics are ok!<br></h3>
+            {{else}}
+                <h3>{{#linkTo "myProjectPitch.basics"}}Basics{{/linkTo}} still need work!</h3>
+                {{#unless title}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Title</strong> is missing<br>
+                {{/unless}}
+                {{#unless pitch}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Pitch</strong> is missing<br>
+                {{/unless}}
+                {{#unless theme}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Theme</strong> is missing<br>
+                {{/unless}}
+                {{#unless description}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Why, what and how</strong> is missing<br>
+                {{/unless}}
+                {{#unless tags}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Tags</strong> are missing. Add at least five tags.<br>
+                {{/unless}}
+            {{/if}}
+            {{#if validLocation}}
+                <h3><span class="flaticon solid checkmark-1"></span> Location is ok!</h3>
+            {{else}}
+                <h3>{{#linkTo "myProjectPitch.basics"}}Basics{{/linkTo}} still need work!</h3>
+                {{#unless latitude}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Map location</strong> is missing<br>
+                {{/unless}}
+                {{#unless country}}
+                    <span class="flaticon solid exclamation-point-2"></span> <strong>Country</strong> are missing<br>
+                {{/unless}}
+            {{/if}}
+            {{#if validMedia}}
+                <h3><span class="flaticon solid checkmark-1"></span> Media is ok!</h3>
+            {{else}}
+                <h3>{{#linkTo "myProjectPitch.media"}}Media{{/linkTo}} still need work!</h3>
+                <span class="flaticon solid exclamation-point-2"></span> <strong>Image</strong> is missing<br>
+            {{/if}}
+        </div>
+
+        <ul>
+            <li class="control-group has-popover" data-content="Agree to the terms to submit the pitch">
+                <div class="controls wide">
+                    <label class="checkbox">{{view Em.Checkbox checkedBinding="agreed" classBinding="errors.agreed.length:error"}} <span>I agree to the  <a>general terms and conditions</a></span></label>
+                </div>
+            </li>
+        </ul>
+
+    </fieldset>
+    {{#if agreed}}
+        <button><span class="flaticon solid right-2"></span>Submit pitch</button>
+    {{else}}
+        <button><span class="flaticon solid right-2"></span>Submit pitch</button>
+    {{/if}}

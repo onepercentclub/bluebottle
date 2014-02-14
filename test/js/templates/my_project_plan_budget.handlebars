@@ -1,0 +1,69 @@
+<legend>
+        <strong>Budget needed</strong>
+        <p>
+
+Time to let us know how the money that you will be raising will be spent! Be sure to give us a
+detailed insight in your budget as it will only make your credibility go up. Just one little suggestion
+before you start; be realistic in your crowdfunding goal. Better a smaller amount and make it then a
+large amount and have nothing in the end. Also, there are certain things not allowed to ask money for.
+Check them in our <a href="/#!/pages/faq-projects">FAQ</a>.
+<br>
+Please add 5% administration fee to your budget. The total amount, including the fee, cannot exceed 5.000 Euro.
+
+        </p>
+    </legend>
+
+    <fieldset>
+        <br>
+        <ul>
+            {{#each line in budgetLines}}
+                <li class="control-group">
+                    <label class="control-label">Budget item description</label>
+                    <div class="controls">
+                       {{view Em.TextField valueBinding="line.description" placeholder="Description"}}
+                    </div>
+                </li>
+                <li class="control-group">
+                    <label class="control-label">Amount</label>
+                    <div class="controls">
+                       {{view Em.TextField valueBinding="line.amount" placeholder="Amount euro"}}
+                    </div>
+                </li>
+                <li class="control-group">
+                    <div class="controls wide text-right">
+                        <a>
+                            <span class="flaticon solid minus-2"> Remove</span>
+                        </a>
+                    </div>
+                </li>
+            {{/each}}
+
+            <li class="control-group">
+                <div class="controls wide text-left">
+                    <a>
+                        <span class="flaticon solid plus-2"></span>
+                        Add budget item
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+    <fieldset>
+        <legend>
+            <strong>Total budget needed:</strong>
+            <p>&euro; {{totalBudget}}</p>
+            {{#if totalBudget}}
+                {{#unless validBudget}}
+                    <div class="has-errors"><p>Total budget shouldn't be over 5000 euro.</p></div>
+                {{/unless}}
+            {{else}}
+                <div class="has-errors"><p>Start adding items to your budget.</p></div>
+            {{/if}}
+        </legend>
+    </fieldset>
+
+    {{#if shouldSave}}
+        <button><span class="flaticon solid right-2"></span>Save & Next</button>
+    {{else}}
+        <button><span class="flaticon solid right-2"></span>Next</button>
+    {{/if}}

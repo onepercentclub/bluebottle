@@ -1,0 +1,48 @@
+<article class="wallpost">
+
+        <header class="wallpost-header">
+
+            <div class="wallpost-member">
+                <a {{action openInBigBox "userModal" author}} class="member">
+                    <span class="member-avatar">
+                        <img {{bindAttr src="author.getAvatar" alt="author.full_name"}}  />
+                    </span>
+                    <strong class="member-name">{{author.full_name}}</strong>
+                </a>
+            </div>
+
+            <div class="wallpost-meta">
+                {{#if created}}
+                    <em class="timestamp">{{localize created formatting="X"}}</em>
+                {{/if}}
+                {{#if isAuthor}}
+                    <a>Delete</a>
+                {{/if}}
+            </div>
+        </header>
+
+        <div class="wallpost-content">
+            {{#if title}}
+                <h3 class="wallpost-title">{{title}}</h3>
+            {{/if}}
+
+            {{#if video_html}}
+                <div class="video">{{{video_html}}}</div>
+            {{/if}}
+
+            <div class="text">{{{text}}}</div>
+
+            {{#if photos.length}}
+                <ul class="photo-viewer">
+                    {{#each photo in photos}}
+                        <li class="photo"><a><img></a></li>
+                    {{/each}}
+                </ul>
+            {{/if}}
+	    </div>
+
+        <div class="wallpost-reactions">
+            {{render "wallPostReactionList" reactions}}
+        </div>
+
+    </article>

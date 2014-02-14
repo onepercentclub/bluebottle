@@ -1,0 +1,35 @@
+<fieldset>
+
+        {{render "currentOrderVoucherNew"}}
+
+        <ul class="voucher-list">
+            {{#each controller itemController=currentOrderVoucher}}
+                {{view "App.CurrentOrderVoucherView"}}
+            {{/each}}
+
+            {{#if length}}
+                <li>
+                    <div class="summary">
+                        {{length}} 1%GIFTCARDS will be sent out with a total value of
+                    </div>
+                    <div class="amount">
+                        <h4 class="right">&euro;{{singleTotal}}</h4>
+                    </div>
+                </li>
+            {{else}}
+                <li>
+                    <div class="summary">
+                        No gift cards in shopping basket
+                    </div>
+                </li>
+            {{/if}}
+        </ul>
+
+
+        {{#if length}}
+            {{#linkTo 'paymentProfile' class="btn btn-primary btn-iconed btn-next"}}<em class="flaticon solid right-2"></em>Next Step{{/linkTo}}
+        {{else}}
+            <button disabled="disabled" class="btn btn-iconed  btn-next"><span class="flaticon solid right-2"></span>Next Step</button>
+        {{/if}}
+
+    </fieldset>

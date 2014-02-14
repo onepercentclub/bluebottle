@@ -1,0 +1,92 @@
+{{#if controllers.currentUser.isAuthenticated}}
+    <div class="l-content">
+        <form>
+            <legend>
+                <strong>We'll keep you up to date!</strong>
+                <p>You already have an account. Great! We'll keep you updated with the progress of the projects you support.<br></div>
+
+            </legend>
+        </form>
+        {{#linkTo 'paymentSelect'}}
+            <button class="btn btn-primary btn-iconed btn-next"><em class="flaticon solid right-2"></em>Next</button>
+        {{/linkTo}}
+    </div>
+
+{{else}}
+
+    <div class="l-content">
+        {{#unless controllers.currentUser.isAuthenticated}}
+            <a><span class="flaticon solid lock-1"></span> <strong>Have an account?</strong><br> Log in here</a>
+		{{/unless}}
+
+        <form>
+
+			<legend>
+				<strong>Follow the progress?</strong>
+				<p>Sign up for an account and we keep you updated on the projects progress.</p>
+			</legend>
+
+            <fieldset>
+                <ul>
+                    <li class="control-group">
+                        <label class="control-label">Your full name</label>
+                        <div class="controls">
+                            {{view Em.TextField valueBinding="first_name" placeholder="First name" class="inline-prepend" classBinding="errors.first_name.length:error"}}
+                            {{view Em.TextField valueBinding="last_name" placeholder="Last name" class="inline-append" classBinding="errors.last_name.length:error"}}
+                        </div>
+                    </li>
+                    <li class="control-group">
+                        <label class="control-label">Email</label>
+                        <div class="controls">
+                            {{view Em.TextField valueBinding="email" classBinding="errors.email.length:error"}}
+                        </div>
+                        {{#if errors.email}}
+                            <div class="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
+
+                    <li class="control-group">
+                        <label class="control-label">Password</label>
+                        <div class="controls">
+                            {{view Em.TextField type="password" valueBinding="password" classBinding="errors.password.length:error"}}
+                        </div>
+                        {{#if errors.password}}
+                            <div class="has-errors">{{#each errors.password}}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
+
+                    <li class="control-group">
+                        <label class="control-label">Password again</label>
+                        <div class="controls">
+                            {{view Em.TextField type="password" valueBinding="password2" classBinding="errors.password2.length:error"}}
+                        </div>
+                        {{#if errors.password2}}
+                            <div class="has-errors">{{#each errors.password2}}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
+                </ul>
+
+                <p class="control-group agree">
+                    <small class="controls">
+                        By joining 1%Club I hereby agree to the 
+                        <a>1%Club Terms of service</a>
+                    </small>
+                </p>
+
+            </fieldset>
+
+            {{#if isFormReady}}
+                <button class="btn btn-primary btn-iconed btn-next"><span class="flaticon solid right-2"></span>Next Step</button>
+            {{else}}
+                <button disabled="disabled" class="btn btn-iconed btn-next"><span class="flaticon solid right-2"></span>Next Step</button>
+            {{/if}}
+
+            {{#linkTo 'paymentSelect' class="btn-link btn-skip"}}<span class="flaticon solid x-1"></span>Skip this step{{/linkTo}}
+
+        </form>
+    </div>
+
+    <div class="l-sidebar">
+
+    </div>
+{{/if}}

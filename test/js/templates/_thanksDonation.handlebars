@@ -1,0 +1,32 @@
+<li class="project-list-item">
+        {{#if donation.fundraiser}}
+            {{#linkTo 'fundRaiser' donation.fundraiser class="project-header"}}
+                <figure class="project-image">
+                    <img {{bindAttr src="donation.fundraiser.image.square" alt="donation.fundraiser.title"}}  />
+                </figure>
+                <h2 class="project-title">
+                    {{donation.fundraiser.title}}
+                    ({{donation.project.title}})
+                    {{!-- <em class="project-location">
+                        <span class="flaticon solid location-pin-1"></span> {{donation.project.plan.country.name}}
+                    </em> NOTE: is this required here? Design decision. --}}
+                </h2>
+            {{/linkTo}}
+        {{else}}
+            {{#linkTo 'project' donation.project class="project-header"}}
+                <figure class="project-image">
+                    <img>
+                </figure>
+                <h2 class="project-title">
+                    {{donation.project.title}}
+                    <em class="project-location">
+                        <span class="flaticon solid location-pin-1"></span> {{donation.project.plan.country.name}}
+                    </em>
+                </h2>
+            {{/linkTo}}
+        {{/if}}
+
+        <div class="fund-amount">
+            You supported <strong class="fund-amount-needed">&euro;{{donation.amount}}</strong>
+        </div>
+    </li>

@@ -1,0 +1,16 @@
+{{render "projectSearchForm"}}
+    <div class="l-section">
+        <section class="l-wrapper">
+            {{#if model.isLoaded}}
+                <ul id="search-results">
+                    {{#each project in model}}
+                        {{render "projectPreview" project}}
+                    {{else}}
+                        <li class="no-results">No projects found.</li>
+                    {{/each}}
+                </ul>
+            {{else}}
+                <div class="is-loading-big"><img src="images/loading.gif"> <strong>Loading projects</strong></div>
+            {{/if}}
+        </section>
+    </div>

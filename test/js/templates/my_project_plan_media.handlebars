@@ -1,0 +1,36 @@
+<legend>
+        <strong>Project media</strong>
+        <p>Upload a photo</p>
+    </legend>
+
+    <fieldset>
+        <ul>
+            <li class="control-group has-popover" data-content="This photo will represent your idea on 1%Club. So make sure it's personal, unique and recognisable for your smart idea and that it looks nice too!">
+                <label class="control-label">
+                    Project Picture
+                </label>
+
+                <div class="controls manage-project-image">
+                    <a class="btn btn-iconed btn-upload">
+                        {{view App.UploadFile fileBinding="image" name="image" accept="image/*" id="image"}}
+                        <span class="flaticon solid upload-document-1"></span>
+                        Upload picture
+                    </a>
+                    <br>
+                    <div>
+                        {{#if image}}
+                            <img>
+                        {{else}}
+                            <img src="images/empty.png">
+                        {{/if}}
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    {{#if isDirty}}
+        <button><span class="flaticon solid right-2"></span>Save & Next</button>
+    {{else}}
+        <button><span class="flaticon solid right-2"></span>Next</button>
+    {{/if}}

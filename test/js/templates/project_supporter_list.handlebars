@@ -1,0 +1,10 @@
+{{#if supporters.length}}
+        <li class="project-member-supporters">
+            <h4>Supporters <em>{{supporters.meta.total}} Total</em></h4>
+            <ul>
+                {{#each supporter in controller}}
+                    {{view "App.ProjectSupporterView"}}
+                {{/each}}
+            </ul>
+        </li>
+    {{/if}}

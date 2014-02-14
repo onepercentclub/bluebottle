@@ -1,0 +1,71 @@
+<legend>
+        <strong>Project description</strong>
+    </legend>
+
+    <fieldset>
+        <ul>
+            <li class="control-group has-popover" data-content="Blow us away with the details!">
+                <label class="control-label">Why, what and how</label>
+                <div class="controls wide">
+                    {{view Em.TextArea valueBinding="description"classBinding="errors.description.length:error" rows=12}}
+                </div>
+
+                {{#if errors.description}}
+                    <div class="has-errors">{{#each errors.description}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="What will be the Impact? How will your Smart Idea change the lives of people?">
+                <label class="control-label">Effects</label>
+                <div class="controls wide">
+                    {{view Em.TextArea valueBinding="effects" classBinding="errors.effects.length:error" rows=6}}
+                </div>
+
+                {{#if errors.effects}}
+                    <div class="has-errors">{{#each errors.effects}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="How will this project be self-sufficient and sustainable in the long term?">
+                <label class="control-label">Future</label>
+                <div class="controls wide">
+                    {{view Em.TextArea valueBinding="future" classBinding="errors.future.length:error" rows=6}}
+                </div>
+
+                {{#if errors.future}}
+                    <div class="has-errors">{{#each errors.future}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+    <fieldset>
+        <ul>
+            <li class="control-group has-popover" data-content="Describe your target group.">
+                <label class="control-label">For who</label>
+                <div class="controls">
+                    {{view Em.TextArea valueBinding="forWho" classBinding="errors.forWho.length:error"}}
+                </div>
+
+                {{#if errors.forWho}}
+                    <div class="has-errors">{{#each errors.forWho}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+
+            <li class="control-group has-popover" data-content="How many people do you expect to reach? Enter a number (e.g. 50)">
+                <label class="control-label">People reached</label>
+                <div class="controls">
+                    {{view Em.TextField valueBinding="reach" classBinding="errors.reach.length:error"}}
+                </div>
+
+                {{#if errors.reach}}
+                    <div class="has-errors">{{#each errors.reach}}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+            </li>
+        </ul>
+    </fieldset>
+
+    {{#if isDirty}}
+        <button><span class="flaticon solid right-2"></span>Save & Next</button>
+    {{else}}
+        <button><span class="flaticon solid right-2"></span>Next</button>
+    {{/if}}

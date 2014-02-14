@@ -1,0 +1,47 @@
+<div class="l-section" id="project-dashboard">
+
+    	{{partial "my_fundraiser_top"}}
+
+        <div class="l-wrapper">
+            {{#if isLoading}}
+                <div class="is-loading-big"><img src="images/loading.gif"  /> <strong>Loading projects</strong></div>
+            {{else}}
+                <div class="l-content">
+                	<header class="l-page-header">
+                        <h1>Fundraisers overview</h1>
+	                    {{#if controller.length}}
+	                        <p>Overview of all your fundraiser actions.</p>
+	                    {{else}}
+	                        <p>You have no fundraiser actions.</p>
+	                    {{/if}}
+                    </header>
+                </div>
+            {{/if}}
+
+            <div class="l-content">
+	            <ul class="project-list">
+	            	{{#each fundraiser in controller}}
+	                <li class="project-list-item">
+
+                        <span class="project-header">
+                            <figure class="project-image">
+                            	<a>
+                                	<img>
+                            	</a>
+                            </figure>
+                            <h2 class="project-title">
+                                <a>
+                                	{{fundraiser.title}}
+	                            </a>
+                            </h2>
+                        </span>
+
+				        <div class="project-actions">
+				        	{{#linkTo 'fundRaiserEdit' fundraiser.id class="btn-link project-edit"}}<span class="flaticon solid pencil-3"></span> Edit{{/linkTo}}
+				        </div>
+				    </li>
+					{{/each}}
+	            </ul>
+			</div>
+        </div>
+    </div>

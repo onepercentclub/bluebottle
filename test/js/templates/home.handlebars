@@ -1,0 +1,29 @@
+<div id="home">
+        {{#if isCampaignHomePage}}
+
+            {{!-- TODO: add progressbar with racecar etc. --}}
+            {{view App.HomeCampaignView}}
+
+            {{#if fundraisers}}
+                {{view App.HomeFundraisersView}}
+            {{/if}}
+        {{else}}
+            {{#if slides}}
+                {{view App.HomeBannerView}}
+            {{/if}}
+
+            {{#if project}}
+                {{view App.HomeProjectView}}
+            {{/if}}
+
+        {{/if}}
+
+        {{!-- this must always be visible --}}
+        {{#if quote}}
+            {{view App.HomeQuotesView}}
+        {{/if}}
+
+        {{#if impact}}
+            {{view App.HomeImpactView}}
+        {{/if}}
+    </div>

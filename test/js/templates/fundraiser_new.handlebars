@@ -1,0 +1,46 @@
+<div class="l-section" id="project-dashboard">
+
+        {{partial "my_fundraiser_top"}}
+
+        <div class="l-wrapper">
+            <div class="l-content">
+                {{#if controllers.currentUser.isAuthenticated}}
+                    <header class="l-page-header">
+                        <h1>Yes, you can!</h1>
+                        <p>
+                            
+                            What's your fundraising plan? Make it concrete & exciting!
+                            
+                        </p>
+                    </header>
+
+                    <form id="fundraiser-new">
+
+                        {{partial "fundraiser_form"}}
+
+                        <button><span class="flaticon solid right-2"></span>Create</button>
+
+                    </form>
+                {{else}}
+                    <header class="l-page-header">
+                        <h1>New fundraiser</h1>
+                        <p>
+                            
+                            You need to be logged in to start fundraising.
+                            
+                        </p>
+                    </header>
+
+                    <p class="login-signup"><a>Login</a> or {{#linkTo "signup"}}register{{/linkTo}} to become a fundraiser.</p>
+                {{/if}}
+            </div>
+
+            <sidebar class="l-sidebar">
+                <h2>Fundraising for project</h2>
+                <p>You'll be fundraising for this project</p>
+
+                {{render "projectPreview" project}}
+
+            </sidebar>
+        </div>
+    </div>

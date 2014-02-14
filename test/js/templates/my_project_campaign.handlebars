@@ -1,0 +1,51 @@
+<div class="l-wrapper">
+
+        <div class="manage-project-sidebar">
+
+            <h4><span class="flaticon solid lock-1"></span> Project Story</h4>
+            <p>Your plan is approved and currently locked. If you need to make any changes: please sent a message to
+            {{#if coach}}your 1%COACH, <strong>{{coach.full_name}}</strong>, at{{/if}} projects@onepercentclub.com.</p>
+
+            <h4><span class="flaticon solid wallet-1"></span> Funding status</h4>
+
+            <div class="project-fund">
+                <p class="project-fund-amount">
+                    <strong class="amount-donated">&euro;{{campaign.money_donated}}</strong>
+                    of
+                    <strong class="amount-asked">&euro;{{campaign.money_asked}}</strong>
+                    raised
+                </p>
+
+                <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
+			</div>
+        </div>
+
+        <form class="l-content manage-project-status">
+            <fieldset>
+                <legend>
+                    <strong>How is your campaign going?</strong>
+                </legend>
+
+                <div class="fieldset-content">
+                    <p>
+                    Is money pouring in? No? Our tips & tricks might help you.
+                    Check our <a href="/#!/pages/faq-projects">FAQ</a>! And remember Einsteins words: "You have to learn the rules
+                    of the game. And then you have to play better than anyone else".
+                    You can do it!
+                    </p>
+
+                    {{#if campaign.deadline}}
+                        <div class="project-days-left">
+						    <strong><span class="flaticon solid clock-1"></span> {{campaign.daysToGo}}</strong>
+                            <em>days to go</em>
+                        </div>
+                    {{/if}}
+
+                </div>
+            </fieldset>
+
+            {{!-- FIXME: Frans, this looks a bit weird - different height --}}
+            {{partial "my_project_tasks_and_updates"}}
+        </form>
+
+    </div>

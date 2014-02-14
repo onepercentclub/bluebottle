@@ -1,0 +1,87 @@
+<div class="container section">
+        <header class="wrapper">
+            <div class="content">
+                <h1 class="">Contact us for 1%GIFTCARDS</h1>
+                Please send us a message and tell us your wishes and we will contact you as soon as possible. Or call us directly on (+31) 20 715 8980.
+            </div>
+        </header>
+    </div>
+    <br>
+    <div class="container">
+        <section class="wrapper">
+            <form>
+                <fieldset>
+                    <ul>
+
+                        <li class="control-group">
+                            <label class="control-label">Value of Gift Cards</label>
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="value"}}
+                            </div>
+                            {{#if errors.amount}}
+                                <div class="errors">{{#each errors.amount}}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+
+                        <li class="control-group">
+                            <label class="control-label">Number of Gift Cards</label>
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="number" type="number" step="10"}}
+                            </div>
+                            {{#if errors.amount}}
+                                <div class="errors">{{#each errors.amount}}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+
+                        <li class="control-group">
+                            <label class="control-label">Your name</label>
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="contact_name"}}
+                            </div>
+                            {{#if errors.contact_name}}
+                                <div class="errors">{{#each errors.contact_name}}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+
+                        <li class="control-group">
+                            <label class="control-label">Your email</label>
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="contact_email"}}
+                            </div>
+                            {{#if errors.contact_email}}
+                                <div class="errors">{{#each errors.contact_email}}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+
+                        <li class="control-group">
+                            <label class="control-label">Organisation</label>
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="organization"}}
+                            </div>
+                            {{#if errors.organization}}
+                                <div class="errors">{{#each errors.organization}}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+
+                        <li class="control-group">
+                            <label class="control-label">Phone number</label>
+                            <div class="controls">
+                                {{view Em.TextField valueBinding="contact_phone"}}
+                            </div>
+                            {{#if errors.contact_phone}}
+                                <div class="errors">{{#each errors.contact_phone}}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+                        <li class="control-group">
+                            Anything else you’d like to ask? Send us a message!
+                            {{view Em.TextArea valueBinding="message" classBinding="errors.message.length:error"}}
+                        </li>
+                        <li class="control-group">
+                            <a class="right button">Send message</a>
+                        </li>
+                    </ul>
+                </fieldset>
+
+            </form>
+        </section>
+    </div>

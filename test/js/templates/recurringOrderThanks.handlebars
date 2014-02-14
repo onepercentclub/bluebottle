@@ -1,0 +1,76 @@
+<div class="l-section">
+        <section class="l-wrapper">
+            <div class="l-content">
+                {{#if recurringPayment.active}}
+
+                	<figure>
+                		<img src="/static/assets/images/you-made-it-work.png" alt="You made it work"  />
+                	</figure>
+
+                	<header>
+	                	<h1>Donation Successful!</h1>
+						{{#if controllers.currentUser.isAuthenticated}}
+	                		<p>
+							Thanks for your support! Your 1% has brought them one step closer to realise their smart idea! Don't forget to tune in to see how they're doing!
+						</p>
+						{{else}}
+	                		<p>
+							Thanks for your support! We'd be happy to keep you posted on the progress of the project(s) you supported. Why? Because it's a fun and personal way to see what's happening with your 1%. Sounds good? Just become a 1%Member!
+						</p>
+						<p>{{#linkTo 'signup'}}Become a 1%Member <em class="flaticon solid right-angle-quote-1"></em>{{/linkTo}}</p>
+						{{/if}}
+	            	</header>
+
+                {{else}}
+                	<header>
+                    	<h1>No donation set...</h1>
+						{{#linkTo 'currentOrder.donationList' class="edit-monthly-donations"}}
+                        	<strong>Create or enable your monthly donation</strong>
+						{{/linkTo}}
+                	</header>
+                {{/if}}
+            </div>
+        </section>
+    </div>
+
+    <div class="l-section">
+        <section class="l-wrapper">
+			<div class="l-content">
+                {{#if recurringPayment.active}}
+
+                   <header>
+                        {{#if donations}}
+                            {{#if moreThanOneDonation}}
+                                <h3>You just supported these projects</h3>
+                            {{else}}
+                                <h3>You just supported this project</h3>
+                            {{/if}}
+                        {{else}}
+                            <h3>You just supported the top three projects.</h3>
+                        {{/if}}
+                   </header>
+
+                    <ul class="project-list">
+                        {{#each donation in donations}}
+                            {{partial "thanksDonation"}}
+                        {{/each}}
+
+
+                        
+                    </ul>
+                {{/if}}
+            </div>
+
+            <sidebar class="l-sidebar">
+
+            	<h3>Your monthly donation is set</h3>
+				{{#if donations.length}}
+                	<p>Your monthly donation will be deducted from your account at the beginning of each month.</p>
+                {{/if}}
+				<p>Monthly donation total: <strong>&euro; {{recurringPayment.amount}},-</strong></p>
+
+            	
+
+            </sidebar>
+        </section>
+    </div>

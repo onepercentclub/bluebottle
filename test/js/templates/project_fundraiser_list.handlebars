@@ -1,0 +1,17 @@
+<li class="project-member-fundraisers">
+
+        <h4>Fundraisers</h4>
+
+        {{#if fundraisers.length}}
+            <ul>
+                {{#each fundraiser in controller}}
+                    {{render "projectFundRaiser" fundraiser}}
+                {{/each}}
+            </ul>
+        {{/if}}
+        {{#if controllers.project.isFundable}}
+            {{#linkTo 'fundRaiserNew' controllers.project.id class="fundraiser-become"}}
+                Become a fundraiser
+            {{/linkTo}}
+        {{/if}}
+    </li>

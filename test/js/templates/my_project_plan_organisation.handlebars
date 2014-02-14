@@ -1,0 +1,189 @@
+<legend>
+        <strong>Organisation</strong>
+    </legend>
+
+    {{#if organization}}
+        <fieldset>
+            <ul>
+                <li class="control-group has-popover" data-content="Name of your organisation">
+                    <label class="control-label">Name</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.name" classBinding="organization.errors.name.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.name}}
+                        <div class="has-errors">{{#each organization.errors.name}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Describe your organisation">
+                    <label class="control-label">Description</label>
+                    <div class="controls">
+                        {{view Em.TextArea valueBinding="organization.description" classBinding="organization.errors.description.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.description}}
+                        <div class="has-errors">{{#each organization.errors.description}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+            </ul>
+        </fieldset>
+        <fieldset>
+            <legend>
+                <strong>Address</strong>
+            </legend>
+            <ul>
+                <li class="control-group has-popover" data-content="Street, house number, the place in your city">
+                    <label class="control-label">Address line 1</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.address_line1" classBinding="organization.errors.address_line1.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.address_line1}}
+                        <div class="has-errors">{{#each organization.errors.address_line1}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+
+                </li>
+
+                <li class="control-group has-popover" data-content="More about your address">
+                    <label class="control-label">Address line 2</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.address_line2" classBinding="organization.errors.address_line2.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.address_line2}}
+                        <div class="has-errors">{{#each organization.errors.address_line2}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+
+                <li class="control-group has-popover" data-content="City or village..">
+                    <label class="control-label">City</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.city" classBinding="organization.errors.city.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.city}}
+                        <div class="has-errors">{{#each organization.errors.city}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Postal code">
+                    <label class="control-label">Postal code</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.postal_code" classBinding="organization.errors.postal_code.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.postal_code}}
+                        <div class="has-errors">{{#each organization.errors.postal_code}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Country or territory">
+                    <label class="control-label">Country</label>
+                    <div class="controls">
+                        {{view App.CountrySelectView valueBinding="organization.country" classBinding="organization.errors.country.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.country}}
+                        <div class="has-errors">{{#each organization.errors.country}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+            </ul>
+        </fieldset>
+        <fieldset>
+            <legend>
+                <strong>Online</strong>
+            </legend>
+            <ul>
+
+                <li class="control-group has-popover" data-content="Does your organization have a website?">
+                    <label class="control-label">Website</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.website" classBinding="organization.errors.website.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.website}}
+                        <div class="has-errors">{{#each organization.errors.website}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Email address">
+                    <label class="control-label">Email</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.email" classBinding="organization.errors.email.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.email}}
+                        <div class="has-errors">{{#each organization.errors.email}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Does your organization have a twitter account?">
+                    <label class="control-label">Twitter</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.twitter" placeholder="@twitteraccount" classBinding="organization.errors.twitter.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.twitter}}
+                        <div class="has-errors">{{#each organization.errors.twitter}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Does your organization have a facebook group?">
+                    <label class="control-label">Facebook</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.facebook" placeholder="https://www.facebook.com/<groupname>" classBinding="organization.errors.facebook.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.facebook}}
+                        <div class="has-errors">{{#each organization.errors.facebook}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="Can we reach you on Skype?">
+                    <label class="control-label">Skype</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.skype" placeholder="skype name" classBinding="organization.errors.skype.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.skype}}
+                        <div class="has-errors">{{#each organization.errors.skype}}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+            </ul>
+        </fieldset>
+
+        {{#if shouldSave}}
+            <button><span class="flaticon solid right-2"></span>Save & Next</button>
+        {{else}}
+            <button><span class="flaticon solid right-2"></span>Next</button>
+        {{/if}}
+
+    {{else}}
+        <fieldset>
+            <ul>
+                <li class="control-group has-popover" data-content="Choose your organisation from the list or create a new one.">
+                    <label class="control-label">Organisation</label>
+                    <div class="controls">
+                        <ul>
+                            {{#each organizations}}
+                                <li>
+                                    <h4>{{this.name}}</h4>
+                                    {{this.description}}
+                                    <br>
+                                    <a><span class="flaticon solid plus-2"> Select</a>
+                                </li>
+                            {{/each}}
+                            <li>
+                                <h4>create new</h4>
+                                Create a new organization to run this project.
+                                <br>
+                                <a><span class="flaticon solid plus-2"> Create</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </fieldset>
+    {{/if}}

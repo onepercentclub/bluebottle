@@ -77,7 +77,7 @@ INSTALLED_APPS = (
     # 'bluebottle.projects',
     # 'bluebottle.tasks',
     'bluebottle.bb_accounts',
-    'bluebottle.bb_contact',
+    'bluebottle.contact',
     'bluebottle.bb_organization',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',

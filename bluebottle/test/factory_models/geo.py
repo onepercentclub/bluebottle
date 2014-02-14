@@ -16,12 +16,12 @@ class SubRegionFactory(factory.DjangoModelFactory):
     FACTORY_FOR = SubRegion
 
     name = factory.Sequence(lambda n: 'SubRegion{0}'.format(n))
-    region = RegionFactory.create()
+    region = factory.SubFactory(RegionFactory)
 
 
 class CountryFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Country
 
     name = factory.Sequence(lambda n: 'Country_{0}'.format(n))
-    subregion = SubRegionFactory.create()
+    subregion = factory.SubFactory(SubRegionFactory)
 

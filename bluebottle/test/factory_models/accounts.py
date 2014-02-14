@@ -1,6 +1,6 @@
 import factory
 
-from bluebottle.bb_accounts.tests import TestBaseUser
+from bluebottle.test.models import TestBaseUser
 
 
 class BlueBottleUserFactory(factory.DjangoModelFactory):

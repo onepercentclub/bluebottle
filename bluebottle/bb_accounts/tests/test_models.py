@@ -5,7 +5,7 @@ from mock import patch
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-from bluebottle.bb_accounts.tests import TestBaseUser
+from bluebottle.test.models import TestBaseUser
 
 
 class BlueBottleUserManagerTestCase(TestCase):

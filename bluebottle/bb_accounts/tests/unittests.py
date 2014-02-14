@@ -1,21 +1,17 @@
-from django.conf import settings
-from django.core import mail, management
+from django.core import mail
 from django.test import TestCase
-
 
 from registration.models import RegistrationProfile
 from rest_framework import status
 
 
 from bluebottle.utils.tests import UserTestsMixin
-from django.utils.unittest.case import skipUnless
 from bluebottle.geo.tests import GeoTestsMixin
 
 
 import json
 import re
 
-from bluebottle.bb_accounts.models import BlueBottleBaseUser
 
 class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
     """

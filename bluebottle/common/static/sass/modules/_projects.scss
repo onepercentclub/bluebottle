@@ -538,24 +538,24 @@
 	
 	.task {
 		
-		border: 1px solid $gray-light;
-		background-color: $gray-dark;
+		border: 1px solid $projects-tasks-task-border-color;
+		background-color: $projects-tasks-task-bg-color;
 		
 		@include grid(24,0,0);
 		
 		.task-status {
 			@include grid(12,0,0);
-			background-color: $gray-light;
-			color: $gray-dark;
+			background-color: $projects-tasks-task-status-bg-color;
+			color: $projects-tasks-task-status-color;
 			text-transform: uppercase;
 		}
 		
 		.task-content {
 			@include grid(36,0,0);
-			color: $gray-light;
+			color: $projects-tasks-task-content-color;
 			
 			.task-name {
-				color: $white;
+				color: $projects-tasks-task-content-task-name;
 			}
 			
 			.task-time-needed {

@@ -5,11 +5,12 @@ from django.utils.timezone import now
 import factory
 import factory.fuzzy
 
-from bluebottle.bb_tasks.models import Task, TaskMember, Skill
-
+from bluebottle.bb_tasks.models import TaskMember, Skill
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
+from bluebottle.bb_tasks import get_task_model
 
+TASK_MODEL = get_task_model()
 
 class SkillFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Skill
@@ -19,7 +20,7 @@ class SkillFactory(factory.DjangoModelFactory):
 
 
 class TaskFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Task
+    FACTORY_FOR = TASK_MODEL
 
     author = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)

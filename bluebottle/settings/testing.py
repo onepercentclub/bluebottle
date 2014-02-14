@@ -9,12 +9,14 @@ DATABASES = {
     },
 }
 
+
 INSTALLED_APPS += (
-    'bluebottle.bb_projects.tests.testproject',
-    'bluebottle.bb_organizations.tests.testorganization',
+    'bluebottle.test',
 )
 
-#AUTH_USER_MODEL = "baseuser.TestBaseUser"
-PROJECTS_PROJECT_MODEL = 'testproject.TestBaseProject'
-ORGANIZATIONS_ORGANIZATION_MODEL = 'testorganization.TestOrganization'
+AUTH_USER_MODEL = 'test.TestBaseUser'
+PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
+ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
+TASKS_TASK_MODEL = 'test.TestTask'
+
 SOUTH_TESTS_MIGRATE = False

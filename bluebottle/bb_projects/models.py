@@ -72,8 +72,8 @@ class BaseProject(models.Model):
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
-    status = models.ForeignKey(ProjectPhase)
-    theme = models.ForeignKey(ProjectTheme, null=True)
+    status = models.ForeignKey('bb_projects.ProjectPhase')
+    theme = models.ForeignKey('bb_projects.ProjectTheme', null=True)
     favorite = models.BooleanField(default=True)
 
     # Extended Description

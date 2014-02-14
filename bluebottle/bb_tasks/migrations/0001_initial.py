@@ -9,29 +9,49 @@ from django.conf import settings
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'OrganizationMember'
-        db.create_table(u'bb_organizations_organizationmember', (
+        # Adding model 'Skill'
+        db.create_table(u'bb_tasks_skill', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
-            ('function', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
+            ('name_nl', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
+            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
-        db.send_create_signal(u'bb_organizations', ['OrganizationMember'])
+        db.send_create_signal(u'bb_tasks', ['Skill'])
 
-        # Adding model 'OrganizationDocument'
-        db.create_table(u'bb_organizations_organizationdocument', (
+        # Adding model 'TaskMember'
+        db.create_table(u'bb_tasks_taskmember', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL], null=True, blank=True)),
+            ('member', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
+            ('status', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('motivation', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('comment', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('time_spent', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=0)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
         ))
-        db.send_create_signal(u'bb_organizations', ['OrganizationDocument'])
+        db.send_create_signal(u'bb_tasks', ['TaskMember'])
+
+        # Adding model 'TaskFile'
+        db.create_table(u'bb_tasks_taskfile', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        ))
+        db.send_create_signal(u'bb_tasks', ['TaskFile'])
 
 
     def backwards(self, orm):
-        # Deleting model 'OrganizationMember'
-        db.delete_table(u'bb_organizations_organizationmember')
+        # Deleting model 'Skill'
+        db.delete_table(u'bb_tasks_skill')
 
-        # Deleting model 'OrganizationDocument'
-        db.delete_table(u'bb_organizations_organizationdocument')
+        # Deleting model 'TaskMember'
+        db.delete_table(u'bb_tasks_taskmember')
+
+        # Deleting model 'TaskFile'
+        db.delete_table(u'bb_tasks_taskfile')
 
 
     models = {
@@ -48,17 +68,32 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
-        u'bb_organizations.organizationdocument': {
-            'Meta': {'object_name': 'OrganizationDocument'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'}),
-            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
-        },
-        u'bb_organizations.organizationmember': {
-            'Meta': {'object_name': 'OrganizationMember'},
-            'function': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+        u'bb_tasks.skill': {
+            'Meta': {'ordering': "('id',)", 'object_name': 'Skill'},
+            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
+            'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
+        },
+        u'bb_tasks.taskfile': {
+            'Meta': {'object_name': 'TaskFile'},
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+        },
+        u'bb_tasks.taskmember': {
+            'Meta': {'object_name': 'TaskMember'},
+            'comment': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'member': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
+            'motivation': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+            'time_spent': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '0'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -104,4 +139,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['bb_organizations']
+    complete_apps = ['bb_tasks']

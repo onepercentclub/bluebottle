@@ -6,6 +6,7 @@ from bluebottle.bb_projects.models import (
     #ProjectBudgetLine,
     ProjectTheme,
     ProjectPhase)
+
 from .accounts import BlueBottleUserFactory
 
 PROJECT_MODEL = get_project_model()

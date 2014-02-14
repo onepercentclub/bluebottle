@@ -204,28 +204,37 @@
 //}
 
 #wallposts {
+	
 	background-color: $wallposts-background-color;
 	padding: $base-padding 0;
+	
 	.wallposts-list {
 		margin: $base-margin 0;
 		@include grid(24,1,1);
 	}
+	
 	.wallposts-important {
+		
 		@include grid(24,1,1);	
+	
 		.task-files {
+	
 			ul {
 				margin: $base-margin 0;
 				li {
 					@include resetlist;		
 					@include clear;
+					
 					.task-file-filename, .task-file-author, .task-file-created {
 						@include grid(16,0,1);
 					}
+					
 					.task-file-author {
 						a {
 							color: $wallposts-task-file-author-link-color;
 						}
 					}
+					
 					.task-file-created {
 						font-size: $font-size-small;
 					}		
@@ -233,12 +242,14 @@
 			}
 		}	
 	}
+	
 	.wallpost-action {
 		
 		border: 1px dashed $wallposts-action-border-color;
 		padding: $base-padding;
 		text-align: center;
 		margin-bottom: $base-margin;
+		
 		a {
 			text-decoration: none;
 		}
@@ -246,10 +257,12 @@
 		.wallpost-post-update {
 			color: $wallposts-post-update-color;
 		}
+		
 		.wallpost-post-comment {
 			color: $wallposts-post-comment-color;
 		}
 	}
+	
     .wallpost-form {
 		
         display: none;
@@ -297,17 +310,21 @@
 				}
 			}
 		}
+		
 		.btn {
 			padding: $base-padding/4 $base-padding/2;
 		}
+		
 		.btn-upload {
 			float: right;
 			color: $wallposts-form-upload-button-color;
 		}
+		
 		.video-container, .photos-container {
 			background: $wallposts-form-tabs-active-background-color;
 			padding: $base-padding;
 		}
+		
 		.video-container {
 			display: none;
 		}
@@ -365,6 +382,7 @@
 			color: $wallposts-wallpost-title-color;
 		}
 	}
+	
 	.wallpost-content {
 		.photo-viewer {
 			.cover {
@@ -372,6 +390,7 @@
 			}
 		}
 	}
+	
 	.wallpost-reactions {
 		
 		margin: -$base-margin;
@@ -411,6 +430,7 @@
 			color: $wallposts-wallpost-important-title-color;
 		}
 	}
+	
 	.wallpost-buttons {
 		
 		margin: 0 (-$base-margin);
@@ -428,6 +448,7 @@
 			float: right;
 		}
 	}
+	
 	.file-link {
 		
 		margin: 0 $base-margin;
@@ -437,9 +458,11 @@
 			color: $wallposts-wallpost-file-link-color;			
 		}
 	}
+	
 	.btn-spacer {
 		margin: 0 $base-margin/2;
 	}
+	
 	.wallpost-delete, .reaction-delete {
 		float: right;
 		text-decoration: none;

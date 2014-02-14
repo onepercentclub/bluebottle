@@ -4,7 +4,6 @@ from django.utils import timezone
 from mock import patch
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
 from bluebottle.test.models import TestBaseUser
 
 

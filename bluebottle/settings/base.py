@@ -144,11 +144,11 @@ INSTALLED_APPS = (
     'bluebottle.bb_accounts',
     'bluebottle.utils',
     'bluebottle.common',
-    # 'bluebottle.bb_contact',
+    'bluebottle.bb_contact',
     'bluebottle.geo',
     # 'bluebottle.pages',
     'bluebottle.bb_projects',
-    # 'bluebottle.bb_organizations',
+    'bluebottle.bb_organizations',
     'bluebottle.bb_tasks',
 
     # Modules required by BlueBottle

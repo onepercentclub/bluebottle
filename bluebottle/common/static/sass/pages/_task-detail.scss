@@ -62,7 +62,7 @@
 			padding: $base-padding / 2;
 			text-align: center;
 			background: $color-primary;
-//			position: absolute;
+			position: absolute;
 			width: 100%;
 			border-bottom: 2px solid $white;
 		}
@@ -72,7 +72,7 @@
 	}
 	.edit-task {
 		text-align: right;
-//		padding: $base-padding 0;
+		padding: $base-padding 0;
 		a {
 			text-decoration: none;
 		}

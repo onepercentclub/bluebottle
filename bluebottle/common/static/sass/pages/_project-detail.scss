@@ -108,6 +108,30 @@
     	}
     }
     
+	.project-deadline-badge {
+		padding: $base-padding / 2 0;
+		color: white;
+		@include grid(10,1,1);
+		big {
+			font-size: $font-size-larger;
+//			vertical-align: middle;
+		}
+		small {
+			font-size: $font-size-smallest;
+		}
+		.flaticon {
+			padding-top: $base-padding / 2;
+			display: block;
+			@include grid(10,0,2);
+			font-size: $font-size-largest;
+		}
+		.text {
+			clear: none;
+			display: block;
+			@include grid(38,0,0);			
+		}
+	}
+	
     .project-fund-amount {
     	color: $gray-light;
     

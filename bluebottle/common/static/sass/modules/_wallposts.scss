@@ -205,7 +205,7 @@
 
 #wallposts {
 	background-color: $wallposts-background-color;
-
+	padding: $base-padding 0;
 	.wallposts-list {
 		margin: $base-margin 0;
 		@include grid(24,1,1);

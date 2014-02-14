@@ -169,13 +169,59 @@ $carousel-nav-item-border-color:								$white !default;
 $carousel-nav-item-active-background-color:						$gray-lighter !default;
 $carousel-nav-item-active-color:								$white !default;
 																
-// Projects														
+// Home														
 // ----------------------------------							
 																
 $project-slider-background-color:								$white !default;
 $project-slider-buttons-color:									$gray-lighter !default;
 $project-slider-buttons-hover-color:							$color-primary !default;
-																
+
+// Projects
+// ----------------------------------
+
+// project detail
+$projects-project-meta-color:									$color-secondary !default;
+$projects-project-days-left-color:								$gray-dark !default;
+$projects-project-days-left-icon-color:							$gray-light !default;
+$projects-project-fund-amount-color:							$gray-dark !default;
+$projects-project-fund-amount-slider-bg-color: 					$gray-lighter !default;
+$projects-project-fund-amount-slider-progress-color:			$white !default;
+$projects-project-fund-amount-slider-progress-bg-color:			$color-secondary !default;
+$projects-project-fund-amount-control-bg-color:					$color-secondary !default;
+$projects-project-fund-amount-control-currency-color:			$color-text !default;
+$projects-project-fund-amount-divided-amount-color:				$gray !default;
+$projects-project-fund-amount-color:							$gray-light !default;
+
+// project - search results
+$projects-project-item-bg-color:								$gray-lighter !default;
+$projects-project-item-border-color:							$gray !default;
+$projects-project-item-border-hover-color:						$black !default;
+$projects-project-item-header-bg-color:							$black !default;
+$projects-project-item-title-color:								$white !default;
+$projects-project-item-status-bg-color:							$gray-lighter !default;
+$projects-project-item-status-color:							$gray-darker !default;
+$projects-project-item-fund-amount-slider-bg-color:				$white !default;
+$projects-project-item-project-description-color:				$gray-lighter !default;
+$projects-project-item-project-view-bg-color: 					$color-secondary !default;
+$projects-project-item-tasks-bg-color:							$white !default;
+$projects-project-item-tasks-border-color:						$gray-lighter !default;
+$projects-project-item-tasks-color:								$gray !default;
+$projects-project-item-tasks-strong-color:						$gray-darker !default;
+$projects-project-item-tasks-hover-color:						$gray-darker !default;
+
+// my projects list
+$projects-project-list-bg-color:								$white !default;
+$projects-project-list-listitem-border-left-right-color:		$white !default;
+$projects-project-list-listitem-border-bottom-color:			$gray-lighter !default;
+$projects-project-list-listitem-project-title-color:			$color-heading !default;
+$projects-project-list-listitem-project-subtitle-color:			$gray !default;
+$projects-project-list-listitem-project-meta-color: 			$gray !default;
+$projects-project-list-listitem-project-action-color:			$gray !default;
+$projects-project-list-listitem-highlight-color:				$gray-lighter !default;
+$projects-project-list-listitem-highlight-header-color:			$color-primary !default;
+$projects-project-list-listitem-first-top-border-color:			$white !default;
+$projects-project-list-listitem-last-bottom-border-color:		$white !default;
+
 // Media														
 // ----------------------------------							
 																
@@ -287,7 +333,7 @@ $tasks-task-item-hover-bg-color:								$black !default;
 $tasks-task-previews-bg-color:									$gray-lighter !default;
 $tasks-task-previews-show-more-bg-color:						$gray-lighter !default;
 $tasks-task-preview-member-status-bg-color:						$color-secondary !default;
-$tasks-task-preview-theme-color:								$gray-light !default;
+$tasks-task-preview-theme-color:								$gray-dark !default;
 $tasks-task-preview-arrow-bg-color:								$color-secondary !default;
 $tasks-task-preview-task-status-color:							$color-primary !default;
 																

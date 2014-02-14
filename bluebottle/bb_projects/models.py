@@ -42,16 +42,13 @@ class ProjectPhase(models.Model):
     sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
 
     active = models.BooleanField(default=True, help_text=_('Whether this phase is in use or has been discarded.'))
-
     editable = models.BooleanField(default=True,
                                    help_text=_('Whether the project owner can change the details of the project.'))
-
     viewable = models.BooleanField(default=True,
                                    help_text=_('Whether this phase, and projects in it show up at the website'))
 
     class Meta():
         ordering = ['sequence']
-
 
     def __unicode__(self):
         return '{0} - {1}'.format(self.sequence,  self.name)

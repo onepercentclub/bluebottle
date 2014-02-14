@@ -40,9 +40,6 @@ class NewsItem(models.Model):
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 
-    # Taxonomy
-    tags = TaggableManager(blank=True)
-
     objects = NewsItemManager()
 
     def __unicode__(self):

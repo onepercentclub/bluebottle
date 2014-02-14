@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
+
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
-from django.utils.timezone import now
-from django.db.models import Q
 
 
 class SlideManager(models.Manager):

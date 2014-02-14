@@ -9,34 +9,49 @@ from django.conf import settings
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Slide'
-        db.create_table(u'slides_slide', (
+        # Adding model 'Skill'
+        db.create_table(u'bb_tasks_skill', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50)),
-            ('language', self.gf('django.db.models.fields.CharField')(max_length=5)),
-            ('tab_text', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=100, blank=True)),
-            ('body', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255, null=True, blank=True)),
-            ('background_image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255, null=True, blank=True)),
-            ('video_url', self.gf('django.db.models.fields.URLField')(default='', max_length=100, blank=True)),
-            ('link_text', self.gf('django.db.models.fields.CharField')(max_length=400, blank=True)),
-            ('link_url', self.gf('django.db.models.fields.CharField')(max_length=400, blank=True)),
-            ('style', self.gf('django.db.models.fields.CharField')(default='default', max_length=40, blank=True)),
-            ('status', self.gf('django.db.models.fields.CharField')(default='draft', max_length=20, db_index=True)),
-            ('publication_date', self.gf('django.db.models.fields.DateTimeField')(null=True, db_index=True)),
-            ('publication_end_date', self.gf('django.db.models.fields.DateTimeField')(db_index=True, null=True, blank=True)),
-            ('sequence', self.gf('django.db.models.fields.IntegerField')()),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
+            ('name_nl', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
+            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
-        db.send_create_signal(u'slides', ['Slide'])
+        db.send_create_signal(u'bb_tasks', ['Skill'])
+
+        # Adding model 'TaskMember'
+        db.create_table(u'bb_tasks_taskmember', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('member', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
+            ('status', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('motivation', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('comment', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('time_spent', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=0)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        ))
+        db.send_create_signal(u'bb_tasks', ['TaskMember'])
+
+        # Adding model 'TaskFile'
+        db.create_table(u'bb_tasks_taskfile', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        ))
+        db.send_create_signal(u'bb_tasks', ['TaskFile'])
 
 
     def backwards(self, orm):
-        # Deleting model 'Slide'
-        db.delete_table(u'slides_slide')
+        # Deleting model 'Skill'
+        db.delete_table(u'bb_tasks_skill')
+
+        # Deleting model 'TaskMember'
+        db.delete_table(u'bb_tasks_taskmember')
+
+        # Deleting model 'TaskFile'
+        db.delete_table(u'bb_tasks_taskfile')
 
 
     models = {
@@ -53,34 +68,39 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
+        u'bb_tasks.skill': {
+            'Meta': {'ordering': "('id',)", 'object_name': 'Skill'},
+            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
+            'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
+        },
+        u'bb_tasks.taskfile': {
+            'Meta': {'object_name': 'TaskFile'},
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+        },
+        u'bb_tasks.taskmember': {
+            'Meta': {'object_name': 'TaskMember'},
+            'comment': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'member': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
+            'motivation': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+            'time_spent': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '0'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+        },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
             'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        u'slides.slide': {
-            'Meta': {'ordering': "('language', 'sequence')", 'object_name': 'Slide'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
-            'background_image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'body': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
-            'link_text': ('django.db.models.fields.CharField', [], {'max_length': '400', 'blank': 'True'}),
-            'link_url': ('django.db.models.fields.CharField', [], {'max_length': '400', 'blank': 'True'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'publication_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'db_index': 'True'}),
-            'publication_end_date': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
-            'sequence': ('django.db.models.fields.IntegerField', [], {}),
-            'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "'draft'", 'max_length': '20', 'db_index': 'True'}),
-            'style': ('django.db.models.fields.CharField', [], {'default': "'default'", 'max_length': '40', 'blank': 'True'}),
-            'tab_text': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'blank': 'True'})
         },
         settings.AUTH_USER_MODEL.lower(): {
             'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1]},
@@ -119,4 +139,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['slides']
+    complete_apps = ['bb_tasks']

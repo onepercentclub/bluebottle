@@ -85,11 +85,11 @@ INSTALLED_APPS = (
     'bluebottle.quotes',
 
     'bluebottle.bb_accounts',
-    'bluebottle.bb_contact',
+    'bluebottle.contact',
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
-    )
+)
 
 MIDDLEWARE_CLASSES = [
     # Have a middleware to make sure old cookies still work after we switch to domain-wide cookies.

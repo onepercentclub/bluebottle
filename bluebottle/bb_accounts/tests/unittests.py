@@ -7,11 +7,10 @@ from rest_framework import status
 
 from bluebottle.utils.tests import UserTestsMixin
 from bluebottle.geo.tests import GeoTestsMixin
-
+from django.contrib.auth import get_user_model
 
 import json
 import re
-
 
 class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
     """

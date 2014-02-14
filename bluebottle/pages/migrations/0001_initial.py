@@ -82,7 +82,7 @@ class Migration(SchemaMigration):
             'title': ('django.db.models.fields.CharField', [], {'max_length': '200'})
         },
         settings.AUTH_USER_MODEL.lower(): {
-            'Meta': {'object_name': 'TestBaseUser'},
+            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1]},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),

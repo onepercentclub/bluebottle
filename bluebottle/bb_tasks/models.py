@@ -8,11 +8,7 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-#from bluebottle.bb_projects import get_project_model
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
-
-#PROJECT_MODEL = get_project_model()
 
 
 class Skill(models.Model):
@@ -136,7 +132,7 @@ class SupportedProjectsManager(models.Manager):
 
         valid_statuses = [
             statuses.applied, statuses.accepted, statuses.realized]
-        projects = PROJECT_MODEL.objects.filter(
+        projects = settings.PROJECTS_PROJECT_MODEL.objects.filter(
             task__taskmember__member=user,
             task__taskmember__status__in=valid_statuses).distinct()
 

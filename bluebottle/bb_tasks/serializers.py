@@ -19,7 +19,8 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'description', 'location', 'skill', 'status', 'created', 'project', 'deadline', 'time_needed')
+        fields = ('id', 'title', 'description', 'skill',
+                  'status', 'created', 'project', 'deadline', 'time_needed')
 
 
 class TaskMemberSerializer(serializers.ModelSerializer):

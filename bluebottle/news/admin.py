@@ -24,7 +24,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'language', 'main_image', 'contents', 'tags'),
+            'fields': ('title', 'slug', 'language', 'main_image', 'contents'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date', 'allow_comments'),

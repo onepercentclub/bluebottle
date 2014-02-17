@@ -23,7 +23,7 @@ class OrganizationDocumentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrganizationDocument
-        fields = ('id', 'organization', 'file')
+        fields = ('id', 'documents', 'file')
 
 
 class ManageOrganizationSerializer(OrganizationSerializer):

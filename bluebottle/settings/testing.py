@@ -14,3 +14,10 @@ TASKS_TASK_MODEL = 'test.TestTask'
 SOUTH_TESTS_MIGRATE = True
 
 ROOT_URLCONF = 'bluebottle.urls'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    },
+}

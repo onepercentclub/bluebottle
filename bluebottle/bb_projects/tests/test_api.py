@@ -3,9 +3,7 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
-#from bluebottle.bb_projects.models import ProjectBudgetLine
 from bluebottle.test.factory_models.projects import (
-    #ProjectDetailFieldFactory, ProjectBudgetLineFactory,
     ProjectFactory, ProjectThemeFactory,
     ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -37,10 +35,6 @@ class ProjectEndpointTestCase(TestCase):
             owner=self.user, status=self.phase_2, theme=self.theme_2)
         self.project_3 = ProjectFactory.create(
             owner=self.user, status=self.phase_3, theme=self.theme_3)
-
-        # self.detail_field_1 = ProjectDetailFieldFactory.create()
-        # self.detail_field_2 = ProjectDetailFieldFactory.create()
-        # self.detail_field_3 = ProjectDetailFieldFactory.create()
 
 
 class TestProjectPhaseList(ProjectEndpointTestCase):
@@ -245,31 +239,6 @@ class TestProjectThemeDetail(ProjectEndpointTestCase):
         self.assertIn('name', data)
 
 
-# class TestProjectDetailFieldList(ProjectEndpointTestCase):
-#     """
-#     Test case for the ``ProjectDetailFieldList`` API view.
-#
-#     Endpoint: /api/projects/fields
-#     """
-#     def test_api_project_detail_field_list_endpoint(self):
-#         """
-#         Test the API endpoint for Project detail field list.
-#         """
-#         response = self.client.get(reverse('project_detail_field_list'))
-#
-#         self.assertEqual(response.status_code, 200)
-#
-#         data = json.loads(response.content)
-#
-#         for item in data:
-#             self.assertIn('id', item)
-#             self.assertIn('name', item)
-#             self.assertIn('description', item)
-#             self.assertIn('type', item)
-#             self.assertIn('options', item)
-#             self.assertIn('attributes', item)
-
-
 class TestManageProjectList(ProjectEndpointTestCase):
     """
     Test case for the ``ManageProjectList`` API view.
@@ -308,15 +277,8 @@ class TestManageProjectList(ProjectEndpointTestCase):
             self.assertIn('status', item)
             self.assertIn('image', item)
             self.assertIn('pitch', item)
-            # self.assertIn('tags', item)
             self.assertIn('description', item)
             self.assertIn('country', item)
-            # self.assertIn('latitude', item)
-            # self.assertIn('longitude', item)
-            # self.assertIn('reach', item)
-            # self.assertIn('organization', item)
-            # self.assertIn('video_html', item)
-            # self.assertIn('video_url', item)
             self.assertIn('editable', item)
 
     def test_api_manage_project_list_endpoint_post(self):
@@ -344,15 +306,8 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertIn('status', data)
         self.assertIn('image', data)
         self.assertIn('pitch', data)
-        # self.assertIn('tags', data)
         self.assertIn('description', data)
         self.assertIn('country', data)
-        # self.assertIn('latitude', data)
-        # self.assertIn('longitude', data)
-        # self.assertIn('reach', data)
-        # self.assertIn('organization', data)
-        # self.assertIn('video_html', data)
-        # self.assertIn('video_url', data)
         self.assertIn('editable', data)
 
 
@@ -412,186 +367,6 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('status', data)
         self.assertIn('image', data)
         self.assertIn('pitch', data)
-        # self.assertIn('tags', data)
         self.assertIn('description', data)
         self.assertIn('country', data)
-        # self.assertIn('latitude', data)
-        # self.assertIn('longitude', data)
-        # self.assertIn('reach', data)
-        # self.assertIn('organization', data)
-        # self.assertIn('video_html', data)
-        # self.assertIn('video_url', data)
         self.assertIn('editable', data)
-
-
-# class TestManageProjectBudgetLineList(ProjectEndpointTestCase):
-#     """
-#     Test case for the ``ManageProjectBudgetLineList`` API view.
-#
-#     Endpoint: /api/projects/budgetlines/manage
-#     """
-#     def setUp(self):
-#         super(TestManageProjectBudgetLineList, self).setUp()
-#
-#         self.project_budget_1 = ProjectBudgetLineFactory.create(
-#             project=self.project_1)
-#         self.project_budget_2 = ProjectBudgetLineFactory.create(
-#             project=self.project_2)
-#         self.project_budget_3 = ProjectBudgetLineFactory.create(
-#             project=self.project_3)
-#
-#     def test_api_manage_project_budgetline_list_endpoint(self):
-#         """
-#         Test API endpoint for manage Project budgetline list.
-#         """
-#         response = self.client.get(reverse('project_budgetline_manage_list'))
-#
-#         self.assertEqual(response.status_code, 200)
-#
-#         data = json.loads(response.content)
-#         self.assertEqual(data['count'], 3)
-#
-#         for item in data['results']:
-#             self.assertIn('id', item)
-#             self.assertIn('project', item)
-#             self.assertIn('description', item)
-#             self.assertIn('amount', item)
-#
-#     def test_api_manage_project_budgetline_list_post_authentication(self):
-#         """
-#         Test POST request over API requires authentication.
-#         """
-#         post_data = {
-#             'project': self.project_1.slug,
-#             'description': 'The testing project.',
-#             # We set the amount in Euros in the POST request.
-#             'amount': 1000
-#         }
-#         response = self.client.post(
-#             reverse('project_budgetline_manage_list'), post_data)
-#
-#         self.assertEqual(response.status_code, 403)
-#
-#     def test_api_manage_project_budgetline_list_post(self):
-#         """
-#         Test successful POST request over API endpoint for manage Project
-#         budgetline.
-#         """
-#         post_data = {
-#             'project': self.project_1.slug,
-#             'description': 'The testing project.',
-#             # We set the amount in Euros in the POST request.
-#             'amount': 1000
-#         }
-#         self.client.login(email=self.project_1.owner.email, password='testing')
-#         response = self.client.post(
-#             reverse('project_budgetline_manage_list'), post_data)
-#
-#         self.assertEqual(response.status_code, 201)
-#
-#         budgetline = ProjectBudgetLine.objects.latest('pk')
-#
-#         self.assertEqual(budgetline.description, post_data['description'])
-#         self.assertEqual(budgetline.project.slug, post_data['project'])
-#         # In the model, the amount is stored in Euro-cents.
-#         self.assertEqual(budgetline.amount, 100000)
-
-
-# class TestManageProjectsBudgetLineDetail(ProjectEndpointTestCase):
-#     """
-#     Test case for the ``ManageProjectBudgetLineDetail`` API view.
-#
-#     Endpoint: /api/projects/budgetlines/manage/{pk}
-#     """
-#     def setUp(self):
-#         super(TestManageProjectsBudgetLineDetail, self).setUp()
-#
-#         self.project_budget_1 = ProjectBudgetLineFactory.create(
-#             project=self.project_1)
-#         self.project_budget_2 = ProjectBudgetLineFactory.create(
-#             project=self.project_2)
-#         self.project_budget_3 = ProjectBudgetLineFactory.create(
-#             project=self.project_3)
-#
-#         self.put_data = {
-#             'project': self.project_budget_1.project.slug,
-#             'description': 'Modified description for testing',
-#             'amount': 2000
-#         }
-#
-#     def test_api_manage_project_budgetline_detail(self):
-#         """
-#         Test API endpoint for manage Project budgetline detail.
-#         """
-#         response = self.client.get(
-#             reverse('project_budgetline_manage_detail',
-#                     kwargs={'pk': self.project_budget_1.pk}))
-#
-#         self.assertEqual(response.status_code, 200)
-#
-#         data = json.loads(response.content)
-#         self.assertIn('id', data)
-#         self.assertIn('project', data)
-#         self.assertIn('description', data)
-#         self.assertIn('amount', data)
-#
-#     def test_api_manage_project_budgetline_detail_put_authentication(self):
-#         """
-#         Test PUT method needs the user to be authenticated.
-#         """
-#         json_data = json.dumps(self.put_data)
-#
-#         response = self.client.put(
-#             reverse('project_budgetline_manage_detail',
-#                     kwargs={'pk': self.project_budget_1.pk}),
-#             json_data, content_type='application/json')
-#
-#         self.assertEqual(response.status_code, 403)
-#
-#     def test_api_manage_project_budgetline_detail_put(self):
-#         """
-#         Test successful PUT method over manage Project budgetline detail
-#         endpoint.
-#         """
-#         json_data = json.dumps(self.put_data)
-#
-#         self.client.login(email=self.project_1.owner.email, password='testing')
-#         response = self.client.put(
-#             reverse('project_budgetline_manage_detail',
-#                     kwargs={'pk': self.project_budget_1.pk}),
-#             json_data, content_type='application/json', follow=True)
-#
-#         self.assertEqual(response.status_code, 200)
-#
-#         budgetline = ProjectBudgetLine.objects.get(pk=self.project_budget_1.pk)
-#         self.assertEqual(budgetline.amount, 200000)
-#         self.assertEqual(budgetline.description, self.put_data['description'])
-#         self.assertEqual(budgetline.project.slug, self.put_data['project'])
-#
-#     def test_api_manage_project_budgetline_detail_delete_authentication(self):
-#         """
-#         Test DELETE method needs the user to be authenticated.
-#         """
-#         response = self.client.delete(
-#             reverse('project_budgetline_manage_detail',
-#                     kwargs={'pk': self.project_budget_1.pk}),
-#             content_type='application/json')
-#
-#         self.assertEqual(response.status_code, 403)
-#
-#     def test_api_manage_project_budgetline_detail_delete(self):
-#         """
-#         Test DELETE method over manage Project budgetline detail endpoint.
-#         """
-#         self.client.login(email=self.project_1.owner.email, password='testing')
-#         response = self.client.delete(
-#             reverse('project_budgetline_manage_detail',
-#                     kwargs={'pk': self.project_budget_1.pk}),
-#             content_type='application/json', follow=True)
-#
-#         self.assertEqual(response.status_code, 204)
-#
-#         self.assertRaises(
-#             ProjectBudgetLine.DoesNotExist,
-#             ProjectBudgetLine.objects.get,
-#             pk=self.project_budget_1.pk)

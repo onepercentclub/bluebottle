@@ -23,6 +23,7 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('member', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
             ('status', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('task_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
             ('motivation', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('comment', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('time_spent', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=0)),

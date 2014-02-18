@@ -8,6 +8,6 @@ class IsOrganizationMember(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, BaseOrganization):
-            return request.user.id in obj.organizationmember_set.values_list('user_id', flat=True)
-        return request.user.id in obj.organization.organizationmember_set.values_list('user_id', flat=True)
+            return request.user.id in obj.members.values_list('user_id', flat=True)
+        return request.user.id in obj.organization.members.values_list('user_id', flat=True)
 

@@ -1,6 +1,7 @@
 from .base import *
 from .secrets import *
 
+COMPRESS_ENABLED = False
 
 INSTALLED_APPS += (
     'bluebottle.test',

@@ -35,17 +35,18 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
     # Limit the view to only the organizations the current user is member of
     def get_queryset(self):
-        org_ids = OrganizationMember.objects.filter(
-            user=self.request.user).values_list('organization_id', flat=True).all()
+        org_members_ids = OrganizationMember.objects.filter(user=self.request.user).values_list('id', flat=True).all()
+        org_ids = self.model.objects.filter(members__in=org_members_ids).values_list('id', flat=True).all()
         queryset = super(ManageOrganizationList, self).get_queryset()
         queryset = queryset.filter(id__in=org_ids)
         return queryset
 
     def post_save(self, obj, created=False):
         if created:
-            member = OrganizationMember(organization=obj, user=self.request.user)
+            member = OrganizationMember(user=self.request.user)
             member.save()
-
+            obj.members.add(member)
+            
 
 class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):
     model = ORGANIZATION_MODEL

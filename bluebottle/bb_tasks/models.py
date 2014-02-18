@@ -35,7 +35,7 @@ class TaskMember(models.Model):
     member = models.ForeignKey(settings.AUTH_USER_MODEL)
     status = models.CharField(
         _('status'), max_length=20, choices=TaskMemberStatuses.choices)
-    task_id = models.PositiveIntegerField(editable=False)
+    task_id = models.PositiveIntegerField(editable=False, null=True)
 
     motivation = models.TextField(
         _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)

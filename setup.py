@@ -86,6 +86,7 @@ dependency_links = [
 
 # TODO: update
 tests_require = [
+    'BeautifulSoup==3.2.1',
     'coverage==3.6',
     'django-nose',
     'django-admin-tools==0.5.1',
@@ -113,6 +114,8 @@ tests_require = [
     'splinter==0.5.4', # Functional testing libraries
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
+    'tdaemon==0.1.1',
+    'django-colortools==0.3.3'
 ]
 
 

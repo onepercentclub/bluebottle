@@ -1,6 +1,11 @@
 from .base import *
 from .secrets import *
 
+COMPRESS_ENABLED = False
+
+TEST_RUNNER = "colortools.test.ColorDjangoTestSuiteRunner"
+
+SECRET_KEY = 'Testing'
 
 INSTALLED_APPS += (
     'bluebottle.test',
@@ -21,3 +26,8 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+
+INSTALLED_APPS += (
+    'django_extensions',
+    'colortools',
+)

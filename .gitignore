@@ -21,6 +21,9 @@ pip-log.txt
 .coverage
 .tox
 
+# JS testing
+node_modules
+
 #Mr Developer
 .mr.developer.cfg
 

@@ -8,6 +8,7 @@ from bluebottle.bb_projects.models import (
     ProjectPhase)
 
 from .accounts import BlueBottleUserFactory
+from .geo import CountryFactory
 
 PROJECT_MODEL = get_project_model()
 
@@ -35,6 +36,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
     status = factory.SubFactory(ProjectPhaseFactory)
     theme = factory.SubFactory(ProjectThemeFactory)
+    country = factory.SubFactory(CountryFactory)
 
 
 # class ProjectDetailFieldFactory(factory.DjangoModelFactory):

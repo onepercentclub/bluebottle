@@ -1,4 +1,4 @@
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db import models
@@ -243,3 +243,37 @@ def accepted_member_notification(sender, instance, created, **kwargs):
                 msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
                 msg.attach_alternative(html_content, "text/html")
                 msg.send()
+
+
+@receiver(post_save, weak=False, sender=TASK_MODEL)
+def send_mail_task_realized(sender, instance, created, **kwargs):
+    """
+    Send (multiple) e-mails when a task is realized.
+    The task members that weren't rejected are the receivers.
+    """
+    if not created and instance.status == 'realized':
+        task = instance
+        mail_sender = task.author
+        link = '/go/tasks/{0}'.format(task.id)
+        site = 'https://' + Site.objects.get_current().domain
+
+        qs = task.members.exclude(status=TaskMember.TaskMemberStatuses.rejected)
+        receivers = [taskmember.member for taskmember in qs]
+
+        emails = []
+
+        for receiver in receivers:
+            translation.activate(receiver.primary_language)
+            subject = _('Good job! "%(task)s" is realized!.') % {'task': task.title}
+            context = Context({'task': task, 'receiver': receiver, 'sender': mail_sender, 'link': link, 'site': site})
+            text_content = get_template('task_realized.mail.txt').render(context)
+            html_content = get_template('task_realized.mail.html').render(context)
+            translation.deactivate()
+            msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+            msg.attach_alternative(html_content, "text/html")
+            emails.append(msg)
+
+        if emails:
+            connection = get_connection()
+            connection.send_messages(emails)
+            connection.close()

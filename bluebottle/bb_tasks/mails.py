@@ -7,12 +7,13 @@ from django.contrib.sites.models import Site
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from .models import TaskMember
+from .models import TaskMember, BaseTask
 
 
 @receiver(post_save, weak=False, sender=TaskMember)
 def new_reaction_notification(sender, instance, created, **kwargs):
     task_member = instance
+    # task = BaseTask.members
     task = instance.task
 
     site = 'https://' + Site.objects.get_current().domain

@@ -8,11 +8,11 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-#from bluebottle.bb_projects import get_project_model
+# from bluebottle.bb_projects import get_project_model
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
-#PROJECT_MODEL = get_project_model()
+# PROJECT_MODEL = get_project_model()
 
 
 class Skill(models.Model):

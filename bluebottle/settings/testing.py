@@ -22,3 +22,5 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+
+COMPRESS_ENABLED = False

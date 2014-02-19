@@ -13,7 +13,7 @@
     padding: $base-padding/2 $base-padding;
     display: inline-block;
     border: 1px solid $button-border-color;
-    background-color: $button-background-color;
+    background-color: $button-bg-color;
     color: $button-color; 
     text-decoration: none;
     text-transform: uppercase;
@@ -35,7 +35,7 @@
 			height: 100%;
 			line-height: 2.25em;
 	        display: inline-block;
-	        background: $button-iconed-icon-background-color; 
+	        background: $button-iconed-icon-bg-color; 
 	        color: $button-iconed-icon-color;
 	        text-align: center;
 			vertical-align: middle;
@@ -54,7 +54,7 @@
 	    &:hover {
     	
         	.flaticon, .icon {
-            	background-color: $button-iconed-hover-icon-background-color;
+            	background-color: $button-iconed-hover-icon-bg-color;
             	color: $button-iconed-hover-icon-color;
 			}
 		}
@@ -63,7 +63,7 @@
 		    padding-left: $base-padding*3.5;
 		    
 			.flaticon, .icon {
-            	background: $button-iconed-active-icon-background-color;
+            	background: $button-iconed-active-icon-bg-color;
 				color: $button-iconed-active-icon-color;
 			}
 		
@@ -73,11 +73,11 @@
     // Primary buttons
     &.btn-primary {
     	border: 1px solid $button-primary-border-color; 
-		background-color: $button-primary-background-color;
+		background-color: $button-primary-bg-color;
 		
 		
 		.flaticon, .icon {
-			background-color: $button-primary-icon-background-color;
+			background-color: $button-primary-icon-bg-color;
 			color: $button-primary-icon-color;
 		}
 	}
@@ -85,7 +85,7 @@
     // Button states
 	&:hover {
     	border-color: $button-hover-border-color; 
-    	background-color: $button-hover-background-color; 
+    	background-color: $button-hover-bg-color; 
     	color: $button-hover-color; 
 	}
 	
@@ -95,7 +95,7 @@
 
     &:active {
     	top: 0;
-        background-color: $button-active-background-color;
+        background-color: $button-active-bg-color;
         color: $button-active-color;
         border-top-width: 0.30em;
         border-color: $button-active-color;
@@ -117,13 +117,13 @@
 	    border-top-width: 1px;
     	top: auto;
         border-color: $button-disabled-border-color;
-        background-color: $button-disabled-background-color;
+        background-color: $button-disabled-bg-color;
         color: $button-disabled-color;
         cursor: default;
         padding: $base-padding/2 $base-padding;
         
         .flaticon, .icon {
-			background: $button-disabled-icon-background-color;
+			background: $button-disabled-icon-bg-color;
 			color: $button-disabled-icon-color;
 		}
 		

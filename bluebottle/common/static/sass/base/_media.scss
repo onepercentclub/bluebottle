@@ -60,7 +60,7 @@ object, embed, iframe {
         &.more {
             display: block;
             @include grid(8,0,0);
-            background-color: $media-photo-viewer-more-background-color;
+            background-color: $media-photo-viewer-more-bg-color;
             
             a {
                 display: block;

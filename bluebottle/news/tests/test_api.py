@@ -26,25 +26,23 @@ class NewsItemApiTestCase(APITestCase):
 
 class NewsItemsApiTest(NewsItemApiTestCase):
     """
-    Test case for the ``NewsItem`` API view. Returns all the NewsItems
+    Test case for the ``NewsItem`` API view
 
     Endpoint: /api/news/items/
     """
+
     def test_news_item_list(self):
         """
-        Test retrieving a news items.
+        Test retrieving news items.
         """
         response = self.client.get(reverse('news_item_list'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['count'], 5, response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 5)
 
-        # # Check that we have 2 english news items
-        # TODO: need to add language param to news routes, or remove the test below
-        #		if there want be any
-        #
-        # response = self.client.get(self.news_url, {'language': 'en'})
-        # self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        # self.assertEqual(response.data['count'], 2, response.data)
+        # Check that we have 2 english news items
+        response = self.client.get(reverse('news_item_list'), {'language': 'en'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
     
     def test_news_post_details(self):
         """

@@ -5,6 +5,7 @@
 
 // Grays
 // --------------------------------
+
 $black                                                     : #000 !default; 
 $gray-darkest                                              : #222 !default;     
 $gray-darker                                               : #444 !default;
@@ -13,10 +14,10 @@ $gray                                                      : #999 !default;
 $gray-light                                                : #ccc !default;
 $gray-lighter                                              : #e9e9e9 !default;
 $white                                                     : #fff !default;
-                                                                
-                                                                
+                                                       
 // Colors                                                       
 // --------------------------------                             
+
 $color-primary                                             : #0896ff !default; // light blue
 $color-secondary                                           : #003580 !default; // dark blue
                                                                    
@@ -86,25 +87,25 @@ $font-size-smallest                                        : $base-font-size * 0
 $base-margin                                               : 1em !default;
 $base-padding                                              : 1em !default;
 
-// Base                                                     
+// Type                                                     
 // ----------------------------------                           
 
-$type-body-color: $color-text !default;
-$type-dl-border-color: $gray-light !default;
-$type-dt-color: $gray !default;
+$type-body-color                                           : $color-text !default;
+$type-dl-border-color                                      : $gray-light !default;
+$type-dt-color                                             : $gray !default;
 
-$type-hr-border-top-color: $gray-light !default;
-$type-hr-border-bottom-color: $white !default;
+$type-hr-border-top-color                                  : $gray-light !default;
+$type-hr-border-bottom-color                               : $white !default;
 
-$type-abbr-border-color: $gray-light !default;
+$type-abbr-border-color                                    : $gray-light !default;
 
-$type-h1-color: $color-primary !default;
-$type-h1-em-color: $color-secondary !default;
-$type-h2-color: $color-secondary !default;
-$type-h3-color: $color-heading !default;
+$type-h1-color                                             : $color-primary !default;
+$type-h1-em-color                                          : $color-secondary !default;
+$type-h2-color                                             : $color-secondary !default;
+$type-h3-color                                             : $color-heading !default;
 
-$type-blockquote-border-color: $gray-lighter !default;
-$type-blockquote-small-color: $gray-light !default;
+$type-blockquote-border-color                              : $gray-lighter !default;
+$type-blockquote-small-color                               : $gray-light !default;
                                                                 
 // Buttons                                                      
 // ----------------------------------                           
@@ -160,17 +161,17 @@ $form-input-border-color                                   : #bcbcbc !default;
 $form-input-disabled-bg-color                              : $gray-lighter !default;
 
 $form-legend-bg-color                                      : $white !default;
-$form-legend-strong-color:	$color-secondary !default;
+$form-legend-strong-color                                  : $color-secondary !default;
 
 $form-fieldset-legend-bg-color                             : $gray-light !default;
-$form-fieldset-legend-strong-color: $white !default;                                                                
+$form-fieldset-legend-strong-color                         : $white !default;                                                                
 
-$form-message-color: $color-text-light !default;
-$form-message-bg-color: $color-secondary !default;
-$form-message-close-color: $color-text-light !default;
-$form-message-close-hover-color: $white !default;
-$form-message-error-color: $white !default;
-$form-message-error-bg-color: $color-error !default;
+$form-message-color                                        : $color-text-light !default;
+$form-message-bg-color                                     : $color-secondary !default;
+$form-message-close-color                                  : $color-text-light !default;
+$form-message-close-hover-color                            : $white !default;
+$form-message-error-color                                  : $white !default;
+$form-message-error-bg-color                               : $color-error !default;
 
 $form-tags-color                                           : $white !default;
 $form-tags-bg-color                                        : $color-secondary !default;
@@ -183,10 +184,10 @@ $form-radio-select-label-border-color                      : darken($gray-light,
 $form-radio-select-input-bg-color                          : $color-secondary !default;
 $form-radio-select-input-border-color                      : darken($color-secondary, 5%) !default;
 
-$form-select-hover-border-color: $color-secondary !default;
-$form-select-error-border-color: $color-error !default;
+$form-select-hover-border-color                            : $color-secondary !default;
+$form-select-error-border-color                            : $color-error !default;
 
-$form-placeholder-color: $gray-light !default;
+$form-placeholder-color                                    : $gray-light !default;
                                                                 
 // Modules                                                      
 // ----------------------------------                           
@@ -291,7 +292,7 @@ $projects-project-item-tasks-hover-color                   : $gray-darker !defau
 $projects-project-list-bg-color                            : $white !default;
 $projects-project-list-listitem-border-left-right-color    : $white !default;
 $projects-project-list-listitem-border-bottom-color        : $gray-lighter !default;
-$projects-project-list-listitem-bg-color:					 $gray-lighter !default;
+$projects-project-list-listitem-bg-color                   : $gray-lighter !default;
 $projects-project-list-listitem-project-title-color        : $color-heading !default;
 $projects-project-list-listitem-project-subtitle-color     : $gray !default;
 $projects-project-list-listitem-project-meta-color         : $gray !default;
@@ -337,8 +338,8 @@ $modal-close-bg-color                                      : $gray-lighter !defa
 $modal-close-hover-color                                   : $gray-dark !default;
 $modal-header-color                                        : $color-primary !default;
 $modal-footer-bg-color                                     : $gray-lighter !default;
-$modal-footer-link-color: $color-secondary !default;
-$modal-footer-link-hover-color: $color-text !default;
+$modal-footer-link-color                                   : $color-secondary !default;
+$modal-footer-link-hover-color                             : $color-text !default;
                                                                 
 // Popovers                                                     
 // ----------------------------------                           
@@ -562,29 +563,29 @@ $header-nav-cart-link-hover-color                          : $white !default;
 // Accounts
 // -----------------------------------
 
-$account-header-bg-color: $gray-lighter !default;
-$account-header-title-color: $gray-darker !default;
-$account-header-edit-link-color: $gray !default;
-$account-header-edit-link-hover-color: $gray-darkest !default;
-$account-header-avatar-border-color: $gray !default;
+$account-header-bg-color                                   : $gray-lighter !default;
+$account-header-title-color                                : $gray-darker !default;
+$account-header-edit-link-color                            : $gray !default;
+$account-header-edit-link-hover-color                      : $gray-darkest !default;
+$account-header-avatar-border-color                        : $gray !default;
 
-$account-body-bg-color: $white !default;
+$account-body-bg-color                                     : $white !default;
 
-$account-about-header-color: $color-primary !default;
+$account-about-header-color                                : $color-primary !default;
 
-$account-details-listitem-border-color: $gray-light !default;
+$account-details-listitem-border-color                     : $gray-light !default;
 
-$account-statistics-bg-color: $white !default;
-$account-statistics-color: $gray-dark !default;
-$account-statistics-header-title-color: $color-primary !default;
-$account-statistics-link-color: $gray !default;
-$account-statistics-link-hover-color: $gray-darker !default;
+$account-statistics-bg-color                               : $white !default;
+$account-statistics-color                                  : $gray-dark !default;
+$account-statistics-header-title-color                     : $color-primary !default;
+$account-statistics-link-color                             : $gray !default;
+$account-statistics-link-hover-color                       : $gray-darker !default;
 
-$account-statistics-table-even-row-bg-color: $white !default;
-$account-statistics-table-odd-row-bg-color: $gray-lighter !default;
+$account-statistics-table-even-row-bg-color                : $white !default;
+$account-statistics-table-odd-row-bg-color                 : $gray-lighter !default;
 
-$account-statistics-pagination-link-color: $gray !default;
-$account-statistics-pagination-link-hover-color: $gray-darker !default;
-$account-statistics-pagination-border-color: $gray-lighter !default;
-$account-statistics-pagination-border-hover-color: $gray-darker !default;
-$account-statistics-pagination-icon-color: $gray-darkest !default;
+$account-statistics-pagination-link-color                  : $gray !default;
+$account-statistics-pagination-link-hover-color            : $gray-darker !default;
+$account-statistics-pagination-border-color                : $gray-lighter !default;
+$account-statistics-pagination-border-hover-color          : $gray-darker !default;
+$account-statistics-pagination-icon-color                  : $gray-darkest !default;

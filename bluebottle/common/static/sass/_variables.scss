@@ -85,6 +85,26 @@ $font-size-smallest                                        : $base-font-size * 0
                                                                 
 $base-margin                                               : 1em !default;
 $base-padding                                              : 1em !default;
+
+// Base                                                     
+// ----------------------------------                           
+
+$type-body-color: $color-text !default;
+$type-dl-border-color: $gray-light !default;
+$type-dt-color: $gray !default;
+
+$type-hr-border-top-color: $gray-light !default;
+$type-hr-border-bottom-color: $white !default;
+
+$type-abbr-border-color: $gray-light !default;
+
+$type-h1-color: $color-primary !default;
+$type-h1-em-color: $color-secondary !default;
+$type-h2-color: $color-secondary !default;
+$type-h3-color: $color-heading !default;
+
+$type-blockquote-border-color: $gray-lighter !default;
+$type-blockquote-small-color: $gray-light !default;
                                                                 
 // Buttons                                                      
 // ----------------------------------                           

@@ -85,7 +85,7 @@ $font-size-smallest:											$base-font-size * 0.75 !default;
 																
 $base-margin:													1em !default;
 $base-padding:													1em !default;
-																																
+																
 // Buttons														
 // ----------------------------------							
 																
@@ -148,7 +148,7 @@ $form-tags-delete-hover-color:									$color-primary !default;
 																
 $form-radio-select-label-color:									$white !default;
 $form-radio-select-label-background-color:						$gray-light !default;
-$form-radio-select-label-border-color:							darken($gray-light, 5%) !default;																
+$form-radio-select-label-border-color:							darken($gray-light, 5%) !default;
 $form-radio-select-input-background-color:						$color-secondary !default;
 $form-radio-select-input-border-color:							darken($color-secondary, 5%) !default;
 																
@@ -283,7 +283,16 @@ $reactions-selected-avatar-border-color:						$form-input-border-color !default;
 // -----------------------------------							
 																
 $table-cell-border-color:										$gray-light !default;
-																
+
+// Static															
+// -----------------------------------							
+$static-page-nav-border-color: 									$gray-lighter !default;		
+$static-page-nav-heading-color: 								$color-heading !default;		
+$static-page-nav-list-border-top-color: 						$white !default;		
+$static-page-nav-list-hover-link-color: 						$color-text !default;		
+$static-page-nav-link-hover-color:		 						$white !default;		
+$static-page-nav-link-hover-bg-color:		 					$color-secondary !default;		
+														
 // Tabs															
 // -----------------------------------							
 																

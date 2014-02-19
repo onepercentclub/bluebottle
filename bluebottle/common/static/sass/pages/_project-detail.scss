@@ -156,6 +156,9 @@
 	.member-list {
 	    @include grid(24,1,0);		
 	}
+	.member-initiator {		
+	    @include grid(24,0,0);		
+	}
 }
 
 #project-actions {

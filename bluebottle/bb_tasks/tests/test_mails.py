@@ -3,12 +3,9 @@ from django.test import TestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, TASK_MODEL
 
-from bluebottle.bb_tasks import get_task_model
 from bluebottle.bb_tasks.models import TaskMember
-
-BB_TASK_MODEL = get_task_model()
 
 
 class TaskEmailTests(TestCase):
@@ -19,21 +16,29 @@ class TaskEmailTests(TestCase):
         self.another_user = BlueBottleUserFactory.create(first_name='Kong')
 
         self.some_project = ProjectFactory.create()
-        self.task = TaskFactory(
-            status = BB_TASK_MODEL.TaskStatuses.in_progress,
-            author = self.some_project.owner
-            )
 
-        self.taskmember1 = TaskMemberFactory(
-                member = self.some_user,
-                task = self.task,
-                status = TaskMember.TaskMemberStatuses.applied
-            )
-        self.taskmember2 = TaskMemberFactory(
-                member = self.another_user,
-                task = self.task,
-                status = TaskMember.TaskMemberStatuses.applied
-            )
+        self.taskmember1 = TaskMemberFactory.create(
+            member=self.some_user,
+            status=TaskMember.TaskMemberStatuses.applied
+        )
+        self.taskmember2 = TaskMemberFactory.create(
+            member=self.another_user,
+            status=TaskMember.TaskMemberStatuses.applied
+        )
+
+        self.task = TaskFactory.create(
+            status=TASK_MODEL.TaskStatuses.in_progress,
+            author=self.some_project.owner,
+            # members=(self.taskmember1, self.taskmember2)
+        )
+        self.task.members.add(self.taskmember1)
+        self.task.members.add(self.taskmember2)
+
+        # Reload the models to get the ``task_id`` properly set.
+        self.taskmember1 = TaskMember.objects.get(pk=self.taskmember1.pk)
+        self.taskmember2 = TaskMember.objects.get(pk=self.taskmember2.pk)
+
+        self.task.save()
 
     def test_mail_taskmember_applied_sent(self):
         """ Test that the e-mails were sent for the task applications """
@@ -71,7 +76,7 @@ class TaskEmailTests(TestCase):
         self.assertIn('found someone else to do the task you applied for.', m.subject)
 
         # change the status from the task to realized
-        self.task.status = BB_TASK_MODEL.TaskStatuses.realized
+        self.task.status = TASK_MODEL.TaskStatuses.realized
         self.task.save()
 
         # e-mails should be outbound by now, to the single taskmember left

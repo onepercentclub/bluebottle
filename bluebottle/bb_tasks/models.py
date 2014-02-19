@@ -1,18 +1,21 @@
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db import models
 import django.db.models.options as options
+from django.db.models.signals import post_save, m2m_changed
+from django.dispatch import receiver
+from django.template.loader import get_template, render_to_string
+from django.template import Context
 from django.utils.translation import ugettext as _
+from django.utils import translation
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
-#from bluebottle.bb_projects import get_project_model
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
-
-#PROJECT_MODEL = get_project_model()
 
 
 class Skill(models.Model):
@@ -39,6 +42,7 @@ class TaskMember(models.Model):
     member = models.ForeignKey(settings.AUTH_USER_MODEL)
     status = models.CharField(
         _('status'), max_length=20, choices=TaskMemberStatuses.choices)
+    task_id = models.PositiveIntegerField(editable=False, null=True)
 
     motivation = models.TextField(
         _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
@@ -54,6 +58,10 @@ class TaskMember(models.Model):
     def __init__(self, *args, **kwargs):
         super(TaskMember, self).__init__(*args, **kwargs)
         self._initial_status = self.status
+
+    @property
+    def task(self):
+        return TASK_MODEL.objects.get(pk=self.task_id)
 
 
 class TaskFile(models.Model):
@@ -136,8 +144,136 @@ class SupportedProjectsManager(models.Manager):
 
         valid_statuses = [
             statuses.applied, statuses.accepted, statuses.realized]
-        projects = PROJECT_MODEL.objects.filter(
+        projects = settings.PROJECTS_PROJECT_MODEL.objects.filter(
             task__taskmember__member=user,
             task__taskmember__status__in=valid_statuses).distinct()
 
         return projects
+
+
+from . import get_task_model
+
+TASK_MODEL = get_task_model()
+
+
+@receiver(m2m_changed, weak=False, sender=TASK_MODEL.members.through)
+def new_reaction_notification(sender, instance, **kwargs):
+    """
+    Signal receiver for new additions to the members of a task. It will set up
+    the ID of the related task in the ``TaskMember`` model and also send an
+    email to the task author to notify that a new member applied for the task.
+    """
+    if kwargs['action'] == 'post_add':
+        task_member_pk = kwargs['pk_set'].pop()
+        task_member = TaskMember.objects.get(pk=task_member_pk)
+        task = instance
+
+        # Set up the ID of the related task here.
+        if not task_member.task_id:
+            task_member.task_id = task.pk
+            task_member.save()
+
+        site = 'https://' + Site.objects.get_current().domain
+
+        # Project Wall Post
+        if task_member.status == TaskMember.TaskMemberStatuses.applied:
+            receiver = task.author
+            sender = task_member.member
+            link = '/go/tasks/{0}'.format(task.id)
+
+            # Compose the mail
+            # Set the language for the receiver
+            translation.activate(receiver.primary_language)
+            subject = _('%(sender)s applied for your task.') % {'sender': sender.get_short_name()}
+            ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+                           'motivation': task_member.motivation})
+            text_content = render_to_string('task_member_applied.mail.txt', context_instance=ctx)
+            html_content = render_to_string('task_member_applied.mail.html', context_instance=ctx)
+            translation.deactivate()
+            msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+
+
+@receiver(post_save, weak=False, sender=TaskMember)
+def accepted_member_notification(sender, instance, created, **kwargs):
+    """
+    Signal handler for existing members status changes. When a task member is
+    accepted or refused by the task author/manager, an email will be sent to
+    inform the member by this function.
+    """
+    if not created:
+        task_member = instance
+
+        if task_member.task_id:
+            task = TASK_MODEL.objects.get(pk=task_member.task_id)
+
+            site = 'https://' + Site.objects.get_current().domain
+
+            if task_member.status == TaskMember.TaskMemberStatuses.accepted:
+                sender = task.author
+                receiver = task_member.member
+                link = '/go/tasks/{0}'.format(task.id)
+
+                # Compose the mail
+                # Set the language for the receiver
+                translation.activate(receiver.primary_language)
+                subject = _('%(sender)s accepted you to complete the tasks you applied for.') % {'sender': sender.get_short_name()}
+                context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
+                text_content = get_template('task_member_accepted.mail.txt').render(context)
+                html_content = get_template('task_member_accepted.mail.html').render(context)
+                translation.deactivate()
+                msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+
+            if task_member.status == TaskMember.TaskMemberStatuses.rejected:
+                sender = task.author
+                receiver = task_member.member
+                link = '/go/tasks/{0}'.format(task.id)
+
+                # Compose the mail
+                # Set the language for the receiver
+                translation.activate(receiver.primary_language)
+                subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.get_short_name()}
+                context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
+                text_content = get_template('task_member_rejected.mail.txt').render(context)
+                html_content = get_template('task_member_rejected.mail.html').render(context)
+                translation.deactivate()
+                msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+
+
+@receiver(post_save, weak=False, sender=TASK_MODEL)
+def send_mail_task_realized(sender, instance, created, **kwargs):
+    """
+    Send (multiple) e-mails when a task is realized.
+    The task members that weren't rejected are the receivers.
+    """
+    if not created and instance.status == 'realized':
+        task = instance
+        mail_sender = task.author
+        link = '/go/tasks/{0}'.format(task.id)
+        site = 'https://' + Site.objects.get_current().domain
+
+        qs = task.members.exclude(status=TaskMember.TaskMemberStatuses.rejected)
+        receivers = [taskmember.member for taskmember in qs]
+
+        emails = []
+
+        for receiver in receivers:
+            translation.activate(receiver.primary_language)
+            subject = _('Good job! "%(task)s" is realized!.') % {'task': task.title}
+            context = Context({'task': task, 'receiver': receiver, 'sender': mail_sender, 'link': link, 'site': site})
+            text_content = get_template('task_realized.mail.txt').render(context)
+            html_content = get_template('task_realized.mail.html').render(context)
+            translation.deactivate()
+            msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+            msg.attach_alternative(html_content, "text/html")
+            emails.append(msg)
+
+        if emails:
+            connection = get_connection()
+            connection.send_messages(emails)
+            connection.close()

@@ -6,6 +6,8 @@ INSTALLED_APPS += (
     'bluebottle.test',
 )
 
+EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
 AUTH_USER_MODEL = 'test.TestBaseUser'
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
 ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'

@@ -76,8 +76,8 @@ class BaseTask(models.Model):
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
 
-    members = models.ManyToManyField(TaskMember, null=True)
-    files = models.ManyToManyField(TaskFile, null=True)
+    members = models.ManyToManyField('bb_tasks.TaskMember', null=True)
+    files = models.ManyToManyField('bb_tasks.TaskFile', null=True)
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     # See Django docs on issues with related name and an (abstract) base class:
@@ -95,7 +95,7 @@ class BaseTask(models.Model):
     time_needed = models.CharField(
         _('time_needed'), max_length=200,
         help_text=_('Estimated number of hours needed to perform this task.'))
-    skill = models.ForeignKey(Skill, verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey('bb_tasks.Skill', verbose_name=_('Skill needed'), null=True)
 
     # internal usage
     created = CreationDateTimeField(

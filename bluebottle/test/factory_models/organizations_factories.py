@@ -33,6 +33,5 @@ class OrganizationFactory(factory.DjangoModelFactory):
 class OrganizationMemberFactory(factory.DjangoModelFactory):
     FACTORY_FOR = OrganizationMember
 
-    organization = factory.SubFactory(OrganizationFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
     function = 'owner'

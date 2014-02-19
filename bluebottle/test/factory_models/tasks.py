@@ -32,5 +32,4 @@ class TaskFactory(factory.DjangoModelFactory):
 class TaskMemberFactory(factory.DjangoModelFactory):
     FACTORY_FOR = TaskMember
 
-    task = factory.SubFactory(TaskFactory)
     member = factory.SubFactory(BlueBottleUserFactory)

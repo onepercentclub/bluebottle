@@ -119,10 +119,10 @@
     
     a:not(.btn) {
         line-height: $base-line-height*2;
-        color: $color-primary;
+        color: $modal-footer-link-color;
         
         &:hover, &:active {
-            color: $color-text;
+            color: $modal-footer-link-hover-color;
         }
     }
     

@@ -7,6 +7,7 @@ INSTALLED_APPS += (
 )
 
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+COMPRESS_ENABLED = False
 
 AUTH_USER_MODEL = 'test.TestBaseUser'
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'

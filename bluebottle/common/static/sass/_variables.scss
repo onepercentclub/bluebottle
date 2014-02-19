@@ -138,9 +138,20 @@ $form-input-hover-focus-border-color                       : $color-secondary !d
 $form-input-bg-color                                       : $white !default;
 $form-input-border-color                                   : #bcbcbc !default;
 $form-input-disabled-bg-color                              : $gray-lighter !default;
+
 $form-legend-bg-color                                      : $white !default;
+$form-legend-strong-color:	$color-secondary !default;
+
 $form-fieldset-legend-bg-color                             : $gray-light !default;
-                                                                
+$form-fieldset-legend-strong-color: $white !default;                                                                
+
+$form-message-color: $color-text-light !default;
+$form-message-bg-color: $color-secondary !default;
+$form-message-close-color: $color-text-light !default;
+$form-message-close-hover-color: $white !default;
+$form-message-error-color: $white !default;
+$form-message-error-bg-color: $color-error !default;
+
 $form-tags-color                                           : $white !default;
 $form-tags-bg-color                                        : $color-secondary !default;
 $form-tags-delete-color                                    : $white !default;
@@ -151,6 +162,11 @@ $form-radio-select-label-bg-color                          : $gray-light !defaul
 $form-radio-select-label-border-color                      : darken($gray-light, 5%) !default;
 $form-radio-select-input-bg-color                          : $color-secondary !default;
 $form-radio-select-input-border-color                      : darken($color-secondary, 5%) !default;
+
+$form-select-hover-border-color: $color-secondary !default;
+$form-select-error-border-color: $color-error !default;
+
+$form-placeholder-color: $gray-light !default;
                                                                 
 // Modules                                                      
 // ----------------------------------                           

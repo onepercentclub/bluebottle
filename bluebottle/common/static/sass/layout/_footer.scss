@@ -2,7 +2,7 @@
 
 #footer {
 	position: relative;
-	background-color: $footer-background-color;
+	background-color: $footer-bg-color;
     
     ul, li {
     	margin: 0;
@@ -101,10 +101,10 @@
 	            height: 2em;
 	            text-align: center;
 	            font-size: $font-size-medium;
-	            background-color: $footer-social-links-background-color;
+	            background-color: $footer-social-links-bg-color;
 	            
 	             &:hover {
-	                background-color: $footer-social-links-hover-background-color;
+	                background-color: $footer-social-links-hover-bg-color;
 	            }
 	        }
 	        
@@ -118,7 +118,7 @@
 	.copyright {
 		position: absolute;
 		bottom: 0;
-		background-color: $footer-copyright-background-color;
+		background-color: $footer-copyright-bg-color;
 		width: 100%;
 		
 	    ul {

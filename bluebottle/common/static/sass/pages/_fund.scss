@@ -14,11 +14,11 @@
     }
     
     .fund-header {
-        background-color: $gray-lighter;
+        background-color: $fund-header-bg-color;
         padding-top: $base-padding;
         
         h1 {
-            color: $color-heading;
+            color: $fund-header-color;
         }
     }
     
@@ -35,17 +35,17 @@
 			text-align: center;
 			font-size: 5em;
 			line-height: 1em;
-			color: $gray-lighter;
+			color: $fund-empty-icon-color;
 		}
         
-        legend, a {
+    	legend, a {
 			@include grid(36,1,1);
-            color: $color-text;
+            color: $fund-empty-legend-color;
             text-decoration: none;
 			
 			strong {
     			text-transform: uppercase;
-    			color: $color-primary;
+    			color: $fund-empty-legend-strong-color;
     			@include transition(all 0.2s ease-out);
 			}
         }
@@ -53,11 +53,11 @@
         a:hover, a:active {
             
             .flaticon {
-                color: $gray;
+                color: $fund-empty-hover-icon-color;
             }
             
             strong {
-                color: $color-secondary;
+                color: $fund-empty-hover-strong-color;
             }
             
         }
@@ -92,8 +92,8 @@
         line-height: $base-line-height;
         padding: 0 $base-padding/1.5;
         font-size: $font-size-larger;
-        color: $gray;
-        background-color: $gray-lighter;
+        color: $fund-total-label-color;
+        background-color: $fund-total-label-bg-color;
         padding: $base-padding/2 $base-padding $base-padding/2 $base-padding*1.6;
 	}
 	
@@ -106,8 +106,8 @@
         line-height: $base-line-height;
 		font-family: $font-family-bold;
 		font-size: $font-size-larger;
-		background-color: $gray-lighter;
-        color: $gray;
+		background-color: $fund-total-amount-bg-color;
+        color: $fund-total-amount-color;
         padding: $base-padding/2 $base-padding*1.6 $base-padding/2 $base-padding/2;
 	}
 	
@@ -140,7 +140,7 @@
             font-family: $font-family-heavy;
             
             &.selected {
-                background-color: $gray-lighter;
+                background-color: $fund-tabs-vertical-selected-bg-color;
             }    
         }
     }
@@ -151,7 +151,7 @@
     @include clear;
     @include grid(32,0,0);
     min-height: 16em;
-    background-color: $gray-lighter;
+    background-color: $fund-tab-content-bg-color;
     padding: $base-padding $base-padding *2;
     
     .radio {

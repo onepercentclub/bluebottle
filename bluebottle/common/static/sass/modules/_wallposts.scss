@@ -205,7 +205,7 @@
 
 #wallposts {
 	
-	background-color: $wallposts-background-color;
+	background-color: $wallposts-bg-color;
 	padding: $base-padding 0;
 	
 	.wallposts-list {
@@ -303,7 +303,7 @@
 			.tab-item {
 				text-align: center;
 				&.active {
-					background: $wallposts-form-tabs-active-background-color;
+					background: $wallposts-form-tabs-active-bg-color;
 					a {
 						color: $wallposts-form-tabs-active-color;							
 					}
@@ -321,7 +321,7 @@
 		}
 		
 		.video-container, .photos-container {
-			background: $wallposts-form-tabs-active-background-color;
+			background: $wallposts-form-tabs-active-bg-color;
 			padding: $base-padding;
 		}
 		

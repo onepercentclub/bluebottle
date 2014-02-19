@@ -367,7 +367,7 @@
 
 .project-slider {
 	
-	background-color: $project-slider-background-color;
+	background-color: $project-slider-bg-color;
 	.project-slider-prev, .project-slider-next {
 		position: absolute;
 		@include hide-text();

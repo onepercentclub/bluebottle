@@ -16,7 +16,7 @@ form {
 }
 	
 fieldset {	
-    background-color: $form-background-color;
+    background-color: $form-bg-color;
     padding: $base-padding/2 0;
     margin-bottom: 1px;
 
@@ -35,7 +35,7 @@ fieldset {
 legend {
     position: relative;
 	padding: $base-padding*3/2 $base-padding*2;
-	background-color: $form-legend-background-color;
+	background-color: $form-legend-bg-color;
 	width: 100%;
 		
 	strong {
@@ -53,7 +53,7 @@ legend {
 
 // Legend inside fieldset
 fieldset legend {
-    background-color: $form-fieldset-legend-background-color;
+    background-color: $form-fieldset-legend-bg-color;
       
     strong {
         color: $white;
@@ -235,7 +235,7 @@ input[type=url] {
     font-family: $base-font-family;
     width: 100%;
     padding: $base-padding/2 $base-padding;
-    background-color: $form-input-background-color;
+    background-color: $form-input-bg-color;
     @include transition(all 0.2s ease-out);
     @include box-shadow(inset 2px 2px 0 rgba($black, 0.05));
     
@@ -283,7 +283,7 @@ textarea:-moz-placeholder { color: $gray-light; }
         color: $form-tags-color;
         font-size: $font-size-small;
         text-transform: uppercase;
-        background-color: $form-tags-background-color;
+        background-color: $form-tags-bg-color;
         
         .flaticon {
             margin-right: $base-margin/2;
@@ -373,7 +373,7 @@ label.radio {
             padding: $base-padding/2 $base-padding;
             color: $form-radio-select-label-color;
             border: 1px solid $form-radio-select-label-border-color;
-            background-color: $form-radio-select-label-background-color;
+            background-color: $form-radio-select-label-bg-color;
             cursor: pointer;
             @include border-radius(1px);
             text-align: center;
@@ -384,7 +384,7 @@ label.radio {
             position: relative;
             border-color: $form-radio-select-input-border-color;
             font-family: $font-family-heavy;
-            background: $form-radio-select-input-background-color;
+            background: $form-radio-select-input-bg-color;
             z-index: 10;
         }
         
@@ -426,7 +426,7 @@ input[readonly],
 select[readonly],
 textarea[readonly] {
     cursor: not-allowed;
-    background-color: $form-input-disabled-background-color;
+    background-color: $form-input-disabled-bg-color;
 }
 
 

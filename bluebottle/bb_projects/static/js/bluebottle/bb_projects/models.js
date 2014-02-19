@@ -40,7 +40,7 @@ App.ProjectTheme = DS.Model.extend({
 
 
 App.Project = DS.Model.extend({
-    url: 'projects/projects',
+    url: 'bb_projects/projects',
 
     // Model fields
     slug: DS.attr('string'),

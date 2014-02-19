@@ -8,7 +8,7 @@ App.Adapter.map('App.MyOrganizationDocument', {
 
 
 App.Organization = DS.Model.extend({
-    url: 'organizations',
+    url: 'bb_organizations',
     name: DS.attr('string'),
     description: DS.attr('string', {defaultValue: ""}),
 
@@ -54,14 +54,14 @@ App.Organization = DS.Model.extend({
 
 
 App.MyOrganizationDocument = DS.Model.extend({
-    url: 'organizations/documents/manage',
+    url: 'bb_organizations/documents/manage',
 
     organization: DS.belongsTo('App.MyOrganization'),
     file: DS.attr('file')
 });
 
 App.MyOrganization = DS.Model.extend({
-    url: 'organizations/manage',
+    url: 'bb_organizations/manage',
     name: DS.attr('string'),
     description: DS.attr('string', {defaultValue: ""}),
 

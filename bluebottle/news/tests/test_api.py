@@ -30,26 +30,31 @@ class NewsItemsApiTest(NewsItemApiTestCase):
 
     Endpoint: /api/news/items/
     """
-    def test_news_list(self):
+    def test_news_item_list(self):
         """
         Test retrieving a news items.
         """
-        # response = self.client.get(self.news_url, {'language': 'nl'})
         response = self.client.get(reverse('news_item_list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 5, response.data)
 
         # # Check that we have 2 english news items
+        # TODO: need to add language param to news routes, or remove the test below
+        #		if there want be any
+        #
         # response = self.client.get(self.news_url, {'language': 'en'})
         # self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         # self.assertEqual(response.data['count'], 2, response.data)
     
-    def test_news_list(self):
+    def test_news_post_details(self):
         """
         Test retrieving a single news item.
         """
         news_item_url = reverse('news_post_detail', kwargs={'slug': self.some_dutch_news.slug})
         print(news_item_url)
+        # TODO: this request is throwing an error:
+        #       MultipleObjectsReturned: get() returned more than one NewsItem -- it returned 5!
+        #
         # response = self.client.get(news_item_url)
         # self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         # self.assertEqual(response.data['title'], self.some_dutch_news.title)

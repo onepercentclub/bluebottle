@@ -11,23 +11,19 @@ ORGANIZATION_MODEL = get_organization_model()
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ORGANIZATION_MODEL
         exclude = ('deleted',)
 
 
 class OrganizationDocumentSerializer(serializers.ModelSerializer):
-
     file = PrivateFileSerializer()
 
     class Meta:
         model = OrganizationDocument
-        fields = ('id', 'organization', 'file')
 
 
 class ManageOrganizationSerializer(OrganizationSerializer):
-
     slug = serializers.SlugField(required=False)
 
     documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', read_only=True)

@@ -184,7 +184,7 @@ def new_reaction_notification(sender, instance, **kwargs):
             # Compose the mail
             # Set the language for the receiver
             translation.activate(receiver.primary_language)
-            subject = _('%(sender)s applied for your task.') % {'sender': sender.get_short_name()}
+            subject = _('{sender} applied for your task.'.format(sender=sender.get_short_name()))
             ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
                            'motivation': task_member.motivation})
             text_content = render_to_string('task_member_applied.mail.txt', context_instance=ctx)
@@ -218,7 +218,8 @@ def accepted_member_notification(sender, instance, created, **kwargs):
                 # Compose the mail
                 # Set the language for the receiver
                 translation.activate(receiver.primary_language)
-                subject = _('%(sender)s accepted you to complete the tasks you applied for.') % {'sender': sender.get_short_name()}
+                subject = _('{sender} accepted you to complete the tasks you applied for.'.format(
+                    sender=sender.get_short_name()))
                 context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
                 text_content = get_template('task_member_accepted.mail.txt').render(context)
                 html_content = get_template('task_member_accepted.mail.html').render(context)
@@ -235,7 +236,8 @@ def accepted_member_notification(sender, instance, created, **kwargs):
                 # Compose the mail
                 # Set the language for the receiver
                 translation.activate(receiver.primary_language)
-                subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.get_short_name()}
+                subject = _('{sender} found someone else to do the task you applied for.'.format(
+                    sender=sender.get_short_name()))
                 context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
                 text_content = get_template('task_member_rejected.mail.txt').render(context)
                 html_content = get_template('task_member_rejected.mail.html').render(context)
@@ -264,7 +266,7 @@ def send_mail_task_realized(sender, instance, created, **kwargs):
 
         for receiver in receivers:
             translation.activate(receiver.primary_language)
-            subject = _('Good job! "%(task)s" is realized!.') % {'task': task.title}
+            subject = _('Good job! "{task}" is realized!.'.format(task=task.title))
             context = Context({'task': task, 'receiver': receiver, 'sender': mail_sender, 'link': link, 'site': site})
             text_content = get_template('task_realized.mail.txt').render(context)
             html_content = get_template('task_realized.mail.html').render(context)

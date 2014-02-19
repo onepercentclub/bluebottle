@@ -150,6 +150,10 @@
 		
 			> dt {
 				@include grid(16,0,0);
+				.flaticon {
+					display: inline-block;
+					width: 30px;
+				}
 			}
 		}
 	}

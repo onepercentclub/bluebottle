@@ -519,3 +519,33 @@ $header-nav-cart-count-color                               : $white !default;
 $header-nav-cart-count-bg-color                            : $color-primary !default;
 $header-nav-cart-link-color                                : $color-primary !default;
 $header-nav-cart-link-hover-color                          : $white !default;
+
+// Accounts
+// -----------------------------------
+
+$account-header-bg-color: $gray-lighter !default;
+$account-header-title-color: $gray-darker !default;
+$account-header-edit-link-color: $gray !default;
+$account-header-edit-link-hover-color: $gray-darkest !default;
+$account-header-avatar-border-color: $gray !default;
+
+$account-body-bg-color: $white !default;
+
+$account-about-header-color: $color-primary !default;
+
+$account-details-listitem-border-color: $gray-light !default;
+
+$account-statistics-bg-color: $white !default;
+$account-statistics-color: $gray-dark !default;
+$account-statistics-header-title-color: $color-primary !default;
+$account-statistics-link-color: $gray !default;
+$account-statistics-link-hover-color: $gray-darker !default;
+
+$account-statistics-table-even-row-bg-color: $white !default;
+$account-statistics-table-odd-row-bg-color: $gray-lighter !default;
+
+$account-statistics-pagination-link-color: $gray !default;
+$account-statistics-pagination-link-hover-color: $gray-darker !default;
+$account-statistics-pagination-border-color: $gray-lighter !default;
+$account-statistics-pagination-border-hover-color: $gray-darker !default;
+$account-statistics-pagination-icon-color: $gray-darkest !default;

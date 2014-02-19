@@ -169,31 +169,31 @@ $carousel-nav-item-active-color                            : $white !default;
 // Fund
 // ----------------------------------                           
 
-$fund-header-bg-color: $gray-lighter !default; 
-$fund-header-color: $color-heading !default;                                                        
-$fund-empty-icon-color:	$gray-lighter !default;
-$fund-empty-legend-color: $color-text !default;
-$fund-empty-legend-strong-color: $color-primary !default;
-$fund-empty-hover-icon-color: $gray !default;
-$fund-empty-hover-strong-color: $color-secondary !default;
+$fund-header-bg-color                                      : $gray-lighter !default; 
+$fund-header-color                                         : $color-heading !default;                                                        
+$fund-empty-icon-color                                     : $gray-lighter !default;
+$fund-empty-legend-color                                   : $color-text !default;
+$fund-empty-legend-strong-color                            : $color-primary !default;
+$fund-empty-hover-icon-color                               : $gray !default;
+$fund-empty-hover-strong-color                             : $color-secondary !default;
 
-$fund-total-label-color: $gray !default;
-$fund-total-label-bg-color: $gray-lighter !default;
+$fund-total-label-color                                    : $gray !default;
+$fund-total-label-bg-color                                 : $gray-lighter !default;
 
-$fund-total-amount-color: $gray !default;
-$fund-total-amount-bg-color: $gray-lighter !default;
+$fund-total-amount-color                                   : $gray !default;
+$fund-total-amount-bg-color                                : $gray-lighter !default;
 
-$fund-tabs-vertical-selected-bg-color:	$gray-lighter !default;
+$fund-tabs-vertical-selected-bg-color                      : $gray-lighter !default;
 
-$fund-tab-content-bg-color: $gray-lighter !default;
+$fund-tab-content-bg-color                                 : $gray-lighter !default;
 
-$thanks-header-bg-color: $gray-lighter !default;
-$thanks-share-link-color: $color-text-light !default;
-$thanks-share-link-hover-color:	$white !default;
-$thanks-share-link-hover-bg-color: $gray-darker !default;
+$thanks-header-bg-color                                    : $gray-lighter !default;
+$thanks-share-link-color                                   : $color-text-light !default;
+$thanks-share-link-hover-color                             : $white !default;
+$thanks-share-link-hover-bg-color                          : $gray-darker !default;
 
-$thanks-sidebar-heading-color:	$color-secondary !default;
-$thanks-sidebar-project-list-title-amount-color: $gray !default;
+$thanks-sidebar-heading-color                              : $color-secondary !default;
+$thanks-sidebar-project-list-title-amount-color            : $gray !default;
 
 // Home                                                     
 // ----------------------------------                           
@@ -201,6 +201,15 @@ $thanks-sidebar-project-list-title-amount-color: $gray !default;
 $project-slider-bg-color                                   : $white !default;
 $project-slider-buttons-color                              : $gray-lighter !default;
 $project-slider-buttons-hover-color                        : $color-primary !default;
+
+$home-quotes-bg-color                                      : $gray-lighter !default;
+$home-quotes-title-em-color                                : $color-primary !default;
+$home-quotes-article-bg-color                              : $white !default;
+$home-quotes-article-quote-name-color                      : $color-secondary !default;
+$home-quotes-article-content-color                         : $black !default;
+
+$home-impact-list-color                                    : $gray !default;
+$home-impact-list-strong-color                             : $gray-darker !default;
 
 // Projects
 // ----------------------------------

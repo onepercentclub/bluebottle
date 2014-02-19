@@ -36,13 +36,13 @@
 		background-image: image-url("world.png");
 		background-repeat: no-repeat;
 		background-position: 50% $base-padding;
-        background-color: $gray-lighter;
+        background-color: $home-quotes-bg-color;
         
 	    h2 {
 	        margin-bottom: $base-margin*2;
 	
 	        em {
-	            color: $color-primary;
+	            color: $home-quotes-title-em-color;
 	            font-weight: normal;
 	            font-style: normal;
 	        }
@@ -61,7 +61,7 @@
 		        @include grid(36,0,4);
 		        padding: $base-padding*2;
 		        position: relative;
-		        background: $white;
+		        background: $home-quotes-article-bg-color;
 		
 		        &:after {
 		            position: absolute;
@@ -81,12 +81,12 @@
 			    .quote-name {
 			        font-size: $font-size-larger;
 			        margin-bottom: $base-margin/2;
-			        color: $color-secondary;
+			        color: $home-quotes-article-quote-name-color;
 			    }
 			
 			    .quote-content {
 			        font-size: $font-size-larger;
-			        color: $black;
+			        color: $home-quotes-article-content-color;
 			        margin: 0;
 			        line-height: $base-line-height;
 			    }
@@ -121,7 +121,7 @@
         li {
             @include resetlist;
             @include grid(9.6,0,1);
-            color: $gray;
+            color: $home-impact-list-color;
             text-align: center;
             text-transform: uppercase;
     		
@@ -135,7 +135,7 @@
                 font-size: $font-size-larger;
                 margin: $base-margin/2 0;
                 display: block;
-                color: $gray-darker;
+                color: $home-impact-list-strong-color;
             }
         }
     }

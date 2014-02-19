@@ -18,7 +18,7 @@ class NewsItemFactory(factory.DjangoModelFactory):
 	author = factory.SubFactory(BlueBottleUserFactory)
 
 	make_placeholder = factory.PostGeneration(
-    	lambda obj, create, extracted, **kwargs: Placeholder.objects.create_for_object(obj, 'blog_contents'))
+		lambda obj, create, extracted, **kwargs: Placeholder.objects.create_for_object(obj, 'blog_contents'))
 
 class DraftNewsItemFactory(NewsItemFactory):
 

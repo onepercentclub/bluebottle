@@ -42,8 +42,6 @@ class PageListTestCase(PageTestCase):
 		response = self.client.get(reverse('page_list', kwargs={'language': 'nl'}))
 
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
 		self.assertEqual(response.data['count'], 1)
 
 

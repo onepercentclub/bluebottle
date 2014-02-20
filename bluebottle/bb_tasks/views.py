@@ -17,6 +17,7 @@ class TaskPreviewList(generics.ListAPIView):
     model = BB_TASK_MODEL
     serializer_class = TaskPreviewSerializer
     paginate_by = 8
+    filter_fields = ('status', 'skill', )
 
     def get_queryset(self):
         qs = super(TaskPreviewList, self).get_queryset()
@@ -35,14 +36,6 @@ class TaskPreviewList(generics.ListAPIView):
                            Q(description__icontains=text) |
                            Q(end_goal__icontains=text))
 
-        skill = self.request.QUERY_PARAMS.get('skill', None)
-        if skill:
-            qs = qs.filter(skill=skill)
-
-        status = self.request.QUERY_PARAMS.get('status', None)
-        if status:
-            qs = qs.filter(status=status)
-
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 
         if ordering == 'newest':
@@ -59,13 +52,10 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
     permission_classes = (IsProjectOwnerOrReadOnly,)
+    filter_fields = ('status', )
 
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()
-
-        status = self.request.QUERY_PARAMS.get('status', None)
-        if status:
-            qs = qs.filter(status=status)
 
         project_slug = self.request.QUERY_PARAMS.get('project', None)
         if project_slug:

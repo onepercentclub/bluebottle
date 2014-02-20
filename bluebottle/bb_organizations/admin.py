@@ -29,21 +29,16 @@ class OrganizationMemberInline(admin.StackedInline):
     
 class OrganizationAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
-
     inlines = (OrganizationMemberInline, OrganizationDocumentInline)
-
     search_fields = ('name', 'description')
-
-    fields = ('name', "description", 'email','phone_number', 'website', 'twitter', 'facebook', 'skype', 'slug')
 
 admin.site.register(ORGANIZATION_MODEL, OrganizationAdmin)
 
 
 class OrganizationMemberAdmin(admin.ModelAdmin):
-    list_display = ('user', 'function', 'organization')
+    list_display = ('user', 'function')
     list_filter = ('function',)
     raw_id_fields = ('user', )
-    search_fields = ('user__first_name', 'user__last_name',
-                     'user__username', 'organization__name')
+    search_fields = ('user__first_name', 'user__last_name', 'user__username')
 
 admin.site.register(OrganizationMember, OrganizationMemberAdmin)

@@ -10,6 +10,17 @@ from .utils import clean_for_hashtag
 import uuid
 import unittest
 
+from django.core.urlresolvers import reverse
+from django.test.client import Client
+
+from fluent_contents.models import Placeholder
+from fluent_contents.plugins.oembeditem.models import OEmbedItem
+from bluebottle.contentplugins.models import PictureItem
+from fluent_contents.plugins.text.models import TextItem
+
+import json
+
+
 BB_USER_MODEL = get_user_model()
 
 def generate_random_slug():
@@ -86,18 +97,6 @@ class HashTagTestCase(unittest.TestCase):
 
         text = 'foo bar /baz'
         self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
-
-
-from django.core.urlresolvers import reverse
-from django.test.client import Client
-
-from fluent_contents.models import Placeholder
-from fluent_contents.plugins.oembeditem.models import OEmbedItem
-from bluebottle.contentplugins.models import PictureItem
-from fluent_contents.plugins.text.models import TextItem
-
-import json
-
 
 class MetaTestCase(TestCase):
     def setUp(self):

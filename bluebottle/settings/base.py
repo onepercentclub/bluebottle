@@ -142,17 +142,24 @@ INSTALLED_APPS = (
 
     # BlueBottle applications.
     'bluebottle.bb_accounts',
-    'bluebottle.utils',
+    'bluebottle.bb_organizations',
+    'bluebottle.bb_projects',
+    'bluebottle.bb_tasks',
+    #miss bluebottle_drf2
     'bluebottle.common',
     'bluebottle.contact',
+    'bluebottle.contentplugins',
     'bluebottle.geo',
-    'bluebottle.pages',
+    'bluebottle.homepage',
+    #miss mail an empty folder
     'bluebottle.news',
+    'bluebottle.pages',
     'bluebottle.quotes',
     'bluebottle.slides',
-    'bluebottle.bb_projects',
-    'bluebottle.bb_organizations',
-    'bluebottle.bb_tasks',
+    #miss test
+    #miss urls
+    'bluebottle.utils',
+    'bluebottle.wallposts',
 
     # Modules required by BlueBottle
     'fluent_contents',

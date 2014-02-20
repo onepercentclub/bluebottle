@@ -24,14 +24,14 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'language', 'main_image', 'contents', 'tags'),
+            'fields': ('title', 'slug', 'language', 'main_image', 'contents'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date', 'allow_comments'),
         }),
     )
 
-    prepopulated_fields = {'slug': ('title',),}
+    prepopulated_fields = {'slug': ('title',)}
     radio_fields = {
         'status': admin.HORIZONTAL,
         'language': admin.HORIZONTAL,
@@ -122,6 +122,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
 
     def _get_formset_objects(self, formset):
         all_objects = []
+
         def dummy_save_base(*args, **kwargs):
             pass
 
@@ -132,15 +133,15 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                 continue
 
             if not form.is_valid():
-                object = form.instance  # Keep old data
+                obj = form.instance  # Keep old data
                 # TODO: merge validated fields into object.
                 # Before Django 1.5 that means manually constructing the values as form.cleaned_data is removed.
             else:
-                object = form.save(commit=False)
-                object.save_base = dummy_save_base  # Disable actual saving code.
-                object.save()  # Trigger any pre-save code (e.g. fetch OEmbedItem, render CodeItem)
+                obj = form.save(commit=False)
+                obj.save_base = dummy_save_base  # Disable actual saving code.
+                obj.save()  # Trigger any pre-save code (e.g. fetch OEmbedItem, render CodeItem)
 
-            all_objects.append(object)
+            all_objects.append(obj)
 
         return all_objects
 
@@ -171,13 +172,13 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
     def status_column(self, blogpost):
         status = blogpost.status
         title = [rec[1] for rec in blogpost.PostStatus.choices if rec[0] == status].pop()
-        icon  = self.STATUS_ICONS[status]
-        admin = settings.STATIC_URL + 'admin/img/'
-        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(admin=admin, icon=icon, title=title)
+        icon = self.STATUS_ICONS[status]
+        admin_url = settings.STATIC_URL + 'admin/img/'
+        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(
+            admin=admin_url, icon=icon, title=title)
 
     status_column.allow_tags = True
     status_column.short_description = _('Status')
-
 
     def make_published(self, request, queryset):
         rows_updated = queryset.update(status=NewsItem.PostStatus.published)
@@ -188,9 +189,6 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             message = "{0} entries were marked as published.".format(rows_updated)
         self.message_user(request, message)
 
-
     make_published.short_description = _("Mark selected entries as published")
-
-
 
 admin.site.register(NewsItem, NewsItemAdmin)

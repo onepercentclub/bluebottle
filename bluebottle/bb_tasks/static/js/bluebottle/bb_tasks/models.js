@@ -166,7 +166,7 @@ App.NewTask = App.Task.extend({
 
 
 App.Skill = DS.Model.extend({
-    url: 'tasks/skills',
+    url: 'bb_tasks/skills',
     name: DS.attr('string')
 });
 

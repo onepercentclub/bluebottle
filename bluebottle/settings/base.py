@@ -149,7 +149,6 @@ INSTALLED_APPS = (
     'bluebottle.contact',
     'bluebottle.contentplugins',
     'bluebottle.geo',
-    'bluebottle.homepage',
     'bluebottle.news',
     'bluebottle.pages',
     'bluebottle.quotes',

@@ -38,13 +38,18 @@ class LocaleMiddleware(object):
                 lang_code = request.user.primary_language
 
                 if lang_code:
-                    # Early redirect based on language to prevent Ember from finding out and redirect after loading a complete page in the wrong language.
+                    # Early redirect based on language to prevent Ember from
+                    # finding out and redirect after loading a complete page
+                    # in the wrong language.
                     expected_url_lang_prefix = '/{0}/'.format(lang_code)
                     url_parts = request.path.split('/')
                     if len(url_parts) >= 2:
                         current_url_lang_prefix = url_parts[1]
-                        if current_url_lang_prefix in dict(settings.LANGUAGES).keys() and not request.path.startswith(expected_url_lang_prefix):
-                            new_location = request.get_full_path().replace('/{0}/'.format(current_url_lang_prefix), expected_url_lang_prefix)
+                        if current_url_lang_prefix in dict(settings.LANGUAGES).keys() and not request.path.startswith(
+                                expected_url_lang_prefix):
+                            new_location = request.get_full_path().replace(
+                                '/{0}/'.format(current_url_lang_prefix), expected_url_lang_prefix)
+
                             return http.HttpResponseRedirect(new_location)
                     # End early redirect.
                 
@@ -71,7 +76,6 @@ class LocaleMiddleware(object):
             
         # Headers, translation deactivation etc. is done in django's LocaleMiddleware
         return response
-
 
     def enable_middleware(self):
         if ('django.middleware.locale.LocaleMiddleware' in settings.MIDDLEWARE_CLASSES 

@@ -12,10 +12,15 @@ class PageList(generics.ListAPIView):
     model = Page
     serializer_class = PageSerializer
     paginate_by = 10
-    filter_fields = ('language', 'slug')
 
     def get_queryset(self):
         qs = super(PageList, self).get_queryset()
+
+        # Set language if supplied
+        language = self.kwargs.get('language', None)
+        if language:
+            qs = qs.filter(language=language)
+
         qs = qs.filter(status=Page.PageStatus.published)
         qs = qs.filter(publication_date__lte=now)
         qs = qs.filter(Q(publication_end_date__gte=now) |
@@ -38,7 +43,6 @@ class PageDetail(generics.RetrieveAPIView):
     def get_object(self, queryset=None):
         slug = self.kwargs['slug']
         qs = self.get_queryset()
-        print 'slug: ' + slug
         obj = get_object_or_404(qs, language=self.kwargs['language'], slug=self.kwargs['slug'])
 
         return obj

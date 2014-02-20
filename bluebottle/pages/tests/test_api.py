@@ -21,9 +21,13 @@ class PageTestCase(APITestCase):
 	"""
 	def setUp(self):
 		self.user = BlueBottleUserFactory.create()
-		self.page = PageFactory.create(author=self.user)
-		placeholder1 = Placeholder.objects.create_for_object(self.page, 'blog_contents')
+
+		self.page1 = PageFactory.create(author=self.user, language = 'nl')
+		placeholder1 = Placeholder.objects.create_for_object(self.page1, 'blog_contents')
 		placeholder1.save()
+
+		self.page2 = PageFactory.create(author=self.user, language = 'en')
+		placeholder2 = Placeholder.objects.create_for_object(self.page2, 'blog_contents')
 
 class PageListTestCase(PageTestCase):
 	"""
@@ -35,9 +39,11 @@ class PageListTestCase(PageTestCase):
 		"""
 		Ensure get request returns 200.
 		"""
-		response = self.client.get(reverse('page_list', kwargs={'language': 'en'}))
+		response = self.client.get(reverse('page_list', kwargs={'language': 'nl'}))
 
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
 		self.assertEqual(response.data['count'], 1)
 
 
@@ -45,10 +51,30 @@ class PageListTestCase(PageTestCase):
 		"""
 		Ensure get request returns record with correct data.
 		"""
-		response = self.client.get(reverse('page_list', kwargs={'language': 'en'}))
+		response = self.client.get(reverse('page_list', kwargs={'language': 'nl'}))
+
+		print(reverse('page_list', kwargs={'language': 'nl'})) 
 
 		page = response.data['results'][0]
-		self.assertEqual(page['title'], 'Page Title 1')
-		self.assertEqual(page['language'], 'en')
+		self.assertEqual(page['title'], self.page1.title)
+		self.assertEqual(page['language'], self.page1.language)
 		self.assertEqual(page['body'], '<!-- no items in placeholder \'blog_contents\' -->')
-		self.assertEqual(page['full_page'], False)
+		self.assertEqual(page['full_page'], self.page1.full_page)
+
+class PageDetailTestCase(PageTestCase):
+	"""
+	Test case for ``PageDetail`` API view.
+
+	Endpoint: /api/pages/<language>/pages/<slug>
+	"""
+	def test_api_pages_detail_content(self):
+		"""
+		Ensure get request returns record with correct data.
+		"""
+		response = self.client.get(reverse('page_detail', kwargs={'language': 'en', 'slug': self.page2.slug}))
+
+		results = response.data
+		self.assertEqual(results['title'], self.page2.title)
+		self.assertEqual(results['language'], self.page2.language)
+		self.assertEqual(results['body'], '<!-- no items in placeholder \'blog_contents\' -->')
+		self.assertEqual(results['full_page'], self.page2.full_page)

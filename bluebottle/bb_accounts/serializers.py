@@ -47,7 +47,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
 
 
-class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """

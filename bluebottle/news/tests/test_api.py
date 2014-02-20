@@ -31,13 +31,22 @@ class NewsItemsApiTest(NewsItemApiTestCase):
     Endpoint: /api/news/items/
     """
 
-    def test_news_item_list(self):
+    def test_news_list_unfiltered(self):
         """
         Test retrieving news items.
         """
         response = self.client.get(reverse('news_item_list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 5)
+
+    def test_news_list_filtered(self):
+        """
+        Test filtering news items by language.
+        """
+        # Check that we have 3 dutch news items
+        response = self.client.get(reverse('news_item_list'), {'language': 'nl'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
 
         # Check that we have 2 english news items
         response = self.client.get(reverse('news_item_list'), {'language': 'en'})
@@ -49,11 +58,7 @@ class NewsItemsApiTest(NewsItemApiTestCase):
         Test retrieving a single news item.
         """
         news_item_url = reverse('news_post_detail', kwargs={'slug': self.some_dutch_news.slug})
-        print(news_item_url)
-        # TODO: this request is throwing an error:
-        #       MultipleObjectsReturned: get() returned more than one NewsItem -- it returned 5!
-        #
-        # response = self.client.get(news_item_url)
-        # self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        # self.assertEqual(response.data['title'], self.some_dutch_news.title)
+        response = self.client.get(news_item_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['title'], self.some_dutch_news.title)
 

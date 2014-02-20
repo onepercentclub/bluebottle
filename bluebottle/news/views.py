@@ -7,10 +7,15 @@ class NewsItemPreviewList(generics.ListAPIView):
     model = NewsItem
     serializer_class = NewsItemPreviewSerializer
     paginate_by = 5
-    filter_fields = ('language', )
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemPreviewList, self).get_queryset()
+        
+        # Set language if supplied
+        language = self.request.QUERY_PARAMS.get('language', None)
+        if language:
+            qs = qs.filter(language=language)
+
         qs = qs.published()
         return qs
 
@@ -19,10 +24,15 @@ class NewsItemList(generics.ListAPIView):
     model = NewsItem
     serializer_class = NewsItemSerializer
     paginate_by = 5
-    filter_fields = ('language', )
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemList, self).get_queryset()
+
+        # Set language if supplied
+        language = self.request.QUERY_PARAMS.get('language', None)
+        if language:
+            qs = qs.filter(language=language)
+
         qs = qs.published()
         return qs
 

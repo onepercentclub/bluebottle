@@ -77,16 +77,14 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], another_task_data['title'])
 
-        # Go wild! Add another task to that project add some tags this time
+        # Go wild! Add another task to that project add some tags this time --> NO TAGS ANYMORE
         # Because we have a nesting here we should properly encode it as json
         third_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
                            'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill4.id,
-                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace',
-                           'tags': [{'id': 'spanish'}, {'id': 'translate'}]}
+                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], third_task_data['title'])
-        self.assertEquals(len(response.data['tags']), 2)
 
         # By now the list for the second project should contain two tasks
         response = self.client.get(self.task_url, {'project': self.another_project.slug})

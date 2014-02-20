@@ -15,6 +15,7 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
+
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 

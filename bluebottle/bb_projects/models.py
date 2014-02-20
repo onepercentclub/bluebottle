@@ -56,7 +56,6 @@ class ProjectPhase(models.Model):
 
 class BaseProject(models.Model):
     """ The base Project model. """
-
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')

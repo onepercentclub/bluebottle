@@ -14,7 +14,7 @@ class OrganizationsEndpointTestCase(TestCase):
     """
     Base class for test cases for ``organizations`` module.
 
-    The testing classes for ``organization`` odule related to the API must
+    The testing classes for ``organization`` module related to the API must
     subclass this.
     """
     def setUp(self):
@@ -37,7 +37,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
 
-    Endpoint: /api/organizations/
+    Endpoint: /api/bb_organizations/
     """
     def test_api_organizations_list_endpoint(self):
         """
@@ -57,7 +57,7 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
 
-    Endpoint: /api/organizations/{pk}
+    Endpoint: /api/bb_organizations/{pk}
     """
     def test_api_organizations_detail_endpoint(self):
         response = self.client.get(reverse('organization_detail', kwargs={'pk': self.organization_1.pk}))
@@ -69,7 +69,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``ManageOrganizationsList`` API view.
 
-    Endpoint: /api/organizations/manage/
+    Endpoint: /api/bb_organizations/manage/
     """
     def test_api_manage_organizations_list_user_filter(self):
         """
@@ -133,7 +133,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
 
-    Endpoint: /api/organizations/manage/{pk}
+    Endpoint: /api/bb_organizations/manage/{pk}
     """
     def test_manage_organizations_detail_login_required(self):
         """

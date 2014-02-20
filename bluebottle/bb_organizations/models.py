@@ -93,8 +93,6 @@ class BaseOrganization(models.Model):
             slug = original_slug
             next_slug = 2
             while not slug or self.__class__.objects.filter(slug=slug):
-                slug = '{0}{1}{2}'.format(original_slug, '-', next_slug)
+                slug = '{0}-{1}'.format(original_slug, next_slug)
                 next_slug += 1
             self.slug = slug
-
-

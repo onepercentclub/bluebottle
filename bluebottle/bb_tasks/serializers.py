@@ -19,19 +19,17 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'description', 'skill',
-                  'status', 'created', 'project', 'deadline', 'time_needed')
 
 
 class TaskMemberSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer()
-    task = serializers.PrimaryKeyRelatedField()
-    status = serializers.ChoiceField(choices=TaskMember.TaskMemberStatuses.choices, required=False, default=TaskMember.TaskMemberStatuses.applied)
+    status = serializers.ChoiceField(
+        choices=TaskMember.TaskMemberStatuses.choices, required=False, default=TaskMember.TaskMemberStatuses.applied)
     motivation = serializers.CharField(required=False)
 
     class Meta:
         model = TaskMember
-        fields = ('id', 'member', 'task', 'status', 'created', 'motivation')
+        fields = ('id', 'member', 'status', 'created', 'motivation')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -41,7 +39,6 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskFile
-        fields = ('id', 'author', 'task', 'file', 'created', 'title')
 
 
 class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -54,18 +51,14 @@ class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
     tags = TagSerializer()
     meta_data = MetaField(
-        title = 'get_meta_title',
-        fb_title = 'get_fb_title',
-        tweet = 'get_tweet',
-        image_source = 'project__projectplan__image',
-        )
+        title='get_meta_title',
+        fb_title='get_fb_title',
+        tweet='get_tweet',
+        image_source='project__projectplan__image',
+    )
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'project', 'description', 'end_goal', 'members', 'files', 'location', 'skill',
-                  'time_needed', 'author', 'status', 'created', 'deadline', 'tags', 'meta_data',
-                  'people_needed'
-        )
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -73,6 +66,7 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ('id', 'name')
+
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
@@ -102,5 +96,3 @@ class TaskWallPostSerializer(TextWallPostSerializer):
     class Meta(TextWallPostSerializer.Meta):
         # Add the project slug field.
         fields = TextWallPostSerializer.Meta.fields + ('task', )
-
-

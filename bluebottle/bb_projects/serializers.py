@@ -32,7 +32,7 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
-        
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
@@ -67,8 +67,6 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PROJECT_MODEL
-        fields = ('id', 'title', 'image', 'status', 'country',
-                  'pitch', 'theme')
 
 
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):

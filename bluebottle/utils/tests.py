@@ -21,7 +21,6 @@ from fluent_contents.plugins.text.models import TextItem
 import json
 
 
-
 BB_USER_MODEL = get_user_model()
 
 def generate_random_slug():
@@ -158,7 +157,7 @@ class MetaTestCase(TestCase):
 
         # set up the client
         self.client = Client()
-        self.url = reverse('meta_test', kwargs={'pk':self.object.id})
+        self.url = reverse('meta_test', kwargs={'pk': self.object.id})
 
     def test_content_items_correctly_created(self):
         """ Test that the setUp function creates the correct items """

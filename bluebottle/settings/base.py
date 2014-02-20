@@ -145,19 +145,16 @@ INSTALLED_APPS = (
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
-    #miss bluebottle_drf2
     'bluebottle.common',
     'bluebottle.contact',
     'bluebottle.contentplugins',
     'bluebottle.geo',
     'bluebottle.homepage',
-    #miss mail an empty folder
     'bluebottle.news',
     'bluebottle.pages',
     'bluebottle.quotes',
     'bluebottle.slides',
     #miss test
-    #miss urls
     'bluebottle.utils',
     'bluebottle.wallposts',
 

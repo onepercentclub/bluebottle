@@ -1,6 +1,5 @@
 import os
 
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
 from django.views.generic.base import View
@@ -9,7 +8,8 @@ from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response
 from taggit.models import Tag
-
+from .models import MetaDataModel
+from .serializers import MetaDataSerializer
 
 class TagList(views.APIView):
     """
@@ -51,13 +51,11 @@ class DocumentDownloadView(View):
         return HttpResponseForbidden()
 
 
+#TODO: this was creating problems with the tests
 # TESTS
 # INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
-# if INCLUDE_TEST_MODELS:
-
-from .models import MetaDataModel
-from .serializers import MetaDataSerializer
+#   if INCLUDE_TEST_MODELS:
 
 class MetaDataDetail(generics.RetrieveAPIView):
     model = MetaDataModel

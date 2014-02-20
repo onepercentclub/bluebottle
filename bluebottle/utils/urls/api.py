@@ -1,9 +1,6 @@
 from django.conf import settings
 from django.conf.urls import patterns, url
-from ..views import TagList, TagSearch
-
-# INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-from ..views import MetaDataDetail
+from ..views import TagList, TagSearch, MetaDataDetail
 
 
 urlpatterns = patterns(
@@ -14,6 +11,7 @@ urlpatterns = patterns(
     url(r'^metadata/(?P<pk>\d+)/$', MetaDataDetail.as_view(), name='meta_test'),
 )
 
+#TODO: I just took this out
 # INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 #
 # if INCLUDE_TEST_MODELS:

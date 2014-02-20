@@ -4,11 +4,8 @@ SECRET_KEY = '8t(nq%rdBHRi7b5bveU^%Erbfu76yr^%uveDU546tedib#%uRD91OLJTdf'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'bluebottle',
-        'USER': 'jose',
-        'PASSWORD': '',
-        'HOST': 'localhost',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
     }
 }
 

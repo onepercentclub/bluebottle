@@ -19,8 +19,10 @@ class QuoteTestCase(APITestCase):
 	subclass this.
 	"""
 	def setUp(self):
+		self.author = BlueBottleUserFactory.create()
 		self.user = BlueBottleUserFactory.create()
-		self.quote = QuoteFactory.create(user=self.user, quote="The best things in life are free.")
+		self.quote1 = QuoteFactory.create(author=self.author, user=self.user, quote="The best things in life are free.", language='en')
+		self.quote2 = QuoteFactory.create(author=self.author, user=self.user, quote="Always forgive your enemies; nothing annoys them so much.", language='nl')
 
 class QuoteListTestCase(QuoteTestCase):
 	"""
@@ -35,6 +37,14 @@ class QuoteListTestCase(QuoteTestCase):
 		response = self.client.get(reverse('quote_list'))
 
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['count'], 2)
+
+
+	def test_api_quotes_list_filtering(self):
+		"""
+		Ensure filtering returns correct results
+		"""
+		response = self.client.get(reverse('quote_list'), {'language': 'en'})
 		self.assertEqual(response.data['count'], 1)
 
 
@@ -43,8 +53,9 @@ class QuoteListTestCase(QuoteTestCase):
 		Ensure get request returns record with correct data.
 		"""
 		response = self.client.get(reverse('quote_list'))
-
 		quote = response.data['results'][0]
-		self.assertEqual(quote['id'], 1)
+
+		self.assertEqual(quote['id'], self.quote1.id)
 		self.assertEqual(quote['user']['id'], self.user.id)
-		self.assertEqual(quote['quote'], 'The best things in life are free.')
+		self.assertEqual(quote.get('author', None), None)
+		self.assertEqual(quote['quote'], self.quote1.quote)

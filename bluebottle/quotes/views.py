@@ -11,10 +11,15 @@ class QuoteList(generics.ListAPIView):
     model = Quote
     serializer_class = QuoteSerializer
     paginate_by = 10
-    filter_fields = ('language', 'segment')
 
     def get_queryset(self):
         qs = super(QuoteList, self).get_queryset()
+
+        # Set language if supplied
+        language = self.request.QUERY_PARAMS.get('language', None)
+        if language:
+            qs = qs.filter(language=language)
+
         qs = qs.filter(status=Quote.QuoteStatus.published)
         qs = qs.filter(publication_date__lte=now)
         qs = qs.filter(Q(publication_end_date__gte=now) | Q(publication_end_date__isnull=True))

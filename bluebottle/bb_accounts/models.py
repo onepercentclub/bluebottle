@@ -15,6 +15,8 @@ from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
+from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
@@ -143,6 +145,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(_('phone number'), max_length=50, blank=True)
     gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
     birthdate = models.DateField(_('birthdate'), null=True, blank=True)
+
+    tags = TaggableManager(verbose_name=_("tags"), blank=True)
 
     objects = BlueBottleUserManager()
 

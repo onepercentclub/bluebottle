@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, TagSerializer, ImageSerializer, TaggableSerializerMixin,
-    OEmbedField)
+    SorlImageField, ImageSerializer, OEmbedField)
 from bluebottle.geo.models import Country
 
 from bluebottle.bb_projects import get_project_model
@@ -32,7 +31,7 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
-        
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
@@ -67,18 +66,12 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PROJECT_MODEL
-        fields = ('id', 'title', 'image', 'status', 'country',
-                  'pitch', 'theme')
 
 
-class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
+class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail')
-    tags = TagSerializer()
-    organization = serializers.PrimaryKeyRelatedField(
-        source='organization', required=False)
-    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
     status = serializers.PrimaryKeyRelatedField(required=False)

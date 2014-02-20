@@ -1,8 +1,6 @@
 import os
 
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.contenttypes.models import ContentType, ContentTypeManager
+from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
 from django.views.generic.base import View
 
@@ -10,21 +8,13 @@ from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response
 from taggit.models import Tag
-
-#from apps.utils.serializers import ThemeSerializer
-#from apps.projects.models import ProjectTheme
-
-
-#class ThemeList(generics.ListAPIView):
-#    model = ProjectTheme
-#    serializer_class = ThemeSerializer
-
+from .models import MetaDataModel
+from .serializers import MetaDataSerializer
 
 class TagList(views.APIView):
     """
     All tags in use on this system
     """
-
     def get(self, request, format=None):
 
         data = [tag.name for tag in Tag.objects.all()[:20]]
@@ -35,7 +25,6 @@ class TagSearch(views.APIView):
     """
     Search tags in use on this system
     """
-
     def get(self, request, format=None, search=''):
 
         data = [tag.name for tag in Tag.objects.filter(name__startswith=search).all()[:20]]
@@ -43,7 +32,6 @@ class TagSearch(views.APIView):
 
 
 # Non API views
-
 # Download private documents based on content_type (id) and pk
 # Only 'author' of a document is allowed
 # TODO: Implement a real ACL for this
@@ -63,15 +51,12 @@ class DocumentDownloadView(View):
         return HttpResponseForbidden()
 
 
-
+#TODO: this was creating problems with the tests
 # TESTS
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
+# INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
-if INCLUDE_TEST_MODELS:
+#   if INCLUDE_TEST_MODELS:
 
-    from .models import MetaDataModel
-    from .serializers import MetaDataSerializer
-
-    class MetaDataDetail(generics.RetrieveAPIView):
-        model = MetaDataModel
-        serializer_class = MetaDataSerializer
+class MetaDataDetail(generics.RetrieveAPIView):
+    model = MetaDataModel
+    serializer_class = MetaDataSerializer

@@ -4,7 +4,6 @@ from django.utils import timezone
 from rest_framework import status
 
 from bluebottle.bb_projects import get_project_model
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.bb_tasks import get_task_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -32,11 +31,10 @@ class TaskApiIntegrationTests(TestCase):
         self.skill3 = SkillFactory.create()
         self.skill4 = SkillFactory.create()
 
-        self.task_url = '/api/tasks/'
-        self.task_members_url = '/api/tasks/members/'
+        self.task_url = '/api/bb_tasks/'
+        self.task_members_url = '/api/bb_tasks/members/'
 
     def test_create_task(self):
-
         self.client.login(username=self.some_user.email, password='password')
 
         # Get the list of tasks for some project should return none (count = 0)
@@ -79,16 +77,14 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], another_task_data['title'])
 
-        # Go wild! Add another task to that project add some tags this time
+        # Go wild! Add another task to that project add some tags this time --> NO TAGS ANYMORE
         # Because we have a nesting here we should properly encode it as json
         third_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
                            'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill4.id,
-                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace',
-                           'tags': [{'id': 'spanish'}, {'id': 'translate'}]}
+                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], third_task_data['title'])
-        self.assertEquals(len(response.data['tags']), 2)
 
         # By now the list for the second project should contain two tasks
         response = self.client.get(self.task_url, {'project': self.another_project.slug})
@@ -101,7 +97,6 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEquals(response.data['title'], some_task_data['title'])
 
     def test_apply_for_task(self):
-
         self.client.login(username=self.some_user.email, password='password')
 
         future_date = timezone.now() + timezone.timedelta(days=60)
@@ -120,7 +115,6 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['status'], 'applied')
 
-
     def test_task_preview_search(self):
         self.client.login(username=self.some_user.email, password='password')
 
@@ -135,15 +129,15 @@ class TaskApiIntegrationTests(TestCase):
 
         # create tasks for projects
         self.task1 = TaskFactory.create(
-            status = BB_TASK_MODEL.TaskStatuses.in_progress,
-            author = self.some_project.owner,
-            project = self.some_project,
-            )
+            status=BB_TASK_MODEL.TaskStatuses.in_progress,
+            author=self.some_project.owner,
+            project=self.some_project,
+        )
         self.task2 = TaskFactory.create(
-            status = BB_TASK_MODEL.TaskStatuses.open,
-            author = self.another_project.owner,
-            project = self.another_project,
-            )
+            status=BB_TASK_MODEL.TaskStatuses.open,
+            author=self.another_project.owner,
+            project=self.another_project,
+        )
 
         self.assertEqual(2, BB_PROJECT_MODEL.objects.count())
         self.assertEqual(2, BB_TASK_MODEL.objects.count())
@@ -172,6 +166,3 @@ class TaskApiIntegrationTests(TestCase):
 # TODO: Test edit task
 # TODO: Test change TaskMember edit status
 # TODO: Test File uploads
-
-
-

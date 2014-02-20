@@ -1,8 +1,6 @@
 import factory
-from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 
-from fluent_contents.models import Placeholder
 from bluebottle.pages.models import Page
 from .accounts import BlueBottleUserFactory
 

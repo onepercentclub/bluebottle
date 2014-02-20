@@ -32,7 +32,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 
     inlines = (OrganizationMemberInline, OrganizationDocumentInline)
 
-    search_fields = ('name')
+    search_fields = ('name',)
 
     fields = ('name','email','phone_number', 'website', 'twitter', 'facebook', 'skype', 'slug')
 

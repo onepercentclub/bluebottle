@@ -34,3 +34,9 @@ INSTALLED_APPS += (
     'django_extensions',
     'colortools',
 )
+
+#Graphviz
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}

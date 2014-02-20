@@ -69,6 +69,7 @@ install_requires = [
     'transifex-client==0.9',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
+    'pygraphviz',
 ]
 
 

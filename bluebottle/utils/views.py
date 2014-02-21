@@ -1,3 +1,4 @@
+from django.conf import settings
 import os
 
 from django.contrib.contenttypes.models import ContentType
@@ -8,15 +9,14 @@ from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response
 from taggit.models import Tag
-from .models import MetaDataModel
-from .serializers import MetaDataSerializer
+
 
 class TagList(views.APIView):
     """
     All tags in use on this system
     """
-    def get(self, request, format=None):
 
+    def get(self, request, format=None):
         data = [tag.name for tag in Tag.objects.all()[:20]]
         return response.Response(data)
 
@@ -25,8 +25,8 @@ class TagSearch(views.APIView):
     """
     Search tags in use on this system
     """
-    def get(self, request, format=None, search=''):
 
+    def get(self, request, format=None, search=''):
         data = [tag.name for tag in Tag.objects.filter(name__startswith=search).all()[:20]]
         return response.Response(data)
 
@@ -37,7 +37,6 @@ class TagSearch(views.APIView):
 # TODO: Implement a real ACL for this
 
 class DocumentDownloadView(View):
-
     def get(self, request, content_type, pk):
         type = ContentType.objects.get(pk=content_type)
         type_class = type.model_class()
@@ -53,10 +52,12 @@ class DocumentDownloadView(View):
 
 #TODO: this was creating problems with the tests
 # TESTS
-# INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
+INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
-#   if INCLUDE_TEST_MODELS:
+if INCLUDE_TEST_MODELS:
+    from .models import MetaDataModel
+    from .serializers import MetaDataSerializer
 
-class MetaDataDetail(generics.RetrieveAPIView):
-    model = MetaDataModel
-    serializer_class = MetaDataSerializer
+    class MetaDataDetail(generics.RetrieveAPIView):
+        model = MetaDataModel
+        serializer_class = MetaDataSerializer

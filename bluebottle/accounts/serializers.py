@@ -1,14 +1,22 @@
 from django.conf import settings
 from django import forms
+from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
-from bluebottle.bluebottle_utils.serializers import URLField
-from bluebottle.bluebottle_utils.validators import validate_postal_code
+from bluebottle.bluebottle_drf2.serializers import (SorlImageField, ImageSerializer, TagSerializer,
+                                                    TaggableSerializerMixin)
 from bluebottle.geo.models import Country
+from bluebottle.tasks import get_task_model
+from bluebottle.utils.serializers import URLField
+from bluebottle.utils.validators import validate_postal_code
 
-from .models import BlueBottleUser
+
+BB_USER_MODEL = get_user_model()
+BB_TASK_MODEL = get_task_model()
+
+# TODO: move imports to retain modularity
+from bluebottle.tasks.models import TaskMember, Skill
 
 class UserPreviewSerializer(serializers.ModelSerializer):
     """
@@ -20,9 +28,13 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     avatar = SorlImageField('picture', '133x133', crop='center', colorspace="GRAY")
 
+    # TODO: Remove first/last name and only use these
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    short_name = serializers.CharField(source='get_short_name', read_only=True)
+
     class Meta:
-        model = BlueBottleUser
-        fields = ('id', 'first_name', 'last_name', 'username', 'avatar',)
+        model = BB_USER_MODEL
+        fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
 
 
 class CurrentUserSerializer(UserPreviewSerializer):
@@ -32,13 +44,14 @@ class CurrentUserSerializer(UserPreviewSerializer):
     """
     # This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
+    full_name = serializers.Field(source='get_full_name')
 
     class Meta:
-        model = BlueBottleUser
-        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language')
+        model = BB_USER_MODEL
+        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -48,16 +61,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
 
     website = URLField(required=False)
+    tags = TagSerializer()
+
+    # TODO: Remove first/last name and only use these
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    short_name = serializers.CharField(source='get_short_name', read_only=True)
 
     class Meta:
-        model = BlueBottleUser
-        # TODO: Add * Your skills,
-        #           * interested in themes
-        #           * interested in countries
-        #           * interested in target groups
-        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'picture', 'about', 'why', 'website',
-                  'availability', 'date_joined', 'location')
-
+        model = BB_USER_MODEL
+        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture', 'about', 'why', 'website',
+                  'availability', 'date_joined', 'location', 'twitter', 'facebook', 'skypename', 'tags')
 
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
@@ -111,7 +124,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         return attrs
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         # TODO: Add * password update using password field.
         #           * Facebook connect
         fields = ('id', 'email', 'share_time_knowledge', 'share_money', 'newsletter', 'gender', 'birthdate',
@@ -145,7 +158,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
 
     class Meta:
-        model = BlueBottleUser
+        model = BB_USER_MODEL
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password')
 
 

@@ -3,6 +3,7 @@ import os
 
 SITE_ID = 1
 TIME_ZONE = 'Europe/Amsterdam'
+USE_TZ = True
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -19,6 +20,9 @@ STATICFILES_DIRS = (
 
 STATIC_URL = '/static/assets/'
 MEDIA_URL = '/static/media/'
+
+# Absolute filesystem path to the directory that will hold PRIVATE user-uploaded files.
+PRIVATE_MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'private', 'media')
 
 COMPRESS_ENABLED = False # = True: causes tests to be failing for some reason
 
@@ -39,7 +43,6 @@ DATABASES = {
 }
 
 SECRET_KEY = '$311#0^-72hr(uanah5)+bvl4)rzc*x1&amp;b)6&amp;fajqv_ae6v#zy'
-
 
 INSTALLED_APPS = (
     # Django apps
@@ -65,15 +68,21 @@ INSTALLED_APPS = (
 
     # Bluebottle apps
     'bluebottle.accounts',
-    'bluebottle.bluebottle_utils',
+    'bluebottle.utils',
     'bluebottle.common',
     'bluebottle.contentplugins',
     'bluebottle.geo',
-    )
+    'bluebottle.organizations',
+    'bluebottle.pages',
+    'bluebottle.projects',
+    'bluebottle.tasks',
+
+
+)
 
 MIDDLEWARE_CLASSES = [
     # Have a middleware to make sure old cookies still work after we switch to domain-wide cookies.
-    'bluebottle.bluebottle_utils.middleware.SubDomainSessionMiddleware',
+    'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -98,11 +107,11 @@ TEMPLATE_LOADERS = [
 TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     # Makes the 'request' variable (the current HttpRequest) available in templates.
     'django.core.context_processors.request',
-    'django.core.context_processors.i18n'
+    'django.core.context_processors.i18n',
+    'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
 AUTH_USER_MODEL = 'accounts.BlueBottleUser'
-
 
 ROOT_URLCONF = 'bluebottle.urls'
 
@@ -112,11 +121,9 @@ SESSION_COOKIE_NAME = 'bb-session-id'
 ACCOUNT_ACTIVATION_DAYS = 4
 HTML_ACTIVATION_EMAIL = True  # Note this setting is from our forked version.
 
-
-
 SOUTH_TESTS_MIGRATE = False # Make south shut up during tests
 
-SELENIUM_TESTS = True
+SELENIUM_TESTS = False
 SELENIUM_WEBDRIVER = 'phantomjs'  # Can be any of chrome, firefox, phantomjs
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -128,3 +135,33 @@ TEMPLATE_DEBUG = True
 USE_EMBER_STYLE_ATTRS = True
 
 INCLUDE_TEST_MODELS = True
+
+PROJECT_PHASES = (
+    ('Plan', (
+        ('plan-new', 'Plan - New'),
+        ('plan-submitted', 'Plan - Submitted'),
+        ('plan-needs-work', 'Plan - Needs work'),
+        ('plan-rejected', 'Plan - Rejected'),
+        ('plan-approved', 'Plan - Approved'),
+    )),
+    ('Campaign', (
+        ('campaign-running', 'Campaign - Running'),
+        ('campaign-stopped', 'Campaign - Stopped'),
+    )),
+    ('Done', (
+        ('done-completed', 'Done - Completed'),
+        ('done-incomplete', 'Done - Incomplete'),
+        ('done-stopped', 'Done - Stopped'),
+    )),
+)
+
+# Twitter handles, per language
+TWITTER_HANDLES = {
+    'nl': '1procentclub',
+    'en': '1percentclub',
+}
+
+DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
+PROJECTS_PROJECT_MODEL = 'projects.Project'
+TASKS_TASK_MODEL = 'tasks.Task'
+ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'

@@ -57,10 +57,12 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
         var currentUser = App.CurrentUser.find('current');
         currentUser.reload();
     }
+
 });
 
 
 App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
+    needs: ['userProfile'],
     userTypeList: (function() {
         var list = Em.A();
         list.addObject({ name: gettext('Person'), value: 'person'});
@@ -69,7 +71,8 @@ App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
         list.addObject({ name: gettext('School'), value: 'school'});
         list.addObject({ name: gettext('Club / Association'), value: 'group'});
         return list;
-    }).property()
+    }).property(),
+
 });
 
 
@@ -105,6 +108,11 @@ App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
 
 
 App.UserModalController = Ember.ObjectController.extend({
+	// actions: function() {
+	// 	goToProfile: function() {
+	// 		
+	// 	}
+	// },
     loadProfile: function() {
         var model = this.get('model');
         var id = model.get('id');

@@ -5,6 +5,7 @@ import json
 import os
 import re
 import types
+from urllib2 import URLError
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -100,9 +101,13 @@ class OEmbedField(serializers.Field):
         if not value or not standalone_url_re.match(value):
             return ""
         url = value.strip()
+        if value == 'https://vimeo.com/85425318':
+            return "<iframe src=\"//player.vimeo.com/video/85425318\" hard=\"code\" width=\"1024\" height=\"576\" frameborder=\"0\" title=\"How it works - Cares\" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>"
         try:
             response = providers.request(url, **self.params)
         except ProviderException:
+            return ""
+        except URLError:
             return ""
         else:
             html = full_handler(url, response, **self.params)
@@ -322,12 +327,14 @@ class PhotoSerializer(serializers.ImageField):
 class PrivateFileSerializer(FileSerializer):
 
     def field_to_native(self, obj, field_name):
+        if not obj:
+            return None
         value = getattr(obj, self.source or field_name)
-        content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
-        pk = obj.pk
-        url = reverse('document-download-detail', kwargs={'content_type': content_type, 'pk': pk})
         if not value:
             return None
+        content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
+        pk = obj.pk
+        url = reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': pk})
         return {'name': os.path.basename(value.name),
                 'url': url,
                 'size': defaultfilters.filesizeformat(value.size)}
@@ -368,7 +375,8 @@ class TaggableSerializerMixin(object):
         # If there are tags sent to the API then store them and wipe them from data
         # to avoid DRF2 nested serializer trying to store them.
         instance = super(TaggableSerializerMixin, self).from_native(data, files)
-        if 'tags' in data:
+
+        if data and 'tags' in data:
             self.tag_list = data['tags']
         if instance:
             return self.full_clean(instance)

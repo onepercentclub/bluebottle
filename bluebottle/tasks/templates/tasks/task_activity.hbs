@@ -1,0 +1,144 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "taskActivity" %}
+    <div class="wallposts-important">
+		<h3>{% trans "Files" %}</h3>
+		
+		<div class="task-files">
+			<ul>	
+		        {{#each files}}
+				{{#if id}}
+				<li>
+					<span class="task-file-filename">
+						<span class="flaticon stroke document-1"></span> 
+						<a {{bindAttr href="this.file.url"}}>
+							{{this.title}}
+						</a>
+					</span>
+					<span class="task-file-author">by 
+						{{#link-to "viewProfile" author}}
+							{{author.full_name}}
+						{{/link-to}}
+					</span>	
+					<span class="task-file-created">
+						{{localize created formatting="X"}}
+					</span>
+				</li>
+				{{/if}}
+				{{/each}}
+			<ul>
+		</div>		
+
+		{{!--}}
+        {{#each files}}
+            <article class="wallpost important">
+
+                <header class="wallpost-header">
+
+                    <div class="wallpost-member">
+                        <a {{action openInBigBox "userModal" author}} class="member">
+                            <figure class="member-avatar">
+                                <img {{bindAttr src=author.getAvatar}} alt="author.full_name"}} />
+                            </figure>
+                        </a>
+                    </div>
+
+                    <div class="wallpost-meta">
+                        <h3 class="wallpost-author">{{author.full_name}}</h3>
+                    </div>
+
+                    <h2 class="wallpost-title">
+                        {% trans "File" %}
+                    </h2>
+                    <a {{bindAttr href=this.file.url}} target="file" class="item">
+                        <em class="flaticon solid download-document-1"></em>
+                        <strong class="file-name">{{this.title}}</strong>
+                        <small class="file-size">({{this.file.size}})</small>
+                    </a>
+
+                </header>
+
+            </article>
+
+        {{else}}
+            {% trans "No files yet" %}<br/>
+        {{/each}}
+		{{--}}
+		
+        {{#if controllers.task.canUpload}}
+		<span class="task-file-upload">
+			<span class="flaticon solid plus-2"></span>
+            <a {{action 'uploadFile' this}}>
+                {% trans "Add file" %}
+            </a>
+		</span>
+        {{/if}}
+
+		{{#if members}}
+		<h3>{% trans "Task members" %}</h3>
+		<div class="task-pending-requests">
+        {{#each members}}
+
+            <article class="wallpost important">
+
+                <header class="wallpost-header">
+
+                    <div class="wallpost-member">
+                        <a {{action openInBigBox "userModal" member}} class="member">
+                            <figure class="member-avatar">
+                                <img {{bindAttr src=member.getAvatar}} alt="member.full_name"}} />
+                            </figure>
+                        </a>
+                    </div>
+
+                    <div class="wallpost-meta">
+                        <h3 class="wallpost-author">{{member.full_name}}</h3>
+                    </div>
+
+                    <h2 class="wallpost-title">
+                        {% trans "Status" %}: {{status}}
+                    </h2>
+                </header>
+
+                <div class="wallpost-content">
+
+                    <div class="text">
+                        <strong>{% trans "Motivation" %}:</strong> {{motivation}}
+
+                    </div>
+
+                </div>
+
+                {{#if controller.controllers.task.canEdit}}
+                    {{#if isStatusApplied}}
+                        <div class="wallpost-buttons">
+                            <a class="btn wallpost-action-accept" {{action 'editTaskMember' this}}>
+                                {% trans "Accept" %}
+                            </a>
+                            <span class="status">{% trans "Application pending..." %}</span>
+                        </div>
+                    {{else}}
+	                    <div class="wallpost-buttons">
+	                        <a class="btn wallpost-action-decline" {{action 'editTaskMember' this}}>
+	                            {% trans "Edit status" %}
+	                        </a>
+						</div>
+                    {{/if}}
+                {{/if}}
+
+                {{!--
+                <div class="wallpost-buttons">
+                    <a class="btn wallpost-action-accept" href="#">Accept</a>
+                     <span class="btn-spacer">or</span>
+                    <a class="wallpost-action-decline" href="#">Decline</a>
+                </div>
+                --}}
+            </article>
+        {{/each}}
+		{{/if}}
+
+    </div>
+{% endtplhandlebars %}

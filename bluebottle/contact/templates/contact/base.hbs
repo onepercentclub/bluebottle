@@ -1,0 +1,45 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "contact_message" %}
+    <div class="l-section" id="page">
+        <section class="l-wrapper">
+
+                <article class="l-content">
+                    <header class="page-header">
+                        <h1>{% trans "Contact" %}</h1>
+                        <p>
+                            {% blocktrans %}
+                            Send us a message or get in touch using the details below. Talk to you soon!
+                            {% endblocktrans %}
+                        </p>
+                    </header>
+
+                    <form id="contact-form">
+                        {{#if isSent}}
+                            <legend>
+                                <strong>{% trans "Thanks for your message!. We'll get back to you soon" %}.</strong>
+                            </legend>
+                        {{else}}
+                            <fieldset>
+                                <ul>
+                                    {{!-- FIXME: label and placeholder translations? --}}
+                                    {{bb-text-field label='Name' valueBinding=name placeholder='Enter your name' errors=errors.name}}
+
+                                    {{bb-text-field label='Email' valueBinding=email placeholder='example@my-domain.com' errors=errors.email}}
+
+                                    {{bb-text-area label='Message' valueBinding=message rows="6" errors=errors.message}}
+
+                                </ul>
+                            </fieldset>
+                            <button {{bindAttr class=":btn :btn-iconed :btn-primary :btn-submit"}} {{action updateRecordOnServer}}><span class="flaticon solid envelope-1"></span>{% trans "Send Message" %}</button>
+                        {{/if}}
+                    </form>
+                </article>
+
+                {% include 'contact/sidebar.hbs' %}
+
+        </section>
+    </div>
+{% endtplhandlebars %}

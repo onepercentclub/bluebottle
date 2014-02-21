@@ -11,6 +11,7 @@ App.Router.map(function(){
         // TODO: isolate this
         this.resource('userOrders', {path: '/orders'});
     });
+    this.resource('viewProfile', {path: '/member/profile/:user_id'});
 
     this.route('userActivate', {path: '/activate/:activation_key'});
     this.resource('passwordReset', {path: '/passwordreset/:reset_token'});
@@ -45,7 +46,6 @@ App.UserIndexRoute = Em.Route.extend({
 App.UserProfileRoute = Em.Route.extend({
     model: function() {
         var route = this;
-
         return App.CurrentUser.find('current').then(function(user) {
             return App.User.find(user.get('id_for_ember'));
         });
@@ -54,6 +54,18 @@ App.UserProfileRoute = Em.Route.extend({
     exit: function() {
         this._super();
         this.controllerFor('userProfile').stopEditing();
+    },
+
+});
+
+App.ViewProfileRoute = Em.Route.extend({
+    model: function(params) {
+        var model = App.User.find(params.user_id);
+        var route = this;
+        model.on('becameError', function() {
+            route.transitionTo('error.notFound');
+        });
+        return model;
     }
 });
 

@@ -44,7 +44,7 @@ module.exports = function(config) {
       'config/test_stubs.js',
 
       // 1%Club Site App
-      '../../bluebottle/**/static/**/{components,controllers,models,routes,views}.js',
+      '../../bluebottle/**/static/js/bluebottle/**/{components,controllers,models,routes,views}.js',
 
       // Handlebar Templates
       // Need to do some preprocessing first to get the django processed

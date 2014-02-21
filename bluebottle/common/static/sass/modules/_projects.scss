@@ -669,18 +669,16 @@
 			}		
 		}
 		.project-plan-back-link {
-	//			float: right;
 			position: absolute;
 			top: 10px;
 			right: 10px;
 			text-decoration: none;
 			text-transform: uppercase;
-			margin-top: $base-margin / 2;
 			.flaticon {
 				text-align: center;
 				vertical-align: middle;
 				font-size: $font-size-larger;
-				margin: $base-margin/2;
+				margin-left: $base-margin/2;
 			}
 		}
 	}

@@ -596,6 +596,9 @@
 		.project-plan-title {
 			position: relative;
 			padding: $base-padding;
+			h4 {
+				color: $color-secondary;
+			}
 			&:after {
 				left: 100%;
 				top: 60px;
@@ -618,9 +621,10 @@
 			li {
 				@include resetlist();
 				text-align: right;
-				padding: $base-padding;
 				a {
+					display: block;
 					text-decoration: none;
+					padding: $base-padding;
 				}
 				&.active {
 					background: white;					

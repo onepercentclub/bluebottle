@@ -10,7 +10,7 @@
 
                 <div class="task-badge">
                     <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> 
-					{{#if image}}
+					{{#if project.image.small}}
 					<img {{bindAttr src="project.image.small" alt="project.title"}} />
 					{{/if}}
                 </div>

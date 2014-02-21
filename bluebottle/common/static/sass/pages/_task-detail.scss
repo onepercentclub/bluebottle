@@ -6,7 +6,9 @@
 	
 	background-color: $gray-darkest;
 	color: $white;
-	
+	#task-details {
+		padding: ($base-padding * 2) 0;
+	}
 	h1, h2, h3 {
 		text-transform: none;
 		color: $white;
@@ -59,7 +61,7 @@
 			padding: $base-padding / 2;
 			text-align: center;
 			background: $color-primary;
-			position: absolute;
+//			position: absolute;
 			width: 100%;
 			border-bottom: 2px solid $white;
 		}
@@ -69,7 +71,7 @@
 	}
 	.edit-task {
 		text-align: right;
-		padding: $base-padding 0;
+//		padding: $base-padding 0;
 		a {
 			text-decoration: none;
 		}
@@ -248,7 +250,7 @@
 		.task-action {
 		    @include grid(16,1,1);
 		    float: right;
-			margin-top: $base-margin * 2;
+			margin: $base-margin;
 
 		    .btn {
 		        font-family: $font-family-bold;

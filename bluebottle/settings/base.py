@@ -114,6 +114,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'bluebottle.bb_accounts.middleware.LocaleMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -254,3 +255,7 @@ DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 
 # E-MAILS
 CONTACT_EMAIL = 'contact@my-bluebottle-project.com'
+
+# Registration
+ACCOUNT_ACTIVATION_DAYS = 7
+HTML_ACTIVATION_EMAIL = True

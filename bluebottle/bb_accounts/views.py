@@ -74,7 +74,7 @@ class UserCreate(generics.CreateAPIView):
             }
             subject_template_name = 'registration/activation_email_subject.txt'
 
-            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and  'html' or 'txt'
+            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
             email_template_name = 'registration/activation_email.' + extension
 
             subject = loader.render_to_string(subject_template_name, c)
@@ -177,11 +177,12 @@ class PasswordSet(views.APIView):
         # The uidb36 and the token are checked by the URLconf.
         uidb36 = self.kwargs.get('uidb36')
         token = self.kwargs.get('token')
-        UserModel = get_user_model()
+        user = get_user_model()
+
         try:
             uid_int = base36_to_int(uidb36)
-            user = UserModel._default_manager.get(pk=uid_int)
-        except (ValueError, OverflowError, UserModel.DoesNotExist):
+            user = user._default_manager.get(pk=uid_int)
+        except (ValueError, OverflowError, user.DoesNotExist):
             user = None
 
         if user is not None and default_token_generator.check_token(user, token):

@@ -502,29 +502,29 @@
 
 // Full project plan
 
-#project-plan {
-	
-	header {
-	    margin-top: $base-margin*2;
-		@include grid(48,1,1);
-	}
-	
-	article {
-	    margin-bottom: $base-margin;
-		@include grid(24,1,1);
-		clear: none !important;
-		
-		br {
-			content: " " !important;
-			display: block !important;
-			margin-bottom: 1.5em !important;
-		}
-		
-		img {
-			width: 100%;
-		}
-	}
-}
+//#project-plan {
+//	
+//	header {
+//	    margin-top: $base-margin*2;
+//		@include grid(48,1,1);
+//	}
+//	
+//	article {
+//	  margin-bottom: $base-margin;
+////		@include grid(24,1,1);
+//		clear: none !important;
+//		
+//		br {
+//			content: " " !important;
+//			display: block !important;
+//			margin-bottom: 1.5em !important;
+//		}
+//		
+//		img {
+//			width: 100%;
+//		}
+//	}
+//}
 
 // task list for in project view
 .task-list {
@@ -583,12 +583,11 @@
 		display: block;
 		opacity: 1;
 	}
-	
 	background: $gray-lighter;
 
 	.project-plan-navigation {
 		
-		@include grid(12, 0, 0);
+		@include grid(16, 4, 0);
 		
 		position: relative;
 		min-height: 100%;
@@ -611,23 +610,21 @@
 				border-left-color: $gray-lighter;
 				border-width: 10px;
 				margin-top: -10px;
+				z-index: 10;
 			}
-		}
+		}		
 		.project-plan-navigation-links {
-			padding: $base-padding;
-		}
-		
-		ul {
+			padding: $base-padding 0;
 			li {
 				@include resetlist();
 				text-align: right;
 				a {
 					display: block;
 					text-decoration: none;
-					padding: $base-padding;
-				}
-				&.active {
-					background: white;					
+					padding: ($base-padding/2) $base-padding * 2;
+					&.active {
+						background: white;					
+					}
 				}
 			}
 			.project-plan-download-pdf {
@@ -635,7 +632,8 @@
 				margin-top: $base-margin * 2;
 				a {
 					border: 2px solid $color-primary;
-					padding: $base-padding;
+					padding: ($base-padding/2) $base-padding;
+					margin: $base-margin;
 					text-decoration: none;
 					float: right;			
 				}
@@ -643,22 +641,41 @@
 		}
 		
 	}
-	.project-plan-main {
-		@include grid(24,0,0);
-		padding: $base-padding * 2;
-		background: $white;
-		overflow-y: auto;
-		overflow-x: hidden;
-		color: $gray-darker;
+	.project-plan-main-container {
+		position: relative;
+		@include clearfix;
+		background: white;
+		padding: $base-padding;
+		padding-top: $base-padding*3;
+		@include grid(20,0,0);
+		.project-plan-main {
+			position: relative;
+			padding: 0 ($base-padding * 2);
+			background: $white;
+			overflow-y: auto;
+			overflow-x: hidden;
+			color: $gray-darker;
+			p {
+				text-align: justify;
+			}
 		
-		h1, h2, h3, h4, h5, h6 {
-			color: $color-primary;
+			h3:first-of-type {
+				font-size: $font-size-larger;
+				margin-top: 0;
+			}
+		
+			h1, h2, h3, h4, h5, h6 {
+				color: $color-primary;
+			}		
 		}
-		
 		.project-plan-back-link {
-			float: right;
+	//			float: right;
+			position: absolute;
+			top: 10px;
+			right: 10px;
 			text-decoration: none;
 			text-transform: uppercase;
+			margin-top: $base-margin / 2;
 			.flaticon {
 				text-align: center;
 				vertical-align: middle;
@@ -667,7 +684,6 @@
 			}
 		}
 	}
-	
 	
 	.project-plan-map {
 		@include grid(12,0,0);

@@ -66,12 +66,14 @@ App.ProjectView = Em.View.extend({
         var height = $(window).height();
         var width = $(window).width();
         this.$(".project-plan-navigation, .project-plan-main").height(height);
-        $("#project-plan-modal").css({width: width, height: height, "margin-left": -(width / 2), "margin-top": -(height / 2)})  
-        $("#project-plan-modal").modal("hide");
+        // $("#project-plan-modal").css({width: width, height: height, "margin-left": -(width / 2), "margin-top": -(height / 2)})  
+        // $("#project-plan-modal").modal("hide");
         
         var view = this;
+        view.$(".project-plan-main-link:first").addClass("active");
         view.$(".project-plan-link").click(function(event) {
           view.$("#project-plan").addClass("active");
+          $("html").css({"overflow-y": hidden})
           event.preventDefault();
         });
         view.$(".project-plan-back-link").click(function(event) {
@@ -79,8 +81,10 @@ App.ProjectView = Em.View.extend({
           event.preventDefault();
         });
         view.$(".project-plan-main-link").click(function(event) {
+            view.$(".project-plan-main").scrollTo($(this).attr("href"), {duration: 300});
+            view.$(".project-plan-main-link.active").removeClass("active");
+            view.$(event.target).addClass("active");
             event.preventDefault();
-            $(".project-plan-main").scrollTo($(this).attr("href"), {duration: 300});
         });        
     },
     staticMap: function(){

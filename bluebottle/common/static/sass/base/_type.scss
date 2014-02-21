@@ -196,7 +196,7 @@ abbr[title],
 // Added data-* attribute to help out our tooltip plugin, per https://github.com/twitter/bootstrap/issues/5257
 abbr[data-original-title] {
   	cursor: help;
-  	border-bottom: 1px dotted $base-abbr-border-color;
+  	border-bottom: 1px dotted $type-abbr-border-color;
 }
 
 abbr.initialism {

@@ -115,6 +115,33 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['status'], 'applied')
 
+    def test_task_search_by_status(self):
+        """
+        Ensure we can filter task list by status
+        """
+        self.task1 = TaskFactory.create(
+            status=BB_TASK_MODEL.TaskStatuses.in_progress,
+            author=self.some_project.owner,
+            project=self.some_project,
+        )
+        self.task2 = TaskFactory.create(
+            status=BB_TASK_MODEL.TaskStatuses.open,
+            author=self.another_project.owner,
+            project=self.another_project,
+        )
+
+        self.assertEqual(2, BB_TASK_MODEL.objects.count())
+
+        self.client.login(username=self.some_user.email, password='password')
+
+        response = self.client.get(self.task_url, {'status': 'open'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
+
+        response = self.client.get(self.task_url, {'status': 'in progress'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
+
     def test_task_preview_search(self):
         self.client.login(username=self.some_user.email, password='password')
 

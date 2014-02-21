@@ -117,6 +117,15 @@ MIDDLEWARE_CLASSES = (
 )
 
 
+REST_FRAMEWORK = {
+    # Don't do basic authentication.
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
+
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',

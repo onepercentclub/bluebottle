@@ -61,7 +61,33 @@ App.ProjectView = Em.View.extend({
     didInsertElement: function(){
         this._super();
         this.$('.tags').popover({trigger: 'hover', placement: 'top', width: '100px'});
-    }
+        
+        // project plan
+        var height = $(window).height();
+        var width = $(window).width();
+        this.$(".project-plan-navigation, .project-plan-main").height(height);
+        $("#project-plan-modal").css({width: width, height: height, "margin-left": -(width / 2), "margin-top": -(height / 2)})  
+        $("#project-plan-modal").modal("hide");
+        
+        var view = this;
+        view.$(".project-plan-link").click(function(event) {
+          view.$("#project-plan").addClass("active");
+          event.preventDefault();
+        });
+        view.$(".project-plan-back-link").click(function(event) {
+          view.$("#project-plan").removeClass("active");
+          event.preventDefault();
+        });
+        view.$(".project-plan-main-link").click(function(event) {
+            event.preventDefault();
+            $(".project-plan-main").scrollTo($(this).attr("href"), {duration: 300});
+        });        
+    },
+    staticMap: function(){
+        var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
+        return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
+            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
+    }.property('latitude', 'longitude')    
 });
 
 App.ProjectIndexView = Em.View.extend({

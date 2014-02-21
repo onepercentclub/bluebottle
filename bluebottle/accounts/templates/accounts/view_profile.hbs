@@ -12,12 +12,14 @@
 		                <img {{bindAttr src="getAvatar"}} width="100%" alt="Photo" />
 		            </figure>
 
-		            <h2 class="account-title">{{full_name}}</h2>
+					<div class="account-personal">
+			            <h2 class="account-title">{{full_name}}</h2>
 
-                    {{#link-to "userProfile" classNames="account-edit-link"}}
-                        <span class="flaticon solid settings-1"></span>
-                        Edit profile
-                    {{/link-to }}
+	                    {{#link-to "userProfile" classNames="account-edit-link"}}
+	                        <span class="flaticon solid settings-1"></span>
+	                        Edit profile
+	                    {{/link-to }}
+					</div>
 				</div>
 
 	            <ul class="account-achievements">
@@ -65,19 +67,24 @@
 	                <dl>
 	                    <dt><span class="flaticon solid location-pin-1"></span> {% trans "Location" %}</dt>
 	                    <dd>{{location}}&nbsp;</dd>
-
+					</dl>
+					<dl>
 	                    <dt><span class="flaticon solid tree-1"></span> {% trans "Fav themes" %}</dt>
 	                    <dd>TODO&nbsp;</dd>
-
+					</dl>
+					<dl>
 	                    <dt><span class="flaticon solid earth-1"></span>{% trans "Fav countries" %}</dt>
 	                    <dd>TODO&nbsp;</dd>
-
+					</dl>
+					<dl>
 	                    <dt><span class="flaticon solid stopwatch-1"></span>{% trans "Time available" %}</dt>
 	                    <dd>{{availability}}&nbsp;</dd>
-
+					</dl>
+					<dl>
 	                    <dt><span class="flaticon solid skill-1"></span>{% trans "Expertise" %}</dt>
 	                    <dd>TODO&nbsp;</dd>
-
+					</dl>
+					<dl>
 	                    <dt><span class="flaticon solid tag-2"></span>{% trans "Tags" %}</dt>
 	                    <dd>TODO&nbsp;</dd>
 	                </dl>

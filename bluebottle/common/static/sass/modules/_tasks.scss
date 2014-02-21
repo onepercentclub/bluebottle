@@ -7,19 +7,19 @@
     position: relative;
     margin-top: $base-margin/2;
     margin-bottom: $base-margin/2;
-    background: $gray-lighter;
+    background: $tasks-task-item-bg-color;
     overflow: hidden;
     height: 260px;
     
     a {
         display: block;
-        //border: 1px solid $gray-light;
+        border: 1px solid $gray-light;
 		text-decoration: none;
     }
     
     .task-category {
-        background-color: $color-secondary;
-        color: $white;
+        background-color: $tasks-task-item-task-category-bg-color;
+        color: $tasks-task-item-task-category-color;
         padding: $base-padding/2 $base-padding;
         margin: 0;
         font-size: $font-size-small;
@@ -30,7 +30,7 @@
         position: relative;
         overflow: hidden;
         min-height: 50px;
-        background: $black;
+        background: $tasks-task-item-task-header-bg-color;
         @include transition(all 0.2s ease-out);
         
         .task-title {
@@ -40,12 +40,12 @@
             bottom: 0;
             display: block;
 			padding: $base-padding;
-			background-color: rgba(0, 0, 0, 0.7);
-			color: $white;
+			background-color: $tasks-task-item-task-title-bg-color;
+			color: $tasks-task-item-task-title-color;
 			
 			h3 {
 			    font-size: $base-font-size;
-			    color: $white;
+			    color: $tasks-task-item-task-title-color;
 				padding: 0;
 				margin: 0;
 			}
@@ -79,13 +79,13 @@
     .task-status {
         height: 100px;
         padding: $base-padding/2 $base-padding;
-        background-color: $gray-lighter;
+        background-color: $tasks-task-item-task-status-bg-color;
         display: block;
-        color: $gray-darker;    
+        color: $tasks-task-item-task-status-color;    
     }
     
     .task-meta {
-        color: $gray;
+        color: $tasks-task-item-task-meta-color;
         @include clear;
         text-transform: uppercase;
         @include clear;
@@ -105,16 +105,15 @@
     .task-description {
 		
         display: none;
-        color: $white;
         font-family: $font-family-heavy;
         width: 100%;
         height: 260px;
         position: absolute;
         top: 0;
         padding: $base-padding;
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: $tasks-task-item-task-description-bg-color;
         font-size: $font-size-small;
-        color: $gray-lighter;
+        color: $tasks-task-item-task-description-color;
         overflow: hidden;
         z-index: 100;
         
@@ -124,14 +123,14 @@
             width: 100%;
             bottom: 0;
             left: 0;
-            background-color: $color-secondary;
+            background-color: $tasks-task-item-task-view-bg-color;
             text-transform: uppercase;
             padding: $base-padding/2 $base-padding;
         }
     }
     
     &:hover, &:active {
-        background-color: $black;
+        background-color: $tasks-task-item-hover-bg-color;
         
         .task-image {
             zoom: 3;
@@ -149,34 +148,37 @@
 }
 
 
-.project-owner-actions {
-	@include grid(48,1,1);
-	background: $gray-lighter;
-	padding: $base-padding/2 $base-padding;
-	margin-top: $base-padding;
-	
-	header {
-		@include grid(16,0,1);
-		float: left;
-		
-		h3 {
-			padding-top: $base-padding;
-			font-weight: 600;
-			text-transform: uppercase;
-		}
-	}
-	
-	.btn {
-		margin: $base-padding/2 0 $base-padding/2 $base-padding/2;
-		float: right;
-	}
-	
-}
+//.project-owner-actions {
+//	@include grid(48,1,1);
+//	background: $gray-lighter;
+//	padding: $base-padding/2 $base-padding;
+//	margin-top: $base-padding;
+//	
+//	header {
+//		@include grid(16,0,1);
+//		float: left;
+//		
+//		h3 {
+//			padding-top: $base-padding;
+//			font-weight: 600;
+//			text-transform: uppercase;
+//		}
+//	}
+//	
+//	.btn {
+//		margin: $base-padding/2 0 $base-padding/2 $base-padding/2;
+//		float: right;
+//	}
+//	
+//}
 
 #task-previews {
 	position: relative;
 	padding: $base-padding;
-	background-color: $gray-lighter;
+	background-color: $tasks-task-previews-bg-color;
+	h3 {
+		margin-bottom: $base-margin;
+	}
 	.container {
 		position: relative;
 		border-bottom: 1px solid gray;
@@ -188,7 +190,7 @@
 		position: absolute;
 		bottom: -12px;
 		right: 0;
-		background: $gray-lighter;
+		background: $tasks-task-previews-show-more-bg-color;
 		font-size: $font-size-smallest;
 		padding-left: $base-padding;
 		text-decoration: none;
@@ -202,7 +204,7 @@
 		}
 		.task-member-status {
 			@include grid(8,0,0);
-			background-color: $color-secondary;
+			background-color: $tasks-task-preview-member-status-bg-color;
 			text-align: center;
 			color: white;
 			padding: $base-padding 0;
@@ -227,11 +229,11 @@
 		}
 		.task-theme {
 			font-size: $font-size-small;
-			color: $gray-light;
+			color: $tasks-task-preview-theme-color;
 		}
 		.task-arrow {
 			@include grid(4,0,0);
-			background: $color-secondary;	
+			background: $tasks-task-preview-arrow-bg-color;	
 			font-size: $font-size-largest;
 			color: white;
 			font-weight: bold;
@@ -243,7 +245,7 @@
 			}
 		}
 		.task-status {
-			color: $color-primary;
+			color: $tasks-task-preview-task-status-color;
 		}
 		.task-status, .task-time-needed, .task-deadline {
 			@include grid(16,0,2);

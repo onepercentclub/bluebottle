@@ -16,7 +16,7 @@
         position: relative;
         
        	> a, > span {
-            color: $gray-dark;
+            color: $tabs-tabitem-bg-color;
             display: block;
             overflow: hidden;
             text-decoration: none;
@@ -27,14 +27,14 @@
                 @include transition(all 0.1s ease-out);
                 display: block;
                 float: left;
-                background-color: $gray-dark;
+                background-color: $tabs-tabitem-icon-bg-color;
                 @include border-radius(16px);
                 width: 32px;
                 height: 32px;
                 line-height: 32px;
                 font-family: $font-family-heavy;
                 text-align: center;
-                color: $color-text-light;
+                color: $tabs-tabitem-icon-text-color;
             }
             
             .tab-title {
@@ -52,10 +52,10 @@
             }
             
             &:hover {
-                color: $color-text;
+                color: $tabs-tabitem-hover-text-color;
                 
                 .tab-icon {
-                    background-color: $color-text;
+                    background-color: $tabs-tabitem-hover-icon-text-color;
                 }
                 
             }
@@ -79,21 +79,21 @@
     
     // TODO create only one type for active state: li.is-active
     li.is-active > a, li > a.active, li.is-active > span, li > span.active {
-    	background-color: $white;
-    	border-color: $white;
-    	border-bottom: 6px solid $white;
+    	background-color: $tabs-tabitem-active-bg-color;
+    	border-color: $tabs-tabitem-active-border-color;
+    	border-bottom: 6px solid $tabs-tabitem-active-border-color;
     	
     	.tab-icon {
-            background-color: $color-secondary;
-            color: $white;
+            background-color: $tabs-tabitem-active-icon-bg-color;
+            color: $tabs-tabitem-active-icon-color;
         }
         
         .tab-title {
-            color: $color-secondary;
+            color: $tabs-tabitem-active-title-color;
         }
         
         .tab-subtitle {
-            color: $color-text;
+            color: $tabs-tabitem-active-subtitle-color;
         } 
     }
     
@@ -120,8 +120,8 @@
 	    li > a, li > span {
 	    	display: block;
 		    padding: $base-padding;
-		    color: $gray-light;
-		    background: image-url("steps-back.png") $white no-repeat 100% 50%;
+		    color: $tabs-steps-tabitem-color;
+		    background: image-url("steps-back.png") $tabs-steps-tabitem-bg-color no-repeat 100% 50%;
 		    border: none;
 		    
 		    .flaticon {
@@ -134,35 +134,35 @@
 	    }
 	    
 		li.is-selected > a, li.is-selected > span {
-			background: image-url("steps-back-selected.png") $color-secondary no-repeat 100% 50%;
-			color: $gray-lighter;
+			background: image-url("steps-back-selected.png") $tabs-steps-tabitem-selected-bg-color no-repeat 100% 50%;
+			color: $tabs-steps-tabitem-selected-color;
 			
 			.tab-icon .flaticon:before {
 				content: "\e1ba"; // replace with ok
 			}
 			
 			&:hover, &:active {
-				color: $color-text;
+				color: $tabs-steps-tabitem-selected-hover-color;
 			}
 			
 		}
 	    
 	   	li > a.active, li > span.active  {
-			border-color: $color-secondary;
-			color: $white;
-			background: image-url("steps-back-active.png") $color-secondary no-repeat 100% 50%;
+			border-color: $tabs-steps-tabitem-active-border-color;
+			color: $tabs-steps-tabitem-active-color;
+			background: image-url("steps-back-active.png") $tabs-steps-tabitem-active-color no-repeat 100% 50%;
 			
 			.tab-icon {
-				background-color: $white;
-				color: $black;
+				background-color: $tabs-steps-tabitem-active-icon-bg-color;
+				color: $tabs-steps-tabitem-active-icon-color;
 			}
 			
 			.tab-title {
-				color: $white;
+				color: $tabs-steps-tabitem-active-title-color;
 			}
 			
 			.tab-subtitle {
-				color: $white;
+				color: $tabs-steps-tabitem-active-subtitle-color;
 			} 
 			
 		} 
@@ -170,26 +170,26 @@
 		li.is-inactive > a, li.is-inactive > span {
 			
 			.tab-icon {
-				background-color: $gray-light;
-				color: $gray-lighter;
+				background-color: $tabs-steps-tabitem-inactive-icon-bg-color;
+				color: $tabs-steps-tabitem-inactive-icon-color;
 			}
 			
 			.tab-title {
-				color: $gray-light;
+				color: $tabs-steps-tabitem-inactive-title-color;
 			}
 			
 			.tab-subtitle {
-				color: $gray-light;
+				color: $tabs-steps-tabitem-inactive-subtitle-color;
 			} 
 			
 		}
 		
 		li:last-of-type > a, li:last-of-type > span {
-			background: $white;
+			background: $tabs-steps-tabitem-last-bg-color;
 		}
 		
 		li:last-of-type > a.active, li:last-of-type > span.active {
-			background: $color-secondary;
+			background: $tabs-steps-tabitem-last-active-bg-color;
 		}
     }
 }

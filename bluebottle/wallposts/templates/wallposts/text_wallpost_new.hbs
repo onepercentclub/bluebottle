@@ -9,9 +9,7 @@
 	        <span class="flaticon solid comment-1"></span>
 	        {% trans "Post a new comment on wall" %}
 	    </a>
-	</div>
 
-	<div>
         <div class="wallpost-form">
             <fieldset>
                 <ul>
@@ -26,7 +24,7 @@
                 </ul>
             </fieldset>
 
-            <button class="btn btn-save" {{action 'saveWallPost' target='controller'}}>{% trans "Post" %}</button>
+            <button class="btn btn-primary btn-save" {{action 'saveWallPost' target='controller'}}>{% trans "Post" %}</button>
 
             <button class="btn btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
 

@@ -1,94 +1,591 @@
-/* ========================= Variables ================================== */
+// ========================= Variables ==================================
+// SET YOUR EDITOR TO USING TABS AND TAB SIZE OF 4 FOR PROPER ALIGNMENT
+// OF THE VARIABLES BELOW
 
 
 // Grays
 // --------------------------------
-$black:								#000 !default;	
-$gray-darkest:						#222 !default;		
-$gray-darker:						#444 !default;
-$gray-dark:							#666 !default;
-$gray:								#999 !default;
-$gray-light:						#ccc !default;
-$gray-lighter:						#e9e9e9 !default;
-$white:								#fff !default;
 
+$black                                                     : #000 !default; 
+$gray-darkest                                              : #222 !default;     
+$gray-darker                                               : #444 !default;
+$gray-dark                                                 : #666 !default;
+$gray                                                      : #999 !default;
+$gray-light                                                : #ccc !default;
+$gray-lighter                                              : #e9e9e9 !default;
+$white                                                     : #fff !default;
+                                                       
+// Colors                                                       
+// --------------------------------                             
 
-// Colors
-// --------------------------------
-$color-primary:						#0896ff !default; // light blue
-$color-secondary:					#003580 !default; // dark blue
+$color-primary                                             : #0896ff !default; // light blue
+$color-secondary                                           : #003580 !default; // dark blue
+                                                                   
+$color-error                                               : #b84040 !default;
+$color-success                                             : #5da423 !default;
+$color-deselect                                            : #bfbfbf !default;
+                                                                
+// Social                                                       
+// ----------------------------------                           
+                                                                
+$facebook-blue                                             : #45619d !default;                  
+$twitter-blue                                              : #33b9e2 !default;
+                                                                
+// Typography                                                   
+// --------------------------------                             
+                                                                
+//$font-family                                             : Arial, Helvetica, sans-serif;
+//$font-family-heavy                                       : Arial, Helvetica, sans-serif;  
+//$font-family-bold                                        : Arial, Helvetica, sans-serif;
+                                                                
+                                                                
+$font-family                                               : 'Futura W01 Book', 'Trebuchet MS', Helvetica, Arial, sans-serif;
+$font-family-heavy                                         : 'Futura W02 Heavy', 'Trebuchet MS', Helvetica, Arial, sans-serif;          
+$font-family-bold                                          : 'Futura W01 Bold', 'Trebuchet MS', Helvetica, Arial, sans-serif;   
+$font-family-small                                         : 'Trebuchet MS', Helvetica, Arial, sans-serif;
+                                                                
+$base-font-size                                            : 1em !default;
+$base-font-family                                          : $font-family !default;
+$base-line-height                                          : 1.5em !default;
+                                                                
+                                                                
+// Scaffolding                                                  
+// --------------------------------                             
+                                                                
+$body-background                                           : $white !default;
+$color-heading                                             : $gray-darker !default; // use for text headings
+$color-text                                                : $gray-darker !default; // use for text body
+$color-text-light                                          : #f4f4f4 !default; // use for text on dark
+                                                                
+                                                                
+// Links                                                        
+// --------------------------------                             
+                                                                
+$color-link                                                : $color-secondary !default;
+$color-link-hover                                          : $color-primary !default;
+                                                                
+// Buttons                                                      
+// ---------------------------------                            
+                                                                
+// Grid                                                         
+// ---------------------------------                            
+                                                                
+$grid-columns                                              : 48 !default;
+$min-width                                                 : 980px !default;
+$max-width                                                 : 1200px !default;
+                                                                
+                                                                
+// Component sizing                                             
+// ---------------------------------                            
+$font-size-largest                                         : $base-font-size * 2.5 !default;
+$font-size-larger                                          : $base-font-size * 1.75 !default;
+$font-size-large                                           : $base-font-size * 1.25 !default;
+$font-size-medium                                          : $base-font-size * 1.225 !default;
+$font-size-small                                           : $base-font-size * 0.875 !default;
+$font-size-smallest                                        : $base-font-size * 0.75 !default;
+                                                                
+$base-margin                                               : 1em !default;
+$base-padding                                              : 1em !default;
 
-$color-error:						#b84040 !default;
-$color-success:						#5da423 !default;
-$color-deselect:					#bfbfbf !default;
+// Type                                                     
+// ----------------------------------                           
 
+$type-body-color                                           : $color-text !default;
+$type-dl-border-color                                      : $gray-light !default;
+$type-dt-color                                             : $gray !default;
 
-// Typography
-// --------------------------------
+$type-hr-border-top-color                                  : $gray-light !default;
+$type-hr-border-bottom-color                               : $white !default;
 
-$font-family:						Arial, Helvetica, sans-serif;
-$font-family-heavy:					Arial, Helvetica, sans-serif;	
-$font-family-bold:					Arial, Helvetica, sans-serif;
+$type-abbr-border-color                                    : $gray-light !default;
 
+$type-h1-color                                             : $color-primary !default;
+$type-h1-em-color                                          : $color-secondary !default;
+$type-h2-color                                             : $color-secondary !default;
+$type-h3-color                                             : $color-heading !default;
 
-//$font-family:						'Futura W01 Book', 'Trebuchet MS', Helvetica, Arial, sans-serif;
-//$font-family-heavy:					'Futura W02 Heavy', 'Trebuchet MS', Helvetica, Arial, sans-serif;			
-//$font-family-bold:					'Futura W01 Bold', 'Trebuchet MS', Helvetica, Arial, sans-serif;	
-//$font-family-small:					'Trebuchet MS', Helvetica, Arial, sans-serif;
+$type-blockquote-border-color                              : $gray-lighter !default;
+$type-blockquote-small-color                               : $gray-light !default;
+                                                                
+// Buttons                                                      
+// ----------------------------------                           
+                                                                
+$button-color                                              : $white !default;
+$button-bg-color                                           : $color-secondary !default;
+$button-border-color                                       : darken($color-secondary, 5%) !default;
+                                                                
+$button-active-color                                       : $gray-dark !default;
+$button-active-bg-color                                    : $gray-darkest !default;
+$button-active-border-color                                : $black !default;
+                                                                
+$button-iconed-icon-color                                  : lighten($color-secondary, 5%) !default;
+$button-iconed-icon-bg-color                               : darken($color-secondary, 5%) !default;
+                                                                
+$button-iconed-active-icon-color                           : $gray-darker !default;
+$button-iconed-active-icon-bg-color                        : darken($black, 5%) !default;
+                                                                
+$button-iconed-hover-icon-color                            : $white !default;
+$button-iconed-hover-icon-bg-color                         : #333 !default;
+                                                                
+$button-hover-color                                        : $white !default;
+$button-hover-bg-color                                     : $gray-darker !default;
+$button-hover-border-color                                 : $black !default;
+                                                                
+$button-disabled-border-color                              : $gray-light !default;
+$button-disabled-bg-color                                  : $gray-light !default;
+$button-disabled-color                                     : $gray-lighter !default;
+                                                                
+$button-disabled-icon-bg-color                             : darken($gray-light, 5%) !default;
+$button-disabled-icon-color                                : $gray-lighter !default;
+                                                                
+$button-primary-border-color                               : darken($color-primary, 5%) !default;
+$button-primary-bg-color                                   : $color-primary !default;
+$button-primary-icon-color                                 : lighten($color-primary, 10%) !default;
+$button-primary-icon-bg-color                              : darken($color-primary, 5%) !default;
+                                                                
+// Dropdowns                                                    
+// ----------------------------------                           
+                                                                
+$dropdown-bg-color                                         : $white !default;
+$dropdown-border-color                                     : $color-secondary !default;
+                                                                
+// Forms                                                        
+// --------------------------------                             
+                                                                
+$form-bg-color                                             : $gray-lighter !default;
+$form-input-color                                          : $gray-darker !default;
+$form-input-hover-focus-color                              : $gray-darker !default;
+$form-input-hover-focus-border-color                       : $color-secondary !default;
+$form-input-bg-color                                       : $white !default;
+$form-input-border-color                                   : #bcbcbc !default;
+$form-input-disabled-bg-color                              : $gray-lighter !default;
 
-$base-font-size:					1em !default;
-$base-font-family:					$font-family !default;
-$base-line-height:					1.5em !default;
+$form-legend-bg-color                                      : $white !default;
+$form-legend-strong-color                                  : $color-secondary !default;
 
+$form-fieldset-legend-bg-color                             : $gray-light !default;
+$form-fieldset-legend-strong-color                         : $white !default;                                                                
 
-// Scaffolding
-// --------------------------------
-$body-background:					$white !default;
-$color-heading:						$gray-darker !default; // use for text headings
-$color-text:						$gray-darker !default; // use for text body
-$color-text-light:					#f4f4f4 !default; // use for text on dark
+$form-message-color                                        : $color-text-light !default;
+$form-message-bg-color                                     : $color-secondary !default;
+$form-message-close-color                                  : $color-text-light !default;
+$form-message-close-hover-color                            : $white !default;
+$form-message-error-color                                  : $white !default;
+$form-message-error-bg-color                               : $color-error !default;
 
+$form-tags-color                                           : $white !default;
+$form-tags-bg-color                                        : $color-secondary !default;
+$form-tags-delete-color                                    : $white !default;
+$form-tags-delete-hover-color                              : $color-primary !default;
+                                                                
+$form-radio-select-label-color                             : $white !default;
+$form-radio-select-label-bg-color                          : $gray-light !default;
+$form-radio-select-label-border-color                      : darken($gray-light, 5%) !default;
+$form-radio-select-input-bg-color                          : $color-secondary !default;
+$form-radio-select-input-border-color                      : darken($color-secondary, 5%) !default;
 
-// Links
-// --------------------------------
-$color-link:						$color-secondary !default;
-$color-link-hover:					$color-primary !default;
+$form-select-hover-border-color                            : $color-secondary !default;
+$form-select-error-border-color                            : $color-error !default;
 
+$form-placeholder-color                                    : $gray-light !default;
+                                                                
+// Modules                                                      
+// ----------------------------------                           
+                                                                
+// Carousel                                                     
+// ----------------------------------                           
+                                                                
+$carousel-bg-color                                         : $gray-darkest !default;
+$carousel-nav-section-bg-color                             : $gray-lighter !default;
+$carousel-nav-bg-color                                     : $gray-lighter !default;
+                                                                
+$carousel-nav-item-border-color                            : $white !default;
+$carousel-nav-item-active-bg-color                         : $gray-lighter !default;
+$carousel-nav-item-active-color                            : $white !default;
 
-// Forms
-// --------------------------------
-$input-background:					$white !default;
-$input-border:						#bcbcbc !default;
-$input-disabled-background: 		$gray-lighter !default;
-$form-background:					$gray-lighter !default;
+// Fund
+// ----------------------------------                           
 
+$fund-header-bg-color                                      : $gray-lighter !default; 
+$fund-header-color                                         : $color-heading !default;                                                        
+$fund-empty-icon-color                                     : $gray-lighter !default;
+$fund-empty-legend-color                                   : $color-text !default;
+$fund-empty-legend-strong-color                            : $color-primary !default;
+$fund-empty-hover-icon-color                               : $gray !default;
+$fund-empty-hover-strong-color                             : $color-secondary !default;
 
-// Buttons
-// ---------------------------------
+$fund-total-label-color                                    : $gray !default;
+$fund-total-label-bg-color                                 : $gray-lighter !default;
 
+$fund-total-amount-color                                   : $gray !default;
+$fund-total-amount-bg-color                                : $gray-lighter !default;
 
+$fund-tabs-vertical-selected-bg-color                      : $gray-lighter !default;
 
-// Grid
-// ---------------------------------
-$grid-columns:						48 !default;
-$min-width:							980px !default;
-$max-width:							1200px !default;
+$fund-tab-content-bg-color                                 : $gray-lighter !default;
 
+$thanks-header-bg-color                                    : $gray-lighter !default;
+$thanks-share-link-color                                   : $color-text-light !default;
+$thanks-share-link-hover-color                             : $white !default;
+$thanks-share-link-hover-bg-color                          : $gray-darker !default;
 
-// Component sizing
-// ---------------------------------
-$font-size-largest:					$base-font-size * 2.5 !default;
-$font-size-larger:					$base-font-size * 1.75 !default;
-$font-size-large:					$base-font-size * 1.25 !default;
-$font-size-medium:					$base-font-size * 1.225 !default;
-$font-size-small:					$base-font-size * 0.875 !default;
-$font-size-smallest:				$base-font-size * 0.75 !default;
+$thanks-sidebar-heading-color                              : $color-secondary !default;
+$thanks-sidebar-project-list-title-amount-color            : $gray !default;
 
-$base-margin:						1em !default;
-$base-padding:						1em !default;
+// Home                                                     
+// ----------------------------------                           
+                                                                
+$project-slider-bg-color                                   : $white !default;
+$project-slider-buttons-color                              : $gray-lighter !default;
+$project-slider-buttons-hover-color                        : $color-primary !default;
 
+$home-quotes-bg-color                                      : $gray-lighter !default;
+$home-quotes-title-em-color                                : $color-primary !default;
+$home-quotes-article-bg-color                              : $white !default;
+$home-quotes-article-quote-name-color                      : $color-secondary !default;
+$home-quotes-article-content-color                         : $black !default;
 
-// Social
+$home-impact-list-color                                    : $gray !default;
+$home-impact-list-strong-color                             : $gray-darker !default;
+
+// Projects
 // ----------------------------------
-$facebook-blue:						#45619d !default;					
-$twitter-blue:						#33b9e2 !default;
+
+// project detail
+$projects-project-meta-color                               : $color-secondary !default;
+$projects-project-days-left-color                          : $gray-dark !default;
+$projects-project-days-left-icon-color                     : $gray-light !default;
+$projects-project-fund-amount-color                        : $gray-dark !default;
+$projects-project-fund-amount-slider-bg-color              : $gray-lighter !default;
+$projects-project-fund-amount-slider-progress-color        : $white !default;
+$projects-project-fund-amount-slider-progress-bg-color     : $color-secondary !default;
+$projects-project-fund-amount-control-bg-color             : $color-secondary !default;
+$projects-project-fund-amount-control-currency-color       : $color-text !default;
+$projects-project-fund-amount-control-label-color          : $white !default;
+$projects-project-fund-amount-divided-amount-color         : $gray !default;
+$projects-project-fund-amount-color                        : $gray-light !default;
+$projects-tasks-task-border-color                          : $gray-light !default;
+$projects-tasks-task-bg-color                              : $gray-dark !default;
+$projects-tasks-task-status-bg-color                       : $gray-light !default;
+$projects-tasks-task-status-color                          : $gray-dark !default;
+$projects-tasks-task-content-color                         : $gray-light !default;
+$projects-tasks-task-content-task-name                     : $white !default;
+
+// project - search results
+$projects-project-item-bg-color                            : $gray-lighter !default;
+$projects-project-item-border-color                        : $gray !default;
+$projects-project-item-border-hover-color                  : $black !default;
+$projects-project-item-header-bg-color                     : $black !default;
+$projects-project-item-title-color                         : $white !default;
+$projects-project-item-status-bg-color                     : $gray-lighter !default;
+$projects-project-item-status-color                        : $gray-darker !default;
+$projects-project-item-fund-amount-slider-bg-color         : $white !default;
+$projects-project-item-project-description-color           : $gray-lighter !default;
+$projects-project-item-project-view-bg-color               : $color-secondary !default;
+$projects-project-item-tasks-bg-color                      : $white !default;
+$projects-project-item-tasks-border-color                  : $gray-lighter !default;
+$projects-project-item-tasks-color                         : $gray !default;
+$projects-project-item-tasks-strong-color                  : $gray-darker !default;
+$projects-project-item-tasks-hover-color                   : $gray-darker !default;
+
+// my projects list
+$projects-project-list-bg-color                            : $white !default;
+$projects-project-list-listitem-border-left-right-color    : $white !default;
+$projects-project-list-listitem-border-bottom-color        : $gray-lighter !default;
+$projects-project-list-listitem-bg-color                   : $gray-lighter !default;
+$projects-project-list-listitem-project-title-color        : $color-heading !default;
+$projects-project-list-listitem-project-subtitle-color     : $gray !default;
+$projects-project-list-listitem-project-meta-color         : $gray !default;
+$projects-project-list-listitem-project-action-color       : $gray !default;
+$projects-project-list-listitem-highlight-color            : $gray-lighter !default;
+$projects-project-list-listitem-highlight-header-color     : $color-primary !default;
+$projects-project-list-listitem-first-top-border-color     : $white !default;
+$projects-project-list-listitem-last-bottom-border-color   : $white !default;
+
+// Media                                                        
+// ----------------------------------                           
+                                                                
+$media-photo-viewer-image-border-color                     : $white !default;
+$media-photo-viewer-image-hover-border-color               : $color-primary !default;
+$media-photo-viewer-more-color                             : $white !default;
+$media-photo-viewer-more-bg-color                          : color-secondary !default;
+                                                                
+// Members                                                      
+// ----------------------------------                           
+                                                                
+$members-member-avatar-bg-color                            : $gray-lighter !default;
+$members-member-avatar-color                               : $color-text-light !default;
+$members-member-avatar-color                               : $color-text-light !default;
+$members-member-organisation-created-color                 : $gray !default;
+$members-member-list-title-color                           : $color-text-light !default;
+$members-member-list-title-em-color                        : $gray-light !default;
+$members-member-list-supporters-member-color               : $color-text !default;
+$members-member-list-supporters-member-strong-color        : $color-primary !default;
+$members-member-list-fundraisers-member-image-border-color : $white !default;
+$members-member-list-fundraisers-member-title-color        : $color-secondary !default;
+$members-member-list-fundraisers-fund-amount-color         : $gray !default;
+$members-member-list-fundraisers-fund-amount-strong-color  : $gray-darker !default;
+$members-member-list-fundraisers-become-color              : $color-primary !default;
+
+// Modals                                                       
+// ----------------------------------                           
+                                                                
+$modal-backdrop-bg-color                                   : $black !default;
+$modal-backdrop-opacity                                    : 0.85 !default;
+$modal-bg-color                                            : $white !default;
+$modal-close-color                                         : $gray !default;
+$modal-close-bg-color                                      : $gray-lighter !default;
+$modal-close-hover-color                                   : $gray-dark !default;
+$modal-header-color                                        : $color-primary !default;
+$modal-footer-bg-color                                     : $gray-lighter !default;
+$modal-footer-link-color                                   : $color-secondary !default;
+$modal-footer-link-hover-color                             : $color-text !default;
+                                                                
+// Popovers                                                     
+// ----------------------------------                           
+                                                                
+$popover-bg-color                                          : $gray-lighter !default;
+$popover-border-color                                      : $gray-lighter !default;
+$popover-title-color                                       : $color-primary !default;
+$popover-content-color                                     : $color-text !default;
+$popover-arrow-color                                       : $gray-lighter !default;
+                                                                
+// Reactions                                                    
+// ----------------------------------                           
+                                                                
+$reactions-reaction-form-bg-color                          : $gray-lighter !default;
+$reactions-reaction-form-avatar-border-color               : $form-input-border-color !default;
+$reactions-selected-avatar-border-color                    : $form-input-border-color !default;
+                                                                
+// Tables                                                       
+// -----------------------------------                          
+                                                                
+$table-cell-border-color                                   : $gray-light !default;
+
+// Static                                                           
+// -----------------------------------                          
+$static-page-nav-border-color                              : $gray-lighter !default;        
+$static-page-nav-heading-color                             : $color-heading !default;       
+$static-page-nav-list-border-top-color                     : $white !default;       
+$static-page-nav-list-hover-link-color                     : $color-text !default;      
+$static-page-nav-link-hover-color                          : $white !default;       
+$static-page-nav-link-hover-bg-color                       : $color-secondary !default;     
+                                                        
+// Tabs                                                         
+// -----------------------------------                          
+                                                                
+$tabs-tabitem-bg-color                                     : $gray-dark !default;
+$tabs-tabitem-icon-bg-color                                : $gray-dark !default;
+$tabs-tabitem-icon-text-color                              : $color-text-light !default;
+$tabs-tabitem-hover-text-color                             : $color-text !default;
+$tabs-tabitem-hover-icon-text-color                        : $color-text !default;
+$tabs-tabitem-active-bg-color                              : $white !default;
+$tabs-tabitem-active-border-color                          : $white !default;
+$tabs-tabitem-active-icon-bg-color                         : $color-secondary !default;
+$tabs-tabitem-active-icon-color                            : $white !default;
+$tabs-tabitem-active-title-color                           : $color-secondary !default;
+$tabs-tabitem-active-subtitle-color                        : $color-text !default;
+
+$tabs-steps-tabitem-color                                  : $gray-light !default;
+$tabs-steps-tabitem-bg-color                               : $white !default;
+$tabs-steps-tabitem-hover-active-color                     : $gray !default;
+$tabs-steps-tabitem-selected-bg-color                      : $color-secondary !default;
+$tabs-steps-tabitem-selected-color                         : $gray-lighter !default;
+$tabs-steps-tabitem-selected-hover-color                   : $color-text !default;
+$tabs-steps-tabitem-active-color                           : $white !default;
+$tabs-steps-tabitem-active-border-color                    : $color-secondary !default;
+$tabs-steps-tabitem-active-bg-color                        : $color-secondary !default;
+$tabs-steps-tabitem-active-icon-color                      : $black !default;
+$tabs-steps-tabitem-active-icon-bg-color                   : $white !default;
+$tabs-steps-tabitem-active-title-color                     : $white !default;
+$tabs-steps-tabitem-active-subtitle-color                  : $white !default;
+$tabs-steps-tabitem-inactive-icon-color                    : $gray-light !default;
+$tabs-steps-tabitem-inactive-icon-bg-color                 : $gray-lighter !default;
+$tabs-steps-tabitem-inactive-title-color                   : $gray-light !default;
+$tabs-steps-tabitem-inactive-subtitle-color                : $gray-light !default;
+$tabs-steps-tabitem-last-bg-color                          : $white !default;
+$tabs-steps-tabitem-last-active-bg-color                   : $color-secondary !default;
+                                                                
+// Tasks                                                        
+// -----------------------------------                          
+                                                                
+$tasks-task-item-bg-color                                  : $gray-lighter !default;
+$tasks-task-item-task-category-color                       : $white !default;
+$tasks-task-item-task-category-bg-color                    : $color-secondary !default;
+$tasks-task-item-task-header-bg-color                      : $black !default;
+$tasks-task-item-task-title-bg-color                       : rgba(0, 0, 0, 0.7) !default;
+$tasks-task-item-task-title-color                          : $white !default;
+$tasks-task-item-task-status-color                         : $gray-darker !default;
+$tasks-task-item-task-status-bg-color                      : $gray-lighter !default;
+$tasks-task-item-task-meta-color                           : $gray !default;
+$tasks-task-item-task-description-color                    : $gray-lighter !default;
+$tasks-task-item-task-description-bg-color                 : rgba(0, 0, 0, 0.7) !default;
+$tasks-task-item-task-view-bg-color                        : $color-secondary !default;
+$tasks-task-item-hover-bg-color                            : $black !default;
+
+$tasks-task-previews-bg-color                              : $gray-lighter !default;
+$tasks-task-previews-show-more-bg-color                    : $gray-lighter !default;
+$tasks-task-preview-member-status-bg-color                 : $color-secondary !default;
+$tasks-task-preview-theme-color                            : $gray-dark !default;
+$tasks-task-preview-arrow-bg-color                         : $color-secondary !default;
+$tasks-task-preview-task-status-color                      : $color-primary !default;
+
+$tasks-task-detail-bg-color                                : $gray-darkest !default;
+$tasks-task-detail-color                                   : $white !default;
+$tasks-task-detail-headers-color                           : $white !default;
+$tasks-task-detail-dl-border-bottom                        : $gray-darker !default;
+$tasks-task-detail-project-color                           : $gray !default;
+$tasks-task-detail-task-badge-border-color                 : $white !default;
+$tasks-task-detail-task-status-bg-color                    : $color-primary !default;
+$tasks-task-detail-read-more-color                         : $gray !default;
+$tasks-task-detail-read-more-bg-color                      : $gray-darkest !default;
+$tasks-task-detail-task-meta-color                         : $gray !default;
+$tasks-task-detail-task-files-file-border-bottom-color     : $gray !default;
+$tasks-task-detail-task-files-file-meta-color              : $gray !default;
+
+$tasks-task-detail-members-bg-color                        : $gray-darker !default;
+
+$tasks-task-detail-task-action-icon-color                  : $white !default;
+
+$tasks-task-detail-wallposts-bg-color                      : $gray-light !default;
+$tasks-task-detail-wallposts-color                         : $black !default;
+$tasks-task-detail-wallposts-action-border-color           : $gray !default;
+$tasks-task-detail-wallposts-title-author-color            : $color-primary !default;
+
+
+// Wallposts                                                    
+// -----------------------------------                          
+                                                                
+$wallposts-bg-color                                        : $white !default;
+$wallposts-task-file-author-link-color                     : $gray-dark !default;
+$wallposts-action-border-color                             : $gray-light !default;
+
+$wallposts-post-update-color                               : $color-primary !default;
+$wallposts-post-comment-color                              : $color-secondary !default;
+
+$wallposts-form-tabs-active-bg-color                       : $gray-dark !default;
+$wallposts-form-tabs-active-color                          : $white !default;
+$wallposts-form-upload-button-color                        : $white !default;
+
+$wallposts-wallpost-member-function-bg-color               : $gray-lighter !default;
+$wallposts-wallpost-member-function-color                  : $white !default;
+$wallposts-wallpost-author-color                           : $color-primary !default;
+$wallposts-wallpost-timestamp-color                        : $gray !default;
+$wallposts-wallpost-title-color                            : $black !default;
+$wallposts-wallpost-system-bg-color                        : $color-primary !default;
+$wallposts-wallpost-important-border-color                 : $color-primary !default;
+$wallposts-wallpost-important-author-color                 : $color-secondary !default;
+$wallposts-wallpost-important-title-color                  : $color-primary !default;
+$wallposts-wallpost-important-buttons-bg-color             : $color-primary !default;
+$wallposts-wallpost-important-buttons-color                : $white !default;
+$wallposts-wallpost-file-link-color                        : $gray !default;
+                                                                
+// Layout                                                       
+// -----------------------------------                          
+                                                                
+// Footer                                                       
+// -----------------------------------                          
+                                                                
+$footer-bg-color                                           : $gray-lighter !default;
+$footer-heading-color                                      : $gray-darker !default;
+$footer-content-color                                      : $gray !default;
+
+$footer-menu-color                                         : $gray !default;
+$footer-menu-link-color                                    : $gray !default;
+$footer-menu-link-hover-color                              : $gray-darker !default;
+
+$footer-social-links-bg-color                              : $gray !default;
+$footer-social-links-hover-bg-color                        : $color-text !default;
+$footer-social-links-icon-color                            : $white !default;
+
+$footer-copyright-bg-color                                 : $black !default;
+$footer-copyright-color                                    : $white !default;
+$footer-copyright-link-color                               : $gray !default;
+$footer-copyright-link-hover-color                         : $gray-lighter !default;
+$footer-copyright-link-feedback-color                      : $color-secondary !default;
+
+// Header
+// -----------------------------------
+
+$header-bg-color                                           : $black !default;
+
+$header-nav-main-color                                     : #bfbfbf !default;
+$header-nav-main-navitem-border-color                      : $black !default;
+$header-nav-main-navitem-border-bottom-color               : #393939 !default;
+$header-nav-main-navitem-active-border-color               : #393939 !default;
+$header-nav-main-navitem-active-border-bottom-color        : $gray-darkest !default;
+$header-nav-main-navitem-active-color                      : $white !default;
+$header-nav-main-navitem-active-bg-color                   : $gray-darkest !default;
+
+$header-nav-actions-color                                  : $white !default;
+
+$header-nav-signup-login-color                             : $color-deselect !default;
+$header-nav-signup-login-active-color                      : $color-text !default;
+$header-nav-signup-login-active-bg-color                   : $white !default;
+$header-nav-signup-color                                   : $white !default;
+$header-nav-signup-bg-color                                : $color-primary !default;
+
+$header-nav-login-color                                    : $white !default;
+$header-nav-login-bg-color                                 : $color-secondary !default;
+
+$header-nav-language-link-color                            : $gray-light !default;
+$header-nav-language-link-hover-color                      : $white !default;
+$header-nav-language-link-hover-border-color               : $white !default;
+$header-nav-language-link-active-color                     : $black !default;
+$header-nav-language-link-active-bg-color                  : $gray-light !default;
+$header-nav-language-switch-color                          : $white !default;
+$header-nav-language-switch-bg-color                       : $color-secondary !default;
+$header-nav-language-switch-link-color                     : $white !default;
+$header-nav-language-switch-link-hover-color               : $black !default;
+$header-nav-language-switch-link-hover-border-color        : $black !default;
+$header-nav-language-switch-link-active-color              : $color-secondary !default;
+$header-nav-language-switch-link-active-bg-color           : $white !default;
+$header-nav-language-switch-link-active-hover-bg-color     : $black !default;
+
+$header-nav-member-dropdown-color                          : $white !default;
+$header-nav-member-dropdown-image-border-color             : $black !default;
+$header-nav-member-dropdown-menu-bg-color                  : $white !default;
+$header-nav-member-dropdown-menu-border-color              : $color-secondary !default;
+$header-nav-member-dropdown-menu-link-border-color         : $color-secondary !default;
+$header-nav-member-dropdown-menu-link-color                : $gray-darker !default;
+$header-nav-member-dropdown-menu-link-hover-color          : $color-secondary !default;
+$header-nav-member-hover-image-border-color                : $color-secondary !default;
+$header-nav-member-hover-dropdown-bg-color                 : $white !default;
+$header-nav-member-hover-dropdown-color                    : $gray-darker !default;
+$header-nav-member-hover-dropdown-border-color             : $color-secondary !default;
+$header-nav-member-hover-dropdown-icon-color               : $color-secondary !default;
+
+$header-nav-cart-count-color                               : $white !default;
+$header-nav-cart-count-bg-color                            : $color-primary !default;
+$header-nav-cart-link-color                                : $color-primary !default;
+$header-nav-cart-link-hover-color                          : $white !default;
+
+// Accounts
+// -----------------------------------
+
+$account-header-bg-color                                   : $gray-lighter !default;
+$account-header-title-color                                : $gray-darker !default;
+$account-header-edit-link-color                            : $gray !default;
+$account-header-edit-link-hover-color                      : $gray-darkest !default;
+$account-header-avatar-border-color                        : $gray !default;
+
+$account-body-bg-color                                     : $white !default;
+
+$account-about-header-color                                : $color-primary !default;
+
+$account-details-listitem-border-color                     : $gray-light !default;
+
+$account-statistics-bg-color                               : $white !default;
+$account-statistics-color                                  : $gray-dark !default;
+$account-statistics-header-title-color                     : $color-primary !default;
+$account-statistics-link-color                             : $gray !default;
+$account-statistics-link-hover-color                       : $gray-darker !default;
+
+$account-statistics-table-even-row-bg-color                : $white !default;
+$account-statistics-table-odd-row-bg-color                 : $gray-lighter !default;
+
+$account-statistics-pagination-link-color                  : $gray !default;
+$account-statistics-pagination-link-hover-color            : $gray-darker !default;
+$account-statistics-pagination-border-color                : $gray-lighter !default;
+$account-statistics-pagination-border-hover-color          : $gray-darker !default;
+$account-statistics-pagination-icon-color                  : $gray-darkest !default;

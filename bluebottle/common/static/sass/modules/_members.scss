@@ -18,8 +18,8 @@
             border-width: 1px;
             border-style: solid;
             border-color: transparent;
-            background-color: $gray-lighter;
-            color: $color-text-light;
+            background-color: $members-member-avatar-bg-color;
+            color: $members-member-avatar-color;
             vertical-align: middle;
         }
         
@@ -27,15 +27,16 @@
     
     .member-name {
         @include transition(all 0.2s ease-out);
-        display: inline-block;
+//        display: inline-block;
         text-transform: uppercase;
         font-family: $font-family-heavy;
+		
     }
     
     .member-organisation, .member-created {
         font-size: $font-size-smallest;
         display: block;
-        color: $gray;
+        color: $members-member-organisation-created-color;
         font-style: normal;
     }
 	.member-created {
@@ -51,7 +52,7 @@
     position: relative;
     margin: 0;
     padding: 0;
-    white-space: nowrap;
+//    white-space: nowrap;
 
     li {
         @include resetlist;
@@ -65,12 +66,12 @@
             font-family: $font-family-heavy;
             margin: 0;
             padding: $base-padding/4 0;
-            color: $color-text-light;
+            color: $members-member-list-title-color;
             text-transform: uppercase;
             
             em {
                 font-family: $base-font-family;
-                color: $gray-light;
+                color: $members-member-list-title-em-color;
             }
         }
 
@@ -84,7 +85,6 @@
         }
 
         &.member-initiator {
-//            @include grid(14,0,1);
         
             h4 {
                 position: relative;
@@ -108,11 +108,11 @@
         }
         
         &.member-fundraisers {
-//            @include grid(14,0,1);
+            @include grid(14,0,1);
         }
         
         &.member-supporters {
-//            @include grid(20,1,0);
+            @include grid(20,1,0);
             margin-right: 0;   
             float: right;
         }
@@ -127,7 +127,7 @@
             .member {
                 width: 45px;
                 height: 45px;
-                color: $color-text;
+                color: $members-member-list-supporters-member-color;
                 vertical-align: middle;
                 text-align: center;
                 text-transform: uppercase;
@@ -153,7 +153,7 @@
 				}
 				
                 strong {
-                    color: $color-primary;
+                    color: $members-member-list-supporters-member-strong-color;
                 }
         
                 em {
@@ -193,7 +193,7 @@
 				margin-bottom: $base-margin;
 	            
 	            img { 
-	            	border: 1px solid $white;
+	            	border: 1px solid $members-member-list-fundraisers-member-image-border-color;
 	            }
             }
             
@@ -204,7 +204,7 @@
             
             .fundraiser-title {
 	            font-size: $font-size-large;
-            	color: $color-secondary;
+            	color: $members-member-list-fundraisers-member-title-color;
 	            font-family: $font-family-heavy;
             }
             
@@ -215,11 +215,11 @@
             
             .fund-amount {
             	margin-top: $base-margin;
-	            color: $gray;
+	            color: $members-member-list-fundraisers-fund-amount-color;
 	            font-size: $font-size-small;
 	            
 	            strong {
-		            color: $gray-darker;
+		            color: $members-member-list-fundraisers-fund-amount-strong-color;
 	            }
 	            
 	            .amount-donated {
@@ -252,7 +252,7 @@
             font-family: $font-family-heavy;
             text-transform: uppercase;
             display: inline-block;
-            color: $color-primary;
+            color: $members-member-list-fundraisers-become-color;
             padding-right: 16px;
             background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAALCAYAAABCm8wlAAAAfElEQVQoz2P4nziLAYgNgXgfEItD+XAMImyA+D0Q/wfi60Asia5gPVQShm8AsRSyAk4g3oGm6BYQy8AUgDA7EG9DU3QHiOWQHcQDxG/RFO1FNmErmuRdmAkcQLwdixtkYW5YjSZ5E4ilkX1hBMRv8IUDCOsC8X4glkAPSQDpL9be9X9n1gAAAABJRU5ErkJggg==') transparent no-repeat 100% 50%;
             

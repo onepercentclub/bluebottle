@@ -118,7 +118,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
         // TODO: Use hbs template for popups.
         var popupView = App.ProjectMapPopupView.create();
-        var template = Ember.Handlebars.compile('{{view App.ProjectMapPopupView}}');
+        // var template = Ember.Handlebars.compile('{{view App.ProjectMapPopupView}}');
 
         var template = Handlebars.compile(view.info_box_template);
         var title = project.get('title');

@@ -149,7 +149,8 @@ class MediaWallPostPhotoDetail(RetrieveUpdateDeleteAPIView):
 
 
 class ReactionList(ListCreateAPIView):
-    model = Reaction
+    # model = Reaction
+    queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     paginate_by = 10

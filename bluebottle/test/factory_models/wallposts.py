@@ -9,12 +9,11 @@ class TextWallPostFactory(factory.DjangoModelFactory):
 
 
 	content_object = factory.SubFactory(ProjectFactory)
-	# author = factory.SubFactory(BlueBottleUserFactory)
-	# editor = factory.SubFactory(BlueBottleUserFactory)
-	# deleted = False
-	# ip_address = "127.0.0.1"
-	# text = factory.Sequence(lambda n: 'Text Wall Post {0}'.format(n))
-    #
+	author = factory.SubFactory(BlueBottleUserFactory)
+	editor = factory.SubFactory(BlueBottleUserFactory)
+	ip_address = "127.0.0.1"
+	text = factory.Sequence(lambda n: 'Text Wall Post {0}'.format(n))
+
 
     # author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), related_name="%(class)s_wallpost", blank=True, null=True)
     # editor = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True, null=True, help_text=_("The last user to edit this wallpost."))

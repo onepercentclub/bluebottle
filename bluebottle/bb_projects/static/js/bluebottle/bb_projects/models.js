@@ -115,7 +115,7 @@ App.Project = DS.Model.extend({
 
 
 App.ProjectPhase = DS.Model.extend({
-    url: 'projects/phases',
+    url: 'bb_projects/phases',
     name: DS.attr('string'),
     description: DS.attr('string'),
     sequence: DS.attr('number'),
@@ -125,7 +125,7 @@ App.ProjectPhase = DS.Model.extend({
 });
 
 App.ProjectPreview = App.Project.extend({
-    url: 'projects/previews',
+    url: 'bb_projects/previews',
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
     pitch: DS.attr('string'),
@@ -173,13 +173,13 @@ App.ProjectDonation = DS.Model.extend({
 
 
 App.Theme = DS.Model.extend({
-    url:'projects/themes',
+    url:'bb_projects/themes',
     name: DS.attr('string')
 });
 
 
 App.UsedTheme = App.Theme.extend({
-    url: 'projects/used_themes'
+    url: 'bb_projects/used_themes'
 });
 
 /* Project Manage Models */

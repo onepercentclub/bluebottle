@@ -31,8 +31,12 @@ class TaskModule(DashboardModule):
         super(TaskModule, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
-
+        #import pdb;pdb.set_trace()
+        try:
+            qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+        except:
+            qs = []
+            
         self.children = qs[:self.limit]
         for c in self.children:
             c.admin_url = reverse('admin:{0}_{1}_change'.format(

@@ -47,7 +47,7 @@ class TaskApiIntegrationTests(TestCase):
         # Now let's create a task.
         some_task_data = {'project': self.some_project.slug, 'title': 'A nice task!',
                           'description': 'Well, this is nice', 'time_needed': 5, 'skill': '%d' % self.skill1.id,
-                          'location': 'Overthere', 'deadline' : future_date, 'end_goal': 'World peace'}
+                          'location': 'Overthere', 'deadline' : future_date}
         response = self.client.post(self.task_url, some_task_data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -57,7 +57,7 @@ class TaskApiIntegrationTests(TestCase):
         # Create a task for a project you don't own should fail...
         another_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
                           'description': 'Wie kan in engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill2.id,
-                          'location': 'Tiel', 'deadline' : future_date, 'end_goal': 'World peace'}
+                          'location': 'Tiel', 'deadline' : future_date}
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
@@ -72,7 +72,7 @@ class TaskApiIntegrationTests(TestCase):
         # Another user that owns another project can create a task for that.
         another_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
                           'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill3.id,
-                          'location': 'Tiel', 'deadline' : future_date, 'end_goal': 'World peace'}
+                          'location': 'Tiel', 'deadline' : future_date}
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], another_task_data['title'])
@@ -81,7 +81,7 @@ class TaskApiIntegrationTests(TestCase):
         # Because we have a nesting here we should properly encode it as json
         third_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
                            'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill4.id,
-                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace'}
+                           'location': 'Tiel', 'deadline': str(future_date)}
         response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], third_task_data['title'])
@@ -104,7 +104,7 @@ class TaskApiIntegrationTests(TestCase):
         # let's create a task.
         some_task_data = {'project': self.some_project.slug, 'title': 'A nice task!',
                           'description': 'Well, this is nice', 'time_needed': 5, 'skill': '%d' % self.skill1.id,
-                          'location': 'Overthere', 'deadline': future_date, 'end_goal': 'World peace'}
+                          'location': 'Overthere', 'deadline': future_date}
         response = self.client.post(self.task_url, some_task_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 

@@ -33,8 +33,7 @@ class TaskPreviewList(generics.ListAPIView):
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text) |
-                           Q(end_goal__icontains=text))
+                           Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 
@@ -48,7 +47,7 @@ class TaskPreviewList(generics.ListAPIView):
         return qs.filter(project__status__viewable=True)
 
 
-class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
+class TaskList(generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
     permission_classes = (IsProjectOwnerOrReadOnly,)
@@ -64,8 +63,7 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text) |
-                           Q(end_goal__icontains=text))
+                           Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 

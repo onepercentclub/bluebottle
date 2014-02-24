@@ -146,7 +146,7 @@ App.ProjectSearch = DS.Model.extend({
 
 // TODO: Refactor App.DonationPreview to ProjectSupporter
 App.DonationPreview = DS.Model.extend({
-    url: 'projects/supporters',
+    url: 'bb_projects/supporters',
 
     project: DS.belongsTo('App.ProjectPreview'),
     member: DS.belongsTo('App.UserPreview'),
@@ -159,7 +159,7 @@ App.DonationPreview = DS.Model.extend({
 
 
 App.ProjectDonation = DS.Model.extend({
-    url: 'projects/donations',
+    url: 'bb_projects/donations',
 
     member: DS.belongsTo('App.UserPreview'),
     amount: DS.attr('number'),
@@ -185,7 +185,7 @@ App.UsedTheme = App.Theme.extend({
 /* Project Manage Models */
 
 App.MyProjectBudgetLine = DS.Model.extend({
-    url: 'projects/budgetlines/manage',
+    url: 'bb_projects/budgetlines/manage',
 
     project: DS.belongsTo('App.MyProject'),
     description: DS.attr('string'),
@@ -201,7 +201,7 @@ App.BudgetLine = DS.Model.extend({
 
 
 App.MyProject = App.Project.extend({
-    url: 'projects/manage',
+    url: 'bb_projects/manage',
 
     country: DS.belongsTo('App.Country'),
 

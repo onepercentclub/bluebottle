@@ -35,11 +35,7 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
     # Limit the view to only the organizations the current user is member of
     def get_queryset(self):
-        org_ids = OrganizationMember.objects.filter(
-            user=self.request.user).values_list('organization_id', flat=True).all()
-        queryset = super(ManageOrganizationList, self).get_queryset()
-        queryset = queryset.filter(id__in=org_ids)
-        return queryset
+        return ORGANIZATION_MODEL.objects.filter(members__user=self.request.user)
 
     def post_save(self, obj, created=False):
         if created:

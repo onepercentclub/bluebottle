@@ -15,6 +15,6 @@ urlpatterns = patterns(
     url(r'^photos/$', MediaWallPostPhotoList.as_view(), name='mediawallpost_photo_list'),
     url(r'^photos/(?P<pk>\d+)$', MediaWallPostPhotoDetail.as_view(), name='mediawallpost_photo_list'),
 
-    url(r'^reactions/$', ReactionList.as_view(), name='wallpost_reaction_list'),
+    url(r'^reactions$', ReactionList.as_view(), name='wallpost_reaction_list'),
     url(r'^reactions/(?P<pk>\d+)$', ReactionDetail.as_view(), name='wallpost_reaction_detail'),
 )

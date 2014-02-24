@@ -6,20 +6,23 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
 from bluebottle.utils.tests import UserTestsMixin
-
+from bluebottle.test.factory_models.wallposts import TextWallPostFactory
 from bluebottle.mail import send_mail
-from bluebottle.bb_projects.tests import ProjectWallPostTestsMixin
+# from bluebottle.bb_projects.tests import ProjectWallPostTestsMixin
 from .models import Reaction
 
 
-class WallPostReactionApiIntegrationTest(ProjectWallPostTestsMixin, TestCase):
+class WallPostReactionApiIntegrationTest(TestCase): #ProjectWallPostTestsMixin
     """
     Integration tests for the Project Media WallPost API.
     """
 
     def setUp(self):
-        self.some_wallpost = self.create_project_text_wallpost()
-        self.another_wallpost = self.create_project_text_wallpost()
+        # self.some_wallpost = self.create_project_text_wallpost()
+        # self.another_wallpost = self.create_project_text_wallpost()
+        self.some_wallpost = TextWallPostFactory.create(text="some wallpost are good")
+        self.another_wallpost = TextWallPostFactory.create(text="another good wallpost")
+
         self.some_user = self.create_user()
         self.another_user = self.create_user()
         self.wallpost_reaction_url = '/api/wallposts/reactions/'
@@ -201,7 +204,7 @@ class WallPostReactionApiIntegrationTest(ProjectWallPostTestsMixin, TestCase):
         self.assertEqual(len(response.data['reactions']), 1)
 
 
-class WallPostApiRegressionTests(ProjectWallPostTestsMixin, UserTestsMixin, TestCase):
+class WallPostApiRegressionTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
     """
     Integration tests for the Project Media WallPost API.
     """
@@ -244,7 +247,7 @@ class WallPostApiRegressionTests(ProjectWallPostTestsMixin, UserTestsMixin, Test
         self.assertEqual(escaped_reaction_text, response.data['text'])
 
 
-class WallpostMailTests(ProjectWallPostTestsMixin, UserTestsMixin, TestCase):
+class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
     def setUp(self):
         self.user_a = self.create_user(email='a@example.com')
         self.user_b = self.create_user(email='b@example.com')

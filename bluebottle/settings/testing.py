@@ -4,6 +4,7 @@ from .secrets import *
 
 INSTALLED_APPS += (
     'bluebottle.test',
+    'django_extensions',
 )
 
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

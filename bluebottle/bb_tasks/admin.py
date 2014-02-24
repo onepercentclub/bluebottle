@@ -10,23 +10,27 @@ BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()
 
 
-class TaskMemberAdminInline(admin.StackedInline):
-    model = TaskMember
-
-    raw_id_fields = ('member', )
-    readonly_fields = ('created', )
-    fields = readonly_fields + ('member', 'status', 'motivation')
-    extra = 0
+class TaskMemberInline(admin.StackedInline):
+    model = BB_TASK_MODEL.members.through
 
 
-class TaskFileAdminInline(admin.StackedInline):
-    model = TaskFile
+class TaskFileInLine(admin.StackedInline):
+    model = BB_TASK_MODEL.files.through
 
-    raw_id_fields = ('author', )
-    readonly_fields = ('created', )
-    fields = readonly_fields + ('author', 'file')
-    extra = 0
 
+# class TaskMemberAdmin(admin.StackedInline):
+#     raw_id_fields = ('member', )
+#     readonly_fields = ('created', )
+#     fields = readonly_fields + ('member', 'status', 'motivation')
+#     extra = 0
+#
+#
+# class TaskFileAdmin(admin.StackedInline):
+#     raw_id_fields = ('author', )
+#     readonly_fields = ('created', )
+#     fields = readonly_fields + ('author', 'file')
+#     extra = 0
+#
 
 class TaskForm(ModelForm):
     owner = ModelChoiceField(queryset=BB_USER_MODEL.objects.order_by('email'))
@@ -39,7 +43,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'created'
 
-    inlines = (TaskMemberAdminInline, TaskFileAdminInline, )
+    inlines = (TaskMemberInline, TaskFileInLine, )
 
     raw_id_fields = ('author', 'project')
     list_filter = ('status', )

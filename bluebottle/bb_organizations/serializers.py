@@ -26,16 +26,14 @@ class OrganizationDocumentSerializer(serializers.ModelSerializer):
 class ManageOrganizationSerializer(OrganizationSerializer):
     slug = serializers.SlugField(required=False)
 
-    documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', read_only=True)
+    # documents = OrganizationDocumentSerializer(many=True, source='organizationdocument_set', read_only=True)
 
     name = serializers.CharField(required=True)
-    description = serializers.CharField(required=False)
     website = URLField(required=False)
     email = serializers.EmailField(required=False)
     twitter = serializers.CharField(required=False)
     facebook = serializers.CharField(required=False)
     skype = serializers.CharField(required=False)
-    legal_status = serializers.CharField(required=False)
 
     class Meta:
         model = ORGANIZATION_MODEL

@@ -8,5 +8,9 @@ install:
   - "pip install --upgrade setuptools --use-mirrors"
   - "pip install nose"
 
+before_script:
+  - npm install
+
 script:
   - python setup.py test
+  - grunt travis --verbose # add --force to overlook JS test failures

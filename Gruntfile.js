@@ -75,6 +75,7 @@ module.exports = function (grunt) {
           'bluebottle/common/static/js/vendor/ember-v1.0.0.js',
           'bluebottle/common/static/js/vendor/ember-data-v0.14.js',
           'bluebottle/common/static/js/vendor/ember-data-drf2-adapter.js',
+          'bluebottle/common/static/js/vendor/ember-meta.js',
           'bluebottle/common/static/js/plugins/ember.hashbang.js',
           'bluebottle/common/static/js/vendor/globalize.js',
           'bluebottle/common/static/jsi18n/en-us/*.js',

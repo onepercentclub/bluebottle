@@ -31,7 +31,10 @@ class TaskModule(DashboardModule):
         super(TaskModule, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+        try:
+            qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+        except:
+            qs = []
 
         self.children = qs[:self.limit]
         for c in self.children:

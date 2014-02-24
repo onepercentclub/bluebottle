@@ -32,7 +32,7 @@ pavlov.specify("Task File model unit tests", function() {
 
         it("should have some properties", function () {
             build('taskFile').then(function(taskFile) {
-                assert(taskFile.url).equals('tasks/files');
+                assert(taskFile.url).equals('bb_tasks/files');
                 assert(taskFile.get('title')).equals('Death Star Blueprints');
                 assert(taskFile.get('file')).equals('deathstar.pdf');
                 assert(taskFile.get('author') instanceof App.User).isTrue();

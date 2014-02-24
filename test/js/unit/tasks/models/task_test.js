@@ -32,7 +32,7 @@ pavlov.specify("Task model unit tests", function() {
 
         it("should have some properties", function () {
             build('task').then(function(task) {
-                assert(task.url).equals('tasks');
+                assert(task.url).equals('bb_tasks');
                 assert(task.get('description')).equals('Title says it all');
                 assert(task.get('title')).equals('Takeover Naboo');
             });

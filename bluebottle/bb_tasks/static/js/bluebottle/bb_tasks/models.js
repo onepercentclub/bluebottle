@@ -30,7 +30,7 @@ App.Adapter.map('App.TaskFile', {
  */
 
 App.TaskMember = DS.Model.extend({
-    url: 'tasks/members',
+    url: 'bb_tasks/members',
 
     member: DS.belongsTo('App.UserPreview'),
     created: DS.attr('date'),
@@ -58,7 +58,7 @@ App.TaskMember = DS.Model.extend({
 });
 
 App.MyTaskMember = App.TaskMember.extend({
-    url: 'tasks/members/my-task',
+    url: 'bb_tasks/members/my-task',
 
     task: DS.belongsTo('App.TaskPreview'),
     time_spent: DS.attr('number')
@@ -66,7 +66,7 @@ App.MyTaskMember = App.TaskMember.extend({
 });
 
 App.TaskFile = DS.Model.extend({
-    url: 'tasks/files',
+    url: 'bb_tasks/files',
 
     author: DS.belongsTo('App.User'),
     title: DS.attr('string'),
@@ -76,7 +76,7 @@ App.TaskFile = DS.Model.extend({
 });
 
 App.Task = DS.Model.extend({
-    url: 'tasks',
+    url: 'bb_tasks',
 
     // Model fields
     author: DS.belongsTo('App.UserPreview'),
@@ -166,14 +166,14 @@ App.NewTask = App.Task.extend({
 
 
 App.Skill = DS.Model.extend({
-    url: 'tasks/skills',
+    url: 'bb_tasks/skills',
     name: DS.attr('string')
 });
 
 
 // model for the skills effectively coupled with a task
 App.UsedSkill = App.Skill.extend({
-    url: 'tasks/used_skills'
+    url: 'bb_tasks/used_skills'
 });
 
 
@@ -181,7 +181,7 @@ App.UsedSkill = App.Skill.extend({
 Preview model that doesn't contain all the properties.
  */
 App.TaskPreview = App.Task.extend({
-    url: 'tasks/previews',
+    url: 'bb_tasks/previews',
     project: DS.belongsTo('App.ProjectPreview'),
 
     image: function(){
@@ -191,7 +191,6 @@ App.TaskPreview = App.Task.extend({
 
 
 App.TaskSearch = DS.Model.extend({
-
     text: DS.attr('string'),
     skill: DS.attr('string'),
     ordering: DS.attr('string', {defaultValue: 'newest'}),

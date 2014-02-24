@@ -32,7 +32,7 @@ pavlov.specify("Task Member model unit tests", function() {
 
         it("should have some properties", function () {
             build('taskMember').then(function(taskMember) {
-                assert(taskMember.url).equals('tasks/members');
+                assert(taskMember.url).equals('bb_tasks/members');
                 assert(taskMember.get('member') instanceof App.UserPreview).isTrue();
                 assert(taskMember.get('task') instanceof App.Task).isTrue();
                 assert(taskMember.get('motivation')).equals('Build a better Death Star');

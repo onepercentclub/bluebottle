@@ -32,7 +32,7 @@ pavlov.specify("Project model unit tests", function() {
 
         it("should have some properties", function () {
             build('project').then(function(project) {
-                assert(project.url).equals('projects/projects');
+                assert(project.url).equals('bb_projects/projects');
                 assert(project.get('slug')).equals('empire-strikes-back');
                 assert(project.get('title')).equals('Empire Strikes Back');
             });

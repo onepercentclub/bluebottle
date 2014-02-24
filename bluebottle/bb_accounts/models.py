@@ -238,5 +238,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.send()
 
     @property
+    # For now return the first address found on this user.
+    def address(self):
+        # addresses = self.useraddress_set.all()
+        # if addresses:
+        #     return addresses[0]
+        # else:
+        #     return None
+        return None
+
+    @property
     def short_name(self):
         return self.get_short_name()

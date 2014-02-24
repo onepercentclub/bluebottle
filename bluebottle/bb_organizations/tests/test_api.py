@@ -3,10 +3,9 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from bluebottle.bb_organizations.models import BaseOrganization
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations_factories import (
-    OrganizationFactory, OrganizationMemberFactory)
+    OrganizationFactory, OrganizationMemberFactory, ORGANIZATION_MODEL)
 
 
 class OrganizationsEndpointTestCase(TestCase):
@@ -24,9 +23,15 @@ class OrganizationsEndpointTestCase(TestCase):
         self.organization_2 = OrganizationFactory.create()
         self.organization_3 = OrganizationFactory.create()
 
-        self.member_1 = OrganizationMemberFactory(organization=self.organization_1, user=self.user_1)
-        self.member_2 = OrganizationMemberFactory(organization=self.organization_2, user=self.user_1)
-        self.member_3 = OrganizationMemberFactory(organization=self.organization_3, user=self.user_2)
+        self.member_1 = OrganizationMemberFactory(user=self.user_1)
+        self.member_2 = OrganizationMemberFactory(user=self.user_2)
+
+        self.organization_1.members.add(self.member_1)
+        self.organization_1.save()
+        self.organization_2.members.add(self.member_1)
+        self.organization_2.save()
+        self.organization_3.members.add(self.member_2)
+        self.organization_3.save()
 
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
@@ -108,7 +113,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 201)
 
         # Check the data.
-        organization = BaseOrganization.objects.latest('pk')
+        organization = ORGANIZATION_MODEL.objects.latest('pk')
         self.assertEqual(organization.name, post_data['name'])
         self.assertEqual(organization.slug, post_data['slug'])
         self.assertEqual(organization.address_line1, post_data['address_line1'])
@@ -193,7 +198,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check the data.
-        organization = Organization.objects.get(pk=self.organization_1.pk)
+        organization = ORGANIZATION_MODEL.objects.get(pk=self.organization_1.pk)
         self.assertEqual(organization.name, put_data['name'])
         self.assertEqual(organization.slug, put_data['slug'])
         self.assertEqual(organization.address_line1, put_data['address_line1'])

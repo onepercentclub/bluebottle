@@ -340,6 +340,8 @@ class PrivateFileSerializer(FileSerializer):
                 'size': defaultfilters.filesizeformat(value.size)}
 
 
+#TODO: PROBABLY THOSE TAG SERIALIZER ARE NOT USED ANYMORE, WAITING TO CLEAN ALL APPS FOR DELETING THEM
+
 class TagSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         if not 'required' in kwargs:

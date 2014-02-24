@@ -11,7 +11,7 @@ class QuoteList(generics.ListAPIView):
     model = Quote
     serializer_class = QuoteSerializer
     paginate_by = 10
-    filter_fields = ('language', 'segment')
+    filter_fields = ('language',) 
 
     def get_queryset(self):
         qs = super(QuoteList, self).get_queryset()

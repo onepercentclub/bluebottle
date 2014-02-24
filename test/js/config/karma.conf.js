@@ -44,25 +44,7 @@ module.exports = function(config) {
       'config/test_stubs.js',
 
       // 1%Club Site App
-      '../../bluebottle/**/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/blogs/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/contact/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/donations/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/geo/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/homepage/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/orders/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/organizations/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/news/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/pages/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/projects/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/quotes/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/slides/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/tasks/static/**/{components,controllers,models,routes,views}.js',
-      // '../../bluebottle/utils/static/**/{components,controllers,models,routes,views}.js', 
-      // '../../bluebottle/wallposts/static/**/{components,controllers,models,routes,views}.js',
-
-      '../../static/global/js/bluebottle/homepage.js', 
-      '../../static/global/js/bluebottle/vouchers.js',
+      '../../bluebottle/**/static/js/bluebottle/**/{components,controllers,models,routes,views}.js',
 
       // Handlebar Templates
       // Need to do some preprocessing first to get the django processed

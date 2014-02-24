@@ -34,22 +34,22 @@ class TaskMemberSerializer(serializers.ModelSerializer):
 
 class TaskFileSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
-    task = serializers.PrimaryKeyRelatedField()
     file = FileSerializer()
 
     class Meta:
         model = TaskFile
 
 
-class TaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
-    # members = TaskMemberSerializer(many=True, source='members', read_only=True)
-    # files = TaskFileSerializer(many=True, source='files', read_only=True)
+class TaskSerializer(serializers.ModelSerializer):
+    members = TaskMemberSerializer(many=True, source='members', read_only=True)
+    files = TaskFileSerializer(many=True, source='files', read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()
-    status = HumanReadableChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
+    status = HumanReadableChoiceField(
+        choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
 
-    tags = TagSerializer()
+    # tags = TagSerializer()
     meta_data = MetaField(
         title='get_meta_title',
         fb_title='get_fb_title',

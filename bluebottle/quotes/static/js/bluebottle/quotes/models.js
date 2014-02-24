@@ -7,6 +7,5 @@ App.Quote = DS.Model.extend({
     url: 'quotes',
 
     quote: DS.attr('string'),
-    segment: DS.attr('string'),
     user: DS.belongsTo('App.UserPreview')
 });

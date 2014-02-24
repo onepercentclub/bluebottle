@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
-import django_filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+import django_filters
 from rest_framework import permissions
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly

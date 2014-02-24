@@ -77,16 +77,14 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], another_task_data['title'])
 
-        # Go wild! Add another task to that project add some tags this time
+        # Go wild! Add another task to that project add some tags this time --> NO TAGS ANYMORE
         # Because we have a nesting here we should properly encode it as json
         third_task_data = {'project': self.another_project.slug, 'title': 'Translate some text.',
                            'description': 'Wie kan Engels vertalen?', 'time_needed': 5, 'skill': '%d' % self.skill4.id,
-                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace',
-                           'tags': [{'id': 'spanish'}, {'id': 'translate'}]}
+                           'location': 'Tiel', 'deadline': str(future_date), 'end_goal': 'World peace'}
         response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], third_task_data['title'])
-        self.assertEquals(len(response.data['tags']), 2)
 
         # By now the list for the second project should contain two tasks
         response = self.client.get(self.task_url, {'project': self.another_project.slug})
@@ -116,6 +114,33 @@ class TaskApiIntegrationTests(TestCase):
         response = self.client.post(self.task_members_url, {'task': 1})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['status'], 'applied')
+
+    def test_task_search_by_status(self):
+        """
+        Ensure we can filter task list by status
+        """
+        self.task1 = TaskFactory.create(
+            status=BB_TASK_MODEL.TaskStatuses.in_progress,
+            author=self.some_project.owner,
+            project=self.some_project,
+        )
+        self.task2 = TaskFactory.create(
+            status=BB_TASK_MODEL.TaskStatuses.open,
+            author=self.another_project.owner,
+            project=self.another_project,
+        )
+
+        self.assertEqual(2, BB_TASK_MODEL.objects.count())
+
+        self.client.login(username=self.some_user.email, password='password')
+
+        response = self.client.get(self.task_url, {'status': 'open'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
+
+        response = self.client.get(self.task_url, {'status': 'in progress'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['count'], 1)
 
     def test_task_preview_search(self):
         self.client.login(username=self.some_user.email, password='password')

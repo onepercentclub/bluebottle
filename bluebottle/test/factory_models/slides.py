@@ -13,3 +13,6 @@ class SlideFactory(factory.DjangoModelFactory):
 	title = factory.Sequence(lambda n: 'Slide Title {0}'.format(n))
 	body = factory.Sequence(lambda n: 'Slide Body {0}'.format(n))
 	sequence = factory.Sequence(lambda n: n)
+
+class DraftSlideFactory(SlideFactory):
+	status = Slide.SlideStatus.draft

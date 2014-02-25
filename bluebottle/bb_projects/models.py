@@ -51,7 +51,7 @@ class ProjectPhase(models.Model):
         ordering = ['sequence']
 
     def __unicode__(self):
-        return '{0} - {1}'.format(self.sequence,  self.name)
+        return u'{0} - {1}'.format(self.sequence,  self.name)
 
 
 class BaseProject(models.Model):

@@ -33,7 +33,6 @@ pavlov.specify('Contact Message Route Tests', function() {
         it('should have a model property', function() {
             var model = route.model();
             assert(model).isInstanceOf(App.ContactMessage);
-            // expect(0);
         });
 
     });

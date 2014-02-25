@@ -115,7 +115,6 @@ tests_require = [
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'tdaemon==0.1.1',
-    'django-colortools==0.3.3'
 ]
 
 

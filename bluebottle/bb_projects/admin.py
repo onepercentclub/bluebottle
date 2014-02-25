@@ -14,6 +14,7 @@ PROJECT_MODEL = get_project_model()
 
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
+    prepopulated_fields = {'slug': ('name', 'name_nl')}
 
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 

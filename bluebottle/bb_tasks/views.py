@@ -47,7 +47,7 @@ class TaskPreviewList(generics.ListAPIView):
         return qs.filter(project__status__viewable=True)
 
 
-class TaskList(generics.ListCreateAPIView):
+class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
     permission_classes = (IsProjectOwnerOrReadOnly,)

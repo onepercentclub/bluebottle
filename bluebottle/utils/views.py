@@ -58,6 +58,7 @@ if INCLUDE_TEST_MODELS:
     from .models import MetaDataModel
     from .serializers import MetaDataSerializer
 
+
     class MetaDataDetail(generics.RetrieveAPIView):
         model = MetaDataModel
         serializer_class = MetaDataSerializer

@@ -80,7 +80,7 @@ class TaskList(generics.ListCreateAPIView):
         obj.author = self.request.user
 
 
-class TaskDetail(generics.RetrieveUpdateAPIView):
+class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
     model = BB_TASK_MODEL
     permission_classes = (IsAuthorOrReadOnly, )
 

@@ -11,7 +11,7 @@ App.Router.map(function() {
 App.ContactMessageRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         var store = this.get('store');
-        model = store.createRecord(App.ContactMessage);
+        model = App.ContactMessage.createRecord();
 
         // get the name and email from the currently logged in user
         App.CurrentUser.find('current').then(function(user) {

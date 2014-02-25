@@ -28,9 +28,10 @@ module.exports = function(config) {
       // Ember ENV for Testing
       'config/test_env.js',
 
-      // Vendor
+      // Vendor - concat using grunt
       '../../static/build/js/lib/deps.js',
 
+      // Load ember configs for testing env
       'config/ember_config.js',
 
       { pattern: '/static/assets/js/vendor/globalize-cultures/globalize.culture.*.js', included: false, served: false },
@@ -51,13 +52,13 @@ module.exports = function(config) {
       // Handlebars templates before loading them here!
       // '../../apps/**/templates/*.hbs',
 
-      // Sion
-      '../../static/build/js/components/sinon/lib/sinon.js',
-      '../../static/build/js/components/sinon/lib/sinon/{assert,test,stub,injector,spy,call}.js',
-      // '../../static/build/js/components/sinon-qunit/lib/*.js',
+      // Test Libs - concat using grunt
+      '../../static/build/js/lib/test_deps.js',
+
+      // Load sinon configs for testing env
+      'config/sinon_config.js',
 
       // Factories / Fixtures
-      '../../static/build/js/components/ember-data-factory/dist/ember-data-factory-0.0.1.js',
       'factories/**/*_factory.js',
       'fixtures/*.js',
 

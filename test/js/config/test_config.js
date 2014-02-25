@@ -1,14 +1,26 @@
 document.write('<div id="ember-testing-container"><div id="ember-testing"></div></div>');
 
 App.Store = DS.Store.extend({
-  adapter: DS.FixtureAdapter.extend({})
+  adapter: DS.FixtureAdapter.extend({
+    queryFixtures: function(fixtures, query, type) {
+      // console.log(query);
+      // console.log(type);
+      return fixtures.filter(function(item) {
+          for(prop in query) {
+              if( item[prop] != query[prop]) {
+                  return false;
+              }
+          }
+          return true;
+      });
+    }
+  })
 });
 
 App.rootElement = '#ember-testing';
-
 App.setupForTesting();
 // App.injectTestHelpers();
-Ember.run(App, App.advanceReadiness);
+// Ember.run(App, App.advanceReadiness);
 
 function exists(selector) {
   return !!find(selector).length;

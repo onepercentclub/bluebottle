@@ -33,8 +33,6 @@ class OrganizationAdmin(admin.ModelAdmin):
 
     search_fields = ('name',)
 
-    exclude = ('created', 'updated', 'deleted', 'tags')
-
 admin.site.register(ORGANIZATION_MODEL, OrganizationAdmin)
 
 

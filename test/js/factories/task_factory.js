@@ -41,3 +41,7 @@ Factory.define('taskSearch', {
 	status: 'open',
 	page: 1
 });
+
+Factory.define('skill', {
+	name: 'Mind Control'
+});

@@ -1,10 +1,12 @@
 pavlov.specify('Task Member Edit View Tests', function() {
 
     describe('App.TaskFileNewView Class', function () {
+
         it('should be an Ember.View', function() {
             assert(App.TaskFileNewView).isDefined();
             assert(Ember.View.detect(App.TaskFileNewView)).isTrue();
         });
+        
     });
 
     describe('App.TaskFileNewView Instance', function () {

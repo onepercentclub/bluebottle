@@ -8,5 +8,8 @@ pavlov.specify.extendAssertions({
     },
     isEmptyArray: function(actual, message) {
         ok(!actual.length, message);
+    },
+    isInstanceOf: function(actual, expected, message) {
+        ok(actual instanceof expected, message)
     }
 });

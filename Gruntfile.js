@@ -13,7 +13,7 @@ module.exports = function (grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     karma: {
-      ci: { configFile: 'test/js/config/karma.conf.js', singleRun: true, browsers: ['PhantomJS'] },
+      ci: { configFile: 'test/js/config/karma.conf.js', singleRun: true },
       unit: { configFile: 'test/js/config/karma.conf.js', keepalive: true },
       chrome: { configFile: 'test/js/config/karma.conf.js', keepalive: true, browsers: ['Chrome']  }
       // e2e: { configFile: 'test/js/config/e2e.js', keepalive: true }, // End-to-end / Functional Tests
@@ -105,7 +105,7 @@ module.exports = function (grunt) {
           'static/build/js/components/sinon/lib/sinon/sandbox.js',
           'static/build/js/components/sinon/lib/sinon/test.js',
           'static/build/js/components/sinon/lib/sinon/test_case.js',
-          // 'static/build/js/components/sinon-qunit/lib/*.js'
+          // 'static/build/js/components/sinon-qunit/lib/sinon-qunit.js'
         ],
         dest: 'static/build/js/lib/test_deps.js'
       },
@@ -135,7 +135,7 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask('default', ['dev']);
-  grunt.registerTask('build', ['bower:install', 'concat:dist']);
+  grunt.registerTask('build', ['bower:install', 'concat:dist', 'concat:test']);
   // Add 'shell:parse_templates' and 'emberhandlebars' tasks to dev once it is working
   grunt.registerTask('dev', ['build', 'karma:unit']);
   grunt.registerTask('travis', ['build', 'karma:ci']);

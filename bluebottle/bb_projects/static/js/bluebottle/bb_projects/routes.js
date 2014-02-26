@@ -97,7 +97,7 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, {
     }
 
 });
-
+ 
 
 App.MyProjectRoute = Em.Route.extend({
     // Load the Project

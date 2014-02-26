@@ -7614,6 +7614,22 @@ form#manage-project-new {
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/jakob\/code\/bluebottle\/bluebottle\/common\/static\/sass\/pages\/_campaign-create\.scss}line{font-family:\0000348}}
     #campaign-create .campaign-footer .previous {
       float: left; }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/jakob\/code\/bluebottle\/bluebottle\/common\/static\/sass\/pages\/_campaign-create\.scss}line{font-family:\0000353}}
+  #campaign-create .amount-control label {
+    float: left;
+    width: 50%;
+    margin-left: 0%;
+    margin-right: 0%; }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/jakob\/code\/bluebottle\/bluebottle\/common\/static\/sass\/pages\/_campaign-create\.scss}line{font-family:\0000356}}
+  #campaign-create .amount-control input {
+    float: left;
+    width: 50%;
+    margin-left: 0%;
+    margin-right: 0%; }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/jakob\/code\/bluebottle\/bluebottle\/common\/static\/sass\/pages\/_campaign-create\.scss}line{font-family:\0000361}}
+  #campaign-create table td {
+    padding: 0.5em 0;
+    padding-right: 1em; }
 
 /* Temp */
 @font-face {

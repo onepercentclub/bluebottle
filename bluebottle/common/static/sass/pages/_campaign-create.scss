@@ -49,4 +49,18 @@
 			float: left;			
 		}
 	}
+	.amount-control {
+		label {
+			@include grid(24,0,0);
+		}
+		input {
+			@include grid(24,0,0);			
+		}
+	}
+	table {
+		td {
+			padding: ($base-padding/2) 0;
+			padding-right: $base-padding;
+		}
+	}
 }

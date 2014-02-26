@@ -1,0 +1,52 @@
+#campaign-create {
+	margin-bottom: $base-margin * 6;
+	.campaign-header {
+		background-color: $gray-lighter;
+		.page-title {
+			@include grid(48,1,1);
+			padding: $base-padding 0;
+		}
+		.steps {
+			@include grid(40,1,2);
+		}
+		.campaign-preview-button {
+			@include grid(8,0,1);
+		}
+	}
+
+	.campaign-campaigner {
+		.campaigner-avatar {
+			@include grid(16,0,2);
+		}
+		.campaigner-details {
+			@include grid(32,2,0);		
+		}
+	}
+
+	.campaign-footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		background: $gray-dark;
+		padding: $base-padding;
+		.navigation {
+			@include grid(32,1,1);
+		}
+		.actions {
+			@include grid(16, 1,1);
+			text-align: right;
+			padding: ($base-padding/2) 0
+		}
+		.save {
+			text-decoration: none;
+			color: $gray-light;
+		}
+		.next {
+			float: right;
+		}
+		.previous {
+			float: left;			
+		}
+	}
+}

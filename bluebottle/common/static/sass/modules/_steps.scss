@@ -1,0 +1,58 @@
+.steps {
+	overflow: hidden;
+	.step {
+		position: relative;
+		background-color: $white;
+		@include grid(8,0,0);
+		line-height: $base-line-height * 2;
+		text-align: center;
+		font-weight: bold;
+		text-decoration: none;
+		.flaticon {
+			border-radius: 50%;
+			background: $white;
+			padding: $base-padding / 2;
+		}
+		&.active {
+			background-color: $gray-darkest;
+			color: $white;
+			.flaticon { 
+				color: $gray-darkest;
+			}
+			&:after {
+				border-left-color: $gray-darkest;
+			}
+		}
+		&.validated {
+			background-color: $color-secondary;
+			color: $white;
+			.flaticon { 
+				color: $color-secondary;
+			}
+			&:after {
+				border-left-color: $color-secondary;
+			}
+		}
+		&:hover {
+			background-color: $gray-light;
+			color: white;
+			&:after {
+				border-left-color: $gray-light;
+			}
+		}
+		&:after {
+			left: 100%;
+			top: 50%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			border-left-color: $white;
+			border-width: $base-line-height;
+			margin-top: -$base-line-height;
+			z-index: 2;	
+		}
+	}
+}

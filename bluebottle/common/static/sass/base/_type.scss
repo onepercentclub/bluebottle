@@ -253,6 +253,12 @@ blockquote:after {
   	content: "";
 }
 
+.well {
+	@include clear;
+	padding: $base-padding;
+	background-color: $gray-lighter;
+}
+
 /*
 figure {
     display: inline-block;

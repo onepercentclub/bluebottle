@@ -22,7 +22,7 @@ class NewsItemList(generics.ListAPIView):
     filter_fields = ('language', )
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(NewsItemList, self).get_queryset()
+        qs = super(NewsItemList, self).get_queryset() 
         qs = qs.published()
         return qs
 

@@ -1,9 +1,7 @@
 import factory
-from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 
 from fluent_contents.models import Placeholder
-from bluebottle.utils.tests import generate_random_slug
 from bluebottle.news.models import NewsItem
 from .accounts import BlueBottleUserFactory
 
@@ -14,7 +12,7 @@ class NewsItemFactory(factory.DjangoModelFactory):
 	status = NewsItem.PostStatus.published
 	publication_date = now()
 	language = 'nl'
-	slug = generate_random_slug()
+	slug = factory.Sequence(lambda n: 'slug-{0}'.format(n))
 	author = factory.SubFactory(BlueBottleUserFactory)
 
 	make_placeholder = factory.PostGeneration(

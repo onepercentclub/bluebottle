@@ -1,24 +1,23 @@
+import json
+import re
+
 from django.core import mail
 from django.test import TestCase
 
 from registration.models import RegistrationProfile
 from rest_framework import status
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-from bluebottle.utils.tests import UserTestsMixin
-from bluebottle.geo.tests import GeoTestsMixin
-from django.contrib.auth import get_user_model
 
-import json
-import re
-
-class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
+class UserApiIntegrationTest(TestCase):
     """
     Integration tests for the User API.
     """
     def setUp(self):
-        self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
-        self.another_user = self.create_user()
+        self.user_1 = BlueBottleUserFactory.create()
+        self.user_2 = BlueBottleUserFactory.create()
+
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
         self.user_profile_api_url = '/api/users/profiles/'
@@ -31,10 +30,10 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         """
         Test retrieving a public user profile by id.
         """
-        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.some_user.id)
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.user_1.id)
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], self.some_user.id)
+        self.assertEqual(response.data['id'], self.user_1.id)
 
         # Profile should not be able to be updated by anonymous users.
         full_name = {'first_name': 'Nijntje', 'last_name': 'het Konijntje'}
@@ -42,7 +41,7 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Profile should be able to be updated by logged in user.
-        self.client.login(username=self.some_user.email, password='password')
+        self.client.login(email=self.user_1.email, password='testing')
         response = self.client.put(user_profile_url, json.dumps(full_name), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['first_name'], full_name.get('first_name'))
@@ -62,10 +61,10 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         """
         Test retrieving the currently logged in user after login.
         """
-        self.client.login(username=self.some_user.email, password='password')
+        self.client.login(email=self.user_1.email, password='testing')
         response = self.client.get(self.current_user_api_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['first_name'], self.some_user.first_name)
+        self.assertEqual(response.data['first_name'], self.user_1.first_name)
 
         self.client.logout()
 
@@ -74,54 +73,33 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         Test retrieving and updating a user's settings by id.
         """
         # Settings shouldn't be accessible until a user is logged in.
-        user_settings_url = "{0}{1}".format(self.user_settings_api_url, self.some_user.id)
+        user_settings_url = "{0}{1}".format(self.user_settings_api_url, self.user_1.id)
         response = self.client.get(user_settings_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Settings should be accessible after a user is logged in.
-        self.client.login(username=self.some_user.email, password='password')
-        some_user_settings_url = "{0}{1}".format(self.user_settings_api_url, self.some_user.id)
-        response = self.client.get(some_user_settings_url)
+        self.client.login(email=self.user_1.email, password='testing')
+        user_1_settings_url = "{0}{1}".format(self.user_settings_api_url, self.user_1.id)
+        response = self.client.get(user_1_settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['email'], self.some_user.email)
+        self.assertEqual(response.data['email'], self.user_1.email)
         self.assertFalse(response.data['newsletter'])
 
         # Test that the settings can be updated.
-        response = self.client.put(some_user_settings_url, json.dumps({'newsletter': True}), 'application/json')
+        response = self.client.put(user_1_settings_url, json.dumps({'newsletter': True}), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertTrue(response.data['newsletter'])
 
         self.client.logout()
 
-    def test_user_settings_country(self):
-        """
-        Regression test: BB-1333 (Country is not saved).
-        """
-        # Make sure there is a country.
-        country = self.create_country('Netherlands', '1', alpha2_code='NL')
-
-        self.client.login(username=self.some_user.email, password='password')
-
-        # Retrieve current settings.
-        some_user_settings_url = "{0}{1}".format(self.user_settings_api_url, self.some_user.id)
-        response = self.client.get(some_user_settings_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['country'], None)
-
-        # Test that the settings can be updated.
-        response = self.client.put(some_user_settings_url, json.dumps({'country': country.alpha2_code}), 'application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['country'], country.alpha2_code)
-
-        self.client.logout()
-
     def test_user_create(self):
         """
-        Test creating a user with the api, activating the new user and updating the settings once logged in.
+        Test creating a user with the api, activating the new user and
+        updating the settings once logged in.
         """
         # Create a user.
         new_user_email = 'nijntje27@hetkonijntje.nl'
-        new_user_password = 'password'
+        new_user_password = 'testing'
         response = self.client.post(self.user_create_api_url, {'email': new_user_email,
                                                                'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -189,14 +167,14 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
                                                                'email': new_user2_email,
                                                                'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(response.data['username'], 'nijntjehetkonijntje2')
+        self.assertEqual(response.data['username'], 'nijntjehetkonijntje_2')
 
         response = self.client.post(self.user_create_api_url, {'first_name': first_name,
                                                                'last_name': last_name,
                                                                'email': new_user3_email,
                                                                'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(response.data['username'], 'nijntjehetkonijntje3')
+        self.assertEqual(response.data['username'], 'nijntjehetkonijntje_3')
 
         # Test username generation with no first name or lastname.
         response = self.client.post(self.user_create_api_url, {'email': new_user4_email,
@@ -215,7 +193,8 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         # Test: resetting a password for an inactive user shouldn't be allowed.
-        response = self.client.put(self.user_password_reset_api_url, json.dumps({'email': new_user_email}), 'application/json')
+        response = self.client.put(self.user_password_reset_api_url, json.dumps(
+            {'email': new_user_email}), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
 
         # Setup: activate the newly created user and logout.
@@ -226,13 +205,14 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         self.client.logout()
 
         # Test: resetting the password should now be allowed.
-        response = self.client.put(self.user_password_reset_api_url, json.dumps({'email': new_user_email}), 'application/json')
+        response = self.client.put(self.user_password_reset_api_url, json.dumps(
+            {'email': new_user_email}), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(mail.outbox), 2)
 
         # Setup: get the password reset token and url.
-        c = re.compile('.*\/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})\".*', re.DOTALL)
-        m = c.match(mail.outbox[1].body)
+        c = re.compile('(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})', re.DOTALL)
+        m = c.search(mail.outbox[1].body)
         password_set_url = '{0}{1}-{2}'.format(self.user_password_set_api_url, m.group(1), m.group(2))
 
         # Test: check that non-matching passwords produce a validation error.
@@ -258,23 +238,23 @@ class UserApiIntegrationTest(UserTestsMixin, GeoTestsMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
 
-class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
+class LocaleMiddlewareTest(TestCase):
     """
     Integration tests for the User API.
     """
     def setUp(self):
-        self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
-        self.some_user.primary_language = 'en'
-        self.some_user.save()
+        self.user_1 = BlueBottleUserFactory.create()
+        self.user_1.primary_language = 'en'
+        self.user_1.save()
 
     def test_early_redirect_to_user_language(self):
-        self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
+        self.assertTrue(self.client.login(username=self.user_1.email, password='testing'))
 
         response = self.client.get('/nl/', follow=False)
         self.assertRedirects(response, '/en/')
 
     def test_no_redirect_for_non_language_urls(self):
-        self.assertTrue(self.client.login(username=self.some_user.email, password='password'))
+        self.assertTrue(self.client.login(username=self.user_1.email, password='testing'))
 
         response = self.client.get('/api/', follow=False)
         self.assertTrue(response.status_code, 200)
@@ -289,13 +269,13 @@ class LocaleMiddlewareTest(UserTestsMixin, GeoTestsMixin, TestCase):
         self.assertTrue(response.status_code, 200)
 
 
-class UserProfileUpdateTests(UserTestsMixin, TestCase):
+class UserProfileUpdateTests(TestCase):
     """
     Integration tests for the User API with dependencies on different bluebottle apps.
     """
     def setUp(self):
-        self.some_user = self.create_user(email='nijntje@hetkonijnje.nl', first_name='Nijntje')
-        self.another_user = self.create_user()
+        self.user_1 = BlueBottleUserFactory.create()
+        self.user_2 = BlueBottleUserFactory.create()
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
         self.user_profile_api_url = '/api/users/profiles/'

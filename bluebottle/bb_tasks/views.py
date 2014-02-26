@@ -33,16 +33,7 @@ class TaskPreviewList(generics.ListAPIView):
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text) |
-                           Q(end_goal__icontains=text))
-
-        skill = self.request.QUERY_PARAMS.get('skill', None)
-        if skill:
-            qs = qs.filter(skill=skill)
-
-        status = self.request.QUERY_PARAMS.get('status', None)
-        if status:
-            qs = qs.filter(status=status)
+                           Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 
@@ -72,8 +63,7 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text) |
-                           Q(end_goal__icontains=text))
+                           Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 

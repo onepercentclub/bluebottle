@@ -92,9 +92,6 @@ STATICFILES_FINDERS = (
     # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = ''
-
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
@@ -114,10 +111,23 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'bluebottle.bb_accounts.middleware.LocaleMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
+}
+
+REST_FRAMEWORK = {
+    # Don't do basic authentication.
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
 
 
 INSTALLED_APPS = (
@@ -142,17 +152,20 @@ INSTALLED_APPS = (
 
     # BlueBottle applications.
     'bluebottle.bb_accounts',
-    'bluebottle.utils',
+    'bluebottle.bb_organizations',
+    'bluebottle.bb_projects',
+    'bluebottle.bb_tasks',
     'bluebottle.common',
     'bluebottle.contact',
+    'bluebottle.contentplugins',
     'bluebottle.geo',
-    'bluebottle.pages',
     'bluebottle.news',
+    'bluebottle.pages',
     'bluebottle.quotes',
     'bluebottle.slides',
-    'bluebottle.bb_projects',
-    'bluebottle.bb_organizations',
-    'bluebottle.bb_tasks',
+    #miss test
+    'bluebottle.utils',
+    'bluebottle.wallposts',
 
     # Modules required by BlueBottle
     'fluent_contents',
@@ -254,3 +267,7 @@ DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 
 # E-MAILS
 CONTACT_EMAIL = 'contact@my-bluebottle-project.com'
+
+# Registration
+ACCOUNT_ACTIVATION_DAYS = 7
+HTML_ACTIVATION_EMAIL = True

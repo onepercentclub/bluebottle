@@ -2,5 +2,4 @@
 // empty fixtures here to keep the DS.FixtureAdapter quiet
 App.CurrentUser.FIXTURES = [];
 App.WallPost.FIXTURES = [];
-App.HomePage.FIXTURES = [];
 App.ProjectPhase.FIXTURES = [];

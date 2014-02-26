@@ -103,7 +103,7 @@ tests_require = [
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
     'django-wysiwyg==0.5.1',
-    'djangorestframework==2.3.6',
+    'djangorestframework==2.3.7',
     'factory-boy==2.3.0',
     'micawber==0.2.6',
     'mock==1.0.1',

@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
-import django_filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+import django_filters
 from rest_framework import permissions
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
@@ -149,7 +149,8 @@ class MediaWallPostPhotoDetail(RetrieveUpdateDeleteAPIView):
 
 
 class ReactionList(ListCreateAPIView):
-    model = Reaction
+    # model = Reaction
+    queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     paginate_by = 10

@@ -6,26 +6,26 @@ import os
 import re
 import types
 from urllib2 import URLError
+
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
+from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
 from django.utils.html import strip_tags, urlize
 from django.utils.encoding import smart_str
-from django.template import defaultfilters
+
 from micawber.contrib.mcdjango import providers
 from micawber.exceptions import ProviderException
 from micawber.parsers import standalone_url_re, full_handler
 from rest_framework import serializers
 from sorl.thumbnail.shortcuts import get_thumbnail
-from django.core.urlresolvers import reverse
 
 
 logger = logging.getLogger(__name__)
 
 
-# TODO Think about adding a feature to set thumbnail quality based on country.
-#      This would be useful for countries with slow internet connections.
 class SorlImageField(serializers.ImageField):
     def __init__(self, source, geometry_string, **kwargs):
         self.crop = kwargs.pop('crop', 'center')
@@ -40,13 +40,11 @@ class SorlImageField(serializers.ImageField):
         if not value.name:
             return ""
 
-
         if not os.path.exists(value.path):
             return ""
 
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
-        thumbnail = ""
         try:
             thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
         except Exception:
@@ -340,6 +338,8 @@ class PrivateFileSerializer(FileSerializer):
                 'size': defaultfilters.filesizeformat(value.size)}
 
 
+#TODO: PROBABLY THOSE TAG SERIALIZER ARE NOT USED ANYMORE, WAITING TO CLEAN ALL APPS FOR DELETING THEM
+
 class TagSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         if not 'required' in kwargs:
@@ -357,17 +357,15 @@ class TagSerializer(serializers.Serializer):
         fields = ('id',)
 
 
-"""
-Add this mixin to a serializer to have writeable tags
-Add this to you modelserialzer too:
-tags = TagSerializer()
-
-On save object we write the tags with object.tags.add()
-This is here because tags behave different from other m2m objects. Please correct if wrong.
-
-"""
 class TaggableSerializerMixin(object):
+    """
+    Add this mixin to a serializer to have writeable tags.
+    Add this to you modelserialzer too:
+    tags = TagSerializer()
 
+    On save object we write the tags with object.tags.add()
+    This is here because tags behave different from other m2m objects. Please correct if wrong.
+    """
     def from_native(self, data, files):
         """
         Override the default method to also add tags to a TaggableManager field
@@ -380,7 +378,6 @@ class TaggableSerializerMixin(object):
             self.tag_list = data['tags']
         if instance:
             return self.full_clean(instance)
-
 
     def save_object(self, obj, **kwargs):
         # First save the object so we can add tags to it.

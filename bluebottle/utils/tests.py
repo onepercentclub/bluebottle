@@ -10,7 +10,19 @@ from .utils import clean_for_hashtag
 import uuid
 import unittest
 
+from django.core.urlresolvers import reverse
+from django.test.client import Client
+
+from fluent_contents.models import Placeholder
+from fluent_contents.plugins.oembeditem.models import OEmbedItem
+from bluebottle.contentplugins.models import PictureItem
+from fluent_contents.plugins.text.models import TextItem
+
+import json
+
+
 BB_USER_MODEL = get_user_model()
+
 
 def generate_random_slug():
     return str(uuid.uuid4())[:30]
@@ -18,29 +30,6 @@ def generate_random_slug():
 
 def generate_random_email():
     return str(uuid.uuid4())[:10] + '@' + str(uuid.uuid4())[:30] + '.com'
-
-
-class UserTestsMixin(object):
-    """ Mixin base class for tests requiring users. """
-
-    def create_user(self, email=None, password=None, **extra_fields):
-        """ Create, save and return a new user. """
-
-        # If email is set and not unique, it will raise a clearly interpretable IntegrityError.
-        # If auto-generated, make sure it's unique.
-        if not email:
-            email = generate_random_email()
-            while BB_USER_MODEL.objects.filter(email=email).exists():
-                email = generate_random_email()
-
-        user = BB_USER_MODEL.objects.create_user(email=email, **extra_fields)
-
-        if not password:
-            user.set_password('password')
-
-        user.save()
-
-        return user
 
 
 class CustomSettingsTestCase(TestCase):
@@ -51,7 +40,6 @@ class CustomSettingsTestCase(TestCase):
     new_settings = {}
     _override = None
 
-
     @classmethod
     def setUpClass(cls):
         cls._override = override_settings(**cls.new_settings)
@@ -59,13 +47,11 @@ class CustomSettingsTestCase(TestCase):
         if 'INSTALLED_APPS' in cls.new_settings:
             cls.syncdb()
 
-
     @classmethod
     def tearDownClass(cls):
         cls._override.disable()
         if 'INSTALLED_APPS' in cls.new_settings:
             cls.syncdb()
-
 
     @classmethod
     def syncdb(cls):
@@ -86,18 +72,6 @@ class HashTagTestCase(unittest.TestCase):
 
         text = 'foo bar /baz'
         self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
-
-
-from django.core.urlresolvers import reverse
-from django.test.client import Client
-
-from fluent_contents.models import Placeholder
-from fluent_contents.plugins.oembeditem.models import OEmbedItem
-from bluebottle.contentplugins.models import PictureItem
-from fluent_contents.plugins.text.models import TextItem
-
-import json
-
 
 class MetaTestCase(TestCase):
     def setUp(self):

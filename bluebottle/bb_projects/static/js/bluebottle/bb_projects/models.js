@@ -40,7 +40,7 @@ App.ProjectTheme = DS.Model.extend({
 
 
 App.Project = DS.Model.extend({
-    url: 'projects/projects',
+    url: 'bb_projects/projects',
 
     // Model fields
     slug: DS.attr('string'),
@@ -115,7 +115,7 @@ App.Project = DS.Model.extend({
 
 
 App.ProjectPhase = DS.Model.extend({
-    url: 'projects/phases',
+    url: 'bb_projects/phases',
     name: DS.attr('string'),
     description: DS.attr('string'),
     sequence: DS.attr('number'),
@@ -125,7 +125,7 @@ App.ProjectPhase = DS.Model.extend({
 });
 
 App.ProjectPreview = App.Project.extend({
-    url: 'projects/previews',
+    url: 'bb_projects/previews',
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
     pitch: DS.attr('string'),
@@ -146,7 +146,7 @@ App.ProjectSearch = DS.Model.extend({
 
 // TODO: Refactor App.DonationPreview to ProjectSupporter
 App.DonationPreview = DS.Model.extend({
-    url: 'projects/supporters',
+    url: 'bb_projects/supporters',
 
     project: DS.belongsTo('App.ProjectPreview'),
     member: DS.belongsTo('App.UserPreview'),
@@ -159,7 +159,7 @@ App.DonationPreview = DS.Model.extend({
 
 
 App.ProjectDonation = DS.Model.extend({
-    url: 'projects/donations',
+    url: 'bb_projects/donations',
 
     member: DS.belongsTo('App.UserPreview'),
     amount: DS.attr('number'),
@@ -173,19 +173,19 @@ App.ProjectDonation = DS.Model.extend({
 
 
 App.Theme = DS.Model.extend({
-    url:'projects/themes',
+    url:'bb_projects/themes',
     name: DS.attr('string')
 });
 
 
 App.UsedTheme = App.Theme.extend({
-    url: 'projects/used_themes'
+    url: 'bb_projects/used_themes'
 });
 
 /* Project Manage Models */
 
 App.MyProjectBudgetLine = DS.Model.extend({
-    url: 'projects/budgetlines/manage',
+    url: 'bb_projects/budgetlines/manage',
 
     project: DS.belongsTo('App.MyProject'),
     description: DS.attr('string'),
@@ -201,7 +201,7 @@ App.BudgetLine = DS.Model.extend({
 
 
 App.MyProject = App.Project.extend({
-    url: 'projects/manage',
+    url: 'bb_projects/manage',
 
     country: DS.belongsTo('App.Country'),
 

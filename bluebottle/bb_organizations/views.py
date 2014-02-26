@@ -46,7 +46,7 @@ class ManageOrganizationList(generics.ListCreateAPIView):
             member = OrganizationMember(user=self.request.user)
             member.save()
             obj.members.add(member)
-            
+
 
 class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):
     model = ORGANIZATION_MODEL

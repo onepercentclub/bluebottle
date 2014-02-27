@@ -8,21 +8,7 @@ pavlov.specify("Task Member model unit tests", function() {
     });
     
     describe("Task Member Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.TaskMember.FIXTURES = [];
-            });
-        });
-
+                
         it("should be a new task search", function () {
             build('taskMember').then(function(taskMember) {
                 assert(taskMember instanceof App.TaskMember).isTrue();

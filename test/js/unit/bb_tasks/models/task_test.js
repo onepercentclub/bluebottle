@@ -8,21 +8,7 @@ pavlov.specify("Task model unit tests", function() {
     });
     
     describe("Task Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.Task.FIXTURES = [];
-            });
-        });
-
+                
         it("should be a new task", function () {
             build('task').then(function(task) {
                 assert(task instanceof App.Task).isTrue();

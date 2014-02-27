@@ -28,8 +28,8 @@ Factory.define('taskMember', {
 		return attr('userPreview');
 	},
 	task: function () {
-    	return attr('task');
-    },
+    return attr('task');
+  },
 	status: 'applied',
 	motivation: 'Build a better Death Star',
 });

@@ -14,21 +14,7 @@ pavlov.specify("News Item Preview model unit tests", function() {
     });
     
     describe("News Item Preview Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.NewsItemPreview.FIXTURES = [];
-            });
-        });
-
+                
         it("should be a new task file", function () {
             build('newsItemPreview').then(function(newsItemPreview) {
                 assert(newsItemPreview instanceof App.NewsItemPreview).isTrue();

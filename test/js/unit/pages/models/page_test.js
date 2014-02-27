@@ -9,20 +9,6 @@ pavlov.specify("Page model unit tests", function(){
 
     describe("Page Instance", function () {
         
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.Page.FIXTURES = [];
-            });
-        });
-
         it("should be a new page", function () {
             build('page').then(function(page) {
                 assert(page instanceof App.Page).isTrue();

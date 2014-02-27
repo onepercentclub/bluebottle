@@ -8,21 +8,7 @@ pavlov.specify("Project model unit tests", function() {
     });
     
     describe("Project Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.Project.FIXTURES = [];
-            });
-        });
-
+                
         it("should be a new project", function () {
             build('project').then(function(project) {
                 assert(project instanceof App.Project).isTrue();

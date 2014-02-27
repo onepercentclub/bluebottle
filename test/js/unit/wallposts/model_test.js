@@ -9,20 +9,6 @@ pavlov.specify("Wallpost model unit tests", function(){
 
     describe("Wallpost instance", function () {
 
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.WallPost.FIXTURES = [];
-            });
-        });
-
         it("should be a new wallpost", function () {
             build('wallPost').then(function(wallPost) {
                 assert(wallPost instanceof App.WallPost).isTrue();

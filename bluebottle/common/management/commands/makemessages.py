@@ -1,4 +1,3 @@
-import fnmatch
 import glob
 import re
 import sys
@@ -6,7 +5,7 @@ import os
 
 from optparse import make_option
 
-from django.core.management.base import NoArgsCommand, CommandError
+from django.core.management.base import CommandError
 from django.core.management.commands.makemessages import handle_extensions, _popen, STATUS_OK, process_file, \
     write_po_file, is_ignored, Command as OriginalCommand
 from django.utils.text import get_text_list

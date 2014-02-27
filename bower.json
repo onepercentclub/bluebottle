@@ -13,7 +13,7 @@
     "jquery-mockjax": "*",
     "pavlov": "https://github.com/pandell/pavlov.git",
     "sinon-qunit": "~1.0.0",
-    "sinon": "~1.7.3",
+    "sinon": "~1.8.2",
     "ember-data-factory": "https://github.com/teddyzeenny/ember-data-factory.git#ed-0.14"
   },
   "ignore": [

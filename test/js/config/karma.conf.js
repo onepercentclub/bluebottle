@@ -12,12 +12,12 @@ module.exports = function(config) {
       'karma-chrome-launcher',
       'karma-coverage',
       'karma-ember-preprocessor',
-      'karma-phantomjs-launcher'
+      'karma-phantomjs-launcher',
     ],
 
     preprocessors: {
       // '../../apps/**/templates/*.hbs': 'ember',
-      '../../apps/**/static/**/*.js': ['coverage']
+      '../../bluebottle/**/static/**/*.js': ['coverage']
     },
 
     // frameworks to use
@@ -28,9 +28,10 @@ module.exports = function(config) {
       // Ember ENV for Testing
       'config/test_env.js',
 
-      // Vendor
+      // Vendor - concat using grunt
       '../../static/build/js/lib/deps.js',
 
+      // Load ember configs for testing env
       'config/ember_config.js',
 
       { pattern: '/static/assets/js/vendor/globalize-cultures/globalize.culture.*.js', included: false, served: false },
@@ -51,13 +52,13 @@ module.exports = function(config) {
       // Handlebars templates before loading them here!
       // '../../apps/**/templates/*.hbs',
 
-      // Sion
-      '../../static/build/js/components/sinon/lib/sinon.js',
-      '../../static/build/js/components/sinon/lib/sinon/{assert,test,stub,injector,spy,call}.js',
-      // '../../static/build/js/components/sinon-qunit/lib/*.js',
+      // Test Libs - concat using grunt
+      '../../static/build/js/lib/test_deps.js',
+
+      // Load sinon configs for testing env
+      'config/sinon_config.js',
 
       // Factories / Fixtures
-      '../../static/build/js/components/ember-data-factory/dist/ember-data-factory-0.0.1.js',
       'factories/**/*_factory.js',
       'fixtures/*.js',
 
@@ -81,7 +82,7 @@ module.exports = function(config) {
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['progress', 'coverage', 'growl'],
+    reporters: ['dots', 'coverage'],
 
     // web server port
     port: 9876,
@@ -104,7 +105,7 @@ module.exports = function(config) {
     // - Safari (only Mac; has to be installed with `npm install karma-safari-launcher`)
     // - PhantomJS
     // - IE (only Windows; has to be installed with `npm install karma-ie-launcher`)
-    browsers: ['PhantomJS'],
+    browsers: [],
 
     // If browser does not capture in given timeout [ms], kill it
     captureTimeout: 60000,

@@ -50,7 +50,7 @@ install_requires = [
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
     'django-wysiwyg==0.5.1',
-    'djangorestframework==2.3.6',
+    'djangorestframework==2.3.12',
     'dkimpy==0.5.4',
 #    'dnspython==1.11.0',
     'html5lib==0.95',
@@ -61,7 +61,6 @@ install_requires = [
 #    'pytz==2013b',
 #    'raven==3.3.12',
 #    'requests==1.2.3',
-#    'selenium==2.33.0',
     'sorl-thumbnail==11.12',
     'splinter==0.5.4',
 #    'suds-jurko==0.4.1.jurko.5.-development-',
@@ -69,6 +68,7 @@ install_requires = [
     'transifex-client==0.9',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
+    'pygraphviz',
 ]
 
 
@@ -102,20 +102,19 @@ tests_require = [
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
     'django-wysiwyg==0.5.1',
-    'djangorestframework==2.3.7',
-    'factory-boy==2.3.0',
+    'djangorestframework==2.3.12',
+    'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
     'nose==1.3.0',
     'pylint==0.28.0',
-    'selenium==2.39.0',
+    'selenium==2.40.0',
     'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
     'splinter==0.5.4', # Functional testing libraries
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'tdaemon==0.1.1',
-    'django-colortools==0.3.3'
 ]
 
 

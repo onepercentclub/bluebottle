@@ -1,24 +1,22 @@
-from django.contrib.auth import get_user_model
-from django.core.management import call_command
-from django.db.models import loading
-from django.test import TestCase
-from django.test.utils import override_settings
-
-from .models import MetaDataModel
-from .utils import clean_for_hashtag
-
+import json
 import uuid
 import unittest
 
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
+from django.db.models import loading
+from django.test import TestCase
 from django.test.client import Client
+from django.test.utils import override_settings
 
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
-from bluebottle.contentplugins.models import PictureItem
 from fluent_contents.plugins.text.models import TextItem
 
-import json
+from bluebottle.contentplugins.models import PictureItem
+from .models import MetaDataModel
+from .utils import clean_for_hashtag
 
 
 BB_USER_MODEL = get_user_model()
@@ -72,6 +70,7 @@ class HashTagTestCase(unittest.TestCase):
 
         text = 'foo bar /baz'
         self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
+
 
 class MetaTestCase(TestCase):
     def setUp(self):

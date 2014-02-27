@@ -37,7 +37,7 @@ App.TagWidget = Em.View.extend({
     didInsertElement: function(){
         this.$('.tag').typeahead({
             source: function (query, process) {
-                return $.get('/api/utils/tags/' + query, function (data) {
+                return $.get('/api/metadata/tags/' + query, function (data) {
                     return process(data);
                 });
             }

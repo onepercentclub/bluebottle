@@ -84,6 +84,12 @@ fieldset legend {
         @include grid(36,1,2);
         float: right;
         
+        &.controls-inline {
+            input, select {
+                margin-bottom: $base-margin;
+            }
+        }
+
         &.wide {
             @include grid(48,2,2);
         }
@@ -94,6 +100,12 @@ fieldset legend {
 
         .inline-append {
             @include grid(24,1,0);
+        }
+        .inline-onethird {
+            @include grid(16,0,1);
+        }
+        .inline-twothirds {
+            @include grid(32,1,0);
         }
     }
 }
@@ -265,6 +277,16 @@ input[type=url] {
 input:-moz-placeholder { color: $gray-light; }
 textarea:-moz-placeholder { color: $gray-light; }
 
+input[type=range] {
+    width:100%;
+}
+input[type=range]::-webkit-slider-thumb {
+    // -webkit-appearance: none !important;
+    background: $color-secondary;
+    height:30px;
+    width:30px;
+
+}
 
 // Tags
 // -------------------------

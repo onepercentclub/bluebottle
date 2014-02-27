@@ -24,12 +24,14 @@
 	}
 
 	.campaign-footer {
+		display: none;
 		width: 100%;
 		position: fixed;
 		bottom: 0;
 		left: 0;
 		background: $gray-dark;
 		padding: $base-padding;
+		z-index: 100;
 		.navigation {
 			@include grid(32,1,1);
 		}
@@ -61,6 +63,50 @@
 		td {
 			padding: ($base-padding/2) 0;
 			padding-right: $base-padding;
+		}
+	}
+	.campaign-create-preview-widget {
+		margin-bottom: $base-margin * 4;
+	}
+	.campaign-create-tips {
+		ul {
+			margin-left: $base-margin * 1.5;
+			li {
+				@include resetlist;
+				list-style-position: outside;
+				list-style-type: circle;
+				margin-bottom: $base-margin;
+			}
+		}
+	}
+	.campaign-duration {
+		input {
+			@include grid(36,0,2);
+		}
+		a {
+			@include grid(12,0,0);	
+		}
+	}
+	.campaign-budget-breakdown {
+		a {
+			text-decoration: none;
+		}
+	}
+	.campaign-budget-description {
+		@include grid(30,0,2);
+	}
+	.campaign-budget-amount {
+		@include grid(12,0,2);
+	}
+	.add-budget {
+		@include grid(6,0,0);
+	}
+	.fieldset-tabs {
+		li {
+			width: 50%;
+			margin: 0 $base-margin;
+			display: block;
+			float: left
 		}
 	}
 }

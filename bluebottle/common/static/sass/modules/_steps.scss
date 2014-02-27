@@ -1,5 +1,6 @@
 .steps {
 	overflow: hidden;
+	border-bottom: 1px solid $gray-light;
 	.step {
 		position: relative;
 		background-color: $white;
@@ -8,29 +9,31 @@
 		text-align: center;
 		font-weight: bold;
 		text-decoration: none;
+		color: $gray-dark;
 		.flaticon {
 			border-radius: 50%;
 			background: $white;
 			padding: $base-padding / 2;
+			text-align: center;
 		}
 		&.active {
-			background-color: $gray-darkest;
+			background-color: $gray-darker;
 			color: $white;
 			.flaticon { 
-				color: $gray-darkest;
+				color: $gray-darker;
 			}
 			&:after {
-				border-left-color: $gray-darkest;
+				border-left-color: $gray-darker;
 			}
 		}
 		&.validated {
-			background-color: $color-secondary;
+			background-color: $color-success;
 			color: $white;
 			.flaticon { 
-				color: $color-secondary;
+				color: $color-success;
 			}
 			&:after {
-				border-left-color: $color-secondary;
+				border-left-color: $color-success;
 			}
 		}
 		&:hover {
@@ -40,8 +43,8 @@
 				border-left-color: $gray-light;
 			}
 		}
-		&:after {
-			left: 100%;
+		&:after, &:before {
+			left: 99%;
 			top: 50%;
 			border: solid transparent;
 			content: " ";
@@ -53,6 +56,14 @@
 			border-width: $base-line-height;
 			margin-top: -$base-line-height;
 			z-index: 2;	
+		}
+		&:before {
+			border-left-color: $gray-light;
+			left: 100%;
+			z-index: 1;	
+		}
+		&:first-of-type, &:last-of-type {
+			color: $gray-light;
 		}
 	}
 }

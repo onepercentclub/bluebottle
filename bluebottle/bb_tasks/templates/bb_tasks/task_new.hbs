@@ -17,53 +17,53 @@
 
                         {% bb_component 'bb-text-area' label=_('Description') valueBinding='description' rows='5' errors='errors.description' placeholder=_('What do you need? Give a clear description of the task') %}
 
+                        {% bb_component 'bb-text-area' label=_('Deliverable') valueBinding='end_goal' rows='3' errors='errors.end_goal' placeholder=_('What do you expect to have in the end?') %}
+
                         {% bb_component 'bb-text-field' label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type="'number'" %}
 
                         {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate="'12M'" valueBinding='deadline' errors='errors.deadline' %}
 
                         {% bb_component 'bb-text-field' label=_('Location') valueBinding='location' errors='errors.location' placeholder=_('Can this be done online or on location?') %}
 
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-time-needed">
-	                            {% trans "Time needed (approximately)" %}
-	                        </label>
+                        <li class="control-group">
+                            <label class="control-label" for="task-time-needed">
+                                {% trans "Time needed (approximately)" %}
+                            </label>
 
-	                        <div class="controls">
-	                            {{view App.TimeNeededSelectView valueBinding="time_needed" id="task-time-needed" name="task-time-needed" classBinding="errors.time_needed.length:error"}}
-	                        </div>
+                            <div class="controls">
+                                {{view App.TimeNeededSelectView valueBinding="time_needed" id="task-time-needed" name="task-time-needed" classBinding="errors.time_needed.length:error"}}
+                            </div>
 
-	                        {{#if errors.time_needed }}
-	                            <div class="has-errors">{{#each time_needed.location }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
+                            {{#if errors.time_needed }}
+                                <div class="has-errors">{{#each time_needed.location }}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
 
-	                    <li class="control-group">
-	                        <label class="control-label" for="task-skill">
-	                            {% trans "Skill" %}
-	                        </label>
+                        <li class="control-group">
+                            <label class="control-label" for="task-skill">
+                                {% trans "Skill" %}
+                            </label>
 
-	                        <div class="controls">
-	                            {{view App.SkillSelectView valueBinding="skill" id="task-skill" name="task-skill" classBinding="errors.skill.length:error"}}
-	                        </div>
+                            <div class="controls">
+                                {{view App.SkillSelectView valueBinding="skill" id="task-skill" name="task-skill" classBinding="errors.skill.length:error"}}
+                            </div>
 
-	                        {{#if errors.skill }}
-	                            <div class="has-errors">{{#each errors.skill }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
-	                </ul>
-	            </fieldset>
-	            <fieldset>
-	                <ul>
-	                    <li class="control-group">
-	                        <label class="control-label">{% trans "Tags" %}</label>
-	                        <div class="controls">
-	                            {{view App.TagWidget tagsBinding="tags" classBinding="errors.tags.length:error"}}
-	                        </div>
+                            {{#if errors.skill }}
+                                <div class="has-errors">{{#each errors.skill }}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+                        <li class="control-group">
+                            <label class="control-label">{% trans "Tags" %}</label>
+                            <div class="controls">
+                                {{view App.TagWidget tagsBinding="tags" classBinding="errors.tags.length:error"}}
+                            </div>
 
-	                        {{#if errors.tags }}
-	                            <div class="has-errors">{{#each errors.tags }}<p>{{this}}</p>{{/each}}</div>
-	                        {{/if}}
-	                    </li>
+                            {{#if errors.tags }}
+                                <div class="has-errors">{{#each errors.tags }}<p>{{this}}</p>{{/each}}</div>
+                            {{/if}}
+                        </li>
+                        {% block_verbatim 'extra_task_fields' %}
+                        {% endblock_verbatim %}
 	                </ul>
 	            </fieldset>
 				<button class="btn btn-primary btn-iconed btn-submit" type="submit"><span class="flaticon solid wrench-1"></span>{% trans "Create Task" %}</button>

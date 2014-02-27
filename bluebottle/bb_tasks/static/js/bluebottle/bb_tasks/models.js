@@ -82,6 +82,8 @@ App.Task = DS.Model.extend({
     author: DS.belongsTo('App.UserPreview'),
     title: DS.attr('string'),
     description: DS.attr('string'),
+    location: DS.attr('string'),
+    end_goal: DS.attr('string'),
     created: DS.attr('date'),
     deadline: DS.attr('date'),
     project: DS.belongsTo('App.Project'),

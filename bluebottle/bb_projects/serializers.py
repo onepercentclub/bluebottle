@@ -54,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
-                  'status', 'meta_data', 'image', 'country', 'theme')
+                  'status', 'image', 'country', 'theme')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):

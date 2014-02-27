@@ -34,10 +34,6 @@ App.ProjectCountry = DS.Model.extend({
     subregion: DS.attr('string')
 });
 
-App.ProjectTheme = DS.Model.extend({
-    name: DS.attr('string'),
-});
-
 
 App.Project = DS.Model.extend({
     url: 'bb_projects/projects',
@@ -129,7 +125,7 @@ App.ProjectPreview = App.Project.extend({
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
     pitch: DS.attr('string'),
-    theme: DS.belongsTo('App.ProjectTheme')
+    theme: DS.belongsTo('App.Theme')
 });
 
 
@@ -173,7 +169,7 @@ App.ProjectDonation = DS.Model.extend({
 
 
 App.Theme = DS.Model.extend({
-    url:'bb_projects/themes',
+    url: 'bb_projects/themes',
     name: DS.attr('string')
 });
 

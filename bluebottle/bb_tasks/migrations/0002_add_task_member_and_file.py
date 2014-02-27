@@ -9,20 +9,42 @@ from django.conf import settings
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Skill'
-        db.create_table(u'bb_tasks_skill', (
+        # Adding model 'TaskMember'
+        db.create_table(u'bb_tasks_taskmember', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
-            ('name_nl', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('member', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
+            ('task', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.TASKS_TASK_MODEL])),
+            ('status', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('motivation', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('comment', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('time_spent', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=0)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
         ))
-        db.send_create_signal(u'bb_tasks', ['Skill'])
+        db.send_create_signal(u'bb_tasks', ['TaskMember'])
+
+        # Adding model 'TaskFile'
+        db.create_table(u'bb_tasks_taskfile', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL])),
+            ('task', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.TASKS_TASK_MODEL])),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        ))
+        db.send_create_signal(u'bb_tasks', ['TaskFile'])
 
 
     def backwards(self, orm):
         # Deleting model 'Skill'
         db.delete_table(u'bb_tasks_skill')
 
+        # Deleting model 'TaskMember'
+        db.delete_table(u'bb_tasks_taskmember')
+
+        # Deleting model 'TaskFile'
+        db.delete_table(u'bb_tasks_taskfile')
 
     models = {
         u'auth.group': {
@@ -44,6 +66,28 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
             'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
+        },
+        u'bb_tasks.taskfile': {
+            'Meta': {'object_name': 'TaskFile'},
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
+            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.TASKS_TASK_MODEL)}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+        },
+        u'bb_tasks.taskmember': {
+            'Meta': {'object_name': 'TaskMember'},
+            'comment': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'member': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
+            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.TASKS_TASK_MODEL)}),
+            'motivation': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+            'time_spent': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '0'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -86,7 +130,27 @@ class Migration(SchemaMigration):
             'username': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
             'why': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'})
+        },
+        settings.TASKS_TASK_MODEL.lower(): {
+            'Meta': {'object_name': settings.TASKS_TASK_MODEL.split('.')[-1]},
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'tasks_task_related'", 'to': u"orm['{0}']".format(settings.TASKS_TASK_MODEL)}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'date_status_change': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
+            'deadline': ('django.db.models.fields.DateTimeField', [], {}),
+            'description': ('django.db.models.fields.TextField', [], {}),
+            'end_goal': ('django.db.models.fields.TextField', [], {}),
+            'expertise': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'location': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'people_needed': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1'}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
+            'skill': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_tasks.Skill']", 'null': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'default': "'open'", 'max_length': '20'}),
+            'time_needed': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         }
+
     }
 
     complete_apps = ['bb_tasks']

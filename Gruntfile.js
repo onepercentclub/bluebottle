@@ -13,9 +13,9 @@ module.exports = function (grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     karma: {
-      ci: { configFile: 'test/js/config/karma.conf.js', singleRun: true },
+        ci: { configFile: 'test/js/config/karma.conf.js', singleRun: true, browsers: ['PhantomJS'] },
       unit: { configFile: 'test/js/config/karma.conf.js', keepalive: true },
-      chrome: { configFile: 'test/js/config/karma.conf.js', keepalive: true, browsers: ['Chrome']  }
+      chrome: { configFile: 'test/js/config/karma.conf.js', keepalive: true, browsers: ['Chrome'] }
       // e2e: { configFile: 'test/js/config/e2e.js', keepalive: true }, // End-to-end / Functional Tests
       // watch: { configFile: 'test/js/config/unit.js', singleRun:false, autoWatch: true, keepalive: true }
     },

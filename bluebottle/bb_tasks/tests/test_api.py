@@ -60,6 +60,7 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
         self.assertEquals(response.data['end_goal'], some_task_data['end_goal'])
+        self.assertEquals(response.data['location'], some_task_data['location'])
         some_task_url = "{0}{1}".format(self.task_url, response.data['id'])
 
         # Create a task for a project you don't own should fail...

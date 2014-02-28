@@ -30,6 +30,10 @@
                     <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
                     {{/if}}
 
+                    {{#if location}}
+                    <p><strong>{% trans "Location" %}:</strong> {{linebreaks location}}</p>
+                    {{/if}}
+
                     {# TODO: commented out until we have pagination #}
                     {{!--}}
                     <a href="#" class="task-read-more"><span class="flaticon solid down-circle-4"></span> {% trans "Read more" %}</a>

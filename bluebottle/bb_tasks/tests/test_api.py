@@ -52,7 +52,8 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': future_date
+            'deadline': future_date,
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, some_task_data)
 
@@ -68,7 +69,8 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill2.id),
             'location': 'Tiel',
-            'deadline': future_date
+            'deadline': future_date,
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)

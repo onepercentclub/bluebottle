@@ -26,6 +26,10 @@
                     <p>{{linebreaks description}}</p>
                     {{/if}}
 
+                    {{#if end_goal}}
+                    <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
+                    {{/if}}
+
                     {# TODO: commented out until we have pagination #}
                     {{!--}}
                     <a href="#" class="task-read-more"><span class="flaticon solid down-circle-4"></span> {% trans "Read more" %}</a>

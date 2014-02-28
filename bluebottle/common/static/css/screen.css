@@ -897,6 +897,13 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 #manage-project .manage-project-nav li a .X12.is-finished:before {
   content: "\e1d7"; }
 
+/* line 1942, ../sass/icons/_flaticons-solid.scss */
+.flaticon.solid.up-circle-4:before, #manage-project .manage-project-nav li a .up-circle-4.is-unfinished:before, #manage-project .manage-project-nav li a .up-circle-4.is-finished:before,
+.flaticon.solid.X17:before,
+#manage-project .manage-project-nav li a .X17.is-unfinished:before,
+#manage-project .manage-project-nav li a .X17.is-finished:before {
+  content: "\e1dc"; }
+
 /* line 1945, ../sass/icons/_flaticons-solid.scss */
 .flaticon.solid.down-circle-4:before, #manage-project .manage-project-nav li a .down-circle-4.is-unfinished:before, #manage-project .manage-project-nav li a .down-circle-4.is-finished:before,
 .flaticon.solid.X18:before,
@@ -2704,7 +2711,10 @@ input[type=range]::-webkit-slider-thumb {
     /* line 25, ../sass/mixins/_utilities.scss */
     .tags li li {
       list-style: none; }
-    /* line 348, ../sass/base/_forms.scss */
+    /* line 344, ../sass/base/_forms.scss */
+    .tags li .flaticon {
+      text-shadow: 0 0 1px #222222; }
+    /* line 347, ../sass/base/_forms.scss */
     .tags li .delete {
       color: white;
       cursor: pointer;
@@ -2719,25 +2729,25 @@ input[type=range]::-webkit-slider-thumb {
       height: 100%;
       margin: 0;
       padding: 0;
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       line-height: 40px;
       -webkit-box-shadow: inset 0 0 2px #666666;
       -moz-box-shadow: inset 0 0 2px #666666;
       box-shadow: inset 0 0 2px #666666; }
-      /* line 367, ../sass/base/_forms.scss */
+      /* line 366, ../sass/base/_forms.scss */
       .tags li .delete:hover {
         background-color: #0896ff; }
 
-/* line 374, ../sass/base/_forms.scss */
+/* line 373, ../sass/base/_forms.scss */
 .btn-tag, .btn-modest {
   font-size: 0.875em !important; }
 
-/* line 378, ../sass/base/_forms.scss */
+/* line 377, ../sass/base/_forms.scss */
 input.tag {
   width: 200px; }
 
-/* line 388, ../sass/base/_forms.scss */
+/* line 387, ../sass/base/_forms.scss */
 label.checkbox,
 label.radio {
   float: left;
@@ -2746,7 +2756,7 @@ label.radio {
   display: block;
   margin-bottom: 0.5em;
   margin-right: 1em; }
-  /* line 396, ../sass/base/_forms.scss */
+  /* line 395, ../sass/base/_forms.scss */
   label.checkbox span,
   label.radio span {
     display: inline-block;
@@ -2757,33 +2767,33 @@ label.radio {
     background-image: url('/static/assets/images/sprites/icons-s4696f19cf3.png');
     background-repeat: no-repeat;
     text-indent: 2.5em; }
-  /* line 408, ../sass/base/_forms.scss */
+  /* line 407, ../sass/base/_forms.scss */
   label.checkbox input[type="checkbox"],
   label.checkbox input[type="radio"],
   label.radio input[type="checkbox"],
   label.radio input[type="radio"] {
     display: none; }
-  /* line 412, ../sass/base/_forms.scss */
+  /* line 411, ../sass/base/_forms.scss */
   label.checkbox input[type="checkbox"] + span,
   label.radio input[type="checkbox"] + span {
     background-position: 0 -2321px; }
-  /* line 416, ../sass/base/_forms.scss */
+  /* line 415, ../sass/base/_forms.scss */
   label.checkbox input[type="radio"] + span,
   label.radio input[type="radio"] + span {
     background-position: 0 -1912px; }
-  /* line 420, ../sass/base/_forms.scss */
+  /* line 419, ../sass/base/_forms.scss */
   label.checkbox input[type="checkbox"]:checked + span,
   label.radio input[type="checkbox"]:checked + span {
     background-position: 0 -2139px; }
-  /* line 424, ../sass/base/_forms.scss */
+  /* line 423, ../sass/base/_forms.scss */
   label.checkbox input[type="radio"]:checked + span,
   label.radio input[type="radio"]:checked + span {
     background-position: 0 -1850px; }
 
-/* line 432, ../sass/base/_forms.scss */
+/* line 431, ../sass/base/_forms.scss */
 .radio-select label {
   margin: 0 0 0 -1px; }
-  /* line 435, ../sass/base/_forms.scss */
+  /* line 434, ../sass/base/_forms.scss */
   .radio-select label span {
     display: block;
     padding: 0;
@@ -2803,7 +2813,7 @@ label.radio {
     -o-border-radius: 1px;
     border-radius: 1px;
     text-align: center; }
-  /* line 454, ../sass/base/_forms.scss */
+  /* line 453, ../sass/base/_forms.scss */
   .radio-select label input[type=radio]:checked + span {
     position: relative;
     border-color: #002a67;
@@ -2811,26 +2821,26 @@ label.radio {
     background: #003580;
     z-index: 10; }
 
-/* line 471, ../sass/base/_forms.scss */
+/* line 470, ../sass/base/_forms.scss */
 .radio-group.two label, .radio-select.two label {
   float: left;
   width: 50%;
   margin-left: 0%;
   margin-right: 0%; }
-/* line 477, ../sass/base/_forms.scss */
+/* line 476, ../sass/base/_forms.scss */
 .radio-group.three label, .radio-select.three label {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%; }
-/* line 483, ../sass/base/_forms.scss */
+/* line 482, ../sass/base/_forms.scss */
 .radio-group.four label, .radio-select.four label {
   float: left;
   width: 25%;
   margin-left: 0%;
   margin-right: 0%; }
 
-/* line 498, ../sass/base/_forms.scss */
+/* line 497, ../sass/base/_forms.scss */
 input[disabled],
 select[disabled],
 textarea[disabled],
@@ -2840,15 +2850,15 @@ textarea[readonly] {
   cursor: not-allowed;
   background-color: #e9e9e9; }
 
-/* line 507, ../sass/base/_forms.scss */
+/* line 506, ../sass/base/_forms.scss */
 .agree {
   margin-bottom: 0; }
 
-/* line 513, ../sass/base/_forms.scss */
+/* line 512, ../sass/base/_forms.scss */
 .file-upload .member-avatar {
   display: inline-block;
   vertical-align: middle; }
-/* line 518, ../sass/base/_forms.scss */
+/* line 517, ../sass/base/_forms.scss */
 .file-upload .btn-upload {
   margin-left: 2em; }
 
@@ -5485,6 +5495,13 @@ table {
     /* line 65, ../sass/modules/_steps.scss */
     .steps .step:first-of-type, .steps .step:last-of-type {
       color: #cccccc; }
+      /* line 67, ../sass/modules/_steps.scss */
+      .steps .step:first-of-type:hover, .steps .step:last-of-type:hover {
+        background-color: white;
+        color: #cccccc; }
+      /* line 72, ../sass/modules/_steps.scss */
+      .steps .step:first-of-type:hover:after, .steps .step:last-of-type:hover:after {
+        border-left-color: white; }
 
 /* line 1, ../sass/modules/_image_upload.scss */
 .image-upload {
@@ -5557,6 +5574,46 @@ table {
     height: 150px;
     top: 0;
     left: 0; }
+
+/* line 1, ../sass/modules/_document_upload.scss */
+.document-upload {
+  padding: 1em;
+  -webkit-box-shadow: inset 0 0 3px #999999;
+  -moz-box-shadow: inset 0 0 3px #999999;
+  box-shadow: inset 0 0 3px #999999;
+  background-color: white;
+  border: 1px solid #999999; }
+  /* line 7, ../sass/modules/_document_upload.scss */
+  .document-upload .files li {
+    padding-left: 0;
+    text-indent: 0;
+    background-image: none;
+    margin-bottom: 0;
+    margin-top: 0;
+    list-style: none;
+    padding: 1em;
+    background-color: #e9e9e9;
+    color: #222222; }
+    /* line 25, ../sass/mixins/_utilities.scss */
+    .document-upload .files li li {
+      list-style: none; }
+    /* line 12, ../sass/modules/_document_upload.scss */
+    .document-upload .files li .delete {
+      text-decoration: none;
+      float: right;
+      color: #666666; }
+  /* line 19, ../sass/modules/_document_upload.scss */
+  .document-upload .upload {
+    display: block;
+    text-align: center;
+    color: #003580;
+    margin: 1em;
+    text-decoration: none; }
+  /* line 26, ../sass/modules/_document_upload.scss */
+  .document-upload .allowed {
+    display: block;
+    color: #999999;
+    text-align: center; }
 
 /* Pages */
 /* line 7, ../sass/pages/_home.scss */
@@ -7796,39 +7853,50 @@ form#manage-project-new {
       #campaign-create .campaign-create-tips ul li li {
         list-style: none; }
   /* line 83, ../sass/pages/_campaign-create.scss */
-  #campaign-create .campaign-duration input {
+  #campaign-create .campaign-duration .slider {
+    padding-top: 1em;
     float: left;
-    width: 70.83333%;
+    width: 66.66667%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 86, ../sass/pages/_campaign-create.scss */
-  #campaign-create .campaign-duration a {
+    /* line 85, ../sass/pages/_campaign-create.scss */
+    #campaign-create .campaign-duration .slider td {
+      padding: 0; }
+  /* line 90, ../sass/pages/_campaign-create.scss */
+  #campaign-create .campaign-duration .btn {
+    margin-top: 1em;
     float: left;
     width: 25%;
-    margin-left: 0%;
+    margin-left: 4.16667%;
     margin-right: 0%; }
-  /* line 91, ../sass/pages/_campaign-create.scss */
+  /* line 96, ../sass/pages/_campaign-create.scss */
+  #campaign-create .campaign-budget-breakdown tfoot {
+    color: #999999; }
+    /* line 98, ../sass/pages/_campaign-create.scss */
+    #campaign-create .campaign-budget-breakdown tfoot td {
+      border-bottom: none; }
+  /* line 102, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-breakdown a {
     text-decoration: none; }
-  /* line 95, ../sass/pages/_campaign-create.scss */
+  /* line 106, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-description {
     float: left;
     width: 58.33333%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 98, ../sass/pages/_campaign-create.scss */
+  /* line 109, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-amount {
     float: left;
     width: 20.83333%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 101, ../sass/pages/_campaign-create.scss */
+  /* line 112, ../sass/pages/_campaign-create.scss */
   #campaign-create .add-budget {
     float: left;
     width: 12.5%;
     margin-left: 0%;
     margin-right: 0%; }
-  /* line 105, ../sass/pages/_campaign-create.scss */
+  /* line 116, ../sass/pages/_campaign-create.scss */
   #campaign-create .fieldset-tabs li {
     width: 50%;
     margin: 0 1em;

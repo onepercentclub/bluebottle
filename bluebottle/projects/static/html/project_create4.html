@@ -8,7 +8,15 @@
 
     <title>Bluebottle Project - Project create</title>
     <link href="/static/assets/css/screen.css" rel="stylesheet">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <link href="/static/assets/css/vendor/jslider.css" rel="stylesheet">
+    <link href="/static/assets/css/vendor/jslider.round.plastic.css" rel="stylesheet">
+    <script src="/static/assets/js/vendor/jquery-1.8.3.min.js"></script>
+    <script src="/static/assets/js/vendor/jslider/draggable-0.1.js"></script>
+    <script src="/static/assets/js/vendor/jslider/tmpl.js"></script>
+    <script src="/static/assets/js/vendor/jslider/jquery.dependClass-0.1.js"></script>
+    <script src="/static/assets/js/vendor/jslider/jshashtable-2.1_src.js"></script>
+    <script src="/static/assets/js/vendor/jslider/jquery.numberFormatter-1.2.3.js"></script>
+    <script src="/static/assets/js/vendor/jslider/jquery.slider.js"></script>
 </head>
 
 <body id="body">
@@ -126,9 +134,9 @@
                                             Crowdfunding goal <br />
                                             <small>Pick an amount betweem &euro; 250 - &euro; 1.000.000</small>
                                         </label>
-                                        <div class="controls amount-control">
-                                            <label>I want to crowdfund</label>
-                                            <input type="text" name="title" placeholder="&euro;" />
+                                        <div class="controls">
+                                            <label class="inline-prepend">I want to crowdfund</label>
+                                            <input class="inline-append" type="text" name="title" placeholder="&euro;" />
                                         </div>
                                     </li>
                                 </ul>
@@ -141,7 +149,9 @@
                                             <small>We recommend that campaigns last 30 days or less</small>
                                         </label>
                                         <div class="controls campaign-duration">
-                                            <input type="range" value="0" min="0" max="30" />
+                                            <div class="slider">
+                                                <input type="range" min="7" max="100" step="1" />
+                                            </div>
                                             <a class="btn btn-modest"><span class="flaticon solid calendar-3"></span> Pick date</a>
                                         </div>
                                     </li>
@@ -151,7 +161,7 @@
                                 <ul>
                                     <li class="control-group fieldset-content">
 
-                                        <h3>Budget breakdown <small>Please specify all the things you need money for</small></h3>
+                                        <label>Budget breakdown <small>Please specify all the things you need money for</small></label>
                                         <hr />
                                         <table class="campaign-budget-breakdown">
                                             <tbody>
@@ -191,7 +201,7 @@
                                         <div class="campaign-budget-amount">
                                             <input type="number" name="amount" placeholder="&euro; Amount" />
                                         </div>
-                                        <a class="btn btn-primary btn-modest add-budget"><span class="flaticon solid plus-2"></span> Add</a>
+                                        <a class="btn btn-modest add-budget"><span class="flaticon solid plus-2"></span> Add</a>
                                     </li>
                                 </ul>
                             </fieldset>
@@ -277,4 +287,16 @@
         <!-- COPY/PASTE UNTILL HERE // template -->
     </div>
 </body>
+<script type="text/javascript">
+    $(".slider input").slider({
+        from: 7,
+        to: 100,
+        step: 1,
+        round: 1,
+        limits: false,
+        scale: ["7&nbsp;days", "100&nbsp;days"],
+        skin: "round_plastic",
+        dimension: '&nbsp;days'
+    });
+</script>
 </html>

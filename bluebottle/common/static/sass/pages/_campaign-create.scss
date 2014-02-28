@@ -80,14 +80,25 @@
 		}
 	}
 	.campaign-duration {
-		input {
-			@include grid(36,0,2);
+		.slider {
+			padding-top: $base-padding;
+			td {
+				padding: 0;
+			}
+			@include grid(34,0,2);
 		}
-		a {
-			@include grid(12,0,0);	
+		.btn {
+			margin-top: $base-margin;
+			@include grid(14,2,0);	
 		}
 	}
 	.campaign-budget-breakdown {
+		tfoot {
+			color: $gray;
+			td {
+				border-bottom: none;
+			}
+		}
 		a {
 			text-decoration: none;
 		}

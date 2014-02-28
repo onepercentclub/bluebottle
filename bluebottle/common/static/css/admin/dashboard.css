@@ -587,6 +587,11 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 .flaticon.solid.X12:before {
   content: "\e1d7"; }
 
+/* line 1942, ../../sass/icons/_flaticons-solid.scss */
+.flaticon.solid.up-circle-4:before,
+.flaticon.solid.X17:before {
+  content: "\e1dc"; }
+
 /* line 1945, ../../sass/icons/_flaticons-solid.scss */
 .flaticon.solid.down-circle-4:before,
 .flaticon.solid.X18:before {

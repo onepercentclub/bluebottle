@@ -64,6 +64,15 @@
 		}
 		&:first-of-type, &:last-of-type {
 			color: $gray-light;
+			&:hover {
+				background-color: white;
+				color: $gray-light;
+			}
+			&:hover {
+				&:after {
+					border-left-color: $white;
+				}
+			}
 		}
 	}
 }

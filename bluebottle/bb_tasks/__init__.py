@@ -44,7 +44,7 @@ def get_task_model():
     return task_model
 
 
-def get_task_member_model():
+def get_taskmember_model():
     """
     Returns the TaskMember model
     """
@@ -62,7 +62,7 @@ def get_task_member_model():
 
     return taskmember_model
 
-def get_task_file_model():
+def get_taskfile_model():
     """
     Returns the TaskFile model
     """

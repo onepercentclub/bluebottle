@@ -18,7 +18,7 @@ from taggit.managers import TaggableManager
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
-class Skill(models.Model):
+class BaseSkill(models.Model):
 
     name = models.CharField(_('english name'), max_length=100, unique=True)
     name_nl = models.CharField(_('dutch name'), max_length=100, unique=True)
@@ -29,9 +29,9 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ('id', )
+        abstract = True
 
-
-class TaskMember(models.Model):
+class BaseTaskMember(models.Model):
     class TaskMemberStatuses(DjangoChoices):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
@@ -39,7 +39,7 @@ class TaskMember(models.Model):
         stopped = ChoiceItem('stopped', label=_('Stopped'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
-    member = models.ForeignKey(settings.AUTH_USER_MODEL)
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey(settings.TASKS_TASK_MODEL)
     status = models.CharField(
         _('status'), max_length=20, choices=TaskMemberStatuses.choices)
@@ -56,17 +56,22 @@ class TaskMember(models.Model):
     _initial_status = None
 
     def __init__(self, *args, **kwargs):
-        super(TaskMember, self).__init__(*args, **kwargs)
+        super(BaseTaskMember, self).__init__(*args, **kwargs)
         self._initial_status = self.status
 
+    class Meta:
+        abstract = True
 
-class TaskFile(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL)
+class BaseTaskFile(models.Model):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('Updated'))
     task = models.ForeignKey(settings.TASKS_TASK_MODEL)
+
+    class Meta:
+        abstract = True
 
 
 class BaseTask(models.Model):
@@ -99,7 +104,7 @@ class BaseTask(models.Model):
     time_needed = models.CharField(
         _('time_needed'), max_length=200,
         help_text=_('Estimated number of hours needed to perform this task.'))
-    skill = models.ForeignKey('bb_tasks.Skill', verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey(settings.TASKS_SKILL_MODEL, verbose_name=_('Skill needed'), null=True)
 
     # internal usage
     created = CreationDateTimeField(

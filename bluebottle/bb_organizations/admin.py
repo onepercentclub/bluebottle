@@ -1,15 +1,16 @@
 from django.contrib import admin
 
-from . import get_organization_model
+from . import get_organization_model, get_organizationdocument_model, get_organizationmember_model
 from .forms import OrganizationDocumentForm
-from .models import OrganizationDocument, OrganizationMember
 
 
 ORGANIZATION_MODEL = get_organization_model()
+MEMBER_MODEL = get_organizationmember_model()
+DOCUMENT_MODEL = get_organizationdocument_model()
 
 
 class OrganizationDocumentInline(admin.StackedInline):
-    model = OrganizationDocument
+    model = DOCUMENT_MODEL
     form = OrganizationDocumentForm
     extra = 0
     raw_id_fields = ('author', )
@@ -22,7 +23,7 @@ class OrganizationDocumentInline(admin.StackedInline):
 
 
 class OrganizationMemberInline(admin.StackedInline):
-    model = OrganizationMember
+    model = MEMBER_MODEL
     raw_id_fields = ('user', )
     extra = 0
 
@@ -37,9 +38,9 @@ admin.site.register(ORGANIZATION_MODEL, OrganizationAdmin)
 
 
 class OrganizationMemberAdmin(admin.ModelAdmin):
-    list_display = ('user', 'function', 'members')
+    list_display = ('user', 'function')
     list_filter = ('function',)
     raw_id_fields = ('user', )
     search_fields = ('user__first_name', 'user__last_name', 'user__username')
 
-admin.site.register(OrganizationMember, OrganizationMemberAdmin)
+admin.site.register(MEMBER_MODEL, OrganizationMemberAdmin)

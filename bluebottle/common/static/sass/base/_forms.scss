@@ -31,6 +31,41 @@ fieldset {
     }
 }
 
+.fieldset-tabs {
+    @include clearfix;
+    li {
+        padding: $base-padding $base-padding * 2;
+        float: left;
+        a {
+            color: $gray-dark;
+        }
+        &.selected {
+            position: relative;
+            background-color: $form-background;            
+            border: 1px solid white;
+            border-bottom: 2px solid $form-background;            
+            padding-bottom: $base-padding;
+            z-index: 100;
+            top: 1px;
+            text-decoration: none;
+            font-weight: bold;
+            a {
+                text-decoration: none;
+                color: $color-primary;                
+            }
+        }
+        &.label {
+            @include grid(24,0,0);
+        }
+    }
+}
+
+fieldset {
+    .fieldset-tabs {
+        margin-bottom: -$base-margin / 2;
+    }
+}
+
 // When outside of fieldset (usally only the first)
 legend {
     position: relative;
@@ -84,6 +119,12 @@ fieldset legend {
         @include grid(36,1,2);
         float: right;
         
+        &.controls-inline {
+            input, select {
+                margin-bottom: $base-margin;
+            }
+        }
+
         &.wide {
             @include grid(48,2,2);
         }
@@ -94,6 +135,12 @@ fieldset legend {
 
         .inline-append {
             @include grid(24,1,0);
+        }
+        .inline-onethird {
+            @include grid(16,0,1);
+        }
+        .inline-twothirds {
+            @include grid(32,1,0);
         }
     }
 }
@@ -265,36 +312,94 @@ input[type=url] {
 input:-moz-placeholder { color: $gray-light; }
 textarea:-moz-placeholder { color: $gray-light; }
 
+input[type=range] {
+    width:100%;
+}
+input[type=range]::-webkit-slider-thumb {
+    // -webkit-appearance: none !important;
+    background: $color-secondary;
+    height:30px;
+    width:30px;
+
+}
 
 // Tags
 // -------------------------
+
+// .tags {
+//     list-style: none;
+//     margin: 0;
+//     padding: 0;
+//     text-indent: 0;
+    
+//     li {
+//         @include resetlist;
+//         display: inline-block;
+//         padding: $base-padding/2 $base-padding/2 $base-padding/2 $base-padding;
+//         margin: 0 $base-margin/4 $base-margin/2 0;
+//         color: $white;
+//         font-size: $font-size-small;
+//         text-transform: uppercase;
+//         background-color: $color-secondary;
+        
+//         .flaticon {
+//             margin-right: $base-margin/2;
+//         }
+        
+//         .delete {
+//             color: $white;
+//             cursor: pointer;
+            
+//             &:hover {
+//                 color: $color-primary;
+//             }
+//         }
+//     }
+// }
 
 .tags {
     list-style: none;
     margin: 0;
     padding: 0;
     text-indent: 0;
+    margin-top: $base-margin / 2;
     
     li {
         @include resetlist;
+        position: relative;
         display: inline-block;
-        padding: $base-padding/2 $base-padding/2 $base-padding/2 $base-padding;
+        padding: $base-padding/2 $base-padding*4 $base-padding/2 $base-padding;
         margin: 0 $base-margin/4 $base-margin/2 0;
         color: $white;
         font-size: $font-size-small;
         text-transform: uppercase;
         background-color: $color-secondary;
-        
+        overflow: hidden;
+        border: 1px solid $gray-darkest;
         .flaticon {
-            margin-right: $base-margin/2;
+            text-shadow: 0 0 1px $gray-darkest;
         }
-        
         .delete {
             color: $white;
             cursor: pointer;
-            
+            // padding: $base-padding;
+            background: $gray-dark;
+            color: $gray-light;
+            font-size: $font-size-larger;
+            text-decoration: none;
+            text-align:center;
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            @include box-shadow(inset 0 0 2px $gray-dark);
             &:hover {
-                color: $color-primary;
+                background-color: $color-primary;
             }
         }
     }

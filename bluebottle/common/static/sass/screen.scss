@@ -56,6 +56,9 @@
 @import "modules/project-iframe";
 @import "modules/owner-actions";
 @import "modules/maps";
+@import "modules/steps";
+@import "modules/image_upload";
+@import "modules/document_upload";
 
 /* Pages */
 @import "pages/home";
@@ -73,6 +76,7 @@
 @import "pages/news";
 @import "pages/manage";
 @import "pages/fmo";
+@import "pages/campaign-create";
 
 /* Temp */
 @import "campaigns/crazy-campaign-2013";

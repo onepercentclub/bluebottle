@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, OEmbedField)
+    SorlImageField, ImageSerializer, OEmbedField, TaggableSerializerMixin, TagSerializer)
 from bluebottle.geo.models import Country
 
 from bluebottle.bb_projects import get_project_model
@@ -38,6 +38,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = UserPreviewSerializer()
     image = ImageSerializer(required=False)
     country = CountrySerializer()
+    tags = TagSerializer()
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -54,7 +55,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
-                  'status', 'meta_data', 'image', 'country', 'theme')
+                  'status', 'meta_data', 'image', 'country', 'theme', 'tags')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
@@ -68,7 +69,7 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
         model = PROJECT_MODEL
 
 
-class ManageProjectSerializer(serializers.ModelSerializer):
+class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail')
@@ -77,6 +78,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     status = serializers.PrimaryKeyRelatedField(required=False)
     image = ImageSerializer(required=False)
     pitch = serializers.CharField(required=False)
+    slug = serializers.CharField(read_only=True)
+    tags = TagSerializer()
 
     def validate_status(self, attrs, source):
         value = attrs.get(source, None)
@@ -87,4 +90,4 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PROJECT_MODEL
-        exclude = ('owner', 'slug')
+        exclude = ('owner',)

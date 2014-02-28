@@ -11,7 +11,7 @@ from djchoices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 
-class OrganizationMember(models.Model):
+class BaseOrganizationMember(models.Model):
     """ Members from a Organization """
 
     class MemberFunctions(DjangoChoices):
@@ -20,26 +20,30 @@ class OrganizationMember(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
     function = models.CharField(_('function'), max_length=20, choices=MemberFunctions.choices)
+    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL)
 
     class Meta:
         verbose_name = _('organization member')
         verbose_name_plural = _('organization members')
+        abstract = True
 
 
-class OrganizationDocument(models.Model):
+class BaseOrganizationDocument(models.Model):
     """ Document for an Organization """
 
     file = models.FileField(
         upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
     author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)
+    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL)
 
     class Meta:
         verbose_name = _('organization document')
         verbose_name_plural = _('organization documents')
+        abstract = True
 
     @property
     def document_url(self):
-        content_type = ContentType.objects.get_for_model(OrganizationDocument).id
+        content_type = ContentType.objects.get_for_model(settings.ORGANIZATIONS_DOCUMENT_MODEL).id
         return reverse('document-download-detail', kwargs={'content_type': content_type, 'pk': self.pk})
 
 
@@ -57,7 +61,6 @@ class BaseOrganization(models.Model):
     partner_organizations = models.TextField(_('partner organizations'), blank=True)
 
     members = models.ManyToManyField('bb_organizations.OrganizationMember', null=True, related_name="members")
-    documents = models.ManyToManyField('bb_organizations.OrganizationDocument', null=True, related_name="documents")
 
     # Address
     address_line1 = models.CharField(max_length=100, blank=True)

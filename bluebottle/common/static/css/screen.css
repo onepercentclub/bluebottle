@@ -7843,7 +7843,6 @@ form#manage-project-new {
     margin-right: 0%; }
   /* line 28, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-footer {
-    display: none;
     width: 100%;
     position: fixed;
     bottom: 0;
@@ -7851,13 +7850,13 @@ form#manage-project-new {
     background: #666666;
     padding: 1em;
     z-index: 100; }
-    /* line 37, ../sass/pages/_campaign-create.scss */
+    /* line 36, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .navigation {
       float: left;
       width: 62.5%;
       margin-left: 2.08333%;
       margin-right: 2.08333%; }
-    /* line 40, ../sass/pages/_campaign-create.scss */
+    /* line 39, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .actions {
       float: left;
       width: 29.16667%;
@@ -7865,40 +7864,40 @@ form#manage-project-new {
       margin-right: 2.08333%;
       text-align: right;
       padding: 0.5em 0; }
-    /* line 45, ../sass/pages/_campaign-create.scss */
+    /* line 44, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .save {
       text-decoration: none;
       color: #cccccc; }
-    /* line 49, ../sass/pages/_campaign-create.scss */
+    /* line 48, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .next {
       float: right; }
-    /* line 52, ../sass/pages/_campaign-create.scss */
+    /* line 51, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .previous {
       float: left; }
-  /* line 58, ../sass/pages/_campaign-create.scss */
+  /* line 57, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-amount label {
     padding-top: 0.5em;
     float: left;
     width: 33.33333%;
     margin-left: 0%;
     margin-right: 0%; }
-  /* line 62, ../sass/pages/_campaign-create.scss */
+  /* line 61, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-amount input {
     float: left;
     width: 66.66667%;
     margin-left: 0%;
     margin-right: 0%; }
-  /* line 68, ../sass/pages/_campaign-create.scss */
+  /* line 67, ../sass/pages/_campaign-create.scss */
   #campaign-create table td {
     padding: 0.5em 0;
     padding-right: 1em; }
-  /* line 74, ../sass/pages/_campaign-create.scss */
+  /* line 73, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-create-preview-widget {
     margin-bottom: 4em; }
-  /* line 78, ../sass/pages/_campaign-create.scss */
+  /* line 77, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-create-tips ul {
     margin-left: 1.5em; }
-    /* line 80, ../sass/pages/_campaign-create.scss */
+    /* line 79, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-create-tips ul li {
       padding-left: 0;
       text-indent: 0;
@@ -7912,55 +7911,55 @@ form#manage-project-new {
       /* line 25, ../sass/mixins/_utilities.scss */
       #campaign-create .campaign-create-tips ul li li {
         list-style: none; }
-  /* line 89, ../sass/pages/_campaign-create.scss */
+  /* line 88, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-duration .slider {
     padding-top: 1em;
     float: left;
     width: 66.66667%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-    /* line 91, ../sass/pages/_campaign-create.scss */
+    /* line 90, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-duration .slider td {
       padding: 0; }
-  /* line 96, ../sass/pages/_campaign-create.scss */
+  /* line 95, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-duration .btn {
     margin-top: 1em;
     float: left;
     width: 25%;
     margin-left: 4.16667%;
     margin-right: 0%; }
-  /* line 103, ../sass/pages/_campaign-create.scss */
+  /* line 102, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-breakdown tfoot {
     color: #999999; }
-    /* line 105, ../sass/pages/_campaign-create.scss */
+    /* line 104, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-budget-breakdown tfoot td {
       border-bottom: none; }
-  /* line 109, ../sass/pages/_campaign-create.scss */
+  /* line 108, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-breakdown a {
     text-decoration: none; }
-  /* line 114, ../sass/pages/_campaign-create.scss */
+  /* line 113, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-description {
     float: left;
     width: 58.33333%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 118, ../sass/pages/_campaign-create.scss */
+  /* line 117, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-amount {
     float: left;
     width: 20.83333%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 122, ../sass/pages/_campaign-create.scss */
+  /* line 121, ../sass/pages/_campaign-create.scss */
   #campaign-create .add-budget {
     float: left;
     width: 12.5%;
     margin-left: 0%;
     margin-right: 0%; }
-  /* line 126, ../sass/pages/_campaign-create.scss */
+  /* line 125, ../sass/pages/_campaign-create.scss */
   #campaign-create .missing-steps {
     margin: 0;
     padding: 0; }
-    /* line 129, ../sass/pages/_campaign-create.scss */
+    /* line 128, ../sass/pages/_campaign-create.scss */
     #campaign-create .missing-steps li {
       padding-left: 0;
       text-indent: 0;
@@ -7986,51 +7985,51 @@ form#manage-project-new {
       /* line 43, ../sass/mixins/_grid.scss */
       #campaign-create .missing-steps li:after {
         clear: both; }
-      /* line 135, ../sass/pages/_campaign-create.scss */
+      /* line 134, ../sass/pages/_campaign-create.scss */
       #campaign-create .missing-steps li .category {
         position: relative;
         float: left;
         width: 20.83333%;
         margin-left: 0%;
         margin-right: 4.16667%; }
-        /* line 138, ../sass/pages/_campaign-create.scss */
+        /* line 137, ../sass/pages/_campaign-create.scss */
         #campaign-create .missing-steps li .category:after {
           content: "\203A";
           color: #999999;
           position: absolute;
           right: 0; }
-      /* line 145, ../sass/pages/_campaign-create.scss */
+      /* line 144, ../sass/pages/_campaign-create.scss */
       #campaign-create .missing-steps li .details {
         float: left;
         width: 50%;
         margin-left: 0%;
         margin-right: 0%; }
-      /* line 148, ../sass/pages/_campaign-create.scss */
+      /* line 147, ../sass/pages/_campaign-create.scss */
       #campaign-create .missing-steps li .action {
         float: left;
         width: 20.83333%;
         margin-left: 4.16667%;
         margin-right: 0%; }
-        /* line 150, ../sass/pages/_campaign-create.scss */
+        /* line 149, ../sass/pages/_campaign-create.scss */
         #campaign-create .missing-steps li .action a {
           color: #5da423;
           text-decoration: none; }
-      /* line 155, ../sass/pages/_campaign-create.scss */
+      /* line 154, ../sass/pages/_campaign-create.scss */
       #campaign-create .missing-steps li.introduction {
         color: white;
         background-color: #999999;
         padding: 2em; }
-        /* line 159, ../sass/pages/_campaign-create.scss */
+        /* line 158, ../sass/pages/_campaign-create.scss */
         #campaign-create .missing-steps li.introduction strong {
           display: block;
           color: #222222; }
-        /* line 163, ../sass/pages/_campaign-create.scss */
+        /* line 162, ../sass/pages/_campaign-create.scss */
         #campaign-create .missing-steps li.introduction h3 {
           margin: 0;
           color: white;
           font-weight: bold;
           text-transform: none; }
-        /* line 169, ../sass/pages/_campaign-create.scss */
+        /* line 168, ../sass/pages/_campaign-create.scss */
         #campaign-create .missing-steps li.introduction .flaticon {
           float: left;
           width: 8.33333%;
@@ -8038,13 +8037,13 @@ form#manage-project-new {
           margin-right: 8.33333%;
           font-size: 2.5em;
           text-align: center; }
-  /* line 178, ../sass/pages/_campaign-create.scss */
+  /* line 177, ../sass/pages/_campaign-create.scss */
   #campaign-create .in-review {
     padding: 2em;
     background-color: #5da423;
     color: black;
     margin-bottom: 2em; }
-    /* line 183, ../sass/pages/_campaign-create.scss */
+    /* line 182, ../sass/pages/_campaign-create.scss */
     #campaign-create .in-review .flaticon {
       float: left;
       width: 4.16667%;
@@ -8053,13 +8052,13 @@ form#manage-project-new {
       font-size: 2.5em;
       text-align: center;
       color: white; }
-    /* line 190, ../sass/pages/_campaign-create.scss */
+    /* line 189, ../sass/pages/_campaign-create.scss */
     #campaign-create .in-review .in-review-text h3 {
       color: white;
       margin: 0;
       text-transform: none;
       font-weight: bold; }
-  /* line 198, ../sass/pages/_campaign-create.scss */
+  /* line 197, ../sass/pages/_campaign-create.scss */
   #campaign-create .suggestion {
     text-align: center; }
 

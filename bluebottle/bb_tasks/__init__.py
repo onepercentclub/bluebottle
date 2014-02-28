@@ -64,7 +64,7 @@ def get_task_member_model():
 
 def get_task_file_model():
     """
-    Returns the Task File model
+    Returns the TaskFile model
     """
     try:
         app_label, model_name = settings.TASKS_TASKFILE_MODEL.split('.')
@@ -79,3 +79,21 @@ def get_task_file_model():
             "installed".format(settings.TASKS_TASKFILE_MODEL))
 
     return taskfile_model
+
+def get_skill_model():
+    """
+    Returns the Skill model
+    """
+    try:
+        app_label, model_name = settings.TASKS_SKILL_MODEL.split('.')
+    except ValueError:
+        raise ImproperlyConfigured(
+            "TASKS_SKILL_MODEL must be of the form 'app_label.model_name'")
+
+    skill_model = get_model(app_label, model_name)
+    if skill_model is None:
+        raise ImproperlyConfigured(
+            "TASKS_SKILL_MODEL refers to model '{0}' that has not been "
+            "installed".format(settings.TASKS_SKILL_MODEL))
+
+    return skill_model

@@ -335,6 +335,22 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 #manage-project .manage-project-nav li a .F7.is-finished:before {
   content: "\e06a"; }
 
+/* line 448, ../sass/icons/_flaticons-solid.scss */
+.flaticon.solid.magnifying-glass-1:before, #manage-project .manage-project-nav li a .magnifying-glass-1.is-unfinished:before, #manage-project .manage-project-nav li a .magnifying-glass-1.is-finished:before,
+.flaticon.solid.magnifying-glass:before,
+#manage-project .manage-project-nav li a .magnifying-glass.is-unfinished:before,
+#manage-project .manage-project-nav li a .magnifying-glass.is-finished:before,
+.flaticon.solid.zoom-1:before,
+#manage-project .manage-project-nav li a .zoom-1.is-unfinished:before,
+#manage-project .manage-project-nav li a .zoom-1.is-finished:before,
+.flaticon.solid.zoom:before,
+#manage-project .manage-project-nav li a .zoom.is-unfinished:before,
+#manage-project .manage-project-nav li a .zoom.is-finished:before,
+.flaticon.solid.F14:before,
+#manage-project .manage-project-nav li a .F14.is-unfinished:before,
+#manage-project .manage-project-nav li a .F14.is-finished:before {
+  content: "\e071"; }
+
 /* line 462, ../sass/icons/_flaticons-solid.scss */
 .flaticon.solid.eye-1:before, #manage-project .manage-project-nav li a .eye-1.is-unfinished:before, #manage-project .manage-project-nav li a .eye-1.is-finished:before,
 .flaticon.solid.eye:before,
@@ -5477,7 +5493,7 @@ table {
 /* line 1, ../sass/modules/_steps.scss */
 .steps {
   overflow: hidden;
-  border-bottom: 1px solid #cccccc; }
+  border-bottom: 1px solid #e9e9e9; }
   /* line 4, ../sass/modules/_steps.scss */
   .steps .step {
     position: relative;
@@ -5498,35 +5514,28 @@ table {
       padding: 0.5em;
       text-align: center; }
     /* line 19, ../sass/modules/_steps.scss */
-    .steps .step.active {
-      background-color: #444444;
-      color: white; }
-      /* line 22, ../sass/modules/_steps.scss */
-      .steps .step.active .flaticon {
-        color: #444444; }
-      /* line 25, ../sass/modules/_steps.scss */
-      .steps .step.active:after {
-        border-left-color: #444444; }
-    /* line 29, ../sass/modules/_steps.scss */
     .steps .step.validated {
       background-color: #5da423;
       color: white; }
-      /* line 32, ../sass/modules/_steps.scss */
+      /* line 22, ../sass/modules/_steps.scss */
       .steps .step.validated .flaticon {
         color: #5da423; }
-      /* line 35, ../sass/modules/_steps.scss */
+      /* line 25, ../sass/modules/_steps.scss */
       .steps .step.validated:after {
         border-left-color: #5da423; }
-    /* line 39, ../sass/modules/_steps.scss */
-    .steps .step:hover {
-      background-color: #cccccc;
+    /* line 29, ../sass/modules/_steps.scss */
+    .steps .step.active, .steps .step:hover {
+      background-color: #444444;
       color: white; }
-      /* line 42, ../sass/modules/_steps.scss */
-      .steps .step:hover:after {
-        border-left-color: #cccccc; }
-    /* line 46, ../sass/modules/_steps.scss */
+      /* line 32, ../sass/modules/_steps.scss */
+      .steps .step.active .flaticon, .steps .step:hover .flaticon {
+        color: #444444; }
+      /* line 35, ../sass/modules/_steps.scss */
+      .steps .step.active:after, .steps .step:hover:after {
+        border-left-color: #444444; }
+    /* line 47, ../sass/modules/_steps.scss */
     .steps .step:after, .steps .step:before {
-      left: 99%;
+      left: 100%;
       top: 50%;
       border: solid transparent;
       content: " ";
@@ -5535,24 +5544,22 @@ table {
       position: absolute;
       pointer-events: none;
       border-left-color: white;
-      border-width: 1.5em;
-      margin-top: -1.5em;
+      border-width: 25px;
+      margin-top: -25px;
       z-index: 2; }
-    /* line 60, ../sass/modules/_steps.scss */
+    /* line 61, ../sass/modules/_steps.scss */
     .steps .step:before {
-      border-left-color: #cccccc;
+      border-left-color: #e9e9e9;
       left: 100%;
-      z-index: 1; }
-    /* line 65, ../sass/modules/_steps.scss */
+      z-index: 1;
+      border-width: 27px;
+      margin-top: -27px; }
+    /* line 68, ../sass/modules/_steps.scss */
     .steps .step:first-of-type, .steps .step:last-of-type {
       color: #cccccc; }
-      /* line 67, ../sass/modules/_steps.scss */
+      /* line 70, ../sass/modules/_steps.scss */
       .steps .step:first-of-type:hover, .steps .step:last-of-type:hover {
-        background-color: white;
-        color: #cccccc; }
-      /* line 72, ../sass/modules/_steps.scss */
-      .steps .step:first-of-type:hover:after, .steps .step:last-of-type:hover:after {
-        border-left-color: white; }
+        color: white; }
 
 /* line 1, ../sass/modules/_image_upload.scss */
 .image-upload {
@@ -8031,6 +8038,30 @@ form#manage-project-new {
           margin-right: 8.33333%;
           font-size: 2.5em;
           text-align: center; }
+  /* line 178, ../sass/pages/_campaign-create.scss */
+  #campaign-create .in-review {
+    padding: 2em;
+    background-color: #5da423;
+    color: black;
+    margin-bottom: 2em; }
+    /* line 183, ../sass/pages/_campaign-create.scss */
+    #campaign-create .in-review .flaticon {
+      float: left;
+      width: 4.16667%;
+      margin-left: 0%;
+      margin-right: 8.33333%;
+      font-size: 2.5em;
+      text-align: center;
+      color: white; }
+    /* line 190, ../sass/pages/_campaign-create.scss */
+    #campaign-create .in-review .in-review-text h3 {
+      color: white;
+      margin: 0;
+      text-transform: none;
+      font-weight: bold; }
+  /* line 198, ../sass/pages/_campaign-create.scss */
+  #campaign-create .suggestion {
+    text-align: center; }
 
 /* Temp */
 @font-face {

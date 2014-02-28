@@ -261,6 +261,14 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 .flaticon.solid.F7:before {
   content: "\e06a"; }
 
+/* line 448, ../../sass/icons/_flaticons-solid.scss */
+.flaticon.solid.magnifying-glass-1:before,
+.flaticon.solid.magnifying-glass:before,
+.flaticon.solid.zoom-1:before,
+.flaticon.solid.zoom:before,
+.flaticon.solid.F14:before {
+  content: "\e071"; }
+
 /* line 462, ../../sass/icons/_flaticons-solid.scss */
 .flaticon.solid.eye-1:before,
 .flaticon.solid.eye:before,

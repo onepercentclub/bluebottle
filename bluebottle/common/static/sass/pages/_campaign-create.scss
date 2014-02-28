@@ -174,4 +174,28 @@
 			}			
 		}
 	}
+
+	.in-review {
+		padding: $base-padding * 2;
+		background-color: $color-success;
+		color: $black;
+		margin-bottom: $base-margin * 2;
+		.flaticon {
+			@include grid(6,0,4);
+			font-size: $font-size-largest;
+			text-align: center;
+			color: $white;
+		}
+		.in-review-text {		
+			h3 {
+				color: $white;
+				margin: 0;
+				text-transform: none;
+				font-weight: bold;
+			}
+		}
+	}
+	.suggestion {
+		text-align: center;
+	}
 }

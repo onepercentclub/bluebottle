@@ -1,6 +1,6 @@
 .steps {
 	overflow: hidden;
-	border-bottom: 1px solid $gray-light;
+	border-bottom: 1px solid $gray-lighter;
 	.step {
 		position: relative;
 		background-color: $white;
@@ -16,16 +16,6 @@
 			padding: $base-padding / 2;
 			text-align: center;
 		}
-		&.active {
-			background-color: $gray-darker;
-			color: $white;
-			.flaticon { 
-				color: $gray-darker;
-			}
-			&:after {
-				border-left-color: $gray-darker;
-			}
-		}
 		&.validated {
 			background-color: $color-success;
 			color: $white;
@@ -36,15 +26,26 @@
 				border-left-color: $color-success;
 			}
 		}
-		&:hover {
-			background-color: $gray-light;
-			color: white;
+		&.active, &:hover {
+			background-color: $gray-darker;
+			color: $white;
+			.flaticon { 
+				color: $gray-darker;
+			}
 			&:after {
-				border-left-color: $gray-light;
+				border-left-color: $gray-darker;
 			}
 		}
+
+		// &:hover {
+		// 	background-color: $gray-light;
+		// 	color: white;
+		// 	&:after {
+		// 		border-left-color: $gray-light;
+		// 	}
+		// }
 		&:after, &:before {
-			left: 99%;
+			left: 100%;
 			top: 50%;
 			border: solid transparent;
 			content: " ";
@@ -53,25 +54,21 @@
 			position: absolute;
 			pointer-events: none;
 			border-left-color: $white;
-			border-width: $base-line-height;
-			margin-top: -$base-line-height;
+			border-width: 25px;
+			margin-top: -25px;
 			z-index: 2;	
 		}
 		&:before {
-			border-left-color: $gray-light;
+			border-left-color: $gray-lighter;
 			left: 100%;
 			z-index: 1;	
+			border-width: 27px;
+			margin-top: -27px;
 		}
 		&:first-of-type, &:last-of-type {
 			color: $gray-light;
 			&:hover {
-				background-color: white;
-				color: $gray-light;
-			}
-			&:hover {
-				&:after {
-					border-left-color: $white;
-				}
+				color: $white;
 			}
 		}
 	}

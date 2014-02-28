@@ -170,7 +170,6 @@ class MetaTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         item = json.loads(response.content)
-        print item
         meta_data = item.get('meta_data2')
 
         # this image has to be processed by sorl.thumbnail

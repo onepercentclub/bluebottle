@@ -48,8 +48,8 @@ class TaskSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
     status = HumanReadableChoiceField(
         choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
+    tags = TagSerializer()
 
-    # tags = TagSerializer()
     meta_data = MetaField(
         title='get_meta_title',
         fb_title='get_fb_title',

@@ -1,3 +1,4 @@
+from taggit.managers import TaggableManager
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -71,6 +72,8 @@ class BaseProject(models.Model):
     status = models.ForeignKey('bb_projects.ProjectPhase')
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True)
     favorite = models.BooleanField(default=True)
+    tags = TaggableManager(blank=True, verbose_name=_('tags'),
+                           help_text=_('Add tags'))
 
     # Extended Description
     description = models.TextField(

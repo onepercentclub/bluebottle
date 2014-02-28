@@ -12,7 +12,7 @@
         {{/each}}
     </ul>
 
-    {{view App.TagField valueBinding="view.new_tag" placeholder="Add a tag" class="tag"}} <button class="btn btn-modest" {{action addTag target=view}}>Add</button>
+    {{view App.TagField valueBinding="view.new_tag" name="tag" placeholder="Add a tag" class="tag"}} <button class="btn btn-modest add-tag" {{action addTag target=view}}>Add</button>
 
 {% endtplhandlebars %}
 

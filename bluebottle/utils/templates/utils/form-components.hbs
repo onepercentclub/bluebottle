@@ -18,7 +18,7 @@
 
 {% tplhandlebars "components/bb-text-area" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view Em.TextArea valueBinding=valueBinding placeholderBinding=placeholder maxlengthBinding=maxlength
+        {{view Em.TextArea valueBinding=valueBinding nameBinding=name placeholderBinding=placeholder maxlengthBinding=maxlength
                rowsBinding=rows colsBinding=cols classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
@@ -26,7 +26,7 @@
 
 {% tplhandlebars "components/bb-text-field" %}
     {{#bb-form-field hint=hint label=label errors=errors contentBinding=contentBinding}}
-        {{view Em.TextField step=step valueBinding=valueBinding placeholderBinding=placeholder
+        {{view Em.TextField step=step nameBinding=name valueBinding=valueBinding placeholderBinding=placeholder
             maxlengthBinding=maxlength classBinding="errors.length:error" typeBinding=type}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
@@ -34,7 +34,7 @@
 
 {% tplhandlebars "components/bb-radio" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view Em.TextField valueBinding=valueBinding placeholderBinding=placeholder
+        {{view Em.TextField valueBinding=valueBinding nameBinding=name placeholderBinding=placeholder
                classBinding="errors.length:error"  typeBinding=type}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
@@ -42,27 +42,31 @@
 
 {% tplhandlebars "components/bb-select" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view Em.Select contentBinding=options optionValuePath="content.value" optionLabelPath="content.text"
+        {{view Em.Select contentBinding=options nameBinding=name optionValuePath="content.value" optionLabelPath="content.text"
                selectedValueBinding=valueBinding classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-select-name" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view Em.Select contentBinding=options optionValuePath="content.name" optionLabelPath="content.name" selectionBinding=selectionBinding classBinding="errors.length:error" promptBinding=prompt}}
+        {{view Em.Select contentBinding=options optionValuePath="content.name" nameBinding=name
+            optionLabelPath="content.name" selectionBinding=selectionBinding
+            classBinding="errors.length:error" promptBinding=prompt}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
 
 {% tplhandlebars "components/bb-map-picker" %}
     {{#bb-form-field hint=hint label=label errors=errors className='wide'}}
-        {{view App.MapPicker longitudeBinding=longitudeBinding latitudeBinding=latitudeBinding classBinding="errors.length:error"}}
+        {{view App.MapPicker longitudeBinding=longitudeBinding latitudeBinding=latitudeBinding  nameBinding=name
+            classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-date-picker" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view App.DatePicker valueBinding=valueBinding minDate=minDate classBinding="errors.length:error"}}
+        {{view App.DatePicker valueBinding=valueBinding minDate=minDate  nameBinding=name
+            classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
@@ -70,7 +74,7 @@
 {% tplhandlebars "components/bb-upload-image" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
         <a class="btn btn-iconed btn-upload">
-            {{view App.UploadFile fileBinding=fileBinding accept=accept}}
+            {{view App.UploadFile nameBinding=name fileBinding=fileBinding accept=accept}}
             <span class="flaticon solid upload-document-1"></span>
             {{buttonLabel}}
         </a>
@@ -84,7 +88,8 @@
 
 {% tplhandlebars "components/bb-video-link" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view Em.TextField step=step valueBinding=valueBinding placeholderBinding=placeholder classBinding="errors.length:error"}}
+        {{view Em.TextField step=step valueBinding=valueBinding nameBinding=name
+            placeholderBinding=placeholder classBinding="errors.length:error"}}
         <br />
         {{#if video_html}}
             {{{video_html}}}
@@ -94,7 +99,8 @@
 
 {% tplhandlebars "components/bb-datepicker" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view App.CustomDatePicker minDateBinding=minDate valueBinding=valueBinding placeholderBinding=placeholder }}
+        {{view App.CustomDatePicker minDateBinding=minDate valueBinding=valueBinding
+            nameBinding=name placeholderBinding=placeholder }}
     {{/bb-form-field}}
 
 {% endtplhandlebars %}

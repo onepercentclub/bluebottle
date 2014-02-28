@@ -3,11 +3,13 @@
 	height: 150px;
 	margin-bottom: $base-margin;
 	overflow: hidden;
+
 	.image-upload-drag, .image-upload-controls {
 		@include grid(24,0,0);
 		padding: $base-padding;
 		height: 150px;
 	}
+	
 	.image-upload-drag {
 		text-align: center;
 		padding-top: $base-padding * 2;
@@ -16,8 +18,8 @@
 			position: absolute;
 			@include grid(24,0,0);
 			height: 150px;
-			top: 0;
-			left: 0;
+			top: 1px;
+			left: 1px;
 			overflow: hidden;
 		}
 		.flaticon {
@@ -26,15 +28,18 @@
 			font-size: $font-size-largest * 2;
 		}
 	}
+	
 	.image-upload-controls {
 		@include grid(24,0,0);
 		padding: $base-padding;
 		background-color: $white;
 		text-align: center;
 		position: relative;
+	
 		.image-upload-controls-instructions {
 			margin-bottom: $base-margin / 2;
 		}
+	
 		.image-upload-controls-browse {
 			color: $color-secondary;
 			display: block;
@@ -42,11 +47,13 @@
 			text-decoration: none;
 			margin-bottom: $base-margin / 2;
 		}
+	
 		.image-upload-controls-allowed {
 			display: block;
 			color: $gray;
 		}
 	}
+	
 	&:after {
 		position: absolute;
 		content: ' ';
@@ -57,5 +64,6 @@
 		height: 150px;
 		top: 0;
 		left: 0;
+		z-index: 100;
 	}
 }

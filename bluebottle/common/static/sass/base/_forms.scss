@@ -31,6 +31,41 @@ fieldset {
     }
 }
 
+.fieldset-tabs {
+    @include clearfix;
+    li {
+        padding: $base-padding $base-padding * 2;
+        float: left;
+        a {
+            color: $gray-dark;
+        }
+        &.selected {
+            position: relative;
+            background-color: $form-background;            
+            border: 1px solid white;
+            border-bottom: 2px solid $form-background;            
+            padding-bottom: $base-padding;
+            z-index: 100;
+            top: 1px;
+            text-decoration: none;
+            font-weight: bold;
+            a {
+                text-decoration: none;
+                color: $color-primary;                
+            }
+        }
+        &.label {
+            @include grid(24,0,0);
+        }
+    }
+}
+
+fieldset {
+    .fieldset-tabs {
+        margin-bottom: -$base-margin / 2;
+    }
+}
+
 // When outside of fieldset (usally only the first)
 legend {
     position: relative;

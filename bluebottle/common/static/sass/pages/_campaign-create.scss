@@ -1,5 +1,7 @@
 #campaign-create {
+	
 	margin-bottom: $base-margin * 6;
+	
 	.campaign-header {
 		background-color: $gray-lighter;
 		.page-title {
@@ -51,20 +53,24 @@
 			float: left;			
 		}
 	}
-	.amount-control {
+
+	.campaign-amount {
 		label {
-			@include grid(24,0,0);
+			padding-top: $base-padding / 2;
+			@include grid(16,0,0);
 		}
 		input {
-			@include grid(24,0,0);			
+			@include grid(32,0,0);			
 		}
 	}
+
 	table {
 		td {
 			padding: ($base-padding/2) 0;
 			padding-right: $base-padding;
 		}
 	}
+
 	.campaign-create-preview-widget {
 		margin-bottom: $base-margin * 4;
 	}
@@ -92,6 +98,7 @@
 			@include grid(14,2,0);	
 		}
 	}
+
 	.campaign-budget-breakdown {
 		tfoot {
 			color: $gray;
@@ -103,21 +110,68 @@
 			text-decoration: none;
 		}
 	}
+
 	.campaign-budget-description {
 		@include grid(30,0,2);
 	}
+
 	.campaign-budget-amount {
 		@include grid(12,0,2);
 	}
+
 	.add-budget {
 		@include grid(6,0,0);
 	}
-	.fieldset-tabs {
+
+	.missing-steps {
+		margin: 0;
+		padding: 0;
 		li {
-			width: 50%;
-			margin: 0 $base-margin;
-			display: block;
-			float: left
+			@include resetlist;
+			@include clearfix;
+			padding: $base-padding $base-padding * 2;
+			background: $gray-lighter;
+			border-bottom: 1px solid $white;
+			.category {
+				position: relative;
+				@include grid(12,0,2);
+				&:after {
+					content: "\203A";
+					color: $gray;
+					position: absolute;
+					right: 0;
+				}
+			}
+			.details {
+				@include grid(24,0,0);
+			}
+			.action {
+				@include grid(12,2,0);				
+				a {
+					color: $color-success;
+					text-decoration: none;
+				}
+			}
+			&.introduction {
+				color: $white;
+				background-color: $gray;
+				padding: $base-padding * 2;
+				strong {
+					display: block;
+					color: $gray-darkest;
+				}
+				h3 {
+					margin: 0;
+					color: $white;
+					font-weight: bold;
+					text-transform: none;
+				}
+				.flaticon {
+					@include grid(8,0,4);
+					font-size: $font-size-largest;
+					text-align: center;
+				}
+			}			
 		}
 	}
 }

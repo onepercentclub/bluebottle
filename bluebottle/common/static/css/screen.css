@@ -1528,6 +1528,10 @@ blockquote:after {
   .well {
     *zoom: 1; }
 
+/* line 261, ../sass/base/_type.scss */
+.flaticon {
+  vertical-align: middle; }
+
 /*
 figure {
     display: inline-block;
@@ -2344,31 +2348,78 @@ fieldset {
     margin-right: 4.16667%;
     padding: 0.5em 0; }
 
-/* line 35, ../sass/base/_forms.scss */
+/* line 34, ../sass/base/_forms.scss */
+.fieldset-tabs {
+  *zoom: 1; }
+  /* line 42, ../sass/mixins/_grid.scss */
+  .fieldset-tabs:before, .fieldset-tabs:after {
+    display: block;
+    height: 0 !important;
+    line-height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    content: "."; }
+  /* line 43, ../sass/mixins/_grid.scss */
+  .fieldset-tabs:after {
+    clear: both; }
+  /* line 36, ../sass/base/_forms.scss */
+  .fieldset-tabs li {
+    padding: 1em 2em;
+    float: left; }
+    /* line 39, ../sass/base/_forms.scss */
+    .fieldset-tabs li a {
+      color: #666666; }
+    /* line 42, ../sass/base/_forms.scss */
+    .fieldset-tabs li.selected {
+      position: relative;
+      background-color: #e9e9e9;
+      border: 1px solid white;
+      border-bottom: 2px solid #e9e9e9;
+      padding-bottom: 1em;
+      z-index: 100;
+      top: 1px;
+      text-decoration: none;
+      font-weight: bold; }
+      /* line 52, ../sass/base/_forms.scss */
+      .fieldset-tabs li.selected a {
+        text-decoration: none;
+        color: #0896ff; }
+    /* line 57, ../sass/base/_forms.scss */
+    .fieldset-tabs li.label {
+      float: left;
+      width: 50%;
+      margin-left: 0%;
+      margin-right: 0%; }
+
+/* line 64, ../sass/base/_forms.scss */
+fieldset .fieldset-tabs {
+  margin-bottom: -0.5em; }
+
+/* line 70, ../sass/base/_forms.scss */
 legend {
   position: relative;
   padding: 1.5em 2em;
   background-color: white;
   width: 100%; }
-  /* line 41, ../sass/base/_forms.scss */
+  /* line 76, ../sass/base/_forms.scss */
   legend strong {
     display: block;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1.225em;
     color: #003580;
     text-transform: uppercase; }
-  /* line 49, ../sass/base/_forms.scss */
+  /* line 84, ../sass/base/_forms.scss */
   legend p {
     margin: 0; }
 
-/* line 55, ../sass/base/_forms.scss */
+/* line 90, ../sass/base/_forms.scss */
 fieldset legend {
   background-color: #cccccc; }
-  /* line 58, ../sass/base/_forms.scss */
+  /* line 93, ../sass/base/_forms.scss */
   fieldset legend strong {
     color: white; }
 
-/* line 63, ../sass/base/_forms.scss */
+/* line 98, ../sass/base/_forms.scss */
 .control-group {
   padding-bottom: 0.5em;
   position: relative; }
@@ -2382,10 +2433,10 @@ fieldset legend {
   /* line 13, ../sass/mixins/_utilities.scss */
   .control-group {
     *zoom: 1; }
-  /* line 68, ../sass/base/_forms.scss */
+  /* line 103, ../sass/base/_forms.scss */
   .control-group:first-child {
     padding-top: 1em; }
-  /* line 72, ../sass/base/_forms.scss */
+  /* line 107, ../sass/base/_forms.scss */
   .control-group .control-label {
     float: left;
     width: 18.75%;
@@ -2393,13 +2444,13 @@ fieldset legend {
     margin-right: 2.08333%;
     padding: 0.5em 0;
     font-family: Arial, Helvetica, sans-serif; }
-    /* line 77, ../sass/base/_forms.scss */
+    /* line 112, ../sass/base/_forms.scss */
     .control-group .control-label.wide {
       float: left;
       width: 91.66667%;
       margin-left: 4.16667%;
       margin-right: 4.16667%; }
-  /* line 82, ../sass/base/_forms.scss */
+  /* line 117, ../sass/base/_forms.scss */
   .control-group .controls {
     position: relative;
     float: left;
@@ -2407,41 +2458,41 @@ fieldset legend {
     margin-left: 2.08333%;
     margin-right: 4.16667%;
     float: right; }
-    /* line 88, ../sass/base/_forms.scss */
+    /* line 123, ../sass/base/_forms.scss */
     .control-group .controls.controls-inline input, .control-group .controls.controls-inline select {
       margin-bottom: 1em; }
-    /* line 93, ../sass/base/_forms.scss */
+    /* line 128, ../sass/base/_forms.scss */
     .control-group .controls.wide {
       float: left;
       width: 91.66667%;
       margin-left: 4.16667%;
       margin-right: 4.16667%; }
-    /* line 97, ../sass/base/_forms.scss */
+    /* line 132, ../sass/base/_forms.scss */
     .control-group .controls .inline-prepend {
       float: left;
       width: 47.91667%;
       margin-left: 0%;
       margin-right: 2.08333%; }
-    /* line 101, ../sass/base/_forms.scss */
+    /* line 136, ../sass/base/_forms.scss */
     .control-group .controls .inline-append {
       float: left;
       width: 47.91667%;
       margin-left: 2.08333%;
       margin-right: 0%; }
-    /* line 104, ../sass/base/_forms.scss */
+    /* line 139, ../sass/base/_forms.scss */
     .control-group .controls .inline-onethird {
       float: left;
       width: 31.25%;
       margin-left: 0%;
       margin-right: 2.08333%; }
-    /* line 107, ../sass/base/_forms.scss */
+    /* line 142, ../sass/base/_forms.scss */
     .control-group .controls .inline-twothirds {
       float: left;
       width: 64.58333%;
       margin-left: 2.08333%;
       margin-right: 0%; }
 
-/* line 113, ../sass/base/_forms.scss */
+/* line 148, ../sass/base/_forms.scss */
 .message {
   display: block;
   position: relative;
@@ -2461,7 +2512,7 @@ fieldset legend {
   /* line 13, ../sass/mixins/_utilities.scss */
   .message {
     *zoom: 1; }
-  /* line 124, ../sass/base/_forms.scss */
+  /* line 159, ../sass/base/_forms.scss */
   .message .message-close {
     position: absolute;
     top: 0;
@@ -2469,20 +2520,20 @@ fieldset legend {
     padding: 1em 1em;
     color: #f4f4f4;
     text-decoration: none; }
-    /* line 132, ../sass/base/_forms.scss */
+    /* line 167, ../sass/base/_forms.scss */
     .message .message-close:hover, .message .message-close:active {
       color: white; }
-  /* line 137, ../sass/base/_forms.scss */
+  /* line 172, ../sass/base/_forms.scss */
   .message .message-title {
     font-family: Arial, Helvetica, sans-serif; }
-  /* line 141, ../sass/base/_forms.scss */
+  /* line 176, ../sass/base/_forms.scss */
   .message .message-content {
     font-family: Arial, Helvetica, sans-serif; }
-  /* line 145, ../sass/base/_forms.scss */
+  /* line 180, ../sass/base/_forms.scss */
   .message.is-error {
     background-color: #b84040; }
 
-/* line 151, ../sass/base/_forms.scss */
+/* line 186, ../sass/base/_forms.scss */
 p.error, label.error {
   display: block;
   margin: 0 0 0.5em 0;
@@ -2492,7 +2543,7 @@ p.error, label.error {
   font-size: 0.875em;
   font-family: Arial, Helvetica, sans-serif; }
 
-/* line 163, ../sass/base/_forms.scss */
+/* line 198, ../sass/base/_forms.scss */
 .has-errors {
   float: left;
   width: 50%;
@@ -2510,10 +2561,10 @@ p.error, label.error {
   color: white;
   font-size: 0.875em;
   font-family: Arial, Helvetica, sans-serif; }
-  /* line 178, ../sass/base/_forms.scss */
+  /* line 213, ../sass/base/_forms.scss */
   .has-errors p {
     margin: 0; }
-  /* line 182, ../sass/base/_forms.scss */
+  /* line 217, ../sass/base/_forms.scss */
   .has-errors:after {
     top: 7px;
     position: absolute;
@@ -2524,14 +2575,14 @@ p.error, label.error {
     background: url('/static/assets/images/form-error-back-arrow.png?1389620624') transparent no-repeat 0 0;
     content: ' '; }
 
-/* line 197, ../sass/base/_forms.scss */
+/* line 232, ../sass/base/_forms.scss */
 textarea {
   overflow: auto;
   resize: none;
   vertical-align: top;
   display: block; }
 
-/* line 206, ../sass/base/_forms.scss */
+/* line 241, ../sass/base/_forms.scss */
 select {
   -webkit-appearance: none;
   -webkit-border-radius: 0;
@@ -2545,16 +2596,16 @@ select {
   background-image: url('/static/assets/images/select-arrow.png?1389620624');
   background-position: center right;
   background-repeat: no-repeat; }
-  /* line 224, ../sass/base/_forms.scss */
+  /* line 259, ../sass/base/_forms.scss */
   select:hover, select:focus {
     border-color: #003580;
     background-image: url('/static/assets/images/select-arrow-hover.png?1390574505'); }
 
-/* line 231, ../sass/base/_forms.scss */
+/* line 266, ../sass/base/_forms.scss */
 select::-ms-expand {
   visibility: hidden; }
 
-/* line 244, ../sass/base/_forms.scss */
+/* line 279, ../sass/base/_forms.scss */
 select,
 option,
 textarea,
@@ -2578,7 +2629,7 @@ input[type=url] {
   -webkit-box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.05);
   -moz-box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.05);
   box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.05); }
-  /* line 254, ../sass/base/_forms.scss */
+  /* line 289, ../sass/base/_forms.scss */
   select + .flaticon,
   option + .flaticon,
   textarea + .flaticon,
@@ -2593,7 +2644,7 @@ input[type=url] {
     -moz-transition: all 0.2s ease-out;
     -o-transition: all 0.2s ease-out;
     transition: all 0.2s ease-out; }
-  /* line 258, ../sass/base/_forms.scss */
+  /* line 293, ../sass/base/_forms.scss */
   select:hover, select:focus,
   option:hover,
   option:focus,
@@ -2619,7 +2670,7 @@ input[type=url] {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none; }
-    /* line 264, ../sass/base/_forms.scss */
+    /* line 299, ../sass/base/_forms.scss */
     select:hover + .flaticon, select:focus + .flaticon,
     option:hover + .flaticon,
     option:focus + .flaticon,
@@ -2640,7 +2691,7 @@ input[type=url] {
     input[type=url]:hover + .flaticon,
     input[type=url]:focus + .flaticon {
       color: #003580 !important; }
-  /* line 269, ../sass/base/_forms.scss */
+  /* line 304, ../sass/base/_forms.scss */
   select.error,
   option.error,
   textarea.error,
@@ -2653,44 +2704,44 @@ input[type=url] {
   input[type=url].error {
     border-color: #b84040; }
 
-/* line 274, ../sass/base/_forms.scss */
+/* line 309, ../sass/base/_forms.scss */
 ::-webkit-input-placeholder {
   color: #cccccc; }
 
-/* line 275, ../sass/base/_forms.scss */
+/* line 310, ../sass/base/_forms.scss */
 ::-moz-placeholder {
   color: #cccccc; }
 
-/* line 276, ../sass/base/_forms.scss */
+/* line 311, ../sass/base/_forms.scss */
 :-ms-input-placeholder {
   color: #cccccc; }
 
-/* line 277, ../sass/base/_forms.scss */
+/* line 312, ../sass/base/_forms.scss */
 input:-moz-placeholder {
   color: #cccccc; }
 
-/* line 278, ../sass/base/_forms.scss */
+/* line 313, ../sass/base/_forms.scss */
 textarea:-moz-placeholder {
   color: #cccccc; }
 
-/* line 280, ../sass/base/_forms.scss */
+/* line 315, ../sass/base/_forms.scss */
 input[type=range] {
   width: 100%; }
 
-/* line 283, ../sass/base/_forms.scss */
+/* line 318, ../sass/base/_forms.scss */
 input[type=range]::-webkit-slider-thumb {
   background: #003580;
   height: 30px;
   width: 30px; }
 
-/* line 325, ../sass/base/_forms.scss */
+/* line 360, ../sass/base/_forms.scss */
 .tags {
   list-style: none;
   margin: 0;
   padding: 0;
   text-indent: 0;
   margin-top: 0.5em; }
-  /* line 332, ../sass/base/_forms.scss */
+  /* line 367, ../sass/base/_forms.scss */
   .tags li {
     padding-left: 0;
     text-indent: 0;
@@ -2711,10 +2762,10 @@ input[type=range]::-webkit-slider-thumb {
     /* line 25, ../sass/mixins/_utilities.scss */
     .tags li li {
       list-style: none; }
-    /* line 344, ../sass/base/_forms.scss */
+    /* line 379, ../sass/base/_forms.scss */
     .tags li .flaticon {
       text-shadow: 0 0 1px #222222; }
-    /* line 347, ../sass/base/_forms.scss */
+    /* line 382, ../sass/base/_forms.scss */
     .tags li .delete {
       color: white;
       cursor: pointer;
@@ -2735,19 +2786,19 @@ input[type=range]::-webkit-slider-thumb {
       -webkit-box-shadow: inset 0 0 2px #666666;
       -moz-box-shadow: inset 0 0 2px #666666;
       box-shadow: inset 0 0 2px #666666; }
-      /* line 366, ../sass/base/_forms.scss */
+      /* line 401, ../sass/base/_forms.scss */
       .tags li .delete:hover {
         background-color: #0896ff; }
 
-/* line 373, ../sass/base/_forms.scss */
+/* line 408, ../sass/base/_forms.scss */
 .btn-tag, .btn-modest {
   font-size: 0.875em !important; }
 
-/* line 377, ../sass/base/_forms.scss */
+/* line 412, ../sass/base/_forms.scss */
 input.tag {
   width: 200px; }
 
-/* line 387, ../sass/base/_forms.scss */
+/* line 422, ../sass/base/_forms.scss */
 label.checkbox,
 label.radio {
   float: left;
@@ -2756,7 +2807,7 @@ label.radio {
   display: block;
   margin-bottom: 0.5em;
   margin-right: 1em; }
-  /* line 395, ../sass/base/_forms.scss */
+  /* line 430, ../sass/base/_forms.scss */
   label.checkbox span,
   label.radio span {
     display: inline-block;
@@ -2767,33 +2818,33 @@ label.radio {
     background-image: url('/static/assets/images/sprites/icons-s4696f19cf3.png');
     background-repeat: no-repeat;
     text-indent: 2.5em; }
-  /* line 407, ../sass/base/_forms.scss */
+  /* line 442, ../sass/base/_forms.scss */
   label.checkbox input[type="checkbox"],
   label.checkbox input[type="radio"],
   label.radio input[type="checkbox"],
   label.radio input[type="radio"] {
     display: none; }
-  /* line 411, ../sass/base/_forms.scss */
+  /* line 446, ../sass/base/_forms.scss */
   label.checkbox input[type="checkbox"] + span,
   label.radio input[type="checkbox"] + span {
     background-position: 0 -2321px; }
-  /* line 415, ../sass/base/_forms.scss */
+  /* line 450, ../sass/base/_forms.scss */
   label.checkbox input[type="radio"] + span,
   label.radio input[type="radio"] + span {
     background-position: 0 -1912px; }
-  /* line 419, ../sass/base/_forms.scss */
+  /* line 454, ../sass/base/_forms.scss */
   label.checkbox input[type="checkbox"]:checked + span,
   label.radio input[type="checkbox"]:checked + span {
     background-position: 0 -2139px; }
-  /* line 423, ../sass/base/_forms.scss */
+  /* line 458, ../sass/base/_forms.scss */
   label.checkbox input[type="radio"]:checked + span,
   label.radio input[type="radio"]:checked + span {
     background-position: 0 -1850px; }
 
-/* line 431, ../sass/base/_forms.scss */
+/* line 466, ../sass/base/_forms.scss */
 .radio-select label {
   margin: 0 0 0 -1px; }
-  /* line 434, ../sass/base/_forms.scss */
+  /* line 469, ../sass/base/_forms.scss */
   .radio-select label span {
     display: block;
     padding: 0;
@@ -2813,7 +2864,7 @@ label.radio {
     -o-border-radius: 1px;
     border-radius: 1px;
     text-align: center; }
-  /* line 453, ../sass/base/_forms.scss */
+  /* line 488, ../sass/base/_forms.scss */
   .radio-select label input[type=radio]:checked + span {
     position: relative;
     border-color: #002a67;
@@ -2821,26 +2872,26 @@ label.radio {
     background: #003580;
     z-index: 10; }
 
-/* line 470, ../sass/base/_forms.scss */
+/* line 505, ../sass/base/_forms.scss */
 .radio-group.two label, .radio-select.two label {
   float: left;
   width: 50%;
   margin-left: 0%;
   margin-right: 0%; }
-/* line 476, ../sass/base/_forms.scss */
+/* line 511, ../sass/base/_forms.scss */
 .radio-group.three label, .radio-select.three label {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%; }
-/* line 482, ../sass/base/_forms.scss */
+/* line 517, ../sass/base/_forms.scss */
 .radio-group.four label, .radio-select.four label {
   float: left;
   width: 25%;
   margin-left: 0%;
   margin-right: 0%; }
 
-/* line 497, ../sass/base/_forms.scss */
+/* line 532, ../sass/base/_forms.scss */
 input[disabled],
 select[disabled],
 textarea[disabled],
@@ -2850,15 +2901,15 @@ textarea[readonly] {
   cursor: not-allowed;
   background-color: #e9e9e9; }
 
-/* line 506, ../sass/base/_forms.scss */
+/* line 541, ../sass/base/_forms.scss */
 .agree {
   margin-bottom: 0; }
 
-/* line 512, ../sass/base/_forms.scss */
+/* line 547, ../sass/base/_forms.scss */
 .file-upload .member-avatar {
   display: inline-block;
   vertical-align: middle; }
-/* line 517, ../sass/base/_forms.scss */
+/* line 552, ../sass/base/_forms.scss */
 .file-upload .btn-upload {
   margin-left: 2em; }
 
@@ -5508,7 +5559,7 @@ table {
   height: 150px;
   margin-bottom: 1em;
   overflow: hidden; }
-  /* line 6, ../sass/modules/_image_upload.scss */
+  /* line 7, ../sass/modules/_image_upload.scss */
   .image-upload .image-upload-drag, .image-upload .image-upload-controls {
     float: left;
     width: 50%;
@@ -5516,12 +5567,12 @@ table {
     margin-right: 0%;
     padding: 1em;
     height: 150px; }
-  /* line 11, ../sass/modules/_image_upload.scss */
+  /* line 13, ../sass/modules/_image_upload.scss */
   .image-upload .image-upload-drag {
     text-align: center;
     padding-top: 2em;
     color: #999999; }
-    /* line 15, ../sass/modules/_image_upload.scss */
+    /* line 17, ../sass/modules/_image_upload.scss */
     .image-upload .image-upload-drag figure {
       position: absolute;
       float: left;
@@ -5529,15 +5580,15 @@ table {
       margin-left: 0%;
       margin-right: 0%;
       height: 150px;
-      top: 0;
-      left: 0;
+      top: 1px;
+      left: 1px;
       overflow: hidden; }
-    /* line 23, ../sass/modules/_image_upload.scss */
+    /* line 25, ../sass/modules/_image_upload.scss */
     .image-upload .image-upload-drag .flaticon {
       display: block;
       text-shadow: 1px 1px white;
       font-size: 5em; }
-  /* line 29, ../sass/modules/_image_upload.scss */
+  /* line 32, ../sass/modules/_image_upload.scss */
   .image-upload .image-upload-controls {
     float: left;
     width: 50%;
@@ -5547,21 +5598,21 @@ table {
     background-color: white;
     text-align: center;
     position: relative; }
-    /* line 35, ../sass/modules/_image_upload.scss */
+    /* line 39, ../sass/modules/_image_upload.scss */
     .image-upload .image-upload-controls .image-upload-controls-instructions {
       margin-bottom: 0.5em; }
-    /* line 38, ../sass/modules/_image_upload.scss */
+    /* line 43, ../sass/modules/_image_upload.scss */
     .image-upload .image-upload-controls .image-upload-controls-browse {
       color: #003580;
       display: block;
       font-weight: bold;
       text-decoration: none;
       margin-bottom: 0.5em; }
-    /* line 45, ../sass/modules/_image_upload.scss */
+    /* line 51, ../sass/modules/_image_upload.scss */
     .image-upload .image-upload-controls .image-upload-controls-allowed {
       display: block;
       color: #999999; }
-  /* line 50, ../sass/modules/_image_upload.scss */
+  /* line 57, ../sass/modules/_image_upload.scss */
   .image-upload:after {
     position: absolute;
     content: ' ';
@@ -5573,7 +5624,8 @@ table {
     width: 100%;
     height: 150px;
     top: 0;
-    left: 0; }
+    left: 0;
+    z-index: 100; }
 
 /* line 1, ../sass/modules/_document_upload.scss */
 .document-upload {
@@ -7748,41 +7800,41 @@ form#manage-project-new {
 /* line 1, ../sass/pages/_campaign-create.scss */
 #campaign-create {
   margin-bottom: 6em; }
-  /* line 3, ../sass/pages/_campaign-create.scss */
+  /* line 5, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-header {
     background-color: #e9e9e9; }
-    /* line 5, ../sass/pages/_campaign-create.scss */
+    /* line 7, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-header .page-title {
       float: left;
       width: 95.83333%;
       margin-left: 2.08333%;
       margin-right: 2.08333%;
       padding: 1em 0; }
-    /* line 9, ../sass/pages/_campaign-create.scss */
+    /* line 11, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-header .steps {
       float: left;
       width: 77.08333%;
       margin-left: 2.08333%;
       margin-right: 4.16667%; }
-    /* line 12, ../sass/pages/_campaign-create.scss */
+    /* line 14, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-header .campaign-preview-button {
       float: left;
       width: 14.58333%;
       margin-left: 0%;
       margin-right: 2.08333%; }
-  /* line 18, ../sass/pages/_campaign-create.scss */
+  /* line 20, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-campaigner .campaigner-avatar {
     float: left;
     width: 29.16667%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 21, ../sass/pages/_campaign-create.scss */
+  /* line 23, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-campaigner .campaigner-details {
     float: left;
     width: 62.5%;
     margin-left: 4.16667%;
     margin-right: 0%; }
-  /* line 26, ../sass/pages/_campaign-create.scss */
+  /* line 28, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-footer {
     display: none;
     width: 100%;
@@ -7792,13 +7844,13 @@ form#manage-project-new {
     background: #666666;
     padding: 1em;
     z-index: 100; }
-    /* line 35, ../sass/pages/_campaign-create.scss */
+    /* line 37, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .navigation {
       float: left;
       width: 62.5%;
       margin-left: 2.08333%;
       margin-right: 2.08333%; }
-    /* line 38, ../sass/pages/_campaign-create.scss */
+    /* line 40, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .actions {
       float: left;
       width: 29.16667%;
@@ -7806,39 +7858,40 @@ form#manage-project-new {
       margin-right: 2.08333%;
       text-align: right;
       padding: 0.5em 0; }
-    /* line 43, ../sass/pages/_campaign-create.scss */
+    /* line 45, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .save {
       text-decoration: none;
       color: #cccccc; }
-    /* line 47, ../sass/pages/_campaign-create.scss */
+    /* line 49, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .next {
       float: right; }
-    /* line 50, ../sass/pages/_campaign-create.scss */
+    /* line 52, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-footer .previous {
       float: left; }
-  /* line 55, ../sass/pages/_campaign-create.scss */
-  #campaign-create .amount-control label {
-    float: left;
-    width: 50%;
-    margin-left: 0%;
-    margin-right: 0%; }
   /* line 58, ../sass/pages/_campaign-create.scss */
-  #campaign-create .amount-control input {
+  #campaign-create .campaign-amount label {
+    padding-top: 0.5em;
     float: left;
-    width: 50%;
+    width: 33.33333%;
     margin-left: 0%;
     margin-right: 0%; }
-  /* line 63, ../sass/pages/_campaign-create.scss */
+  /* line 62, ../sass/pages/_campaign-create.scss */
+  #campaign-create .campaign-amount input {
+    float: left;
+    width: 66.66667%;
+    margin-left: 0%;
+    margin-right: 0%; }
+  /* line 68, ../sass/pages/_campaign-create.scss */
   #campaign-create table td {
     padding: 0.5em 0;
     padding-right: 1em; }
-  /* line 68, ../sass/pages/_campaign-create.scss */
+  /* line 74, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-create-preview-widget {
     margin-bottom: 4em; }
-  /* line 72, ../sass/pages/_campaign-create.scss */
+  /* line 78, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-create-tips ul {
     margin-left: 1.5em; }
-    /* line 74, ../sass/pages/_campaign-create.scss */
+    /* line 80, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-create-tips ul li {
       padding-left: 0;
       text-indent: 0;
@@ -7852,56 +7905,132 @@ form#manage-project-new {
       /* line 25, ../sass/mixins/_utilities.scss */
       #campaign-create .campaign-create-tips ul li li {
         list-style: none; }
-  /* line 83, ../sass/pages/_campaign-create.scss */
+  /* line 89, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-duration .slider {
     padding-top: 1em;
     float: left;
     width: 66.66667%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-    /* line 85, ../sass/pages/_campaign-create.scss */
+    /* line 91, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-duration .slider td {
       padding: 0; }
-  /* line 90, ../sass/pages/_campaign-create.scss */
+  /* line 96, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-duration .btn {
     margin-top: 1em;
     float: left;
     width: 25%;
     margin-left: 4.16667%;
     margin-right: 0%; }
-  /* line 96, ../sass/pages/_campaign-create.scss */
+  /* line 103, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-breakdown tfoot {
     color: #999999; }
-    /* line 98, ../sass/pages/_campaign-create.scss */
+    /* line 105, ../sass/pages/_campaign-create.scss */
     #campaign-create .campaign-budget-breakdown tfoot td {
       border-bottom: none; }
-  /* line 102, ../sass/pages/_campaign-create.scss */
+  /* line 109, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-breakdown a {
     text-decoration: none; }
-  /* line 106, ../sass/pages/_campaign-create.scss */
+  /* line 114, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-description {
     float: left;
     width: 58.33333%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 109, ../sass/pages/_campaign-create.scss */
+  /* line 118, ../sass/pages/_campaign-create.scss */
   #campaign-create .campaign-budget-amount {
     float: left;
     width: 20.83333%;
     margin-left: 0%;
     margin-right: 4.16667%; }
-  /* line 112, ../sass/pages/_campaign-create.scss */
+  /* line 122, ../sass/pages/_campaign-create.scss */
   #campaign-create .add-budget {
     float: left;
     width: 12.5%;
     margin-left: 0%;
     margin-right: 0%; }
-  /* line 116, ../sass/pages/_campaign-create.scss */
-  #campaign-create .fieldset-tabs li {
-    width: 50%;
-    margin: 0 1em;
-    display: block;
-    float: left; }
+  /* line 126, ../sass/pages/_campaign-create.scss */
+  #campaign-create .missing-steps {
+    margin: 0;
+    padding: 0; }
+    /* line 129, ../sass/pages/_campaign-create.scss */
+    #campaign-create .missing-steps li {
+      padding-left: 0;
+      text-indent: 0;
+      background-image: none;
+      margin-bottom: 0;
+      margin-top: 0;
+      list-style: none;
+      *zoom: 1;
+      padding: 1em 2em;
+      background: #e9e9e9;
+      border-bottom: 1px solid white; }
+      /* line 25, ../sass/mixins/_utilities.scss */
+      #campaign-create .missing-steps li li {
+        list-style: none; }
+      /* line 42, ../sass/mixins/_grid.scss */
+      #campaign-create .missing-steps li:before, #campaign-create .missing-steps li:after {
+        display: block;
+        height: 0 !important;
+        line-height: 0;
+        overflow: hidden;
+        visibility: hidden;
+        content: "."; }
+      /* line 43, ../sass/mixins/_grid.scss */
+      #campaign-create .missing-steps li:after {
+        clear: both; }
+      /* line 135, ../sass/pages/_campaign-create.scss */
+      #campaign-create .missing-steps li .category {
+        position: relative;
+        float: left;
+        width: 20.83333%;
+        margin-left: 0%;
+        margin-right: 4.16667%; }
+        /* line 138, ../sass/pages/_campaign-create.scss */
+        #campaign-create .missing-steps li .category:after {
+          content: "\203A";
+          color: #999999;
+          position: absolute;
+          right: 0; }
+      /* line 145, ../sass/pages/_campaign-create.scss */
+      #campaign-create .missing-steps li .details {
+        float: left;
+        width: 50%;
+        margin-left: 0%;
+        margin-right: 0%; }
+      /* line 148, ../sass/pages/_campaign-create.scss */
+      #campaign-create .missing-steps li .action {
+        float: left;
+        width: 20.83333%;
+        margin-left: 4.16667%;
+        margin-right: 0%; }
+        /* line 150, ../sass/pages/_campaign-create.scss */
+        #campaign-create .missing-steps li .action a {
+          color: #5da423;
+          text-decoration: none; }
+      /* line 155, ../sass/pages/_campaign-create.scss */
+      #campaign-create .missing-steps li.introduction {
+        color: white;
+        background-color: #999999;
+        padding: 2em; }
+        /* line 159, ../sass/pages/_campaign-create.scss */
+        #campaign-create .missing-steps li.introduction strong {
+          display: block;
+          color: #222222; }
+        /* line 163, ../sass/pages/_campaign-create.scss */
+        #campaign-create .missing-steps li.introduction h3 {
+          margin: 0;
+          color: white;
+          font-weight: bold;
+          text-transform: none; }
+        /* line 169, ../sass/pages/_campaign-create.scss */
+        #campaign-create .missing-steps li.introduction .flaticon {
+          float: left;
+          width: 8.33333%;
+          margin-left: 0%;
+          margin-right: 8.33333%;
+          font-size: 2.5em;
+          text-align: center; }
 
 /* Temp */
 @font-face {

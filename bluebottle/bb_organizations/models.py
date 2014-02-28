@@ -60,8 +60,6 @@ class BaseOrganization(models.Model):
 
     partner_organizations = models.TextField(_('partner organizations'), blank=True)
 
-    members = models.ManyToManyField('bb_organizations.OrganizationMember', null=True, related_name="members")
-
     # Address
     address_line1 = models.CharField(max_length=100, blank=True)
     address_line2 = models.CharField(max_length=100, blank=True)

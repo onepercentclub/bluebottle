@@ -13,6 +13,7 @@ module.exports = function(config) {
       'karma-coverage',
       'karma-ember-preprocessor',
       'karma-phantomjs-launcher',
+      'karma-spec-reporter'
     ],
 
     preprocessors: {

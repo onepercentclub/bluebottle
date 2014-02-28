@@ -17,21 +17,7 @@ pavlov.specify("Organization model unit tests", function() {
     });
     
     describe("Project Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.Organization.FIXTURES = [];
-            });
-        });
-
+        
         it("should be a new org", function () {
             build('organization', data).then(function(org) {
                 assert(org instanceof App.Organization).isTrue();

@@ -13,18 +13,11 @@ pavlov.specify('News Route Tests', function() {
 
         before(function() {      
             Ember.run( function () {
-                App.injectTestHelpers();
-
                 route = App.NewsRoute.create();
             });
         });
-
         after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.Task.FIXTURES = [];
-            });
+            route = undefined;
         });
 
         it('should have a model property', function() {

@@ -8,19 +8,7 @@ pavlov.specify("Skill model unit tests", function() {
     });
     
     describe("Skill Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-            });
-        });
-
+                
         it("should be a new skill", function () {
             build('skill').then(function(skill) {
                 assert(skill instanceof App.Skill).isTrue();

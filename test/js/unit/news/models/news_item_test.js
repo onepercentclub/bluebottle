@@ -15,20 +15,6 @@ pavlov.specify("News Item model unit tests", function() {
     
     describe("News Item Instance", function () {
 
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.NewsItem.FIXTURES = [];
-            });
-        });
-
         it("should be a new task file", function () {
             build('newsItem').then(function(newsItem) {
                 assert(newsItem instanceof App.NewsItem).isTrue();

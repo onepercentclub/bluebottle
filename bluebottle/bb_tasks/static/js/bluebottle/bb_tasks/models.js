@@ -149,9 +149,9 @@ App.Task = DS.Model.extend({
     }.property('project.image'),
     
     daysToGo: function(){
-        // if (!this.get('time')) {
-        //     return null;
-        // }
+        if (!this.get('deadline')) {
+            return null;
+        }
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));

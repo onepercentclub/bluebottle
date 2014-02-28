@@ -13,7 +13,7 @@ pavlov.specify('Contact Message Route Tests', function() {
 
         before(function() {      
             Ember.run( function () {
-                App.injectTestHelpers(); 
+                // App.injectTestHelpers(); 
                 route = App.ContactMessageRoute.create();
             });
 
@@ -22,9 +22,7 @@ pavlov.specify('Contact Message Route Tests', function() {
 
         after(function () {
             Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.ContactMessage.FIXTURES = [];
+                // App.removeTestHelpers();
             });
 
             // App.CurrentUser.find.restore();

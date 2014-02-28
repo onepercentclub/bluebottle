@@ -12,21 +12,7 @@ pavlov.specify("Quote model unit tests", function() {
     });
     
     describe("Quote Instance", function () {
-
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.Quote.FIXTURES = [];
-            });
-        });
-
+                
         it("should be a new quote", function () {
             build('quote').then(function(quote) {
                 assert(quote instanceof App.Quote).isTrue();

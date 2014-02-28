@@ -99,7 +99,7 @@ App.Project = DS.Model.extend({
     }.property('id'),
 
     daysToGo: function(){
-        if (!this.get('time')) {
+        if (!this.get('deadline')) {
             return null;
         }
         var now = new Date();

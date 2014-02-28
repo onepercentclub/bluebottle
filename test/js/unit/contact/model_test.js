@@ -8,21 +8,7 @@ pavlov.specify("Contact Message model unit tests", function(){
     });
 
     describe("Contact Message Instance", function () {
-        
-        before(function() {      
-            Ember.run( function () {
-                App.injectTestHelpers();
-            });
-        });
-
-        after(function () {
-            Ember.run( function () {
-                App.removeTestHelpers();
-
-                App.ContactMessage.FIXTURES = [];
-            });
-        });
-
+                
         it("should be a new contact message", function () {
             build('contactMessage').then(function(contactMessage) {
                 assert(contactMessage instanceof App.ContactMessage).isTrue();

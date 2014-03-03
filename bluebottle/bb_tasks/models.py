@@ -55,6 +55,8 @@ class BaseTaskMember(models.Model):
 
     _initial_status = None
 
+    #objects = models.Manager()
+
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
         self._initial_status = self.status

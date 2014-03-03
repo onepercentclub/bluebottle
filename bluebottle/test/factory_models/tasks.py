@@ -20,15 +20,6 @@ class SkillFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
     name_nl = factory.LazyAttribute(lambda o: o.name)
 
-
-class TaskMemberFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TASK_MEMBER_MODEL
-
-    member = factory.SubFactory(BlueBottleUserFactory)
-    status = 'accepted'
-
-
-
 class TaskFactory(factory.DjangoModelFactory):
     FACTORY_FOR = TASK_MODEL
 
@@ -46,3 +37,11 @@ class TaskFactory(factory.DjangoModelFactory):
         if extracted:
             for member in extracted:
                 self.members.add(member)
+
+class TaskMemberFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = TASK_MEMBER_MODEL
+
+    member = factory.SubFactory(BlueBottleUserFactory)
+    status = 'accepted'
+
+    task = factory.SubFactory(TaskFactory)

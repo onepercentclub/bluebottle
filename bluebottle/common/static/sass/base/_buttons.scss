@@ -12,9 +12,9 @@
     line-height: $base-line-height;
     padding: $base-padding/2 $base-padding;
     display: inline-block;
-    border: 1px solid darken($color-secondary, 5%);
-    background-color: $color-secondary;
-    color: $white;
+    border: 1px solid $button-border-color;
+    background-color: $button-bg-color;
+    color: $button-color; 
     text-decoration: none;
     text-transform: uppercase;
     cursor: pointer;
@@ -35,8 +35,8 @@
 			height: 100%;
 			line-height: 2.25em;
 	        display: inline-block;
-	        background: darken($color-secondary, 5%);
-	        color: lighten($color-secondary, 5%);
+	        background: $button-iconed-icon-bg-color; 
+	        color: $button-iconed-icon-color;
 	        text-align: center;
 			vertical-align: middle;
 	    }
@@ -54,8 +54,8 @@
 	    &:hover {
     	
         	.flaticon, .icon {
-            	background: #333;
-            	color: $white;
+            	background-color: $button-iconed-hover-icon-bg-color;
+            	color: $button-iconed-hover-icon-color;
 			}
 		}
 
@@ -63,8 +63,8 @@
 		    padding-left: $base-padding*3.5;
 		    
 			.flaticon, .icon {
-            	background: darken($black, 5%);
-				color: $gray-darker;
+            	background: $button-iconed-active-icon-bg-color;
+				color: $button-iconed-active-icon-color;
 			}
 		
 		}
@@ -72,20 +72,21 @@
     
     // Primary buttons
     &.btn-primary {
-    	border: 1px solid darken($color-primary, 5%);
-		background-color: $color-primary;
+    	border: 1px solid $button-primary-border-color; 
+		background-color: $button-primary-bg-color;
+		
 		
 		.flaticon, .icon {
-			background: darken($color-primary, 5%);
-			color: lighten($color-primary, 10%);
+			background-color: $button-primary-icon-bg-color;
+			color: $button-primary-icon-color;
 		}
 	}
 	
     // Button states
 	&:hover {
-    	border-color: $black;
-    	background-color: $gray-darker;
-    	color: $white;
+    	border-color: $button-hover-border-color; 
+    	background-color: $button-hover-bg-color; 
+    	color: $button-hover-color; 
 	}
 	
 	&:focus {
@@ -94,10 +95,10 @@
 
     &:active {
     	top: 0;
-        background: $gray-darkest;
-        color: $gray-dark;
+        background-color: $button-active-bg-color;
+        color: $button-active-color;
         border-top-width: 0.30em;
-        border-color: $black;
+        border-color: $button-active-color;
         padding: $base-padding/2 $base-padding ($base-padding/2 - 0.25em) $base-padding;
     }
     
@@ -115,20 +116,24 @@
     &.disabled, &[disabled], &.disabled:hover, &[disabled]:hover, &.disabled:active, &[disabled]:active {
 	    border-top-width: 1px;
     	top: auto;
-        border-color: $gray-light;
-        background-color: $gray-light;
-        color: $gray-lighter;
+        border-color: $button-disabled-border-color;
+        background-color: $button-disabled-bg-color;
+        color: $button-disabled-color;
         cursor: default;
         padding: $base-padding/2 $base-padding;
         
         .flaticon, .icon {
-			background: darken($gray-light, 5%);
-			color: $gray-lighter;
+			background: $button-disabled-icon-bg-color;
+			color: $button-disabled-icon-color;
 		}
 		
 		&.btn-iconed {
 		    padding-left: $base-padding*3.5;
 		}
+    }
+    &.btn-block {
+    	width: 100%;
+    	text-align: center;
     }
 }
 

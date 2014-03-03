@@ -6,7 +6,7 @@
 // --------------------------------------------------
 
 .carousel {
-	background: $gray-darkest;
+	background: $carousel-bg-color;
 	@include clear;
 	position: relative;
 	
@@ -73,7 +73,7 @@
 }
 
 .carousel-nav-section {
-	background-color: $gray-lighter;
+	background-color: $carousel-nav-section-bg-color;
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -84,7 +84,7 @@
 	.carousel-nav {
 		margin-top: 0;
 		margin-bottom: 0;
-		background-color: $gray-lighter;
+		background-color: $carousel-nav-bg-color;
 		
 		.carousel-nav-item {
 			@include grid(12);
@@ -92,15 +92,15 @@
             @include resetlist;
             margin: 0;
 			padding: $base-padding 0;
-			border-right: 1px solid $white;
+			border-right: 1px solid $carousel-nav-item-border-color;
 			text-align: center;
 			cursor: pointer;
 			position: relative;
 		
 			&.is-active {
 				position: relative;
-				background: $gray-light;
-				color: $white;
+				background: $carousel-nav-item-active-bg-color;
+				color: $carousel-nav-item-active-color;
 				
 				&:after {
 					position: absolute;
@@ -111,7 +111,7 @@
 					left: 49%;
 					width: 0;
 					border-width: 12px;
-					border-bottom-color: $gray-light;
+					border-bottom-color: $carousel-nav-item-active-bg-color;
 				}
 			}
 			

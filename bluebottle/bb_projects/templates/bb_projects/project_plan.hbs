@@ -3,98 +3,83 @@
 {% load static %}
 
 {% tplhandlebars "project_plan" %}
-
     <div class="l-section" id="project-plan">
-        <section class="l-wrapper">
+        <!-- <section class="l-wrapper"> -->
 
-                <header>
-                    <h1>{% trans "Project Plan" %}</h1>
-                </header>
+			<nav class="project-plan-navigation">
+				
+				<div class="project-plan-title">
+					<h1>Project plan</h1>
+					<h4>{{title}}</h4>
+				</div>
+				
+				<ul class="project-plan-navigation-links">
+					<li><a class="project-plan-main-link" href="#header-1">Why, What and How</a></li>
+					<li><a class="project-plan-main-link" href="#header-2">Effects</a></li>
+					<li><a class="project-plan-main-link" href="#header-3">Heading 3</a></li>
+					<li><a class="project-plan-main-link" href="#header-4">Heading 4</a></li>
+					<li><a class="project-plan-main-link" href="#header-5">Heading 5</a></li>
+					<li><a class="project-plan-main-link" href="#header-6">Heading 6</a></li>
+					<li><a class="project-plan-main-link" href="#header-7">Heading 7</a></li>
+					<li><a class="project-plan-main-link" href="#header-8">Heading 8</a></li>
+					<li class="project-plan-download-pdf"><a href="#"><span class="flaticon solid download-document-1"></span> Download as PDF</a><li>
+				</ul>
+			</nav>
+			
+			<div class="project-plan-main-container">
+				<a class="project-plan-back-link" href="#">Back to project<span class="flaticon stroke x-1"></span></a>
+				<article class="project-plan-main">
+					<h3 id="header-1">Why, What and How</h3>
+					<p>{{why}}</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<h3 id="header-2">Effects</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<h3 id="header-3">Heading 3</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<h3 id="header-4">Heading 4</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.	
+					</p>
+					<p>Vestibulum id ligula porta felis euismod semper. Sed posuere consectetur est at lobortis. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Aenean lacinia bibendum nulla sed consectetur. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum.</p>
 
-                {{#if description}}
-                    <article>
-                        <h2>{% trans "Why, what and how?" %}</h2>
-                        <p>{{{description}}}</p>
-                    </article>
-                {{/if}}
+					<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Curabitur blandit tempus porttitor. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras mattis consectetur purus sit amet fermentum. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit.</p>
 
-                {{#if effects}}
-                    <article>
-                        <h2>{% trans "Effects" %}</h2>
-                            <p>{{{effects}}}</p>
-                    </article>
-                {{/if}}
+					<p>Nulla vitae elit libero, a pharetra augue. Sed posuere consectetur est at lobortis. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec ullamcorper nulla non metus auctor fringilla. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit.</p>
+					<h3 id="header-5">Heading 5</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<p>Vestibulum id ligula porta felis euismod semper. Sed posuere consectetur est at lobortis. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Aenean lacinia bibendum nulla sed consectetur. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum.</p>
 
-                {{#if future}}
-                    <article>
-                        <h2>{% trans "Future" %}</h2>
-                        <p>{{{future}}}</p>
-                    </article>
-                {{/if}}
+					<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Curabitur blandit tempus porttitor. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras mattis consectetur purus sit amet fermentum. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit.</p>
 
-                {{#if forWho}}
-                    <article>
-                        <h2>{% trans "For who?" %}</h2>
-                        <p>{{{forWho}}}</p>
-                    </article>
-                {{/if}}
-
-                {{#if reached}}
-                    <article>
-                        <h2>{% trans "People reached" %}</h2>
-                        <p>{{{reached}}}</p>
-                    </article>
-                {{/if}}
-
-                {{#if country.name}}
-                    <article>
-                        <h2>{% trans "Location" %}</h2>
-                        <p>{{country.name}}, {{country.subregion}}</p>
-                        <img {{bindAttr src="view.staticMap"}} />
-                    </article>
-                {{/if}}
-
-                {{#if organization.name}}
-                    <article>
-                        <h2>{% trans "Organisation" %}</h2>
-                        <h3>{{organization.name}}</h3>
-                        <p>{{organization.description}}</p>
-
-                        {{#if organization.website}}
-                            <dl>
-                                <dt><span class="flaticon solid link-1"></span> Website</dt>
-                                <dd><a {{bindAttr href=organization.websiteUrl}} target="_blank">{{organization.website}}</a></dd>
-                            </dl>
-                        {{/if}}
-                        {{#if organization.twitter}}
-                            <dl>
-                                <dt><span class="flaticon social twitter-3"></span> Twitter</dt>
-                                <dd><a {{bindAttr href=organization.twitterUrl}} target="_blank">{{organization.twitter}}</a></dd>
-                            </dl>
-                        {{/if}}
-                        {{#if organization.facebook}}
-                            <dl>
-                                <dt><span class="flaticon social facebook-3"></span> Facebook</dt>
-                                <dd><a {{bindAttr href=organization.facebookUrl}} target="_blank">{{organization.facebook}}</a></dd>
-                            </dl>
-                        {{/if}}
-                        </ul>
-                    </article>
-                {{/if}}
-
-                {{#if budgetLines.length}}
-                    <article>
-                        <h2>{% trans "Budget" %}</h2>
-                        {{#each line in budgetLines}}
-                            <dl>
-                                <dd>{{line.description}}</dd>
-                                <dt align="right">&euro;{{line.amount}}</dt>
-                            </dl>
-                        {{/each}}
-                    </article>
-                {{/if}}
-
-        </section>
+					<p>Nulla vitae elit libero, a pharetra augue. Sed posuere consectetur est at lobortis. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec ullamcorper nulla non metus auctor fringilla. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit.</p>
+					<h3 id="header-6">Heading 6</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<h3 id="header-7">Heading 7</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<h3 id="header-8">Heading 8</h3>
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+				</article>
+			</div>
+			<div class="project-plan-map">
+				<img src="http://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=300x1200&maptype=roadmap
+&markers=color:blue%7Clabel:S%7C40.702147,-74.015794&markers=color:green%7Clabel:G%7C40.711614,-74.012318
+&markers=color:red%7Clabel:C%7C40.718217,-73.998284&sensor=false" />
+			</div>
+        <!-- </section> -->
     </div>
 
 {% endtplhandlebars %}

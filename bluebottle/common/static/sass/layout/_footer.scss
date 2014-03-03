@@ -2,7 +2,7 @@
 
 #footer {
 	position: relative;
-	background-color: $gray-lighter;
+	background-color: $footer-bg-color;
     
     ul, li {
     	margin: 0;
@@ -14,7 +14,7 @@
 	.footer-content {
 	    @include grid(48,1);
 	    padding: $base-padding*2 0;
-	    color: $gray;
+	    color: $footer-content-color;
 	    
 	    hr {
 	        margin: $base-margin*2 0;
@@ -28,21 +28,21 @@
 		h3 {
 		    font-size: $base-font-size;
 		    margin-bottom: $base-margin/2;
-		    color: $gray-darker;
+		    color: $footer-heading-color;
 		}
 	}
 	
 	.footer-menu {
 	    @include clearfix;
-	    color: $gray;
+	    color: $footer-menu-color;
 	    text-transform: uppercase;
 	    
 	    a {
-			color: $gray;
+			color: $footer-menu-link-color;
 			text-decoration: none;
 			
 			&:hover, &:active {
-				color: $gray-darker;
+				color: $footer-menu-link-hover-color;
 			}
 	    }
 	
@@ -101,15 +101,15 @@
 	            height: 2em;
 	            text-align: center;
 	            font-size: $font-size-medium;
-	            background-color: $gray;
+	            background-color: $footer-social-links-bg-color;
 	            
 	             &:hover {
-	                background-color: $color-text;
+	                background-color: $footer-social-links-hover-bg-color;
 	            }
 	        }
 	        
 	        .flaticon {
-	            color: $white;
+	            color: $footer-social-links-icon-color;
 	        }
 	    }
 	}
@@ -118,14 +118,14 @@
 	.copyright {
 		position: absolute;
 		bottom: 0;
-		background-color: $black;
+		background-color: $footer-copyright-bg-color;
 		width: 100%;
 		
 	    ul {
 	        @include grid(48,1);
 	        font-size: $font-size-smallest;
 	        margin-bottom: 0;
-	        color: $white;
+	        color: $footer-copyright-color;
 	        list-style: none;
 	
 	        li {
@@ -140,16 +140,16 @@
 	            }
 	
 	            a {
-	                color: $gray;
+	                color: $footer-copyright-link-color;
 	                text-decoration: underline;
 	
 	                &.feedback {
-	                    color: $color-secondary;
+	                    color: $footer-copyright-link-feedback-color;
 	                    text-transform: uppercase;
 	                }
 	                
 	                &:hover, &:active {
-		                color: $gray-lighter;
+		                color: $footer-copyright-link-hover-color;
 	                }
 	            }
 	        }

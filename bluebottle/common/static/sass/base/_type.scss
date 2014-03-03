@@ -9,7 +9,7 @@ body {
 	font-family: $font-family;
 	line-height: $base-line-height;
 	font-size: $base-font-size;
-	color: $color-text;
+	color: $type-body-color;
 	-webkit-font-smoothing: antialiased;
 	font-smoothing: antialiased; 
 	text-rendering: optimizelegibility;
@@ -69,22 +69,22 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 { 
 	font-size: $font-size-largest;
-	color: $color-primary;
+	color: $type-h1-color;
 	
 	em {
 	    font-family: $base-font-family;
-    	color: $color-secondary;
+    	color: $type-h1-em-color;
 	}
 } 
 
 h2 {
 	font-size: $font-size-larger;
-	color: $color-secondary;
+	color: $type-h2-color;
 } 
 
 h3 { 
 	font-size: $font-size-large;
-	color: $color-heading;
+	color: $type-h3-color;
 } 
 
 h4 { 
@@ -155,12 +155,12 @@ ol {
 dl {
 	@include clear;
 	font-size: $font-size-small;
-	border-bottom: 1px solid $gray-light;
+	border-bottom: 1px solid $type-dl-border-color;
 	padding: $base-padding/2 $base-padding;
 	
 	> dt {
 		text-transform: uppercase;
-		color: $gray;
+		color: $type-dt-color;
 		@include grid(20,0,1);
 		font-weight: normal;
 		white-space: nowrap;
@@ -186,8 +186,8 @@ dl {
 hr {
 	margin: $base-line-height 0;
 	border: 0;
-	border-top: 1px solid $gray-light;
-	border-bottom: 1px solid $white;
+	border-top: 1px solid $type-hr-border-top-color;
+	border-bottom: 1px solid $type-hr-border-bottom-color;
 }
 
 // Abbreviations and acronyms
@@ -196,7 +196,7 @@ abbr[title],
 // Added data-* attribute to help out our tooltip plugin, per https://github.com/twitter/bootstrap/issues/5257
 abbr[data-original-title] {
   	cursor: help;
-  	border-bottom: 1px dotted $gray-light;
+  	border-bottom: 1px dotted $type-abbr-border-color;
 }
 
 abbr.initialism {
@@ -208,7 +208,7 @@ abbr.initialism {
 blockquote {
 	padding: 0 0 0 $base-padding;
 	margin: $base-margin 0;
-	border-left: 5px solid $gray-lighter;
+	border-left: 5px solid $type-blockquote-border-color;
 	
 	p {
 		margin-bottom: 0;	
@@ -217,7 +217,7 @@ blockquote {
 	small {
 		display: block;
 		line-height: $base-line-height;
-		color: $gray-light;
+		color: $type-blockquote-small-color;
 		&:before {
 	  		content: '\2014 \00A0';
 	  	}
@@ -228,7 +228,7 @@ blockquote {
 		float: right;
 		padding-right: 15px;
 		padding-left: 0;
-		border-right: 5px solid $gray-lighter;
+		border-right: 5px solid $type-blockquote-border-color;
 		border-left: 0;
 		p,
 		small {
@@ -251,6 +251,20 @@ q:after,
 blockquote:before,
 blockquote:after {
   	content: "";
+}
+
+// Icons
+.flaticon {
+	vertical-align: middle;
+}
+
+.well {
+	@include clear;
+	padding: $base-padding;
+	background-color: $gray-lighter;
+}
+.flaticon {
+	vertical-align: middle;
 }
 
 /*

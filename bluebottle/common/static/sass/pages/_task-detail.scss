@@ -4,19 +4,25 @@
 
 #task-detail {
 	
+	padding: $base-padding 0;
 	background-color: $gray-darkest;
 	color: $white;
+	#task-details {
+		padding: ($base-padding * 2) 0;
+		background-color: $tasks-task-detail-bg-color;
+		color: $tasks-task-detail-color;		
+	}
 	
 	h1, h2, h3 {
 		text-transform: none;
-		color: $white;
+		color: $tasks-task-detail-headers-color;
 		font-family: $font-family-heavy;
 		margin: 0;
 		margin-bottom: $base-margin / 4;
 	}
 	
 	dl {
-		border-bottom: 1px solid $gray-darker;
+		border-bottom: 1px solid $tasks-task-detail-dl-border-bottom;
 //		> dt, dd {
 //			width: auto;
 //		}
@@ -34,34 +40,21 @@
 	}
 	
 	.task-project {
-		color: $gray;
+		color: $tasks-task-detail-project-color;
 	}
 	
 	.task-badge {
-		border: 2px solid $white;
+		border: 2px solid $tasks-task-detail-task-badge-border-color;
 		position: relative;
-		@include grid(8,1,1);	
+		@include grid(8,1,1);
+		@include clear;	
 		
-//		&:after {
-//			left: 100%;
-//			top: 4.5em;
-//			border: solid transparent;
-//			content: " ";
-//			height: 0;
-//			width: 0;
-//			position: absolute;
-//			pointer-events: none;
-//			border-left-color: $white;
-//			border-width: 10px;
-//			margin-top: -10px;
-//		}
 		.task-status {
 			padding: $base-padding / 2;
 			text-align: center;
-			background: $color-primary;
-			position: absolute;
+			background: $tasks-task-detail-task-status-bg-color;
 			width: 100%;
-			border-bottom: 2px solid $white;
+			border-bottom: 2px solid $tasks-task-detail-task-badge-border-color;
 		}
 	}
 	.task-sidebar {
@@ -101,12 +94,12 @@
 		
 		.task-read-more {
 			text-decoration: none;
-			color: $gray;
+			color: $tasks-task-detail-read-more-color;
 			position: absolute;
 			bottom: -12px;
 			right: 0;
 			display: block;
-			background-color: $gray-darkest;
+			background-color: $tasks-task-detail-read-more-bg-color;
 			padding-right: $base-padding * 4;
 			padding-left: $base-padding;
 		}
@@ -144,7 +137,7 @@
 	
 	.task-meta {
 		p {
-			color: $gray;
+			color: $tasks-task-detail-task-meta-color;
 		}
 	}
 	
@@ -219,7 +212,7 @@
                 display: block;
                 text-decoration: none;
                 padding: $base-padding/2 0;
-                border-bottom: 1px solid $gray-light;
+                border-bottom: 1px solid $tasks-task-detail-task-files-file-border-bottom-color;
             }
                             
             &:last-of-type a {
@@ -230,14 +223,32 @@
 				font-size: $font-size-smallest;
 				text-transform: uppercase;
 				font-style: normal;
-				color: $gray;
+				color: $tasks-task-detail-task-files-file-meta-color;
 			}
         }	
+	}
+	
+	.task-action {
+	    @include grid(16,1,1);
+	    float: right;
+		margin-top: $base-margin;
+
+	    .btn {
+	        font-family: $font-family-bold;
+	        white-space: nowrap;
+	        font-size: 1.5em;
+	        display: block;
+    
+	        .flaticon {
+	            color: $tasks-task-detail-task-action-icon-color;
+	            font-size: 1.2em;
+	        }
+	    }
 	}
 
 	#task-members {
 		
-		background-color: $gray-darker;
+		background-color: $tasks-task-detail-members-bg-color;
 		padding: $base-padding 0;
 		
 		.task-members-list {
@@ -245,23 +256,7 @@
 			float: left;	
 		}
 
-		.task-action {
-		    @include grid(16,1,1);
-		    float: right;
-			margin-top: $base-margin * 2;
 
-		    .btn {
-		        font-family: $font-family-bold;
-		        white-space: nowrap;
-		        font-size: 1.5em;
-		        display: block;
-        
-		        .flaticon {
-		            color: $white;
-		            font-size: 1.2em;
-		        }
-		    }
-		}
         .member-initiator {
             @include grid(18,0,1);		
 		}
@@ -272,9 +267,9 @@
 	
 	#wallposts {
 		
-		background-color: $gray-light;
+		background-color: $tasks-task-detail-wallposts-bg-color;
 		padding: $base-padding 0;
-		color: $black;
+		color: $tasks-task-detail-wallposts-color;
 		
 		.wallposts-timeline {
 			@include grid(32,1,1);
@@ -287,10 +282,10 @@
 		}
 		
 		.wallpost-action {
-			border: 1px dashed $gray;
+			border: 1px dashed $tasks-task-detail-wallposts-action-border-color;
 		}
 		.wallpost-author, .wallpost-title {
-			color: $color-primary;
+			color: $tasks-task-detail-wallposts-title-author-color;
 		}
 	}
 }

@@ -10,7 +10,7 @@
 		<div class="task-files">
 			<ul>	
 		        {{#each files}}
-			{{#if id}}
+				{{#if id}}
 				<li>
 					<span class="task-file-filename">
 						<span class="flaticon stroke document-1"></span> 
@@ -22,14 +22,13 @@
 						{{#link-to "viewProfile" author}}
 							{{author.full_name}}
 						{{/link-to}}
-					</span>
-						
+					</span>	
 					<span class="task-file-created">
 						{{localize created formatting="X"}}
 					</span>
 				</li>
-			{{/if}}
-			{{/each}}
+				{{/if}}
+				{{/each}}
 			<ul>
 		</div>		
 

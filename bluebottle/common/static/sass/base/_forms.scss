@@ -16,7 +16,7 @@ form {
 }
 	
 fieldset {	
-    background-color: $form-background;
+    background-color: $form-bg-color;
     padding: $base-padding/2 0;
     margin-bottom: 1px;
 
@@ -31,18 +31,53 @@ fieldset {
     }
 }
 
+.fieldset-tabs {
+    @include clearfix;
+    li {
+        padding: $base-padding $base-padding * 2;
+        float: left;
+        a {
+            color: $gray-dark;
+        }
+        &.selected {
+            position: relative;
+            background-color: $form-bg-color;            
+            border: 1px solid white;
+            border-bottom: 2px solid $form-bg-color;            
+            padding-bottom: $base-padding;
+            z-index: 100;
+            top: 1px;
+            text-decoration: none;
+            font-weight: bold;
+            a {
+                text-decoration: none;
+                color: $color-primary;                
+            }
+        }
+        &.label {
+            @include grid(24,0,0);
+        }
+    }
+}
+
+fieldset {
+    .fieldset-tabs {
+        margin-bottom: -$base-margin / 2;
+    }
+}
+
 // When outside of fieldset (usally only the first)
 legend {
     position: relative;
 	padding: $base-padding*3/2 $base-padding*2;
-	background-color: $white;
+	background-color: $form-legend-bg-color;
 	width: 100%;
 		
 	strong {
 		display: block;
 		font-family: $font-family-heavy;
 		font-size: $font-size-medium;
-        color: $color-secondary;
+        color: $form-legend-strong-color;
         text-transform: uppercase;
     }
 
@@ -53,10 +88,10 @@ legend {
 
 // Legend inside fieldset
 fieldset legend {
-    background-color: $gray-light;
+    background-color: $form-fieldset-legend-bg-color;
       
     strong {
-        color: $white;
+        color: $form-fieldset-legend-strong-color;
     }
 }
 
@@ -84,6 +119,12 @@ fieldset legend {
         @include grid(36,1,2);
         float: right;
         
+        &.controls-inline {
+            input, select {
+                margin-bottom: $base-margin;
+            }
+        }
+
         &.wide {
             @include grid(48,2,2);
         }
@@ -95,6 +136,12 @@ fieldset legend {
         .inline-append {
             @include grid(24,1,0);
         }
+        .inline-onethird {
+            @include grid(16,0,1);
+        }
+        .inline-twothirds {
+            @include grid(32,1,0);
+        }
     }
 }
 
@@ -102,23 +149,23 @@ fieldset legend {
     display: block;
     @include clear;
     position: relative;
-    color: $color-text-light;
+    color: $form-message-color;
     font-family: $font-family-heavy;
     padding: $base-padding $base-padding*2;
     margin-top: 1px;
     margin-bottom: $base-margin;
-    background-color: $color-secondary;
+    background-color: $form-message-bg-color;
     
     .message-close {
         position: absolute;
         top: 0;
         right: 0;
         padding: $base-padding $base-padding;
-        color: $color-text-light;
+        color: $form-message-close-color;
         text-decoration: none;
         
         &:hover, &:active {
-            color: $white;
+            color: $form-message-close-hover-color;
         }
     }
     
@@ -131,7 +178,7 @@ fieldset legend {
     }
     
     &.is-error {
-        background-color: $color-error;
+        background-color: $form-message-error-bg-color;
     }
 }
 
@@ -139,9 +186,9 @@ fieldset legend {
 p.error, label.error {
     display: block;
     margin: 0 0 $base-padding/2 0;
-    background-color: $color-error;
+    background-color: $form-message-error-bg-color;
     padding: $base-padding/2 $base-padding;
-    color: $white;
+    color: $form-message-error-color;
     font-size: $font-size-small;
     font-family: $font-family-heavy;
 }
@@ -156,10 +203,10 @@ p.error, label.error {
     @include single-box-shadow( rgba(0,0,0,0.25) , 0, 0, 12px, 0px);
 
 
-    background-color: $color-error;
-    border: 1px solid darken($color-error, 10%);
+    background-color: $form-message-error-bg-color;
+    border: 1px solid darken($form-message-error-bg-color, 10%);
     padding: $base-padding/2 $base-padding;
-    color: $white;
+    color: $form-message-error-color;
     font-size: $font-size-small;
     font-family: $font-family-heavy;
 	
@@ -210,7 +257,7 @@ select {
 	background-repeat: no-repeat;
 	
 	&:hover, &:focus {
-		border-color: $color-secondary;
+		border-color: $form-select-hover-border-color;
 		background-image: image-url("select-arrow-hover.png");
 	}
 }
@@ -230,12 +277,12 @@ input[type=search],
 input[type=email],
 input[type=tel],
 input[type=url] {
-    color: $gray-darker;
-    border: 1px solid $input-border;
+    color: $form-input-color;
+    border: 1px solid $form-input-border-color;
     font-family: $base-font-family;
     width: 100%;
     padding: $base-padding/2 $base-padding;
-    background-color: $white;
+    background-color: $form-input-bg-color;
     @include transition(all 0.2s ease-out);
     @include box-shadow(inset 2px 2px 0 rgba($black, 0.05));
     
@@ -244,9 +291,9 @@ input[type=url] {
     }
 
     &:hover, &:focus {
-        border-color: $color-secondary;
+        border-color: $form-input-hover-focus-border-color;
         outline: 0;
-        color: $gray-darker;
+        color: $form-input-hover-focus-color;
         @include box-shadow(none);
         
         & + .flaticon {
@@ -255,46 +302,107 @@ input[type=url] {
     }
 
     &.error {
-        border-color: $color-error;
+        border-color: $form-select-error-border-color;
     }
 }
 
-::-webkit-input-placeholder { color: $gray-light; }
-::-moz-placeholder { color: $gray-light; }
-:-ms-input-placeholder { color: $gray-light; }
-input:-moz-placeholder { color: $gray-light; }
-textarea:-moz-placeholder { color: $gray-light; }
+::-webkit-input-placeholder { color: $form-placeholder-color; }
+::-moz-placeholder { color: $form-placeholder-color; }
+:-ms-input-placeholder { color: $form-placeholder-color; }
+input:-moz-placeholder { color: $form-placeholder-color; }
+textarea:-moz-placeholder { color: $form-placeholder-color; }
 
+input[type=range] {
+    width:100%;
+}
+input[type=range]::-webkit-slider-thumb {
+    // -webkit-appearance: none !important;
+    background: $color-secondary;
+    height:30px;
+    width:30px;
+
+}
 
 // Tags
 // -------------------------
+
+// .tags {
+//     list-style: none;
+//     margin: 0;
+//     padding: 0;
+//     text-indent: 0;
+    
+//     li {
+//         @include resetlist;
+//         display: inline-block;
+//         padding: $base-padding/2 $base-padding/2 $base-padding/2 $base-padding;
+//         margin: 0 $base-margin/4 $base-margin/2 0;
+//         color: $white;
+//         font-size: $font-size-small;
+//         text-transform: uppercase;
+//         background-color: $color-secondary;
+        
+//         .flaticon {
+//             margin-right: $base-margin/2;
+//         }
+        
+//         .delete {
+//             color: $white;
+//             cursor: pointer;
+            
+//             &:hover {
+//                 color: $color-primary;
+//             }
+//         }
+//     }
+// }
 
 .tags {
     list-style: none;
     margin: 0;
     padding: 0;
     text-indent: 0;
+    margin-top: $base-margin / 2;
     
     li {
         @include resetlist;
+        position: relative;
         display: inline-block;
-        padding: $base-padding/2 $base-padding/2 $base-padding/2 $base-padding;
+        padding: $base-padding/2 $base-padding*4 $base-padding/2 $base-padding;
         margin: 0 $base-margin/4 $base-margin/2 0;
-        color: $white;
+        color: $form-tags-color;
         font-size: $font-size-small;
         text-transform: uppercase;
+        background-color: $form-tags-bg-color;
+        
         background-color: $color-secondary;
-        
+        overflow: hidden;
+        border: 1px solid $gray-darkest;
         .flaticon {
-            margin-right: $base-margin/2;
+            text-shadow: 0 0 1px $gray-darkest;
         }
-        
         .delete {
-            color: $white;
+            color: $form-tags-delete-color;
             cursor: pointer;
-            
+            // padding: $base-padding;
+            background: $gray-dark;
+            color: $gray-light;
+            font-size: $font-size-larger;
+            text-decoration: none;
+            text-align:center;
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            @include box-shadow(inset 0 0 2px $gray-dark);
             &:hover {
-                color: $color-primary;
+                color: $form-tags-delete-hover-color;
+                background-color: $color-primary;
             }
         }
     }
@@ -371,9 +479,9 @@ label.radio {
             
             margin: 0;
             padding: $base-padding/2 $base-padding;
-            color: $white;
-            border: 1px solid darken($gray-light, 5%);
-            background-color: $gray-light;
+            color: $form-radio-select-label-color;
+            border: 1px solid $form-radio-select-label-border-color;
+            background-color: $form-radio-select-label-bg-color;
             cursor: pointer;
             @include border-radius(1px);
             text-align: center;
@@ -382,9 +490,9 @@ label.radio {
         
         input[type=radio]:checked + span {
             position: relative;
-            border-color: darken($color-secondary, 5%);
+            border-color: $form-radio-select-input-border-color;
             font-family: $font-family-heavy;
-            background: $color-secondary;
+            background: $form-radio-select-input-bg-color;
             z-index: 10;
         }
         
@@ -426,7 +534,7 @@ input[readonly],
 select[readonly],
 textarea[readonly] {
     cursor: not-allowed;
-    background-color: $input-disabled-background;
+    background-color: $form-input-disabled-bg-color;
 }
 
 

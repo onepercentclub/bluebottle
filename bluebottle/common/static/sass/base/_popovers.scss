@@ -14,12 +14,11 @@
     min-width: 150px;
     padding: 1px;
     text-align: left; // Reset given new insertion method
-    background-color: $color-primary;
     -webkit-background-clip: padding-box;
     -moz-background-clip: padding;
     background-clip: padding-box;
-    border: 1px solid $gray-lighter;
-    background-color: $gray-lighter;
+    border: 1px solid $popover-border-color;
+    background-color: $popover-bg-color;
     
     // Overrides for proper insertion
     white-space: normal;
@@ -35,7 +34,7 @@
     margin: 0; // reset heading margin
     padding: $base-padding/2 $base-padding;
     font-family: $font-family-heavy;
-    color: $color-secondary;
+    color: $popover-title-color;
     
     &:empty {
         display: none;
@@ -44,7 +43,7 @@
 
 .popover-content {
     padding: $base-padding/2 $base-padding;
-    color: $color-text;
+    color: $popover-content-color;
 }
 
 // Arrows
@@ -73,15 +72,15 @@
         left: 50%;
         margin-left: -12px;
         border-bottom-width: 0;
-        border-top-color: #999; // IE8 fallback
-        border-top-color: $gray-lighter;
+//        border-top-color: #999; // IE8 fallback
+        border-top-color: $popover-arrow-color;
         bottom: -12px;
         
         &:after {
             bottom: 1px;
             margin-left: -12px;
             border-bottom-width: 0;
-            border-top-color: $gray-lighter;
+            border-top-color: $popover-arrow-color;
         }
     }
     
@@ -90,14 +89,14 @@
         left: -12px;
         margin-top: -12px;
         border-left-width: 0;
-        border-right-color: #999; // IE8 fallback
-        border-right-color: $gray-lighter;
+//        border-right-color: #999; // IE8 fallback
+        border-right-color: $popover-arrow-color;
         
         &:after {
             left: 1px;
             bottom: -12px;
             border-left-width: 0;
-            border-right-color: $gray-lighter;
+            border-right-color: $popover-arrow-color;
         }
     }
     
@@ -105,15 +104,15 @@
         left: 50%;
         margin-left: -12px;
         border-top-width: 0;
-        border-bottom-color: #999; // IE8 fallback
-        border-bottom-color: $white;
+//        border-bottom-color: #999; // IE8 fallback
+        border-bottom-color: $popover-arrow-color;
         top: -12px;
         
         &:after {
             top: 1px;
             margin-left: -12px;
             border-top-width: 0;
-            border-bottom-color: $gray-lighter;
+            border-bottom-color: $popover-arrow-color;
         }
     }
     
@@ -124,13 +123,13 @@
             right: -12px;
             margin-top: -12px;
             border-right-width: 0;
-            border-left-color: #999; // IE8 fallback
-            border-left-color: $gray-lighter;
+//            border-left-color: #999; // IE8 fallback
+            border-left-color: $popover-arrow-color;
             
             &:after {
                 right: 1px;
                 border-right-width: 0;
-                border-left-color: $gray-lighter;
+                border-left-color: $popover-arrow-color;
                 bottom: -12px;
             }
         }

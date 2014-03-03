@@ -1,7 +1,7 @@
 .dropdown-menu {
     position: absolute;
     z-index: 9999;
-    background-color: $white;
-    border: 1px solid $color-secondary;
+    background-color: $dropdown-bg-color;
+    border: 1px solid $dropdown-border-color;
     padding: 8px;
 }

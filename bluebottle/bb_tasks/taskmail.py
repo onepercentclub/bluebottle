@@ -12,29 +12,6 @@ from bluebottle.utils.utils import get_task_model, get_taskmember_model
 TASK_MODEL = get_task_model()
 TASK_MEMBER_MODEL = get_taskmember_model()
 
-# class SupportedProjectsManager(models.Manager):
-#     """
-#     Manager to retrieve user statistics related to supported projects through
-#     tasks.
-#     """
-#     def by_user(self, user):
-#         """
-#         Fetches the projects supported by `user` by being a taskmember in the
-#         related tasks.
-#
-#         Usage: Task.supported_projects.by_user(user) returns the projects
-#         queryset.
-#         """
-#         statuses = TASK_MEMBER_MODEL.TaskMemberStatuses
-#
-#         valid_statuses = [
-#             statuses.applied, statuses.accepted, statuses.realized]
-#         projects = settings.PROJECTS_PROJECT_MODEL.objects.filter(
-#             task__taskmember__member=user,
-#             task__taskmember__status__in=valid_statuses).distinct()
-#
-#         return projects
-
 
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
 def new_reaction_notification(sender, instance, created, **kwargs):

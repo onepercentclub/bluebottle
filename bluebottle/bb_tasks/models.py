@@ -96,6 +96,8 @@ class BaseTask(models.Model):
     deadline = models.DateTimeField()
     tags = TaggableManager(blank=True, verbose_name=_('tags'))
 
+    objects = models.Manager()
+
     # required resources
     time_needed = models.CharField(
         _('time_needed'), max_length=200,

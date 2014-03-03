@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import ugettext as _
 from django.utils.html import format_html
 
-from . import get_organizationdocument_model
+from bluebottle.utils.utils import get_organizationdocument_model
 DOCUMENT_MODEL = get_organizationdocument_model()
 
 # Widgets

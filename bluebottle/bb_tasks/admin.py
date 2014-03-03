@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
-from . import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
+from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
 
 BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()

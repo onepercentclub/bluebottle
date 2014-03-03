@@ -8,7 +8,7 @@ from rest_framework import generics
 
 from bluebottle.utils.utils import get_client_ip
 
-from . import get_organization_model, get_organizationdocument_model, get_organizationmember_model
+from bluebottle.utils.utils import get_organization_model, get_organizationdocument_model, get_organizationmember_model
 from .permissions import IsOrganizationMember
 from .serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
 

@@ -6,7 +6,7 @@ from bluebottle.utils.serializers import MetaField, HumanReadableChoiceField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
-from . import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
+from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()

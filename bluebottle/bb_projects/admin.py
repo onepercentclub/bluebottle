@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from . import get_project_model
+from bluebottle.utils.utils import get_project_model
 from .models import ProjectPhase, ProjectTheme
 
 

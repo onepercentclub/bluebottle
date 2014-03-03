@@ -5,9 +5,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, TASK_MODEL
 
-from bluebottle.bb_tasks import get_taskmember_model
+from bluebottle.utils.utils import get_taskmember_model
 TASKS_MEMBER_MODEL = get_taskmember_model()
 
+from bluebottle.bb_tasks import taskmail
 
 class TaskEmailTests(TestCase):
     """ Tests for tasks: sending e-mails on certain status changes. """
@@ -34,14 +35,6 @@ class TaskEmailTests(TestCase):
             status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied,
             task=self.task
         )
-
-
-        #self.task.members.add(self.taskmember1)
-        #self.task.members.add(self.taskmember2)
-
-        # Reload the models to get the ``task_id`` properly set.
-        # self.taskmember1 = TASKS_MEMBER_MODEL.objects.get(pk=self.taskmember1.pk)
-        # self.taskmember2 = TASKS_MEMBER_MODEL.objects.get(pk=self.taskmember2.pk)
 
         self.task.save()
 

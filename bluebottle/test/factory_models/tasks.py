@@ -5,7 +5,7 @@ from django.utils.timezone import now
 import factory
 import factory.fuzzy
 
-from bluebottle.bb_tasks import get_task_model, get_skill_model, get_taskmember_model
+from bluebottle.utils.utils import get_task_model, get_skill_model, get_taskmember_model
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
 

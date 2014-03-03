@@ -1,5 +1,3 @@
-from django.db import models
-from django.conf import settings
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
@@ -9,34 +7,33 @@ from django.template.loader import get_template, render_to_string
 from django.template import Context
 from django.core.mail import EmailMultiAlternatives, get_connection
 
-
-from . import get_task_model, get_taskmember_model
+from bluebottle.utils.utils import get_task_model, get_taskmember_model
 
 TASK_MODEL = get_task_model()
 TASK_MEMBER_MODEL = get_taskmember_model()
 
-class SupportedProjectsManager(models.Manager):
-    """
-    Manager to retrieve user statistics related to supported projects through
-    tasks.
-    """
-    def by_user(self, user):
-        """
-        Fetches the projects supported by `user` by being a taskmember in the
-        related tasks.
-
-        Usage: Task.supported_projects.by_user(user) returns the projects
-        queryset.
-        """
-        statuses = TASK_MEMBER_MODEL.TaskMemberStatuses
-
-        valid_statuses = [
-            statuses.applied, statuses.accepted, statuses.realized]
-        projects = settings.PROJECTS_PROJECT_MODEL.objects.filter(
-            task__taskmember__member=user,
-            task__taskmember__status__in=valid_statuses).distinct()
-
-        return projects
+# class SupportedProjectsManager(models.Manager):
+#     """
+#     Manager to retrieve user statistics related to supported projects through
+#     tasks.
+#     """
+#     def by_user(self, user):
+#         """
+#         Fetches the projects supported by `user` by being a taskmember in the
+#         related tasks.
+#
+#         Usage: Task.supported_projects.by_user(user) returns the projects
+#         queryset.
+#         """
+#         statuses = TASK_MEMBER_MODEL.TaskMemberStatuses
+#
+#         valid_statuses = [
+#             statuses.applied, statuses.accepted, statuses.realized]
+#         projects = settings.PROJECTS_PROJECT_MODEL.objects.filter(
+#             task__taskmember__member=user,
+#             task__taskmember__status__in=valid_statuses).distinct()
+#
+#         return projects
 
 
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
@@ -106,13 +103,13 @@ def send_mail_task_realized(sender, instance, created, **kwargs):
     Send (multiple) e-mails when a task is realized.
     The task members that weren't rejected are the receivers.
     """
+
     if not created and instance.status == 'realized':
         task = instance
         sender = task.author
         link = '/go/tasks/{0}'.format(task.id)
         site = 'https://' + Site.objects.get_current().domain
 
-        #qs = task.taskmember_set.exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
         qs = task.members.all().exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
         receivers= [taskmember.member for taskmember in qs]
         emails = []
@@ -127,7 +124,6 @@ def send_mail_task_realized(sender, instance, created, **kwargs):
             msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
             msg.attach_alternative(html_content, "text/html")
             emails.append(msg)
-
 
         if emails:
             connection = get_connection()

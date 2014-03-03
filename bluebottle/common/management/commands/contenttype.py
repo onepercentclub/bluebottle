@@ -79,20 +79,18 @@ class Command(BaseCommand):
         if options['deleteModel']:
             modelToDelete = options['deleteModel']
             self.stdout.write("Going to delete the contenttype for the %s model" %modelToDelete)
-            # ContentType.objects.filter(model__in=model_to_delete).delete()
-            mt = ContentType.objects.filter(model=modelToDelete)
+            ContentType.objects.filter(model=modelToDelete).delete()
 
         if options['deleteLabel']:
             labelToDelete = options['deleteLabel']
             self.stdout.write("Going to delete the contenttypes for the '%s' app" %labelToDelete)
-            # ContentType.objects.filter(app_label__in=label_to_delete).delete()
-            lt = ContentType.objects.filter(app_label=labelToDelete)
+            ContentType.objects.filter(app_label=labelToDelete).delete()
 
         if options['deleteObsolete']:
             self.stdout.write("Going to Deleted all obsolete ContentType")
             for ct in ContentType.objects.exclude(app_label__in=settings.INSTALLED_APPS):
                 self.stdout.write("Deleting %s" %ct.model)
-                # ct.delete()
+                ct.delete()
 
         if options['updateSingle']:
             contentToUpdate = options['updateSingle']

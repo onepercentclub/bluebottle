@@ -10,8 +10,8 @@ from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
 
 TASK_MODEL = get_task_model()
-TASK_MEMBER_MODEL = get_taskmember_model
-TASK_SKILL_MODEL = get_skill_model
+TASK_MEMBER_MODEL = get_taskmember_model()
+TASK_SKILL_MODEL = get_skill_model()
 
 
 class SkillFactory(factory.DjangoModelFactory):

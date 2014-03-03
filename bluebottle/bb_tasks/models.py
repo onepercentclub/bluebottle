@@ -113,8 +113,6 @@ class BaseTask(models.Model):
         _('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
-    objects = models.Manager()
-
     class Meta:
         default_serializer = 'bluebottle.bb_tasks.serializers.TaskSerializer'
         abstract = True
@@ -221,34 +219,40 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         msg.send()
 
 
-def send_mail_task_realized(task):
+@receiver(post_save, weak=False, sender=TASK_MODEL)
+def send_mail_task_realized(sender, instance, created, **kwargs):
     """
     Send (multiple) e-mails when a task is realized.
     The task members that weren't rejected are the receivers.
     """
-    sender = task.author
-    link = '/go/tasks/{0}'.format(task.id)
-    site = 'https://' + Site.objects.get_current().domain
+    if not created and instance.status == 'realized':
+        task = instance
+        sender = task.author
+        link = '/go/tasks/{0}'.format(task.id)
+        site = 'https://' + Site.objects.get_current().domain
 
-    qs = task.taskmember_set.exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
-    receivers = [taskmember.member for taskmember in qs]
+        #qs = task.taskmember_set.exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
+        qs = task.members.all().exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
+        receivers= [taskmember.member for taskmember in qs]
+        print "Receivers: ", receivers
+        emails = []
 
-    emails = []
+        for receiver in receivers:
+            translation.activate(receiver.primary_language)
+            subject = _('Good job! "%(task)s" is realized!.') % {'task': task.title}
+            context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
+            text_content = get_template('task_realized.mail.txt').render(context)
+            html_content = get_template('task_realized.mail.html').render(context)
+            translation.deactivate()
+            msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+            msg.attach_alternative(html_content, "text/html")
+            emails.append(msg)
 
-    for receiver in receivers:
-        translation.activate(receiver.primary_language)
-        subject = _('Good job! "%(task)s" is realized!.') % {'task': task.title}
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
-        text_content = get_template('task_realized.mail.txt').render(context)
-        html_content = get_template('task_realized.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        emails.append(msg)
 
-    connection = get_connection()
-    connection.send_messages(emails)
-    connection.close()
+        if emails:
+            connection = get_connection()
+            connection.send_messages(emails)
+            connection.close()
 
 
 #

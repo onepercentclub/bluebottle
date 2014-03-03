@@ -69,7 +69,7 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'skill', 'project', 'time_needed')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'end_goal')
 
 
 class MyTaskMemberSerializer(TaskMemberSerializer):

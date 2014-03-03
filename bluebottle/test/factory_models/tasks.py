@@ -28,6 +28,7 @@ class TaskMemberFactory(factory.DjangoModelFactory):
     status = 'accepted'
 
 
+
 class TaskFactory(factory.DjangoModelFactory):
     FACTORY_FOR = TASK_MODEL
 

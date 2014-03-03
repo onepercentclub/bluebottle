@@ -20,7 +20,7 @@ class BaseOrganizationMember(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
     function = models.CharField(_('function'), max_length=20, choices=MemberFunctions.choices)
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL)
+    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, related_name="members")
 
     class Meta:
         verbose_name = _('organization member')
@@ -34,7 +34,7 @@ class BaseOrganizationDocument(models.Model):
     file = models.FileField(
         upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
     author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL)
+    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, related_name="documents")
 
     class Meta:
         verbose_name = _('organization document')

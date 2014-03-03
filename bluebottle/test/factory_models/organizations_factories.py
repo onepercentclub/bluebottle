@@ -5,7 +5,7 @@ from .geo import CountryFactory
 from .accounts import BlueBottleUserFactory
 
 ORGANIZATION_MODEL = get_organization_model()
-ORGANIZATION_MEMBER_MODEL = get_organizationmember_model
+ORGANIZATION_MEMBER_MODEL = get_organizationmember_model()
 
 
 class OrganizationFactory(factory.DjangoModelFactory):
@@ -35,3 +35,5 @@ class OrganizationMemberFactory(factory.DjangoModelFactory):
 
     user = factory.SubFactory(BlueBottleUserFactory)
     function = 'owner'
+    organization = factory.SubFactory(OrganizationFactory)
+

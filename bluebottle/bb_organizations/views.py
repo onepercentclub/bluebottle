@@ -44,9 +44,8 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
     def post_save(self, obj, created=False):
         if created:
-            member = MEMBER_MODEL(user=self.request.user)
+            member = MEMBER_MODEL(user=self.request.user, organization=obj)
             member.save()
-            obj.members.add(member)
 
 
 class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):

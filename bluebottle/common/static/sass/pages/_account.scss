@@ -2,56 +2,6 @@
 // Account page (overwrites modules)
 // --------------------------------------------------
 
-.account-header {
-    background-color: $gray-lighter;
-    position: relative;
-    
-    .account-avatar {
-        @include grid(6,1,1);
-        margin-top: $base-margin*2;
-        margin-bottom: $base-margin*2;
-    }
-    
-    .account-title {
-        @include grid(32,1,0);
-        margin-top: $base-margin;
-        
-        h2 {
-            width: 100%;
-            color: $color-heading;
-            float: left;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .account-subtitle {
-            color: $gray;
-//            font-family: $base-font-family;
-//            padding-left: $base-padding;
-//            margin-left: $base-margin/4;
-//            background: image-url("list-item.png") transparent no-repeat 0 50%;
-        }
-    }
-    
-    .account-preview {
-        @include grid(10,1,1);
-        font-size: $font-size-small;
-        color: $gray;
-        float: right;
-        margin-top: $base-margin*2;
-        text-align: right;
-        display: inline-block;
-    }
-    
-    .tabs {
-        @include grid(48,7,1);
-        position: absolute;
-        bottom: 0;
-    }
-    
-}
-
 // Project Picker Monthly
 #project-select {
     
@@ -121,7 +71,7 @@
 }
 .account-header {
 	
-	background-color: $gray-lighter;
+	background-color: $account-header-bg-color;
 	padding: $base-padding * 2 0;
 
 	.account-personal {
@@ -131,14 +81,14 @@
 		.account-title {
 			margin-top: $base-margin * 1.5;
 			text-transform: none;
-			color: $gray-darker;
+			color: $account-header-title-color;
 		}
 		
 		.account-edit-link {
-			color: $gray;
+			color: $account-header-edit-link-color;
 			text-decoration: none;
 			&:hover {
-				color: $gray-darkest;
+				color: $account-header-edit-link-hover-color;
 			}
 		}
 	
@@ -146,7 +96,7 @@
 			width: 150px;
 			height: 150px;
 			float: left;
-			border: 1px solid $gray;
+			border: 1px solid $account-header-avatar-border-color;
 			margin-right: $base-margin;
 		}	
 	}	
@@ -158,11 +108,9 @@
 	}	
 }
 
-
-
 .account-body {
 	
-	background-color: $white;
+	background-color: $account-body-bg-color;
 	padding: $base-padding*2 0;
 
 	.account-info {
@@ -174,7 +122,7 @@
 		}
 		
 		.account-about-header {
-			color: $color-primary;
+			color: $account-about-header-color;
 		}			
 	}
 	.account-details {
@@ -186,11 +134,13 @@
 			padding: 0;
 			font-size: $base-font-size;
 			border-bottom: none;
+			@include clear;
 		
 			> dt, > dd {
+				min-height: 60px;
 				margin: 0;
 				padding: $base-padding;
-				border-bottom: 1px solid $gray-light;
+				border-bottom: 1px solid $account-details-listitem-border-color;
 			}
 		
 			> dd {
@@ -201,6 +151,10 @@
 			> dt {
 				@include grid(16,0,0);
 				
+				.flaticon {
+					display: inline-block;
+					width: 30px;
+				}
 			}
 		}
 	}
@@ -226,9 +180,9 @@
 }
 .account-statistics {
 	
-	background-color: $white;
+	background-color: $account-statistics-bg-color;
 	padding: $base-padding*2 0;
-	color: $gray-dark;
+	color: $account-statistics-color;
 	
 	.account-statistics-header {
 		
@@ -236,7 +190,7 @@
 		@include clear;
 		
 		.account-statistics-header-title {
-			color: $color-primary;
+			color: $account-statistics-header-title-color;
 			text-transform: none;
 			@include grid(20,0,0);
 		}
@@ -254,11 +208,11 @@
 			text-align: right;
 		}
 		a {
-			color: $gray;
+			color: $account-statistics-link-color;
 			text-decoration: none;
 			padding: 0 $base-margin;
 			&:hover {
-				color: $gray-darker;
+				color: $account-statistics-link-hover-color;
 			}
 		}
 	}
@@ -269,11 +223,11 @@
 		
 		tr {
 			&:nth-child(even) {
-				background: $white
+				background: $account-statistics-table-even-row-bg-color
 			}
 			
 			&:nth-child(odd) {
-				background: $gray-lighter
+				background: $account-statistics-table-odd-row-bg-color
 			}
 			
 			td {
@@ -297,19 +251,19 @@
 		
 		a {
 			text-transform: uppercase;
-			color: $gray;
+			color: $account-statistics-pagination-link-color;
 			text-decoration: none;
 			display: inline-block;
-			border: 1px solid $gray-lighter;
+			border: 1px solid $account-statistics-pagination-border-color;
 			padding: $base-padding;
 			
 			&:hover {
-				color: $gray-darker;
-				border: 1px solid $gray-dark;
+				color: $account-statistics-pagination-link-hover-color;
+				border: 1px solid $account-statistics-pagination-border-hover-color;
 			}
 			
 			strong, .flaticon {
-				color: $gray-darkest;
+				color: $account-statistics-pagination-icon-color;
 			}
 		}
 	}

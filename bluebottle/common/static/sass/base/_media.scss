@@ -50,21 +50,21 @@ object, embed, iframe {
         margin-bottom: $base-margin;
         
         img {
-            border: 1px solid $white;
+            border: 1px solid $media-photo-viewer-image-border-color;
         }
         
         &:hover img {
-            border-color: $color-primary;
+            border-color: $media-photo-viewer-image-hover-border-color;
         }
         
         &.more {
             display: block;
             @include grid(8,0,0);
-            background-color: $color-secondary;
+            background-color: $media-photo-viewer-more-bg-color;
             
             a {
                 display: block;
-                color: $white;
+                color: $media-photo-viewer-more-color;
             }
         }
     }

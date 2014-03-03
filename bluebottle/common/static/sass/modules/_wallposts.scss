@@ -1,7 +1,7 @@
 //
 // Wallposts
 // --------------------------------------------------
-
+//
 //#wallpost-form {
 //    @include clear;
 //	
@@ -44,7 +44,7 @@
 //        float: right;
 //    }
 //}
-
+//
 //#wallposts {
 //	@include clear;
 //	padding-top: $base-padding*2;
@@ -204,28 +204,37 @@
 //}
 
 #wallposts {
-	background: $gray-lighter;
-
+	
+	background-color: $wallposts-bg-color;
+	padding: $base-padding 0;
+	
 	.wallposts-list {
 		margin: $base-margin 0;
 		@include grid(24,1,1);
 	}
+	
 	.wallposts-important {
+		
 		@include grid(24,1,1);	
+	
 		.task-files {
+	
 			ul {
 				margin: $base-margin 0;
 				li {
 					@include resetlist;		
 					@include clear;
+					
 					.task-file-filename, .task-file-author, .task-file-created {
 						@include grid(16,0,1);
 					}
+					
 					.task-file-author {
 						a {
-							color: $gray-dark;
+							color: $wallposts-task-file-author-link-color;
 						}
 					}
+					
 					.task-file-created {
 						font-size: $font-size-small;
 					}		
@@ -233,28 +242,30 @@
 			}
 		}	
 	}
+	
 	.wallpost-action {
 		
-		border: 1px dashed $gray-light;
+		border: 1px dashed $wallposts-action-border-color;
 		padding: $base-padding;
 		text-align: center;
 		margin-bottom: $base-margin;
+		
 		a {
 			text-decoration: none;
 		}
 		
 		.wallpost-post-update {
-			color: $color-primary;
+			color: $wallposts-post-update-color;
 		}
+		
 		.wallpost-post-comment {
-			color: $color-secondary;
+			color: $wallposts-post-comment-color;
 		}
 	}
+	
     .wallpost-form {
 		
         display: none;
-		border: 1px dashed $gray-light;
-		padding: $base-padding;
 		@include clear;
 		
 		fieldset {
@@ -263,7 +274,7 @@
 		
 		.errors {
 			p {
-				color: red;
+				color: $color-error;
 				text-align: left;
 			}
 		}
@@ -292,30 +303,28 @@
 			.tab-item {
 				text-align: center;
 				&.active {
-					background: $gray-dark;
+					background: $wallposts-form-tabs-active-bg-color;
 					a {
-						color: $white;							
+						color: $wallposts-form-tabs-active-color;							
 					}
 				}
 			}
 		}
+		
 		.btn {
 			padding: $base-padding/4 $base-padding/2;
 		}
+		
 		.btn-upload {
 			float: right;
-			color: $white;
+			color: $wallposts-form-upload-button-color;
 		}
-		.btn-save {
-			background-color: $color-primary;
-		}
-		.btn-cancel {
-			background-color: $color-secondary;
-		}
+		
 		.video-container, .photos-container {
-			background: $gray-dark;
+			background: $wallposts-form-tabs-active-bg-color;
 			padding: $base-padding;
 		}
+		
 		.video-container {
 			display: none;
 		}
@@ -324,7 +333,6 @@
 
 .wallpost {
 
-	background: $white;
 	padding: $base-padding;
 	padding-bottom: 0;
 	margin-bottom: $base-margin;
@@ -344,8 +352,8 @@
 				display: block;
 				text-align: center;
 				text-transform: uppercase;
-				background: $gray-lighter;
-				color: $white;
+				background: $wallposts-wallpost-member-function-bg-color;
+				color: $wallposts-wallpost-member-function-color;
 			}
 		}
 
@@ -353,12 +361,12 @@
 
 			.wallpost-author {
 				text-transform: none;
-				color: $color-primary;
+				color: $wallposts-wallpost-author-color;
 				display: inline;
 			}
 
 			.wallpost-timestamp {
-				color: $gray;
+				color: $wallposts-wallpost-timestamp-color;
 				font-size: $font-size-small;
 			}
 			
@@ -371,9 +379,10 @@
 
 		.wallpost-title {
 			text-transform: none;
-			color: $black;
+			color: $wallposts-wallpost-title-color;
 		}
 	}
+	
 	.wallpost-content {
 		.photo-viewer {
 			.cover {
@@ -381,6 +390,7 @@
 			}
 		}
 	}
+	
 	.wallpost-reactions {
 		
 		margin: -$base-margin;
@@ -406,26 +416,27 @@
 	}
 	
 	&.wallpost-system {
-		background-color: $color-secondary;
+		background-color: $wallposts-wallpost-system-bg-color;
 	}
 	
 	&.important {
 		
-		border: 1px solid $color-primary;
+		border: 1px solid $wallposts-wallpost-important-border-color;
 		
 		.wallpost-author {
-			color: $color-secondary;
+			color: $wallposts-wallpost-important-author-color;
 		}
 		.wallpost-title {
-			color: $color-primary;
+			color: $wallposts-wallpost-important-title-color;
 		}
 	}
+	
 	.wallpost-buttons {
 		
 		margin: 0 (-$base-margin);
 		padding: $base-padding;
-		background-color: $color-primary;
-		color: $white;
+		background-color: $wallposts-wallpost-important-buttons-bg-color;
+		color: $wallposts-wallpost-important-buttons-color;
 		text-transform: uppercase;
 		
 		.btn {
@@ -437,18 +448,21 @@
 			float: right;
 		}
 	}
+	
 	.file-link {
 		
 		margin: 0 $base-margin;
-		color: $gray;
+		color: $wallposts-wallpost-file-link-color;
 		
 		a {
-			color: $gray;			
+			color: $wallposts-wallpost-file-link-color;			
 		}
 	}
+	
 	.btn-spacer {
 		margin: 0 $base-margin/2;
 	}
+	
 	.wallpost-delete, .reaction-delete {
 		float: right;
 		text-decoration: none;

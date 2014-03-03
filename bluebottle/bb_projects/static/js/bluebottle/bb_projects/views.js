@@ -31,29 +31,50 @@ App.ProjectSearchFormView = Em.View.extend({
     templateName: 'project_search_form'
 });
 
-
-App.ProjectPlanView = Em.View.extend(App.ScrollInView, {
-    templateName: 'project_plan',
-
-    staticMap: function(){
-        var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
-        return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
-            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
-    }.property('latitude', 'longitude')
-});
-
-
 App.ProjectView = Em.View.extend({
     templateName: 'project',
 
     didInsertElement: function(){
         this._super();
         this.$('.tags').popover({trigger: 'hover', placement: 'top', width: '100px'});
-    }
+        
+        // project plan
+        var height = $(window).height();
+        var width = $(window).width();
+        this.$(".project-plan-navigation, .project-plan-main").height(height);
+        
+        var view = this;
+        view.$(".project-plan-main-link:first").addClass("active");
+
+        // TODO: Solve the extra scrollbar on the html body
+        view.$(".project-plan-link").click(function(event) {
+          view.$("#project-plan").addClass("active");
+          event.preventDefault();
+        });
+        view.$(".project-plan-back-link").click(function(event) {
+          view.$("#project-plan").removeClass("active");
+          event.preventDefault();
+        });
+        view.$(".project-plan-main-link").click(function(event) {
+            view.$(".project-plan-main").scrollTo($(this).attr("href"), {duration: 300});
+            view.$(".project-plan-main-link.active").removeClass("active");
+            view.$(event.target).addClass("active");
+            event.preventDefault();
+        });        
+    },
+    staticMap: function(){
+        var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
+        return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
+            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
+    }.property('latitude', 'longitude')    
 });
 
 App.ProjectIndexView = Em.View.extend({
-    templateName: 'project_wall'
+    templateName: 'project_wall',
+    willInsertElement: function() {
+        this.get("controller").getTasks();
+        this.get("controller").set("showingAll", false);
+    }
 });
 
 /* Form Elements */

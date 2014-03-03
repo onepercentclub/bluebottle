@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, TaggableSerializerMixin)
+    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
 from bluebottle.utils.serializers import URLField
 
 
@@ -45,7 +45,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -55,6 +55,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
 
     website = URLField(required=False)
+    tags = TagSerializer()
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -64,7 +65,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
                   'about', 'why', 'website', 'availability', 'date_joined', 'location', 'twitter', 'facebook',
-                  'skypename')
+                  'skypename', 'tags')
 
 
 # Thanks to Neamar Tucote for this code:

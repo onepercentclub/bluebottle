@@ -146,10 +146,11 @@ App.ProjectIndexController = Em.ArrayController.extend({
     needs: ['project', 'currentUser'],
     perPage: 5,
     page: 1,
+    parentId: null,
     parentType: 'project',
-    showingAll: false,
+    showingAll: null,
     tasks: null,
-
+    
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
@@ -181,9 +182,13 @@ App.ProjectIndexController = Em.ArrayController.extend({
                 })); 
              });
         } else {
-            this.set("tasks", App.Task.find({project: this.get('parentId')}));            
+            controller.set("tasks", App.Task.find({project: this.get('parentId')}));            
         }
-    }.observes('parentId', 'parentType', 'showingAll'),
+    }.observes('showingAll'),
+    
+    resetShowingAll: function() {
+        this.set("showingAll", false);
+    }.observes('parentId'),
     
     actions: {
         showMore: function() {
@@ -202,8 +207,6 @@ App.ProjectIndexController = Em.ArrayController.extend({
             this.set("showingAll", true);
         }
     },
-
-
 });
 
 App.GenericFieldController = Em.ObjectController.extend({});
@@ -326,17 +329,4 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
         this._super();
     }
 });
-
-// App.ProjectIndexController = Em.ObjectController.extend({
-// 
-//     actions: {
-//         showAllTasks: function() {
-//             
-//         },
-//         showActiveTasks: function() {
-//             
-//         }
-//     },
-// 
-// });
 

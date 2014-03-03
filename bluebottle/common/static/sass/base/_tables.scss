@@ -17,7 +17,7 @@ table {
     td {
         padding: $base-padding/2 $base-padding;
         line-height: $base-line-height;
-        border-bottom: 1px solid $gray-light;
+        border-bottom: 1px solid $table-cell-border-color;
         
         td {
             border: none;

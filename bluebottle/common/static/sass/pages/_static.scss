@@ -17,24 +17,24 @@
 
 .page-nav {
 	margin-top: $base-margin*2;
-	border-left: 1px solid $gray-lighter;
+	border-left: 1px solid $static-page-nav-border-color;
 	font-size: $font-size-small;
 	
 	h3 {
-		color: $color-heading;
+		color: $static-page-nav-heading-color;
 		margin: $base-margin/2 $base-margin*1.6;
 	}
 
-	ul{ 
+	ul { 
 		padding: 0;
 		margin: 0;
 		list-style: none;
 		background: none;
-		border-top: 1px solid $white;
+		border-top: 1px solid $static-page-nav-list-border-top-color;
 		margin-bottom: $base-padding;
 	
 		li {
-		    @include resetlist;
+		  @include resetlist;
 			padding: 0;
 			margin: 0;
 			list-style: none;
@@ -60,11 +60,11 @@
 		}
 	
 		&:hover li a {
-			color: $color-text;
+			color: $static-page-nav-list-hover-link-color;
 	
 			&:hover, &:active {
-				color: $white;
-				background: $color-secondary;
+				color: $static-page-nav-link-hover-color;
+				background: $static-page-nav-link-hover-bg-color;
 			}
 		}
 	}

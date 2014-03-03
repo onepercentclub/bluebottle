@@ -6,7 +6,7 @@
     
     .thanks-header {
         padding: $base-padding*2 0;
-        background-color: $gray-lighter;
+        background-color: $thanks-header-bg-color;
         
         .thanks-image {
             @include grid(10,1,1);
@@ -29,20 +29,20 @@
         font-size: $base-font-size;
         
         a {
-            color: $color-text-light;
+            color: $thanks-share-link-color;
         
             &:hover {
-                color: $white;
-                background-color: $gray-darker !important;
+                color: $thanks-share-link-hover-color;
+                background-color: $thanks-share-link-hover-bg-color !important;
             }
         }
 
         .share-facebook a {
-            background-color: #45619d;
+            background-color: $facebook-blue;
         }
         
         .share-twitter a {
-            background-color: #33b9e2;
+            background-color: $twitter-blue;
         }
     }
     
@@ -53,7 +53,7 @@
     .l-sidebar {
         
         h3 {
-            color: $color-secondary;
+            color: $thanks-sidebar-heading-color;
         }
         
         .btn {
@@ -64,7 +64,7 @@
     .project-list {
     
         .project-title, .fund-amount {
-            color: $gray;
+            color: $thanks-sidebar-project-list-title-amount-color;
         }
     }
 }

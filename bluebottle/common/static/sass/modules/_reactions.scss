@@ -6,7 +6,7 @@
     @include clear;
     position: relative;
     padding: 0;
-    background-color: $gray-lighter;
+    background-color: $reactions-reaction-form-bg-color;
     
     fieldset {
         padding: 0;
@@ -24,7 +24,7 @@
         left: 0;
         width: 40px;
         position: absolute;
-        border: 1px solid $input-border;
+        border: 1px solid $reactions-reaction-form-avatar-border-color;
         @include transition(all 0.1s ease-out);
     }
     

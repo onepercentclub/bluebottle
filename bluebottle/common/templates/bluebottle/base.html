@@ -112,8 +112,8 @@
             {% include app|add:"/base.hbs" %}
         {% endfor %}
     {% endblock handlebars_templates %}
-
-
+		<script src="{{ STATIC_URL }}js/vendor/jquery.scrollTo.min.js" type="text/javascript" charset="utf-8"></script>
+		<!--script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js"></script-->
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
     <script src="{{ STATIC_URL }}js/infobox.js"></script>
     <script src="{{ STATIC_URL }}js/marker_clusterer.js"></script>

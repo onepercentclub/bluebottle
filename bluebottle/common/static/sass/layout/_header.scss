@@ -5,7 +5,7 @@
 #header {
 	@include clear;
 	@include transition(background 0.2s ease-out);
-	background-color: $black;
+	background-color: $header-bg-color;
 	box-shadow: inset 0 -1px 0 0 #393939
 }
 
@@ -67,32 +67,32 @@
 
 
 	        white-space: nowrap;
-	        color: #bfbfbf;
+	        color: $header-nav-main-color;
             font-family: $font-family-bold;
 		    display: inline-block;
 		    text-align: center;
 		    text-decoration: none;
-		    border: 1px solid $black;
-		    border-bottom-color: #393939;
+		    border: 1px solid $header-nav-main-navitem-border-color;
+		    border-bottom-color: $header-nav-main-navitem-border-bottom-color;
 		
 		    &:hover, &:active, &.is-active {
-		        border-color:  #393939;
-		        border-bottom-color: $gray-darkest;
-		        color: $white;
-		        background-color: $gray-darkest;
+		        border-color:  $header-nav-main-navitem-active-border-color;
+		        border-bottom-color: $header-nav-main-navitem-active-border-bottom-color;
+		        color: $header-nav-main-navitem-active-color;
+		        background-color: $header-nav-main-navitem-active-bg-color;
 		    }
 	    }
 	}
 	
 	.nav-actions {
 	    @include grid(16,0,1);
-	    color: $white;
+	    color: $header-nav-actions-color;
 				
 		.nav-signup-login {
 	        padding: $base-margin 0 0 0;
 		    float: left;
 			text-align: left;
-			color: $color-deselect;
+			color: $header-nav-signup-login-color;
 			white-space: nowrap;
 				
 			a {
@@ -102,19 +102,19 @@
 			    font-family: $font-family-heavy;
 			    
 				&:hover, &:active, &.is-active {
-	            	color: $color-text;
-	            	background-color: $white;
+	            	color: $header-nav-signup-login-active-color;
+	            	background-color: $header-nav-signup-login-active-bg-color;
 				}
 			}
 			
 			.nav-signup {
-				color: $white;
-                background-color: $color-primary;
+				color: $header-nav-signup-color;
+                background-color: $header-nav-signup-bg-color;
 			}
 			
 			.nav-login {
-				color: $white;
-                background-color: $color-secondary;
+				color: $header-nav-login-color;
+                background-color: $header-nav-login-bg-color;
 			}
 			
 		}
@@ -135,21 +135,21 @@
             		margin: 0 $base-margin/6;
             		padding: $base-padding/6 $base-padding/2;
             		border: 1px solid transparent;
-            		color: $gray-light;
+            		color: $header-nav-language-link-color;
             		text-decoration: none;
             		
             		&:hover, &:active {
-                		color: $white;
-                		border-color: $white;
+                		color: $header-nav-language-link-hover-color;
+                		border-color: $header-nav-language-link-hover-border-color;
             		}
         		}
         		
                 &.active a {
-                    color: $black;
-                    background-color: $gray-light;
+                    color: $header-nav-language-link-active-color;
+                    background-color: $header-nav-language-link-active-bg-color;
                     
                     &:hover, &:active {
-                		background-color: $white;
+                		background-color: $header-nav-language-link-active-color;
             		}
                 }
             }
@@ -166,7 +166,7 @@
 				position: relative;
 				z-index: 999;
 				display: inline-block;
-				color: $white;
+				color: $header-nav-member-dropdown-color;
 				margin: 0;
                 padding: 0 16px 0 0;
                 background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAJCAYAAADpeqZqAAAAb0lEQVQoz2NgaDVngOJwIA5F4iNjWyBugPOhjGAg/gPFoVg0fAbi/0BcBdPkCsQ/oYL/0TQia4DhZJCEKBBfQJMAaWzCouExECvDnIBN43+sGpD8REgjQgOaJlwaUTVg0YSuEVMDDk0wjVuxagBiAFeciJvQD09BAAAAAElFTkSuQmCC') $color-secondary no-repeat 90% 50%;
@@ -178,7 +178,7 @@
 					vertical-align: top;
 		            border-width: 0 1px 1px 0;
 		            border-style: solid;
-		            border-color: $black;
+		            border-color: $header-nav-member-dropdown-image-border-color;
 		        }
 		
 		        strong {
@@ -196,10 +196,10 @@
 		        width: 16em;
 		        margin-top: -2px;
 		    	font-family: $font-family-heavy;
-		        background-color: $white;
+		        background-color: $header-nav-member-dropdown-menu-bg-color;
 		        border-width: 2px 2px 1px 2px;
 		        border-style: solid;
-		        border-color: $color-secondary;
+		        border-color: $header-nav-member-dropdown-menu-border-color;
 		        
 		        > li {
 		            font-size: $font-size-small;
@@ -207,21 +207,21 @@
 			        > a {
 				        display: block;
 				        padding: $base-padding/2;
-				        border-bottom: 1px solid $color-secondary;
-				        color: $gray-darker;
+				        border-bottom: 1px solid $header-nav-member-dropdown-menu-link-border-color;
+				        color: $header-nav-member-dropdown-menu-link-color;
 				        text-decoration: none;
 				        
 				        &:hover {
-					        color: $color-secondary;
+					        color: $header-nav-member-dropdown-menu-link-hover-color;
 				        }
 			        }
 			        
 		        }
 		        
 		        .nav-member-switch-language {
-			    	color: $white;
+			    	color: $header-nav-language-switch-color;
 			    	font-weight: normal;
-			    	background: $color-secondary;
+			    	background: $header-nav-language-switch-bg-color;
 			    	padding: $base-padding/2;
 			    	
 			    	.nav-language {
@@ -230,20 +230,20 @@
     			    	    li {	
             			    	
                     		a {
-                    			color: $white;
+                    			color: $header-nav-language-switch-link-color;
                         		
                         		&:hover, &:active {
-                            		color: $black;
-                            		border-color: $black;
+                            		color: $header-nav-language-switch-link-hover-color;
+                            		border-color: $header-nav-language-switch-link-hover-border-color;
                         		}
                     		}
                     		
                             &.active a {
-                                color: $color-secondary;
-                                background-color: $white;
+                                color: $header-nav-language-switch-link-active-color;
+                                background-color: $header-nav-language-switch-link-active-bg-color;
                                 
                                 &:hover, &:active {
-                            		background-color: $black;
+                            		background-color: $header-nav-language-switch-link-active-hover-bg-color;
                         		}
                             }
         		    	}
@@ -254,12 +254,12 @@
 		    &:hover {
 			    
 			    .nav-member-dropdown img {
-    			    border-color: $color-secondary;
+    			    border-color: $header-nav-member-hover-image-border-color;
 			    }
 			    
 			 	.nav-member-dropdown {
-		        	background-color: $white;
-		        	color: $gray-darker;
+		        	background-color: $header-nav-member-hover-dropdown-bg-color;
+		        	color: $header-nav-member-hover-dropdown-color;
 					height: 34px;
 					
 					position: relative;
@@ -268,10 +268,10 @@
 					
 					border-width: 2px 2px 0 2px;
 					border-style: solid;
-					border-color: $color-secondary;
+					border-color: $header-nav-member-hover-dropdown-border-color;
 					
 					.flaticon {
-						color: $color-secondary;
+						color: $header-nav-member-hover-dropdown-icon-color;
 					}
 				}
 								
@@ -290,21 +290,21 @@
 		        width: 1.5em;
 		        height: 1.5em;
 		        line-height: 1.5em;
-		        background: $color-primary;
-		        color: $white;
+		        background: $header-nav-cart-count-bg-color;
+		        color: $header-nav-cart-count-color;
 		        text-align: center;
 		        @include border-radius(1.5em);
 			}
 	        
 	        a {
 	        	display: inline-block;
-		    	color: $color-primary;
+		    	color: $header-nav-cart-link-color;
 				padding: 0.2em 0;
 				text-decoration: none;
 				font-family: $font-family-heavy;
 				
 				&:hover, &:active {
-					color: $white;
+					color: $header-nav-cart-link-hover-color;
 					
 					.nav-cart-count {
 					}

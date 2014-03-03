@@ -4,7 +4,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 
 from admin_tools.dashboard.modules import DashboardModule
 
-from bluebottle.bb_tasks import get_task_model
+from bluebottle.utils.utils import get_task_model
 
 
 TASK_MODEL = get_task_model()

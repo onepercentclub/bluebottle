@@ -3,11 +3,11 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.utils.serializers import URLField
 
-from . import get_organization_model
-from .models import OrganizationDocument
-
+from bluebottle.utils.utils import get_organization_model, get_organizationdocument_model, get_organizationmember_model
 
 ORGANIZATION_MODEL = get_organization_model()
+MEMBER_MODEL = get_organizationmember_model()
+DOCUMENT_MODEL = get_organizationdocument_model()
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -20,7 +20,7 @@ class OrganizationDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer()
 
     class Meta:
-        model = OrganizationDocument
+        model = DOCUMENT_MODEL
 
 
 class ManageOrganizationSerializer(OrganizationSerializer):

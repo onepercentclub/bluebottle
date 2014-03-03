@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url
 
 from ..views import (
     TaskDetail, TaskList, TaskMemberList,TaskMemberDetail, TaskFileList,
-    TaskFileDetail, TaskPreviewList, SkillList, UsedSkillList, MyTaskMemberList)
+    TaskFileDetail, TaskPreviewList, MyTaskMemberList)
 
 
 urlpatterns = patterns(
@@ -11,9 +11,6 @@ urlpatterns = patterns(
     url(r'^(?P<pk>\d+)$', TaskDetail.as_view(), name='task_detail'),
 
     url(r'^previews/$', TaskPreviewList.as_view(), name='task_preview_list'),
-
-    url(r'^skills/$', SkillList.as_view(), name='task_skill_list'),
-    url(r'^used_skills/$', UsedSkillList.as_view(), name='used_task_skill_list'),
 
     # Task Members
     url(r'^members/$', TaskMemberList.as_view(), name='task_member_list'),

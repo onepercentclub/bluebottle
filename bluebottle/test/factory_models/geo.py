@@ -1,6 +1,6 @@
 import factory
 
-from bluebottle.bb_projects import get_project_model
+from bluebottle.utils.utils import get_project_model
 from bluebottle.geo.models import Country, SubRegion, Region
 
 

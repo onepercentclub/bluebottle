@@ -6,11 +6,12 @@ from bluebottle.utils.serializers import MetaField, HumanReadableChoiceField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
-from . import get_task_model
-from .models import TaskMember, TaskFile, Skill
+from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
 
 BB_TASK_MODEL = get_task_model()
-
+BB_TASKMEMBER_MODEL = get_taskmember_model()
+BB_TASKFILE_MODEL = get_taskfile_model()
+BB_SKILL_MODEL = get_skill_model
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
@@ -24,12 +25,13 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
 class TaskMemberSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer()
     status = serializers.ChoiceField(
-        choices=TaskMember.TaskMemberStatuses.choices, required=False, default=TaskMember.TaskMemberStatuses.applied)
+        choices=BB_TASKMEMBER_MODEL.TaskMemberStatuses.choices,
+        required=False, default=BB_TASKMEMBER_MODEL.TaskMemberStatuses.applied)
     motivation = serializers.CharField(required=False)
 
     class Meta:
-        model = TaskMember
-        fields = ('id', 'member', 'status', 'created', 'motivation')
+        model = BB_TASKMEMBER_MODEL
+        fields = ('id', 'member', 'status', 'created', 'motivation', 'task')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -37,7 +39,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
     file = FileSerializer()
 
     class Meta:
-        model = TaskFile
+        model = BB_TASKFILE_MODEL
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -61,20 +63,13 @@ class TaskSerializer(serializers.ModelSerializer):
         model = BB_TASK_MODEL
 
 
-class SkillSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Skill
-        fields = ('id', 'name')
-
-
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField()
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'skill', 'project', 'time_needed')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'end_goal')
 
 
 class MyTaskMemberSerializer(TaskMemberSerializer):

@@ -6,11 +6,16 @@ from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 
-from .models import TaskMember, TaskFile, Skill
 from .permissions import IsTaskAuthorOrReadOnly
 from .serializers import (
     TaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
-    SkillSerializer, MyTaskMemberSerializer, BB_TASK_MODEL)
+    MyTaskMemberSerializer, BB_TASK_MODEL)
+
+from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model
+
+BB_TASK_MODEL = get_task_model()
+BB_TASKMEMBER_MODEL = get_taskmember_model()
+BB_TASKFILE_MODEL = get_taskfile_model()
 
 
 class TaskPreviewList(generics.ListAPIView):
@@ -88,7 +93,7 @@ class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
 
 
 class TaskMemberList(generics.ListCreateAPIView):
-    model = TaskMember
+    model = BB_TASKMEMBER_MODEL
     serializer_class = TaskMemberSerializer
     paginate_by = 50
     filter_fields = ('task', )
@@ -97,11 +102,11 @@ class TaskMemberList(generics.ListCreateAPIView):
     def pre_save(self, obj):
         # When creating a task member it should always be by the request.user and have status 'applied'
         obj.member = self.request.user
-        obj.status = TaskMember.TaskMemberStatuses.applied
+        obj.status = BB_TASKMEMBER_MODEL.TaskMemberStatuses.applied
 
 
 class MyTaskMemberList(generics.ListAPIView):
-    model = TaskMember
+    model = BB_TASKMEMBER_MODEL
     serializer_class = MyTaskMemberSerializer
 
     def get_queryset(self):
@@ -111,14 +116,14 @@ class MyTaskMemberList(generics.ListAPIView):
 
 
 class TaskMemberDetail(generics.RetrieveUpdateAPIView):
-    model = TaskMember
+    model = BB_TASKMEMBER_MODEL
     serializer_class = TaskMemberSerializer
 
     permission_classes = (IsTaskAuthorOrReadOnly, )
 
 
 class TaskFileList(generics.ListCreateAPIView):
-    model = TaskFile
+    model = BB_TASKFILE_MODEL
     serializer_class = TaskFileSerializer
     paginate_by = 50
     filter_fields = ('task', )
@@ -130,19 +135,7 @@ class TaskFileList(generics.ListCreateAPIView):
 
 
 class TaskFileDetail(generics.RetrieveUpdateAPIView):
-    model = TaskFile
+    model = BB_TASKFILE_MODEL
     serializer_class = TaskFileSerializer
 
     permission_classes = (IsAuthorOrReadOnly, )
-
-
-class SkillList(generics.ListAPIView):
-    model = Skill
-    serializer_class = SkillSerializer
-
-
-class UsedSkillList(SkillList):
-    def get_queryset(self):
-        qs = super(UsedSkillList, self).get_queryset()
-        skill_ids = BB_TASK_MODEL.objects.values_list('skill', flat=True).distinct()
-        return qs.filter(id__in=skill_ids)

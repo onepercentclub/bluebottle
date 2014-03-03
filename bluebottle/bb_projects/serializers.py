@@ -4,7 +4,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer, OEmbedField)
 from bluebottle.geo.models import Country
 
-from bluebottle.bb_projects import get_project_model
+from bluebottle.utils.utils import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.utils.serializers import MetaField
 from bluebottle.geo.serializers import CountrySerializer
@@ -54,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
-                  'status', 'meta_data', 'image', 'country', 'theme')
+                  'status', 'image', 'country', 'theme', 'meta_data')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):

@@ -49,7 +49,6 @@ App.BbProjectMapComponent = Ember.Component.extend({
     initMap: function(){
         var view = this;
         this.geocoder = new google.maps.Geocoder();
-        var view = this;
         // var point = new google.maps.LatLng(22, 10);
         var MyMapType = new google.maps.StyledMapType(this.get("mapStyle"), {name: 'Grey'});
 
@@ -117,8 +116,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var view = this;
 
         // TODO: Use hbs template for popups.
-        var popupView = App.ProjectMapPopupView.create();
-        var template = Ember.Handlebars.compile('{{view App.ProjectMapPopupView}}');
+        // var popupView = App.ProjectMapPopupView.create();
+        // var template = Ember.Handlebars.compile('{{view App.ProjectMapPopupView}}');
 
         var template = Handlebars.compile(view.info_box_template);
         var title = project.get('title');

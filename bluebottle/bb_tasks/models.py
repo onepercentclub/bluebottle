@@ -15,6 +15,8 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
+from bluebottle.bb_projects import get_project_model
+from bluebottle.bb_tasks import get_task_model
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
@@ -147,17 +149,15 @@ class SupportedProjectsManager(models.Manager):
 
         valid_statuses = [
             statuses.applied, statuses.accepted, statuses.realized]
-        projects = settings.PROJECTS_PROJECT_MODEL.objects.filter(
+
+        projects = get_project_model().objects.filter(
             task__taskmember__member=user,
             task__taskmember__status__in=valid_statuses).distinct()
 
         return projects
 
 
-from . import get_task_model
-
 TASK_MODEL = get_task_model()
-
 
 @receiver(m2m_changed, weak=False, sender=TASK_MODEL.members.through)
 def new_reaction_notification(sender, instance, **kwargs):

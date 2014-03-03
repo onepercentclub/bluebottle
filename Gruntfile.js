@@ -15,6 +15,7 @@ module.exports = function (grunt) {
     karma: {
         ci: { configFile: 'test/js/config/karma.conf.js', singleRun: true, browsers: ['PhantomJS'] },
       unit: { configFile: 'test/js/config/karma.conf.js', keepalive: true, browsers: ['Chrome'] },
+      unitSpec: { configFile: 'test/js/config/karma.conf.js', keepalive: true, browsers: ['Chrome'], reporters: ['spec'] },
       chrome: { configFile: 'test/js/config/karma.conf.js', keepalive: true, browsers: ['Chrome'] }
       // e2e: { configFile: 'test/js/config/e2e.js', keepalive: true }, // End-to-end / Functional Tests
       // watch: { configFile: 'test/js/config/unit.js', singleRun:false, autoWatch: true, keepalive: true }

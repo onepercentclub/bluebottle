@@ -9,6 +9,12 @@ pavlov.specify("Task model unit tests", function() {
     
     describe("Task Instance", function () {
                 
+        var data = {
+            title: 'Takeover Naboo',
+            description: 'Title says it all!',
+            end_goal: 'Description says it all!'
+        }
+
         it("should be a new task", function () {
             build('task').then(function(task) {
                 assert(task instanceof App.Task).isTrue();
@@ -17,10 +23,38 @@ pavlov.specify("Task model unit tests", function() {
         });
 
         it("should have some properties", function () {
-            build('task').then(function(task) {
+            build('task', data).then(function(task) {
                 assert(task.url).equals('bb_tasks');
-                assert(task.get('description')).equals('Title says it all');
-                assert(task.get('title')).equals('Takeover Naboo');
+                assert(task.get('title')).equals(data['title']);
+                assert(task.get('description')).equals(data['description']);
+                assert(task.get('end_goal')).equals(data['end_goal']);
+            });
+        });
+
+        it('should set the tags_list property correctly', function () {
+            build('task').then(function(task) {
+                assert(task.get('tags_list').length).equals(0);
+
+                return task;
+            }).then( function(task) { // Add a tag
+
+                build('tag').then(function(tag) {
+
+                    task.get('tags').pushObject(tag);
+                    assert(task.get('tags_list')).equals(tag.get("id"));
+
+                    return {task: task, tag1: tag};
+
+                }).then( function(d) { // Add another tag
+                    
+                    build('tag').then(function(tag) {
+                        d.task.get('tags').pushObject(tag);
+                        var tag_list = d.tag1.get("id")+", "+tag.get("id");
+
+                        assert(d.task.get('tags_list')).equals(tag_list);
+                    });
+
+                });
             });
         });
 

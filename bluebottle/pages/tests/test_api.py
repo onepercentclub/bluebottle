@@ -51,8 +51,6 @@ class PageListTestCase(PageTestCase):
 		"""
 		response = self.client.get(reverse('page_list', kwargs={'language': 'nl'}))
 
-		print(reverse('page_list', kwargs={'language': 'nl'})) 
-
 		page = response.data['results'][0]
 		self.assertEqual(page['title'], self.page1.title)
 		self.assertEqual(page['language'], self.page1.language)

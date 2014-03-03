@@ -52,12 +52,15 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': future_date
+            'deadline': future_date,
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, some_task_data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
+        self.assertEquals(response.data['end_goal'], some_task_data['end_goal'])
+        self.assertEquals(response.data['location'], some_task_data['location'])
         some_task_url = "{0}{1}".format(self.task_url, response.data['id'])
 
         # Create a task for a project you don't own should fail...
@@ -68,7 +71,8 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill2.id),
             'location': 'Tiel',
-            'deadline': future_date
+            'deadline': future_date,
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
@@ -89,7 +93,8 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill3.id),
             'location': 'Tiel',
-            'deadline': future_date
+            'deadline': future_date,
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, another_task_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -104,7 +109,8 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill4.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -133,7 +139,8 @@ class TaskApiIntegrationTests(TestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': future_date
+            'deadline': future_date,
+            'end_goal': 'World peace'
         }
         response = self.client.post(self.task_url, some_task_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)

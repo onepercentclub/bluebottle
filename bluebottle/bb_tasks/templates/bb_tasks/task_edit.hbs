@@ -49,6 +49,8 @@
 
                         {% bb_component 'bb-text-area' label=_('Description') valueBinding='description' rows='5' errors='errors.description' placeholder=_('What do you need? Give a clear description of the task') %}
 
+                        {% bb_component 'bb-text-area' label=_('Deliverable') valueBinding='end_goal' rows='3' errors='errors.end_goal' placeholder=_('What do you expect to have in the end?') %}
+
                         {% bb_component 'bb-text-field' label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type="'number'" %}
 
                         {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate="'12M'" valueBinding='deadline' errors='errors.deadline' %}

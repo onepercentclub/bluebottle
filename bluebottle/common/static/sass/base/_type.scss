@@ -258,6 +258,15 @@ blockquote:after {
 	vertical-align: middle;
 }
 
+.well {
+	@include clear;
+	padding: $base-padding;
+	background-color: $gray-lighter;
+}
+.flaticon {
+	vertical-align: middle;
+}
+
 /*
 figure {
     display: inline-block;

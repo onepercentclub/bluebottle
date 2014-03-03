@@ -25,7 +25,8 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
 class TaskMemberSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer()
     status = serializers.ChoiceField(
-        choices=BB_TASKMEMBER_MODEL.TaskMemberStatuses.choices, required=False, default=BB_TASKMEMBER_MODEL.TaskMemberStatuses.applied)
+        choices=BB_TASKMEMBER_MODEL.TaskMemberStatuses.choices,
+        required=False, default=BB_TASKMEMBER_MODEL.TaskMemberStatuses.applied)
     motivation = serializers.CharField(required=False)
 
     class Meta:
@@ -42,8 +43,8 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    members = TaskMemberSerializer(many=True, source='taskmember_set', read_only=True)
-    files = TaskFileSerializer(many=True, source='taskfile_set', read_only=True)
+    members = TaskMemberSerializer(many=True, source='members', read_only=True)
+    files = TaskFileSerializer(many=True, source='files', read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()

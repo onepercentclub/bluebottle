@@ -28,7 +28,7 @@ class CountryListTestCase(GeoTestCase):
 		Ensure get request returns 200.
 		"""
 		response = self.client.get(reverse('country-list'))
-		
+
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 2)
 
@@ -62,6 +62,6 @@ class UsedCountryListTestCase(GeoTestCase):
 		Ensure get request returns 200.
 		"""
 		response = self.client.get(reverse('used-country-list'))
-		
+
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 1)

@@ -5,7 +5,9 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, TASK_MODEL
 
-from bluebottle.bb_tasks.models import TaskMember
+from bluebottle.bb_tasks import get_taskmember_model
+TASKS_MEMBER_MODEL = get_taskmember_model
+
 
 
 class TaskEmailTests(TestCase):
@@ -19,11 +21,11 @@ class TaskEmailTests(TestCase):
 
         self.taskmember1 = TaskMemberFactory.create(
             member=self.some_user,
-            status=TaskMember.TaskMemberStatuses.applied
+            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied
         )
         self.taskmember2 = TaskMemberFactory.create(
             member=self.another_user,
-            status=TaskMember.TaskMemberStatuses.applied
+            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied
         )
 
         self.task = TaskFactory.create(
@@ -35,8 +37,8 @@ class TaskEmailTests(TestCase):
         self.task.members.add(self.taskmember2)
 
         # Reload the models to get the ``task_id`` properly set.
-        self.taskmember1 = TaskMember.objects.get(pk=self.taskmember1.pk)
-        self.taskmember2 = TaskMember.objects.get(pk=self.taskmember2.pk)
+        self.taskmember1 = TASKS_MEMBER_MODEL.objects.get(pk=self.taskmember1.pk)
+        self.taskmember2 = TASKS_MEMBER_MODEL.objects.get(pk=self.taskmember2.pk)
 
         self.task.save()
 
@@ -67,7 +69,7 @@ class TaskEmailTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
         # change the status from one member to rejected -> he shouldn't get the e-mail
-        self.taskmember1.status = TaskMember.TaskMemberStatuses.rejected
+        self.taskmember1.status = TASKS_MEMBER_MODEL.TaskMemberStatuses.rejected
         self.taskmember1.save()
 
         # e-mail should be sent to inform of rejection
@@ -94,7 +96,7 @@ class TaskEmailTests(TestCase):
         del mail.outbox[:2]
 
         # change the status from one member to accepted -> he should receive an e-mail
-        self.taskmember1.status = TaskMember.TaskMemberStatuses.accepted
+        self.taskmember1.status = TASKS_MEMBER_MODEL.TaskMemberStatuses.accepted
         self.taskmember1.save()
 
         # test that the e-mail is indeed sent

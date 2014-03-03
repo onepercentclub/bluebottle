@@ -234,7 +234,6 @@ def send_mail_task_realized(sender, instance, created, **kwargs):
         #qs = task.taskmember_set.exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
         qs = task.members.all().exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
         receivers= [taskmember.member for taskmember in qs]
-        print "Receivers: ", receivers
         emails = []
 
         for receiver in receivers:

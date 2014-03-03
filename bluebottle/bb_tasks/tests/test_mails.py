@@ -9,7 +9,6 @@ from bluebottle.bb_tasks import get_taskmember_model
 TASKS_MEMBER_MODEL = get_taskmember_model()
 
 
-
 class TaskEmailTests(TestCase):
     """ Tests for tasks: sending e-mails on certain status changes. """
 

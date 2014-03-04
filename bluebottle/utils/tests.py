@@ -192,3 +192,25 @@ class MetaTestCase(TestCase):
         meta_data = item.get('meta_data')
 
         self.assertIn('{URL}', meta_data['tweet'])
+
+class UserTestsMixin(object):
+    """ Mixin base class for tests requiring users. """
+
+    def create_user(self, email=None, password=None, **extra_fields):
+        """ Create, save and return a new user. """
+
+        # If email is set and not unique, it will raise a clearly interpretable IntegrityError.
+        # If auto-generated, make sure it's unique.
+        if not email:
+            email = generate_random_email()
+            while BB_USER_MODEL.objects.filter(email=email).exists():
+                email = generate_random_email()
+
+        user = BB_USER_MODEL.objects.create_user(email=email, **extra_fields)
+
+        if not password:
+            user.set_password('password')
+
+        user.save()
+
+        return user

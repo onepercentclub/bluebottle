@@ -3,7 +3,7 @@ from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from . import get_project_model
+from bluebottle.utils.utils import get_project_model
 from .models import ProjectTheme, ProjectPhase
 from .serializers import (
     ManageProjectSerializer, ProjectPreviewSerializer, ProjectThemeSerializer,

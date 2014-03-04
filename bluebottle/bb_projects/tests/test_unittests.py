@@ -1,6 +1,6 @@
 from django.test import TestCase
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.bb_projects import get_project_model
+from bluebottle.utils.utils import get_project_model
 
 PROJECT_MODEL = get_project_model()
 

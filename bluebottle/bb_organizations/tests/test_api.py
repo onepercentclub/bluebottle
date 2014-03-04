@@ -23,15 +23,16 @@ class OrganizationsEndpointTestCase(TestCase):
         self.organization_2 = OrganizationFactory.create()
         self.organization_3 = OrganizationFactory.create()
 
-        self.member_1 = OrganizationMemberFactory(user=self.user_1)
-        self.member_2 = OrganizationMemberFactory(user=self.user_2)
+        self.member_1 = OrganizationMemberFactory.create(user=self.user_1, organization=self.organization_1)
+        self.member_2 = OrganizationMemberFactory.create(user=self.user_1, organization=self.organization_2)
+        self.member_3 = OrganizationMemberFactory.create(user=self.user_2, organization=self.organization_3)
 
-        self.organization_1.members.add(self.member_1)
-        self.organization_1.save()
-        self.organization_2.members.add(self.member_1)
-        self.organization_2.save()
-        self.organization_3.members.add(self.member_2)
-        self.organization_3.save()
+        # self.organization_1.members.add(self.member_1)
+        # self.organization_1.save()
+        # self.organization_2.members.add(self.member_1)
+        # self.organization_2.save()
+        # self.organization_3.members.add(self.member_2)
+        # self.organization_3.save()
 
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):

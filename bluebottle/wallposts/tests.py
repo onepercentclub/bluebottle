@@ -5,7 +5,6 @@ from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status
-from bluebottle.utils.tests import UserTestsMixin
 from bluebottle.test.factory_models.wallposts import TextWallPostFactory
 from bluebottle.mail import send_mail
 # from bluebottle.bb_projects.tests import ProjectWallPostTestsMixin
@@ -204,7 +203,7 @@ class WallPostReactionApiIntegrationTest(TestCase): #ProjectWallPostTestsMixin
         self.assertEqual(len(response.data['reactions']), 1)
 
 
-class WallPostApiRegressionTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
+class WallPostApiRegressionTests(TestCase): #ProjectWallPostTestsMixin,
     """
     Integration tests for the Project Media WallPost API.
     """
@@ -247,7 +246,7 @@ class WallPostApiRegressionTests(UserTestsMixin, TestCase): #ProjectWallPostTest
         self.assertEqual(escaped_reaction_text, response.data['text'])
 
 
-class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
+class WallpostMailTests(TestCase): #ProjectWallPostTestsMixin,
     def setUp(self):
         self.user_a = self.create_user(email='a@example.com')
         self.user_b = self.create_user(email='b@example.com')

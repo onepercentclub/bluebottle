@@ -1,14 +1,14 @@
 App.Router.map(function(){
-    this.resource('taskList', {path: '/bb_tasks'}, function() {
+    this.resource('taskList', {path: '/tasks'}, function() {
         this.route('search');
     });
 
     // route disabled for now, let the backend handle the hours spent
     // this.resource('myTaskList', {path: '/my/tasks'});
-    this.resource('task', {path: '/bb_tasks/:task_id'}, function(){
+    this.resource('task', {path: '/tasks/:task_id'}, function(){
 
     });
-    this.resource('taskEdit', {path: '/bb_tasks/:task_id/edit'});
+    this.resource('taskEdit', {path: '/tasks/:task_id/edit'});
 });
 
 

@@ -1,7 +1,7 @@
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
-from bluebottle.bb_organizations.models import BaseOrganization
-from bluebottle.bb_tasks.models import BaseTask
+from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
+from bluebottle.bb_tasks.models import BaseTask, BaseSkill, BaseTaskFile, BaseTaskMember
 
 
 class TestBaseProject(BaseProject):
@@ -29,5 +29,40 @@ class TestOrganization(BaseOrganization):
 class TestTask(BaseTask):
     """
     Implementation of BaseTask. Used only for testing purposes.
+    """
+    pass
+
+
+class TestSkill(BaseSkill):
+    """
+    Implementation for testing of BaseSkill
+    """
+    pass
+
+
+class TestTaskMember(BaseTaskMember):
+    """
+    Implementation for testing of BaseMember
+    """
+    pass
+
+
+class TestTaskFile(BaseTaskFile):
+    """
+    Implementation for testing of BaseTaskFile
+    """
+    pass
+
+
+class TestOrganizationMember(BaseOrganizationMember):
+    """
+    Implementation for testing of BaseOrganizationMember
+    """
+    pass
+
+
+class TestOrganizationDocument(BaseOrganizationDocument):
+    """
+    Implementation for testing of BaseOrganizationDocument
     """
     pass

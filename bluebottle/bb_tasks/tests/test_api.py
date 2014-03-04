@@ -3,8 +3,7 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from bluebottle.bb_projects import get_project_model
-from bluebottle.bb_tasks import get_task_model
+from bluebottle.utils.utils import get_project_model, get_task_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory

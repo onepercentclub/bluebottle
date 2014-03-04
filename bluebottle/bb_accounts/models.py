@@ -15,8 +15,7 @@ from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
-
+from taggit.managers import TaggableManager
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
@@ -218,7 +217,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Returns the first_name plus the last_name, with a space in between.
         """
-        full_name = '{0} {1}'.format(self.first_name, self.last_name)
+        full_name = u'{0} {1}'.format(self.first_name, self.last_name)
         return full_name.strip()
 
     def get_short_name(self):

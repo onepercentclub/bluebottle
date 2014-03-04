@@ -8,13 +8,14 @@ from rest_framework import generics
 
 from bluebottle.utils.utils import get_client_ip
 
-from . import get_organization_model
-from .models import OrganizationMember, OrganizationDocument
+from bluebottle.utils.utils import get_organization_model, get_organizationdocument_model, get_organizationmember_model
 from .permissions import IsOrganizationMember
 from .serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
 
 
 ORGANIZATION_MODEL = get_organization_model()
+MEMBER_MODEL = get_organizationmember_model()
+DOCUMENT_MODEL = get_organizationdocument_model()
 
 
 class OrganizationList(generics.ListAPIView):
@@ -35,7 +36,7 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
     # Limit the view to only the organizations the current user is member of
     def get_queryset(self):
-        org_members_ids = OrganizationMember.objects.filter(user=self.request.user).values_list('id', flat=True).all()
+        org_members_ids = MEMBER_MODEL.objects.filter(user=self.request.user).values_list('id', flat=True).all()
         org_ids = self.model.objects.filter(members__in=org_members_ids).values_list('id', flat=True).all()
         queryset = super(ManageOrganizationList, self).get_queryset()
         queryset = queryset.filter(id__in=org_ids)
@@ -43,9 +44,8 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
     def post_save(self, obj, created=False):
         if created:
-            member = OrganizationMember(user=self.request.user)
+            member = MEMBER_MODEL(user=self.request.user, organization=obj)
             member.save()
-            obj.members.add(member)
 
 
 class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):
@@ -55,7 +55,7 @@ class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):
 
 
 class ManageOrganizationDocumentList(generics.ListCreateAPIView):
-    model = OrganizationDocument
+    model = DOCUMENT_MODEL
     serializer_class = OrganizationDocumentSerializer
     paginate_by = 20
     filter = ('organization', )
@@ -66,7 +66,7 @@ class ManageOrganizationDocumentList(generics.ListCreateAPIView):
 
 
 class ManageOrganizationDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = OrganizationDocument
+    model = DOCUMENT_MODEL
     serializer_class = OrganizationDocumentSerializer
     paginate_by = 20
     filter = ('organization', )

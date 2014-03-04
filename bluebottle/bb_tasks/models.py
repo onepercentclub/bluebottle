@@ -58,6 +58,7 @@ class BaseTaskMember(models.Model):
     class Meta:
         abstract = True
 
+
 class BaseTaskFile(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
@@ -83,9 +84,6 @@ class BaseTask(models.Model):
     description = models.TextField(_('description'))
     end_goal = models.TextField(_('end_goal'))
     location = models.CharField(_('location'), max_length=200)
-
-    members = models.ManyToManyField('bb_tasks.TaskMember', null=True)
-    files = models.ManyToManyField('bb_tasks.TaskFile', null=True)
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     # See Django docs on issues with related name and an (abstract) base class:

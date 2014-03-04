@@ -53,6 +53,7 @@ class TestTaskFile(BaseTaskFile):
     """
     pass
 
+
 class TestOrganizationMember(BaseOrganizationMember):
     """
     Implementation for testing of BaseOrganizationMember

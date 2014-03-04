@@ -23,6 +23,11 @@ AUTH_USER_MODEL = 'test.TestBaseUser'
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
 ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
 TASKS_TASK_MODEL = 'test.TestTask'
+TASKS_SKILL_MODEL = 'test.TestSkill'
+TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
+TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
+ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
+ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
 
 SOUTH_TESTS_MIGRATE = True
 

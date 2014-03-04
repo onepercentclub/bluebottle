@@ -1,9 +1,9 @@
 from rest_framework import permissions
-from .models import TaskMember
 
-from . import get_task_model
+from bluebottle.utils.utils import get_task_model, get_taskmember_model
 
 BB_TASK_MODEL = get_task_model()
+BB_TASKMEMBER_MODEL = get_taskmember_model()
 
 
 class IsTaskAuthorOrReadOnly(permissions.BasePermission):
@@ -44,7 +44,7 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
         if isinstance(obj, BB_TASK_MODEL):
             return obj.author == request.user
 
-        if isinstance(obj, TaskMember):
+        if isinstance(obj, BB_TASKMEMBER_MODEL):
             return obj.task.author == request.user
 
 
@@ -56,5 +56,5 @@ class IsMemberOrReadOnly(permissions.BasePermission):
             return True
 
         # Test for project model object-level permissions.
-        return isinstance(obj, TaskMember) and obj.member == request.user
+        return isinstance(obj, BB_TASKMEMBER_MODEL) and obj.member == request.user
 

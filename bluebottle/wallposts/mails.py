@@ -43,7 +43,7 @@ from bluebottle.bb_projects import get_project_model
 
 from .models import TextWallPost, Reaction
 
-PROJECT_MODEL = get_project_model()
+# PROJECT_MODEL = get_project_model()
 logger = logging.getLogger(__name__)
 
 

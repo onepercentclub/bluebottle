@@ -19,19 +19,19 @@
 
                     <nav id="campaign-steps" class="steps">
 
-                        {{#link-to "myProject.start" classBinding=":step validBasics:validated"}}
-                            {{#if validBasics}}
+                        {{#link-to "myProject.start" classBinding=":step validStart:validated"}}
+                            {{#if validStart}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
                             {% trans "Start" %}
                         {{/link-to}}
 
 
-                        {{#link-to "myProject.basics" classBinding=":step validBasics:validated"}}
-                            {{#if validBasics}}
+                        {{#link-to "myProject.pitch" classBinding=":step validPitch:validated"}}
+                            {{#if validPitch}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Basics" %}
+                            {% trans "Pitch" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.description" classBinding=":step validDescription:validated"}}

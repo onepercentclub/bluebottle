@@ -47,7 +47,7 @@ App.Project = DS.Model.extend({
     //~mg
     // Start, it actually doesn't need anything, maybe the language
 
-    // Basics
+    // Pitch
     title: DS.attr('string'),
     pitch: DS.attr('string'),
     theme: DS.belongsTo('App.Theme'),
@@ -207,7 +207,7 @@ App.MyProject = App.Project.extend({
     //~mg
     // Start shouldn't need this thing
 
-    validBasics: function(){
+    validPitch: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
             return true;
         }

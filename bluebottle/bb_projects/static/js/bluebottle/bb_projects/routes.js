@@ -22,7 +22,7 @@ App.Router.map(function(){
         //I add for project create ~mg
         this.route('start');
 
-        this.route('basics');
+        this.route('pitch');
         this.route('description');
         this.route('details');
         this.route('location');
@@ -115,7 +115,7 @@ App.MyProjectRoute = Em.Route.extend({
 
 App.MyProjectIndexRoute = Em.Route.extend({
     redirect: function(){
-        this.transitionTo('myProject.basics');
+        this.transitionTo('myProject.pitch');
     }
 
 });
@@ -146,7 +146,7 @@ App.MyProjectSubRoute = Em.Route.extend({
 });
 //~mg
 App.MyProjectStartRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});

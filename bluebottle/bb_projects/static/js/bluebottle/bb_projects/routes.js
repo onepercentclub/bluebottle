@@ -19,6 +19,9 @@ App.Router.map(function(){
     this.resource('myProjectList', {path: '/my/projects'});
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
+        //I add for project create ~mg
+        this.route('start');
+
         this.route('basics');
         this.route('description');
         this.route('details');
@@ -141,7 +144,8 @@ App.MyProjectSubRoute = Em.Route.extend({
         }
     }
 });
-
+//~mg
+App.MyProjectStartRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});

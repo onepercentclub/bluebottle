@@ -44,6 +44,9 @@ App.Project = DS.Model.extend({
     created: DS.attr('date'),
 
     owner: DS.belongsTo('App.UserPreview'),
+    //~mg
+    // Start, it actually doesn't need anything, maybe the language
+
     // Basics
     title: DS.attr('string'),
     pitch: DS.attr('string'),
@@ -200,6 +203,9 @@ App.MyProject = App.Project.extend({
     url: 'bb_projects/manage',
 
     country: DS.belongsTo('App.Country'),
+
+    //~mg
+    // Start shouldn't need this thing
 
     validBasics: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){

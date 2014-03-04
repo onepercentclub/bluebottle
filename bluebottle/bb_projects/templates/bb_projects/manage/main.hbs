@@ -4,18 +4,29 @@
 
 {% tplhandlebars "my_project" %}
 
-    <div class="l-section" id="project-dashboard">
 
+
+    <div class="l-section" id="project-dashboard">
         <article id="campaign-create">
 
             <header class="campaign-header l-section">
 
-				<div class="l-wrapper">
+                <div class="l-wrapper">
+
 					<h1 class="page-title">
 						{% trans "My projects"%} <small>&rsaquo; {{ title }}</small>
 					</h1>
 
                     <nav id="campaign-steps" class="steps">
+
+                        {{#link-to "myProject.start" classBinding=":step validBasics:validated"}}
+                            {{#if validBasics}}
+                                <span class="flaticon solid checkmark-1"></span>
+                            {{/if}}
+                            {% trans "Start" %}
+                        {{/link-to}}
+
+
                         {{#link-to "myProject.basics" classBinding=":step validBasics:validated"}}
                             {{#if validBasics}}
                                 <span class="flaticon solid checkmark-1"></span>
@@ -78,140 +89,15 @@
                     </div>
 
                     <aside class="l-sidebar">
-                        <div class="campaign-create-preview-widget">
-                            <h3><span class="flaticon solid eye-1"></span> Preview widget</h3>
-                            <div class="project-item">
-
-                                <a id="ember2291" class="ember-view" href="#!/projects/empowered-by-sanitary-pads">
-                                    <span class="project-header">
-
-                                        <figure class="project-image">
-                                            <img src="http://onepercentclub.com/static/media/cache/19/4f/194fca36cd678b6ddbfd43a09fcfb75a.jpg" data-bindattr-49="49">
-                                        </figure>
-
-                                        <span class="project-title">
-                                            <h3>Empowered by sanitary pads </h3>
-                                            <span class="project-location">
-                                                <span class="flaticon solid location-pin-1"></span> India
-                                            </span>
-                                        </span>
-                                    </span>
-
-                                    <span class="project-status campaign" data-bindattr-50="50">
-                                        <div class="project-fund-amount-slider">
-                                            <strong style="width: 32.953105196451205%; overflow: hidden;" class="slider-progress is-in-progress">
-                                                <em class="slider-percentage">0%</em>
-                                            </strong>
-                                        </div>
-                                        <span class="project-fund-amount">
-                                            <strong>€1,587</strong>
-                                            <em>To go</em>
-                                        </span>
-                                        <span class="project-days-left">
-                                            <span class="flaticon solid clock-1"></span>
-                                            <strong>74</strong>
-                                            <em>days</em>
-                                        </span>
-                                    </span>
-
-                                    <span class="project-description">
-                                        A stress free mind and a disease free body, it is life’s most basic desire. With this project we include local Indian women in the production process of making sanitary pads, hence generating new livelihood opportunities. Along the way, and on the basis of these sanitary pads, health and hygiene information will be imparted by conducting health camps in the community. Prevailing attitudes toward menstruation will change. Generating job opportunities and feminine hygiene all in one: becoming empowered by sanitary pads!
-                                        <span class="project-view">View project</span>
-                                    </span>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="campaign-create-tips">
-                            <h3><span class="flaticon solid lightbulb-3"></span> Tips</h3>
-                            <ul>
-                                <li>
-                                    Cras mattis consectetur purus sit amet fermentum. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Maecenas faucibus mollis interdum. Maecenas sed diam eget risus varius blandit sit amet non magna. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.
-                                </li>
-                                <li>
-                                    Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam porta sem malesuada magna mollis euismod. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Curabitur blandit tempus porttitor. Sed posuere consectetur est at lobortis. Cras justo odio, dapibus ac facilisis in, egestas eget quam.
-                                </li>
-                                <li>
-                                    Maecenas sed diam eget risus varius blandit sit amet non magna. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Sed posuere consectetur est at lobortis. Maecenas faucibus mollis interdum.
-                                </li>
-                            </ul>
-                            <p><a href="#">More tips in our faq ›</a></p>
-                        </div>
+                        <iframe width="560" height="315" src="//www.youtube.com/embed/De7zcM8-oeE" frameborder="0" allowfullscreen></iframe>
                     </aside>
                 </div>
             </section>
-
-            <div class="l-wrapper">
-                <div class="l-content">
-                    <form>
-                        {{ outlet }}
-                    </form>
-                </div>
-                <aside class="l-sidebar">
-                    <div class="campaign-create-preview-widget">
-                        <h3><span class="flaticon solid eye-1"></span> Preview widget</h3>
-                        <div class="project-item">
-
-                            <a id="ember2291" class="ember-view" href="#!/projects/empowered-by-sanitary-pads">
-                                <span class="project-header">
-
-                                    <figure class="project-image">
-                                        <img src="http://onepercentclub.com/static/media/cache/19/4f/194fca36cd678b6ddbfd43a09fcfb75a.jpg" data-bindattr-49="49">
-                                    </figure>
-
-                                    <span class="project-title">
-                                        <h3>Empowered by sanitary pads </h3>
-                                        <span class="project-location">
-                                            <span class="flaticon solid location-pin-1"></span> India
-                                        </span>
-                                    </span>
-                                </span>
-
-                                <span class="project-status campaign" data-bindattr-50="50">
-                                    <div class="project-fund-amount-slider">
-                                        <strong style="width: 32.953105196451205%; overflow: hidden;" class="slider-progress is-in-progress">
-                                            <em class="slider-percentage">0%</em>
-                                        </strong>
-                                    </div>
-                                    <span class="project-fund-amount">
-                                        <strong>€1,587</strong>
-                                        <em>To go</em>
-                                    </span>
-                                    <span class="project-days-left">
-                                        <span class="flaticon solid clock-1"></span>
-                                        <strong>74</strong>
-                                        <em>days</em>
-                                    </span>
-                                </span>
-
-                                <span class="project-description">
-                                    A stress free mind and a disease free body, it is life’s most basic desire. With this project we include local Indian women in the production process of making sanitary pads, hence generating new livelihood opportunities. Along the way, and on the basis of these sanitary pads, health and hygiene information will be imparted by conducting health camps in the community. Prevailing attitudes toward menstruation will change. Generating job opportunities and feminine hygiene all in one: becoming empowered by sanitary pads!
-                                    <span class="project-view">View project</span>
-                                </span>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="campaign-create-tips">
-                        <h3><span class="flaticon solid lightbulb-3"></span> Tips</h3>
-                        <ul>
-                            <li>
-                                Cras mattis consectetur purus sit amet fermentum. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Maecenas faucibus mollis interdum. Maecenas sed diam eget risus varius blandit sit amet non magna. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.
-                            </li>
-                            <li>
-                                Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam porta sem malesuada magna mollis euismod. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Curabitur blandit tempus porttitor. Sed posuere consectetur est at lobortis. Cras justo odio, dapibus ac facilisis in, egestas eget quam.
-                            </li>
-                            <li>
-                                Maecenas sed diam eget risus varius blandit sit amet non magna. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Sed posuere consectetur est at lobortis. Maecenas faucibus mollis interdum.
-                            </li>
-                        </ul>
-                        <p><a href="#">More tips in our faq ›</a></p>
-                    </div>
-                </aside>
-
             <footer class="campaign-footer">
                 <div class="l-wrapper">
                     <div class="navigation">
-                        <a href="project_create6.html" class="btn btn-modest previous">Previous</a>
-                        <a href="project_create8.html" class="btn btn-modest btn-primary next">Next</a>
+                        <!-- <a class="btn btn-modest previous">Previous</a> -->
+                        <a href="project_create2.html" class="btn btn-modest btn-primary next">Next</a>
                     </div>
                     <div class="actions">
                         <a class="save">
@@ -220,7 +106,7 @@
                     </div>
                 </div>
             </footer>
-        </div>
+        </article>
     </div>
 {% endtplhandlebars %}
 

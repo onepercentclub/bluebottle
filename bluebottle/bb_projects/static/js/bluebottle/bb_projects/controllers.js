@@ -235,6 +235,11 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
+//~mg Start
+App.MyProjectStartController = Em.ObjectController.extend(App.Editable, {
+    nextStep: 'myProject.basics'
+});
+
 App.MyProjectBasicsController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.description'
 });

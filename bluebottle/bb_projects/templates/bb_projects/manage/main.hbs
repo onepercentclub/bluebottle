@@ -41,25 +41,18 @@
                             {% trans "Story" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.location" classBinding=":step validLocation:validated"}}
-                            {{#if validLocation}}
-                                <span class="flaticon solid checkmark-1"></span>
-                            {{/if}}
-                            {% trans "Location" %}
-                        {{/link-to}}
-
-                        {{#link-to "myProject.media" classBinding=":step validMedia:validated"}}
-                            {{#if validMedia}}
-                                <span class="flaticon solid checkmark-1"></span>
-                            {{/if}}
-                            {% trans "Media" %}
-                        {{/link-to}}
-
                         {{#link-to "myProject.partnerOrganization" classBinding=":step validPartnerOrganization:validated"}}
                             {{#if validPartnerOrganization}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
                             {% trans "Partner Organization" %}
+                        {{/link-to}}
+
+                       {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
+                            {{#if validsubmit}}
+                                <span class="flaticon solid checkmark-1"></span>
+                            {{/if}}
+                            {% trans "Review" %}
                         {{/link-to}}
 
                     </nav>

@@ -272,8 +272,7 @@ App.MyProjectMediaController = Em.ObjectController.extend(App.Editable, {
 });
 
 
-
-App.MyProjectLegalController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectPartnerOrganizationController = Em.ObjectController.extend(App.Editable, {
 
     nextStep: 'myProject.submit',
 

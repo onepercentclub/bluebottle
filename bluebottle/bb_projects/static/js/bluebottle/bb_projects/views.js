@@ -175,12 +175,8 @@ App.MyProjectMediaView = Em.View.extend(App.PopOverMixin, {
     templateName: 'my_project_media'
 });
 
-App.MyProjectOrganisationView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_organisation'
-});
-
-App.MyProjectLegalView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_legal'
+App.MyProjectPartnerOrganizationView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_partner_organization'
 });
 
 App.MyProjectAmbassadorsView = Em.View.extend(App.PopOverMixin, {

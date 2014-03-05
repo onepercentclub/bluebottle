@@ -55,20 +55,12 @@
                             {% trans "Media" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.organisation" classBinding=":step validOrganization:validated"}}
-                            {{#if validOrganization}}
+                        {{#link-to "myProject.partnerOrganization" classBinding=":step validPartnerOrganization:validated"}}
+                            {{#if validPartnerOrganization}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Organization Profile" %}
+                            {% trans "Partner Organization" %}
                         {{/link-to}}
-
-                        {{#link-to "myProject.legal" classBinding=":step validLegal:validated"}}
-                            {{#if validLegal}}
-                                <span class="flaticon solid checkmark-1"></span>
-                            {{/if}}
-                            {% trans "Legal status" %}
-                        {{/link-to}}
-
 
                     </nav>
 

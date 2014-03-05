@@ -26,9 +26,10 @@ App.Router.map(function(){
         this.route('details');
         this.route('location');
         this.route('media');
+        this.route('partnerOrganization');
 
-        this.route('organisation');
-        this.route('legal');
+//        this.route('organisation');
+//        this.route('legal');
         this.route('ambassadors');
 
         this.route('bank');
@@ -179,7 +180,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
+App.MyProjectPartnerOrganizationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);
@@ -196,8 +197,6 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 });
 
 App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
-
-App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
 

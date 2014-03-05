@@ -241,22 +241,23 @@ App.MyProjectStartController = Em.ObjectController.extend(App.Editable, {
 });
 
 App.MyProjectPitchController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.description',
+    nextStep: 'myProject.story',
+    //TODO: FIX THIS, I have smth in the booking project as well
 
-    allowDrop: function() {
+    allowDrop: function(ev) {
         ev.preventDefault();
-    }.property(ev),
+    }.property(),
 
-    drop: function() {
+    drop: function(ev) {
         ev.preventDefault();
         var data = ev.dataTransfer.getData("Text");
         ev.target.appendChild(document.getElementById(data));
-    }.property(ev)
+    }.property()
 
 
 });
 
-App.MyProjectDescriptionController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectStoryController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.location'
 });
 

@@ -34,11 +34,11 @@
                             {% trans "Pitch" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.description" classBinding=":step validDescription:validated"}}
-                            {{#if validDescription}}
+                        {{#link-to "myProject.story" classBinding=":step validStory:validated"}}
+                            {{#if validStory}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Description" %}
+                            {% trans "Story" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.location" classBinding=":step validLocation:validated"}}
@@ -96,8 +96,10 @@
             <footer class="campaign-footer">
                 <div class="l-wrapper">
                     <div class="navigation">
-                        <!-- <a class="btn btn-modest previous">Previous</a> -->
-                        <a href="project_create2.html" class="btn btn-modest btn-primary next">Next</a>
+                        <a class="btn btn-modest previous">Previous</a>
+                        <button {{bindAttr class=":btn :btn-modest :btn-primary :next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
+                        <!--<a href="project_create2.html" class="btn btn-modest btn-primary next">Next</a>-->
+
                     </div>
                     <div class="actions">
                         <a class="save">

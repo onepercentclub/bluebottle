@@ -3,14 +3,15 @@
 {% load static %}
 
 
-{% tplhandlebars "my_project_description" %}
+{% tplhandlebars "my_project_story" %}
 
     <legend>
-        <strong>{% trans "Project description" %}</strong>
+        <strong>{% trans "Project story" %}</strong>
     </legend>
 
     <fieldset>
         <ul>
+
             {{bb-text-area rows='10' label='Why, what and how' hint='Describe your project in more detail.' valueBinding=description
                 placeholder='Describe your project' errors=errors.description}}
 
@@ -18,11 +19,5 @@
                 valueBinding=reach placeholder='e.g. 20' errors=errors.reach}}
         </ul>
     </fieldset>
-
-    {{#if isDirty}}
-        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
-    {{else}}
-        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
-    {{/if}}
 
 {% endtplhandlebars %}

@@ -26,8 +26,8 @@ from optparse import make_option
 '''
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
 
+    option_list = BaseCommand.option_list + (
         make_option('--delete-model', metavar='ct',
                     dest='deleteModel', default=False,
                     help='Delete the contenttypes for the specified model'
@@ -72,7 +72,6 @@ class Command(BaseCommand):
                     help="used with show: shows contentTypes not related to apps in INSTALLED_APPS"
                     ),
     )
-
 
     def handle(self, *args, **options):
 

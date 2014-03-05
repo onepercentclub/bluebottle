@@ -206,7 +206,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
         showAllTasks: function() {
             this.set("showingAll", true);
         }
-    },
+    }
 });
 
 App.GenericFieldController = Em.ObjectController.extend({});
@@ -241,7 +241,19 @@ App.MyProjectStartController = Em.ObjectController.extend(App.Editable, {
 });
 
 App.MyProjectPitchController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.description'
+    nextStep: 'myProject.description',
+
+    allowDrop: function() {
+        ev.preventDefault();
+    }.property(ev),
+
+    drop: function() {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("Text");
+        ev.target.appendChild(document.getElementById(data));
+    }.property(ev)
+
+
 });
 
 App.MyProjectDescriptionController = Em.ObjectController.extend(App.Editable, {

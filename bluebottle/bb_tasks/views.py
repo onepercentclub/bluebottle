@@ -9,13 +9,14 @@ from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 from .permissions import IsTaskAuthorOrReadOnly
 from .serializers import (
     TaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
-    MyTaskMemberSerializer, BB_TASK_MODEL)
+    MyTaskMemberSerializer, SkillSerializer)
 
-from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model
+from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
+SKILL_MODEL = get_skill_model()
 
 
 class TaskPreviewList(generics.ListAPIView):
@@ -139,3 +140,15 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
     serializer_class = TaskFileSerializer
 
     permission_classes = (IsAuthorOrReadOnly, )
+
+
+class SkillList(generics.ListAPIView):
+    model = SKILL_MODEL
+    serializer_class = SkillSerializer
+
+
+class UsedSkillList(SkillList):
+    def get_queryset(self):
+        qs = super(UsedSkillList, self).get_queryset()
+        skill_ids = BB_TASK_MODEL.objects.values_list('skill', flat=True).distinct()
+        return qs.filter(id__in=skill_ids)

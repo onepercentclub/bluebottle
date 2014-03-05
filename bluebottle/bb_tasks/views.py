@@ -16,7 +16,7 @@ from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_tas
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
-SKILL_MODEL = get_skill_model()
+BB_SKILL_MODEL = get_skill_model()
 
 
 class TaskPreviewList(generics.ListAPIView):
@@ -143,7 +143,7 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 
 
 class SkillList(generics.ListAPIView):
-    model = SKILL_MODEL
+    model = BB_SKILL_MODEL
     serializer_class = SkillSerializer
 
 

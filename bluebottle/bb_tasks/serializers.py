@@ -11,7 +11,7 @@ from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_tas
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
-BB_SKILL_MODEL = get_skill_model
+SKILL_MODEL = get_skill_model()
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
@@ -91,3 +91,10 @@ class TaskWallPostSerializer(TextWallPostSerializer):
     class Meta(TextWallPostSerializer.Meta):
         # Add the project slug field.
         fields = TextWallPostSerializer.Meta.fields + ('task', )
+
+
+class SkillSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SKILL_MODEL
+        fields = ('id', 'name')

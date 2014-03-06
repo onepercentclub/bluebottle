@@ -44,21 +44,24 @@ App.Project = DS.Model.extend({
     created: DS.attr('date'),
 
     owner: DS.belongsTo('App.UserPreview'),
-    // Basics
+
+    // Start, it actually doesn't need anything, maybe the language
+
+    // Pitch
     title: DS.attr('string'),
     pitch: DS.attr('string'),
     theme: DS.belongsTo('App.Theme'),
     tags: DS.hasMany('App.Tag'),
 
-    // Description
+    // Story
     description: DS.attr('string'),
     effects: DS.attr('string'),
     reach: DS.attr('number'),
 
     // Location
     country: DS.belongsTo('App.Country'),
-    latitude: DS.attr('string'),
-    longitude: DS.attr('string'),
+    latitude: DS.attr('string', {defaultValue: 54}),
+    longitude: DS.attr('string', {defaultValue: 4}),
 
     // Media
     image: DS.attr('image'),
@@ -106,7 +109,7 @@ App.Project = DS.Model.extend({
     overDeadline: function() {
         var now = new Date();
         return now > this.get("deadline");
-    }.property('deadline'),
+    }.property('deadline')
 });
 
 
@@ -201,6 +204,9 @@ App.MyProject = App.Project.extend({
 
     country: DS.belongsTo('App.Country'),
 
+    //~mg
+    // Start shouldn't need this thing
+
     validBasics: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
             return true;
@@ -208,7 +214,7 @@ App.MyProject = App.Project.extend({
         return false;
     }.property('title', 'pitch', 'theme', 'tags.length'),
 
-    validDescription: function(){
+    validStory: function(){
         if (this.get('description') && this.get('reach')){
             return true;
         }

@@ -19,14 +19,17 @@ App.Router.map(function(){
     this.resource('myProjectList', {path: '/my/projects'});
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
-        this.route('basics');
-        this.route('description');
+        //I add for project create ~mg
+        this.route('start');
+        this.route('pitch');
+        this.route('story');
         this.route('details');
         this.route('location');
         this.route('media');
+        this.route('partnerOrganization');
 
-        this.route('organisation');
-        this.route('legal');
+//        this.route('organisation');
+//        this.route('legal');
         this.route('ambassadors');
 
         this.route('bank');
@@ -112,7 +115,7 @@ App.MyProjectRoute = Em.Route.extend({
 
 App.MyProjectIndexRoute = Em.Route.extend({
     redirect: function(){
-        this.transitionTo('myProject.basics');
+        this.transitionTo('myProject.pitch');
     }
 
 });
@@ -141,9 +144,10 @@ App.MyProjectSubRoute = Em.Route.extend({
         }
     }
 });
-
-App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
+//~mg
+App.MyProjectStartRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
@@ -176,7 +180,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
+App.MyProjectPartnerOrganizationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);
@@ -193,8 +197,6 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 });
 
 App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
-
-App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
 

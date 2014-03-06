@@ -41,11 +41,11 @@
                             {% trans "Story" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.partnerOrganization" classBinding=":step validPartnerOrganization:validated"}}
+                        {{#link-to "myProject.organisation" classBinding=":step validPartnerOrganization:validated"}}
                             {{#if validPartnerOrganization}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Partner Organization" %}
+                            {% trans "Partner" %}
                         {{/link-to}}
 
                        {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
@@ -78,21 +78,8 @@
                     </aside>
                 </div>
             </section>
-            <footer class="campaign-footer">
-                <div class="l-wrapper">
-                    <div class="navigation">
-                        <a class="btn btn-modest previous">Previous</a>
-                        <button {{bindAttr class=":btn :btn-modest :btn-primary :next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
-                        <!--<a href="project_create2.html" class="btn btn-modest btn-primary next">Next</a>-->
 
-                    </div>
-                    <div class="actions">
-                        <a class="save">
-                            <span class="flaticon solid pencil-3"></span> Save &amp; continue later
-                        </a>
-                    </div>
-                </div>
-            </footer>
+            {# footer was here #}
         </article>
     </div>
 {% endtplhandlebars %}

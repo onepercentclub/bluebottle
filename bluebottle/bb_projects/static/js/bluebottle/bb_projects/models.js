@@ -207,7 +207,7 @@ App.MyProject = App.Project.extend({
     //~mg
     // Start shouldn't need this thing
 
-    validBasics: function(){
+    validPitch: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
             return true;
         }
@@ -222,25 +222,27 @@ App.MyProject = App.Project.extend({
     }.property('description', 'reach'),
 
 
-    validLocation: function(){
-        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
-            return true;
-        }
-        return false;
-    }.property('country', 'latitude', 'longitude'),
-
-
-    validMedia: function(){
-        if (this.get('image')){
-            return true;
-        }
-        return false;
-    }.property('image'),
+//    validLocation: function(){
+//        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
+//            return true;
+//        }
+//        return false;
+//    }.property('country', 'latitude', 'longitude'),
+//
+//
+//    validMedia: function(){
+//        if (this.get('image')){
+//            return true;
+//        }
+//        return false;
+//    }.property('image'),
 
 
     created: DS.attr('date'),
 
     organization: DS.belongsTo('App.MyOrganization'),
+
+    currentUser: DS.belongsTo('App.CurrentUser'),
 
     canSubmit: function(){
         if (!this.get('status')) {

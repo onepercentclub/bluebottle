@@ -235,12 +235,16 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
-//~mg Start
 App.MyProjectStartController = Em.ObjectController.extend(App.Editable, {
+    needs: ['currentUser'],
+
     nextStep: 'myProject.pitch'
+
 });
 
 App.MyProjectPitchController = Em.ObjectController.extend(App.Editable, {
+    needs: ['currentUser'],
+
     nextStep: 'myProject.story',
     //TODO: FIX THIS, I have smth in the booking project as well
 
@@ -258,17 +262,7 @@ App.MyProjectPitchController = Em.ObjectController.extend(App.Editable, {
 });
 
 App.MyProjectStoryController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.location'
-});
-
-App.MyProjectLocationController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.media'
-});
-
-
-App.MyProjectMediaController = Em.ObjectController.extend(App.Editable, {
-    // TODO: Different nextStep if bluebottle.organizations isn't installed.
-    nextStep: 'myProject.organisation'
+    nextStep: 'myProject.partnerOrganization'
 });
 
 

@@ -8,15 +8,13 @@ App.Adapter.map('App.Project', {
 });
 
 App.Adapter.map('App.ProjectPreview', {
-    campaign: {embedded: 'load'},
     country: {embedded: 'load'},
     theme: {embedded: 'load'}
 });
 
 App.Adapter.map('App.MyProject', {
     budgetLines: {embedded: 'load'},
-    tags: {embedded: 'always'},
-    extras: {embedded: 'load'}
+    tags: {embedded: 'always'}
 });
 
 App.Adapter.map('App.PartnerOrganization', {
@@ -71,7 +69,7 @@ App.Project = DS.Model.extend({
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
 
-    organization: DS.belongsTo("App.Organization"),
+    //organization: DS.belongsTo("App.Organization"),
 
     phaseName: function(){
         return this.get('status').get('name');
@@ -204,10 +202,8 @@ App.MyProject = App.Project.extend({
 
     country: DS.belongsTo('App.Country'),
 
-    //~mg
-    // Start shouldn't need this thing
 
-    validBasics: function(){
+    validPitch: function(){
         if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
             return true;
         }

@@ -19,21 +19,13 @@ App.Router.map(function(){
     this.resource('myProjectList', {path: '/my/projects'});
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
-        //I add for project create ~mg
+
         this.route('start');
         this.route('pitch');
         this.route('story');
-        this.route('details');
-        this.route('location');
-        this.route('media');
-        this.route('partnerOrganization');
-
-//        this.route('organisation');
-//        this.route('legal');
-        this.route('ambassadors');
+        this.route('organisation');
 
         this.route('bank');
-        this.route('campaign');
         this.route('budget');
 
         this.route('submit');
@@ -139,12 +131,10 @@ App.MyProjectSubRoute = Em.Route.extend({
     },
 
     exit: function() {
-        if (this.get('controller')) {
-            this.get('controller').stopEditing();
-        }
+        this.get('controller').send('goToStep');
     }
 });
-//~mg
+
 App.MyProjectStartRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
@@ -180,7 +170,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectPartnerOrganizationRoute = App.MyProjectSubRoute.extend({
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);

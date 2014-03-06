@@ -1,7 +1,7 @@
 
 App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
 
-    nextStep: 'myProject.legal',
+    nextStep: 'myProject.submit',
 
     hasMultipleOrganizations: function(){
         return (this.get('organizations.length') > 1);

@@ -150,12 +150,17 @@ App.MyProjectView = Em.View.extend({
     templateName: 'my_project'
 });
 
-App.MyProjectBasicsView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_basics'
+//~mg
+App.MyProjectStartView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_start'
 });
 
-App.MyProjectDescriptionView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_description'
+App.MyProjectPitchView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_pitch'
+});
+
+App.MyProjectStoryView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_story'
 });
 
 App.MyProjectDetailsView = Em.View.extend(App.PopOverMixin, {
@@ -170,12 +175,8 @@ App.MyProjectMediaView = Em.View.extend(App.PopOverMixin, {
     templateName: 'my_project_media'
 });
 
-App.MyProjectOrganisationView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_organisation'
-});
-
-App.MyProjectLegalView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_legal'
+App.MyProjectPartnerOrganizationView = Em.View.extend(App.PopOverMixin, {
+    templateName: 'my_project_partner_organization'
 });
 
 App.MyProjectAmbassadorsView = Em.View.extend(App.PopOverMixin, {

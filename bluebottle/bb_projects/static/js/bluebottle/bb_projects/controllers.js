@@ -206,7 +206,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
         showAllTasks: function() {
             this.set("showingAll", true);
         }
-    },
+    }
 });
 
 App.GenericFieldController = Em.ObjectController.extend({});
@@ -235,11 +235,29 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
-App.MyProjectBasicsController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.description'
+//~mg Start
+App.MyProjectStartController = Em.ObjectController.extend(App.Editable, {
+    nextStep: 'myProject.pitch'
 });
 
-App.MyProjectDescriptionController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectPitchController = Em.ObjectController.extend(App.Editable, {
+    nextStep: 'myProject.story',
+    //TODO: FIX THIS, I have smth in the booking project as well
+
+    allowDrop: function(ev) {
+        ev.preventDefault();
+    }.property(),
+
+    drop: function(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("Text");
+        ev.target.appendChild(document.getElementById(data));
+    }.property()
+
+
+});
+
+App.MyProjectStoryController = Em.ObjectController.extend(App.Editable, {
     nextStep: 'myProject.location'
 });
 
@@ -254,8 +272,7 @@ App.MyProjectMediaController = Em.ObjectController.extend(App.Editable, {
 });
 
 
-
-App.MyProjectLegalController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectPartnerOrganizationController = Em.ObjectController.extend(App.Editable, {
 
     nextStep: 'myProject.submit',
 

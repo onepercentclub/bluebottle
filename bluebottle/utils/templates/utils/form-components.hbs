@@ -55,7 +55,6 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
-
 {% tplhandlebars "components/bb-map-picker" %}
     {{#bb-form-field hint=hint label=label errors=errors className='wide'}}
         {{view App.MapPicker longitudeBinding=longitudeBinding latitudeBinding=latitudeBinding  nameBinding=name
@@ -85,11 +84,10 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
-
 {% tplhandlebars "components/bb-video-link" %}
-    {{#bb-form-field hint=hint label=label errors=errors}}
+    {{#bb-form-field label=label errors=errors hint=hint}}
         {{view Em.TextField step=step valueBinding=valueBinding nameBinding=name
-            placeholderBinding=placeholder classBinding="errors.length:error"}}
+            placeholderBinding=placeholder classBinding="errors.length:error" typeBinding=type}}
         <br />
         {{#if video_html}}
             {{{video_html}}}

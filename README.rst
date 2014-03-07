@@ -6,7 +6,7 @@ Project Bluebottle
 
 
 The repository for Project Bluebottle, the crowdsourcing framework initiated
-by the 1%CLUB.
+by the 1%Club.
 
 Contributors
 ------------

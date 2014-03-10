@@ -206,7 +206,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
         showAllTasks: function() {
             this.set("showingAll", true);
         }
-    },
+    }
 });
 
 App.GenericFieldController = Em.ObjectController.extend({});
@@ -214,6 +214,58 @@ App.GenericFieldController = Em.ObjectController.extend({});
 /*
  Project Manage Controllers
  */
+
+/*
+ Mixin that controllers with editable models can use. E.g. App.UserProfileController
+
+ @see App.UserProfileRoute and App.UserProfileController to see it in action.
+ */
+App.SaveOnExitMixin = Ember.Mixin.create({
+
+    actions : {
+        goToStep: function(step){
+            $("body").animate({ scrollTop: 0 }, 600);
+            var model = this.get('model');
+            var controller = this;
+
+            if (!model.get('isDirty')) {
+                if (step) controller.transitionToRoute(step);
+            }
+
+            model.one('becameInvalid', function(record) {
+                controller.set('saving', false);
+                model.set('errors', record.get('errors'));
+                // Ember-data currently has no clear way of dealing with the state
+                // loaded.created.invalid on server side validation, so we transition
+                // to the uncommitted state to allow resubmission
+                model.transitionTo('loaded.created.uncommitted');
+            });
+
+            if  (model.get('isNew')) {
+                model.one('didCreate', function(){
+                    if (step) controller.transitionToRoute(step);
+
+                });
+            } else {
+                model.one('didUpdate', function(){
+                    if (step) controller.transitionToRoute(step);
+                });
+            }
+            model.save();
+        },
+
+
+        goToPreviousStep: function(){
+            var step = this.get('previousStep');
+            this.send('goToStep', step);
+        },
+
+        goToNextStep: function(){
+            var step = this.get('nextStep');
+            this.send('goToStep', step);
+        }
+    }
+});
 
 
 App.MyProjectListController = Em.ArrayController.extend({
@@ -235,28 +287,36 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
-App.MyProjectBasicsController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.description'
+//~mg Start
+App.MyProjectStartController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+    nextStep: 'myProject.pitch'
 });
 
-App.MyProjectDescriptionController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.location'
+App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+    previousStep: 'myProject.start',
+    nextStep: 'myProject.story',
+    //TODO: FIX THIS, I have smth in the booking project as well
+
+    allowDrop: function(ev) {
+        ev.preventDefault();
+    }.property(),
+
+    drop: function(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("Text");
+        ev.target.appendChild(document.getElementById(data));
+    }.property()
+
+
 });
 
-App.MyProjectLocationController = Em.ObjectController.extend(App.Editable, {
-    nextStep: 'myProject.media'
-});
-
-
-App.MyProjectMediaController = Em.ObjectController.extend(App.Editable, {
-    // TODO: Different nextStep if bluebottle.organizations isn't installed.
+App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+    previousStep: 'myProject.pitch',
     nextStep: 'myProject.organisation'
 });
 
-
-
-App.MyProjectLegalController = Em.ObjectController.extend(App.Editable, {
-
+App.MyProjectOrganisationController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+    previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
     shouldSave: function(){

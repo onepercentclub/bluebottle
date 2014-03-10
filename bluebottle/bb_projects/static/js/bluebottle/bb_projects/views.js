@@ -150,51 +150,52 @@ App.MyProjectView = Em.View.extend({
     templateName: 'my_project'
 });
 
-App.MyProjectBasicsView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_basics'
+//~mg
+App.MyProjectStartView = Em.View.extend({
+    templateName: 'my_project_start'
 });
 
-App.MyProjectDescriptionView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_description'
+App.MyProjectPitchView = Em.View.extend({
+    templateName: 'my_project_pitch'
 });
 
-App.MyProjectDetailsView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectStoryView = Em.View.extend({
+    templateName: 'my_project_story'
+});
+
+App.MyProjectDetailsView = Em.View.extend({
     templateName: 'my_project_details'
 });
 
-App.MyProjectLocationView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectLocationView = Em.View.extend({
     templateName: 'my_project_location'
 });
 
-App.MyProjectMediaView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectMediaView = Em.View.extend({
     templateName: 'my_project_media'
 });
 
-App.MyProjectOrganisationView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectOrganisationView = Em.View.extend({
     templateName: 'my_project_organisation'
 });
 
-App.MyProjectLegalView = Em.View.extend(App.PopOverMixin, {
-    templateName: 'my_project_legal'
-});
-
-App.MyProjectAmbassadorsView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectAmbassadorsView = Em.View.extend({
     templateName: 'my_project_ambassadors'
 });
 
-App.MyProjectBankView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectBankView = Em.View.extend({
     templateName: 'my_project_bank'
 });
 
-App.MyProjectBudgetView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectBudgetView = Em.View.extend({
     templateName: 'my_project_budget'
 });
 
-App.MyProjectCampaignView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectCampaignView = Em.View.extend({
     templateName: 'my_project_campaign'
 });
 
-App.MyProjectSubmitView = Em.View.extend(App.PopOverMixin, {
+App.MyProjectSubmitView = Em.View.extend({
     templateName: 'my_project_submit'
 });
 

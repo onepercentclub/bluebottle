@@ -129,6 +129,7 @@ App.ProjectController = Em.ObjectController.extend({
 
 });
 
+App.ProjectPlanController = Ember.ObjectController.extend();
 
 App.ProjectSupporterListController = Em.ArrayController.extend({
     supportersLoaded: function(sender, key) {

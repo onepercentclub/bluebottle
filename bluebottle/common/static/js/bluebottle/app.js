@@ -342,30 +342,13 @@ App.ApplicationRoute = Em.Route.extend({
             });
             return true;
         },
-
-        openInBigBox: function(name, context) {
-            // Close all other modals.
-            $('.close-modal').click();
-
-            // Get the controller or create one
-            var controller = this.controllerFor(name);
-            controller.set('model', context);
-
-            // Get the view. This should be defined.
-            var view = App[name.classify() + 'View'].create();
-            view.set('controller', controller);
-
-            var modalPaneTemplate = "{{view view.bodyViewClass}}";
-
-            Bootstrap.ModalPane.popup({
-                classNames: ['modal', 'large'],
-                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-                bodyViewClass: view,
-                secondary: 'Close'
-            });
-
+        openInScalableBox: function(name, context) {
+            this.send('openInBox', name, context, 'scalable');
         },
-        openInBox: function(name, context) {
+        openInBigBox: function(name, context) {
+            this.send('openInBox', name, context, 'large');
+        },
+        openInBox: function(name, context, type) {
             // Close all other modals.
             $('.close-modal').click();
 
@@ -375,6 +358,11 @@ App.ApplicationRoute = Em.Route.extend({
                 controller.set('model', context);
             }
 
+            if (typeof type === 'undefined')
+              type = 'normal'
+
+            var classNames = [type];
+
             // Get the view. This should be defined.
             var view = App[name.classify() + 'View'].create();
             view.set('controller', controller);
@@ -382,7 +370,7 @@ App.ApplicationRoute = Em.Route.extend({
             var modalPaneTemplate = ['<div class="modal-body"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
 
             Bootstrap.ModalPane.popup({
-                classNames: ['modal'],
+                classNames: classNames,
                 defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
                 bodyViewClass: view
             });

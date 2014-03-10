@@ -69,6 +69,10 @@ App.ProjectView = Em.View.extend({
     }.property('latitude', 'longitude')    
 });
 
+App.ProjectPlanView = Em.View.extend({
+    templateName: 'project_plan',
+});
+
 App.ProjectIndexView = Em.View.extend({
     templateName: 'project_wall',
     willInsertElement: function() {

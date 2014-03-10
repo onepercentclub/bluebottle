@@ -60,8 +60,8 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/handlebars-1.0.0{% if not debug %}.min{% endif %}.js"></script>
     {% endcompress %}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0{% if not debug %}.min{% endif %}.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14{% if not debug %}.min{% endif %}.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0{% if not debug %}{% endif %}.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14{% if not debug %}{% endif %}.js"></script>
 
     {% compress js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-drf2-adapter.js"></script>
@@ -206,6 +206,21 @@
             <!-- end: main content -->
 
         </div>
+        
+        <div class="modal fade">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="myLargeModalLabel">Large modal</h4>
+              </div>
+              <div class="modal-body">
+                {{outlet modal}}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {{partial "footer"}}
 
     {% endtplhandlebars %}

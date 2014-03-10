@@ -70,7 +70,6 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         });
         return page;
     }
-
 });
 
 

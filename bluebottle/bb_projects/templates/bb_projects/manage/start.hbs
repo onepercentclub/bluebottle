@@ -1,0 +1,20 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "my_project_start" %}
+
+    <legend>
+        <strong>{% trans "Project start" %}</strong>
+        <p>{% trans "Here is where you can start to create your own project. Good luck and have fun! "%}</p>
+    </legend>
+
+    <fieldset>
+        <ul>
+            Don't think we need field in this page, just some info, maybe a video that explains
+            how to create a project (but actually that should be in the homepage).
+
+        </ul>
+    </fieldset>
+
+{% endtplhandlebars %}

@@ -19,18 +19,13 @@ App.Router.map(function(){
     this.resource('myProjectList', {path: '/my/projects'});
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
-        this.route('basics');
-        this.route('description');
-        this.route('details');
-        this.route('location');
-        this.route('media');
 
+        this.route('start');
+        this.route('pitch');
+        this.route('story');
         this.route('organisation');
-        this.route('legal');
-        this.route('ambassadors');
 
         this.route('bank');
-        this.route('campaign');
         this.route('budget');
 
         this.route('submit');
@@ -112,7 +107,7 @@ App.MyProjectRoute = Em.Route.extend({
 
 App.MyProjectIndexRoute = Em.Route.extend({
     redirect: function(){
-        this.transitionTo('myProject.basics');
+        this.transitionTo('myProject.pitch');
     }
 
 });
@@ -136,14 +131,13 @@ App.MyProjectSubRoute = Em.Route.extend({
     },
 
     exit: function() {
-        if (this.get('controller')) {
-            this.get('controller').stopEditing();
-        }
+        this.get('controller').send('goToStep');
     }
 });
 
-App.MyProjectBasicsRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectDescriptionRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectStartRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
@@ -193,8 +187,6 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 });
 
 App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
-
-App.MyProjectLegalRoute = App.MyProjectSubRoute.extend({});
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
 

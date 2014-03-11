@@ -208,14 +208,17 @@ App.BudgetLine = DS.Model.extend({
 
 App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
+    
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    requiredPartnerFields: ['name', 'contactName', 'email', 'phone', 'website'],
 
     init: function () {
       this._super();
 
       this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
       this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
+      this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPitchFields'));
     },
 
     country: DS.belongsTo('App.Country'),

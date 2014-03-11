@@ -368,8 +368,8 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.SaveOnExitM
 });
 
 
-
-App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, App.SaveOnExitMixin, {
+    previousStep: 'myProject.organisation',
 
     actions: {
         submitPlan: function(e){

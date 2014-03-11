@@ -7,7 +7,8 @@
              <aside class="l-sidebar">
                 <p>
                     title: {{#if title}} {{title}} {{/if}} <br />
-                    description: {{#if pitch}} {{description}} {{/if}} <br />
+                    pitch: {{#if pitch}} {{pitch}} {{/if}} <br />
+                    description: {{#if description}} {{description}} {{/if}} <br />
                     picture: {{#if image}} {{picture}} {{/if}} <br />
                     video: {{#if video_url }} {{video}} {{/if}} <br />
                     tags: {{#if tags }} {{#each tag in tags}}{{tag.id}};{{/each}}{{/if}} <br />

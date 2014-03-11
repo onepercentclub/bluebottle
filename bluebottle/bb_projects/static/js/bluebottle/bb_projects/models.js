@@ -209,20 +209,36 @@ App.BudgetLine = DS.Model.extend({
 App.MyProject = App.Project.extend({
     url: 'bb_projects/manage',
 
+    validateStoryFields: function () {
+        return Ember.ArrayProxy.create({content: []});
+    }.property(),
+
+    image: DS.attr('image'),
+
     validPitch: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')
-            && this.get('country') && this.get('latitude'), this.get('longitude')){
+        if (this.get('title') &&  this.get('pitch') && this.get('image') && this.get('theme') && this.get('country')
+            && this.get('latitude') && this.get('longitude') && this.get('tags.length')){
             return true;
         }
         return false;
-    }.property('title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'),
+    }.property('title', 'pitch', 'image', 'theme', 'latitude', 'longitude', 'tags.length', 'country'),
+
 
     validStory: function(){
-        if (this.get('description') && this.get('reach')){
-            return true;
-        }
-        return false;
-    }.property('description', 'reach'),
+        this.get('validateStoryFields').forEach(function(field) {
+            if (!this.get(field)){
+                return false;
+            }
+        })
+        return true;
+    }.property(this.get('validateStoryFields')),
+
+//    validStory: function(){
+//        if (this.get('description') && this.get('reach')){
+//            return true;
+//        }
+//        return false;
+//    }.property('description', 'reach'),
 
 
 //    validLocation: function(){

@@ -95,7 +95,6 @@ App.Task = DS.Model.extend({
     time_needed: DS.attr('number'),
     status: DS.attr('string', {defaultValue: 'open'}),
     tags: DS.hasMany('App.Tag'),
-    wallposts: DS.hasMany('App.WallPost'),
 
     tags_list: function() {
     	var arr = [];

@@ -107,7 +107,16 @@ App.Project = DS.Model.extend({
     overDeadline: function() {
         var now = new Date();
         return now > this.get("deadline");
-    }.property('deadline')
+    }.property('deadline'),
+
+    cleanTags: function(){
+        // Ugly fix to avoid putting tags
+        this.get('tags').forEach(function (tag) {
+            if (tag.get('isDirty')){
+                tag.transitionTo('loaded.updated.saved');
+            }
+        });
+    }.observes('isDirty')
 });
 
 
@@ -202,7 +211,6 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
 
-    country: DS.belongsTo('App.Country'),
     init: function () {
       this._super();
 
@@ -210,8 +218,11 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
       this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
     },
 
+    country: DS.belongsTo('App.Country'),
     created: DS.attr('date'),
     organization: DS.belongsTo('App.MyOrganization'),
+    currentUser: DS.belongsTo('App.CurrentUser'),
+
     canSubmit: function(){
         if (!this.get('status')) {
             return true;

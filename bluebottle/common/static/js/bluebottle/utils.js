@@ -32,6 +32,35 @@ App.IsAuthorMixin = Em.Mixin.create({
 
 
 /*
+  Mixin for validating multiple properties in a model instance at runtime
+*/
+App.ModelValidationMixin = Ember.Mixin.create({
+    ////
+    // name: property to query for validation
+    // fields: an array of properties which will be checked
+    //
+    validatedFieldsProperty: function(name, fields) {
+        if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
+
+        var self = this;
+        var checkFunc = function() {
+            var valid = true;
+
+            fields.forEach(function (field) {
+                if (!self.get(field))
+                    valid = false;
+            });
+            return valid;
+        };
+
+        var computedProp = Ember.ComputedProperty.property.apply(checkFunc, fields);
+
+        Ember.defineProperty(self, name, computedProp);
+    }
+});
+
+
+/*
  Mixin that controllers with editable models can use. E.g. App.UserProfileController
 
  @see App.UserProfileRoute and App.UserProfileController to see it in action.

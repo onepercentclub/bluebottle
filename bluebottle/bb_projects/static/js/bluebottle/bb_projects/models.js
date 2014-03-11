@@ -197,47 +197,21 @@ App.BudgetLine = DS.Model.extend({
 });
 
 
-App.MyProject = App.Project.extend({
+App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
+    requiredStoryFields: ['description', 'reach'],
+    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
 
     country: DS.belongsTo('App.Country'),
+    init: function () {
+      this._super();
 
-
-    validPitch: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
-            return true;
-        }
-        return false;
-    }.property('title', 'pitch', 'theme', 'tags.length'),
-
-    validStory: function(){
-        if (this.get('description') && this.get('reach')){
-            return true;
-        }
-        return false;
-    }.property('description', 'reach'),
-
-
-    validLocation: function(){
-        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
-            return true;
-        }
-        return false;
-    }.property('country', 'latitude', 'longitude'),
-
-
-    validMedia: function(){
-        if (this.get('image')){
-            return true;
-        }
-        return false;
-    }.property('image'),
-
+      this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
+      this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
+    },
 
     created: DS.attr('date'),
-
     organization: DS.belongsTo('App.MyOrganization'),
-
     canSubmit: function(){
         if (!this.get('status')) {
             return true;

@@ -107,7 +107,16 @@ App.Project = DS.Model.extend({
     overDeadline: function() {
         var now = new Date();
         return now > this.get("deadline");
-    }.property('deadline')
+    }.property('deadline'),
+
+    cleanTags: function(){
+        // Ugly fix to avoid putting tags
+        this.get('tags').forEach(function (tag) {
+            if (tag.get('isDirty')){
+                tag.transitionTo('loaded.updated.saved');
+            }
+        });
+    }.observes('isDirty')
 });
 
 
@@ -200,43 +209,59 @@ App.BudgetLine = DS.Model.extend({
 App.MyProject = App.Project.extend({
     url: 'bb_projects/manage',
 
-    country: DS.belongsTo('App.Country'),
+    validateStoryFields: function () {
+        return Ember.ArrayProxy.create({content: []});
+    }.property(),
 
+    image: DS.attr('image'),
 
     validPitch: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
+        if (this.get('title') &&  this.get('pitch') && this.get('image') && this.get('theme') && this.get('country')
+            && this.get('latitude') && this.get('longitude') && this.get('tags.length')){
             return true;
         }
         return false;
-    }.property('title', 'pitch', 'theme', 'tags.length'),
+    }.property('title', 'pitch', 'image', 'theme', 'latitude', 'longitude', 'tags.length', 'country'),
+
 
     validStory: function(){
-        if (this.get('description') && this.get('reach')){
-            return true;
-        }
-        return false;
-    }.property('description', 'reach'),
+        this.get('validateStoryFields').forEach(function(field) {
+            if (!this.get(field)){
+                return false;
+            }
+        })
+        return true;
+    }.property(this.get('validateStoryFields')),
+
+//    validStory: function(){
+//        if (this.get('description') && this.get('reach')){
+//            return true;
+//        }
+//        return false;
+//    }.property('description', 'reach'),
 
 
-    validLocation: function(){
-        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
-            return true;
-        }
-        return false;
-    }.property('country', 'latitude', 'longitude'),
-
-
-    validMedia: function(){
-        if (this.get('image')){
-            return true;
-        }
-        return false;
-    }.property('image'),
+//    validLocation: function(){
+//        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
+//            return true;
+//        }
+//        return false;
+//    }.property('country', 'latitude', 'longitude'),
+//
+//
+//    validMedia: function(){
+//        if (this.get('image')){
+//            return true;
+//        }
+//        return false;
+//    }.property('image'),
 
 
     created: DS.attr('date'),
 
     organization: DS.belongsTo('App.MyOrganization'),
+
+    currentUser: DS.belongsTo('App.CurrentUser'),
 
     canSubmit: function(){
         if (!this.get('status')) {

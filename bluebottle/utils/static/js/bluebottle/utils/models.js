@@ -8,13 +8,13 @@ App.Tag = DS.Model.extend({
             this._super.apply(this, arguments);
         }
     },
-
-    unDirtySoWeNeverCommit: function(){
-        // Ugly fix to avoid putting tags
-        if (this.get('isNew')){
-           this.transitionTo('loaded.updated.saved');
-        }
-    }.observes('isNew')
+//
+//    unDirtySoWeNeverCommit: function(){
+//        // Ugly fix to avoid putting tags
+//        if (this.get('isNew') || this.get('isDirty')){
+//           this.transitionTo('loaded.updated.saved');
+//        }
+//    }.observes('isNew', 'isDirty')
 
 });
 

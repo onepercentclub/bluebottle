@@ -241,7 +241,7 @@ App.SaveOnExitMixin = Ember.Mixin.create({
                 model.transitionTo('loaded.created.uncommitted');
             });
 
-            if  (model.get('isNew')) {
+            if (model.get('isNew')) {
                 model.one('didCreate', function(){
                     if (step) controller.transitionToRoute(step);
 
@@ -253,7 +253,6 @@ App.SaveOnExitMixin = Ember.Mixin.create({
             }
             model.save();
         },
-
 
         goToPreviousStep: function(){
             var step = this.get('previousStep');
@@ -287,27 +286,27 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
-App.MyProjectStartController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectStartController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     needs: ['currentUser'],
 
     nextStep: 'myProject.pitch'
-
 });
+
 
 App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.start',
     nextStep: 'myProject.story',
     //TODO: FIX THIS, I have smth in the booking project as well
 
-    allowDrop: function(ev) {
-        ev.preventDefault();
-    }.property(),
-
-    drop: function(ev) {
-        ev.preventDefault();
-        var data = ev.dataTransfer.getData("Text");
-        ev.target.appendChild(document.getElementById(data));
-    }.property()
+//    allowDrop: function(ev) {
+//        ev.preventDefault();
+//    }.property(),
+//
+//    drop: function(ev) {
+//        ev.preventDefault();
+//        var data = ev.dataTransfer.getData("Text");
+//        ev.target.appendChild(document.getElementById(data));
+//    }.property()
 
 
 });

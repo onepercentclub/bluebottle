@@ -1,0 +1,23 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "_my_project_sidebar" %}
+        {{#if validPitch}}
+             <aside class="l-sidebar">
+                <p>
+                    title: {{#if title}} {{title}} {{/if}} <br />
+                    description: {{#if pitch}} {{description}} {{/if}} <br />
+                    picture: {{#if image}} {{picture}} {{/if}} <br />
+                    video: {{#if video_url }} {{video}} {{/if}} <br />
+                    tags: {{#if tags }} {{#each tag in tags}}{{tag.id}};{{/each}}{{/if}} <br />
+                    location: {{#if latitude}} {{#if longitude}} {{latitude}}, {{longitude}} {{/if}}{{/if}}  <br />
+                    country: {{#if country}} {{country}} {{/if}} <br />
+                </p>
+            <!--<iframe width="560" height="315" src="//www.youtube.com/embed/De7zcM8-oeE" frameborder="0" allowfullscreen></iframe>-->
+            </aside>
+        {{else}}
+            ...
+        {{/if}}
+
+{% endtplhandlebars %}

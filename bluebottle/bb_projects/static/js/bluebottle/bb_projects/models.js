@@ -107,7 +107,16 @@ App.Project = DS.Model.extend({
     overDeadline: function() {
         var now = new Date();
         return now > this.get("deadline");
-    }.property('deadline')
+    }.property('deadline'),
+
+    cleanTags: function(){
+        // Ugly fix to avoid putting tags
+        this.get('tags').forEach(function (tag) {
+            if (tag.get('isDirty')){
+                tag.transitionTo('loaded.updated.saved');
+            }
+        });
+    }.observes('isDirty')
 });
 
 
@@ -200,15 +209,13 @@ App.BudgetLine = DS.Model.extend({
 App.MyProject = App.Project.extend({
     url: 'bb_projects/manage',
 
-    country: DS.belongsTo('App.Country'),
-
-
     validPitch: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
+        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')
+            && this.get('country') && this.get('latitude'), this.get('longitude')){
             return true;
         }
         return false;
-    }.property('title', 'pitch', 'theme', 'tags.length'),
+    }.property('title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'),
 
     validStory: function(){
         if (this.get('description') && this.get('reach')){

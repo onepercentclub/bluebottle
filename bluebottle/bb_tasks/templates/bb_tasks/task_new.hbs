@@ -7,9 +7,11 @@
 
     <div class="l-section">
         <section class="l-wrapper">
-    		<form class="l-content" id="task-form">
+            <form class="l-content" id="task-form">
     		    <legend>
-    		        <strong>{% trans "Create new task" %}</strong>
+    		        <strong>{% trans "Create new task" %}</strong><br />
+
+                    {{ project.title }}
     		    </legend>
 	            <fieldset>
 	                <ul>

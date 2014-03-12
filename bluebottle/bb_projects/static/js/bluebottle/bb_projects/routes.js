@@ -9,11 +9,7 @@ App.Router.map(function(){
 
     this.resource('project', {path: '/projects/:project_id'}, function() {
         this.resource('projectPlan', {path: '/plan'});
-        this.resource('projectTasks', {path: '/tasks'}, function(){
-            this.resource('projectTask', {path: '/:task_id'}, function(){});
-            this.resource('taskNew', {path: '/new'});
-            this.resource('taskEdit', {path: '/:task_id/edit'});
-        });
+        this.resource('projectTasks', {path: '/tasks'}, function(){});
     });
 
     this.resource('myProjectList', {path: '/my/projects'});

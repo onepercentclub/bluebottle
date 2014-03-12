@@ -5,6 +5,10 @@
 {% tplhandlebars "_my_project_sidebar" %}
 
              <aside class="l-sidebar">
+                {{# if this.id}}
+                    {{render "projectPreview" this}}
+                {{/if}}
+
                 <strong>PITCH</strong>
                  <p>
                     title: {{#if title}} {{title}} {{/if}} <br />

@@ -38,7 +38,8 @@
     </fieldset>
     <fieldset>
         <ul>
-            {{bb-datepicker name='deadline' label='Deadline' minDate='c' valueBinding=deadline errors=errors.deadline }}
+            {{bb-datepicker hint='Select the ending date of your project'
+                valueBinding=deadline name='deadline' label='Deadline' errors=errors.deadline minDate='c'}}
 
         </ul>
     </fieldset>

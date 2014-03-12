@@ -32,6 +32,35 @@ App.IsAuthorMixin = Em.Mixin.create({
 
 
 /*
+  Mixin for validating multiple properties in a model instance at runtime
+*/
+App.ModelValidationMixin = Ember.Mixin.create({
+    ////
+    // name: property to query for validation
+    // fields: an array of properties which will be checked
+    //
+    validatedFieldsProperty: function(name, fields) {
+        if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
+
+        var self = this;
+        var checkFunc = function() {
+            var valid = true;
+
+            fields.forEach(function (field) {
+                if (!self.get(field))
+                    valid = false;
+            });
+            return valid;
+        };
+
+        var computedProp = Ember.ComputedProperty.property.apply(checkFunc, fields);
+
+        Ember.defineProperty(self, name, computedProp);
+    }
+});
+
+
+/*
  Mixin that controllers with editable models can use. E.g. App.UserProfileController
 
  @see App.UserProfileRoute and App.UserProfileController to see it in action.
@@ -259,20 +288,21 @@ App.MapPicker = Em.View.extend({
          e.preventDefault();
          this.lookUpLocation();
      },
+     actions: {
+         lookUpLocation: function() {
+             var address = this.get('lookup');
+             var view = this;
+             view.geocoder.geocode( {'address': address}, function(results, status) {
+                 if (status == google.maps.GeocoderStatus.OK) {
+                     view.placeMarker(results[0].geometry.location);
+                     view.set('latitude',  '' + results[0].geometry.location.lat().toString());
+                     view.set('longitude', '' + results[0].geometry.location.lng().toString());
 
-     lookUpLocation: function() {
-         var address = this.get('lookup');
-         var view = this;
-         view.geocoder.geocode( {'address': address}, function(results, status) {
-             if (status == google.maps.GeocoderStatus.OK) {
-                 view.placeMarker(results[0].geometry.location);
-                 view.set('latitude',  '' + results[0].geometry.location.lat().toString());
-                 view.set('longitude', '' + results[0].geometry.location.lng().toString());
-
-             } else {
-                 alert('Geocode was not successful for the following reason: ' + status);
-             }
-         });
+                 } else {
+                     alert('Geocode was not successful for the following reason: ' + status);
+                 }
+             });
+         }
      },
      placeMarker: function (position) {
          var view = this;
@@ -285,11 +315,11 @@ App.MapPicker = Em.View.extend({
              position: position,
              map: view.map
          });
-//         google.maps.event.addListener(view.marker, 'dragend', function(){
-//              var pos = view.marker.getPosition();
-//              view.set('latitude', pos.lat().toString());
-//              view.set('longitude', pos.lng().toString());
-//         });
+         google.maps.event.addListener(view.marker, 'dragend', function(){
+              var pos = view.marker.getPosition();
+              view.set('latitude', pos.lat().toString());
+              view.set('longitude', pos.lng().toString());
+         });
 
          view.map.panTo(position);
      },
@@ -298,7 +328,12 @@ App.MapPicker = Em.View.extend({
          var view = this;
          this.geocoder = new google.maps.Geocoder();
          var view = this;
-         var point = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
+         var point = new google.maps.LatLng(52.3747157,4.8986167);
+         var latitude = view.get('latitude');
+         var longitude = view.get('longitude');
+         if (latitude && longitude){
+             point = new google.maps.LatLng(latitude, longitude);
+         }
          var mapOptions = {
              zoom: 2,
              center: point,

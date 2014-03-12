@@ -107,7 +107,16 @@ App.Project = DS.Model.extend({
     overDeadline: function() {
         var now = new Date();
         return now > this.get("deadline");
-    }.property('deadline')
+    }.property('deadline'),
+
+    cleanTags: function(){
+        // Ugly fix to avoid putting tags
+        this.get('tags').forEach(function (tag) {
+            if (tag.get('isDirty')){
+                tag.transitionTo('loaded.updated.saved');
+            }
+        });
+    }.observes('isDirty')
 });
 
 
@@ -197,46 +206,25 @@ App.BudgetLine = DS.Model.extend({
 });
 
 
-App.MyProject = App.Project.extend({
+App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
+    
+    requiredStoryFields: ['description', 'reach'],
+    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    requiredPartnerFields: ['name', 'contactName', 'email', 'phone', 'website'],
+
+    init: function () {
+      this._super();
+
+      this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
+      this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
+      this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPitchFields'));
+    },
 
     country: DS.belongsTo('App.Country'),
-
-
-    validPitch: function(){
-        if (this.get('title') &&  this.get('pitch') && this.get('theme') && this.get('tags.length')){
-            return true;
-        }
-        return false;
-    }.property('title', 'pitch', 'theme', 'tags.length'),
-
-    validStory: function(){
-        if (this.get('description') && this.get('reach')){
-            return true;
-        }
-        return false;
-    }.property('description', 'reach'),
-
-
-    validLocation: function(){
-        if (this.get('country') &&  this.get('latitude') && this.get('longitude')){
-            return true;
-        }
-        return false;
-    }.property('country', 'latitude', 'longitude'),
-
-
-    validMedia: function(){
-        if (this.get('image')){
-            return true;
-        }
-        return false;
-    }.property('image'),
-
-
     created: DS.attr('date'),
-
     organization: DS.belongsTo('App.MyOrganization'),
+    currentUser: DS.belongsTo('App.CurrentUser'),
 
     canSubmit: function(){
         if (!this.get('status')) {

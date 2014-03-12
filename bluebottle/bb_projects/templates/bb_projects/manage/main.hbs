@@ -19,13 +19,15 @@
 
                     <nav id="campaign-steps" class="steps">
 
-                        {{#link-to "myProject.start" classBinding=":step validStart:validated"}}
-                            {{#if validStart}}
-                                <span class="flaticon solid checkmark-1"></span>
-                            {{/if}}
-                            {% trans "Start" %}
-                        {{/link-to}}
 
+                        {{#if isPhasePlanNew}}
+                            {{#link-to "myProject.start" classBinding=":step validStart:validated"}}
+                                {{#if validStart}}
+                                    <span class="flaticon solid checkmark-1 "></span>
+                                {{/if}}
+                                {% trans "Start" %}
+                            {{/link-to}}
+                        {{/if}}
 
                         {{#link-to "myProject.pitch" classBinding=":step validPitch:validated"}}
                             {{#if validPitch}}
@@ -48,13 +50,14 @@
                             {% trans "Partner" %}
                         {{/link-to}}
 
-                       {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
-                            {{#if validsubmit}}
-                                <span class="flaticon solid checkmark-1"></span>
-                            {{/if}}
-                            {% trans "Review" %}
-                        {{/link-to}}
-
+                       {{#if isPhasePlanNew}}
+                           {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
+                                {{#if validsubmit}}
+                                    <span class="flaticon solid checkmark-1"></span>
+                                {{/if}}
+                                {% trans "Review" %}
+                            {{/link-to}}
+                        {{/if}}
                     </nav>
 
 					<a class="btn btn-modest campaign-preview-button">

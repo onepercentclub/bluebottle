@@ -12,6 +12,8 @@
                     picture: {{#if image}} {{image}} {{/if}} <br />
                     video: {{#if video_url }} {{video_url}} {{/if}} <br />
                     tags: {{#if tags }} {{#each tag in tags}}{{tag.id}};{{/each}}{{/if}} <br />
+                    deadline: {{#if deadline}} {{deadline}} / daysToGo:{{daysToGo}}/ overDeadline:{{ overDeadline}} {{/if}} <br />
+
                     location: {{#if latitude}} {{#if longitude}} {{latitude}}, {{longitude}} {{/if}}{{/if}}  <br />
                     country: {{#if country}} {{country}} {{/if}} <br />
                 </p>

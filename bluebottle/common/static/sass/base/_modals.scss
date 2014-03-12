@@ -37,6 +37,19 @@
             max-height: 90%;
         }
     }
+
+  &.scalable {
+    height: 80%;
+    width: 80%;
+    left: 10%;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: hidden;
+
+    .modal-body {
+      max-height: 100%;
+    }
+  }
 }
 
 .modal-header, .modal-body, .modal-footer {

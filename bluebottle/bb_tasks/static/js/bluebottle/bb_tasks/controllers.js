@@ -228,13 +228,12 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['project', 'currentUser', 'taskIndex'],
+    needs: ['currentUser', 'taskIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
-        task.set('project', this.get('controllers.project.model'));
         task.on('didCreate', function(record) {
-            controller.transitionToRoute('projectTasks')
+            controller.transitionToRoute('task', task);
         });
         task.on('becameInvalid', function(record) {
             // controller.set('errors', record.get('errors'));

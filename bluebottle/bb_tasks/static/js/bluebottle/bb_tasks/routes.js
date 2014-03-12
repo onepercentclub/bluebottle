@@ -9,6 +9,9 @@ App.Router.map(function(){
 
     });
     this.resource('taskEdit', {path: '/tasks/:task_id/edit'});
+    this.resource('projectTask', {path: '/:task_id'}, function(){});
+    this.resource('taskNew', {path: '/tasks/new/:project_id'});
+
 });
 
 
@@ -152,10 +155,13 @@ App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
 
 
 App.TaskNewRoute = Em.Route.extend({
-    model: function(params) {
-        return this.get('store').createRecord(App.Task);
+    model: function(params){
+        var task = this.get('store').createRecord(App.Task);
+        task.set('project', App.Project.find(params.project_id));
+        return task;
     }
 });
+
 
 
 App.TaskEditRoute = Em.Route.extend({

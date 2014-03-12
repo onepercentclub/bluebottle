@@ -62,7 +62,6 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
-<!-- minDate Seems to do not work I've implemented that in App.DatePicker-->
 {% tplhandlebars "components/bb-date-picker" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
         {{view App.DatePicker valueBinding=valueBinding minDate=minDate  nameBinding=name

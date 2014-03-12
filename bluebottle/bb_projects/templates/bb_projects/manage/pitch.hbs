@@ -38,8 +38,8 @@
     </fieldset>
     <fieldset>
         <ul>
-            {{bb-date-picker hint='Select the ending date of your project'
-                valueBinding=deadline name=deadline label='Deadline' errors=errors.deadline }}
+            {{bb-datepicker name="'deadline'" label='Deadline' minDate='c' valueBinding='deadline' errors=errors.deadline }}
+
         </ul>
     </fieldset>
     <fieldset>
@@ -53,8 +53,6 @@
                 latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location}}
         </ul>
     </fieldset>
-
-
 {{ partial '_my_project_footer' }}
 
 

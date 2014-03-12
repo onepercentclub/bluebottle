@@ -221,8 +221,6 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
       this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPitchFields'));
     },
 
-    country: DS.belongsTo('App.Country'),
-    created: DS.attr('date'),
     organization: DS.belongsTo('App.MyOrganization'),
     currentUser: DS.belongsTo('App.CurrentUser'),
 

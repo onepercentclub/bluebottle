@@ -3,22 +3,53 @@
 {% load static %}
 
 {% tplhandlebars "_my_project_sidebar" %}
-        {{#if validPitch}}
+
              <aside class="l-sidebar">
-                <p>
+                <strong>PITCH</strong>
+                 <p>
                     title: {{#if title}} {{title}} {{/if}} <br />
                     pitch: {{#if pitch}} {{pitch}} {{/if}} <br />
-                    description: {{#if description}} {{description}} {{/if}} <br />
-                    picture: {{#if image}} {{picture}} {{/if}} <br />
-                    video: {{#if video_url }} {{video}} {{/if}} <br />
+                    picture: {{#if image}} {{image}} {{/if}} <br />
+                    video: {{#if video_url }} {{video_url}} {{/if}} <br />
                     tags: {{#if tags }} {{#each tag in tags}}{{tag.id}};{{/each}}{{/if}} <br />
                     location: {{#if latitude}} {{#if longitude}} {{latitude}}, {{longitude}} {{/if}}{{/if}}  <br />
                     country: {{#if country}} {{country}} {{/if}} <br />
                 </p>
+                 {{#if validPitch}}
+                    Pitch is valid!!
+                 {{else}}
+                    Pitch not valid
+                 {{/if}}
+                 <br />
+                 <br />
+                <strong>STORY</strong>
+                <p>
+                    description: {{#if description}} {{description}} {{/if}} <br />
+                    goal: {{#if goal}} {{goal}}{{/if}} <br />
+                    destination_impact: {{#if destination_impact }}{{destination_impact}}{{/if}}<br />
+                </p>
+                 {{#if validStory}}
+                    Story is valid!!
+                 {{else}}
+                    Story not valid
+                 {{/if}}
+                 <br />
+                 <br />
+                <strong>PartnerOrganization</strong>
+                <p>
+                    name: {{#if organization.name}} {{organization.name}} {{/if}}<br />
+                    contactName: {{#if organization.contact_name}} {{organization.contact_name}} {{/if}}<br />
+                    email: {{#if organization.email}} {{organization.email}} {{/if}}<br />
+                    phone: {{#if organization.phone}} {{organization.phone}} {{/if}}<br />
+                    website: {{#if organization.website}} {{organization.website}} {{/if}}<br />
+                </p>
+                 {{#if validPartnerOrganization}}
+                    PartnerOrganization is valid!!
+                 {{else}}
+                    PartnerOrganization not valid
+                 {{/if}}
+
             <!--<iframe width="560" height="315" src="//www.youtube.com/embed/De7zcM8-oeE" frameborder="0" allowfullscreen></iframe>-->
             </aside>
-        {{else}}
-            ...
-        {{/if}}
 
 {% endtplhandlebars %}

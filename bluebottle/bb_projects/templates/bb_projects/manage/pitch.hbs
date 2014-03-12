@@ -38,6 +38,13 @@
     </fieldset>
     <fieldset>
         <ul>
+            {{bb-datepicker hint='Select the ending date of your project'
+                valueBinding=deadline name='deadline' label='Deadline' errors=errors.deadline minDate='c'}}
+
+        </ul>
+    </fieldset>
+    <fieldset>
+        <ul>
 
              {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country}}
                 {{view App.CountrySelectView selectionBinding=country classBinding="errors.country.length:error"}}
@@ -48,7 +55,7 @@
         </ul>
     </fieldset>
 
-    {{ partial '_my_project_footer' }}
+{{ partial '_my_project_footer' }}
 
 
 {% endtplhandlebars %}

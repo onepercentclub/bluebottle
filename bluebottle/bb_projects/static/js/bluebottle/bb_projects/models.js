@@ -95,6 +95,8 @@ App.Project = DS.Model.extend({
         return App.Project.find(this.get('id'));
     }.property('id'),
 
+    //those two function are based on fields which are not implemented here
+    //they shouldn't be here, or deadline should be here
     daysToGo: function(){
         if (!this.get('deadline')) {
             return null;
@@ -221,8 +223,6 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
       this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPitchFields'));
     },
 
-    country: DS.belongsTo('App.Country'),
-    created: DS.attr('date'),
     organization: DS.belongsTo('App.MyOrganization'),
     currentUser: DS.belongsTo('App.CurrentUser'),
 

@@ -61,6 +61,10 @@ class BaseProject(models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')
 
+    organization = models.ForeignKey(
+        settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_('organization'),
+        help_text=_('Project organization'), related_name='organization', null=True, blank=True)
+
     # Basics
     created = CreationDateTimeField(
         _('created'), help_text=_('When this project was created.'))

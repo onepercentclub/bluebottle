@@ -473,3 +473,15 @@ DS.DRF2Adapter.registerTransform("string", {
       return Ember.isNone(deserialized) ? "" : String(deserialized);
     }
 });
+
+DS.DRF2Adapter.registerTransform("image", {
+    deserialize: function(serialized) {
+        return serialized;
+    },
+
+    serialize: function(deserialized) {
+        if(deserialized instanceof File) {
+            return deserialized;
+        };
+    }
+});

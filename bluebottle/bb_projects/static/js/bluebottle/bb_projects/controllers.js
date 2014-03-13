@@ -268,6 +268,29 @@ App.SaveOnExitMixin = Ember.Mixin.create({
 });
 
 
+App.MoveOnMixin = Ember.Mixin.create({
+
+    actions : {
+        goToStep: function(step){
+            $("body").animate({ scrollTop: 0 }, 600);
+            var controller = this;
+            if (step) controller.transitionToRoute(step);
+        },
+
+        goToPreviousStep: function(){
+            var step = this.get('previousStep');
+            this.send('goToStep', step);
+        },
+
+        goToNextStep: function(){
+            var step = this.get('nextStep');
+            this.send('goToStep', step);
+        }
+
+    }
+
+});
+
 App.MyProjectListController = Em.ArrayController.extend({
     needs: ['currentUser'],
     canPitchNew: function(){
@@ -287,7 +310,7 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
-App.MyProjectStartController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
     needs: ['currentUser'],
 
     nextStep: 'myProject.pitch'
@@ -296,20 +319,7 @@ App.MyProjectStartController = Em.ObjectController.extend(App.SaveOnExitMixin, {
 
 App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.start',
-    nextStep: 'myProject.story',
-    //TODO: FIX THIS, I have smth in the booking project as well
-
-//    allowDrop: function(ev) {
-//        ev.preventDefault();
-//    }.property(),
-//
-//    drop: function(ev) {
-//        ev.preventDefault();
-//        var data = ev.dataTransfer.getData("Text");
-//        ev.target.appendChild(document.getElementById(data));
-//    }.property()
-
-
+    nextStep: 'myProject.story'
 });
 
 App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
@@ -317,59 +327,7 @@ App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     nextStep: 'myProject.organisation'
 });
 
-App.MyProjectOrganisationController = Em.ObjectController.extend(App.SaveOnExitMixin, {
-    previousStep: 'myProject.story',
-    nextStep: 'myProject.submit',
-
-    shouldSave: function(){
-        // Determine if any part is dirty, project plan, org or any of the org addresses
-        if (this.get('isDirty')) {
-            return true;
-        }
-        if (this.get('organization.isDirty')) {
-            return true;
-        }
-    }.property('organization.isLoaded'),
-
-    actions: {
-        updateRecordOnServer: function() {
-            var controller = this;
-            var model = this.get('model.organization');
-            model.one('becameInvalid', function(record){
-                model.set('errors', record.get('errors'));
-            });
-            model.one('didUpdate', function(){
-                controller.transitionToRoute(controller.get('nextStep'));
-                window.scrollTo(0);
-            });
-            model.one('didCreate', function(){
-                controller.transitionToRoute(controller.get('nextStep'));
-                window.scrollTo(0);
-            });
-
-            model.save();
-        },
-
-        removeFile: function(doc) {
-            var transaction = this.get('model').transaction;
-            transaction.add(doc);
-            doc.deleteRecord();
-            transaction.commit();
-        }
-    },
-
-    addFile: function(file) {
-        var store = this.get('store');
-        var doc = store.createRecord(App.MyOrganizationDocument);
-        doc.set('file', file);
-        var org = this.get('organization');
-        doc.set('organization', org);
-        doc.save();
-    }
-});
-
-
-App.MyProjectSubmitController = Em.ObjectController.extend(App.Editable, App.SaveOnExitMixin, {
+App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.organisation',
 
     actions: {

@@ -13,13 +13,13 @@
 
     <fieldset>
         <ul>
-            {{bb-text-area rows='10' name='description' label='Why, what and how' hint='Describe your project in more detail.' valueBinding=description
+            {{bb-text-area rows='10' name='description' label='Why, what and how' undertext='Describe your project in more detail.' valueBinding=description
                 placeholder='Describe your project' errors=errors.description maxlength=800}}
 
-            {{bb-text-area rows='5' label='Goal' name='goal' hint='What do you want to achieve with this project and how will you measure your success?' valueBinding=goal
+            {{bb-text-area rows='5' label='Goal' name='goal' undertext='What do you want to achieve with this project and how will you measure your success?' valueBinding=goal
                 placeholder='Describe the goal of the project' maxlength=800}}
 
-            {{bb-text-area rows='5' label='Destination Impact' name='destination_impact' hint='How will your project improve your destination, now and maybe even in the future?'
+            {{bb-text-area rows='5' label='Destination Impact' name='destination_impact' undertext='How will your project improve your destination, now and maybe even in the future?'
                 placeholder='Describe how the project improves your destination' valueBinding=destination_impact maxlength=800}}
 
 

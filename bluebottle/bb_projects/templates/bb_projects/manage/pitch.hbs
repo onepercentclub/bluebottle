@@ -19,9 +19,8 @@
     </fieldset>
     <fieldset>
         <ul>
-            {{bb-upload-image hint='Upload the picture that best describes your campaign.'
-                fileBinding=image image_url=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image}}
-            {{bb-video-link label='Video' name='video' hint='Add here a video pitch if you want. Make it sparkling! Your energy will be your best selling point.'
+            {{bb-upload-image fileBinding=image image_url=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image undertext='Upload the picture that best describes your project.'}}
+            {{bb-video-link label='Video' name='video' undertext='Add a video if you want. Make it sparkling! Your energy will be your best selling point.'
             placeholder='Not required' valueBinding=video_url video_html=video_html  errors=errors.video}}
         </ul>
     </fieldset>
@@ -54,7 +53,6 @@
                 latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location}}
         </ul>
     </fieldset>
-
 {{ partial '_my_project_footer' }}
 
 

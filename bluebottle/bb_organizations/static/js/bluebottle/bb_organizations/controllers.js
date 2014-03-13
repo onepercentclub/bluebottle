@@ -1,58 +1,93 @@
 
-App.MyProjectOrganisationController = Em.ObjectController.extend(App.Editable, {
-
+App.MyProjectOrganisationController = Em.ObjectController.extend({
+    previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
-    hasMultipleOrganizations: function(){
-        return (this.get('organizations.length') > 1);
-    }.property('organizations'),
-
     shouldSave: function(){
-        // Determine if any part is dirty, project or organization.
+        // Determine if any part is dirty, project plan, org or any of the org addresses
         if (this.get('isDirty')) {
             return true;
         }
         if (this.get('organization.isDirty')) {
             return true;
         }
-        return false;
-    }.property('isDirty', 'organization.isDirty'),
+    }.property('organization.isLoaded'),
 
     actions: {
-        updateRecordOnServer: function(){
+        goToStep: function(step){
+            $("body").animate({ scrollTop: 0 }, 600);
+
+            var project = this.get('model');
+            var organization = project.get('organization');
             var controller = this;
-            var model = this.get('model');
-            var organization = model.get('organization');
-            var transaction =  this.get('transaction');
-            organization.one('didUpdate', function(){
-                // Updated organization info.
-                controller.transitionToRoute(controller.get('nextStep'));
-                $("html, body").animate({ scrollTop: 0 }, 600);
+
+            if (!organization.get('isDirty') &! project.get('isDirty')) {
+                if (step) controller.transitionToRoute(step);
+            }
+
+
+
+            organization.one('becameInvalid', function(record) {
+                controller.set('saving', false);
+                organization.set('errors', record.get('errors'));
+                // Ember-data currently has no clear way of dealing with the state
+                // loaded.created.invalid on server side validation, so we transition
+                // to the uncommitted state to allow resubmission
+                organization.transitionTo('loaded.created.uncommitted');
             });
-            organization.one('didCreate', function(){
-                // Create organization info.
-                controller.transitionToRoute(controller.get('nextStep'));
-                $("html, body").animate({ scrollTop: 0 }, 600);
-            });
-            model.one('didUpdate', function(){
-                // Updated organization info.
-                controller.transitionToRoute(controller.get('nextStep'));
-                $("html, body").animate({ scrollTop: 0 }, 600);
-            });
-            transaction.commit();
+
+            if  (organization.get('isNew')) {
+                organization.one('didCreate', function(){
+                    Ember.run.next(function() {
+                        organization.get('documents').forEach(function(doc){
+                            console.log('saving document...');
+                            doc.save();
+                        });
+                        console.log('saving project...');
+                        project.save();
+                        if (step) controller.transitionToRoute(step);
+                    });
+
+                });
+            } else {
+                organization.one('didUpdate', function(){
+                    if (step) controller.transitionToRoute(step);
+                });
+            }
+            organization.save();
         },
-        selectOrganization: function(org){
-            // Use the same transaction as project
-            var model = this.get('model');
-            var transaction =  this.get('transaction');
-            transaction.add(org);
-            this.set('organization', org);
-            org.get('projects').pushObject(model);
+
+
+        goToPreviousStep: function(){
+            var step = this.get('previousStep');
+            this.send('goToStep', step);
+        },
+
+        goToNextStep: function(){
+            var step = this.get('nextStep');
+            this.send('goToStep', step);
+        },
+        removeFile: function(doc) {
+            var transaction = this.get('model').transaction;
+            transaction.add(doc);
+            doc.deleteRecord();
+            transaction.commit();
+        }
+    },
+
+    addFile: function(file) {
+        var store = this.get('store');
+        var doc = store.createRecord(App.MyOrganizationDocument);
+        doc.set('file', file);
+        var organization = this.get('organization');
+        doc.set('organization', organization);
+        // If the organization is already saved we can save the doc right away
+        if (organization.get('id')) {
+            console.log('saving document...');
+            doc.save();
         }
     }
 });
-
-
 
 App.MyProjectBankController = Em.ObjectController.extend(App.Editable, {
 

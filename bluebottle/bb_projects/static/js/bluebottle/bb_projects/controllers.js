@@ -263,7 +263,21 @@ App.SaveOnExitMixin = Ember.Mixin.create({
         goToNextStep: function(){
             var step = this.get('nextStep');
             this.send('goToStep', step);
+        },
+
+        goToNextNoSave: function(){
+            if (this.get('nextStep')){
+                this.transitionToRoute(this.get('nextStep'));
+            }
+        },
+
+        goToPreviousNoSave: function(){
+            if (this.get('previousStep')){
+                this.transitionToRoute(this.get('previousStep'));
+            }
         }
+
+
     }
 });
 
@@ -320,6 +334,19 @@ App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
 App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.start',
     nextStep: 'myProject.story'
+    //TODO: FIX THIS, I have smth in the booking project as well
+
+//    allowDrop: function(ev) {
+//        ev.preventDefault();
+//    }.property(),
+//
+//    drop: function(ev) {
+//        ev.preventDefault();
+//        var data = ev.dataTransfer.getData("Text");
+//        ev.target.appendChild(document.getElementById(data));
+//    }.property()
+
+
 });
 
 App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {

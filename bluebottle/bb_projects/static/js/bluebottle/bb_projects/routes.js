@@ -109,6 +109,7 @@ App.MyProjectIndexRoute = Em.Route.extend({
 
 
 App.MyProjectSubRoute = Em.Route.extend({
+    skipExitSignal: false,
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -126,29 +127,30 @@ App.MyProjectSubRoute = Em.Route.extend({
     },
 
     exit: function() {
-        this.get('controller').send('goToStep');
+        if (!this.skipExitSignal) {
+            this.get('controller').send('goToStep');
+        }
     }
 });
 
-App.MyProjectStartRoute = App.MyProjectSubRoute.extend(
-    {
-        redirect: function() {
-            var phase = this.modelFor('myProject').get('phase');
-            switch(phase) {
-                case 'plan-submitted':
-                    this.transitionTo('myProjectReview');
-                    break;
-                case 'plan-rejected':
-                    this.transitionTo('myProjectRejected');
-                    break;
-            }
-        },
-
-        model: function(params) {
-            return this.modelFor('myProject');
+App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
+    skipExitSignal: true,
+    redirect: function() {
+        var phase = this.modelFor('myProject').get('phase');
+        switch(phase) {
+            case 'plan-submitted':
+                this.transitionTo('myProjectReview');
+                break;
+            case 'plan-rejected':
+                this.transitionTo('myProjectRejected');
+                break;
         }
+    },
+
+    model: function(params) {
+        return this.modelFor('myProject');
     }
-);
+});
 
 App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});

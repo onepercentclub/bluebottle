@@ -53,7 +53,9 @@
                 latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location}}
         </ul>
     </fieldset>
-{{ partial '_my_project_footer' }}
 
+    {% block_verbatim pitch_footer %}
+      {{ partial '_my_project_footer' }}
+    {% endblock_verbatim %}
 
 {% endtplhandlebars %}

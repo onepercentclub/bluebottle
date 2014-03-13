@@ -109,6 +109,7 @@ App.MyProjectIndexRoute = Em.Route.extend({
 
 
 App.MyProjectSubRoute = Em.Route.extend({
+    skipExitSignal: false,
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -126,12 +127,18 @@ App.MyProjectSubRoute = Em.Route.extend({
     },
 
     exit: function() {
-        this.get('controller').send('goToStep');
+        if (!this.skipExitSignal) {
+            this.get('controller').send('goToStep');
+        }
     }
 });
 
-App.MyProjectStartRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
+    skipExitSignal: true
+});
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({
+    skipExitSignal: true
+});
 App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});

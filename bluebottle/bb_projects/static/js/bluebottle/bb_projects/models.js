@@ -76,6 +76,9 @@ App.Project = DS.Model.extend({
     }.property('phaseName'),
 
     phaseNum: function(){
+        if (this.get('status') == null){
+            return 1;
+        }
         return this.get('status').get('sequence');
     }.property('phaseNum'),
 

@@ -91,6 +91,8 @@ App.Project = DS.Model.extend({
 
     isPhasePlanNew: Em.computed.equal('phaseNum', 1),
 
+    isPhaseSubmitted: Em.computed.equal('phaseNum', 2),
+
     getProject: function(){
         return App.Project.find(this.get('id'));
     }.property('id'),

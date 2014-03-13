@@ -296,20 +296,7 @@ App.MyProjectStartController = Em.ObjectController.extend(App.SaveOnExitMixin, {
 
 App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.start',
-    nextStep: 'myProject.story',
-    //TODO: FIX THIS, I have smth in the booking project as well
-
-//    allowDrop: function(ev) {
-//        ev.preventDefault();
-//    }.property(),
-//
-//    drop: function(ev) {
-//        ev.preventDefault();
-//        var data = ev.dataTransfer.getData("Text");
-//        ev.target.appendChild(document.getElementById(data));
-//    }.property()
-
-
+    nextStep: 'myProject.story'
 });
 
 App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {

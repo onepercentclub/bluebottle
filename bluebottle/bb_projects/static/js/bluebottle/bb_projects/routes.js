@@ -133,12 +133,28 @@ App.MyProjectSubRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
+App.MyProjectStartRoute = App.MyProjectSubRoute.extend(
     skipExitSignal: true
-});
-App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({
-    skipExitSignal: true
-});
+    {
+        redirect: function() {
+            var phase = this.modelFor('myProject').get('phase');
+            switch(phase) {
+                case 'plan-submitted':
+                    this.transitionTo('myProjectReview');
+                    break;
+                case 'plan-rejected':
+                    this.transitionTo('myProjectRejected');
+                    break;
+            }
+        },
+
+        model: function(params) {
+            return this.modelFor('myProject');
+        }
+    }
+);
+
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
@@ -176,15 +192,14 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
         this._super(controller, model);
-        var transaction = this.get('store').transaction();
-        transaction.add(model);
         controller.set('organizations', App.MyOrganization.find());
         var organization =  model.get('organization');
         if (Ember.isNone(organization)) {
+            // Bug in Ember: we set project manually to dirty.
+            model.transitionTo('loaded.updated.uncommitted')
             var organization = App.MyOrganization.createRecord();
             model.set('organization', organization);
         }
-        transaction.add(organization);
     }
 });
 

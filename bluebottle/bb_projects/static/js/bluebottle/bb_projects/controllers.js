@@ -268,6 +268,29 @@ App.SaveOnExitMixin = Ember.Mixin.create({
 });
 
 
+App.MoveOnMixin = Ember.Mixin.create({
+
+    actions : {
+        goToStep: function(step){
+            $("body").animate({ scrollTop: 0 }, 600);
+            var controller = this;
+            if (step) controller.transitionToRoute(step);
+        },
+
+        goToPreviousStep: function(){
+            var step = this.get('previousStep');
+            this.send('goToStep', step);
+        },
+
+        goToNextStep: function(){
+            var step = this.get('nextStep');
+            this.send('goToStep', step);
+        }
+
+    }
+
+});
+
 App.MyProjectListController = Em.ArrayController.extend({
     needs: ['currentUser'],
     canPitchNew: function(){
@@ -287,7 +310,7 @@ App.MyProjectController = Em.ObjectController.extend({
 
 });
 
-App.MyProjectStartController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
     needs: ['currentUser'],
 
     nextStep: 'myProject.pitch'

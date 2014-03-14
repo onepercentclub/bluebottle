@@ -11,21 +11,20 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
         if (this.get('organization.isDirty')) {
             return true;
         }
+
+        return false;
     }.property('organization.isLoaded'),
 
     actions: {
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
 
-            var project = this.get('model');
-            var organization = project.get('organization');
             var controller = this;
+            var organization = this.get('model');
 
-            if (!organization.get('isDirty') &! project.get('isDirty')) {
+            if (!organization.get('isDirty')) {
                 if (step) controller.transitionToRoute(step);
             }
-
-
 
             organization.one('becameInvalid', function(record) {
                 controller.set('saving', false);
@@ -43,8 +42,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                             console.log('saving document...');
                             doc.save();
                         });
-                        console.log('saving project...');
-                        project.save();
+
                         if (step) controller.transitionToRoute(step);
                     });
 
@@ -54,6 +52,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                     if (step) controller.transitionToRoute(step);
                 });
             }
+
             organization.save();
         },
 
@@ -79,7 +78,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
         var store = this.get('store');
         var doc = store.createRecord(App.MyOrganizationDocument);
         doc.set('file', file);
-        var organization = this.get('organization');
+        var organization = this.get('model');
         doc.set('organization', organization);
         // If the organization is already saved we can save the doc right away
         if (organization.get('id')) {

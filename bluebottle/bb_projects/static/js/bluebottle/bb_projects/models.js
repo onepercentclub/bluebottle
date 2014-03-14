@@ -225,7 +225,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
 
       this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
       this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
-      this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPitchFields'));
+      this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPartnerFields'));
     },
 
     organization: DS.belongsTo('App.MyOrganization'),

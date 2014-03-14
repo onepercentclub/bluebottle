@@ -64,7 +64,8 @@ App.MyOrganization = DS.Model.extend({
     url: 'bb_organizations/manage',
     name: DS.attr('string'),
     description: DS.attr('string', {defaultValue: ""}),
-
+    current_name: DS.attr('string'),
+    
     projects: DS.hasMany('App.MyProject'),
 
     // Address

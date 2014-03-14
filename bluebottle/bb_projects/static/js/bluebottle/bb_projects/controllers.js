@@ -252,6 +252,7 @@ App.SaveOnExitMixin = Ember.Mixin.create({
                     if (step) controller.transitionToRoute(step);
                 });
             }
+            
             model.save();
         },
 
@@ -334,19 +335,6 @@ App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
 App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.start',
     nextStep: 'myProject.story'
-    //TODO: FIX THIS, I have smth in the booking project as well
-
-//    allowDrop: function(ev) {
-//        ev.preventDefault();
-//    }.property(),
-//
-//    drop: function(ev) {
-//        ev.preventDefault();
-//        var data = ev.dataTransfer.getData("Text");
-//        ev.target.appendChild(document.getElementById(data));
-//    }.property()
-
-
 });
 
 App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
@@ -357,16 +345,35 @@ App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
 App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.organisation',
 
+    isInvalid: function () {
+      return true;
+    }.property(),
+
     actions: {
-        submitPlan: function(e){
+        submitPlan: function(e) {
             var controller = this;
             var model = this.get('model');
+
             // Go to second status/phase
             model.set('status', App.ProjectPhase.find().objectAt(1));
             model.transitionTo('loaded.updated.uncommitted');
+
+            // Associate the organization with the project if the
+            // organization has been saved => not isNew
+            var organization = this.get('target.organization');
             model.on('didUpdate', function(){
                 controller.transitionToRoute('myProjectReview');
             });
+
+            if (!organization.get('isNew'))
+                model.set('organization', organization);
+
+            // TODO/FIXME: why is the unsaved project changing to state
+            //              loaded.updated.uncommitted when when associated
+            //              with it??? Should we do model.set or model.push above??
+            if (!model.get('isNew') && !model.get('id'))
+                model.transitionTo('loaded.created.uncommitted');
+            
             model.save();
         }
     },

@@ -186,17 +186,33 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
+App.MyProjectOrganisationRoute =  Em.Route.extend({
+    init: function () {
+        this._super();
 
-    setupController: function(controller, model) {
-        this._super(controller, model);
-        controller.set('organizations', App.MyOrganization.find());
-        var organization =  model.get('organization');
-        if (Ember.isNone(organization)) {
-            // Bug in Ember: we set project manually to dirty.
-            model.transitionTo('loaded.updated.uncommitted')
-            var organization = App.MyOrganization.createRecord();
-            model.set('organization', organization);
+        this.set('mainRoute', this.controllerFor('myProject').get('target'));
+    },
+
+    // Load the Project
+    model: function(params) {
+        var store = this.get('store'),
+            project = this.modelFor('myProject');
+
+        if (project.get('organization'))
+            this.set('organization', project.get('organization'));
+        else if (!this.get('organization'))
+            this.set('organization', App.MyOrganization.createRecord());
+
+        return this.get('organization');
+    },
+
+    setOrganizationOnMainRoute: function () {
+        this.controllerFor('myProject').set('target.organization', this.get('organization'));
+    }.observes('organization'),
+
+    exit: function() {
+        if (!this.skipExitSignal) {
+            this.get('controller').send('goToStep');
         }
     }
 });

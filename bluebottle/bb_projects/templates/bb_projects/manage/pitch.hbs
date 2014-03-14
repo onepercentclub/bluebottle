@@ -19,7 +19,7 @@
     </fieldset>
     <fieldset>
         <ul>
-            {{bb-upload-image fileBinding=image image_url=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image undertext='Upload the picture that best describes your project.'}}
+            {{bb-upload-image fileBinding=image name='img_upload' image_url=image.large label='Picture' buttonLabel='Upload picture' errors=errors.image undertext='Upload the picture that best describes your project.'}}
             {{bb-video-link label='Video' name='video' undertext='Add a video if you want. Make it sparkling! Your energy will be your best selling point.'
             placeholder='Not required' valueBinding=video_url video_html=video_html  errors=errors.video}}
         </ul>
@@ -45,8 +45,8 @@
     <fieldset>
         <ul>
 
-             {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country}}
-                {{view App.CountrySelectView selectionBinding=country classBinding="errors.country.length:error"}}
+             {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country }}
+                {{view App.CountrySelectView selectionBinding=country name='country' classBinding="errors.country.length:error"}}
             {{/bb-form-field}}
 
             {{bb-map-picker hint='Select the location on the map. You can use the search to find your location.'

@@ -4,10 +4,12 @@ import urlparse
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
+from django.test.utils import override_settings
 
 from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
 from splinter.exceptions import DriverNotFoundError
+from splinter.browser import ChromeWebDriver, PhantomJSWebDriver, FirefoxWebDriver
 
 # from apps.projects.models import Project
 
@@ -189,6 +191,7 @@ class WebDriverAdditionMixin(object):
         return ElementList(result, find_by='link by itext', query=text)
 
 
+@override_settings(DEBUG=True)
 class SeleniumTestCase(LiveServerTestCase):
     """
     Selenium test cases should inherit from this class.

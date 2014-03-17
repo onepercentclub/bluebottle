@@ -10,7 +10,7 @@
             <span class="project-header">
 
                 <figure class="project-image">
-                    {{#if image.small}}
+                    {{#if image.small.length}}
                         <img {{bindAttr src="image.small" }} />
                     {{else}}
                         <img {{bindAttr src="image" }} />

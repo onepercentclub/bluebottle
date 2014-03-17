@@ -284,8 +284,6 @@ App.SaveOnExitMixin = Ember.Mixin.create({
         save: function() {
             $("body").animate({ scrollTop: 0 }, 600);
             var model = this.get('model');
-//            var controller = this;
-            debugger
 
             model.set('errors', {});
             model.save();
@@ -363,10 +361,6 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, 
     needs: ['myProjectOrganisation'],
     previousStep: 'myProject.organisation',
 
-    isInvalid: function () {
-      return false;
-    }.property(),
-
     validSubmit: function () {
         return !this.get('model').get('isNew') && !this.get('target.organization').get('isNew');
     },
@@ -389,7 +383,6 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, 
             // organization has been saved => not isNew
             // We have been storing the organization in the route
             // TODO: should we move this to the controller??
-            debugger
             var organization = this.get('controllers.myProjectOrganisation.model');
 
             if (!organization.get('isNew'))

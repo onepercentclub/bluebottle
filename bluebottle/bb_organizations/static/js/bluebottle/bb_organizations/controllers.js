@@ -79,7 +79,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
         save: function() {
             $("body").animate({ scrollTop: 0 }, 600);
             var model = this.get('model');
-            debugger
 
             model.set('errors', {});
             model.save();

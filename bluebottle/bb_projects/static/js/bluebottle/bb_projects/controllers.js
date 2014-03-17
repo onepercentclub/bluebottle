@@ -362,7 +362,7 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, 
     previousStep: 'myProject.organisation',
 
     validSubmit: function () {
-        return !this.get('model').get('isNew') && !this.get('target.organization').get('isNew');
+        return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');
     },
 
     actions: {

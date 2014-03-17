@@ -31,21 +31,21 @@
 
                         {{#link-to "myProject.pitch" classBinding=":step validPitch:validated"}}
                             {{#if validPitch}}
-                                <span class="flaticon solid checkmark-1"></span>
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Pitch" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.story" classBinding=":step validStory:validated"}}
                             {{#if validStory}}
-                                <span class="flaticon solid checkmark-1"></span>
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Story" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.organisation" classBinding=":step controller.target.organization.validOrganization:validated"}}
                             {{#if controller.target.organization.validOrganization}}
-                                <span class="flaticon solid checkmark-1"></span>
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Partner" %}
                         {{/link-to}}

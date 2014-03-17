@@ -8,13 +8,8 @@
 
         {{#link-to 'project' getProject }}
             <span class="project-header">
-
                 <figure class="project-image">
-                    {{#if image.small}}
-                        <img {{bindAttr src="image.small" }} />
-                    {{else}}
-                        <img {{bindAttr src="image" }} />
-                    {{/if}}
+                    <img {{bindAttr src="image" }} />
                 </figure>
 
                 <span class="project-title">

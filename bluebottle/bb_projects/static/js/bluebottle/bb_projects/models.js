@@ -223,10 +223,18 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     init: function () {
       this._super();
 
-      this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
-      this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
-      this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPitchFields'));
+        this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
+        this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
+        this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPartnerFields'));
+
+        this.missingFieldsProperty('missingFieldsStory', this.get('requiredStoryFields'));
+        this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
+        this.missingFieldsProperty('missingFieldsPartnerOrganization', this.get('requiredPartnerFields'));
     },
+
+    valid: function(){
+        return (this.get('') && this.get('validPitch') && this.get('validPartnerOrganization'));
+    }.property('validStory', 'validPitch', 'validPartnerOrganization'),
 
     organization: DS.belongsTo('App.MyOrganization'),
     currentUser: DS.belongsTo('App.CurrentUser'),

@@ -33,21 +33,21 @@
                             {{#if validPitch}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Pitch" %}
+                            {% trans "Project" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.story" classBinding=":step validStory:validated"}}
                             {{#if validStory}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Story" %}
+                            {% trans "Description" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.organisation" classBinding=":step validPartnerOrganization:validated"}}
                             {{#if validPartnerOrganization}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
-                            {% trans "Partner" %}
+                            {% trans "Organisation" %}
                         {{/link-to}}
 
                        {{#if isPhasePlanNew}}

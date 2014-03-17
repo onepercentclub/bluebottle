@@ -54,9 +54,28 @@ App.ModelValidationMixin = Ember.Mixin.create({
         };
 
         var computedProp = Ember.ComputedProperty.property.apply(checkFunc, fields);
-
         Ember.defineProperty(self, name, computedProp);
+
+    },
+    missingFieldsProperty: function(name, fields) {
+        if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
+
+        var self = this;
+        var checkFunc = function() {
+            var missing = Em.A();
+
+            fields.forEach(function (field) {
+                if (!self.get(field))
+                    missing.addObject(field);
+            });
+            return missing;
+        };
+
+        var computedProp = Ember.ComputedProperty.property.apply(checkFunc, fields);
+        Ember.defineProperty(self, name, computedProp);
+
     }
+
 });
 
 

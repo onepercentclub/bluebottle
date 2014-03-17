@@ -117,7 +117,7 @@ App.MyProjectIndexRoute = Em.Route.extend({
 });
 
 
-App.MyProjectSubRoute = Em.Route.extend({
+App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
     skipExitSignal: false,
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
@@ -196,19 +196,15 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
 });
 
 App.MyProjectOrganisationRoute = Em.Route.extend({
-    // Load the Organization
-    setupController: function(controller, model) {
-        console.log("++++++++++ Setup Org Route");
-
+    model: function(params){
         var project = this.modelFor('myProject');
-
         if (project.get('organization')) {
-            controller.set('model', project.get('organization'));
-        } else if (!controller.get('model')) {
-            controller.set('model', App.MyOrganization.createRecord());
+            return project.get('organization');
+        } else {
+            var organization = App.MyOrganization.createRecord();
+            return organization;
         }
     },
-
     exit: function() {
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');

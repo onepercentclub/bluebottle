@@ -1,19 +1,9 @@
 
 App.MyProjectOrganisationController = Em.ObjectController.extend({
+    needs: ['myProject'],
+
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
-
-    shouldSave: function(){
-        // Determine if any part is dirty, project plan, org or any of the org addresses
-        if (this.get('isDirty')) {
-            return true;
-        }
-        if (this.get('organization.isDirty')) {
-            return true;
-        }
-
-        return false;
-    }.property('organization.isLoaded'),
 
     actions: {
         goToStep: function(step){
@@ -21,6 +11,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
 
             var controller = this;
             var organization = this.get('model');
+            var project = this.get('controllers.myProject.model');
 
             if (!organization.get('isDirty')) {
                 if (step) controller.transitionToRoute(step);
@@ -44,7 +35,18 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                             console.log('saving document...');
                             doc.save();
                         });
-
+                        // Set organization on project.
+                        project.set('organization', organization);
+                        if (project.get('isNew')) {
+                            project.transitionTo('loaded.created.uncommitted');
+                        } else {
+                            project.transitionTo('loaded.updated.uncommitted');
+                        }
+                        // If no project title: Use organization name for that.
+                        if (!project.get('title')) {
+                            project.set('title', organization.get('name'));
+                        }
+                        project.save();
                         if (step) controller.transitionToRoute(step);
                     });
 

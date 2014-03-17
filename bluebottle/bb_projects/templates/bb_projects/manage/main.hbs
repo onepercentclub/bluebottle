@@ -43,8 +43,8 @@
                             {% trans "Description" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.organisation" classBinding=":step controller.target.organization.validOrganization:validated"}}
-                            {{#if controller.target.organization.validOrganization}}
+                        {{#link-to "myProject.organisation" classBinding=":step organization.validOrganization:validated"}}
+                            {{#if organization.validOrganization}}
                                 {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Organisation" %}

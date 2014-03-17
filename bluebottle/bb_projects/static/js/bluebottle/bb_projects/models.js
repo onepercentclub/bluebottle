@@ -218,23 +218,23 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
-    requiredPartnerFields: ['organization.name', 'organization.email', 'organization.phone', 'organization.website'],
+    requiredOrganizationFields: ['organization.name', 'organization.email', 'organization.phone', 'organization.website'],
 
     init: function () {
       this._super();
 
         this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
         this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
-        this.validatedFieldsProperty('validPartnerOrganization', this.get('requiredPartnerFields'));
+        this.validatedFieldsProperty('validOrganization', this.get('requiredOrganizationFields'));
 
         this.missingFieldsProperty('missingFieldsStory', this.get('requiredStoryFields'));
         this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
-        this.missingFieldsProperty('missingFieldsPartnerOrganization', this.get('requiredPartnerFields'));
+        this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredOrganizationFields'));
     },
 
     valid: function(){
-        return (this.get('') && this.get('validPitch') && this.get('validPartnerOrganization'));
-    }.property('validStory', 'validPitch', 'validPartnerOrganization'),
+        return (this.get('') && this.get('validPitch') && this.get('validOrganization'));
+    }.property('validStory', 'validPitch', 'validOrganization'),
 
     organization: DS.belongsTo('App.MyOrganization'),
     currentUser: DS.belongsTo('App.CurrentUser'),

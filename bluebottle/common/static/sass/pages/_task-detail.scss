@@ -2,11 +2,10 @@
 // Task detail page
 // --------------------------------------------------
 
-#task-detail {
-	
-	padding: $base-padding 0;
+#task-detail {	//padding: $base-padding 0;
 	background-color: $gray-darkest;
 	color: $white;
+	
 	#task-details {
 		padding: ($base-padding * 2) 0;
 		background-color: $tasks-task-detail-bg-color;

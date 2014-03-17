@@ -1,49 +1,65 @@
+$steps-border: $gray-lighter;
+
+
+$step-color: $gray-dark;
+$step-background-color: $white;
+$step-icon-color: $white;
+
+$step-active-color: $white;
+$step-active-background-color: $gray-darker;
+$step-active-icon-color: $white;
+
+$step-validated-color: $white;
+$step-validated-background-color: $color-success;
+$step-validated-icon-color: $white;
+
 .steps {
 	overflow: hidden;
-	border-bottom: 1px solid $gray-lighter;
+	border-bottom: 1px solid $steps-border;
+	
 	.step {
 		position: relative;
-		background-color: $white;
+		background-color: $step-background-color;
 		@include grid(8,0,0);
-		line-height: $base-line-height * 2;
+		line-height: $base-line-height * 2.5;
 		text-align: center;
 		font-weight: bold;
 		text-decoration: none;
-		color: $gray-dark;
+		color: $step-color;
+		
 		.flaticon {
+			color: $step-icon-color;
 			border-radius: 50%;
-			background: $white;
 			padding: $base-padding / 2;
 			text-align: center;
 		}
+		
 		&.validated {
-			background-color: $color-success;
-			color: $white;
+			background-color: $step-validated-background-color;
+			color: $step-validated-color;
+			
 			.flaticon { 
-				color: $color-success;
+				color: $step-validated-icon-color;
 			}
+			
 			&:after {
-				border-left-color: $color-success;
+				border-left-color: $step-validated-background-color;
 			}
 		}
+		
 		&.active, &:hover {
-			background-color: $gray-darker;
-			color: $white;
+			background-color: $step-active-background-color;
+			color: $step-active-color;
+			
 			.flaticon { 
-				color: $gray-darker;
+				color: $step-validated-icon-color;
 			}
+			
 			&:after {
-				border-left-color: $gray-darker;
+				border-left-color: $step-active-background-color;
 			}
 		}
-
-		// &:hover {
-		// 	background-color: $gray-light;
-		// 	color: white;
-		// 	&:after {
-		// 		border-left-color: $gray-light;
-		// 	}
-		// }
+		
 		&:after, &:before {
 			left: 100%;
 			top: 50%;
@@ -56,19 +72,20 @@
 			border-left-color: $white;
 			border-width: 25px;
 			margin-top: -25px;
-			z-index: 2;	
+			z-index: 2;
 		}
+		
 		&:before {
-			border-left-color: $gray-lighter;
+			border-left-color: $steps-border;
 			left: 100%;
 			z-index: 1;	
 			border-width: 27px;
 			margin-top: -27px;
 		}
-		&:first-of-type, &:last-of-type {
-			color: $gray-light;
-			&:hover {
-				color: $white;
+		
+		&:last-of-type {
+			&:after, &:before {
+				display: none;
 			}
 		}
 	}

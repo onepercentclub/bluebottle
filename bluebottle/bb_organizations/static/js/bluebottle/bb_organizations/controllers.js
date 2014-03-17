@@ -74,7 +74,23 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
             transaction.add(doc);
             doc.deleteRecord();
             transaction.commit();
+        },
+
+        save: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var model = this.get('model');
+            debugger
+
+            model.set('errors', {});
+            model.save();
+        },
+
+        rollback: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var organization = this.get('model');
+            organization.rollback();
         }
+
     },
 
     addFile: function(file) {

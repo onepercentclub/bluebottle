@@ -49,7 +49,6 @@
                             {{/if}}
                             {% trans "Partner" %}
                         {{/link-to}}
-
                        {{#if isPhasePlanNew}}
                            {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
                                 {{#if validsubmit}}
@@ -59,7 +58,7 @@
                             {{/link-to}}
                         {{/if}}
                     </nav>
-                    
+
 					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this}}>
 						<span class="flaticon solid eye-1"></span>
 						{% trans 'Preview' %}
@@ -79,8 +78,10 @@
                 </div>
             </section>
 
-            {# footer was here #}
+
         </article>
+
     </div>
+
 {% endtplhandlebars %}
 

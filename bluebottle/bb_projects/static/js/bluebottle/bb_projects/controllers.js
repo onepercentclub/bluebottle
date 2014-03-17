@@ -279,8 +279,23 @@ App.SaveOnExitMixin = Ember.Mixin.create({
             if (this.get('previousStep')){
                 this.transitionToRoute(this.get('previousStep'));
             }
-        }
+        },
 
+        save: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var model = this.get('model');
+//            var controller = this;
+            debugger
+
+            model.set('errors', {});
+            model.save();
+        },
+
+        rollback: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var organization = this.get('model');
+            organization.rollback();
+        }
 
     }
 });

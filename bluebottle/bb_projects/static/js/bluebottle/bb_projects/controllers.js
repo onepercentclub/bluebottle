@@ -234,8 +234,6 @@ App.SaveOnExitMixin = Ember.Mixin.create({
             }
 
             model.one('becameInvalid', function(record) {
-                controller.set('saving', false);
-                model.set('errors', record.get('errors'));
                 // Ember-data currently has no clear way of dealing with the state
                 // loaded.created.invalid on server side validation, so we transition
                 // to the uncommitted state to allow resubmission
@@ -253,6 +251,7 @@ App.SaveOnExitMixin = Ember.Mixin.create({
                 });
             }
             
+            model.set('errors', {});
             model.save();
         },
 
@@ -369,7 +368,7 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, 
                 model.set('organization', organization);
 
             // TODO/FIXME: why is the unsaved project changing to state
-            //              loaded.updated.uncommitted when when associated
+            //              loaded.updated.uncommitted when associated
             //              with it??? Should we do model.set or model.push above??
             if (!model.get('isNew') && !model.get('id'))
                 model.transitionTo('loaded.created.uncommitted');

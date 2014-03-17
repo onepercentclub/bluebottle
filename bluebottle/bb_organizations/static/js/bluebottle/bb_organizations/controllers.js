@@ -27,8 +27,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
             }
 
             organization.one('becameInvalid', function(record) {
-                controller.set('saving', false);
-                organization.set('errors', record.get('errors'));
                 // Ember-data currently has no clear way of dealing with the state
                 // loaded.created.invalid on server side validation, so we transition
                 // to the uncommitted state to allow resubmission
@@ -53,6 +51,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                 });
             }
 
+            organization.set('errors', {});
             organization.save();
         },
 

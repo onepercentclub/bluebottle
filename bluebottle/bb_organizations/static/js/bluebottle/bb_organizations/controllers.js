@@ -1,39 +1,31 @@
 
 App.MyProjectOrganisationController = Em.ObjectController.extend({
+    needs: ['myProject'],
+
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
-
-    shouldSave: function(){
-        // Determine if any part is dirty, project plan, org or any of the org addresses
-        if (this.get('isDirty')) {
-            return true;
-        }
-        if (this.get('organization.isDirty')) {
-            return true;
-        }
-    }.property('organization.isLoaded'),
 
     actions: {
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
 
-            var project = this.get('model');
-            var organization = project.get('organization');
             var controller = this;
+            var organization = this.get('model');
+            var project = this.get('controllers.myProject.model');
 
-            if (!organization.get('isDirty') &! project.get('isDirty')) {
+            if (!organization.get('isDirty')) {
                 if (step) controller.transitionToRoute(step);
             }
 
-
-
             organization.one('becameInvalid', function(record) {
-                controller.set('saving', false);
-                organization.set('errors', record.get('errors'));
                 // Ember-data currently has no clear way of dealing with the state
                 // loaded.created.invalid on server side validation, so we transition
                 // to the uncommitted state to allow resubmission
-                organization.transitionTo('loaded.created.uncommitted');
+                if (record.get('isNew')) {
+                    record.transitionTo('loaded.created.uncommitted');
+                } else {
+                    record.transitionTo('loaded.updated.uncommitted');
+                }
             });
 
             if  (organization.get('isNew')) {
@@ -43,7 +35,17 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                             console.log('saving document...');
                             doc.save();
                         });
-                        console.log('saving project...');
+                        // Set organization on project.
+                        project.set('organization', organization);
+                        if (project.get('isNew')) {
+                            project.transitionTo('loaded.created.uncommitted');
+                        } else {
+                            project.transitionTo('loaded.updated.uncommitted');
+                        }
+                        // If no project title: Use organization name for that.
+                        if (!project.get('title')) {
+                            project.set('title', organization.get('name'));
+                        }
                         project.save();
                         if (step) controller.transitionToRoute(step);
                     });
@@ -54,6 +56,8 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                     if (step) controller.transitionToRoute(step);
                 });
             }
+
+            organization.set('errors', {});
             organization.save();
         },
 
@@ -72,14 +76,29 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
             transaction.add(doc);
             doc.deleteRecord();
             transaction.commit();
+        },
+
+        save: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var model = this.get('model');
+
+            model.set('errors', {});
+            model.save();
+        },
+
+        rollback: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var organization = this.get('model');
+            organization.rollback();
         }
+
     },
 
     addFile: function(file) {
         var store = this.get('store');
         var doc = store.createRecord(App.MyOrganizationDocument);
         doc.set('file', file);
-        var organization = this.get('organization');
+        var organization = this.get('model');
         doc.set('organization', organization);
         // If the organization is already saved we can save the doc right away
         if (organization.get('id')) {

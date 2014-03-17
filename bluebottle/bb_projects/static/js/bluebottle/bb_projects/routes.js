@@ -96,7 +96,16 @@ App.MyProjectRoute = Em.Route.extend({
         if (params.id == 'new' || params.id == 'null') {
             return App.MyProject.createRecord();
         }
-        return store.find('myProject', params.id);
+
+        var project = store.find('myProject', params.id);
+
+        // ensure there is no associated organization when the 
+        // model is loaded.
+        if (project.get('organization')) {
+            this.set('organization', project.get('organization'));
+        }
+
+        return project;
     }
 });
 
@@ -186,29 +195,19 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute =  Em.Route.extend({
-    init: function () {
-        this._super();
+App.MyProjectOrganisationRoute = Em.Route.extend({
+    // Load the Organization
+    setupController: function(controller, model) {
+        console.log("++++++++++ Setup Org Route");
 
-        this.set('mainRoute', this.controllerFor('myProject').get('target'));
+        var project = this.modelFor('myProject');
+
+        if (project.get('organization')) {
+            controller.set('model', project.get('organization'));
+        } else if (!controller.get('model')) {
+            controller.set('model', App.MyOrganization.createRecord());
+        }
     },
-
-    // Load the Project
-    model: function(params) {
-        var store = this.get('store'),
-            project = this.modelFor('myProject');
-
-        if (project.get('organization'))
-            this.set('organization', project.get('organization'));
-        else if (!this.get('organization'))
-            this.set('organization', App.MyOrganization.createRecord());
-
-        return this.get('organization');
-    },
-
-    setOrganizationOnMainRoute: function () {
-        this.controllerFor('myProject').set('target.organization', this.get('organization'));
-    }.observes('organization'),
 
     exit: function() {
         if (!this.skipExitSignal) {

@@ -237,7 +237,11 @@ App.SaveOnExitMixin = Ember.Mixin.create({
                 // Ember-data currently has no clear way of dealing with the state
                 // loaded.created.invalid on server side validation, so we transition
                 // to the uncommitted state to allow resubmission
-                model.transitionTo('loaded.created.uncommitted');
+                if (record.get('isNew')) {
+                    record.transitionTo('loaded.created.uncommitted');
+                } else {
+                    record.transitionTo('loaded.updated.uncommitted');
+                }
             });
 
             if (model.get('isNew')) {
@@ -321,7 +325,6 @@ App.MyProjectListController = Em.ArrayController.extend({
 
 App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser']
-
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
@@ -342,11 +345,16 @@ App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
 });
 
 App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+    needs: ['myProjectOrganisation'],
     previousStep: 'myProject.organisation',
 
     isInvalid: function () {
-      return true;
+      return false;
     }.property(),
+
+    validSubmit: function () {
+        return !this.get('model').get('isNew') && !this.get('target.organization').get('isNew');
+    },
 
     actions: {
         submitPlan: function(e) {
@@ -355,23 +363,26 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, 
 
             // Go to second status/phase
             model.set('status', App.ProjectPhase.find().objectAt(1));
-            model.transitionTo('loaded.updated.uncommitted');
+
+            if (model.get('isNew')) {
+                model.transitionTo('loaded.created.uncommitted');
+            } else {
+                model.transitionTo('loaded.updated.uncommitted');
+            }
 
             // Associate the organization with the project if the
             // organization has been saved => not isNew
-            var organization = this.get('target.organization');
-            model.on('didUpdate', function(){
-                controller.transitionToRoute('myProjectReview');
-            });
+            // We have been storing the organization in the route
+            // TODO: should we move this to the controller??
+            debugger
+            var organization = this.get('controllers.myProjectOrganisation.model');
 
             if (!organization.get('isNew'))
                 model.set('organization', organization);
 
-            // TODO/FIXME: why is the unsaved project changing to state
-            //              loaded.updated.uncommitted when associated
-            //              with it??? Should we do model.set or model.push above??
-            if (!model.get('isNew') && !model.get('id'))
-                model.transitionTo('loaded.created.uncommitted');
+            model.on('didUpdate', function() {
+                controller.transitionToRoute('myProjectReview');
+            });
             
             model.save();
         }

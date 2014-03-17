@@ -60,12 +60,19 @@ App.MyOrganizationDocument = DS.Model.extend({
     file: DS.attr('file')
 });
 
-App.MyOrganization = DS.Model.extend({
+App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     url: 'bb_organizations/manage',
+    requiredFields: ['name', 'email', 'phone_number', 'website'],
+
+    init: function () {
+      this._super();
+
+      this.validatedFieldsProperty('validOrganization', this.get('requiredFields'));
+    },
+
     name: DS.attr('string'),
     description: DS.attr('string', {defaultValue: ""}),
     current_name: DS.attr('string'),
-    
     projects: DS.hasMany('App.MyProject'),
 
     // Address

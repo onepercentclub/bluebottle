@@ -43,8 +43,8 @@
                             {% trans "Story" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.organisation" classBinding=":step validPartnerOrganization:validated"}}
-                            {{#if validPartnerOrganization}}
+                        {{#link-to "myProject.organisation" classBinding=":step controller.target.organization.validOrganization:validated"}}
+                            {{#if controller.target.organization.validOrganization}}
                                 <span class="flaticon solid checkmark-1"></span>
                             {{/if}}
                             {% trans "Partner" %}

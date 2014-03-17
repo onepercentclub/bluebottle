@@ -30,7 +30,11 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
                 // Ember-data currently has no clear way of dealing with the state
                 // loaded.created.invalid on server side validation, so we transition
                 // to the uncommitted state to allow resubmission
-                organization.transitionTo('loaded.created.uncommitted');
+                if (record.get('isNew')) {
+                    record.transitionTo('loaded.created.uncommitted');
+                } else {
+                    record.transitionTo('loaded.updated.uncommitted');
+                }
             });
 
             if  (organization.get('isNew')) {

@@ -81,7 +81,24 @@
 			color: $button-primary-icon-color;
 		}
 	}
-	
+
+    &.disabled, &[disabled],
+    &.disabled:hover, &[disabled]:hover,
+    &.disabled:active, &[disabled]:active {
+        border-top-width: 1px;
+        top: auto;
+        border-color: $button-disabled-border-color !important;
+        background: $button-disabled-bg-color !important;
+        color: $button-disabled-color !important;
+        cursor: default;
+        padding: $base-padding/2 $base-padding;
+
+        .flaticon, .icon {
+            background: $button-disabled-icon-bg-color !important;
+            color: $button-disabled-icon-color !important;
+        }
+    }
+
     // Button states
 	&:hover {
     	border-color: $button-hover-border-color; 
@@ -111,29 +128,9 @@
 	    bottom: 0;
 	    left: 0;
 	}
-	
-	// Disabled buttons
-    &.disabled, &[disabled], &.disabled:hover, &[disabled]:hover, &.disabled:active, &[disabled]:active {
-	    border-top-width: 1px;
-    	top: auto;
-        border-color: $button-disabled-border-color;
-        background-color: $button-disabled-bg-color;
-        color: $button-disabled-color;
-        cursor: default;
-        padding: $base-padding/2 $base-padding;
-        
-        .flaticon, .icon {
-			background: $button-disabled-icon-bg-color;
-			color: $button-disabled-icon-color;
-		}
-		
-		&.btn-iconed {
-		    padding-left: $base-padding*3.5;
-		}
-    }
     &.btn-block {
-    	width: 100%;
-    	text-align: center;
+        width: 100%;
+        text-align: center;
     }
 }
 

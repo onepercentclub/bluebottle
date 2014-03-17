@@ -130,19 +130,20 @@ $button-iconed-hover-icon-bg-color                         : #333 !default;
 $button-hover-color                                        : $white !default;
 $button-hover-bg-color                                     : $gray-darker !default;
 $button-hover-border-color                                 : $black !default;
-                                                                
-$button-disabled-border-color                              : $gray-light !default;
-$button-disabled-bg-color                                  : $gray-light !default;
-$button-disabled-color                                     : $gray-lighter !default;
-                                                                
-$button-disabled-icon-bg-color                             : darken($gray-light, 5%) !default;
-$button-disabled-icon-color                                : $gray-lighter !default;
-                                                                
+
 $button-primary-border-color                               : darken($color-primary, 5%) !default;
 $button-primary-bg-color                                   : $color-primary !default;
 $button-primary-icon-color                                 : lighten($color-primary, 10%) !default;
 $button-primary-icon-bg-color                              : darken($color-primary, 5%) !default;
-                                                                
+
+
+$button-disabled-border-color                              : $gray-light !default;
+$button-disabled-bg-color                                  : $gray-light !default;
+$button-disabled-color                                     : $gray-lighter !default;
+
+$button-disabled-icon-bg-color                             : darken($gray-light, 5%) !default;
+$button-disabled-icon-color                                : $gray-lighter !default;
+
 // Dropdowns                                                    
 // ----------------------------------                           
                                                                 

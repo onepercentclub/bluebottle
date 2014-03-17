@@ -96,7 +96,16 @@ App.MyProjectRoute = Em.Route.extend({
         if (params.id == 'new' || params.id == 'null') {
             return App.MyProject.createRecord();
         }
-        return store.find('myProject', params.id);
+
+        var project = store.find('myProject', params.id);
+
+        // ensure there is no associated organization when the 
+        // model is loaded.
+        if (project.get('organization')) {
+            this.set('organization', project.get('organization'));
+        }
+
+        return project;
     }
 });
 
@@ -186,17 +195,23 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
-
+App.MyProjectOrganisationRoute = Em.Route.extend({
+    // Load the Organization
     setupController: function(controller, model) {
-        this._super(controller, model);
-        controller.set('organizations', App.MyOrganization.find());
-        var organization =  model.get('organization');
-        if (Ember.isNone(organization)) {
-            // Bug in Ember: we set project manually to dirty.
-            model.transitionTo('loaded.updated.uncommitted')
-            var organization = App.MyOrganization.createRecord();
-            model.set('organization', organization);
+        console.log("++++++++++ Setup Org Route");
+
+        var project = this.modelFor('myProject');
+
+        if (project.get('organization')) {
+            controller.set('model', project.get('organization'));
+        } else if (!controller.get('model')) {
+            controller.set('model', App.MyOrganization.createRecord());
+        }
+    },
+
+    exit: function() {
+        if (!this.skipExitSignal) {
+            this.get('controller').send('goToStep');
         }
     }
 });

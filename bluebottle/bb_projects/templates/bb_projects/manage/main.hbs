@@ -31,25 +31,24 @@
 
                         {{#link-to "myProject.pitch" classBinding=":step validPitch:validated"}}
                             {{#if validPitch}}
-                                <span class="flaticon solid checkmark-1"></span>
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Project" %}
                         {{/link-to}}
 
                         {{#link-to "myProject.story" classBinding=":step validStory:validated"}}
                             {{#if validStory}}
-                                <span class="flaticon solid checkmark-1"></span>
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Description" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.organisation" classBinding=":step validPartnerOrganization:validated"}}
-                            {{#if validPartnerOrganization}}
-                                <span class="flaticon solid checkmark-1"></span>
+                        {{#link-to "myProject.organisation" classBinding=":step controller.target.organization.validOrganization:validated"}}
+                            {{#if controller.target.organization.validOrganization}}
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Organisation" %}
                         {{/link-to}}
-
                        {{#if isPhasePlanNew}}
                            {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
                                 {{#if validsubmit}}
@@ -60,9 +59,9 @@
                         {{/if}}
                     </nav>
 
-					<a class="btn btn-modest campaign-preview-button">
+					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this}}>
 						<span class="flaticon solid eye-1"></span>
-						Preview
+						{% trans 'Preview' %}
 					</a>
 				</div>
 			</header>
@@ -79,8 +78,10 @@
                 </div>
             </section>
 
-            {# footer was here #}
+
         </article>
+
     </div>
+
 {% endtplhandlebars %}
 

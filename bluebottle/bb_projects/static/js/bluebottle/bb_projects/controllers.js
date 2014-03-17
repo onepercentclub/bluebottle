@@ -234,12 +234,14 @@ App.SaveOnExitMixin = Ember.Mixin.create({
             }
 
             model.one('becameInvalid', function(record) {
-                controller.set('saving', false);
-                model.set('errors', record.get('errors'));
                 // Ember-data currently has no clear way of dealing with the state
                 // loaded.created.invalid on server side validation, so we transition
                 // to the uncommitted state to allow resubmission
-                model.transitionTo('loaded.created.uncommitted');
+                if (record.get('isNew')) {
+                    record.transitionTo('loaded.created.uncommitted');
+                } else {
+                    record.transitionTo('loaded.updated.uncommitted');
+                }
             });
 
             if (model.get('isNew')) {
@@ -252,6 +254,8 @@ App.SaveOnExitMixin = Ember.Mixin.create({
                     if (step) controller.transitionToRoute(step);
                 });
             }
+            
+            model.set('errors', {});
             model.save();
         },
 
@@ -275,8 +279,21 @@ App.SaveOnExitMixin = Ember.Mixin.create({
             if (this.get('previousStep')){
                 this.transitionToRoute(this.get('previousStep'));
             }
-        }
+        },
 
+        save: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var model = this.get('model');
+
+            model.set('errors', {});
+            model.save();
+        },
+
+        rollback: function() {
+            $("body").animate({ scrollTop: 0 }, 600);
+            var organization = this.get('model');
+            organization.rollback();
+        }
 
     }
 });
@@ -321,7 +338,6 @@ App.MyProjectListController = Em.ArrayController.extend({
 
 App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser']
-
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
@@ -334,19 +350,6 @@ App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
 App.MyProjectPitchController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     previousStep: 'myProject.start',
     nextStep: 'myProject.story'
-    //TODO: FIX THIS, I have smth in the booking project as well
-
-//    allowDrop: function(ev) {
-//        ev.preventDefault();
-//    }.property(),
-//
-//    drop: function(ev) {
-//        ev.preventDefault();
-//        var data = ev.dataTransfer.getData("Text");
-//        ev.target.appendChild(document.getElementById(data));
-//    }.property()
-
-
 });
 
 App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
@@ -355,18 +358,40 @@ App.MyProjectStoryController = Em.ObjectController.extend(App.SaveOnExitMixin, {
 });
 
 App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+    needs: ['myProjectOrganisation'],
     previousStep: 'myProject.organisation',
 
+    validSubmit: function () {
+        return !this.get('model').get('isNew') && !this.get('target.organization').get('isNew');
+    },
+
     actions: {
-        submitPlan: function(e){
+        submitPlan: function(e) {
             var controller = this;
             var model = this.get('model');
+
             // Go to second status/phase
             model.set('status', App.ProjectPhase.find().objectAt(1));
-            model.transitionTo('loaded.updated.uncommitted');
-            model.on('didUpdate', function(){
+
+            if (model.get('isNew')) {
+                model.transitionTo('loaded.created.uncommitted');
+            } else {
+                model.transitionTo('loaded.updated.uncommitted');
+            }
+
+            // Associate the organization with the project if the
+            // organization has been saved => not isNew
+            // We have been storing the organization in the route
+            // TODO: should we move this to the controller??
+            var organization = this.get('controllers.myProjectOrganisation.model');
+
+            if (!organization.get('isNew'))
+                model.set('organization', organization);
+
+            model.on('didUpdate', function() {
                 controller.transitionToRoute('myProjectReview');
             });
+            
             model.save();
         }
     },

@@ -218,7 +218,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
-    requiredPartnerFields: ['name', 'contactName', 'email', 'phone', 'website'],
+    requiredPartnerFields: ['organization.name', 'organization.email', 'organization.phone', 'organization.website'],
 
     init: function () {
       this._super();

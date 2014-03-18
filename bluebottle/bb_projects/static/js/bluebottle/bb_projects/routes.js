@@ -209,6 +209,11 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');
         }
+    },
+    setupController: function (controller, model) {
+      this._super(controller, model);
+
+      controller.set('organizations', App.MyOrganization.find());
     }
 });
 

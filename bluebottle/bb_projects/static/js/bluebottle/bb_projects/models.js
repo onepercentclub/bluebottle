@@ -217,7 +217,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
     
     requiredStoryFields: ['description', 'reach'],
-    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    requiredPitchFields: ['title', 'pitch', 'tags.length', 'country', 'latitude', 'longitude'],
     requiredOrganizationFields: ['organization.name', 'organization.email', 'organization.phone', 'organization.website'],
 
     init: function () {

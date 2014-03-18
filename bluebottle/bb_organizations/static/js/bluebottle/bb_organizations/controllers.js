@@ -1,5 +1,5 @@
 
-App.MyProjectOrganisationController = Em.ObjectController.extend(App.SimpleControllerObjectStatus, {
+App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, {
     needs: ['myProject'],
 
     previousStep: 'myProject.story',
@@ -76,20 +76,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.SimpleContr
             transaction.add(doc);
             doc.deleteRecord();
             transaction.commit();
-        },
-
-        save: function() {
-            $("body").animate({ scrollTop: 0 }, 600);
-            var model = this.get('model');
-
-            model.set('errors', {});
-            model.save();
-        },
-
-        rollback: function() {
-            $("body").animate({ scrollTop: 0 }, 600);
-            var organization = this.get('model');
-            organization.rollback();
         }
 
     },

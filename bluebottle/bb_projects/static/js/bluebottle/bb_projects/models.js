@@ -250,6 +250,6 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
             return true;
         }
         return false;
-    }.property('status')
+    }.property('status'),
 
 });

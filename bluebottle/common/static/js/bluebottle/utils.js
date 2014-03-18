@@ -380,3 +380,5 @@ App.CustomDatePicker = App.DatePicker.extend({
         }
     }
 });
+
+App.FlashView = Em.View.extend();

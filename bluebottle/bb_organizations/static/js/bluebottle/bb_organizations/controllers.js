@@ -5,6 +5,10 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
+    isPhasePlanNew: function () {
+      return this.get('controllers.myProject.model.isPhasePlanNew');
+    }.property('controllers.myProject.model.isPhasePlanNew'),
+
     actions: {
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);

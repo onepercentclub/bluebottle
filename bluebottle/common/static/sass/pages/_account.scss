@@ -77,31 +77,46 @@
 	.account-personal {
 	
 		@include grid(20,0,1);
-	
-		.account-title {
-			margin-top: $base-margin * 1.5;
-			text-transform: none;
-			color: $account-header-title-color;
-		}
 		
-		.account-edit-link {
-			color: $account-header-edit-link-color;
-			text-decoration: none;
-			&:hover {
-				color: $account-header-edit-link-hover-color;
-			}
-		}
-	
 		.account-avatar {
 			width: 150px;
 			height: 150px;
-			float: left;
-			border: 1px solid $account-header-avatar-border-color;
-			margin-right: $base-margin;
-		}	
+		}
+			
 	}	
-	.account-achievements {
+	
+	.account-title {
+		margin-top: $base-margin * 1.5;
+		text-transform: none;
+		color: $account-header-title-color;
+	}
+	
+	.account-edit-link {
+		color: $account-header-edit-link-color;
+		text-decoration: none;
+		&:hover {
+			color: $account-header-edit-link-hover-color;
+		}
+	}
 
+	.account-avatar {
+		width: 150px;
+		height: 150px;
+		float: left;
+		border: 1px solid $account-header-avatar-border-color;
+		margin-right: $base-margin;
+	}
+	
+	.account-edit {
+		@include grid(48,1,1);
+		
+		.account-avatar {
+			width: 50px;
+			height: 50px;
+		}
+	}
+	
+	.account-achievements {
 		@include grid(28,0,0);
 		@include resetlist();
 

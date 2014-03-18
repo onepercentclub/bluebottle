@@ -1,3 +1,6 @@
+App.BbFlashComponent = Em.Component.extend({
+
+});
 
 App.BbFormFieldComponent = Em.Component.extend({
 

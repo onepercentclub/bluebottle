@@ -1,9 +1,22 @@
 
-App.MyProjectOrganisationController = Em.ObjectController.extend({
+App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, {
     needs: ['myProject'],
 
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
+
+    hasMultipleOrganizations: function () {
+      return this.get('organizations.length') > 0;
+    }.property('organizations'),
+
+    // Triggered when the user selects one of the existing organisations for this user.
+    setOrganization: function () {
+        // TODO: we should set the model on the controller to this organisation and
+        //       hide the form?? Currently the select list disappears => hasMultipleOrganizations == false
+        if (this.get('selectedOrganization')) {
+            this.set('model', this.get('selectedOrganization'));
+        }
+    }.observes('selectedOrganization'),
 
     actions: {
         goToStep: function(step){
@@ -76,20 +89,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend({
             transaction.add(doc);
             doc.deleteRecord();
             transaction.commit();
-        },
-
-        save: function() {
-            $("body").animate({ scrollTop: 0 }, 600);
-            var model = this.get('model');
-
-            model.set('errors', {});
-            model.save();
-        },
-
-        rollback: function() {
-            $("body").animate({ scrollTop: 0 }, 600);
-            var organization = this.get('model');
-            organization.rollback();
         }
 
     },

@@ -1,5 +1,5 @@
 
-App.MyProjectOrganisationController = Em.ObjectController.extend({
+App.MyProjectOrganisationController = Em.ObjectController.extend(App.SimpleControllerObjectStatus, {
     needs: ['myProject'],
 
     previousStep: 'myProject.story',

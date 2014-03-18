@@ -41,6 +41,8 @@ module.exports = function(config) {
       '../../bluebottle/common/static/js/bluebottle/app.js',
       '../../bluebottle/common/static/js/bluebottle/presets.js', 
       '../../bluebottle/common/static/js/bluebottle/utils.js', 
+      '../../bluebottle/common/static/js/bluebottle/mixins.js', 
+      '../../bluebottle/common/static/js/bluebottle/controllers.js', 
 
       // Stubs for Bluebottle API
       'config/test_stubs.js',

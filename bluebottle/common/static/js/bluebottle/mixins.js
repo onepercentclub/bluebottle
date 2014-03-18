@@ -72,7 +72,7 @@ App.SaveOnExitMixin = Ember.Mixin.create({
 
 App.ControllerObjectStatusMixin = Em.Mixin.create({
 
-    status: function () {
+    modelStatus: function () {
         if (!this.get('model.isSaving') && !this.get('model.isDirty')) {
             return 'ready';
         } else if (this.get('model.isSaving')) {
@@ -88,7 +88,7 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
     flash: null,
     scrollTopBeforeSave: true,
 
-    // If there is a status property on the controller
+    // If there is a modelStatus property on the controller
     // then use to re-set the flash message on change
     // This shouldn't happen after the didUpdate call
     // below has set a flash message but will happen when 
@@ -96,7 +96,7 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
     // reloaded, eg changing tabs
     setFlash: function () {
         this.set('flash', null);
-    }.observes('status'),
+    }.observes('modelStatus'),
 
     actions: {
         save: function() {

@@ -68,6 +68,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
       this._super();
 
       this.validatedFieldsProperty('validOrganization', this.get('requiredFields'));
+      this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredFields'));
     },
 
     name: DS.attr('string'),

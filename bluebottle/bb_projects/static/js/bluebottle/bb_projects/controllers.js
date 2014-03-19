@@ -337,7 +337,11 @@ App.MyProjectListController = Em.ArrayController.extend({
 });
 
 App.MyProjectController = Em.ObjectController.extend({
-    needs: ['currentUser']
+    needs: ['currentUser', 'myProjectOrganisation'],
+
+    organization: function () {
+        return this.get('controllers.myProjectOrganisation.model');
+    }.property('controllers.myProjectOrganisation.model')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
@@ -363,7 +367,11 @@ App.MyProjectSubmitController = Em.ObjectController.extend(App.SaveOnExitMixin, 
 
     validSubmit: function () {
         return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');
-    },
+    }.property('controllers.myProjectOrganisation.model.isNew', 'model.isNew'),
+
+    missingFieldsOrganization: function () {
+        return this.get('controllers.myProjectOrganisation.model.missingFieldsOrganization');
+    }.property('controllers.myProjectOrganisation.model.missingFieldsOrganization'),
 
     actions: {
         submitPlan: function(e) {

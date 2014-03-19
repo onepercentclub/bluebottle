@@ -17,11 +17,7 @@
 
     {{#if hasMultipleOrganizations}}
         {% trans "It appears that you already have an (other) organisation. Select it below or fill out the form to create a new one." %}
-        {{#each org in organizations}}
-            <br />                    <button {{bindAttr class=":btn :btn-modest :btn-primary :next"}} {{action save}}><span class="flaticon solid right-2"></span>{% trans "Save" %}</button>
-
-            <a {{action 'selectOrganization' org}}>{{org.name}}</a> {{org.description}}
-        {{/each}}
+        {{view App.MyOrganizationSelectView name='organization'}}
     {{/if}}
 
     <fieldset>

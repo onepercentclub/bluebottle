@@ -7,6 +7,19 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
+    hasMultipleOrganizations: function () {
+      return this.get('organizations.length') > 0;
+    }.property('organizations'),
+
+    // Triggered when the user selects one of the existing organisations for this user.
+    setOrganization: function () {
+        // TODO: we should set the model on the controller to this organisation and
+        //       hide the form?? Currently the select list disappears => hasMultipleOrganizations == false
+        if (this.get('selectedOrganization')) {
+            this.set('model', this.get('selectedOrganization'));
+        }
+    }.observes('selectedOrganization'),
+
     isPhasePlanNew: function () {
       return this.get('controllers.myProject.model.isPhasePlanNew');
     }.property('controllers.myProject.model.isPhasePlanNew'),

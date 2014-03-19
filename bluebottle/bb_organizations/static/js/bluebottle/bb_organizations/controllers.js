@@ -2,8 +2,14 @@
 App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, {
     needs: ['myProject'],
 
+    tempDocuments: Em.A(),
+
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
+
+    isPhasePlanNew: function () {
+      return this.get('controllers.myProject.model.isPhasePlanNew');
+    }.property('controllers.myProject.model.isPhasePlanNew'),
 
     actions: {
         goToStep: function(step){
@@ -31,9 +37,10 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
             if  (organization.get('isNew')) {
                 organization.one('didCreate', function(){
                     Ember.run.next(function() {
-                        organization.get('documents').forEach(function(doc){
-                            console.log('saving document...');
+                        // Now that the org is saved we can save the documents too.
+                        controller.get('tempDocuments').forEach(function(doc){
                             doc.save();
+                            organization.get('documents').addObject(doc);
                         });
                         // Set organization on project.
                         project.set('organization', organization);
@@ -85,11 +92,12 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
         var doc = store.createRecord(App.MyOrganizationDocument);
         doc.set('file', file);
         var organization = this.get('model');
-        doc.set('organization', organization);
         // If the organization is already saved we can save the doc right away
         if (organization.get('id')) {
-            console.log('saving document...');
+            doc.set('organization', organization);
             doc.save();
+        } else {
+            this.get('tempDocuments').addObject(doc);
         }
     }
 });

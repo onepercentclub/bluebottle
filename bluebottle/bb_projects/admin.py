@@ -31,7 +31,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     search_fields = ('title', 'owner__first_name', 'owner__last_name', 'partner_organization__name')
 
-    raw_id_fields = ('owner',)
+    raw_id_fields = ('owner', 'organization')
 
     prepopulated_fields = {'slug': ('title',)}
 

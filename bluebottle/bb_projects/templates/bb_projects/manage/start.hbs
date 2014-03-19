@@ -8,15 +8,18 @@
         <br />
         <p>
             <strong>
+                {% blocktrans %}
                 Do you want to improve your destination? Improve it by cleaning up the beach or the canals? By supporting that iconic landmark? By teaching students the skills to make it in tourism? To help out after an emergency? By helping that local handicraft shop expand their business online?
                 Then you’ve come to the right place!
                 All you need now is a local partner and a sound idea for a project that fits our theme's on destination improvement. Our current themes are Environment, Cultural heritage, Entrepreneurship, Platform and Emergency response. (the last in case of big emergencies, let's hope we don't use this one!)
                 Any preconditions? Yes, but just a few.
+                {% endblocktrans %}
 
             </strong>
         </p>
-        <h3>Your project is really about destination improvement when your project will…</h3>
+        <h3>{% trans "Your project is really about destination improvement when your project will…" %}</h3>
         <br />
+        {% blocktrans %}
         <ul>
             <li>
                 … improve what makes your destination special, and makes people want to visit it over and over again
@@ -40,20 +43,23 @@
                … have tasks for your colleagues that can be done in half a day or a day
             </li>
         </ul>
+        {% endblocktrans %}
         <br />
         <p>
+            {% blocktrans %}
             So, is your idea for destination approvement the right one? Then put your project on the map!
             <br />
             <br />
             Or not sure about your idea and in need for some extra inspiration for projects and partners in your region?
             <br />
             <br />
-            Check out our {{#link-to "page" "inspiration"}}inspiration pages{{/link-to}}
+            {% endblocktrans %}
+            {% trans "Check out our" %} {{#link-to "page" "inspiration"}}{% trans "inspiration pages" %}{{/link-to}}
         </p>
         <div class="well">
             <div class="campaign-campaigner l-half">
-                <h3>The project initiator</h3>
-                <p>Personalise your profile so we can get to know you even better.</p>
+                <h3>{% trans "The project initiator" %}</h3>
+                <p>{% trans "Personalise your profile so we can get to know you even better." %}</p>
                 {{#if controllers.currentUser.isAuthenticated}}
                     <figure class="campaigner-avatar">
                         <img {{bindAttr src="controllers.currentUser.getAvatar" alt="controllers.currentUser.full_name"}}>
@@ -69,7 +75,7 @@
                     </div>
 
                 {{else}}
-                    <p>No user Logged, sign in to start and create your project</p>
+                    <p>{% trans "No user Logged, sign in to start and create your project." %}</p>
                 {{/if}}
 
 

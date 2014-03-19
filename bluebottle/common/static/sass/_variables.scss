@@ -425,11 +425,14 @@ $tasks-task-item-task-view-bg-color                        : $color-secondary !d
 $tasks-task-item-hover-bg-color                            : $black !default;
 
 $tasks-task-previews-bg-color                              : $gray-lighter !default;
+$task-preview-background								   : $white !default;
 $tasks-task-previews-show-more-bg-color                    : $gray-lighter !default;
 $tasks-task-preview-member-status-bg-color                 : $color-secondary !default;
 $tasks-task-preview-theme-color                            : $gray-dark !default;
 $tasks-task-preview-arrow-bg-color                         : $color-secondary !default;
 $tasks-task-preview-task-status-color                      : $color-primary !default;
+
+$task-preview-more-color								   : $gray-dark !default;
 
 $tasks-task-detail-bg-color                                : $gray-darkest !default;
 $tasks-task-detail-color                                   : $white !default;

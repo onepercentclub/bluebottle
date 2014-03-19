@@ -17,7 +17,7 @@
 
     {{#if hasMultipleOrganizations}}
         {% trans "It appears that you already have an (other) organisation. Select it below or fill out the form to create a new one." %}
-        {{view App.MyOrganizationSelectView name='organization'}}
+        {{view App.MyOrganizationSelectView name='organization' selectionBinding=model}}
     {{/if}}
 
     <fieldset>

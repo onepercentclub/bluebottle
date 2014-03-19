@@ -3,22 +3,49 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     needs: ['myProject'],
 
     tempDocuments: Em.A(),
+    organizations: Em.A(),
 
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
     hasMultipleOrganizations: function () {
-      return this.get('organizations.length') > 0;
-    }.property('organizations'),
+      return this.get('organizations.length') > 1;
+    }.property('organizations.length'),
 
     // Triggered when the user selects one of the existing organisations for this user.
     setOrganization: function () {
-        // TODO: we should set the model on the controller to this organisation and
-        //       hide the form?? Currently the select list disappears => hasMultipleOrganizations == false
         if (this.get('selectedOrganization')) {
+            if (this.get('isNew')) {
+                // Set the current organization name to something that
+                // makes sense in the picklist
+                console.log(this.get('model'));
+                console.log(this.get('name'));
+                this.set('name', '- New Organisation -');
+                console.log(this.get('model'));
+                console.log(this.get('name'));
+            }
             this.set('model', this.get('selectedOrganization'));
+            this.connectOrganizationToProject();
         }
     }.observes('selectedOrganization'),
+
+    connectOrganizationToProject: function(){
+        var project = this.get('controllers.myProject.model');
+        var organization = this.get('model');
+
+        // Set organization on project.
+        project.set('organization', organization);
+        if (project.get('isNew')) {
+            project.transitionTo('loaded.created.uncommitted');
+        } else {
+            project.transitionTo('loaded.updated.uncommitted');
+        }
+        // If no project title: Use organization name for that.
+        if (!project.get('title')) {
+            project.set('title', organization.get('name'));
+        }
+        project.save();
+    },
 
     isPhasePlanNew: function () {
       return this.get('controllers.myProject.model.isPhasePlanNew');
@@ -55,18 +82,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
                             doc.save();
                             organization.get('documents').addObject(doc);
                         });
-                        // Set organization on project.
-                        project.set('organization', organization);
-                        if (project.get('isNew')) {
-                            project.transitionTo('loaded.created.uncommitted');
-                        } else {
-                            project.transitionTo('loaded.updated.uncommitted');
-                        }
-                        // If no project title: Use organization name for that.
-                        if (!project.get('title')) {
-                            project.set('title', organization.get('name'));
-                        }
-                        project.save();
+                        controller.connectOrganizationToProject();
                         if (step) controller.transitionToRoute(step);
                     });
 

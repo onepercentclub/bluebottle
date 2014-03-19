@@ -356,8 +356,12 @@ App.MapPicker = Em.View.extend({
          var mapOptions = {
              zoom: 2,
              center: point,
-             mapTypeId: google.maps.MapTypeId.ROADMAP
-           };
+             mapTypeId: google.maps.MapTypeId.ROADMAP,
+             mapTypeControlOptions: {
+                 style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                 position: google.maps.ControlPosition.BOTTOM_RIGHT
+             }
+         };
          view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
 
          view.placeMarker(point);

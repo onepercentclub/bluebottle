@@ -53,7 +53,7 @@
 				        	{% trans "Phase" %}: <strong>{{ project.status.name }}</strong>
                             <br/>
 	                        {{#if project.editable}}
-	                            {{#link-to "myProject" project tagName="a" class="btn-link right"}}
+	                            {{#link-to "myProject" project.id tagName="a" class="btn-link right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Edit" %}
 	                            {{/link-to}}

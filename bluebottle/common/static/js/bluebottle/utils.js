@@ -312,20 +312,21 @@ App.MapPicker = Em.View.extend({
 			var address = this.get('lookup');
 			var view = this;
 
-
-
-
 			view.geocoder.geocode( {'address': address}, function(results, status) {
 				if (status == google.maps.GeocoderStatus.OK) {
 					view.placeMarker(results[0].geometry.location);
 					view.set('latitude',  '' + results[0].geometry.location.lat().toString());
 					view.set('longitude', '' + results[0].geometry.location.lng().toString());
+
+					var latlng = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
 					view.geocoder.geocode({'latLng': latlng}, function(results, status) {
 						if (status == google.maps.GeocoderStatus.OK) {
-							debugger
-							if (results[8]) {
-								view.get('model').set('pitch', results[8].formatted_address)
-		//						view.get('model').set('country', )
+							for (var i = 0; i < results[0].address_components.length; i++) {
+								if (results[0].address_components[i].types[0] == "country") {
+									results[0].address_components[i].short_name
+									view.get('model').set('country', App.Country.find(
+										alpha2_code=results[0].address_components[i].short_name))
+								}
 							}
 						}
 

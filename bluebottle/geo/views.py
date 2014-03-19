@@ -7,31 +7,24 @@ from .models import Country
 
 PROJECT_MODEL = get_project_model()
 
+
 class CountryList(generics.ListAPIView):
-    model = Country
     serializer_class = CountrySerializer
+    model = serializer_class.Meta.model
 
     def get_queryset(self):
-        queryset = Country.objects.filter(alpha2_code__isnull=False).order_by('name').all()
-        name = self.request.QUERY_PARAMS.get('name', None)
-        print name
-        if name is not None:
-            queryset = Country.objects.filter(name__iexact=name)
-        return queryset
-    #     qs = super(CountryList, self).get_queryset()
-    #
-    #     # Set language if supplied
-    #     language = self.kwargs.get('language', None)
-    #     if language:
-    #         qs = qs.filter(language=language)
-    #
-    #     qs = qs.filter(status=Page.PageStatus.published)
-    #     qs = qs.filter(publication_date__lte=now)
-    #     qs = qs.filter(Q(publication_end_date__gte=now) |
-    #                    Q(publication_end_date__isnull=True))
-    #     return qs
+        return self.model.objects.filter(alpha2_code__isnull=False).order_by('name').all()
 
-        # return Country.objects.filter(alpha2_code__isnull=False).order_by('name').all()
+
+class CountryDetail(generics.RetrieveAPIView):
+    serializer_class = CountrySerializer
+    model = serializer_class.Meta.model
+    lookup_field = 'alpha2_code'
+
+    def get_queryset(self):
+        qs = super(CountryDetail, self).get_queryset()
+        return qs
+
 
 class UsedCountryList(CountryList):
 

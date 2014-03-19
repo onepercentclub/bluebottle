@@ -3,12 +3,15 @@
 {% load static %}
 
 {% tplhandlebars "my_project_pitch" %}
-
+    
     <legend>
         <strong>
             {% trans 'Project Basics' %}
         </strong>
     </legend>
+
+    {{bb-flash data=flash}}
+    
     <fieldset>
         <ul>
             {{bb-text-field label='Title' name='title' hint='Make it short, creative, simple and memorable.'

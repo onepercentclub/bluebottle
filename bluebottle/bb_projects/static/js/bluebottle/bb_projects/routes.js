@@ -96,14 +96,7 @@ App.MyProjectRoute = Em.Route.extend({
         if (params.id == 'new' || params.id == 'null') {
             return App.MyProject.createRecord();
         }
-
         var project = store.find('myProject', params.id);
-
-        // ensure there is no associated organization when the 
-        // model is loaded.
-        if (project.get('organization')) {
-            this.set('organization', project.get('organization'));
-        }
 
         return project;
     }

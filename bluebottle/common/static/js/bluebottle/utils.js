@@ -300,29 +300,42 @@ App.PopOverMixin = Em.Mixin.create({
 
 App.MapPicker = Em.View.extend({
 
-     templateName: 'map_picker',
-     marker: null,
+	templateName: 'map_picker',
+	marker: null,
 
-     submit: function(e){
-         e.preventDefault();
-         this.lookUpLocation();
-     },
-     actions: {
-         lookUpLocation: function() {
-             var address = this.get('lookup');
-             var view = this;
-             view.geocoder.geocode( {'address': address}, function(results, status) {
-                 if (status == google.maps.GeocoderStatus.OK) {
-                     view.placeMarker(results[0].geometry.location);
-                     view.set('latitude',  '' + results[0].geometry.location.lat().toString());
-                     view.set('longitude', '' + results[0].geometry.location.lng().toString());
+	submit: function(e){
+		e.preventDefault();
+		this.lookUpLocation();
+	},
+	actions: {
+		lookUpLocation: function() {
+			var address = this.get('lookup');
+			var view = this;
 
-                 } else {
-                     alert('Geocode was not successful for the following reason: ' + status);
-                 }
-             });
-         }
-     },
+
+
+
+			view.geocoder.geocode( {'address': address}, function(results, status) {
+				if (status == google.maps.GeocoderStatus.OK) {
+					view.placeMarker(results[0].geometry.location);
+					view.set('latitude',  '' + results[0].geometry.location.lat().toString());
+					view.set('longitude', '' + results[0].geometry.location.lng().toString());
+					view.geocoder.geocode({'latLng': latlng}, function(results, status) {
+						if (status == google.maps.GeocoderStatus.OK) {
+							debugger
+							if (results[8]) {
+								view.get('model').set('pitch', results[8].formatted_address)
+		//						view.get('model').set('country', )
+							}
+						}
+
+					});
+				} else {
+					alert('Geocode was not successful for the following reason: ' + status);
+				}
+			});
+		}
+	},
      placeMarker: function (position) {
          var view = this;
          if (view.marker) {

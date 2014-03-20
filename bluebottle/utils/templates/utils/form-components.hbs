@@ -2,6 +2,12 @@
 {% load i18n %}
 {% load static %}
 
+{% tplhandlebars "components/bb-flash" %}
+    {{#if data.text}}
+        <div class="flash {{unbound data.type}}">{{data.text}}</div>
+    {{/if}}
+{% endtplhandlebars %}
+
 
 {% tplhandlebars "components/bb-form-field" %}
     <li class="control-group has-popover" {{bindAttr data-content=hint}}>

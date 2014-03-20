@@ -145,6 +145,15 @@ fieldset legend {
     }
 }
 
+.flash {
+    &.success {
+        text-align: center;
+        padding: 10px;
+        border: 2px solid green;
+        background-color: lightgreen;
+    }
+}
+
 .message {
     display: block;
     @include clear;

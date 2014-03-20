@@ -25,6 +25,7 @@ class BaseSkill(models.Model):
         ordering = ('id', )
         abstract = True
 
+
 class BaseTaskMember(models.Model):
     class TaskMemberStatuses(DjangoChoices):
         applied = ChoiceItem('applied', label=_('Applied'))

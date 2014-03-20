@@ -3,9 +3,6 @@
 {% load static %}
 
 {% tplhandlebars "my_project" %}
-
-
-
     <div class="l-section" id="project-dashboard">
         <article id="campaign-create">
 
@@ -58,23 +55,23 @@
                             {{/link-to}}
                         {{/if}}
                     </nav>
-
-					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this}}>
-						<span class="flaticon solid eye-1"></span>
-						{% trans 'Preview' %}
-					</a>
+                    {{#if canPreview}}
+    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this}}>
+    						<span class="flaticon solid eye-1"></span>
+    						{% trans 'Preview' %}
+    					</a>
+                    {{/if}}
 				</div>
 			</header>
 
             <section class="l-section">
                 <div class="l-wrapper">
-
                     <div class="l-content">
                         <form>
                             {{outlet}}
                         </form>
                     </div>
-                {{ partial '_my_project_sidebar' }}
+                    {{ partial '_my_project_sidebar' }}
                 </div>
             </section>
 

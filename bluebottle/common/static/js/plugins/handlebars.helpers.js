@@ -47,3 +47,23 @@ Em.Handlebars.registerBoundHelper('linebreaks', function(value, options) {
     }
 });
 
+Ember.Handlebars.helper('daysToGoText', function(value, options) {
+  var text = '',
+      reachedText = gettext('Deadline reached');
+
+  if (typeof value == 'number') {
+      if (value > 0) {
+          var plural = value > 1 ? daysText : dayText,
+              daysText = gettext('days'),
+              dayText = gettext('day'),
+              supportText = gettext('to support this project');
+
+          text = '<big>' + value + '</big> ' + plural + ' left';
+          text += '<br /><small>' + supportText + '</small>'
+      } else {
+          text = '<big>' + reachedText + '</big>';
+      }
+  }
+
+  return new Handlebars.SafeString(text);
+});

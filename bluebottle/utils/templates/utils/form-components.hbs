@@ -65,8 +65,8 @@
 {% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-map-picker" %}
-    {{#bb-form-field hint=hint label=label errors=errors className=className}}
-        {{view App.MapPicker longitudeBinding=longitudeBinding latitudeBinding=latitudeBinding  nameBinding=name
+    {{#bb-form-field hint=hint label=label errors=errors className='wide'}}
+        {{view App.MapPicker modelBinding=model longitudeBinding=longitudeBinding latitudeBinding=latitudeBinding  nameBinding=name
             classBinding="errors.length:error"}}
     {{/bb-form-field}}
 {% endtplhandlebars %}

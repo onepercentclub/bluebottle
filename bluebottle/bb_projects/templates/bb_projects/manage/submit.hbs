@@ -2,44 +2,85 @@
 {% load i18n %}
 {% load static %}
 
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
 
 {% tplhandlebars "my_project_submit" %}
 
+
+{{#if valid}}
     <legend>
         <strong>{% trans "Review Plan" %}</strong>
     </legend>
-
     <fieldset>
-
         <div class="fieldset-content">
-
             <h3>{% trans "Final Check!" %}</h3>
-            {% block_verbatim submit_subtext %}
-            {% blocktrans %}
-                Make sure that you filled out the entire form and that all items to the left have a <span class="flaticon solid checkmark-2"></span> check sign.
-                If one of the items still shows a circle then that still needs some work.
-            {% endblocktrans %}
-            {% endblock_verbatim %}
+            {% trans "You are ready to submit you project now!" %}
         </div>
 
-         {% block_verbatim submit_fields %}
-        <ul>
-            <li class="control-group has-popover" data-content="{% trans "Agree to the terms to submit the plan" %}">
-                <div class="controls wide">
-                    <label class="checkbox wide">{{view Em.Checkbox checkedBinding="agreed" classBinding="errors.agreed.length:error"}} <span>{% trans "I agree to the " %} <a {{action showPage 'terms-and-conditions'}}>{% trans "general terms and conditions" %}</a></span></label>
-                </div>
-            </li>
-        </ul>
-        {% endblock_verbatim %}
     </fieldset>
+    <button {{bindAttr class=":btn :btn-iconed :btn-submit :btn-primary"}} {{action submitPlan}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
 
-    {% block_verbatim submit_btn %}
+{{else}}
+    <ul class="missing-steps">
+        <li class="introduction">
+            <span class="flaticon solid post-comment-1"></span>
+            <div class="introduction-text">
+                <h3>Please fill in all information before submitting</h3>
+                <strong>The following information is still missing:</strong>
+            </div>
+        </li>
+        {{#unless validPitch}}
+            {{#each field in missingFieldsPitch}}
+                <li>
+                    <div class="category">
+                        {% trans "Project" %}
+                    </div>
+                    <div class="details">
+                        {{#link-to "myProject.pitch"}}{{field}}{{/link-to}} is not filled in.
+                    </div>
+                    <div class="action">
+                        {{#link-to "myProject.pitch"}}<span class="flaticon solid checkmark-2"></span> Let's fix this{{/link-to}}
+                    </div>
+                </li>
+            {{/each}}
+        {{/unless}}
 
-    {{#if agreed}}
-        <button {{bindAttr class=":btn :btn-iconed :btn-submit :btn-primary"}} {{action submitPlan}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
-    {{else}}
-        <button {{bindAttr class=":btn :btn-iconed :btn-submit :disabled"}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
-    {{/if}}
+        {{#unless validStory}}
+            {{#each field in missingFieldsStory}}
+                <li>
+                    <div class="category">
+                        {% trans "Description" %}
+                    </div>
+                    <div class="details">
+                        {{#link-to "myProject.story"}}{{field}}{{/link-to}} is not filled in.
+                    </div>
+                    <div class="action">
+                        {{#link-to "myProject.story"}}<span class="flaticon solid checkmark-2"></span> Let's fix this{{/link-to}}
+                    </div>
+                </li>
+            {{/each}}
+        {{/unless}}
 
-    {% endblock_verbatim %}
+        {{#unless validOrganization}}
+            {{#each field in missingFieldsOrganization}}
+                <li>
+                    <div class="category">
+                        {% trans "Organisation" %}
+                    </div>
+                    <div class="details">
+                        {{#link-to "myProject.organisation"}}{{field}}{{/link-to}} is not filled in.
+                    </div>
+                    <div class="action">
+                        {{#link-to "myProject.organisation"}}<span class="flaticon solid checkmark-2"></span> Let's fix this{{/link-to}}
+                    </div>
+                </li>
+            {{/each}}
+        {{/unless}}
+    </ul>
+
+{{/if}}
+
 {% endtplhandlebars %}

@@ -50,12 +50,12 @@ Em.Handlebars.registerBoundHelper('linebreaks', function(value, options) {
 Ember.Handlebars.helper('daysToGoText', function(value, options) {
   var text = '',
       reachedText = gettext('Deadline reached');
-
+  
   if (typeof value == 'number') {
       if (value > 0) {
-          var plural = value > 1 ? daysText : dayText,
-              daysText = gettext('days'),
+          var daysText = gettext('days'),
               dayText = gettext('day'),
+              plural = value > 1 ? daysText : dayText,
               supportText = gettext('to support this project');
 
           text = '<big>' + value + '</big> ' + plural + ' left';

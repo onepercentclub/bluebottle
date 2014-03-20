@@ -28,8 +28,7 @@
 
     <fieldset>
         <ul>
-            {{bb-text-field hint="Name of your partner organisation" label="Name" name="name"
-                            valueBinding=name errors=errors.name maxlength=255}}
+            {% bb_component 'bb-text-field' label=_("Name") name="'name'" valueBinding='name' errors='errors.name' maxlength=255 %}
 
             {{bb-text-field hint="Name of then contact in the organisation" label="Contact name" name="contact_name"
                             valueBinding=contact_name errors=errors.contact_name maxlength=255}}

@@ -62,11 +62,21 @@ App.ModelValidationMixin = Ember.Mixin.create({
 
         var self = this;
         var checkFunc = function() {
-            var missing = Em.A();
+            var missing = Em.A(),
+                friendlyNames = self.get('friendlyFieldNames');
 
             fields.forEach(function (field) {
-                if (!self.get(field))
-                    missing.addObject(field);
+                var fieldName;
+
+                if (!self.get(field)) {
+                    if (friendlyNames && friendlyNames[field]) {
+                        fieldName = friendlyNames[field];
+                    } else {
+                        fieldName = field;
+                    }
+
+                    missing.addObject(fieldName);
+                }
             });
             return missing;
         };

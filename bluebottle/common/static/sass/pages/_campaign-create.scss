@@ -37,6 +37,7 @@
 		background: $gray-dark;
 		padding: $base-padding;
 		z-index: 100;
+		position: fixed;
 		.navigation {
 			@include grid(32,1,1);
 		}

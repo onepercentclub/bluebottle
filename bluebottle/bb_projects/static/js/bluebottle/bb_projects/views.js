@@ -136,12 +136,6 @@ App.MyProjectListView = Em.View.extend({
     templateName: 'my_project_list'
 });
 
-App.MyProjectView = Em.View.extend({
-    templateName: 'my_project'
-
-});
-
-
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",

@@ -8,6 +8,15 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
+    // Before the organisation is saved the documents will
+    // be temporarily stored in the tempDocuments array.
+    attachedDocuments: function () {
+        if (this.get('model.isNew'))
+            return this.get('tempDocuments');
+        else
+            return this.get('model.documents');
+    }.property('model.documents.length', 'tempDocuments.length'),
+
     hasMultipleOrganizations: function () {
       return this.get('organizations.length') > 1;
     }.property('organizations.length'),

@@ -273,6 +273,9 @@ Em.Route.reopen({
     }.property('context.meta_data')
 });
 
+
+
+
 App.Router.map(function() {
 
     this.resource('language', {path:'/:lang'});
@@ -444,4 +447,20 @@ App.LanguageSwitchView = Em.CollectionView.extend({
 
 App.ApplicationView = Em.View.extend({
     elementId: 'site'
+});
+
+//Enable Google Analytics with Ember
+App.Router.reopen({
+    /**
+     * Tracks pageviews if google analytics is used
+     * Source: http://www.randomshouting.com/2013/05/04/Ember-and-Google-Analytics.html
+     */
+    didTransition: function(infos) {
+        this._super(infos);
+        if (window._gaq === undefined) { return; }
+
+        Ember.run.next(function(){
+            _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
+        });
+    }
 });

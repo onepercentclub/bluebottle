@@ -134,13 +134,13 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         return (this.get('isMember') || this.get('isAuthor'));
     }.property('isMember', 'isAuthor'),
 
-	acceptedMembers: function() {
-		return this.get('model').get('members').filterBy('isStatusAccepted', true);
-	}.property('members.@each.member.isStatusAccepted'),
+    acceptedMembers: function() {
+      return this.get('model').get('members').filterBy('isStatusAccepted', true);
+    }.property('members.@each.member.isStatusAccepted'),
 
-	notAcceptedMembers: function() {
-		return this.get('model').get('members').filterBy('isStatusAccepted', false);
-	}.property('members.@each.member.isStatusAccepted')
+    notAcceptedMembers: function() {
+      return this.get('model').get('members').filterBy('isStatusAccepted', false);
+    }.property('members.@each.member.isStatusAccepted')
 
 });
 

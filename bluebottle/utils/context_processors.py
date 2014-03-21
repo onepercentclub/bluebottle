@@ -13,3 +13,14 @@ def installed_apps_context_processor(request):
         'bb_apps': bb_apps,
     }
     return context
+
+
+def google_analytics_code(request):
+    """
+    Add Google Analytics code from settings file to general request context.
+    """
+    try:
+        context = {'ANALYTICS_CODE': settings.ANALYTICS_CODE}
+    except AttributeError:
+        context ={}
+    return context

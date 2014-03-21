@@ -258,7 +258,11 @@ App.MyProjectController = Em.ObjectController.extend({
 
     organization: function () {
         return this.get('controllers.myProjectOrganisation.model');
-    }.property('controllers.myProjectOrganisation.model')
+    }.property('controllers.myProjectOrganisation.model'),
+
+    canPreview: function () {
+        return !!this.get('model.title');
+    }.property('model.title')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

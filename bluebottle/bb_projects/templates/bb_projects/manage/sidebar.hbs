@@ -5,7 +5,7 @@
 {% tplhandlebars "_my_project_sidebar" %}
 
              <aside class="l-sidebar">
-                {{# if this.id}}
+                {{#if canPreview}}
                     {{render "projectPreview" this}}
                 {{/if}}
             </aside>

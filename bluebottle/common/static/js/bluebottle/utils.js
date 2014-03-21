@@ -334,10 +334,10 @@ App.MapPicker = Em.View.extend({
 							for (var i = 0; i < results[0].address_components.length; i++) {
 								if (results[0].address_components[i].types[0] == "country") {
 									var code = results[0].address_components[i].short_name,
-											country = App.Country.find().filterProperty('code', code)[0];
+									    country = App.Country.find().filterProperty('code', code)[0];
 
 									if (country)
-											view.get('model').set('country', country);
+										view.get('model').set('country', country);
 								}
 							}
 						}

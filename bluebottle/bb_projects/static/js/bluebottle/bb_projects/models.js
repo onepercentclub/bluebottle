@@ -218,9 +218,10 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    friendlyFieldNames: null,
 
     init: function () {
-      this._super();
+        this._super();
 
         this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
         this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));

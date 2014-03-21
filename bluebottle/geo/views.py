@@ -19,7 +19,6 @@ class CountryList(generics.ListAPIView):
 class CountryDetail(generics.RetrieveAPIView):
     serializer_class = CountrySerializer
     model = serializer_class.Meta.model
-    lookup_field = 'alpha2_code'
 
     def get_queryset(self):
         qs = super(CountryDetail, self).get_queryset()

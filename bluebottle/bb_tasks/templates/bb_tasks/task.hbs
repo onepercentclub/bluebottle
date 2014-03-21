@@ -75,10 +75,14 @@
                             <dt>
                                 <span class="flaticon solid calendar-1"></span>
                             </dt>
-                            {{# if deadline }}
-                            <dd>{{localize deadline formatting="X"}}</dd>
+                            {{#if deadline}}
+                                {{#ifExpired deadline}}
+                                    <dd>{% trans "Deadline passed" %}</dd>
+                                {{else}}
+                                    <dd>{{localize deadline formatting="X"}}</dd>
+                                {{/ifExpired}}
                             {{else}}
-                            <dd>{% trans "No deadline" %}</dd>
+                                <dd>{% trans "No deadline" %}</dd>
                             {{/if}}
                         </dl>
                         <dl>

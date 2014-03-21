@@ -5,7 +5,6 @@
 
 {% tplhandlebars "my_project_organisation" %}
 
-
     <legend>
         <strong>{% trans "Partner organisation" %}</strong>
         <p>
@@ -71,7 +70,7 @@
         <ul>
             <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
                 <label class="control-label">
-                    {% trans "Partner Passport" %} ({{documents.length}})<br />
+                    {% trans "Partner Passport" %} ({{attachedDocuments.length}})<br />
                     <small>
                         {% trans ".jpg, .png or .pdf" %}
                     </small>
@@ -84,7 +83,7 @@
                         {% trans "Upload scan(s)" %}
                     </a>
                     <br />
-                    {{#each doc in documents}}
+                    {{#each doc in attachedDocuments}}
                         <a {{action removeFile doc}}><span class="flaticon solid minus-2"></span></a>
                         <a {{bindAttr href=doc.file.url}}>
                             {{doc.file.name}} <small>{{doc.file.size}}</small><br/>

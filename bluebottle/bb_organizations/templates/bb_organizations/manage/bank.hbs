@@ -1,0 +1,130 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_bank" %}
+
+    <legend>
+        <strong>{% trans "Bank details" %}</strong>
+    </legend>
+
+    {{#if organization.isLoaded}}
+        <fieldset>
+            <ul>
+                <li class="control-group has-popover" data-content="{% trans "Name of the bank that holds your acount." %}">
+                    <label class="control-label">{% trans "Account bank name" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_bank_name" classBinding="organization.errors.account_bank_name.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_bank_name }}
+                        <div class="has-errors">{{#each organization.errors.account_bank_name }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "Address of the bank." %}">
+                    <label class="control-label">{% trans "Bank address" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_bank_address" classBinding="organization.errors.account_bank_address.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_bank_address }}
+                        <div class="has-errors">{{#each organization.errors.account_bank_address }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "Country of the bank." %}">
+                    <label class="control-label">{% trans "Bank country" %}</label>
+                    <div class="controls">
+                        {{view App.CountrySelectView valueBinding="organization.account_bank_country" classBinding="organization.errors.account_bank_country.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_bank_country }}
+                        <div class="has-errors">{{#each organization.errors.account_bank_country }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "Bank account number." %}">
+                    <label class="control-label">{% trans "Account number" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_number" classBinding="organization.errors.account_number.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_number }}
+                        <div class="has-errors">{{#each organization.errors.account_number }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "Name of the bank account holder." %}">
+                    <label class="control-label">{% trans "Account name" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_name" classBinding="organization.errors.account_name.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_name }}
+                        <div class="has-errors">{{#each organization.errors.account_name }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "Account holder city" %}">
+                    <label class="control-label">{% trans "Account city" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_city" classBinding="organization.errors.account_city.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_city }}
+                        <div class="has-errors">{{#each organization.errors.account_city }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "You ony have to enter this if your country supports IBAN." %}">
+                    <label class="control-label">{% trans "Account IBAN" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_iban" classBinding="organization.errors.account_iban.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_iban }}
+                        <div class="has-errors">{{#each organization.errors.account_iban }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "BIC/SWIFT code for your bank" %}">
+                    <label class="control-label">{% trans "Bank BIC/SWIFT code" %}</label>
+                    <div class="controls">
+                        {{view Em.TextField valueBinding="organization.account_bic" classBinding="organization.errors.account_bic.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_bic }}
+                        <div class="has-errors">{{#each organization.errors.account_bic }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+
+                <li class="control-group has-popover" data-content="{% trans "Do we need more information to make an eventual bank transfer?" %}">
+                    <label class="control-label">{% trans "Extra info" %}</label>
+                    <div class="controls">
+                        {{view Em.TextArea valueBinding="organization.account_other" classBinding="organization.errors.account_other.length:error"}}
+                    </div>
+
+                    {{#if organization.errors.account_other }}
+                        <div class="has-errors">{{#each organization.errors.account_other }}<p>{{this}}</p>{{/each}}</div>
+                    {{/if}}
+                </li>
+            </ul>
+        </fieldset>
+        {{#if shouldSave}}
+            <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
+        {{else}}
+            <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
+        {{/if}}
+
+    {{else}}
+        {{#if organization}}
+            {% trans "Loading data" %}
+        {{else}}
+            {% trans "You should create an organisation profile first." %}
+        {{/if}}
+    {{/if}}
+
+{% endtplhandlebars %}
+

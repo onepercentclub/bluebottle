@@ -1,0 +1,45 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_submit" %}
+
+    <legend>
+        <strong>{% trans "Review Plan" %}</strong>
+    </legend>
+
+    <fieldset>
+
+        <div class="fieldset-content">
+
+            <h3>{% trans "Final Check!" %}</h3>
+            {% block_verbatim submit_subtext %}
+            {% blocktrans %}
+                Make sure that you filled out the entire form and that all items to the left have a <span class="flaticon solid checkmark-2"></span> check sign.
+                If one of the items still shows a circle then that still needs some work.
+            {% endblocktrans %}
+            {% endblock_verbatim %}
+        </div>
+
+         {% block_verbatim submit_fields %}
+        <ul>
+            <li class="control-group has-popover" data-content="{% trans "Agree to the terms to submit the plan" %}">
+                <div class="controls wide">
+                    <label class="checkbox wide">{{view Em.Checkbox checkedBinding="agreed" classBinding="errors.agreed.length:error"}} <span>{% trans "I agree to the " %} <a {{action showPage 'terms-and-conditions'}}>{% trans "general terms and conditions" %}</a></span></label>
+                </div>
+            </li>
+        </ul>
+        {% endblock_verbatim %}
+    </fieldset>
+
+    {% block_verbatim submit_btn %}
+
+    {{#if agreed}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-submit :btn-primary"}} {{action submitPlan}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
+    {{else}}
+        <button {{bindAttr class=":btn :btn-iconed :btn-submit :disabled"}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
+    {{/if}}
+
+    {% endblock_verbatim %}
+{% endtplhandlebars %}

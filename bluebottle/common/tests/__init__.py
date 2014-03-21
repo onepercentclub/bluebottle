@@ -1,1 +1,1 @@
-from .templatetags import BlockVerbatimTestCase
+from .templatetags import BlockVerbatimTestCase, BBComponentTestCase

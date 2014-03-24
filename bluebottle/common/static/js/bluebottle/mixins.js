@@ -164,3 +164,18 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
     }
     
 });
+
+// A mixin for classes with a latitude and longitude property
+App.StaticMapMixin = Em.Mixin.create({
+    // return url for Google static map based on lat / lng and (optional) google api key
+    staticMap: function() {
+        var latlng = this.get('latitude') + ',' + this.get('longitude'),
+            imageUrl = "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
+            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
+
+        if (MAPS_API_KEY)
+            imageUrl += "?key=" + MAPS_API_KEY;
+
+        return imageUrl;
+    }.property('latitude', 'longitude')
+})

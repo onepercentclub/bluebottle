@@ -35,13 +35,16 @@ App.TagWidget = Em.View.extend({
     },
 
     didInsertElement: function(){
-        this.$('.tag').typeahead({
-            source: function (query, process) {
-                return $.get('/api/metadata/tags/' + query, function (data) {
-                    return process(data);
-                });
-            }
-        })
+        var $tag = this.$('.tag');
+        if ($tag.length && typeof $tag.typeahead == 'function') {
+          $tag.typeahead({
+              source: function (query, process) {
+                  return $.get('/api/metadata/tags/' + query, function (data) {
+                      return process(data);
+                  });
+              }
+          })
+        }
     }
 });
 

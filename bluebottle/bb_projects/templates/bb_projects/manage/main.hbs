@@ -56,7 +56,7 @@
                         {{/if}}
                     </nav>
                     {{#if canPreview}}
-    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this}}>
+    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
     						<span class="flaticon solid eye-1"></span>
     						{% trans 'Preview' %}
     					</a>

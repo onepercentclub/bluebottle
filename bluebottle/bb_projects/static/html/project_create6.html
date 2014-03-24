@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width" name="viewport">
+
+    <title>Bluebottle Project - Project create</title>
+    <link href="/static/assets/css/screen.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+</head>
+
+<body id="body">
+    <!-- global site -->
+
+    <div class="l-section" id="header">
+        <header class="l-wrapper">
+            <!-- logo -->
+
+            <div id="logo">
+                <a class="ember-view logo-link active" href="#!/" id=
+                "ember1331"><object class="logo-image" data=
+                "/static/assets/images/global/logo.svg" type="image/svg+xml">
+                    </object></a>
+            </div><!-- end: logo -->
+            <!-- main navigation -->
+
+            <nav id="nav">
+                <ul class="nav-main">
+                    <li class="nav-main-item"><a data-ember-action="1" href="/#!/pages/about">About us</a></li>
+
+                    <li class="nav-main-item"><a class="ember-view" href="#!/projects" id="ember1332">Projects</a></li>
+
+                    <li class="nav-main-item"><a class="ember-view" href="#!/tasks" id="ember1351">Tasks</a></li>
+                </ul>
+
+                <ul class="nav-actions">
+                    <li style="list-style: none; display: inline">
+                        <script id="metamorph-1-start" type=
+                        "text/x-placeholder"></script>
+                    </li>
+
+                    <li class="nav-member">
+                        <a class="nav-member-dropdown" href="#"><strong>Profile&nbsp;</strong></a>
+
+                        <ul class="nav-member-dropdown-menu">
+                            <li><a class="ember-view" href="#!/member/profile" id="ember1372">Edit my profile &amp; settings</a></li>
+
+                            <li><a class="ember-view" href="#!/my/projects" id="ember1386">My Projects</a></li>
+
+                            <li><a class="ember-view" href="#!/member/profile/1" id="ember1395">View my profile</a></li>
+
+                            <li><a href="/en/accounts/logout/?next=/en/">Logout</a></li>
+
+                            <li class="nav-member-switch-language">Language
+
+                                <ul class="ember-view nav-language" id="ember1408">
+                                    <li class="ember-view active" id="ember1411"><a data-bindattr-3="3" data-ember-action="2" title="English">
+                                                                            en</a></li>
+
+                                    <li class="ember-view" id="ember1412">
+                                    <a data-bindattr-5="5" data-ember-action=
+                                    "4" title="Nederlands"><script id=
+                                    "metamorph-3-start" type=
+                                    "text/x-placeholder"></script>nl</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li style="list-style: none; display: inline">
+                        
+                    </li>
+                </ul>
+            </nav>
+            
+        </header>
+    </div>
+    <div id="content">
+            
+        <!-- COPY/PASTE FROM HERE // template -->
+        <article id="campaign-create">
+
+            <header class="campaign-header l-section">
+                
+                <div class="l-wrapper">
+                    <h1 class="page-title">
+                        <figure>
+                        My bluebottle <small>&rsaquo; New campaign</small>
+                    </h2>
+
+                    <nav id="campaign-steps" class="steps">
+                        <a href="project_create1.html" class="step">Start</a>
+                        <a href="project_create2.html" class="step">Pitch</a>
+                        <a href="project_create4.html" class="step">Goal</a>
+                        <a href="project_create5.html" class="step">Story</a>
+                        <a href="project_create6.html" class="step active"><span class="flaticon solid pencil-3"></span> Payout</a>
+                        <a href="project_create7.html" class="step">Review</a>
+                    </nav>                    
+                    
+                    <a class="btn btn-modest campaign-preview-button">
+                        <span class="flaticon solid eye-1"></span>
+                        Preview
+                    </a>
+                </div>
+            </header>
+            
+            <section class="l-section">
+                <div class="l-wrapper">
+                    
+                    <div class="l-content">
+                        <form>
+                            <legend>
+                                <strong>
+                                    Bank details & Legal Documents
+                                </strong>
+                                <p>
+                                    Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Aenean lacinia bibendum nulla sed consectetur. Etiam porta sem malesuada magna mollis euismod. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Maecenas sed diam eget risus varius blandit sit amet non magna.
+                                </p>
+                            </legend>
+                            <ul class="fieldset-tabs">
+                                <li class="label">The campaign is run by an:</li>
+                                <li><a href="#">Individual</a></li>
+                                <li class="selected"><a href="#">Organisation</a></li>
+                            </ul>
+                            <fieldset>
+                                <ul>
+                                    <li class="control-group">
+                                        <label class="control-label">Organisation name</label>
+                                        <div class="controls">
+                                            <input type="text" name="organisation_name" placeholder="Name of your organisation"/>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </fieldset>
+                            <fieldset>
+                                <ul>
+                                    <li class="control-group">
+                                        <label class="control-label">Account holder name</label>
+                                        <div class="controls">
+                                            <input type="text" name="account_holder_name" placeholder="Account holder's full name"/>
+                                        </div>
+                                    </li>
+                                    <li class="control-group">
+                                        <label class="control-label">Account holder full address</label>
+                                        <div class="controls controls-inline">
+                                            <input type="text" name="street_and_number" placeholder="Street and number"/>
+                                            <input type="text" name="zip" placeholder="Zipcode" class="inline-onethird" />
+                                            <input type="text" name="city" placeholder="City" class="inline-twothirds" />
+                                            <select name="country">
+                                                <option value="">Country</option>
+                                                <option value="uk">England</option>
+                                                <option value="de">Germany</option>
+                                                <option value="nl">Netherlands</option>
+                                            </select>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <ul class="fieldset-tabs">
+                                    <li class="label">Where is your bank located:</li>                                
+                                    <li><a href="#">In Europe</a></li>
+                                    <li class="selected"><a href="#">Outside Europe</a></li>
+                                </ul>                            
+                            </fieldset>
+                            <fieldset>
+                                <ul>
+                                    <li class="control-group">
+                                        <label class="control-label">Account number</label>
+                                        <div class="controls">
+                                            <input type="text" name="account_number" placeholder="Can be found on your bank statement"/>
+                                        </div>
+                                    </li>
+                                    <li class="control-group">
+                                        <label class="control-label">BIC/SWIFT code<br /><a><small>More info</small></a></label>
+                                        <div class="controls">
+                                            <input type="text" name="bic_swift_code" placeholder="The BIC/SWIFT code contains 8 or 11 characters"/>
+                                        </div>
+                                    </li>
+                                    <li class="control-group">
+                                        <label class="control-label">Bank name</label>
+                                        <div class="controls">
+                                            <input type="text" name="bank_name" placeholder="Your bank's full name" />
+                                        </div>
+                                    </li>
+                                    <li class="control-group">
+                                        <label class="control-label">Bank name</label>
+                                        <div class="controls">
+                                            <input type="text" name="bank_name" placeholder="Your bank's full name" />
+                                        </div>
+                                    </li>
+                                    <li class="control-group">
+                                        <label class="control-label">Bank's full address</label>
+                                        <div class="controls controls-inline">
+                                            <input type="text" name="bank_street_and_number" placeholder="Street and number"/>
+                                            <input type="text" name="bank_zip" placeholder="Zipcode" class="inline-onethird" />
+                                            <input type="text" name="bank_city" placeholder="City" class="inline-twothirds" />
+                                            <select name="bank_country">
+                                                <option value="">Country</option>
+                                                <option value="uk">England</option>
+                                                <option value="de">Germany</option>
+                                                <option value="nl">Netherlands</option>
+                                            </select>
+                                        </div>
+                                    </li                                    
+                                </ul>
+                            </fieldset>
+                            <fieldset>
+                                <ul>
+                                    <li class="control-group">
+                                        <label class="control-label">
+                                            Legal documents<br />
+                                            <small>Please scan and upload a clear copy of your passport or ID. Don't have a scanner? A clear photo will do too!</small>
+                                        </label>
+                                        <div class="controls">
+                                            <div class="document-upload">
+                                                <ul class="files">
+                                                    <li>
+                                                        <span class="flaticon stroke document-1"></span> My_passport.pdf <a class="delete flaticon stroke trash-2"></a>
+                                                    </li>
+                                                <ul>
+                                                <a class="upload"><span class="flaticon solid up-circle-4"></span> Upload another document</a>
+                                                <small class="allowed">Allowed: .pdf, .jpg or .png</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </fieldset>
+                        </form>
+                    </div>
+                    
+                    <aside class="l-sidebar">
+                        <div class="campaign-create-preview-widget">
+                            <h3><span class="flaticon solid eye-1"></span> Preview widget</h3>
+                            <div class="project-item">
+
+                                <a id="ember2291" class="ember-view" href="#!/projects/empowered-by-sanitary-pads">
+                                    <span class="project-header">
+
+                                        <figure class="project-image">
+                                            <img src="http://onepercentclub.com/static/media/cache/19/4f/194fca36cd678b6ddbfd43a09fcfb75a.jpg" data-bindattr-49="49">
+                                        </figure>
+
+                                        <span class="project-title">
+                                            <h3>Empowered by sanitary pads </h3>
+                                            <span class="project-location">
+                                                <span class="flaticon solid location-pin-1"></span> India
+                                            </span>
+                                        </span>
+                                    </span>
+
+                                    <span class="project-status campaign" data-bindattr-50="50">
+                                        <div class="project-fund-amount-slider">
+                                            <strong style="width: 32.953105196451205%; overflow: hidden;" class="slider-progress is-in-progress">
+                                                <em class="slider-percentage">0%</em>
+                                            </strong>
+                                        </div>
+                                        <span class="project-fund-amount">
+                                            <strong>€1,587</strong>
+                                            <em>To go</em>
+                                        </span>
+                                        <span class="project-days-left">
+                                            <span class="flaticon solid clock-1"></span> 
+                                            <strong>74</strong> 
+                                            <em>days</em>
+                                        </span>
+                                    </span>
+
+                                    <span class="project-description">
+                                        A stress free mind and a disease free body, it is life’s most basic desire. With this project we include local Indian women in the production process of making sanitary pads, hence generating new livelihood opportunities. Along the way, and on the basis of these sanitary pads, health and hygiene information will be imparted by conducting health camps in the community. Prevailing attitudes toward menstruation will change. Generating job opportunities and feminine hygiene all in one: becoming empowered by sanitary pads! 
+                                        <span class="project-view">View project</span>
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="campaign-create-tips"> 
+                            <h3><span class="flaticon solid lightbulb-3"></span> Tips</h3>
+                            <ul>
+                                <li>
+                                    Cras mattis consectetur purus sit amet fermentum. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Maecenas faucibus mollis interdum. Maecenas sed diam eget risus varius blandit sit amet non magna. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.
+                                </li>
+                                <li>
+                                    Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam porta sem malesuada magna mollis euismod. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Curabitur blandit tempus porttitor. Sed posuere consectetur est at lobortis. Cras justo odio, dapibus ac facilisis in, egestas eget quam.
+                                </li>
+                                <li>
+                                    Maecenas sed diam eget risus varius blandit sit amet non magna. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Sed posuere consectetur est at lobortis. Maecenas faucibus mollis interdum.
+                                </li>
+                            </ul>
+                            <p><a href="#">More tips in our faq &rsaquo;</a></p>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+            <footer class="campaign-footer">
+                <div class="l-wrapper">
+                    <div class="navigation">
+                        <a href="project_create5.html" class="btn btn-modest previous">Previous</a>
+                        <a href="project_create7.html" class="btn btn-modest btn-primary next">Next</a>
+                    </div>
+                    <div class="actions">
+                        <a class="save">
+                            <span class="flaticon solid pencil-3"></span> Save &amp; continue later
+                        </a>
+                    </div>
+                </div>
+            </footer>
+        </article>
+        <!-- COPY/PASTE UNTILL HERE // template -->
+    </div>
+</body>
+</html>

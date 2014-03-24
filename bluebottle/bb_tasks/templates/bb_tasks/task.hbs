@@ -1,0 +1,182 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "task" %}
+
+    <div id="task-detail">
+        <div class="l-section" id="task-details">
+            <section class="l-wrapper">
+
+                <div class="task-badge">
+                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> 
+					{{#if project.image.small}}
+					<img {{bindAttr src="project.image.small" alt="project.title"}} />
+					{{/if}}
+                </div>
+
+                <article class="task-description">
+                    <header class="task-header">
+                        <h1 class="task-title">{{title}}</h1>
+                    </header>
+
+                    <p class="task-project">{% trans "For project" %} {{#link-to 'project' project}}{{project.title}}{{/link-to}}</p>
+
+                    {{#if description}}
+                    <p>{{linebreaks description}}</p>
+                    {{/if}}
+
+                    {{#if end_goal}}
+                    <p><strong>{% trans "Deliverable" %}:</strong> {{linebreaks end_goal}}</p>
+                    {{/if}}
+
+                    {# TODO: commented out until we have pagination #}
+                    {{!--}}
+                    <a href="#" class="task-read-more"><span class="flaticon solid down-circle-4"></span> {% trans "Read more" %}</a>
+                    {{--}}
+                </article>
+
+                <sidebar class="task-sidebar">
+					
+					{{#if canEdit}}
+					<div class="edit-task">
+                    {{#link-to 'taskEdit' model}}
+                        <span class="flaticon solid settings-1"></span>
+                        {% trans 'Edit' %}
+                    {{/link-to}}
+					</div>
+					{{/if}}
+
+                    {% block_verbatim task_share %}
+                    {{view App.SocialShareView classNames="task-share"}}
+                    {% endblock_verbatim task_share %}
+
+                    <div class="task-section task-meta">
+
+                        <dl>
+                            <dt>
+                                <span class="flaticon solid wrench-1"></span>
+                            </dt>
+                            <dd>{{ skill.name }}</dd>
+                        </dl>
+                        <dl>
+                            <dt>
+                                <span class="flaticon solid location-pin-1"></span>
+                            </dt>
+                            <dd>{{ location }}</dd>
+                        </dl>
+                        <dl>
+                            <dt>
+                                <span class="flaticon solid watch-1"></span>
+                            </dt>
+                            <dd>{{ timeNeeded }}</dd>
+                        </dl>
+                        <dl>
+                            <dt>
+                                <span class="flaticon solid calendar-1"></span>
+                            </dt>
+                            {{#if deadline}}
+                                {{#ifExpired deadline}}
+                                    <dd>{% trans "Deadline passed" %}</dd>
+                                {{else}}
+                                    <dd>{{localize deadline formatting="X"}}</dd>
+                                {{/ifExpired}}
+                            {{else}}
+                                <dd>{% trans "No deadline" %}</dd>
+                            {{/if}}
+                        </dl>
+                        <dl>
+                            <dt>
+                                <span class="flaticon solid tag-1"></span>
+                            </dt>
+                            <dd>
+                               	{{tags_list}}
+                            </dd>
+                        </dl>
+                    </div>
+
+                </sidebar>
+
+            </section>
+        </div>
+        <div class="l-section" id="task-members">
+            <section class="l-wrapper">
+                <div class="task-members-list">
+                    <ul class="member-list">
+                        <li class="member-initiator">
+                            <ul>
+                                <li>
+                                    <a {{action 'openInBigBox' 'userModal' author }} class="member">
+                                        <figure class="member-avatar"><img {{bindAttr src="author.getAvatar"}} /></figure>
+                                        <h4>{% trans "Initiator" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
+                                        <strong class="member-name">{{author.full_name}}</strong>
+                                        <em class="member-organisation">{{author.organization}}</em>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+
+                        {{#if acceptedMembers}}
+                            <li class="member-assigned">
+                                <h4>{% trans "Assigned" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
+                                {{#if hasMoreThanOneMember}}
+                                    <ul>
+                                        {{#each acceptedMembers}}
+                                            {{#if isAccepted}}
+                                                <li>
+                                                    <a {{action 'openInBigBox' 'userModal' member }} class="member">
+                                                        <span class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></span>
+                                                    </a>
+                                                </li>
+                                            {{/if}}
+                                        {{/each}}
+                                    </ul>
+                                    {{else}}
+                                    <ul>
+                                        {{#each acceptedMembers}}
+                                            {{#if isAccepted}}
+                                                <li>
+                                                    <a {{action 'openInBigBox' 'userModal' member }} class="member single">
+                                                        <figure class="member-avatar"><img {{bindAttr src="this.member.getAvatar"}}></figure>
+                                                        <div class="member-details">
+                                                            <strong class="member-name">{{this.member.full_name}}</strong>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                            {{/if}}
+                                        {{/each}}
+                                    </ul>
+                                {{/if}}
+                            </li>
+                        {{/if}}
+                    </ul>
+                </div>
+                <div class="task-action">
+                    {{#if canEdit}}
+                        {{#link-to 'taskEdit' model class="btn btn-primary btn-iconed"}}
+                            <span class="flaticon stroke work-1"></span>
+                            {% trans 'Edit task' %}
+                        {{/link-to}}
+                    {{else}}
+                        {{#unless isMember}}
+                            <a {{action applyForTask this }} class="btn btn-primary btn-iconed"}}>
+                                <span class="flaticon stroke work-1"></span>
+                                {% trans "Apply for task" %}
+                            </a>
+                        {{/unless}}
+                    {{/if}}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="l-section" id="wallposts">
+        <section class="l-wrapper">
+            {{render 'taskIndex'}}
+            {{render 'taskActivity' model}}
+		</section>
+	</div>
+
+
+{% endtplhandlebars %}

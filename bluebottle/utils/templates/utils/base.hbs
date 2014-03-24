@@ -1,0 +1,29 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% include 'utils/form-components.hbs' %}
+
+{% tplhandlebars "tag_widget" %}
+
+    <ul class="tags">
+        {{#each tags}}
+            <li class="tag"><span class="flaticon solid tag-2"></span> {{this.id}}<em {{action removeTag this target="view" }} class="flaticon solid x-1 delete"></em></li>
+        {{/each}}
+    </ul>
+
+    {{view App.TagField valueBinding="view.new_tag" name="tag" placeholder="Add a tag" class="tag"}} <button class="btn btn-modest add-tag" {{action addTag target=view}}>Add</button>
+
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "social_share" %}
+
+    <ul id="share">
+        <li class="share-facebook"><a {{action shareOnFacebook target="view"}}><span class="flaticon social facebook-4"></span> <strong>{% trans "Share" %}</strong></a></li>
+        <li class="share-twitter"><a {{action shareOnTwitter target="view"}}><span class="flaticon social twitter-4"></span> <strong>{% trans "Tweet" %}</strong></a></li>
+    </ul>
+
+{% endtplhandlebars %}
+
+

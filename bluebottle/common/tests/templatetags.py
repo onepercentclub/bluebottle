@@ -5,7 +5,7 @@ import unittest
 
 
 class BlockVerbatimTestCase(unittest.TestCase):
-    """ 
+    """
     Testcase testing the block_verbatim template tag.
 
     block_verbatim parses other template tags while leaving {{foo}} structures
@@ -67,9 +67,60 @@ class BlockVerbatimTestCase(unittest.TestCase):
 
     def test_tag_not_loaded(self):
         def _create_template():
-            t = Template(
+            Template(
                 '{% block_verbatim test %}'
                 '{{verbatim node}}'
                 '{% endblock_verbatim %}'
                 )
         self.assertRaises(TemplateSyntaxError, _create_template)
+
+
+class BBComponentTestCase(unittest.TestCase):
+    """
+    TestCase testing the correct functioning of the bb_component tag.
+
+    bb_component takes an arbitrary number of keyword arguments and translates
+    strings marked for translation.
+    """
+
+    def setUp(self):
+        self.load_statement = "{% load bb_ember %}";
+
+    def test_no_component_args(self):
+        t = Template(
+            self.load_statement +
+            '{% bb_component \'my-component\' %}'
+            )
+        rendered = t.render(Context())
+        self.assertEqual(rendered, u'{{my-component}}')
+
+    def test_no_args(self):
+        """ Test that a TemplateSyntaxError is raised when no component name is specified (as a string)"""
+        def _create_template():
+            t = Template(
+                self.load_statement +
+                '{% bb_component %}'
+                )
+            t.render(Context())
+        self.assertRaises(TemplateSyntaxError, _create_template)
+
+        def _create_template2():
+            t = Template(
+                self.load_statement +
+                '{% bb_component foo %}'
+                )
+            t.render(Context())
+        self.assertRaises(TemplateSyntaxError, _create_template2)
+
+    def test_kwargs(self):
+        """ Test that the keyword arguments are indeed in the component """
+        t = Template(
+            self.load_statement +
+            '{% bb_component \'my-component\' value1=\'foo\' value2="\'bar\'" %}'
+            )
+        result = t.render(Context())
+
+        self.assertTrue(result.startswith('{{my-component '))
+        self.assertIn('value1=foo', result)
+        self.assertIn('value2=\'bar\'', result)
+        self.assertTrue(result.endswith('}}'))

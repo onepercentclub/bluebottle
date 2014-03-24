@@ -1,0 +1,84 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "my_project" %}
+    <div class="l-section" id="project-dashboard">
+        <article id="campaign-create">
+
+            <header class="campaign-header l-section">
+
+                <div class="l-wrapper">
+
+					<h1 class="page-title">
+						{% trans "My projects"%} <small>&rsaquo; {{ title }}</small>
+					</h1>
+
+                    <nav id="campaign-steps" class="steps">
+
+
+                        {{#if isPhasePlanNew}}
+                            {{#link-to "myProject.start" classBinding=":step validStart:validated"}}
+                                {{#if validStart}}
+                                    <span class="flaticon solid checkmark-1 "></span>
+                                {{/if}}
+                                {% trans "Start" %}
+                            {{/link-to}}
+                        {{/if}}
+
+                        {{#link-to "myProject.pitch" classBinding=":step validPitch:validated"}}
+                            {{#if validPitch}}
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
+                            {{/if}}
+                            {% trans "Project" %}
+                        {{/link-to}}
+
+                        {{#link-to "myProject.story" classBinding=":step validStory:validated"}}
+                            {{#if validStory}}
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
+                            {{/if}}
+                            {% trans "Description" %}
+                        {{/link-to}}
+
+                        {{#link-to "myProject.organisation" classBinding=":step organization.validOrganization:validated"}}
+                            {{#if organization.validOrganization}}
+                                {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
+                            {{/if}}
+                            {% trans "Organisation" %}
+                        {{/link-to}}
+                       {{#if isPhasePlanNew}}
+                           {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
+                                {{#if validsubmit}}
+                                    <span class="flaticon solid checkmark-1"></span>
+                                {{/if}}
+                                {% trans "Submit" %}
+                            {{/link-to}}
+                        {{/if}}
+                    </nav>
+                    {{#if canPreview}}
+    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
+    						<span class="flaticon solid eye-1"></span>
+    						{% trans 'Preview' %}
+    					</a>
+                    {{/if}}
+				</div>
+			</header>
+
+            <section class="l-section">
+                <div class="l-wrapper">
+                    <div class="l-content">
+                        <form>
+                            {{outlet}}
+                        </form>
+                    </div>
+                    {{ partial '_my_project_sidebar' }}
+                </div>
+            </section>
+
+
+        </article>
+
+    </div>
+
+{% endtplhandlebars %}
+

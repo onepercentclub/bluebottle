@@ -122,7 +122,6 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
 
     actions: {
         saveAndRedirect: function () {
-            debugger;
             var self = this,
                 model = this.get('model'),
                 redirected = false,

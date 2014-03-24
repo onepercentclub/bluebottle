@@ -4,7 +4,6 @@
  @see App.UserProfileRoute and App.UserProfileController to see it in action.
  */
 App.SaveOnExitMixin = Ember.Mixin.create({
-
     actions : {
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
@@ -15,34 +14,25 @@ App.SaveOnExitMixin = Ember.Mixin.create({
                 if (step) controller.transitionToRoute(step);
             }
 
-            model.one('becameInvalid', function(record) {
-                // Ember-data currently has no clear way of dealing with the state
-                // loaded.created.invalid on server side validation, so we transition
-                // to the uncommitted state to allow resubmission
-                if (record.get('isNew')) {
-                    record.transitionTo('loaded.created.uncommitted');
-                } else {
-                    record.transitionTo('loaded.updated.uncommitted');
-                }
-            });
-
             if (model.get('isNew')) {
                 model.one('didCreate', function(){
                     if (step) controller.transitionToRoute(step);
-
                 });
             } else {
                 model.one('didUpdate', function(){
                     if (step) controller.transitionToRoute(step);
                 });
             }
-            
-            if (this.get('flash')) {
-                this.set('flash', null);
-            }
 
-            model.set('errors', {});
-            model.save();
+            // If there is a flash property on the controller then 
+            // reset as we are changing steps now
+            if (this.get('flash') && step)
+                this.set('flash', null);
+
+            // The class using this mixin must have an implementation of _save()
+            // or use a mixin which includes one, eg App.ControllerObjectSaveMixin
+            if (typeof this._save === 'function')
+              this._save();
         },
 
         goToPreviousStep: function(){
@@ -87,6 +77,7 @@ App.ControllerObjectStatusMixin = Em.Mixin.create({
 App.ControllerObjectSaveMixin = Em.Mixin.create({
     flash: null,
     scrollTopBeforeSave: true,
+    redirectRouteName: 'home',
 
     // If there is a modelStatus property on the controller
     // then use to re-set the flash message on change
@@ -94,29 +85,73 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
     // below has set a flash message but will happen when 
     // editing the record => isDirty or the record is 
     // reloaded, eg changing tabs
-    setFlash: function () {
+    resetFlash: function () {
         this.set('flash', null);
     }.observes('modelStatus'),
 
+    _save: function () {
+        var self = this,
+            model = this.get('model');        
+
+        if (this.get('flash'))
+            this.set('flash', null);
+
+        model.one('didUpdate', function () {
+            self.set('flash', {
+                type: 'success',
+                text: gettext('Successfully saved')
+            });
+        });
+
+        model.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        if (model) {
+          model.set('errors', {});
+          model.save();
+        }
+    },
+
     actions: {
-        save: function() {
+        saveAndRedirect: function () {
             var self = this,
-                model = this.get('model');
-            
+                model = this.get('model'),
+                redirected = false,
+                saveEvent = model.get('isNew') ? 'didCreate' : 'didUpdate';
+
+            var t = model.one(saveEvent, function () {
+                if (!redirected) {
+                    redirected = true;
+                    self.transitionToRoute(self.redirectRouteName);
+                }
+            });
+
+            // If the save was invalid then we should cancel the redirect
+            // otherwise the model.one above will trigger later when/if the
+            // model is successfully updated/created => causing a redirect
+            // unless the redirected variable is true.
+            // TODO: It would be better to get a 'handle' for the one off
+            //       trigger above and then cancel it if the save was invalid
+            model.one('becameInvalid', function () {
+                redirected = true;
+            });
+
+            this._save();
+        },
+
+        save: function() {
             if (this.scrollTopBeforeSave)
                 $('body').animate({ scrollTop: 0 }, 600);
 
-            model.one('didUpdate', function () {
-                self.set('flash', {
-                    type: 'success',
-                    text: gettext('Successfully updated')
-                });
-            });
-
-            if (model) {
-                model.set('errors', {});
-                model.save();
-            }
+            this._save();
         },
 
         rollback: function() {

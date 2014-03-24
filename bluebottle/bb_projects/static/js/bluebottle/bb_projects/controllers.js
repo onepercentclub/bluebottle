@@ -262,7 +262,7 @@ App.MyProjectController = Em.ObjectController.extend({
 
     canPreview: function () {
         return !!this.get('model.title');
-    }.property('model.title')
+    }.property('model.title'),
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
@@ -273,12 +273,20 @@ App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
 
 App.MyProjectPitchController = App.StandardTabController.extend({
     previousStep: 'myProject.start',
-    nextStep: 'myProject.story'
+    nextStep: 'myProject.story',
+
+    canSave: function () {
+        return !!this.get('model.title');
+    }.property('model.title')
 });
 
 App.MyProjectStoryController = App.StandardTabController.extend({
     previousStep: 'myProject.pitch',
-    nextStep: 'myProject.organisation'
+    nextStep: 'myProject.organisation',
+
+    canSave: function () {
+        return !!this.get('model.title');
+    }.property('model.title')
 });
 
 App.MyProjectSubmitController = App.StandardTabController.extend({

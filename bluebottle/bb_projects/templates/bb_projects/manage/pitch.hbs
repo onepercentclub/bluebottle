@@ -4,13 +4,13 @@
 
 {% tplhandlebars "my_project_pitch" %}
     
+    {{bb-flash data=flash}}
+
     <legend>
         <strong>
             {% trans 'Project Basics' %}
         </strong>
     </legend>
-
-    {{bb-flash data=flash}}
     
     <fieldset>
         <ul>
@@ -47,13 +47,12 @@
     </fieldset>
     <fieldset>
         <ul>
-
-             {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country }}
-                {{view App.CountrySelectView selectionBinding=country name='country' classBinding="errors.country.length:error"}}
-            {{/bb-form-field}}
-
             {{bb-map-picker model=controller.model hint='Select the location on the map. You can use the search to find your location.'
                 latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location}}
+            
+            {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country }}
+                {{view App.CountrySelectView selectionBinding=country name='country' classBinding="errors.country.length:error"}}
+            {{/bb-form-field}}
         </ul>
     </fieldset>
 

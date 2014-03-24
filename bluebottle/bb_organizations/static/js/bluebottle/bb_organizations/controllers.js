@@ -27,11 +27,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
             if (this.get('isNew')) {
                 // Set the current organization name to something that
                 // makes sense in the picklist
-                console.log(this.get('model'));
-                console.log(this.get('name'));
                 this.set('name', '- New Organisation -');
-                console.log(this.get('model'));
-                console.log(this.get('name'));
             }
             this.set('model', this.get('selectedOrganization'));
             this.connectOrganizationToProject();

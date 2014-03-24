@@ -220,6 +220,9 @@ App.Store = DS.Store.extend({
     adapter: 'App.Adapter'
 });
 
+DS.Model.reopen({
+    meta: DS.attr('object')
+});
 
 /* Routing */
 
@@ -238,6 +241,7 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
+//Enable Google Analytics with Ember
 App.Router.reopen({
     /**
      * Tracks pageviews if google analytics is used
@@ -245,26 +249,18 @@ App.Router.reopen({
      */
     didTransition: function(infos) {
         this._super(infos);
-        if (window._gaq === undefined) { return; }
 
-        Ember.run.next(function(){
-            _gaq.push(['_trackPageview', window.location.hash.substr(1)]);
-        });
-    }
-});
-
-App.Router.reopen({
-    didTransition: function(infos) {
-        this._super(infos);
         Ember.run.next(function() {
             // the meta module will now go trough the routes and look for data
             App.meta.trigger('reloadDataFromRoutes');
         });
-    }
-});
 
-DS.Model.reopen({
-    meta: DS.attr('object')
+        if (window._gaq !== undefined) {
+            Ember.run.next(function() {
+                _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
+            });
+        }
+    }
 });
 
 Em.Route.reopen({
@@ -272,9 +268,6 @@ Em.Route.reopen({
         return this.get('context.meta_data');
     }.property('context.meta_data')
 });
-
-
-
 
 App.Router.map(function() {
 
@@ -375,7 +368,8 @@ App.ApplicationRoute = Em.Route.extend({
             Bootstrap.ModalPane.popup({
                 classNames: classNames,
                 defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-                bodyViewClass: view
+                bodyViewClass: view,
+                controller: controller
             });
 
         },
@@ -447,20 +441,4 @@ App.LanguageSwitchView = Em.CollectionView.extend({
 
 App.ApplicationView = Em.View.extend({
     elementId: 'site'
-});
-
-//Enable Google Analytics with Ember
-App.Router.reopen({
-    /**
-     * Tracks pageviews if google analytics is used
-     * Source: http://www.randomshouting.com/2013/05/04/Ember-and-Google-Analytics.html
-     */
-    didTransition: function(infos) {
-        this._super(infos);
-        if (window._gaq === undefined) { return; }
-
-        Ember.run.next(function(){
-            _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
-        });
-    }
 });

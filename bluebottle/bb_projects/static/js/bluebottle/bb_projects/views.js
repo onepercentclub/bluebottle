@@ -61,12 +61,7 @@ App.ProjectView = Em.View.extend({
             view.$(event.target).addClass("active");
             event.preventDefault();
         });        
-    },
-    staticMap: function(){
-        var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
-        return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
-            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
-    }.property('latitude', 'longitude')    
+    } 
 });
 
 App.ProjectPlanView = Em.View.extend({

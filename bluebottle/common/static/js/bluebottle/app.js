@@ -368,7 +368,8 @@ App.ApplicationRoute = Em.Route.extend({
             Bootstrap.ModalPane.popup({
                 classNames: classNames,
                 defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-                bodyViewClass: view
+                bodyViewClass: view,
+                controller: controller
             });
 
         },

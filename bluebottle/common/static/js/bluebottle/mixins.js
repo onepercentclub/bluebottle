@@ -103,17 +103,6 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
             });
         });
 
-        model.one('becameInvalid', function(record) {
-            // Ember-data currently has no clear way of dealing with the state
-            // loaded.created.invalid on server side validation, so we transition
-            // to the uncommitted state to allow resubmission
-            if (record.get('isNew')) {
-                record.transitionTo('loaded.created.uncommitted');
-            } else {
-                record.transitionTo('loaded.updated.uncommitted');
-            }
-        });
-
         if (model) {
           model.set('errors', {});
           model.save();

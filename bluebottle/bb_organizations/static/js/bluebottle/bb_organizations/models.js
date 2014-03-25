@@ -72,6 +72,10 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     },
 
     name: DS.attr('string'),
+    nameOrDefault: function () {
+        return this.get('name') || '-- No Name --';
+    }.property('name'),
+
     description: DS.attr('string', {defaultValue: ""}),
     current_name: DS.attr('string'),
     projects: DS.hasMany('App.MyProject'),

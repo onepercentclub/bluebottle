@@ -109,7 +109,6 @@ App.GenericFieldView = Em.View.extend({
             return 'generic_radio';
         }
         if (this.get('controller.model.type') == 'select') {
-            console.log(this.get('controller.model.values'));
             return 'generic_select';
         }
         return 'generic_textarea';
@@ -169,7 +168,13 @@ App.MyProjectMediaView = Em.View.extend({
 });
 
 App.MyProjectOrganisationView = Em.View.extend({
-    templateName: 'my_project_organisation'
+    templateName: 'my_project_organisation',
+
+    focusNameField: function () {
+        var nameInput = this.$('input:first');
+        if (nameInput)
+          this.$('input:first').focus();
+    }.observes('controller.model.isNew')
 });
 
 App.MyProjectAmbassadorsView = Em.View.extend({

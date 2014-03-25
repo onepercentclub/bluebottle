@@ -230,6 +230,21 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
         this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
     },
 
+    save: function () {
+        this.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        this._super();
+    },
+
     valid: function(){
         return (this.get('') && this.get('validPitch'));
     }.property('validStory', 'validPitch'),

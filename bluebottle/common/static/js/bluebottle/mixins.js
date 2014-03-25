@@ -122,8 +122,16 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
 
     actions: {
         saveAndRedirect: function () {
+            var model = this.get('model');
+            
+            // If the model isn't dirty then nothing to save so 
+            // just fulfil the redirect
+            if (!model.get('isDirty')) {
+                this.transitionToRoute(this.redirectRouteName);
+                return;
+            }
+
             var self = this,
-                model = this.get('model'),
                 redirected = false,
                 saveEvent = model.get('isNew') ? 'didCreate' : 'didUpdate';
 

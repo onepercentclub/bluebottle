@@ -26,12 +26,12 @@
     </fieldset>
     <fieldset>
         <ul>
-
-            {{#bb-form-field label='Theme' errors=errors.theme}}
+            {% bb_block_component label='Theme' errors='errors.theme' %}
                 {{view App.ThemeSelectView name='theme' selectionBinding="theme" classBinding="errors.theme.length:error"
                 prompt='Select one of the themes.'}}
-            {{/bb-form-field}}
-            {{#bb-form-field hint='Add some tags that characterise your project.' label='Tags' errors=errors.tags}}
+            {% endbb_block_component %}
+
+                {{#bb-form-field hint='Add some tags that characterise your project.' label='Tags' errors=errors.tags}}
                 {{view App.TagWidget tagsBinding="tags" name='tags' classBinding="errors.tags.length:error" prompt='Add some tags that characterise your project.'}}
             {{/bb-form-field}}
         </ul>

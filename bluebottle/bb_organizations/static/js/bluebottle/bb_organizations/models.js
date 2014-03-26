@@ -71,7 +71,26 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
       this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredFields'));
     },
 
+    save: function () {
+        this.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        this._super();
+    },
+
     name: DS.attr('string'),
+    nameOrDefault: function () {
+        return this.get('name') || '-- No Name --';
+    }.property('name'),
+
     description: DS.attr('string', {defaultValue: ""}),
     current_name: DS.attr('string'),
     projects: DS.hasMany('App.MyProject'),

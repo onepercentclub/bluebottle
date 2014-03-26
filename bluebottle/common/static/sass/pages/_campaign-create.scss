@@ -39,24 +39,27 @@
 	}
 
 	.campaign-footer {
-		width: 100%;
-		bottom: 0;
-		left: 0;
+		// width: 100%;
+		// bottom: 0;
+		// left: 0;
+		@include clear;
+		padding: $base-padding;
 		background: $gray-dark;
 		padding: $base-padding;
-		z-index: 100;
-		position: fixed;
-		.navigation {
-			@include grid(32,1,1);
-		}
-		.actions {
-			@include grid(16, 1,1);
-			text-align: right;
-			padding: ($base-padding/2) 0
-		}
+		// z-index: 100;
+		// position: fixed;
+		// .navigation {
+		// 	@include grid(32,1,1);
+		// }
+		// .actions {
+		// 	@include grid(16, 1,1);
+		// 	text-align: right;
+		// 	padding: ($base-padding/2) 0
+		// }
 		.save {
 			text-decoration: none;
 			color: $gray-light;
+			float: right;
 		}
 		.next {
 			float: right;

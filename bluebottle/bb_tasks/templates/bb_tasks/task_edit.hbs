@@ -95,9 +95,6 @@
                                 {{view App.TagWidget tagsBinding="tags" classBinding="errors.tags.length:error"}}
                             </div>
 
-
-
-
                             {{#if errors.tags }}
                                 <div class="has-errors">{{#each errors.tags }}<p>{{this}}</p>{{/each}}</div>
                             {{/if}}

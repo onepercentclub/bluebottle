@@ -96,7 +96,6 @@ App.Task = DS.Model.extend({
     status: DS.attr('string', {defaultValue: 'open'}),
     tags: DS.hasMany('App.Tag'),
 
-
     tags_list: function() {
     	var arr = [];
         this.get('tags').forEach(function (item, index, self) {

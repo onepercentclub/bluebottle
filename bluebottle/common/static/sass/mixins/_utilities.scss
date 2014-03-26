@@ -15,6 +15,17 @@
     }
 }
 
+@mixin verticalcenter {
+
+	&:after {
+		content: "";
+		height: 100%;
+		display: inline-block;
+		vertical-align: middle;
+	}
+
+}
+
 @mixin resetlist {
     padding-left: 0;
     text-indent: 0;

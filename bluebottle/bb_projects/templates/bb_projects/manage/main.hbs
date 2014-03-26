@@ -16,10 +16,12 @@
 
 
                     <div class="page-actions">
-                        {{#link-to "project" this.id class="btn btn-modest campaign-link-button"}}
+                        {{#if id}}
+                        {{#link-to "project" id class="btn btn-modest campaign-link-button"}}
                             <span class="flaticon solid eye-1"></span>
                             {% trans 'Go to campaign' %}
                         {{/link-to}}
+                        {{/if}}
                     </div>
                    
 

@@ -179,6 +179,11 @@
 	
 	h3 {
 		margin-bottom: $base-margin/2;
+		display: inline-block;
+	}
+	
+	.task-create {
+		margin-top: $base-margin;
 	}
 	
 	.container {
@@ -209,15 +214,17 @@
 	margin-bottom: $base-margin;
 	background-color: $task-preview-background;
 	
+	background-color: $tasks-task-preview-member-status-bg-color;	
+	
 	.task-member-status, .task-content, .task-arrow {
-		height: 90px;
+		min-height: 90px;
 	}
 	
 	.task-member-status {
 		@include grid(8,0,0);
 		background-color: $tasks-task-preview-member-status-bg-color;
 		text-align: center;
-		color: white;
+		color: $white;
 		padding: $base-padding 0;
 		
 		big {
@@ -237,6 +244,7 @@
 	.task-content {
 		@include grid(36,0,0);
 		padding: $base-padding;
+		background-color: $white;
 	}
 	
 	.task-title {
@@ -252,13 +260,14 @@
 		@include grid(4,0,0);
 		background: $tasks-task-preview-arrow-bg-color;	
 		font-size: $font-size-largest;
-		color: white;
+		color: $white;
 		font-weight: bold;
 		text-align: center;
+		vertical-align: middle;
+		padding: ($base-padding * .75) 0;
+			
 		.flaticon {
 			display: inline-block;
-			vertical-align: middle;
-			padding: ($base-padding * .75) 0;
 		}
 	}
 	

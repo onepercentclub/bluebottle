@@ -149,8 +149,11 @@ fieldset legend {
     &.success {
         text-align: center;
         padding: 10px;
-        border: 2px solid green;
-        background-color: lightgreen;
+        border: 2px solid darken($color-success, 20%);
+        background-color: $color-success;
+        margin: $base-margin 0;
+        color: $white;
+        font-weight: bold;
     }
 }
 

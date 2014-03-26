@@ -11,6 +11,7 @@ BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
 BB_SKILL_MODEL = get_skill_model
 
+
 class TaskMemberAdminInline(admin.StackedInline):
     model = BB_TASKMEMBER_MODEL
 
@@ -64,3 +65,15 @@ class TaskAdmin(admin.ModelAdmin):
     )
 
 admin.site.register(BB_TASK_MODEL, TaskAdmin)
+
+
+class TaskMemberAdmin(admin.ModelAdmin):
+    model = BB_TASKMEMBER_MODEL
+
+    list_display = ('member', 'task', 'created', 'status', 'time_spent')
+    list_filter = ('status', )
+    raw_id_fields = ('member', )
+    readonly_fields = ('created', )
+    fields =  readonly_fields + ('member', 'task', 'status', 'motivation', 'time_spent')
+
+admin.site.register(BB_TASKMEMBER_MODEL, TaskMemberAdmin)

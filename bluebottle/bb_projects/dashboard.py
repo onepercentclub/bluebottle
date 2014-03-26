@@ -5,7 +5,6 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from admin_tools.dashboard.modules import DashboardModule
 from bluebottle.utils.utils import get_project_model
 
-
 PROJECT_MODEL = get_project_model()
 
 

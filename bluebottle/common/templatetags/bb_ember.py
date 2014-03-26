@@ -204,3 +204,39 @@ def bb_component(component, *args, **kwargs):
         component_bits.append(bit)
 
     return '{{' + ' '.join(component_bits) + '}}'
+
+
+@register.tag(name='bb_block_component')
+def do_bb_block_component(parser, token, *args, **kwargs):
+    params = token.split_contents()
+    params.pop(0)
+    print params
+    print args
+    print kwargs
+
+    nodelist = parser.parse(('endbb_block_component',))
+    parser.delete_first_token()
+
+    component_bits = []
+    for param in params:
+        print param
+        key, value = param.split('=')
+        print key
+        print value
+        # trigger translation if we're dealing with Lazy translatable strings
+        if isinstance(value, Promise):
+            value = '\'{0}\''.format(force_str(value))
+        # bit = '{key}={value}'.format(key=key, value=value)
+        # component_bits.append(param)
+
+    return BbBlockComponentNode(nodelist, component_bits)
+
+
+class BbBlockComponentNode(template.Node):
+
+    def __init__(self, nodelist, params=[]):
+        self.nodelist = nodelist
+        self.params = params
+
+    def render(self, context):
+        return '{{#bb-form-field ' + ' '.join(self.params) + ' }}' + self.nodelist.render(context) +'{{/bb-form-field}}'

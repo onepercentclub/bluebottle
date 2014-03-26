@@ -288,7 +288,7 @@ App.MyProjectController = Em.ObjectController.extend({
     }.property('model.title'),
 
     validOrganization: function () {
-        var organization = this.get('organization'),
+        var organization = this.get('myOrganization'),
             project = this.get('model');
 
         if (organization && organization == project.get('organization')) {
@@ -296,7 +296,7 @@ App.MyProjectController = Em.ObjectController.extend({
         } else {
             return project.get('organization.validOrganization');
         }
-    }.property('organization', 'model.organization')
+    }.property('myOrganization', 'model.organization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

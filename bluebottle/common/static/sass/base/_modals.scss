@@ -40,20 +40,20 @@
 
   &.scalable {
     height: 80%;
-    width: 80%;
-    left: 10%;
+    width: 60%;
+    left: 20%;
     margin-left: auto;
     margin-right: auto;
     overflow: hidden;
 
     .modal-body {
-      max-height: 100%;
+    	max-height: auto !important;
     }
   }
 }
 
 .modal-header, .modal-body, .modal-footer {
-    padding: $base-padding $base-padding*2;
+    padding: $base-padding*1.5 $base-padding*2.5;
 }
 
 .modal-close, .modal .close {

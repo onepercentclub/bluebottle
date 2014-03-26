@@ -69,11 +69,13 @@ App.User = DS.Model.extend({
     }.property('first_name'),
 
     get_website: function() {
-        if (this.get('website').substr(0,7) != 'http://') {
-            return "http://" + this.get('website');
+        if (this.get('website').substr(0,7) == 'http://') {
+            return this.get('website').replace('http://', '');
+        } else if ((this.get('website').substr(0,11) == 'http://www.')) {
+            return this.get('website').replace('http://www.', '');
         } else {
-            return this.get('website');
-        }
+			return this.get('website');
+		}
     }.property('website'),
 
     user_since: function() {
@@ -87,7 +89,6 @@ App.User = DS.Model.extend({
     get_facebook: function() {
         return '//www.facebook.com/' + this.get('facebook');
     }.property('facebook')
-
 });
 
 

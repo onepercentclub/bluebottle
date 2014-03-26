@@ -62,11 +62,21 @@ App.ModelValidationMixin = Ember.Mixin.create({
 
         var self = this;
         var checkFunc = function() {
-            var missing = Em.A();
+            var missing = Em.A(),
+                friendlyNames = self.get('friendlyFieldNames');
 
             fields.forEach(function (field) {
-                if (!self.get(field))
-                    missing.addObject(field);
+                var fieldName;
+
+                if (!self.get(field)) {
+                    if (friendlyNames && friendlyNames[field]) {
+                        fieldName = friendlyNames[field];
+                    } else {
+                        fieldName = field;
+                    }
+
+                    missing.addObject(fieldName);
+                }
             });
             return missing;
         };
@@ -323,9 +333,11 @@ App.MapPicker = Em.View.extend({
 						if (status == google.maps.GeocoderStatus.OK) {
 							for (var i = 0; i < results[0].address_components.length; i++) {
 								if (results[0].address_components[i].types[0] == "country") {
-									results[0].address_components[i].short_name
-									view.get('model').set('country', App.Country.find(
-										alpha2_code=results[0].address_components[i].short_name))
+									var code = results[0].address_components[i].short_name,
+									    country = App.Country.find().filterProperty('code', code)[0];
+
+									if (country)
+										view.get('model').set('country', country);
 								}
 							}
 						}

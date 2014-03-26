@@ -61,12 +61,7 @@ App.ProjectView = Em.View.extend({
             view.$(event.target).addClass("active");
             event.preventDefault();
         });        
-    },
-    staticMap: function(){
-        var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
-        return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
-            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
-    }.property('latitude', 'longitude')    
+    } 
 });
 
 App.ProjectPlanView = Em.View.extend({
@@ -114,7 +109,6 @@ App.GenericFieldView = Em.View.extend({
             return 'generic_radio';
         }
         if (this.get('controller.model.type') == 'select') {
-            console.log(this.get('controller.model.values'));
             return 'generic_select';
         }
         return 'generic_textarea';
@@ -135,12 +129,6 @@ App.GenericFieldView = Em.View.extend({
 App.MyProjectListView = Em.View.extend({
     templateName: 'my_project_list'
 });
-
-App.MyProjectView = Em.View.extend({
-    templateName: 'my_project'
-
-});
-
 
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
@@ -180,7 +168,13 @@ App.MyProjectMediaView = Em.View.extend({
 });
 
 App.MyProjectOrganisationView = Em.View.extend({
-    templateName: 'my_project_organisation'
+    templateName: 'my_project_organisation',
+
+    focusNameField: function () {
+        var nameInput = this.$('input:first');
+        if (nameInput)
+          this.$('input:first').focus();
+    }.observes('controller.model.isNew')
 });
 
 App.MyProjectAmbassadorsView = Em.View.extend({

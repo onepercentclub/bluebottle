@@ -27,8 +27,9 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     }.property('controllers.myProject.model.isPhasePlanNew'),
 
     canSave: function () {
-        return !!this.get('model.name');
-    },
+        var name = this.get('model.name');
+        return (name && name.length > 0);
+    }.property('model.name'),
 
     selectableOrganizations: function () {
         return this.get('organizations').filterProperty('isNew', false);

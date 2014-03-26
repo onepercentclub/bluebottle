@@ -372,6 +372,7 @@ class TaggableSerializerMixin(object):
         """
         # If there are tags sent to the API then store them and wipe them from data
         # to avoid DRF2 nested serializer trying to store them.
+        print "from native"
         instance = super(TaggableSerializerMixin, self).from_native(data, files)
 
         if data and 'tags' in data:
@@ -380,6 +381,7 @@ class TaggableSerializerMixin(object):
             return self.full_clean(instance)
 
     def save_object(self, obj, **kwargs):
+        print "Save object"
         # First save the object so we can add tags to it.
         super(TaggableSerializerMixin, self).save_object(obj, **kwargs)
 

@@ -263,6 +263,10 @@ App.TaskEditController = App.TaskNewController.extend({
     updateTask: function(event){
         var controller = this;
         var task = this.get('content');
+        var model = this.get('model');
+        console.log(model);
+        console.log(task.get('tags'));
+
         if (task.get('isDirty') == false){
             controller.transitionToRoute('task', task);
         }

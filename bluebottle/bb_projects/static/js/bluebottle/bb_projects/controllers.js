@@ -176,21 +176,19 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
     
-    tasks: function () {
-        return App.Task.find({project: this.get('parentId')});
-    }.property('parentId'),
-
-    availableTasks: function () {
-        return this.get('tasks').filter(function(task) {
-            return task.get("isAvailable");
-        });
-    }.property('tasks.@each.isAvailable'),
-
-    unavailableTasks: function () {
-        return this.get('tasks').filter(function(task) {
-            return task.get("isUnavailable");
-        });
-    }.property('tasks.@each.isUnavailable'),
+    getTasks: function() {
+        var controller = this;
+        if (!this.get("showingAll")) {
+            var now = new Date();
+            App.Task.find({project: this.get('controllers.project.id')}).then(function(tasks) {
+                controller.set("tasks", tasks.filter(function(item) {
+                    return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
+                })); 
+             });
+        } else {
+            controller.set("tasks", App.Task.find({project: this.get('controllers.project.id')}));
+        }
+    }.observes('showingAll'),
 
     resetShowingAll: function() {
         this.set("showingAll", false);

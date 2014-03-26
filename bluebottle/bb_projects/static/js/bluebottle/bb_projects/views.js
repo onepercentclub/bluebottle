@@ -171,9 +171,14 @@ App.MyProjectOrganisationView = Em.View.extend({
     templateName: 'my_project_organisation',
 
     focusNameField: function () {
+        // If there is already a focused element then don't 
+        // auto focus the first one
+        if (this.$('input:focus'))
+            return;
+
         var nameInput = this.$('input:first');
         if (nameInput)
-          this.$('input:first').focus();
+            nameInput.focus();
     }.observes('controller.model.isNew')
 });
 

@@ -97,9 +97,10 @@ $step-validated-icon-color: $white;
 		border-bottom: none;
 		text-decoration: none;
 		color: $gray-light;
+		font-weight: bold;
 		&.active {
 			background-color: $white;
-			font-weight: bold;
+			color: $gray-darker;
 		}
 	}
 }

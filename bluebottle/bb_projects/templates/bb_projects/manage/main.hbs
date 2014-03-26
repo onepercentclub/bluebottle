@@ -40,13 +40,14 @@
                             {% trans "Description" %}
                         {{/link-to}}
 
-                        {{#link-to "myProject.organisation" classBinding=":step organization.validOrganization:validated"}}
-                            {{#if organization.validOrganization}}
+                        {{#link-to "myProject.organisation" classBinding=":step validOrganization:validated"}}
+                            {{#if validOrganization}}
                                 {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                             {{/if}}
                             {% trans "Organisation" %}
                         {{/link-to}}
-                       {{#if isPhasePlanNew}}
+
+                        {{#if isPhasePlanNew}}
                            {{#link-to "myProject.submit" classBinding=":step validSubmit:validated"}}
                                 {{#if validsubmit}}
                                     <span class="flaticon solid checkmark-1"></span>
@@ -56,7 +57,7 @@
                         {{/if}}
                     </nav>
                     {{#if canPreview}}
-    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this}}>
+    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
     						<span class="flaticon solid eye-1"></span>
     						{% trans 'Preview' %}
     					</a>

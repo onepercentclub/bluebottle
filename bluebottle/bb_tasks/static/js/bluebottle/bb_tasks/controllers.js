@@ -118,6 +118,17 @@ App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMi
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, {
     needs: ['currentUser'],
 
+	// you can apply to a task only if:
+	// the task is not closed or realized,
+	// and if:
+	// you are not a already a member or if you already applied
+	isApplicable: function(){
+		var model = this.get('model')
+		return (model.get('isStatusClosed') || model.get('isStatusRealized') ||
+			this.get('isMember') || model.get('members').filterBy('isStatusApplied', true));
+	}.property('status', 'isMember', 'model.isStatusClosed', 'model.isStatusRealized',
+		'model.members.isStatusApplied'),
+
     isMember: function() {
         var user = this.get('controllers.currentUser.username');
         var isMember = false;
@@ -134,13 +145,13 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         return (this.get('isMember') || this.get('isAuthor'));
     }.property('isMember', 'isAuthor'),
 
-	acceptedMembers: function() {
-		return this.get('model').get('members').filterBy('isStatusAccepted', true);
-	}.property('members.@each.member.isStatusAccepted'),
+    acceptedMembers: function() {
+      return this.get('model').get('members').filterBy('isStatusAccepted', true);
+    }.property('members.@each.member.isStatusAccepted'),
 
-	notAcceptedMembers: function() {
-		return this.get('model').get('members').filterBy('isStatusAccepted', false);
-	}.property('members.@each.member.isStatusAccepted')
+    notAcceptedMembers: function() {
+      return this.get('model').get('members').filterBy('isStatusAccepted', false);
+    }.property('members.@each.member.isStatusAccepted')
 
 });
 

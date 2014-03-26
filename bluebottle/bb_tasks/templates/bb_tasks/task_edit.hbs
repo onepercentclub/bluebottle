@@ -10,8 +10,8 @@
             <form class="l-content" id="task-form">
                 <legend>
                     <strong>{% trans "Edit current task" %}</strong>
+                    {% trans "For campaign:" %} {{ project.title }}
                 </legend>
-
                 <fieldset>
                     <ul>
                         {% bb_component 'bb-text-field' label=_('Title of your task') valueBinding='title' errors='errors.title' %}

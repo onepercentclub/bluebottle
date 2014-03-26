@@ -9,9 +9,8 @@
         <section class="l-wrapper">
             <form class="l-content" id="task-form">
     		    <legend>
-    		        <strong>{% trans "Create new task" %}</strong><br />
-
-                    {{ project.title }}
+    		        <strong>{% trans "Create new task" %}</strong>
+                    {% trans "For campaign:" %} {{ project.title }}
     		    </legend>
 	            <fieldset>
 	                <ul>

@@ -333,9 +333,11 @@ App.MapPicker = Em.View.extend({
 						if (status == google.maps.GeocoderStatus.OK) {
 							for (var i = 0; i < results[0].address_components.length; i++) {
 								if (results[0].address_components[i].types[0] == "country") {
-									results[0].address_components[i].short_name
-									view.get('model').set('country', App.Country.find(
-										alpha2_code=results[0].address_components[i].short_name))
+									var code = results[0].address_components[i].short_name,
+									    country = App.Country.find().filterProperty('code', code)[0];
+
+									if (country)
+										view.get('model').set('country', country);
 								}
 							}
 						}

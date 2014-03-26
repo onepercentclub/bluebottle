@@ -129,7 +129,7 @@ App.ProjectController = Em.ObjectController.extend({
 
 });
 
-App.ProjectPlanController = Ember.ObjectController.extend();
+App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {});
 
 App.ProjectSupporterListController = Em.ArrayController.extend({
     supportersLoaded: function(sender, key) {
@@ -256,13 +256,44 @@ App.MyProjectListController = Em.ArrayController.extend({
 App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser', 'myProjectOrganisation'],
 
-    organization: function () {
-        return this.get('controllers.myProjectOrganisation.model');
-    }.property('controllers.myProjectOrganisation.model'),
+    // Create a one way binding so that changes in the MyProject controller don't alter the value in
+    // the MyProjectOrganization controller. This way the MyProjectOrganization controller is in 
+    // control of the value
+    organizationBinding: Ember.Binding.oneWay("controllers.myProjectOrganisation.model"),
+
+    // Here the controller will observe the organization value from the MyProjectOrganization controller
+    // add update the connection to the property on the MyProject when the value changes.
+    connectOrganization: function () {
+        var organization = this.get('organization'),
+            project = this.get('model');
+
+        // Return early if organization already associated with 
+        // project or the organization hasn't been saved yet
+        if (organization == project.get('organization') || organization.get('isNew'))
+            return;
+
+        // Set organization on project.
+        project.set('organization', organization);
+        if (!project.get('title'))
+            project.set('title', organization.get('title'));
+
+        project.save();
+    }.observes('organization.isNew'),
 
     canPreview: function () {
         return !!this.get('model.title');
-    }.property('model.title')
+    }.property('model.title'),
+
+    validOrganization: function () {
+        var organization = this.get('organization'),
+            project = this.get('model');
+
+        if (organization && organization == project.get('organization')) {
+            return organization.get('validOrganization');
+        } else {
+            return project.get('organization.validOrganization');
+        }
+    }.property('organization', 'model.organization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
@@ -273,12 +304,20 @@ App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
 
 App.MyProjectPitchController = App.StandardTabController.extend({
     previousStep: 'myProject.start',
-    nextStep: 'myProject.story'
+    nextStep: 'myProject.story',
+
+    canSave: function () {
+        return !!this.get('model.title');
+    }.property('model.title')
 });
 
 App.MyProjectStoryController = App.StandardTabController.extend({
     previousStep: 'myProject.pitch',
-    nextStep: 'myProject.organisation'
+    nextStep: 'myProject.organisation',
+
+    canSave: function () {
+        return !!this.get('model.title');
+    }.property('model.title')
 });
 
 App.MyProjectSubmitController = App.StandardTabController.extend({

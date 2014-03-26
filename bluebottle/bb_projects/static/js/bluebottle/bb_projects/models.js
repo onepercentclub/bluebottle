@@ -70,6 +70,9 @@ App.Project = DS.Model.extend({
     editable: DS.attr('boolean'),
 
     //organization: DS.belongsTo("App.Organization"),
+    validStart: function(){
+        return true;
+    },
 
     phaseName: function(){
         return this.get('status').get('name');
@@ -219,6 +222,8 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
     friendlyFieldNames: null,
+
+
 
     init: function () {
         this._super();

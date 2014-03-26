@@ -42,13 +42,14 @@
 				<section id="task-previews">
 					<div class="container">
 						<h3>Tasks available</h3>
-						
-						{# TODO: Create working "add task" link if project owner #}
-						{{#link-to "taskNew" project.id class="btn btn-modest right task-create"}}
-	                    	<span class="flaticon solid pencil-3"></span>
-	                        {% trans "Create task" %}
-	                    {{/link-to}}
-	               
+
+						{{#if isProjectOwner }}
+                            {{#link-to "taskNew" controllers.project.id class="btn btn-modest right task-create"}}
+                                <span class="flaticon solid pencil-3"></span>
+                                {% trans "Create task" %}
+                            {{/link-to}}
+	                    {{/if}}
+
 						{{#each tasks}}
 							{{#link-to "task" this}}
 								<article class="task-preview">

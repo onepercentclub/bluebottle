@@ -45,6 +45,7 @@
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
         var DEBUG = {{ debug|yesno:"true,false" }};
+        var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
 
     {# The Ember stack. jQuery, jQuery-ui, Ember, Ember-data, Ember-drf2-adapter, Ember meta #}
@@ -53,6 +54,7 @@
     {% else %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     {% endif %}
+    <script type="text/javascript" src="http://www.skypeassets.com/i/scom/js/skype-uri.js"></script>
 
     {% compress js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-ui/minified/jquery.ui.core.min.js"></script>
@@ -97,6 +99,7 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/mixins.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/controllers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/overrides.js"></script>
 
             {% for app in bb_apps %}
                 <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/routes.js"></script>
@@ -220,15 +223,16 @@
     <div id="fb-root"></div>
 
 	{% block google_analytics %}
-    {#  Google analytics #}
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-2761714-4']);
-        _gaq.push(['_trackPageview']);
-        (function()
-        { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
-        )();
-    </script>
+        <script type="text/javascript">
+          var _gaq = _gaq || [];
+            {% if ANALYTICS_CODE %}
+                _gaq.push(['_setAccount', '{{  ANALYTICS_CODE }}']);
+                _gaq.push(['_trackPageview']);
+                (function()
+                { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
+                )();
+            {%  endif %}
+        </script>
 	{% endblock %}
 	
     <!--[if lte IE 9]>

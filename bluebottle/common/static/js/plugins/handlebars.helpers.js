@@ -47,3 +47,47 @@ Em.Handlebars.registerBoundHelper('linebreaks', function(value, options) {
     }
 });
 
+Ember.Handlebars.registerHelper('ifExpired', function (property, options) {
+  var value,
+      now = new Date();
+  
+  // If context is an ObjectController then property
+  // should be found on the associated model
+  if (this instanceof Ember.ObjectController) {
+      value = Em.get(this, 'model').get(property);
+  } else {
+      value = Em.get(this, property);
+  }
+
+  if (typeof value.getMonth !== 'function') {
+    throw new Error('Property is not a date');
+  }
+ 
+  if (now < value) {
+     return options.inverse(this);      
+  }
+  else {
+     return options.fn(this);
+  }
+});
+
+Ember.Handlebars.helper('daysToGoText', function(value, options) {
+  var text = '',
+      reachedText = gettext('Deadline reached');
+  
+  if (typeof value == 'number') {
+      if (value > 0) {
+          var daysText = gettext('days'),
+              dayText = gettext('day'),
+              plural = value > 1 ? daysText : dayText,
+              supportText = gettext('to support this project');
+
+          text = '<big>' + value + '</big> ' + plural + ' left';
+          text += '<br /><small>' + supportText + '</small>'
+      } else {
+          text = '<big>' + reachedText + '</big>';
+      }
+  }
+
+  return new Handlebars.SafeString(text);
+});

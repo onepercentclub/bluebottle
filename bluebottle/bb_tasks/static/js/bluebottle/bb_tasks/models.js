@@ -103,7 +103,7 @@ App.Task = DS.Model.extend({
         });
         return arr.join(', ');
     }.property('tags.@each.id'),
-    
+
     // Calculate status booleans here so we can use it in all views
     isStatusOpen: function(){
         return this.get('status') == 'open';

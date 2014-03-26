@@ -31,9 +31,9 @@
                     <button {{bindAttr class=":btn :btn-modest :btn-primary :next modelStatus"}} {{action save}}><span class="flaticon solid right-2"></span>{% trans "Save" %}</button>
                 {{/if}}
             </div>
-            {{#if isPhasePlanNew}}
+            {{#if canSave}}
                 <div class="actions">
-                    <a class="save" {{action save}}>
+                    <a class="save" {{action saveAndRedirect}}>
                         <span class="flaticon solid pencil-3"></span> Save &amp; continue later
                     </a>
                 </div>

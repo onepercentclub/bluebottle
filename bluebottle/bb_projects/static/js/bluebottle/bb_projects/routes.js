@@ -194,8 +194,7 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
         if (project.get('organization')) {
             return project.get('organization');
         } else {
-            var organization = App.MyOrganization.createRecord();
-            return organization;
+            return App.MyOrganization.createRecord();
         }
     },
     exit: function() {

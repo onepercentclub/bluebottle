@@ -20,84 +20,88 @@
                 {{#bb-form-field classBinding="wide"}}
                     {% trans "It appears that you already have an (other) organisation. Select it below or fill out the form to create a new one." %}
                     {{view App.MyOrganizationSelectView name='organization' 
-                                                        contentBinding='organizations'
+                                                        contentBinding='selectableOrganizations'
                                                         optionValuePath='content.id'
                                                         optionLabelPath='content.nameOrDefault'
-                                                        selectionBinding='controller.model'}} <button class="btn btn-modest add-org" {{action newOrganization}}>New</button>
+                                                        selectionBinding='controller.selectedOrganization'}} 
+                    <button class="btn btn-modest add-org" {{action newOrganization}}>New</button>
                 {{/bb-form-field}}
             </ul>
         </fieldset>
     {{/if}}
 
+    {{! TODO: Temp fix for the object controller sometimes losing the content. Why/How? }}
+    {{#if content}}
+        <fieldset>
+            <ul>
+                {{bb-text-field hint="Name of your partner organisation" label="Name" name="name"
+                                valueBinding=name errors=errors.name maxlength=255}}
 
-    <fieldset>
-        <ul>
-            {{bb-text-field hint="Name of your partner organisation" label="Name" name="name"
-                            valueBinding=name errors=errors.name maxlength=255}}
+                {{bb-text-field hint="Name of then contact in the organisation" label="Contact name" name="contact_name"
+                                valueBinding=contact_name errors=errors.contact_name maxlength=255}}
 
-            {{bb-text-field hint="Name of then contact in the organisation" label="Contact name" name="contact_name"
-                            valueBinding=contact_name errors=errors.contact_name maxlength=255}}
+                {{bb-text-field hint="E-mail of your contact person" label="Email" name="email"
+                                valueBinding=email errors=errors.email maxlength=255}}
 
-            {{bb-text-field hint="E-mail of your contact person" label="Email" name="email"
-                            valueBinding=email errors=errors.email maxlength=255}}
+                {{bb-text-field hint="Phone number of your contact person" label="Phone number" name="phone"
+                                valueBinding=phone_number errors=errors.phone_number maxlength=255}}
 
-            {{bb-text-field hint="Phone number of your contact person" label="Phone number" name="phone"
-                            valueBinding=phone_number errors=errors.phone_number maxlength=255}}
+                {{bb-text-field hint="Does your partner organization have a website?" label="Website" name="website"
+                                valueBinding=website errors=errors.website maxlength=255
+                                placeholder="http://"}}
 
-            {{bb-text-field hint="Does your partner organization have a website?" label="Website" name="website"
-                            valueBinding=website errors=errors.website maxlength=255
-                            placeholder="http://"}}
+                {{bb-text-field hint="Does your partner organization have a twitter account?" label="Twitter" name="twitter"
+                                valueBinding=twitter errors=errors.twitter maxlength=255
+                                placeholder="@twitteraccount"}}
 
-            {{bb-text-field hint="Does your partner organization have a twitter account?" label="Twitter" name="twitter"
-                            valueBinding=twitter errors=errors.twitter maxlength=255
-                            placeholder="@twitteraccount"}}
+                {{bb-text-field hint="Does your partner organization have a facebook group?" label="Facebook" name="facebook"
+                                valueBinding=facebook errors=errors.facebook maxlength=255
+                                placeholder="https://www.facebook.com/<groupname>"}}
 
-            {{bb-text-field hint="Does your partner organization have a facebook group?" label="Facebook" name="facebook"
-                            valueBinding=facebook errors=errors.facebook maxlength=255
-                            placeholder="https://www.facebook.com/<groupname>"}}
+                {{bb-text-field hint="Can we reach you on Skype?" label="Skype" name="skype"
+                                valueBinding=skype errors=errors.skype maxlength=255
+                                placeholder="Skype name"}}
 
-            {{bb-text-field hint="Can we reach you on Skype?" label="Skype" name="skype"
-                            valueBinding=skype errors=errors.skype maxlength=255
-                            placeholder="Skype name"}}
-
-        </ul>
-    </fieldset>
-
-
-    <legend>
-        <strong>{% trans "Legal status" %}</strong>
-        <p>{% trans "Upload a document that identifies your contact person or your partner organisation. The document can be an ID, passport, memorandum of association or an other official document." %}</p>
-    </legend>
+            </ul>
+        </fieldset>
 
 
-    <fieldset>
-        <ul>
-            <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
-                <label class="control-label">
-                    {% trans "Partner Passport" %} ({{attachedDocuments.length}})<br />
-                    <small>
-                        {% trans ".jpg, .png or .pdf" %}
-                    </small>
-                </label>
+        <legend>
+            <strong>{% trans "Legal status" %}</strong>
+            <p>{% trans "Upload a document that identifies your contact person or your partner organisation. The document can be an ID, passport, memorandum of association or an other official document." %}</p>
+        </legend>
 
-                <div class="controls manage-project-files">
-                    <a class="btn btn-iconed btn-upload">
-                        {{view App.UploadMultipleFiles name="documents" multiple=true}}
-                        <span class="flaticon solid upload-document-1"></span>
-                        {% trans "Upload scan(s)" %}
-                    </a>
-                    <br />
-                    {{#each doc in attachedDocuments}}
-                        <a {{action removeFile doc}}><span class="flaticon solid minus-2"></span></a>
-                        <a {{bindAttr href=doc.file.url}}>
-                            {{doc.file.name}} <small>{{doc.file.size}}</small><br/>
+
+        <fieldset>
+            <ul>
+                <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
+                    <label class="control-label">
+                        {% trans "Partner Passport" %} ({{attachedDocuments.length}})<br />
+                        <small>
+                            {% trans ".jpg, .png or .pdf" %}
+                        </small>
+                    </label>
+
+                    <div class="controls manage-project-files">
+                        <a class="btn btn-iconed btn-upload">
+                            {{view App.UploadMultipleFiles name="documents" multiple=true}}
+                            <span class="flaticon solid upload-document-1"></span>
+                            {% trans "Upload scan(s)" %}
                         </a>
-                    {{/each}}
-                </div>
-            </li>
-        </ul>
-    </fieldset>
+                        <br />
+                        {{#each doc in attachedDocuments}}
+                            <a {{action removeFile doc}}><span class="flaticon solid minus-2"></span></a>
+                            <a {{bindAttr href=doc.file.url}}>
+                                {{doc.file.name}} <small>{{doc.file.size}}</small><br/>
+                            </a>
+                        {{/each}}
+                    </div>
+                </li>
+            </ul>
+        </fieldset>
 
+    {{/if}}
+        
     {{ partial '_my_project_save_edit_footer'}}
 
 {% endtplhandlebars %}

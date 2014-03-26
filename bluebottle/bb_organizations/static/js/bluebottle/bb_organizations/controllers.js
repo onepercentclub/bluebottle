@@ -4,6 +4,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
 
     tempDocuments: Em.A(),
     organizations: Em.A(),
+    selectedOrganization: null,
     
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
@@ -18,12 +19,28 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     }.property('model.documents.length', 'tempDocuments.length'),
 
     hasMultipleOrganizations: function () {
-      return this.get('organizations.length') > 1;
-    }.property('organizations.length'),
+        return this.get('selectableOrganizations.length') > 0;
+    }.property('selectableOrganizations.length'),
 
     isPhasePlanNew: function () {
         return this.get('controllers.myProject.model.isPhasePlanNew');
     }.property('controllers.myProject.model.isPhasePlanNew'),
+
+    canSave: function () {
+        return !!this.get('model.name');
+    },
+
+    selectableOrganizations: function () {
+        return this.get('organizations').filterProperty('isNew', false);
+    }.property('organizations.length'),
+
+    setOrganization: function () {
+        // Only set the actual organization when the selected one is an already saved org
+        var selected = this.get('selectedOrganization');
+
+        if (!selected.get('isNew'))
+            this.set('model', selected);
+    }.observes('selectedOrganization'),
 
     actions: {
         newOrganization: function () {

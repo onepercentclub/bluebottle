@@ -259,17 +259,20 @@ App.MyProjectController = Em.ObjectController.extend({
     // Create a one way binding so that changes in the MyProject controller don't alter the value in
     // the MyProjectOrganization controller. This way the MyProjectOrganization controller is in 
     // control of the value
-    organizationBinding: Ember.Binding.oneWay("controllers.myProjectOrganisation.model"),
+    myOrganization: null,
+    myOrganizationBinding: Ember.Binding.oneWay("controllers.myProjectOrganisation.model"),
 
     // Here the controller will observe the organization value from the MyProjectOrganization controller
-    // add update the connection to the property on the MyProject when the value changes.
+    // and update the connection to the property on the MyProject when the value changes.
+    // Use the 'id' property from the organization to ensure it has been comitted and the record returned
+    // by the api with a valid id
     connectOrganization: function () {
-        var organization = this.get('organization'),
+        var organization = this.get('myOrganization'),
             project = this.get('model');
 
         // Return early if organization already associated with 
         // project or the organization hasn't been saved yet
-        if (organization == project.get('organization') || organization.get('isNew'))
+        if (organization == project.get('organization') || !organization.get('id'))
             return;
 
         // Set organization on project.
@@ -278,14 +281,14 @@ App.MyProjectController = Em.ObjectController.extend({
             project.set('title', organization.get('title'));
 
         project.save();
-    }.observes('organization.isNew'),
+    }.observes('myOrganization.id'),
 
     canPreview: function () {
         return !!this.get('model.title');
     }.property('model.title'),
 
     validOrganization: function () {
-        var organization = this.get('organization'),
+        var organization = this.get('myOrganization'),
             project = this.get('model');
 
         if (organization && organization == project.get('organization')) {
@@ -293,7 +296,7 @@ App.MyProjectController = Em.ObjectController.extend({
         } else {
             return project.get('organization.validOrganization');
         }
-    }.property('organization', 'model.organization')
+    }.property('myOrganization', 'model.organization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

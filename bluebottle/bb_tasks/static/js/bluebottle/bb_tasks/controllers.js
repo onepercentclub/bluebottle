@@ -125,7 +125,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 	// you are not a already a member or if you already applied
 	isApplicable: function(){
 		var model = this.get('model')
-		return (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusRealized') ||
+		return (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted') ||
 			this.get('isMember') || model.get('members').filterBy('isStatusApplied', true));
 	}.property('status', 'isMember', 'model.isStatusClosed', 'model.isStatusRealized', 'model.isStatusCompleted',
 		'model.members.isStatusApplied'),

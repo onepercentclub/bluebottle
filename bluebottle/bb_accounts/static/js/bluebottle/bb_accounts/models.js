@@ -47,6 +47,38 @@ App.User = DS.Model.extend({
 
     tags: DS.hasMany("App.Tag", {embedded: "always"}),
 
+    themes_list: function() {
+        var arr = [];
+        this.get('favourite_themes').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('favourite_themes.@each.name'),
+
+    countries_list: function() {
+        var arr = [];
+        this.get('favourite_countries').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('favourite_countries.@each.name'),
+
+    skills_list: function() {
+        var arr = [];
+        this.get('skills').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('skills.@each.name'),
+
+    tags_list: function() {
+        var arr = [];
+        this.get('tags').forEach(function(item, index, self) {
+            arr.push(item.get('id'));
+        });
+        return arr.join(', ');
+    }.property('tags.@each.id'),
+
     getPicture: function() {
         if (this.get('picture')) {
             return this.get('picture.large')

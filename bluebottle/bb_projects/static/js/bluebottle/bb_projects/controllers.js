@@ -187,6 +187,10 @@ App.ProjectIndexController = Em.ArrayController.extend({
         }
     }.observes('showingAll'),
     
+    // hasTasks: function() {
+    //     return this.get("tasks") && this.get("tasks").length
+    // }.property("tasks", "tasks.length"),
+
     resetShowingAll: function() {
         this.set("showingAll", false);
     }.observes('parentId'),

@@ -76,12 +76,7 @@
 
 	.account-personal {
 	
-		@include grid(20,0,1);
-		
-		.account-avatar {
-			width: 150px;
-			height: 150px;
-		}
+		@include grid(16,0,1);
 			
 	}	
 	
@@ -100,24 +95,20 @@
 	}
 
 	.account-avatar {
-		width: 150px;
-		height: 150px;
-		float: left;
-		border: 1px solid $account-header-avatar-border-color;
-		margin-right: $base-margin;
+		// width: 150px;
+		// height: 150px;
+		// float: left;
+		@include grid(8,0,1);
+		// border: 1px solid $account-header-avatar-border-color;
+		// margin-right: $base-margin;
 	}
 	
-	.account-edit {
-		@include grid(48,1,1);
-		
-		.account-avatar {
-			width: 50px;
-			height: 50px;
-		}
-	}
+	// .account-edit {
+	// 	@include grid(48,1,1);
+	// }
 	
 	.account-achievements {
-		@include grid(28,0,0);
+		@include grid(24,0,0);
 		@include resetlist();
 
 	}	
@@ -325,5 +316,45 @@
 #public-profile-page {
 	.account-achievements {
 		margin: $base-margin*2 0;
+	}
+}
+
+#account {
+	.account-header {
+		padding: $base-padding 0;
+	}
+	.account-avatar {
+		@include grid(8,1,1);
+		border: none;
+		img {
+			display: block;
+		}
+	}
+	.account-title {
+		margin: 0;
+		@include grid(28,0,0);	
+		h2 {
+			margin: none;
+		}
+	}
+	.account-preview {
+		margin-bottom: $base-margin*2;
+		@include grid(12,1,1);
+		text-align: right;
+	}
+	.tabs {
+		@include clearfix;
+	}
+}
+
+#SkypeButton_Call {
+	img {
+		margin: 0 !important;
+		margin-bottom: $base-margin;
+	}
+	ul {
+		li {
+			@include resetlist;
+		}
 	}
 }

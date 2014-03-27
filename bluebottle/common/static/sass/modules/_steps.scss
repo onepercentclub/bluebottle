@@ -14,79 +14,93 @@ $step-validated-background-color: $color-success;
 $step-validated-icon-color: $white;
 
 .steps {
-	overflow: hidden;
-	border-bottom: 1px solid $steps-border;
+	// overflow: hidden;
+	// border-bottom: 1px solid $steps-border;
 	
+	// .step {
+	// 	position: relative;
+	// 	background-color: $step-background-color;
+	// 	@include grid(8,0,0);
+	// 	line-height: $base-line-height * 2.5;
+	// 	text-align: center;
+	// 	font-weight: bold;
+	// 	text-decoration: none;
+	// 	color: $step-color;
+		
+	// 	.flaticon {
+	// 		color: $step-icon-color;
+	// 		border-radius: 50%;
+	// 		padding: $base-padding / 2;
+	// 		text-align: center;
+	// 	}
+		
+	// 	&.validated {
+	// 		background-color: $step-validated-background-color;
+	// 		color: $step-validated-color;
+			
+	// 		.flaticon { 
+	// 			color: $step-validated-icon-color;
+	// 		}
+			
+	// 		&:after {
+	// 			border-left-color: $step-validated-background-color;
+	// 		}
+	// 	}
+		
+	// 	&.active, &:hover {
+	// 		background-color: $step-active-background-color;
+	// 		color: $step-active-color;
+			
+	// 		.flaticon { 
+	// 			color: $step-validated-icon-color;
+	// 		}
+			
+	// 		&:after {
+	// 			border-left-color: $step-active-background-color;
+	// 		}
+	// 	}
+		
+	// 	&:after, &:before {
+	// 		left: 100%;
+	// 		top: 50%;
+	// 		border: solid transparent;
+	// 		content: " ";
+	// 		height: 0;
+	// 		width: 0;
+	// 		position: absolute;
+	// 		pointer-events: none;
+	// 		border-left-color: $white;
+	// 		border-width: 25px;
+	// 		margin-top: -25px;
+	// 		z-index: 2;
+	// 	}
+		
+	// 	&:before {
+	// 		border-left-color: $steps-border;
+	// 		left: 100%;
+	// 		z-index: 1;	
+	// 		border-width: 27px;
+	// 		margin-top: -27px;
+	// 	}
+		
+	// 	&:last-of-type {
+	// 		&:after, &:before {
+	// 			display: none;
+	// 		}
+	// 	}
+	// }
 	.step {
-		position: relative;
-		background-color: $step-background-color;
-		@include grid(8,0,0);
-		line-height: $base-line-height * 2.5;
-		text-align: center;
-		font-weight: bold;
+		background-color: $gray-lighter;
+		border: 1px solid $gray-light;
+		padding: $base-padding ($base-padding*2);
+		margin-right: $base-margin/2;
+		border-bottom: none;
 		text-decoration: none;
-		color: $step-color;
-		
-		.flaticon {
-			color: $step-icon-color;
-			border-radius: 50%;
-			padding: $base-padding / 2;
-			text-align: center;
-		}
-		
-		&.validated {
-			background-color: $step-validated-background-color;
-			color: $step-validated-color;
-			
-			.flaticon { 
-				color: $step-validated-icon-color;
-			}
-			
-			&:after {
-				border-left-color: $step-validated-background-color;
-			}
-		}
-		
-		&.active, &:hover {
-			background-color: $step-active-background-color;
-			color: $step-active-color;
-			
-			.flaticon { 
-				color: $step-validated-icon-color;
-			}
-			
-			&:after {
-				border-left-color: $step-active-background-color;
-			}
-		}
-		
-		&:after, &:before {
-			left: 100%;
-			top: 50%;
-			border: solid transparent;
-			content: " ";
-			height: 0;
-			width: 0;
-			position: absolute;
-			pointer-events: none;
-			border-left-color: $white;
-			border-width: 25px;
-			margin-top: -25px;
-			z-index: 2;
-		}
-		
-		&:before {
-			border-left-color: $steps-border;
-			left: 100%;
-			z-index: 1;	
-			border-width: 27px;
-			margin-top: -27px;
-		}
-		
-		&:last-of-type {
-			&:after, &:before {
-				display: none;
-			}
+		color: $gray-light;
+		font-weight: bold;
+		&.active {
+			background-color: $white;
+			color: $gray-darker;
 		}
 	}
 }

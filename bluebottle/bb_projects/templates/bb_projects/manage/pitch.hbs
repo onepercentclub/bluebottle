@@ -47,12 +47,13 @@
     </fieldset>
     <fieldset>
         <ul>
-            {{bb-map-picker model=controller.model hint='Select the location on the map. You can use the search to find your location.'
-                latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location className='small'}}
-            
             {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country }}
                 {{view App.CountrySelectView selectionBinding=country name='country' classBinding="errors.country.length:error"}}
             {{/bb-form-field}}
+
+            {{bb-map-picker model=controller.model hint='Select the location on the map. You can use the search to find your location.'
+                latitudeBinding=latitude longitudeBinding=longitude label='Location' errors=errors.location className='small'}}
+            
         </ul>
     </fieldset>
 

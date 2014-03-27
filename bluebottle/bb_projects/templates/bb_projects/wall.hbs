@@ -40,6 +40,7 @@
 
 			<div class="wallposts-important">
 				<section id="task-previews">
+					{{#if tasks}}
 					<div class="container">
 						<h3>Tasks available</h3>
 
@@ -81,6 +82,7 @@
 						<a {{action "showAllTasks"}} class="task-previews-show-more">Show full & completed tasks <span class="flaticon stroke down-2"></span></a>
 						{{/if}}
 					</div>
+					{{/if}}
 				</section>
 				
 				{# TODO: make dynamic and refactor into seperate view file #}

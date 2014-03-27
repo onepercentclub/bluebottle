@@ -14,8 +14,18 @@
 						{% trans "My projects"%} <small>&rsaquo; {{ title }}</small>
 					</h1>
 
-                    <nav id="campaign-steps" class="steps">
 
+                    <div class="page-actions">
+                        {{#if id}}
+                        {{#link-to "project" id class="btn btn-modest campaign-link-button"}}
+                            <span class="flaticon solid eye-1"></span>
+                            {% trans 'Go to campaign' %}
+                        {{/link-to}}
+                        {{/if}}
+                    </div>
+                   
+
+                    <nav id="campaign-steps" class="steps">
 
                         {{#if isPhasePlanNew}}
                             {{#link-to "myProject.start" classBinding=":step validated"}}
@@ -56,12 +66,6 @@
                             {{/link-to}}
                         {{/if}}
                     </nav>
-                    {{#if canPreview}}
-    					<a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
-    						<span class="flaticon solid eye-1"></span>
-    						{% trans 'Preview' %}
-    					</a>
-                    {{/if}}
 				</div>
 			</header>
 

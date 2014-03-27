@@ -35,9 +35,8 @@ class BaseTaskMember(models.Model):
 
     member = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="members")
-    status = models.CharField(
-        _('status'), max_length=20, choices=TaskMemberStatuses.choices)
-
+    status = models.CharField(_('status'), max_length=20, choices=TaskMemberStatuses.choices,
+                              default=TaskMemberStatuses.applied)
     motivation = models.TextField(
         _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
     comment = models.TextField(_('Comment'), help_text=_('Comment by task owner.'), blank=True)

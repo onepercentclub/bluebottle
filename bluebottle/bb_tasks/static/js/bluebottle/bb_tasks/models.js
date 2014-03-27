@@ -117,8 +117,13 @@ App.Task = DS.Model.extend({
         return this.get('status') == 'closed';
     }.property('status'),
 
+	// statusRealized is not working, instead we have completed...
     isStatusRealized: function(){
         return this.get('status') == 'realized';
+    }.property('status'),
+
+	isStatusCompleted: function(){
+        return this.get('status') == 'completed';
     }.property('status'),
 
     membersCount: function() {

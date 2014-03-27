@@ -70,9 +70,6 @@ App.Project = DS.Model.extend({
     editable: DS.attr('boolean'),
 
     //organization: DS.belongsTo("App.Organization"),
-    validStart: function(){
-        return true;
-    },
 
     phaseName: function(){
         return this.get('status').get('name');

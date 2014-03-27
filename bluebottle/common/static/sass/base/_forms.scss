@@ -389,6 +389,7 @@ input[type=range]::-webkit-slider-thumb {
         background-color: $color-secondary;
         overflow: hidden;
         border: 1px solid $gray-darkest;
+
         .flaticon {
             text-shadow: 0 0 1px $gray-darkest;
         }
@@ -397,7 +398,6 @@ input[type=range]::-webkit-slider-thumb {
             cursor: pointer;
             // padding: $base-padding;
             background: $gray-dark;
-            color: $gray-light;
             font-size: $font-size-larger;
             text-decoration: none;
             text-align:center;

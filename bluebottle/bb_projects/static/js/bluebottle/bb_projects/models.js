@@ -69,7 +69,7 @@ App.Project = DS.Model.extend({
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
 
-    //organization: DS.belongsTo("App.Organization"),
+    organization: DS.belongsTo("App.Organization"),
 
     phaseName: function(){
         return this.get('status').get('name');

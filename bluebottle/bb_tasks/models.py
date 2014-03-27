@@ -111,7 +111,7 @@ class BaseTask(models.Model):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
-        default_serializer = 'bluebottle.bb_tasks.serializers.TaskSerializer'
+        default_serializer = 'bluebottle.bb_tasks.serializers.BaseTaskSerializer'
         abstract = True
         ordering = ['-created']
         verbose_name = _(u'task')

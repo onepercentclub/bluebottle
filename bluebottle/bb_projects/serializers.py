@@ -9,7 +9,6 @@ from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.utils.serializers import MetaField
 from bluebottle.geo.serializers import CountrySerializer
 
-
 PROJECT_MODEL = get_project_model()
 
 
@@ -54,7 +53,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PROJECT_MODEL
-        fields = ('id', 'created', 'title', 'pitch', 'description', 'owner',
+        fields = ('id', 'created', 'title', 'pitch', 'organization', 'description', 'owner',
                   'status', 'meta_data', 'image', 'country', 'theme', 'tags',
                   'meta_data')
 

@@ -18,7 +18,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
             return this.get('model.documents');
     }.property('model.documents.length', 'tempDocuments.length'),
 
-    hasMultipleOrganizations: function () {
+    hasSelectableOrganizations: function () {
         return this.get('selectableOrganizations.length') > 0;
     }.property('selectableOrganizations.length'),
 
@@ -31,9 +31,9 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
         return (name && name.length > 0);
     }.property('model.name'),
 
-    selectableOrganizations: function () {
+    selectableOrganizations: function() {
         return this.get('organizations').filterProperty('isNew', false);
-    }.property('organizations.length'),
+    }.property('organizations.@each.isNew'),
 
     setOrganization: function () {
         // Only set the actual organization when the selected one is an already saved org

@@ -63,4 +63,28 @@ class TaskAdmin(admin.ModelAdmin):
         'deadline',
     )
 
+class TaskMemberAdmin(admin.ModelAdmin):
+
+    date_hierarchy = 'created'
+
+    raw_id_fields = ('member', 'task')
+    list_filter = ('status', )
+    list_display = ('member', 'task', 'status', 'updated')
+
+    readonly_fields = ('updated',)
+
+    search_fields = (
+        'task', 'motivation',
+        'member__first_name', 'member__last_name'
+    )
+    # ordering
+    fields = (
+        'member', 'motivation',
+        'status', 'updated',
+        'time_spent',
+        'task',
+    )
+
+
 admin.site.register(BB_TASK_MODEL, TaskAdmin)
+admin.site.register(BB_TASKMEMBER_MODEL, TaskMemberAdmin)

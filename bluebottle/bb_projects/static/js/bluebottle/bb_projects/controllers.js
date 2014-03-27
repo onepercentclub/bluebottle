@@ -151,7 +151,11 @@ App.ProjectIndexController = Em.ArrayController.extend({
     parentType: 'project',
     showingAll: null,
     tasks: null,
-    
+
+    isProjectOwner: function(){
+        return this.get('controllers.project.owner.username') == this.get('controllers.currentUser.username');
+    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));

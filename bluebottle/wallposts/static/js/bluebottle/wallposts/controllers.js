@@ -80,7 +80,6 @@ App.TextWallPostNewController = Em.ObjectController.extend({
         },
 		
 		showImages: function(event) {
-			console.log(event);
 			$(".photos-tab").addClass("active");
 			$(".video-tab").removeClass("active");
 

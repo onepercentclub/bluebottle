@@ -28,6 +28,7 @@
     outline: none;
 
 	.close {
+        z-index: 100;
 	}
     &.large {
         width: 600px;
@@ -47,7 +48,7 @@
     overflow: hidden;
 
     .modal-body {
-    	max-height: auto !important;
+    	max-height: initial;
     }
   }
 }

@@ -149,8 +149,11 @@ fieldset legend {
     &.success {
         text-align: center;
         padding: 10px;
-        border: 2px solid green;
-        background-color: lightgreen;
+        border: 2px solid darken($color-success, 20%);
+        background-color: $color-success;
+        margin: $base-margin 0;
+        color: $white;
+        font-weight: bold;
     }
 }
 
@@ -210,14 +213,13 @@ p.error, label.error {
     position: absolute;
     right: -50%;
     @include single-box-shadow( rgba(0,0,0,0.25) , 0, 0, 12px, 0px);
-
-
     background-color: $form-message-error-bg-color;
     border: 1px solid darken($form-message-error-bg-color, 10%);
     padding: $base-padding/2 $base-padding;
     color: $form-message-error-color;
     font-size: $font-size-small;
     font-family: $font-family-heavy;
+    z-index: 100;
 	
     p {
         margin: 0;

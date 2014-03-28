@@ -1,3 +1,60 @@
+// Tasks color variables                                                       
+// -----------------------------------                          
+
+// Task search result item                                 
+$task-item-background                                : $gray-lighter !default;
+$task-item-category-color                       	: $white !default;
+$task-item-category-background                    : $color-secondary !default;
+$task-item-header-background                      : $black !default;
+$task-item-title-background                       : rgba(0, 0, 0, 0.7) !default;
+$task-item-title-color                          : $white !default;
+$task-item-status-color                         : $gray-darker !default;
+$task-item-status-background                      : $gray-lighter !default;
+$task-item-meta-color                           : $gray !default;
+$task-item-description-color                    : $gray-lighter !default;
+$task-item-description-background                 : rgba(0, 0, 0, 0.7) !default;
+$task-item-view-background                        : $color-secondary !default;
+$task-item-hover-background                            : $black !default;
+
+// Project detail task list
+$task-list-open-background                             : $gray-lighter !default;
+$task-list-closed-background                           : $gray-lighter !default;
+
+// Project detail task list preview
+$task-preview-open-background								   : $color-secondary !default;
+$task-preview-closed-background								   : $gray !default;
+
+// open tasks
+$task-preview-open-member-status-background            : $color-secondary !default;
+$task-preview-open-theme-color                       : $gray-dark !default;
+$task-preview-open-arrow-background                    : $color-secondary !default;
+$task-preview-open-task-status-color                 : $color-primary !default;
+// closed tasks
+$task-preview-closed-member-status-background          : $gray !default;
+$task-preview-closed-theme-color                     : $gray-dark !default;
+$task-preview-closed-arrow-background                  : $gray !default;
+$task-preview-closed-task-status-color               : $color-primary !default;
+
+// Task detail page
+$task-detail-background                                : $gray-darkest !default;
+$task-detail-color                                   : $white !default;
+$task-detail-header-color                           : $white !default;
+$task-detail-border-bottom-color-color                        : $gray-darker !default;
+$task-detail-project-color                           : $gray !default;
+$task-detail-badge-border-color                 : $white !default;
+$task-detail-status-background                    : $color-primary !default;
+$task-detail-read-more-color                         : $gray !default;
+$task-detail-read-more-background                      : $gray-darkest !default;
+$task-detail-meta-color                         : $gray !default;
+$task-detail-file-border-bottom-color     : $gray !default;
+$task-detail-file-meta-color              : $gray !default;
+$task-detail-members-background                        : $gray-darker !default;
+$task-detail-action-icon-color                  : $white !default;
+$task-detail-wallposts-background                      : $gray-light !default;
+$task-detail-wallposts-color                         : $black !default;
+$task-detail-wallposts-action-border-color           : $gray !default;
+
+
 //
 // Search result task block
 // --------------------------------------------------
@@ -7,7 +64,7 @@
     position: relative;
     margin-top: $base-margin/2;
     margin-bottom: $base-margin/2;
-    background: $tasks-task-item-bg-color;
+    background: $task-item-background;
     overflow: hidden;
     height: 260px;
     
@@ -18,8 +75,8 @@
     }
     
     .task-category {
-        background-color: $tasks-task-item-task-category-bg-color;
-        color: $tasks-task-item-task-category-color;
+        background-color: $task-item-category-background;
+        color: $task-item-category-color;
         padding: $base-padding/2 $base-padding;
         margin: 0;
         font-size: $font-size-small;
@@ -30,7 +87,7 @@
         position: relative;
         overflow: hidden;
         min-height: 50px;
-        background: $tasks-task-item-task-header-bg-color;
+        background: $task-item-header-background;
         @include transition(all 0.2s ease-out);
         
         .task-title {
@@ -40,12 +97,12 @@
             bottom: 0;
             display: block;
 			padding: $base-padding;
-			background-color: $tasks-task-item-task-title-bg-color;
-			color: $tasks-task-item-task-title-color;
+			background-color: $task-item-title-background;
+			color: $task-item-title-color;
 			
 			h3 {
 			    font-size: $base-font-size;
-			    color: $tasks-task-item-task-title-color;
+			    color: $task-item-title-color;
 				padding: 0;
 				margin: 0;
 			}
@@ -79,13 +136,13 @@
     .task-status {
         height: 100px;
         padding: $base-padding/2 $base-padding;
-        background-color: $tasks-task-item-task-status-bg-color;
+        background-color: $task-item-status-background;
         display: block;
-        color: $tasks-task-item-task-status-color;    
+        color: $task-item-status-color;    
     }
     
     .task-meta {
-        color: $tasks-task-item-task-meta-color;
+        color: $task-item-meta-color;
         @include clear;
         text-transform: uppercase;
         @include clear;
@@ -111,9 +168,9 @@
         position: absolute;
         top: 0;
         padding: $base-padding;
-        background-color: $tasks-task-item-task-description-bg-color;
+        background-color: $task-item-description-background;
         font-size: $font-size-small;
-        color: $tasks-task-item-task-description-color;
+        color: $task-item-description-color;
         overflow: hidden;
         z-index: 100;
         
@@ -123,14 +180,14 @@
             width: 100%;
             bottom: 0;
             left: 0;
-            background-color: $tasks-task-item-task-view-bg-color;
+            background-color: $task-item-view-background;
             text-transform: uppercase;
             padding: $base-padding/2 $base-padding;
         }
     }
     
     &:hover, &:active {
-        background-color: $tasks-task-item-hover-bg-color;
+        background-color: $task-item-hover-background;
         
         .task-image {
             zoom: 3;
@@ -148,73 +205,15 @@
 }
 
 
-//.project-owner-actions {
-//	@include grid(48,1,1);
-//	background: $gray-lighter;
-//	padding: $base-padding/2 $base-padding;
-//	margin-top: $base-padding;
-//	
-//	header {
-//		@include grid(16,0,1);
-//		float: left;
-//		
-//		h3 {
-//			padding-top: $base-padding;
-//			font-weight: 600;
-//			text-transform: uppercase;
-//		}
-//	}
-//	
-//	.btn {
-//		margin: $base-padding/2 0 $base-padding/2 $base-padding/2;
-//		float: right;
-//	}
-//	
-//}
-
-#task-previews {
-	position: relative;
-	padding: 0 $base-padding $base-padding $base-padding;
-	background-color: $tasks-task-previews-bg-color;
-	
-	h3 {
-		margin-bottom: $base-margin/2;
-		display: inline-block;
-	}
-	
-	.task-create {
-		margin-top: $base-margin;
-	}
-	
-	.container {
-		position: relative;
-		border-bottom: 1px solid gray;
-	}
-	
-	.task-previews-show-more {
-	
-		&:focus, &:active {
-			top: auto;
-		}
-		
-		position: absolute;
-		bottom: -12px;
-		right: 0;
-		background: $tasks-task-previews-show-more-bg-color;
-		font-size: $font-size-smallest;
-		padding-left: $base-padding;
-		color: $task-preview-more-color;
-		text-decoration: none;
-	}
-}
+//
+// Project detail task list
+// --------------------------------------------------
 
 .task-preview {
 	@include clear;
 	font-size: $font-size-small;
 	margin-bottom: $base-margin;
-	background-color: $task-preview-background;
-	
-	background-color: $tasks-task-preview-member-status-bg-color;	
+	background-color: $task-preview-open-background;
 	
 	.task-member-status, .task-content, .task-arrow {
 		min-height: 90px;
@@ -222,7 +221,7 @@
 	
 	.task-member-status {
 		@include grid(8,0,0);
-		background-color: $tasks-task-preview-member-status-bg-color;
+		background-color: $task-preview-open-member-status-background;
 		text-align: center;
 		color: $white;
 		padding: $base-padding 0;
@@ -253,12 +252,12 @@
 	
 	.task-theme {
 		font-size: $font-size-small;
-		color: $tasks-task-preview-theme-color;
+		color: $task-preview-open-theme-color;
 	}
 	
 	.task-arrow {
 		@include grid(4,0,0);
-		background: $tasks-task-preview-arrow-bg-color;	
+		background: $task-preview-open-arrow-background;	
 		font-size: $font-size-largest;
 		color: $white;
 		font-weight: bold;
@@ -272,10 +271,50 @@
 	}
 	
 	.task-status {
-		color: $tasks-task-preview-task-status-color;
+		color: $task-preview-open-task-status-color;
 	}
 	
 	.task-status, .task-time-needed, .task-deadline {
 		@include grid(16,0,2);
+	}
+}
+
+#task-list {
+	position: relative;
+	
+	h3 {
+		margin-bottom: $base-margin/2;
+		display: inline-block;
+	}
+	
+	.task-create {
+		margin-top: $base-margin;
+	}
+	
+	.task-list-wrapper {
+		position: relative;
+		border-bottom: 1px solid $white;
+		padding: 0 $base-padding $base-padding $base-padding;
+		
+		&.task-list-open {
+			background-color: $task-list-open-background;
+		}
+		
+		&.task-list-closed {
+			background-color: $task-list-closed-background;
+			
+			.task-preview {
+				background-color: $task-preview-closed-background;
+				
+				.task-member-status {
+					background-color: $task-preview-closed-member-status-background;
+				}
+				
+				.task-arrow {
+					background: $task-preview-closed-arrow-background;
+				}
+			}
+			
+		}
 	}
 }

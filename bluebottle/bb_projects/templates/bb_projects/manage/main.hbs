@@ -13,29 +13,25 @@
 					<h1 class="page-title">
 						{% trans "My projects"%} <small>&rsaquo; {{ title }}</small>
 					</h1>
-                    <div class="page-actions">
-                    {{#if isPhasePlanNew}}
-                        {{#if canPreview}}
-                            <a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
+                    <div class="page-actions" style="padding:0px; margin-top:40px">
+                        {{#if isPhasePlanNew}}
+                            {{#if canPreview}}
+                                <a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
+                                    <span class="flaticon solid eye-1"></span>
+                                    {% trans 'Preview' %}
+                                </a>
+                            {{/if}}
+                        {{else}}
+
+                            {{#if id}}
+                                {{#link-to "project" id class="btn btn-modest campaign-link-button"}}
                                 <span class="flaticon solid eye-1"></span>
-                                {% trans 'Preview' %}
-                            </a>
-                        {{/if}}
-                    {{else}}
+                                {% trans 'Go to campaign' %}
+                                {{/link-to}}
+                            {{/if}}
 
-                        {{#if id}}
-                            {{#link-to "project" id class="btn btn-modest campaign-link-button"}}
-                            <span class="flaticon solid eye-1"></span>
-                            {% trans 'Go to campaign' %}
-                            {{/link-to}}
                         {{/if}}
-
-                    {{/if}}
                     </div>
-
-
-                    
-
                     <ul id="campaign-steps" class="{{#if isPhasePlanNew}} steps {{else}} tabs {{/if}}">
                         {{#if isPhasePlanNew}}
                             <li class="tab">{{#link-to "myProject.start" classBinding=":tab-link :validated"}}
@@ -76,8 +72,7 @@
                             {{/link-to}}</li>
                         {{/if}}
 
-
-				    </ul>
+                    </ul>
                 </div>
 			</header>
 

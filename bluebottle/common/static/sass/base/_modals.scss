@@ -47,6 +47,24 @@
     margin-right: auto;
     overflow: hidden;
 
+    .modal-wrapper {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+
+        #project-plan {
+            overflow-y: auto;
+            position: relative;
+            height: 100%;
+        }
+
+        // this is needed because of nesting
+        .ember-view {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+    }
     .modal-body {
     	max-height: initial;
     }
@@ -85,7 +103,7 @@
 .modal-body {
     position: relative;
     overflow-y: auto;
-    max-height: 400px;
+    // max-height: 400px;
     
     // Reset form margins
     form, fieldset, legend {
@@ -166,4 +184,6 @@
     //margin-left: 0;
     }
 }
+
+
 

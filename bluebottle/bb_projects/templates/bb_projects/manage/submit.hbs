@@ -35,10 +35,8 @@
         {{#unless validPitch}}
             {{#each field in missingFieldsPitch}}
                 <li>
-                    <div class="category">
+                    <div class="problem">
                         {% trans "Project" %}
-                    </div>
-                    <div class="details">
                         {{#link-to "myProject.pitch"}}{{field}}{{/link-to}} is not filled in.
                     </div>
                     <div class="action">
@@ -51,10 +49,8 @@
         {{#unless validStory}}
             {{#each field in missingFieldsStory}}
                 <li>
-                    <div class="category">
+                    <div class="problem">
                         {% trans "Description" %}
-                    </div>
-                    <div class="details">
                         {{#link-to "myProject.story"}}{{field}}{{/link-to}} is not filled in.
                     </div>
                     <div class="action">
@@ -67,10 +63,8 @@
         {{#unless validOrganization}}
             {{#each field in missingFieldsOrganization}}
                 <li>
-                    <div class="category">
+                    <div class="problem">
                         {% trans "Organisation" %}
-                    </div>
-                    <div class="details">
                         {{#link-to "myProject.organisation"}}{{field}}{{/link-to}} is not filled in.
                     </div>
                     <div class="action">

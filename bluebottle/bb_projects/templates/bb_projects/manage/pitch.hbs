@@ -4,7 +4,9 @@
 
 {% tplhandlebars "my_project_pitch" %}
     
-    {{bb-flash data=flash}}
+    {{#unless isPhasePlanNew}}
+        {{bb-flash data=flash}}
+    {{/unless}}
 
     <legend>
         <strong>

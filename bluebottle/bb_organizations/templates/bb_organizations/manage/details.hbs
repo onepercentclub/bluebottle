@@ -5,7 +5,9 @@
 
 {% tplhandlebars "my_project_organisation" %}
 
-    {{bb-flash data=flash}}
+    {{#unless isPhasePlanNew}}
+        {{bb-flash data=flash}}
+    {{/unless}}
 
     <legend>
         <strong>{% trans "Partner organisation" %}</strong>

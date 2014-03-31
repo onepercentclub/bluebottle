@@ -292,6 +292,11 @@ App.MyProjectController = Em.ObjectController.extend({
         return !!this.get('model.title');
     }.property('model.title'),
 
+	isSubmittable: function(){
+		return (this.get('isPhasePlanNew') || this.get('isPhaseNeedsWork'))
+	}.property('isPhasePlanNew', 'isPhaseNeedsWork'),
+
+
     validOrganization: function () {
         var organization = this.get('myOrganization'),
             project = this.get('model');

@@ -63,7 +63,7 @@
                             {% trans "Organisation" %}
                         {{/link-to}}</li>
 
-                        {{#if isPhasePlanNew}}
+                        {{#if this.controller.isSubmittable}}
                            <li class="tab">{{#link-to "myProject.submit" classBinding=":tab-link validSubmit:validated"}}
                                 {{#if validsubmit}}
                                     <span class="flaticon solid checkmark-1"></span>

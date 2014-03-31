@@ -391,10 +391,12 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
     */
     dirtyRecordsForHasManyChange: function(dirtySet, record, relationship) {
         // FIXME: Dirty trick to keep things working for adding TaskMember / WallPostPhotos / Org documents
-        if(record.constructor.toString() == 'App.User' || record.constructor.toString() == 'App.Task') {
+        if(record.constructor.toString() == 'App.User') {
             relationship.childReference.parent = relationship.parentReference;
             this._dirtyTree(dirtySet, record);
-        }
+        } else {
+            this._super(dirtySet, record, relationship);
+         }
     }
 });
 

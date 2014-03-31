@@ -24,3 +24,13 @@ def google_analytics_code(request):
     except AttributeError:
         context ={}
     return context
+
+def google_maps_api_key(request):
+    """
+    Add Google Maps API key from settings file to general request context.
+    """
+    try:
+        context = {'MAPS_API_KEY': settings.MAPS_API_KEY}
+    except AttributeError:
+        context = {}
+    return context

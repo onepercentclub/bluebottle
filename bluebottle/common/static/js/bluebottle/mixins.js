@@ -171,7 +171,7 @@ App.StaticMapMixin = Em.Mixin.create({
             "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
 
         if (MAPS_API_KEY)
-            imageUrl += "?key=" + MAPS_API_KEY;
+            imageUrl += "&key=" + MAPS_API_KEY;
 
         return imageUrl;
     }.property('latitude', 'longitude')

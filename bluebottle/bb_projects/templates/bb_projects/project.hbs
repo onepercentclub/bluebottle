@@ -25,8 +25,9 @@
 					{{--}}
                     <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
                     <span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.name}}</span>
-                    {{!-- TODO: Make link to edit project working for project owners }}{{--}}
-                    <span class="project-edit"><a href="#"><span class="flaticon solid settings-1"></span>{% trans 'Edit' %}</a></span>
+                    {{# if isProjectOwner }}
+                        <span class="project-edit"><a href="#"><span class="flaticon solid settings-1"></span>{% trans 'Edit' %}</a></span>
+                    {{/if}}
                 </div>
 				
                 <h1 class="project-title">{{title}}</h1>

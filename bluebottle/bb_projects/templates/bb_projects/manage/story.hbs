@@ -5,7 +5,9 @@
 
 {% tplhandlebars "my_project_story" %}
 
-    {{bb-flash data=flash}}
+    {{#unless isPhasePlanNew}}
+        {{bb-flash data=flash}}
+    {{/unless}}
 
     <legend>
         <strong>{% trans "Project Description" %}</strong>

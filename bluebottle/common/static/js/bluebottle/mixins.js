@@ -89,6 +89,16 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
         this.set('flash', null);
     }.observes('modelStatus'),
 
+    // TODO:  this should be an action / property on the Application Router so that 
+    //        it can be reseting can be handled there by default and then other parts
+    //        of the code can use it too.
+    _setFlash: function (type, text) {
+        this.set('flash', {
+            type: type,
+            text: text
+        });
+    },
+
     _save: function () {
         var self = this,
             model = this.get('model');        
@@ -97,10 +107,7 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
             this.set('flash', null);
 
         model.one('didUpdate', function () {
-            self.set('flash', {
-                type: 'success',
-                text: gettext('Successfully saved')
-            });
+            self._setFlash('success', gettext('Successfully saved'));
         });
 
         if (model) {

@@ -58,15 +58,16 @@
 						</div>
 					{{else}}
 						<div class="task-list-wrapper task-list-open">
-						<h3>{% trans "Open tasks" %}</h3>
-						<p>{% trans "No available tasks" %}</p>
+							<h3>{% trans "Open tasks" %}</h3>
+							<p>{% trans "No available tasks" %}</p>
 						
-						{{#if isProjectOwner }}
-                                {{#link-to "taskNew" controllers.project.id class="btn btn-modest right task-create"}}
-                                <span class="flaticon solid pencil-3"></span>
-                                {% trans "Create task" %}
-                            {{/link-to}}
-	                    {{/if}}
+							{{#if isProjectOwner }}
+	                                {{#link-to "taskNew" controllers.project.id class="btn btn-modest right task-create"}}
+	                                <span class="flaticon solid pencil-3"></span>
+	                                {% trans "Create task" %}
+	                            {{/link-to}}
+		                    {{/if}}
+						</div>
 					{{/if}}
 					
 					{{#if unavailableTasks}}

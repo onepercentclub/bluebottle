@@ -261,20 +261,32 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 
 #task-list {
 	position: relative;
+	margin: 0;
+	padding: 0;
 	
 	h3 {
-		margin-bottom: $base-margin/2;
+		margin-bottom: 0;
 		display: inline-block;
+		padding-bottom: 0;
+	}
+	
+	p {
+		padding: 0;
 	}
 	
 	.task-create {
+		position: absolute;
+		top: 0;
+		right: 0;
 		margin-top: $base-margin;
+		
 	}
 	
 	.task-list-wrapper {
 		position: relative;
 		border-bottom: 1px solid $white;
 		padding: 0 $base-padding $base-padding $base-padding;
+		margin: 0;
 		
 		&.task-list-open {
 			background-color: $task-list-open-background;

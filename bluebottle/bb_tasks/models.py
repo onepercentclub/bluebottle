@@ -83,6 +83,7 @@ class BaseTask(models.Model):
     description = models.TextField(_('description'))
     end_goal = models.TextField(_('end_goal'))
     location = models.CharField(_('location'), max_length=200)
+    people_needed = models.PositiveIntegerField()
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     # See Django docs on issues with related name and an (abstract) base class:

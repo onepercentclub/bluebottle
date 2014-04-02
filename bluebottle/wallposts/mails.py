@@ -37,7 +37,7 @@ from django.template import Context
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bb_projects import get_project_model
+from bluebottle.utils.utils import get_project_model
 #from bluebottle.tasks.models import Task
 #from bluebottle.mail import send_mail
 

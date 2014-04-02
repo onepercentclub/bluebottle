@@ -39,19 +39,10 @@ App.UserController = Ember.Controller.extend({
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
-    timeAvailableList: (function() {
-        var list = Em.A();
-        list.addObject({ name: '- - - - - - - - - - - - - - - - - -', value: ''});
-        list.addObject({ name: gettext('1-4 hours per week'), value: '1-4_hours_week' });
-        list.addObject({ name: gettext('5-8 hours per week'), value: '5-8_hours_week' });
-        list.addObject({ name: gettext('9-16 hours per week'), value: '9-16_hours_week' });
-        list.addObject({ name: gettext('1-4 hours per month'), value: '1-4_hours_month' });
-        list.addObject({ name: gettext('5-8 hours per month'), value: '5-8_hours_month' });
-        list.addObject({ name: gettext('9-16 hours per month'), value: '9-16_hours_month' });
-        list.addObject({ name: gettext('I have all the time in the world. Bring it on!'), value: 'lots_of_time' });
-        list.addObject({ name: gettext('It depends on the content of the tasks. Challenge me!'), value: 'depends' });
-        return list;
-    }).property(),
+
+	availableTimes: function() {
+		return App.TimeAvailable.find();
+	}.property(),
 
     updateCurrentUser: function(record) {
         var currentUser = App.CurrentUser.find('current');

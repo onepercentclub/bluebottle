@@ -44,7 +44,7 @@ App.UserIndexRoute = Em.Route.extend({
 
 
 App.UserProfileRoute = Em.Route.extend({
-    model: function() {
+	model: function() {
         var route = this;
         return App.CurrentUser.find('current').then(function(user) {
             return App.User.find(user.get('id_for_ember'));

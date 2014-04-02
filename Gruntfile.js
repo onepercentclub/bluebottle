@@ -139,6 +139,7 @@ module.exports = function (grunt) {
       }
     },
     compass: {
+      // live
       dist: {
         options: {
           httpPath: '/static/assets/',
@@ -154,6 +155,7 @@ module.exports = function (grunt) {
           raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available
         }
       },
+      // development
       dev: {
         options: {
           httpPath: '/static/assets/',

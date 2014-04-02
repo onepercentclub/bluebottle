@@ -4,7 +4,9 @@
 
 {% tplhandlebars "my_project_pitch" %}
     
-    {{bb-flash data=flash}}
+    {{#unless isPhasePlanNew}}
+        {{bb-flash data=flash}}
+    {{/unless}}
 
     <legend>
         <strong>
@@ -14,8 +16,8 @@
     
     <fieldset>
         <ul>
-            {% bb_component 'bb-text-field' label=_('Title') name="'title'" valueBinding='title' placeholder=_('Title') errors='errors.title' maxlength=255 %}
-            {% bb_component 'bb-text-area' rows=8 label=_('Description') name="'pitch'" valueBinding='pitch' placeholder=_('Tell us in one paragraph where you need to the money for.') errors='errors.pitch' maxlength=200 %}
+            {% bb_component 'bb-text-field' label=_('Title') name="'title'" valueBinding="'title'" placeholder=_('Title') errors='errors.title' maxlength=255 hint='Make it short, creative, simple and memorable.' %}
+            {% bb_component 'bb-text-area' rows=8 label=_('Description') name="'pitch'" valueBinding='pitch' hint='Describe your smart idea in one paragraph.' placeholder=_('Tell us in one paragraph where you need to the money for.') errors='errors.pitch' maxlength=200 %}
         </ul>
     </fieldset>
     <fieldset>
@@ -45,11 +47,12 @@
     <fieldset>
         <ul>
 
-            {% bb_component 'bb-map-picker' latitudeBinding='latitude' longitudeBinding='longitude' hint=_('Select the location on the map. You can use the search to find your location.') label=_('Location') errors='errors.location' %}
+            {% bb_component 'bb-map-picker' latitudeBinding="'latitude'" longitudeBinding="'longitude'" hint=_('Select the location on the map. You can use the search to find your location.') label=_('Location') errors='errors.location' className='small' %}
 
             {{#bb-form-field hint='Select a country.' label='Country' errors=errors.country }}
                 {{view App.CountrySelectView selectionBinding=country name='country' classBinding="errors.country.length:error"}}
             {{/bb-form-field}}
+            
         </ul>
     </fieldset>
 

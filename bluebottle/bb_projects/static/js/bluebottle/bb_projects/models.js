@@ -69,7 +69,7 @@ App.Project = DS.Model.extend({
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
 
-    //organization: DS.belongsTo("App.Organization"),
+    organization: DS.belongsTo("App.Organization"),
 
     phaseName: function(){
         return this.get('status').get('name');
@@ -220,6 +220,8 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
     friendlyFieldNames: null,
 
+
+
     init: function () {
         this._super();
 
@@ -228,6 +230,21 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
 
         this.missingFieldsProperty('missingFieldsStory', this.get('requiredStoryFields'));
         this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
+    },
+
+    save: function () {
+        this.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        this._super();
     },
 
     valid: function(){

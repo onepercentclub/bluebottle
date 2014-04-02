@@ -47,6 +47,38 @@ App.User = DS.Model.extend({
 
     tags: DS.hasMany("App.Tag", {embedded: "always"}),
 
+    themes_list: function() {
+        var arr = [];
+        this.get('favourite_themes').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('favourite_themes.@each.name'),
+
+    countries_list: function() {
+        var arr = [];
+        this.get('favourite_countries').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('favourite_countries.@each.name'),
+
+    skills_list: function() {
+        var arr = [];
+        this.get('skills').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('skills.@each.name'),
+
+    tags_list: function() {
+        var arr = [];
+        this.get('tags').forEach(function(item, index, self) {
+            arr.push(item.get('id'));
+        });
+        return arr.join(', ');
+    }.property('tags.@each.id'),
+
     getPicture: function() {
         if (this.get('picture')) {
             return this.get('picture.large')
@@ -69,11 +101,13 @@ App.User = DS.Model.extend({
     }.property('first_name'),
 
     get_website: function() {
-        if (this.get('website').substr(0,7) != 'http://') {
-            return "http://" + this.get('website');
+        if (this.get('website').substr(0,7) == 'http://') {
+            return this.get('website').replace('http://', '');
+        } else if ((this.get('website').substr(0,11) == 'http://www.')) {
+            return this.get('website').replace('http://www.', '');
         } else {
-            return this.get('website');
-        }
+			return this.get('website');
+		}
     }.property('website'),
 
     user_since: function() {
@@ -87,7 +121,6 @@ App.User = DS.Model.extend({
     get_facebook: function() {
         return '//www.facebook.com/' + this.get('facebook');
     }.property('facebook')
-
 });
 
 

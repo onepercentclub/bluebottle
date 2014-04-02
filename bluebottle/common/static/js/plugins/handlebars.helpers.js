@@ -73,7 +73,7 @@ Ember.Handlebars.registerHelper('ifExpired', function (property, options) {
 
 Ember.Handlebars.helper('daysToGoText', function(value, options) {
   var text = '',
-      reachedText = gettext('Deadline reached');
+      reachedText = gettext('Deadline<br /> reached');
   
   if (typeof value == 'number') {
       if (value > 0) {
@@ -82,10 +82,10 @@ Ember.Handlebars.helper('daysToGoText', function(value, options) {
               plural = value > 1 ? daysText : dayText,
               supportText = gettext('to support this project');
 
-          text = '<big>' + value + '</big> ' + plural + ' left';
-          text += '<br /><small>' + supportText + '</small>'
+          text = '<strong>' + value + ' ' + plural + ' left' + '</strong>';
+          text += '<br />' + supportText;
       } else {
-          text = '<big>' + reachedText + '</big>';
+          text = '<strong class="deadline-reached">' + reachedText + '</strong>';
       }
   }
 

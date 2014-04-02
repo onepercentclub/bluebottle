@@ -103,7 +103,7 @@ App.Task = DS.Model.extend({
         });
         return arr.join(', ');
     }.property('tags.@each.id'),
-    
+
     // Calculate status booleans here so we can use it in all views
     isStatusOpen: function(){
         return this.get('status') == 'open';
@@ -117,9 +117,23 @@ App.Task = DS.Model.extend({
         return this.get('status') == 'closed';
     }.property('status'),
 
+	// statusRealized is not working, instead we have completed...
     isStatusRealized: function(){
         return this.get('status') == 'realized';
     }.property('status'),
+
+	  isStatusCompleted: function(){
+        return this.get('status') == 'completed';
+    }.property('status'),
+
+    isAvailable: function () {
+        var now = new Date();
+        return (this.get('isStatusOpen') || this.get('isStatusInProgress')) && this.get('people_needed') > this.get('membersCount') && this.get('deadline') > now;
+    }.property('isStatusOpen', 'isStatusInProgress', 'people_needed', 'membersCount', 'deadline'),
+
+    isUnavailable: function () {
+        return !this.get('isAvailable');
+    }.property('isAvailable'),
 
     membersCount: function() {
 		return this.get('members.length')

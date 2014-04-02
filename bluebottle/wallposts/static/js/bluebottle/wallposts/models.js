@@ -54,7 +54,6 @@ App.WallPost = DS.Model.extend({
     related_id: DS.attr('string'),
     related_type: DS.attr('string'),
 
-    related_type: DS.attr('string'),
     related_object: DS.attr('object'), // keep it generic
 
     isSystemWallPost: function(){

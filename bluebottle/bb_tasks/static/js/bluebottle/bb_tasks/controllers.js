@@ -118,6 +118,18 @@ App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMi
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, {
     needs: ['currentUser'],
 
+	// you can apply to a task only if:
+	// the task is not closed, realized or completed
+	// (strange behaviour since completed is not a status but just a label)
+	// and if:
+	// you are not a already a member or if you already applied
+	isApplicable: function(){
+		var model = this.get('model')
+		return (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted') ||
+			this.get('isMember') || model.get('members').filterBy('isStatusApplied', true));
+	}.property('status', 'isMember', 'model.isStatusClosed', 'model.isStatusRealized', 'model.isStatusCompleted',
+		'model.members.isStatusApplied'),
+
     isMember: function() {
         var user = this.get('controllers.currentUser.username');
         var isMember = false;

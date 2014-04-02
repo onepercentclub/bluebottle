@@ -4,7 +4,8 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
 
     tempDocuments: Em.A(),
     organizations: Em.A(),
-
+    selectedOrganization: null,
+    
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
@@ -17,46 +18,38 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
             return this.get('model.documents');
     }.property('model.documents.length', 'tempDocuments.length'),
 
-    hasMultipleOrganizations: function () {
-      return this.get('organizations.length') > 1;
-    }.property('organizations.length'),
-
-    // Triggered when the user selects one of the existing organisations for this user.
-    setOrganization: function () {
-        if (this.get('selectedOrganization')) {
-            if (this.get('isNew')) {
-                // Set the current organization name to something that
-                // makes sense in the picklist
-                this.set('name', '- New Organisation -');
-            }
-            this.set('model', this.get('selectedOrganization'));
-            this.connectOrganizationToProject();
-        }
-    }.observes('selectedOrganization'),
-
-    connectOrganizationToProject: function(){
-        var project = this.get('controllers.myProject.model');
-        var organization = this.get('model');
-
-        // Set organization on project.
-        project.set('organization', organization);
-        if (project.get('isNew')) {
-            project.transitionTo('loaded.created.uncommitted');
-        } else {
-            project.transitionTo('loaded.updated.uncommitted');
-        }
-        // If no project title: Use organization name for that.
-        if (!project.get('title')) {
-            project.set('title', organization.get('name'));
-        }
-        project.save();
-    },
+    hasSelectableOrganizations: function () {
+        return this.get('selectableOrganizations.length') > 0;
+    }.property('selectableOrganizations.length'),
 
     isPhasePlanNew: function () {
-      return this.get('controllers.myProject.model.isPhasePlanNew');
+        return this.get('controllers.myProject.model.isPhasePlanNew');
     }.property('controllers.myProject.model.isPhasePlanNew'),
 
+    canSave: function () {
+        var name = this.get('model.name');
+        return (name && name.length > 0);
+    }.property('model.name'),
+
+    selectableOrganizations: function() {
+        return this.get('organizations').filterProperty('isNew', false);
+    }.property('organizations.@each.isNew'),
+
+    setOrganization: function () {
+        // Only set the actual organization when the selected one is an already saved org
+        var selected = this.get('selectedOrganization');
+
+        if (!selected.get('isNew'))
+            this.set('model', selected);
+    }.observes('selectedOrganization'),
+
     actions: {
+        newOrganization: function () {
+            // Only create a new org if the current one isn't new
+            if (!this.get('model.isNew'))
+              this.set('model', App.MyOrganization.createRecord());
+        },
+
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
 
@@ -68,17 +61,6 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
                 if (step) controller.transitionToRoute(step);
             }
 
-            organization.one('becameInvalid', function(record) {
-                // Ember-data currently has no clear way of dealing with the state
-                // loaded.created.invalid on server side validation, so we transition
-                // to the uncommitted state to allow resubmission
-                if (record.get('isNew')) {
-                    record.transitionTo('loaded.created.uncommitted');
-                } else {
-                    record.transitionTo('loaded.updated.uncommitted');
-                }
-            });
-
             if  (organization.get('isNew')) {
                 organization.one('didCreate', function(){
                     Ember.run.next(function() {
@@ -87,7 +69,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
                             doc.save();
                             organization.get('documents').addObject(doc);
                         });
-                        controller.connectOrganizationToProject();
+
                         if (step) controller.transitionToRoute(step);
                     });
 

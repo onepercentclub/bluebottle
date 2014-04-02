@@ -24,7 +24,6 @@ class WallPostListSerializer(serializers.Field):
     def field_to_native(self, obj, field_name):
         content_type = ContentType.objects.get_for_model(obj)
         wallposts = WallPost.objects.filter(object_id=obj.id).filter(content_type=content_type)
-
         return wallposts.values_list('id', flat=True).order_by('-created').all()
 
 

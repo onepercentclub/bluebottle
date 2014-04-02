@@ -89,6 +89,16 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
         this.set('flash', null);
     }.observes('modelStatus'),
 
+    // TODO:  this should be an action / property on the Application Router so that 
+    //        it can be reseting can be handled there by default and then other parts
+    //        of the code can use it too.
+    _setFlash: function (type, text) {
+        this.set('flash', {
+            type: type,
+            text: text
+        });
+    },
+
     _save: function () {
         var self = this,
             model = this.get('model');        
@@ -97,21 +107,7 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
             this.set('flash', null);
 
         model.one('didUpdate', function () {
-            self.set('flash', {
-                type: 'success',
-                text: gettext('Successfully saved')
-            });
-        });
-
-        model.one('becameInvalid', function(record) {
-            // Ember-data currently has no clear way of dealing with the state
-            // loaded.created.invalid on server side validation, so we transition
-            // to the uncommitted state to allow resubmission
-            if (record.get('isNew')) {
-                record.transitionTo('loaded.created.uncommitted');
-            } else {
-                record.transitionTo('loaded.updated.uncommitted');
-            }
+            self._setFlash('success', gettext('Successfully saved'));
         });
 
         if (model) {
@@ -122,8 +118,16 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
 
     actions: {
         saveAndRedirect: function () {
+            var model = this.get('model');
+            
+            // If the model isn't dirty then nothing to save so 
+            // just fulfil the redirect
+            if (!model.get('isDirty')) {
+                this.transitionToRoute(this.redirectRouteName);
+                return;
+            }
+
             var self = this,
-                model = this.get('model'),
                 redirected = false,
                 saveEvent = model.get('isNew') ? 'didCreate' : 'didUpdate';
 
@@ -174,7 +178,7 @@ App.StaticMapMixin = Em.Mixin.create({
             "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
 
         if (MAPS_API_KEY)
-            imageUrl += "?key=" + MAPS_API_KEY;
+            imageUrl += "&key=" + MAPS_API_KEY;
 
         return imageUrl;
     }.property('latitude', 'longitude')

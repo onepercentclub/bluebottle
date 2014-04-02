@@ -2,6 +2,27 @@
 // Task detail page
 // --------------------------------------------------
 
+
+// Task detail page
+$task-detail-background                                : $gray-darkest !default;
+$task-detail-color                                   : $white !default;
+$task-detail-header-color                           : $white !default;
+$task-detail-border-bottom-color                        : $gray-darker !default;
+$task-detail-project-color                           : $gray !default;
+$task-detail-badge-border-color                 : $white !default;
+$task-detail-status-background                    : $color-primary !default;
+$task-detail-read-more-color                         : $gray !default;
+$task-detail-read-more-background                      : $gray-darkest !default;
+$task-detail-meta-color                         : $gray !default;
+$task-detail-file-border-bottom-color     : $gray !default;
+$task-detail-file-meta-color              : $gray !default;
+$task-detail-members-background                        : $gray-darker !default;
+$task-detail-action-icon-color                  : $white !default;
+$task-detail-wallposts-background                      : $gray-light !default;
+$task-detail-wallposts-color                         : $black !default;
+$task-detail-wallposts-action-border-color           : $gray !default;
+$task-detail-wallposts-title-color            : $color-primary !default;
+
 #task-detail {
 	
 	//padding: $base-padding 0;
@@ -10,20 +31,20 @@
 	
 	#task-details {
 		padding: ($base-padding * 2) 0;
-		background-color: $tasks-task-detail-bg-color;
-		color: $tasks-task-detail-color;		
+		background-color: $task-detail-background;
+		color: $task-detail-color;		
 	}
 	
 	h1, h2, h3 {
 		text-transform: none;
-		color: $tasks-task-detail-headers-color;
+		color: $task-detail-header-color;
 		font-family: $font-family-heavy;
 		margin: 0;
 		margin-bottom: $base-margin / 4;
 	}
 	
 	dl {
-		border-bottom: 1px solid $tasks-task-detail-dl-border-bottom;
+		border-bottom: 1px solid $task-detail-border-bottom-color;
 //		> dt, dd {
 //			width: auto;
 //		}
@@ -41,11 +62,11 @@
 	}
 	
 	.task-project {
-		color: $tasks-task-detail-project-color;
+		color: $task-detail-project-color;
 	}
 	
 	.task-badge {
-		border: 2px solid $tasks-task-detail-task-badge-border-color;
+		border: 2px solid $task-detail-badge-border-color;
 		position: relative;
 		@include grid(8,1,1);
 		@include clear;	
@@ -53,9 +74,9 @@
 		.task-status {
 			padding: $base-padding / 2;
 			text-align: center;
-			background: $tasks-task-detail-task-status-bg-color;
+			background: $task-detail-status-background;
 			width: 100%;
-			border-bottom: 2px solid $tasks-task-detail-task-badge-border-color;
+			border-bottom: 2px solid $task-detail-badge-border-color;
 		}
 	}
 	.task-sidebar {
@@ -95,12 +116,12 @@
 		
 		.task-read-more {
 			text-decoration: none;
-			color: $tasks-task-detail-read-more-color;
+			color: $task-detail-read-more-color;
 			position: absolute;
 			bottom: -12px;
 			right: 0;
 			display: block;
-			background-color: $tasks-task-detail-read-more-bg-color;
+			background-color: $task-detail-read-more-background;
 			padding-right: $base-padding * 4;
 			padding-left: $base-padding;
 		}
@@ -138,7 +159,7 @@
 	
 	.task-meta {
 		p {
-			color: $tasks-task-detail-task-meta-color;
+			color: $task-detail-meta-color;
 		}
 	}
 	
@@ -213,7 +234,7 @@
                 display: block;
                 text-decoration: none;
                 padding: $base-padding/2 0;
-                border-bottom: 1px solid $tasks-task-detail-task-files-file-border-bottom-color;
+                border-bottom: 1px solid $task-detail-file-border-bottom-color;
             }
                             
             &:last-of-type a {
@@ -224,7 +245,7 @@
 				font-size: $font-size-smallest;
 				text-transform: uppercase;
 				font-style: normal;
-				color: $tasks-task-detail-task-files-file-meta-color;
+				color: $task-detail-file-meta-color;
 			}
         }	
 	}
@@ -241,7 +262,7 @@
 	        display: block;
     
 	        .flaticon {
-	            color: $tasks-task-detail-task-action-icon-color;
+	            color: $task-detail-action-icon-color;
 	            font-size: 1.2em;
 	        }
 	    }
@@ -249,7 +270,7 @@
 
 	#task-members {
 		
-		background-color: $tasks-task-detail-members-bg-color;
+		background-color: $task-detail-members-background;
 		padding: $base-padding 0;
 		
 		.task-members-list {
@@ -268,9 +289,9 @@
 	
 	#wallposts {
 		
-		background-color: $tasks-task-detail-wallposts-bg-color;
+		background-color: $task-detail-wallposts-background;
 		padding: $base-padding 0;
-		color: $tasks-task-detail-wallposts-color;
+		color: $task-detail-wallposts-color;
 		
 		.wallposts-timeline {
 			@include grid(32,1,1);
@@ -283,10 +304,10 @@
 		}
 		
 		.wallpost-action {
-			border: 1px dashed $tasks-task-detail-wallposts-action-border-color;
+			border: 1px dashed $task-detail-wallposts-action-border-color;
 		}
 		.wallpost-author, .wallpost-title {
-			color: $tasks-task-detail-wallposts-title-author-color;
+			color: $task-detail-wallposts-title-color;
 		}
 	}
 }

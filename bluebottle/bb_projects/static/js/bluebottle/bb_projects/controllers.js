@@ -150,8 +150,11 @@ App.ProjectIndexController = Em.ArrayController.extend({
     parentId: null,
     parentType: 'project',
     showingAll: null,
-    tasks: null,
-    
+
+    isProjectOwner: function(){
+        return this.get('controllers.project.owner.username') == this.get('controllers.currentUser.username');
+    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
@@ -173,20 +176,22 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
     
-    getTasks: function() {
-        var controller = this;
-        if (!this.get("showingAll")) {
-            var now = new Date();
-            App.Task.find({project: this.get('parentId')}).then(function(tasks) {
-                controller.set("tasks", tasks.filter(function(item) {
-                    return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
-                })); 
-             });
-        } else {
-            controller.set("tasks", App.Task.find({project: this.get('parentId')}));            
-        }
-    }.observes('showingAll'),
-    
+    tasks: function () {
+        return App.Task.find({project: this.get('parentId')});
+    }.property('parentId'),
+
+    availableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isAvailable");
+        });
+    }.property('tasks.@each.isAvailable'),
+
+    unavailableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isUnavailable");
+        });
+    }.property('tasks.@each.isUnavailable'),
+
     resetShowingAll: function() {
         this.set("showingAll", false);
     }.observes('parentId'),
@@ -256,13 +261,52 @@ App.MyProjectListController = Em.ArrayController.extend({
 App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser', 'myProjectOrganisation'],
 
-    organization: function () {
-        return this.get('controllers.myProjectOrganisation.model');
-    }.property('controllers.myProjectOrganisation.model'),
+    // Create a one way binding so that changes in the MyProject controller don't alter the value in
+    // the MyProjectOrganization controller. This way the MyProjectOrganization controller is in 
+    // control of the value
+    myOrganization: null,
+    myOrganizationBinding: Ember.Binding.oneWay("controllers.myProjectOrganisation.model"),
+
+    // Here the controller will observe the organization value from the MyProjectOrganization controller
+    // and update the connection to the property on the MyProject when the value changes.
+    // Use the 'id' property from the organization to ensure it has been comitted and the record returned
+    // by the api with a valid id
+    connectOrganization: function () {
+        var organization = this.get('myOrganization'),
+            project = this.get('model');
+
+        // Return early if organization already associated with 
+        // project or the organization hasn't been saved yet
+        if (organization == project.get('organization') || !organization.get('id'))
+            return;
+
+        // Set organization on project.
+        project.set('organization', organization);
+        if (!project.get('title'))
+            project.set('title', organization.get('title'));
+
+        project.save();
+    }.observes('myOrganization.id'),
 
     canPreview: function () {
         return !!this.get('model.title');
     }.property('model.title'),
+
+	isSubmittable: function(){
+		return (this.get('isPhasePlanNew') || this.get('isPhaseNeedsWork'))
+	}.property('isPhasePlanNew', 'isPhaseNeedsWork'),
+
+
+    validOrganization: function () {
+        var organization = this.get('myOrganization'),
+            project = this.get('model');
+
+        if (organization && organization == project.get('organization')) {
+            return organization.get('validOrganization');
+        } else {
+            return project.get('organization.validOrganization');
+        }
+    }.property('myOrganization', 'model.organization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

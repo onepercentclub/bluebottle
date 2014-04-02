@@ -8,6 +8,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify'); 
   grunt.loadNpmTasks('grunt-microlib');
   grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-compass');
 
   // Project configuration.
   grunt.initConfig({
@@ -36,7 +37,11 @@ module.exports = function (grunt) {
           interrupt: true,
           debounceDelay: 250
         }
-      }
+      },
+      scss: {
+        files: ['bluebottle/common/static/**/*.scss'],
+        tasks: ['compass:dev'],
+      }      
     },
     hashres: {
       options: {
@@ -133,6 +138,34 @@ module.exports = function (grunt) {
         dest: 'static/build/js/templates.js'
       }
     }
+    compass: {
+      dist: {
+        options: {
+          httpPath: '/static/assets/',
+          sassDir: 'bluebottle/common/static/scss',
+          cssDir: 'bluebottle/common/static/css',
+          imagesDir: 'bluebottle/common/static/images',          
+          javascriptsDir: 'bluebottle/common/static/js',          
+          outputStyle: 'compressed',
+          relativeAssets: true,
+          lineComments: true,
+          raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available
+        }
+      }
+      dev: {
+        options: {
+          httpPath: '/static/assets/',
+          sassDir: 'bluebottle/common/static/scss',
+          cssDir: 'bluebottle/common/static/css',
+          imagesDir: 'bluebottle/common/static/images',          
+          javascriptsDir: 'bluebottle/common/static/js',          
+          outputStyle: 'expanded',
+          relativeAssets: true,
+          lineComments: true,
+          raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available        
+        }
+      }
+    }
   });
 
   grunt.registerTask('default', ['dev']);
@@ -141,5 +174,5 @@ module.exports = function (grunt) {
   grunt.registerTask('dev', ['build', 'karma:unit']);
   grunt.registerTask('travis', ['build', 'karma:ci']);
   grunt.registerTask('local', ['dev', 'watch']);
-  grunt.registerTask('deploy', ['concat:dist', 'uglify:dist', 'hashres']);
+  grunt.registerTask('deploy', ['concat:dist', 'uglify:dist', 'hashres', 'compass:dist']);
 }

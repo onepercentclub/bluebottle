@@ -1,0 +1,14 @@
+{
+  "name": "pavlov",
+  "homepage": "https://github.com/pandell/pavlov",
+  "version": "0.3.0",
+  "_release": "0.3.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.3.0",
+    "commit": "bfbb523a438dff590aa03706cc7c3f1b1fadac4e"
+  },
+  "_source": "https://github.com/pandell/pavlov.git",
+  "_target": "*",
+  "_originalSource": "https://github.com/pandell/pavlov.git"
+}

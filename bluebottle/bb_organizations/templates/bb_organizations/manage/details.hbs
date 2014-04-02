@@ -35,29 +35,21 @@
 
     <fieldset>
         <ul>
-                {% bb_component 'bb-text-field' label=_("Name") name="'name'" valueBinding="'name'" errors="'errors.name'" maxlength=255 hint='Name of your partner organisation' %}
+            {% bb_component 'bb-text-field' label=_("Name") name="'name'" valueBinding="'name'" errorsBinding="'errors.name'" maxlength=255 hint=_("Name of your partner organisation") %}
 
-                {{bb-text-field hint="E-mail of your contact person" label="Email" name="email"
-                                valueBinding=email errors=errors.email maxlength=255}}
+            {% bb_component 'bb-text-field' label=_("Contact name") name="'contact_name'" valueBinding="'contact_name'" errorsBinding="'errors.contact_name'" maxlength=255 hint=_("Name of your contact person") %}
 
-                {{bb-text-field hint="Phone number of your contact person" label="Phone number" name="phone"
-                                valueBinding=phone_number errors=errors.phone_number maxlength=255}}
+            {% bb_component 'bb-text-field' label=_("Email") name="'email'" valueBinding="'email'" errorsBinding="'errors.email'" maxlength=255 hint=_("E-mail of your contact person") %}
 
-                {{bb-text-field hint="Does your partner organization have a website?" label="Website" name="website"
-                                valueBinding=website errors=errors.website maxlength=255
-                                placeholder="http://"}}
+            {% bb_component 'bb-text-field' label=_("Phone number") name="'phone'" valueBinding="'phone_number'" errorsBinding="'errors.phone_number'" hint=_("Phone number of your contact person") maxlength=255 %}
 
-                {{bb-text-field hint="Does your partner organization have a twitter account?" label="Twitter" name="twitter"
-                                valueBinding=twitter errors=errors.twitter maxlength=255
-                                placeholder="@twitteraccount"}}
+            {% bb_component 'bb-text-field' label=_("Website") name="'website'" valueBinding="'website'" errorsBinding="'errors.website'" hint=_("Does your partner organization have a website?") maxlength=255 placeholder=_("http://") %}
 
-                {{bb-text-field hint="Does your partner organization have a facebook group?" label="Facebook" name="facebook"
-                                valueBinding=facebook errors=errors.facebook maxlength=255
-                                placeholder="https://www.facebook.com/<groupname>"}}
+            {% bb_component 'bb-text-field' label=_("Twitter") name="'twitter'" valueBinding="'twitter'" errorsBinding="'errors.twitter'" hint=_("Does your partner organization have a twitter account?") maxlength=255 placeholder=_("@twitteraccount") %}
 
-                {{bb-text-field hint="Can we reach you on Skype?" label="Skype" name="skype"
-                                valueBinding=skype errors=errors.skype maxlength=255
-                                placeholder="Skype name"}}
+            {% bb_component 'bb-text-field' label=_("Facebook") name="'facebook'" valueBinding="'facebook'" errorsBinding="'errors.facebook'" hint=_("Does your partner organization have a facebook group?") maxlength=255 placeholder=_("https://www.facebook.com/<groupname>") %}
+
+            {% bb_component 'bb-text-field' label=_("Skype") name="'skype'" valueBinding="'skype'" errorsBinding="'errors.skype'"  hint=_("Can we reach you on Skype?") maxlength=255 placeholder=_("Skype name") %}
 
             </ul>
         </fieldset>

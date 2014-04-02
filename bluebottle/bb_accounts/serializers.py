@@ -1,3 +1,4 @@
+from bluebottle.bb_accounts.models import TimeAvailable
 from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
@@ -31,6 +32,13 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
 
 
+class TimeAvailableSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TimeAvailable
+        fields = ('id', 'type', 'description')
+
+
 class CurrentUserSerializer(UserPreviewSerializer):
     """
     Serializer for the current authenticated user. This is the same as the serializer for the member preview with the
@@ -42,7 +50,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name')
+        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name',
+                                                      'time_available')
 
 
 class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -64,7 +73,7 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
-                  'about', 'why', 'website', 'availability', 'date_joined', 'location', 'twitter', 'facebook',
+                  'about', 'why', 'website', 'time_available', 'date_joined', 'location', 'twitter', 'facebook',
                   'skypename', 'tags')
 
 

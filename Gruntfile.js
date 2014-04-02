@@ -150,7 +150,7 @@ module.exports = function (grunt) {
           javascriptsDir: 'js',          
           outputStyle: 'compressed',
           relativeAssets: true,
-          noLineComments: false,
+          noLineComments: true,
           environment: 'production',
           raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available
         }

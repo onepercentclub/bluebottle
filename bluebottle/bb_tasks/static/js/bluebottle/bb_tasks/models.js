@@ -126,26 +126,32 @@ App.Task = DS.Model.extend({
         return this.get('status') == 'completed';
     }.property('status'),
 
+    ////
+    // Override this function to change what determines an available task
     isAvailable: function () {
         var now = new Date();
-        return (this.get('isStatusOpen') || this.get('isStatusInProgress')) && this.get('people_needed') > this.get('membersCount') && this.get('deadline') > now;
-    }.property('isStatusOpen', 'isStatusInProgress', 'people_needed', 'membersCount', 'deadline'),
+        return this.get('isStatusOpen') && this.get('deadline') > now;
+    }.property('isStatusOpen', 'deadline'),
 
     isUnavailable: function () {
         return !this.get('isAvailable');
     }.property('isAvailable'),
 
     membersCount: function() {
-		return this.get('members.length')
+		    return this.get('members.length')
     }.property("members.length"),
+    
+	  hasMoreThanOneMember: function() {
+        return this.get('membersCount') > 1
+	  }.property('membersCount'),
     
     hasMembers: function() {
         return this.get('members.length') > 0;
     }.property("members.length"),
-    
-	hasMoreThanOneMember: function() {
-		return this.get('members.length') > 1
-	}.property('members.length'),
+
+    moreThanOnePersonNeeded: function() {
+        return this.get("people_needed") > 1
+    }.property("people_needed"),
 
     timeNeeded: function(){
         var times = App.TimeNeededList;

@@ -112,6 +112,11 @@ App.Editable = Ember.Mixin.create({
                 controller.set('saved', true);
             });
 
+
+            record.one('becameInvalid', function(record) {
+                controller.set('saving', false);
+            });
+
             record.save();
         },
 

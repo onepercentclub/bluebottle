@@ -1,3 +1,4 @@
+from bluebottle.utils.serializers import DefaultSerializerMixin
 from django.db.models.query_utils import Q
 
 from rest_framework import generics
@@ -92,9 +93,8 @@ class ProjectPhaseDetail(generics.RetrieveAPIView):
     serializer_class = ProjectPhaseSerializer
 
 
-class ProjectList(generics.ListAPIView):
+class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL
-    serializer_class = ProjectSerializer
     paginate_by = 10
 
     def get_queryset(self):
@@ -105,9 +105,8 @@ class ProjectList(generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectDetail(generics.RetrieveAPIView):
+class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
     model = PROJECT_MODEL
-    serializer_class = ProjectSerializer
 
     def get_queryset(self):
         qs = super(ProjectDetail, self).get_queryset()

@@ -9,6 +9,9 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from sorl.thumbnail import ImageField
+from django.db.models import options
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
 class ProjectTheme(models.Model):
@@ -96,6 +99,7 @@ class BaseProject(models.Model):
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')
+        default_serializer = 'bluebottle.bb_projects.serializers.ProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title

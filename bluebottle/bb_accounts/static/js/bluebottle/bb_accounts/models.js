@@ -159,6 +159,15 @@ App.User.reopen({
 //   }
 // });
 
+
+//Configure the embedded object. Embed UserAddress object in user settings.
+// (see: http://stackoverflow.com/questions/14521182/ember-data-does-not-support-embedded-objects/14521612#14521612)
+App.Adapter.map('App.UserSettings', {
+   address: {
+       embedded: 'always'
+   }
+});
+
 App.UserSettings = DS.Model.extend({
     url: 'users/settings',
 

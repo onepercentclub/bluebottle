@@ -253,15 +253,17 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
-    @property
-    # For now return the first address found on this user.
-    def address(self):
-        # addresses = self.useraddress_set.all()
-        # if addresses:
-        #     return addresses[0]
-        # else:
-        #     return None
-        return None
+    #
+    # @property
+    # # For now return the first address found on this user.
+    # def address(self):
+    #     addresses = self.useraddress_set.all()
+    #     if addresses:
+    #         print addresses[0]
+    #         return addresses[0]
+    #     else:
+    #         return None
+    #     #return None
 
     @property
     def short_name(self):

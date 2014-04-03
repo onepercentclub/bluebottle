@@ -144,7 +144,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
     about = models.TextField(_('about'), max_length=265, blank=True)
     why = models.TextField(_('why'), max_length=265, blank=True)
-    availability_old = models.CharField(_('availability_old'), max_length=25, blank=True, choices=Availability.choices)
 
     time_available = models.ForeignKey('bb_accounts.TimeAvailable', null=True, blank=True)
     # max length is not entirely clear, however over 50 characters throws errors on facebook
@@ -254,16 +253,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg = EmailMessage(subject, message, from_email, [self.email])
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
-
-    @property
-    # For now return the first address found on this user.
-    def address(self):
-        # addresses = self.useraddress_set.all()
-        # if addresses:
-        #     return addresses[0]
-        # else:
-        #     return None
-        return None
 
     @property
     def short_name(self):

@@ -172,6 +172,7 @@ App.Adapter = DS.DRF2Adapter.extend({
         "bb_projects/budgetlines/manage": "bb_projects/budgetlines/manage",
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
+	"users/time_available": "users/time_available",
         "homepage": "homepage",
         "contact/contact": "contact/contact",
         // TODO: Are the plurals below still needed?

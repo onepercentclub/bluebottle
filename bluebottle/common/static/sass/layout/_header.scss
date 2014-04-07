@@ -63,7 +63,9 @@
 	        @include transition(all 0.2s ease-in);
 
 			margin: 0;
+			margin-top: $base-margin;
 			padding: $base-padding;
+			padding-bottom: $base-padding * 2;
 
 
 	        white-space: nowrap;

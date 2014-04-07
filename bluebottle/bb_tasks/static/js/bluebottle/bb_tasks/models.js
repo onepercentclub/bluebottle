@@ -122,7 +122,7 @@ App.Task = DS.Model.extend({
         return this.get('status') == 'realized';
     }.property('status'),
 
-	  isStatusCompleted: function(){
+	isStatusCompleted: function(){
         return this.get('status') == 'completed';
     }.property('status'),
 

@@ -9,9 +9,9 @@
             <section class="l-wrapper">
 
                 <div class="task-badge">
-                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> 
+                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div>
                     {{#if project.image.small}}
-                    <img {{bindAttr src="project.image.small" alt="project.title"}} />
+                        <img {{bindAttr src="project.image.small" alt="project.title"}} />
                     {{/if}}
                 </div>
 
@@ -23,11 +23,11 @@
                     <p class="task-project">{% trans "For project" %} {{#link-to 'project' project}}{{project.title}}{{/link-to}}</p>
 
                     {{#if description}}
-                    <p>{{linebreaks description}}</p>
+                        <p>{{linebreaks description}}</p>
                     {{/if}}
 
                     {{#if end_goal}}
-                    <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
+                        <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
                     {{/if}}
 
                     {# TODO: commented out until we have pagination #}
@@ -90,18 +90,21 @@
                             </dd>
                         </dl>
                         {{#if people_needed}}
-                        <dl>
-                            <dt>
-                                <span class="flaticon solid group-1"></span>
-                            </dt>
-                            <dd>
-                                {{#if moreThanOnePersonNeeded}}
-                                    {{people_needed}} {% trans "people needed" %}
-                                {{else}}
-                                    {{people_needed}} {% trans "person needed" %}
-                                {{/if}}
-                            </dd>
-                        </dl>
+                            <dl>
+                                <dt>
+                                    <span class="flaticon solid group-1"></span>
+                                </dt>
+                                <dd>
+                                    {{#if moreThanOnePersonNeeded}}
+                                        {{people_needed}} {% trans "people needed" %}
+                                    {{else}}
+                                        {{people_needed}} {% trans "person needed" %}
+                                    {{/if}}
+                                    {{#if acceptedMemberCount}}
+                                        / {{acceptedMemberCount}}  {% trans "accepted" %}
+                                    {{/if}}
+                                </dd>
+                            </dl>
                         {{/if}}
                     </div>
 
@@ -169,12 +172,12 @@
                             {% trans 'Edit task' %}
                         {{/link-to}}
                     {{else}}
-                        {{#unless isApplicable}}
+                        {{#if isApplicable}}
                             <a {{action applyForTask this }} class="btn btn-primary btn-iconed">
                                 <span class="flaticon stroke work-1"></span>
                                 {% trans "Apply for task" %}
                             </a>
-                        {{/unless}}
+                        {{/if}}
                     {{/if}}
                 </div>
             </section>

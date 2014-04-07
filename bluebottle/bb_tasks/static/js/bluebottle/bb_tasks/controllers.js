@@ -124,11 +124,24 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 	// and if:
 	// you are not a already a member or if you already applied
 	isApplicable: function(){
-		var model = this.get('model')
-		return (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted') ||
-			this.get('isMember') || model.get('members').filterBy('isStatusApplied', true));
+		var model = this.get('model');
+        if (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted')){
+            return false;
+        }
+        if (this.get('isMember')) {
+            return false;
+        }
+        if (this.get('acceptedMemberCount') >=  this.get('people_needed')) {
+            return false;
+
+        }
+        return true;
 	}.property('status', 'isMember', 'model.isStatusClosed', 'model.isStatusRealized', 'model.isStatusCompleted',
-		'model.members.isStatusApplied'),
+		'model.@members.isStatusAccepted'),
+
+    acceptedMemberCount: function(){
+        return (this.get('members').filterBy('isAccepted').get('length'));
+    }.property('model.members.@each.status'),
 
     isMember: function() {
         var user = this.get('controllers.currentUser.username');

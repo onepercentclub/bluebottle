@@ -8,8 +8,7 @@ from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
-
+from taggit.managers import TaggableManager
 
 class BaseOrganizationMember(models.Model):
     """ Members from a Organization """

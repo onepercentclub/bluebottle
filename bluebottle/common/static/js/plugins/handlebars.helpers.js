@@ -10,6 +10,7 @@
 Em.Handlebars.registerBoundHelper('localize', function (value, options) {
     // Unfortunately although this is 'bound' it won't update it since the value doesn't change.
 
+
     // If there's no second argument then formatting will be an object. Set it to null instead.
     var formatting = options.hash['formatting'];
     // Check if it's a Ember Data number or a date
@@ -27,9 +28,8 @@ Em.Handlebars.registerBoundHelper('localize', function (value, options) {
     }
 
     //Usisng typeof here since false can be safely rendered
-    if (Ember.typeOf(value) == 'undefined'){
-
-	return "";
+    if (Ember.typeOf(value) == 'undefined' || Ember.isNone(value)){
+	    return "";
     }
     
     return new Handlebars.SafeString(Globalize.format(value));

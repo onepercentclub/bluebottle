@@ -110,8 +110,15 @@ App.MyProjectIndexRoute = Em.Route.extend({
 });
 
 
-App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
+App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, App.RouteHintMixin, {
     skipExitSignal: false,
+    delegate: null,
+
+    init: function () {
+        this._super();
+        this.set('delegate', this.controllerFor('myProject'));
+    },
+
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -128,7 +135,9 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
         return this.modelFor('myProject');
     },
 
-    exit: function() {
+    deactivate: function() {
+        this._super();
+
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');
         }
@@ -188,7 +197,14 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = Em.Route.extend({
+App.MyProjectOrganisationRoute = Em.Route.extend(App.RouteHintMixin, {
+    delegate: null,
+
+    init: function () {
+        this._super();
+        this.set('delegate', this.controllerFor('myProject'));
+    },
+
     model: function(params) {
         var project = this.modelFor('myProject');
         if (project.get('organization')) {
@@ -197,11 +213,13 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
             return App.MyOrganization.createRecord();
         }
     },
-    exit: function() {
+    
+    deactivate: function() {
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');
         }
     },
+
     setupController: function (controller, model) {
       this._super(controller, model);
 

@@ -4,4 +4,6 @@
 //   Status property associated model
 //   Model save actions
 //
-App.StandardTabController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, App.SaveOnExitMixin, {});
+App.StandardTabController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, App.SaveOnExitMixin, {
+    hint: null
+});

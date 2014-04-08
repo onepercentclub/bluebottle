@@ -9,6 +9,8 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     previousStep: 'myProject.story',
     nextStep: 'myProject.submit',
 
+    hint: null,
+
     // Before the organisation is saved the documents will
     // be temporarily stored in the tempDocuments array.
     attachedDocuments: function () {

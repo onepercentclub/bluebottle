@@ -14,17 +14,17 @@
     		    </legend>
 	            <fieldset>
 	                <ul>
-                        {% bb_component 'bb-text-field' name="'title'" label=_('Title of your task') valueBinding='title' errors='errors.title' placeholder=_('Be creative! And eh&hellip; avoid the word "help"') %}
+                        {% bb_component 'bb-text-field' name='title' label=_('Title of your task') valueBinding='title' errors=errors.title placeholder=_('Be creative! And eh&hellip; avoid the word "help') %}
 
-                        {% bb_component 'bb-text-area' name="'description'" label=_('Description') valueBinding='description' rows='5' errors='errors.description' placeholder=_('What do you need? Give a clear description of the task') %}
+                        {% bb_component 'bb-text-area' name='description' label=_('Description') valueBinding='description' rows='5' errors=errors.description placeholder=_('What do you need? Give a clear description of the task') %}
 
-                        {% bb_component 'bb-text-area' name="'end_goal'" label=_('Deliverable') valueBinding='end_goal' rows='3' errors='errors.end_goal' placeholder=_('What do you expect to have in the end?') %}
+                        {% bb_component 'bb-text-area' name='end_goal' label=_('Deliverable') valueBinding='end_goal' rows='3' errors=errors.end_goal placeholder=_('What do you expect to have in the end?') %}
 
-                        {% bb_component 'bb-text-field' name="'people_needed'" label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type="'number'" %}
+                        {% bb_component 'bb-text-field' name='people_needed' label=_('People needed') valueBinding='people_needed' errors=errors.people_needed type='number' %}
 
-                        {% bb_component 'bb-datepicker' name="'deadline'" label=_('Deadline') minDate='0' maxDate="'12M'" valueBinding='deadline' errors='errors.deadline' %}
+                        {% bb_component 'bb-datepicker' name='deadline' label=_('Deadline') minDate='0' maxDate='12M' valueBinding='deadline' errors=errors.deadline %}
 
-                        {% bb_component 'bb-text-field' name="'location'" label=_('Location') valueBinding='location' errors='errors.location' placeholder=_('Can this be done online or on location?') %}
+                        {% bb_component 'bb-text-field' name='location' label=_('Location') valueBinding='location' errors=errors.location placeholder=_('Can this be done online or on location?') %}
 
                         <li class="control-group">
                             <label class="control-label" for="task-time-needed">

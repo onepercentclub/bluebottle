@@ -200,7 +200,10 @@ def bb_component(component, *args, **kwargs):
         # trigger translation if we're dealing with Lazy translatable strings
         if isinstance(value, Promise):
             value = '{0}'.format(force_str(value))
-        bit = '{key}=\'{value}\''.format(key=key, value=value)
+        if key == 'errors':
+            bit = '{key}={value}'.format(key=key, value=value)
+        else:
+            bit = '{key}=\'{value}\''.format(key=key, value=value)
         component_bits.append(bit)
 
     return '{{' + ' '.join(component_bits) + '}}'

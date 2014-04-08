@@ -200,6 +200,8 @@ def bb_component(component, *args, **kwargs):
         # trigger translation if we're dealing with Lazy translatable strings
         if isinstance(value, Promise):
             value = '\'{0}\''.format(force_str(value))
+        if key in ('name', 'type') or 'Binding' in key:
+            value = '\'{0}\''.format(value)
         bit = '{key}={value}'.format(key=key, value=value)
         component_bits.append(bit)
 
@@ -210,19 +212,13 @@ def bb_component(component, *args, **kwargs):
 def do_bb_block_component(parser, token, *args, **kwargs):
     params = token.split_contents()
     params.pop(0)
-    print params
-    print args
-    print kwargs
 
     nodelist = parser.parse(('endbb_block_component',))
     parser.delete_first_token()
 
     component_bits = []
     for param in params:
-        print param
         key, value = param.split('=')
-        print key
-        print value
         # trigger translation if we're dealing with Lazy translatable strings
         if isinstance(value, Promise):
             value = '\'{0}\''.format(force_str(value))

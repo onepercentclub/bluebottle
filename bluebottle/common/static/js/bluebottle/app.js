@@ -438,6 +438,14 @@ App.LanguageSwitchView = Em.CollectionView.extend({
     itemViewClass: App.LanguageView
 });
 
+App.LanguageSelectView = Em.Select.extend({
+    classNames: ['language'],
+    optionValuePath: 'content.code',
+    optionLabelPath: 'content.name',
+    prompt: gettext('Pick a language'),
+    content: App.interfaceLanguages,
+    value: App.language
+});
 
 App.ApplicationView = Em.View.extend({
     elementId: 'site'

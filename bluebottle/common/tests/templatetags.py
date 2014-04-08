@@ -116,12 +116,12 @@ class BBComponentTestCase(unittest.TestCase):
         """ Test that the keyword arguments are indeed in the component """
         t = Template(
             self.load_statement +
-            '{% bb_component \'my-component\' value1=\'foo\' value2="bar" value3=foobar %}'
+            '{% bb_component \'my-component\' value1=\'foo\' value2="bar" errors=\'foobar\' %}'
             )
         result = t.render(Context())
 
         self.assertTrue(result.startswith('{{my-component '))
         self.assertIn('value1=\'foo\'', result)
         self.assertIn('value2=\'bar\'', result)
-        self.assertIn('value3=foobar', result)
+        self.assertIn('errors=foobar', result)
         self.assertTrue(result.endswith('}}'))

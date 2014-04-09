@@ -130,8 +130,6 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
     },
 
     deactivate: function() {
-        this._super();
-
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');
         }

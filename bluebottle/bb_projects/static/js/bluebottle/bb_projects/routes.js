@@ -112,6 +112,7 @@ App.MyProjectIndexRoute = Em.Route.extend({
 
 App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
     skipExitSignal: false,
+
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -128,7 +129,7 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
         return this.modelFor('myProject');
     },
 
-    exit: function() {
+    deactivate: function() {
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');
         }
@@ -197,11 +198,13 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
             return App.MyOrganization.createRecord();
         }
     },
-    exit: function() {
+    
+    deactivate: function() {
         if (!this.skipExitSignal) {
             this.get('controller').send('goToStep');
         }
     },
+
     setupController: function (controller, model) {
       this._super(controller, model);
 

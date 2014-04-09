@@ -110,14 +110,8 @@ App.MyProjectIndexRoute = Em.Route.extend({
 });
 
 
-App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, App.RouteHintMixin, {
+App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
     skipExitSignal: false,
-    delegate: null,
-
-    init: function () {
-        this._super();
-        this.set('delegate', this.controllerFor('myProject'));
-    },
 
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
@@ -197,14 +191,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = Em.Route.extend(App.RouteHintMixin, {
-    delegate: null,
-
-    init: function () {
-        this._super();
-        this.set('delegate', this.controllerFor('myProject'));
-    },
-
+App.MyProjectOrganisationRoute = Em.Route.extend({
     model: function(params) {
         var project = this.modelFor('myProject');
         if (project.get('organization')) {

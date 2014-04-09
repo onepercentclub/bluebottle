@@ -34,7 +34,7 @@
 
 
 {% tplhandlebars "components/bb-text-field" %}
-    {{#bb-form-field hint=hint label=label errors=errors contentBinding='content'}}
+    {{#bb-form-field hint=hint label=label errors=errors contentBinding='content' undertext=undertext}}
         {{view Em.TextField step=step nameBinding=name valueBinding='value' placeholderBinding=placeholder
             maxlengthBinding=maxlength classBinding='errors.length:error' typeBinding=type}}
     {{/bb-form-field}}

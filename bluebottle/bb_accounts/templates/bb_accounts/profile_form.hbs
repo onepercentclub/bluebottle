@@ -5,7 +5,6 @@
 
 {{#if isLoaded}}
     <form>
-            
         {% block_verbatim profile_form %}
             {% block_verbatim profile_header %}
             <legend>
@@ -16,19 +15,9 @@
             {% block_verbatim fieldset1 %}
                 <fieldset>
                     <ul>
-                        <li class="control-group">
-                            <label class="control-label">
-                                {% trans "Name" %}
-                            </label>
+                        {% bb_component 'bb-text-field' name="'first_name'" label=_('First Name') valueBinding='first_name' errors='errors.first_name.length:error' placeholder=_('First Name') %}
+                        {% bb_component 'bb-text-field' name="'last_name'" label=_('Last Name') valueBinding='last_name' errors='errors.last_name.length:error' placeholder=_('Last Name') %}
 
-                            <div class="controls">
-                                {{view Em.TextField valueBinding="first_name" placeholder="{% trans "First name" %}" 
-                                class="inline-prepend" classBinding="errors.first_name.length:error"}}
-                                
-                                {{view Em.TextField valueBinding="last_name" placeholder="{% trans "Surname" %}" 
-                                class="inline-append" classBinding="errors.last_name.length:error"}}
-                            </div>
-                        </li>
                         {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
                 </ul>
                 </fieldset>
@@ -45,8 +34,7 @@
                                 </label>
 
                                 <div class="controls">
-                                    {{view Em.TextArea valueBinding="about" maxlength="265" 
-                                    placeholder="{% trans "An example placeholder" %}" 
+                                    {{view Em.TextArea valueBinding="about" maxlength="265" placeholder="{% trans 'An example placeholder' %}"
                                     classBinding="errors.about.length:error"}}
                                 </div>
 

@@ -84,7 +84,7 @@ class BlueBottleUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
-        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'availability', 'location', 'website', 'tags')}),
+        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'time_available', 'location', 'website', 'tags')}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined', 'deleted')}),

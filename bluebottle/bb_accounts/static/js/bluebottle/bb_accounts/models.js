@@ -23,7 +23,7 @@ App.User = DS.Model.extend({
 
     about: DS.attr('string'),
     why: DS.attr('string'),
-    availability: DS.attr('string'),
+    time_available: DS.belongsTo('App.TimeAvailable'),
     location: DS.attr('string'),
 
     picture: DS.attr('image'),
@@ -258,4 +258,11 @@ App.PasswordReset = DS.Model.extend({
 
     new_password1: DS.attr('string'),
     new_password2: DS.attr('string')
+});
+
+
+App.TimeAvailable = DS.Model.extend({
+    url: 'users/time_available',
+	type: DS.attr('string'),
+	description : DS.attr('string')
 });

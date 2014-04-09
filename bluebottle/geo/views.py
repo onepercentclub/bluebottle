@@ -29,7 +29,6 @@ class UsedCountryList(CountryList):
 
     def get_queryset(self):
         qs = super(UsedCountryList, self).get_queryset()
-
-        project_country_ids = PROJECT_MODEL.objects.values_list('country', flat=True).distinct()
+        project_country_ids = PROJECT_MODEL.objects.filter(status__viewable=True).values_list('country', flat=True).distinct()
 
         return qs.filter(id__in=project_country_ids)

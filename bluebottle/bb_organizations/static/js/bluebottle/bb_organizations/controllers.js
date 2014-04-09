@@ -1,3 +1,4 @@
+
 App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, {
     needs: ['myProject'],
 

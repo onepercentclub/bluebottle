@@ -74,3 +74,6 @@ salesforce/*/Data/Output/*
 static/global/compass_app_log.txt
 
 ghostdriver.log
+
+# node modules
+bower_components

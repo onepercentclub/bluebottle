@@ -86,23 +86,23 @@
                 
                 <div class="l-wrapper">
                     <h1 class="page-title">
-                        <figure>
                         My bluebottle <small>&rsaquo; New campaign</small>
-                    </h2>
+                    </h1>
+                    <div class="page-actions">
+                        <a class="btn btn-modest campaign-preview-button">
+                            <span class="flaticon solid eye-1"></span>
+                            Preview
+                        </a>
+                    </div>
 
-                    <nav id="campaign-steps" class="steps">
-                        <a href="project_create1.html" class="step">Start</a>
-                        <a href="project_create2.html" class="step active"><span class="flaticon solid pencil-3"></span> Pitch</a>
-                        <a href="project_create4.html" class="step">Goal</a>
-                        <a href="project_create5.html" class="step">Story</a>
-                        <a href="project_create6.html" class="step validated"><span class="flaticon solid checkmark-1"></span> Payout</a>
-                        <a href="project_create7.html" class="step">Review</a>
-                    </nav>                    
-                    
-                    <a class="btn btn-modest campaign-preview-button">
-                        <span class="flaticon solid eye-1"></span>
-                        Preview
-                    </a>
+                    <ul id="campaign-steps" class="steps">
+                        <li><a href="project_create1.html" class="step active">Start</a></li>
+                        <li><a href="project_create2.html" class="step">Pitch</a></li>
+                        <li><a href="project_create4.html" class="step">Goal</a></li>
+                        <li><a href="project_create5.html" class="step">Story</a></li>
+                        <li><a href="project_create6.html" class="step validated"><span class="flaticon solid checkmark-1"></span> Payout</a></li>
+                        <li><a href="project_create7.html" class="step">Review</a></li>
+                    </ul>                    
                 </div>
             </header>
             
@@ -204,11 +204,17 @@
                                 </ul>
                             </fieldset>                                                        
                         </form>
+                        <footer class="campaign-footer">
+                            <div class="navigation">
+                                <a class="btn btn-modest previous">&lsaquo; Previous</a>
+                                <a href="project_create2.html" class="btn btn-modest btn-primary next">&rsaquo; Next</a>
+                            </div>
+                        </footer>
                     </div>
                     
                     <aside class="l-sidebar">
                         <div class="campaign-create-preview-widget">
-                            <h3><span class="flaticon solid eye-1"></span> Preview widget</h3>
+                            <!-- <h3><span class="flaticon solid eye-1"></span> Preview widget</h3> -->
                             <div class="project-item">
 
                                 <a id="ember2291" class="ember-view" href="#!/projects/empowered-by-sanitary-pads">
@@ -268,19 +274,6 @@
                     </aside>
                 </div>
             </section>
-            <footer class="campaign-footer">
-                <div class="l-wrapper">
-                    <div class="navigation">
-                        <a href="project_create2.html" class="btn btn-modest previous">Previous</a>
-                        <a href="project_create4.html" class="btn btn-modest btn-primary next">Next</a>
-                    </div>
-                    <div class="actions">
-                        <a class="save">
-                            <span class="flaticon solid pencil-3"></span> Save &amp; continue later
-                        </a>
-                    </div>
-                </div>
-            </footer>
         </article>
         <!-- COPY/PASTE UNTILL HERE // template -->
     </div>

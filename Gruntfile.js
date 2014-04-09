@@ -8,6 +8,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify'); 
   grunt.loadNpmTasks('grunt-microlib');
   grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-contrib-compass');
 
   // Project configuration.
   grunt.initConfig({
@@ -36,7 +37,11 @@ module.exports = function (grunt) {
           interrupt: true,
           debounceDelay: 250
         }
-      }
+      },
+      scss: {
+        files: ['bluebottle/common/static/**/*'],
+        tasks: ['compass:dev'],
+      }      
     },
     hashres: {
       options: {
@@ -132,14 +137,47 @@ module.exports = function (grunt) {
         files: ['static/build/js/templates/*.handlebars'],
         dest: 'static/build/js/templates.js'
       }
+    },
+    compass: {
+      // live
+      dist: {
+        options: {
+          httpPath: '/static/assets/',
+          basePath: 'bluebottle/common/static',
+          sassDir: 'sass',
+          cssDir: 'css',
+          imagesDir: 'images',          
+          javascriptsDir: 'js',          
+          outputStyle: 'compressed',
+          relativeAssets: true,
+          noLineComments: true,
+          environment: 'production',
+          raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available
+        }
+      },
+      // development
+      dev: {
+        options: {
+          httpPath: '/static/assets/',
+          basePath: 'bluebottle/common/static',
+          sassDir: 'sass',
+          cssDir: 'css',
+          imagesDir: 'images',          
+          javascriptsDir: 'js',          
+          outputStyle: 'expanded',
+          relativeAssets: true,
+          noLineComments: false,
+          raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available        
+        }
+      }
     }
   });
 
-  grunt.registerTask('default', ['dev']);
+  grunt.registerTask('default', ['dev', 'compass:dev']);
   grunt.registerTask('build', ['bower:install', 'concat:dist', 'concat:test']);
   // Add 'shell:parse_templates' and 'emberhandlebars' tasks to dev once it is working
   grunt.registerTask('dev', ['build', 'karma:unit']);
   grunt.registerTask('travis', ['build', 'karma:ci']);
   grunt.registerTask('local', ['dev', 'watch']);
-  grunt.registerTask('deploy', ['concat:dist', 'uglify:dist', 'hashres']);
+  grunt.registerTask('deploy', ['concat:dist', 'uglify:dist', 'hashres', 'compass:dist']);
 }

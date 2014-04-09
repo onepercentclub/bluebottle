@@ -85,7 +85,7 @@
                 <h3>{% trans "Language" %}</h3>
                 <p>{% trans "Choose a language" %}</p>
                 <div class="control-group">
-                    {{view "App.LanguageSelectView" valueBinding='language'}}
+                    {{view "App.LanguageSelectView" selectionBinding='language'}}
                 </div>
                 <div class="control-group">
                     {{#link-to 'myProject.pitch' tagName='button' class="btn btn-primary btn-block"}}

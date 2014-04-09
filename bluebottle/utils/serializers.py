@@ -14,9 +14,16 @@ from taggit.managers import _TaggableManager
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 
 from .validators import validate_postal_code
-from .models import Address
+from .models import Address, Language
 
 from HTMLParser import HTMLParser
+
+
+class LanguageSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Language
+        fields = ('id', 'code', 'language_name', 'native_name')
 
 
 class MLStripper(HTMLParser):

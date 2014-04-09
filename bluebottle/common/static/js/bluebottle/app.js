@@ -76,6 +76,12 @@ App = Em.Application.create({
             });
         });
 
+        App.Language.find().then(function(list) {
+            App.LanguageSelectView.reopen({
+                content: list
+            });
+        });
+
         App.ProjectPhase.find().then(function(data){
 
             var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
@@ -441,11 +447,9 @@ App.LanguageSwitchView = Em.CollectionView.extend({
 
 App.LanguageSelectView = Em.Select.extend({
     classNames: ['language'],
-    optionValuePath: 'content.code',
-    optionLabelPath: 'content.name',
-    prompt: gettext('Pick a language'),
-    content: App.interfaceLanguages,
-    value: App.language
+    optionValuePath: 'content.id',
+    optionLabelPath: 'content.native_name',
+    prompt: gettext('Pick a language')
 });
 
 App.ApplicationView = Em.View.extend({

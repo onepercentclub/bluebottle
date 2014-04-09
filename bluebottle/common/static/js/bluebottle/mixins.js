@@ -1,28 +1,4 @@
 /*
-Em.Route Mixin for setting a hint in the main controller.
-For example, in a tab setup with sub-controllers
-*/
-
-App.RouteHintMixin = Ember.Mixin.create({
-    activate: function () {
-        var controller = this.controller;
-        if (!controller) {
-            var controllerName = this.controllerName || this.routeName,
-                controller = this.controllerFor(controllerName, true);
-        } 
-
-        var delegate = this.get('delegate');
-        if (controller && delegate) {
-            var hint = controller.get('hint');
-
-            delegate.set('hint', hint || '');
-        } else {
-            throw new Error('Could not find controller!');   
-        }
-    }
-});
-
-/*
  Mixin that controllers with editable models can use. E.g. App.UserProfileController
 
  @see App.UserProfileRoute and App.UserProfileController to see it in action.

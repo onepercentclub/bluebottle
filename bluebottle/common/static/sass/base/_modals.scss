@@ -69,6 +69,19 @@
     	max-height: initial;
     }
   }
+  &.full-screen {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin-left: 0;
+    margin-top: 0;
+    .modal-wrapper, .ember-view {
+        position: relative;
+        height: 100%;
+    }
+  }
 }
 
 .modal-header, .modal-body, .modal-footer {

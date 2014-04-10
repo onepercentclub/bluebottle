@@ -82,11 +82,13 @@
             </div>
 
             <div class="l-half">
-                <h3>{% trans "Language" %}</h3>
-                <p>{% trans "Choose a language" %}</p>
-                <div class="control-group">
-                    {{view "App.LanguageSelectView" selectionBinding='language'}}
-                </div>
+                {{#if hasLanguages}}
+                    <h3>{% trans "Language" %}</h3>
+                    <p>{% trans "Choose a language" %}</p>
+                    <div class="control-group">
+                        {{view "App.LanguageSelectView" selectionBinding='language' valueBinding='currentLanguage.id'}}
+                    </div>
+                {{/if}}
                 <div class="control-group">
                     {{#link-to 'myProject.pitch' tagName='button' class="btn btn-primary btn-block"}}
                         {% trans "Start a project" %}

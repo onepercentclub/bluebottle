@@ -272,6 +272,11 @@ $projects-tasks-task-status-color                          : $gray-dark !default
 $projects-tasks-task-content-color                         : $gray-light !default;
 $projects-tasks-task-content-task-name                     : $white !default;
 
+// task previews
+$tasks-task-list-color: $gray-darker !default;
+$tasks-task-list-bg-color: $white !default;
+$tasks-task-list-heading-color: $gray-darker !default;
+
 // project - search results
 $projects-project-item-bg-color                            : $gray-lighter !default;
 $projects-project-item-border-color                        : $gray !default;

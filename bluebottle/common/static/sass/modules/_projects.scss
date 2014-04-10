@@ -647,8 +647,8 @@
 	.project-plan-main-container {
 		position: relative;
 		@include clearfix;
-		margin: $base-margin;
-		margin-top: $base-margin*3;
+		padding: $base-padding;
+		padding-top: $base-padding*3;
 		@include grid(20,0,0);
         background-color: $projects-project-plan-main-content-bg-color;
 		.project-plan-main {

@@ -11,7 +11,7 @@ from django_extensions.db.fields import (
 from sorl.thumbnail import ImageField
 from django.db.models import options
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 
 class ProjectTheme(models.Model):
@@ -104,6 +104,8 @@ class BaseProject(models.Model):
         verbose_name = _('project')
         verbose_name_plural = _('projects')
         default_serializer = 'bluebottle.bb_projects.serializers.ProjectSerializer'
+        preview_serializer = 'bluebottle.bb_projects.serializers.ProjectPreviewSerializer'
+        manage_serializer = 'bluebottle.bb_projects.serializers.ManageProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title

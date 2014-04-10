@@ -90,4 +90,4 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
 
     class Meta:
         model = PROJECT_MODEL
-        exclude = ('owner',)
+        fields = ('id', 'title', 'description', 'editable', 'viewable', 'status', 'image', 'pitch', 'slug', 'tags')

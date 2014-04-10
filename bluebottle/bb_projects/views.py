@@ -1,4 +1,4 @@
-from bluebottle.utils.serializers import DefaultSerializerMixin
+from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin
 from django.db.models.query_utils import Q
 
 from rest_framework import generics
@@ -6,18 +6,15 @@ from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.utils.utils import get_project_model
 from .models import ProjectTheme, ProjectPhase
-from .serializers import (
-    ManageProjectSerializer, ProjectPreviewSerializer, ProjectThemeSerializer,
-    ProjectSerializer, ProjectPhaseSerializer)
+from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer)
 from .permissions import IsProjectOwner
 
 
 PROJECT_MODEL = get_project_model()
 
 
-class ProjectPreviewList(generics.ListAPIView):
+class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL
-    serializer_class = ProjectPreviewSerializer
     paginate_by = 8
     paginate_by_param = 'page_size'
     max_paginate_by = 100
@@ -56,9 +53,8 @@ class ProjectPreviewList(generics.ListAPIView):
         return qs.all()
 
 
-class ProjectPreviewDetail(generics.RetrieveAPIView):
+class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
     model = PROJECT_MODEL
-    serializer_class = ProjectPreviewSerializer
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
@@ -113,9 +109,8 @@ class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
         return qs
 
 
-class ManageProjectList(generics.ListCreateAPIView):
+class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
     model = PROJECT_MODEL
-    serializer_class = ManageProjectSerializer
     permission_classes = (IsAuthenticated, )
     paginate_by = 10
 
@@ -133,13 +128,14 @@ class ManageProjectList(generics.ListCreateAPIView):
         """
         Set the project owner and the status of the project.
         """
+        print "pre_saving: ", obj
         obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
+        print ProjectPhase.objects.order_by('sequence').all()[0]
         obj.owner = self.request.user
 
 
-class ManageProjectDetail(generics.RetrieveUpdateAPIView):
+class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL
-    serializer_class = ManageProjectSerializer
     permission_classes = (IsProjectOwner, )
 
 

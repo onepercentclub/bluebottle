@@ -97,6 +97,7 @@ class BaseProject(models.Model):
         help_text=_('Main project picture'))
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
+    language = models.ForeignKey('utils.Language', blank=True, null=True)
 
     class Meta:
         abstract = True

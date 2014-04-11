@@ -327,7 +327,27 @@ App.MyProjectController = Em.ObjectController.extend({
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
     needs: ['currentUser'],
 
-    nextStep: 'myProject.pitch'
+    nextStep: 'myProject.pitch',
+
+    languages: function () {
+        return App.Language.find();
+    }.property(),
+
+    hasLanguages: function () {
+        return this.get('languages.length');
+    }.property('languages.length'),
+
+    currentLanguage: function () {
+        var results = App.Language.filter( function (language) { 
+            return language.get('code') === App.get("language");
+        });
+
+        if (results.get('length') > 0) {
+            return App.Language.find(results.get('content.0.id'));
+        }
+
+        return null;
+    }.property('App.language', 'languages.length')
 });
 
 App.MyProjectPitchController = App.StandardTabController.extend({

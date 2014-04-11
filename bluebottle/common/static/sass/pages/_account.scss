@@ -322,6 +322,7 @@
 #account {
 	.account-header {
 		padding: $base-padding 0;
+		padding-bottom: 0;
 	}
 	.account-avatar {
 		@include grid(8,1,1);

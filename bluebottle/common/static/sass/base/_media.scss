@@ -1,0 +1,71 @@
+//
+// MEDIA: Wrappers for images, videos, embeds, etc
+// --------------------------------------------------
+
+.text, .video, .image, .oembed, .rawhtml {
+	clear: both;
+	margin-top: $base-margin;
+	margin-bottom: $base-margin;
+}
+
+
+// Wrapper for responsive media
+// -------------------------
+
+object, embed, iframe {
+	width: 100% !important;
+}
+
+.video, .oembed {
+    position: relative;
+	padding-bottom: 56.25%; // 16:9
+}
+
+.video iframe, 
+.oembed iframe,
+.video object, 
+.oembed object,
+.video embed, 
+.oembed embed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+// Photo viewer (currently wallpost only)
+// -------------------------
+
+.photo-viewer {
+    @include clear;
+    margin: 0;
+    padding: 0;
+
+    li {
+        @include resetlist;
+        @include grid(8,0,1);
+        overflow: hidden;
+        margin-bottom: $base-margin;
+        
+        img {
+            border: 1px solid $media-photo-viewer-image-border-color;
+        }
+        
+        &:hover img {
+            border-color: $media-photo-viewer-image-hover-border-color;
+        }
+        
+        &.more {
+            display: block;
+            @include grid(8,0,0);
+            background-color: $media-photo-viewer-more-bg-color;
+            
+            a {
+                display: block;
+                color: $media-photo-viewer-more-color;
+            }
+        }
+    }
+}

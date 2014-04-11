@@ -1,0 +1,100 @@
+{% load i18n bb_ember %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+    {% block_verbatim nav_login_content %}
+
+        <ul class="nav-actions">
+            {{#if controllers.currentUser.isAuthenticated }}
+                {% block_verbatim user_logged_in %}
+                    <li class="nav-member">
+
+                        {% block_verbatim profile_anchor %}
+                            <a href="#" class="nav-member-dropdown">
+                                <strong>
+                                    {% trans "Profile" %} &nbsp;
+                                </strong>
+                            </a>
+                        {% endblock_verbatim profile_anchor %}
+
+                        <ul class="nav-member-dropdown-menu">
+                            {% block_verbatim my_menu %}
+
+                                <li>
+                                    {{#link-to "userProfile" }}
+                                        {% trans "Edit my profile & settings" %}
+                                    {{/link-to }}
+                                </li>
+
+                                {% if 'projects' in bb_apps %}
+                                {% block_verbatim 'my-projects-menu-link' %}
+                                    <li>
+                                        {{#link-to 'myProjectList'}}
+                                            {% trans "My Projects" %}
+                                        {{/link-to}}
+                                    </li>
+                                {% endblock_verbatim %}
+                                {% endif %}
+
+                                {% comment %}
+                                    {% if 'tasks' in bb_apps %}
+                                        {% block_verbatim 'my-tasks-menu-link' %}
+                                            <li>
+                                                {{#link-to 'myTaskList'}}
+                                                    {% trans "My Tasks" %}
+                                                {{/link-to}}
+                                            </li>
+                                        {% endblock_verbatim %}
+                                    {% endif %}
+                                {% endcomment %}
+
+                                <li>
+                                    {{#link-to "viewProfile" controllers.currentUser.id_for_ember }}
+                                        {% trans "View my profile" %}
+                                    {{/link-to}}
+                                </li>
+
+                                <li>
+                                    {% block logout_anchor %}
+                                        <a href="{% url 'accounts:logout' %}?next=/{{ LANGUAGE_CODE }}/">Logout</a>
+                                    {% endblock logout_anchor %}
+                                </li>
+								
+								{% block_verbatim language_switcher %}
+
+                                <li class="nav-member-switch-language">
+                                    {% trans "Language" %} {{view "App.LanguageSwitchView"}}
+                                </li>
+								
+								{% endblock_verbatim %}
+
+                            {% endblock_verbatim my_menu %}
+                        </ul>
+                    </li>
+
+                    {# TODO: only if donations app is enabled #}
+                    {% block donations_anchor %}
+                    {% endblock donations_anchor %}
+
+                {% endblock_verbatim user_logged_in %}
+
+            {{else}}
+
+                {% block_verbatim anonymous_user %}
+
+                    <li class="nav-signup-login">
+                        {{#link-to "signup" class="nav-signup"}}{% trans "Sign up" %}{{/link-to}}
+                        &#124;
+                        <a {{action 'openInBox' "login"}} class="nav-login">{%  trans "Log in" %}</a>
+                    </li>
+
+                    <li class="nav-switch-language">{{view "App.LanguageSwitchView"}}</li>
+
+                {% endblock_verbatim anonymous_user %}
+
+            {{/if}}
+        </ul>
+
+    {% endblock_verbatim nav_login_content %}
+
+</nav>

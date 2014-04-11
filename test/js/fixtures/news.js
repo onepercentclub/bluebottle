@@ -1,0 +1,1 @@
+App.NewsItemPreview.FIXTURES = []

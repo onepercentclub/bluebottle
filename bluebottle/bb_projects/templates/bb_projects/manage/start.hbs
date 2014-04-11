@@ -1,0 +1,101 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "my_project_start" %}
+
+        <h1 class="page-title">{% trans "Project start" %}</h1>
+        <br />
+        <p>
+            <strong>
+                {% blocktrans %}
+                Do you want to improve your destination? Improve it by cleaning up the beach or the canals? By supporting that iconic landmark? By teaching students the skills to make it in tourism? To help out after an emergency? By helping that local handicraft shop expand their business online?
+                Then you’ve come to the right place!
+                All you need now is a local partner and a sound idea for a project that fits our theme's on destination improvement. Our current themes are Environment, Cultural heritage, Entrepreneurship, Platform and Emergency response. (the last in case of big emergencies, let's hope we don't use this one!)
+                Any preconditions? Yes, but just a few.
+                {% endblocktrans %}
+
+            </strong>
+        </p>
+        <h3>{% trans "Your project is really about destination improvement when your project will…" %}</h3>
+        <br />
+        {% blocktrans %}
+        <ul>
+            <li>
+                … improve what makes your destination special, and makes people want to visit it over and over again
+            </li>
+            <li>
+                … contribute to the people living and working there, i.e. it benefits the local community
+            </li>
+            <li>
+              … help/ boost a local partner organisation
+            </li>
+            <li>
+                … have a long(er) term impact
+            </li>
+            <li>
+               … be managed and owned locally
+            </li>
+            <li>
+               … require a team effort
+            </li>
+            <li>
+               … have tasks for your colleagues that can be done in half a day or a day
+            </li>
+        </ul>
+        {% endblocktrans %}
+        <br />
+        <p>
+            {% blocktrans %}
+            So, is your idea for destination approvement the right one? Then put your project on the map!
+            <br />
+            <br />
+            Or not sure about your idea and in need for some extra inspiration for projects and partners in your region?
+            <br />
+            <br />
+            {% endblocktrans %}
+            {% trans "Check out our" %} {{#link-to "page" "inspiration"}}{% trans "inspiration pages" %}{{/link-to}}
+        </p>
+        <div class="well">
+            <div class="campaign-campaigner l-half">
+                <h3>{% trans "The project initiator" %}</h3>
+                <p>{% trans "Personalise your profile so we can get to know you even better." %}</p>
+                {{#if controllers.currentUser.isAuthenticated}}
+                    <figure class="campaigner-avatar">
+                        <img {{bindAttr src="controllers.currentUser.getAvatar" alt="controllers.currentUser.full_name"}}>
+                    </figure>
+                    <div class="campaigner-details">
+                        <h4 class="campaigner-name">{{ controllers.currentUser.full_name }}</h4>
+
+                        {{#link-to "userProfile" classNames="btn btn-modest"}}
+                            <span class="flaticon solid pencil-3"></span>
+                            {% trans "Edit profile" %}
+                        {{/link-to}}
+
+                    </div>
+
+                {{else}}
+                    <p>{% trans "No user Logged, sign in to start and create your project." %}</p>
+                {{/if}}
+
+
+            </div>
+
+            <div class="l-half">
+                {{#if hasLanguages}}
+                    <h3>{% trans "Language" %}</h3>
+                    <p>{% trans "Choose a language" %}</p>
+                    <div class="control-group">
+                        {{view "App.LanguageSelectView" selectionBinding='language' valueBinding='currentLanguage.id'}}
+                    </div>
+                {{/if}}
+                <div class="control-group">
+                    {{#link-to 'myProject.pitch' tagName='button' class="btn btn-primary btn-block"}}
+                        {% trans "Start a project" %}
+                    {{/link-to}}
+                </div>
+            </div>
+        </div>
+
+
+{% endtplhandlebars %}

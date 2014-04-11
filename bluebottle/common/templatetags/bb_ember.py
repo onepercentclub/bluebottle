@@ -2,7 +2,8 @@ from django import template
 from django.conf import settings
 from django.template.base import TemplateSyntaxError, TextNode
 from django.template.loader_tags import BlockNode
-
+from django.utils.encoding import force_str
+from django.utils.functional import Promise
 
 """ based on django_templatetag_handlebars """
 
@@ -15,7 +16,7 @@ def verbatim_tags(parser, token, endtagname='', endtagnames=[]):
     Javascript templates (jquery, handlebars.js, mustache.js) use constructs like:
 
     ::
-    
+
         {{if condition}} print something{{/if}}
 
     This, of course, completely screws up Django templates,
@@ -39,7 +40,7 @@ def verbatim_tags(parser, token, endtagname='', endtagnames=[]):
         # TODO: refactor this condition, token.split_contents should return
         # only one string, block.super, otherwise we might be dealing with
         # handlebars templating shenanigans
-        
+
         # FIXME: block.super not working
 
         # if 'block.super' in token.contents:
@@ -47,7 +48,7 @@ def verbatim_tags(parser, token, endtagname='', endtagnames=[]):
         #     var_node = parser.create_variable_node(filter_expression)
         #     parser.extend_nodelist(nodelist, var_node, token)
         #     import pdb; pdb.set_trace()
-        
+
         if token.token_type == template.TOKEN_VAR:
             parser.extend_nodelist(nodelist, TextNode('{{'), token)
             parser.extend_nodelist(nodelist, TextNode(token.contents), token)
@@ -82,21 +83,21 @@ class VerbatimNode(template.Node):
     Wrap {% verbatim %} and {% endverbatim %} around a
     block of javascript template and this will try its best
     to output the contents with no changes.
-    
+
     ::
-    
+
         {% verbatim %}
             {% trans "Your name is" %} {{first}} {{last}}
         {% endverbatim %}
     """
     def __init__(self, text_and_nodes):
         self.text_and_nodes = text_and_nodes
-    
+
     def render(self, context):
         output = ""
         # If its text we concatenate it, otherwise it's a node and we render it
         for bit in self.text_and_nodes:
-            if isinstance(bit, basestring): 
+            if isinstance(bit, basestring):
                 output += bit
             else:
                 output += bit.render(context)
@@ -114,7 +115,7 @@ def do_block(parser, token):
     Define a block that can be overridden by child templates. Adapted for handlebar
     template syntax. Note that you cannot use template variables in these blocks!
     """
-    
+
     bits = token.contents.split()
     if len(bits) != 2:
         raise TemplateSyntaxError("'%s' tag takes only one argument" % bits[0])
@@ -127,8 +128,8 @@ def do_block(parser, token):
         parser.__loaded_blocks.append(block_name)
     except AttributeError: # parser.__loaded_blocks isn't a list yet
         parser.__loaded_blocks = [block_name]
-    
-    
+
+
     acceptable_endblocks = ('endblock_verbatim', 'endblock_verbatim %s' % block_name)
 
     # modify nodelist!
@@ -146,20 +147,20 @@ class HandlebarsNode(VerbatimNode):
     """
     A Handlebars.js block is a *verbatim* block wrapped inside a
     named (``template_id``) <script> tag.
-    
+
     ::
-    
+
         {% tplhandlebars "tpl-popup" %}
             {{#ranges}}
                 <li>{{min}} < {{max}}</li>
             {{/ranges}}
         {% endtplhandlebars %}
-    
+
     """
     def __init__(self, template_id, text_and_nodes):
         super(HandlebarsNode, self).__init__(text_and_nodes)
         self.template_id = template_id
-    
+
     def render(self, context):
         USE_EMBER_STYLE_ATTRS = getattr(settings, 'USE_EMBER_STYLE_ATTRS', False)
         output = super(HandlebarsNode, self).render(context)
@@ -180,3 +181,58 @@ def tplhandlebars(parser, token):
     except ValueError:
         raise template.TemplateSyntaxError, "%s tag requires exactly one argument" % token.split_contents()[0]
     return HandlebarsNode(template_id, text_and_nodes)
+
+
+
+@register.simple_tag
+def bb_component(component, *args, **kwargs):
+    """
+    Template tag to generate Ember components with translated arguments.
+
+    Usage: {% bb_component 'my-component' myFirstArg="'foo'" mySecondArg='bar' %}
+    Translates to: {{my-component myFirstArg='foo' mySecondArg=bar}}
+    """
+    if not isinstance(component, basestring) or not len(component):
+        raise template.TemplateSyntaxError("bb-component tag requires at least one argument")
+
+    component_bits = [component]
+    for key, value in kwargs.items():
+        # trigger translation if we're dealing with Lazy translatable strings
+        if isinstance(value, Promise):
+            value = '\'{0}\''.format(force_str(value))
+        if key in ('name', 'type') or 'Binding' in key:
+            value = '\'{0}\''.format(value)
+        bit = '{key}={value}'.format(key=key, value=value)
+        component_bits.append(bit)
+
+    return '{{' + ' '.join(component_bits) + '}}'
+
+
+@register.tag(name='bb_block_component')
+def do_bb_block_component(parser, token, *args, **kwargs):
+    params = token.split_contents()
+    params.pop(0)
+
+    nodelist = parser.parse(('endbb_block_component',))
+    parser.delete_first_token()
+
+    component_bits = []
+    for param in params:
+        key, value = param.split('=')
+        # trigger translation if we're dealing with Lazy translatable strings
+        if isinstance(value, Promise):
+            value = '\'{0}\''.format(force_str(value))
+        # bit = '{key}={value}'.format(key=key, value=value)
+        # component_bits.append(param)
+
+    return BbBlockComponentNode(nodelist, component_bits)
+
+
+class BbBlockComponentNode(template.Node):
+
+    def __init__(self, nodelist, params=[]):
+        self.nodelist = nodelist
+        self.params = params
+
+    def render(self, context):
+        return '{{#bb-form-field ' + ' '.join(self.params) + ' }}' + self.nodelist.render(context) +'{{/bb-form-field}}'

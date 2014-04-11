@@ -63,11 +63,13 @@
 	        @include transition(all 0.2s ease-in);
 
 			margin: 0;
+			margin-top: $base-margin;
 			padding: $base-padding;
+			padding-bottom: $base-padding * 2;
 
 
 	        white-space: nowrap;
-	        color: $header-nav-main-color;
+	        color: $header-nav-main-navitem-color;
             font-family: $font-family-bold;
 		    display: inline-block;
 		    text-align: center;
@@ -169,7 +171,7 @@
 				color: $header-nav-member-dropdown-color;
 				margin: 0;
                 padding: 0 16px 0 0;
-                background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAJCAYAAADpeqZqAAAAb0lEQVQoz2NgaDVngOJwIA5F4iNjWyBugPOhjGAg/gPFoVg0fAbi/0BcBdPkCsQ/oYL/0TQia4DhZJCEKBBfQJMAaWzCouExECvDnIBN43+sGpD8REgjQgOaJlwaUTVg0YSuEVMDDk0wjVuxagBiAFeciJvQD09BAAAAAElFTkSuQmCC') $color-secondary no-repeat 90% 50%;
+                background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAJCAYAAADpeqZqAAAAb0lEQVQoz2NgaDVngOJwIA5F4iNjWyBugPOhjGAg/gPFoVg0fAbi/0BcBdPkCsQ/oYL/0TQia4DhZJCEKBBfQJMAaWzCouExECvDnIBN43+sGpD8REgjQgOaJlwaUTVg0YSuEVMDDk0wjVuxagBiAFeciJvQD09BAAAAAElFTkSuQmCC') $nav-member-dropdown-bg-color no-repeat 90% 50%;
                 
 		        img {
 		        	width: 2em;

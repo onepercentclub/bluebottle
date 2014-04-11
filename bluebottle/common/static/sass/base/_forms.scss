@@ -61,6 +61,7 @@ fieldset {
 }
 
 fieldset {
+    background-color: $form-fieldset-bg-color;
     .fieldset-tabs {
         margin-bottom: -$base-margin / 2;
     }
@@ -72,7 +73,7 @@ legend {
 	padding: $base-padding*3/2 $base-padding*2;
 	background-color: $form-legend-bg-color;
 	width: 100%;
-		
+	color: $form-legend-color;	
 	strong {
 		display: block;
 		font-family: $font-family-heavy;

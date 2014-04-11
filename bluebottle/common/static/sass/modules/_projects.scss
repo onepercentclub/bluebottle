@@ -224,7 +224,7 @@
             bottom: 0;
             display: block;
 			padding: $base-padding;
-			background-color: rgba(0, 0, 0, 0.7);
+			background-color: $projects-project-item-title-bg-color;
 			color: $projects-project-item-title-color;
 			
 			h3 {
@@ -308,7 +308,7 @@
         position: absolute;
         top: 0;
         padding: $base-padding;
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: $projects-project-item-project-description-bg-color;
         font-size: $font-size-small;
         color: $projects-project-item-project-description-color;
         overflow: hidden;
@@ -320,6 +320,7 @@
             width: 100%;
             bottom: 0;
             left: 0;
+            color: $projects-project-item-project-view-color;
             background-color: $projects-project-item-project-view-bg-color;
             text-transform: uppercase;
             padding: $base-padding/2 $base-padding;

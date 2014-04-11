@@ -10,6 +10,8 @@ from rest_framework import generics
 from rest_framework import views, response
 from taggit.models import Tag
 
+from .serializers import LanguageSerializer
+
 
 class TagList(views.APIView):
     """
@@ -19,6 +21,14 @@ class TagList(views.APIView):
     def get(self, request, format=None):
         data = [tag.name for tag in Tag.objects.all()[:20]]
         return response.Response(data)
+
+
+class LanguageList(generics.ListAPIView):
+    serializer_class = LanguageSerializer
+    model = serializer_class.Meta.model
+
+    def get_queryset(self):
+        return self.model.objects.order_by('language_name').all()
 
 
 class TagSearch(views.APIView):

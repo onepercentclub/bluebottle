@@ -4,6 +4,22 @@ from django.conf import settings
 from django.db import models
 
 
+class Language(models.Model):
+    """
+    A language - ISO 639-1
+    """
+
+    code = models.CharField(max_length=2, blank=False)
+    language_name = models.CharField(max_length=100, blank=False)
+    native_name = models.CharField(max_length=100, blank=False)
+
+    class Meta:
+        ordering = ['language_name']
+
+    def __unicode__(self):
+        return self.language_name
+
+
 class Address(models.Model):
     """
     A postal address.
@@ -15,17 +31,18 @@ class Address(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True)
 
-    def __unicode__(self):
-        return self.line1[:80]
-
     class Meta:
         abstract = True
+
+    def __unicode__(self):
+        return self.line1[:80]
 
 
 # Below is test-only stuff
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
 if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
+    print 'more nice models here'
     import re
 
     from fluent_contents.models import PlaceholderField

@@ -19,11 +19,11 @@ from ..views import (
 # User settings Detail (GET/PUT):  /users/settings/<pk>
 
 router = DefaultRouter()
-router.register(r'time_available', TimeAvailableViewSet)
+router.register(r'', TimeAvailableViewSet)
 
 urlpatterns = patterns(
     '',
-    url(r'^', include(router.urls)),
+    url(r'^time_available', include(router.urls)),
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     url(r'^activate/(?P<activation_key>[a-f0-9]{40})$', UserActivate.as_view()),
     url(r'^current$', CurrentUser.as_view(), name='user-current'),

@@ -36,8 +36,14 @@ App.ProjectView = Em.View.extend({
 
     didInsertElement: function(){
         this._super();
-        this.$('.tags').popover({trigger: 'hover', placement: 'top', width: '100px'});
-        
+        this.$('.tags').popover({trigger: 'hover', placement: 'top', width: '100px'});       
+    } 
+});
+
+App.ProjectPlanView = Em.View.extend({
+    templateName: 'project_plan',
+
+    didInsertElement: function(){
         // project plan
         var height = $(window).height();
         var width = $(window).width();
@@ -60,12 +66,8 @@ App.ProjectView = Em.View.extend({
             view.$(".project-plan-main-link.active").removeClass("active");
             view.$(event.target).addClass("active");
             event.preventDefault();
-        });        
-    } 
-});
-
-App.ProjectPlanView = Em.View.extend({
-    templateName: 'project_plan',
+        }); 
+    }    
 });
 
 App.ProjectIndexView = Em.View.extend({

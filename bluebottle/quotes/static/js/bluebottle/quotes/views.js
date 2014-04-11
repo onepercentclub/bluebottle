@@ -19,11 +19,9 @@ App.QuoteListView = Ember.View.extend({
             }
 
 	    if (controller.get('quoteIndex') + 1 < quote_length){
-
-		controller.set('nextQuoteIndex', controller.get('quoteIndex') + 1);
-	    }else{
-
-		controller.set('nextQuoteIndex', 0);
+			controller.set('nextQuoteIndex', controller.get('quoteIndex') + 1);
+	    } else{
+			controller.set('nextQuoteIndex', 0);
 	    }
 	}
 

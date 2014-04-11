@@ -263,11 +263,14 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 	position: relative;
 	margin: 0;
 	padding: 0;
+	color: $tasks-task-list-color;
+	background-color: $tasks-task-list-bg-color;
 	
 	h3 {
 		margin-bottom: 0;
 		display: inline-block;
 		padding-bottom: 0;
+		color: $tasks-task-list-heading-color;
 	}
 	
 	p {

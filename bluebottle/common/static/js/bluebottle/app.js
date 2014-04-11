@@ -339,6 +339,9 @@ App.ApplicationRoute = Em.Route.extend({
             });
             return true;
         },
+        openInFullScreenBox: function(name, context) {
+            this.send('openInBox', name, context, 'full-screen');
+        },
         openInScalableBox: function(name, context) {
             this.send('openInBox', name, context, 'scalable');
         },

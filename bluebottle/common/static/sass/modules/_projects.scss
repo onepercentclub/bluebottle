@@ -514,29 +514,29 @@
 
 // Full project plan
 
-//#project-plan {
-//	
-//	header {
-//	    margin-top: $base-margin*2;
-//		@include grid(48,1,1);
-//	}
-//	
-//	article {
-//	  margin-bottom: $base-margin;
-////		@include grid(24,1,1);
-//		clear: none !important;
-//		
-//		br {
-//			content: " " !important;
-//			display: block !important;
-//			margin-bottom: 1.5em !important;
-//		}
-//		
-//		img {
-//			width: 100%;
-//		}
-//	}
-//}
+#project-plan {
+	
+	header {
+	    margin-top: $base-margin*2;
+		@include grid(48,1,1);
+	}
+	
+	article {
+	  margin-bottom: $base-margin;
+//		@include grid(24,1,1);
+		clear: none !important;
+		
+		br {
+			content: " " !important;
+			display: block !important;
+			margin-bottom: 1.5em !important;
+		}
+		
+		img {
+			width: 100%;
+		}
+	}
+}
 
 // task list for in project view
 .task-list {
@@ -575,122 +575,124 @@
 
 
 // new project plan
-//#project-plan-modal {
-//	top: 50%;
-//	left: 50%;
-//}
-// #project-plan {
-	
-//   width: 100%;
-//   height: 100%;
-//   max-height: 800px;
-//   overflow-y: auto;
-
-// 	.project-plan-navigation {
-		
-// 		@include grid(16, 4, 0);
-		
-// 		position: relative;
-// 		min-height: 100%;
-			
-// 		.project-plan-title {
-// 			position: relative;
-// 			padding: $base-padding;
-// 			h4 {
-// 				color: $color-secondary;
-// 			}
-// 			&:after {
-// 				left: 100%;
-// 				top: 60px;
-// 				border: solid transparent;
-// 				content: " ";
-// 				height: 0;
-// 				width: 0;
-// 				position: absolute;
-// 				pointer-events: none;
-// 				border-left-color: $gray-lighter;
-// 				border-width: 10px;
-// 				margin-top: -10px;
-// 				z-index: 10;
-// 			}
-// 		}		
-// 		.project-plan-navigation-links {
-// 			padding: $base-padding 0;
-// 			li {
-// 				@include resetlist();
-// 				text-align: right;
-// 				a {
-// 					display: block;
-// 					text-decoration: none;
-// 					padding: ($base-padding/2) $base-padding * 2;
-// 					&.active {
-// 						background: white;					
-// 					}
-// 				}
-// 			}
-// 			.project-plan-download-pdf {
-// 				@include clear;
-// 				margin-top: $base-margin * 2;
-// 				a {
-// 					border: 2px solid $color-primary;
-// 					padding: ($base-padding/2) $base-padding;
-// 					margin: $base-margin;
-// 					text-decoration: none;
-// 					float: right;			
-// 				}
-// 			}
-// 		}
-		
-// 	}
-// 	.project-plan-main-container {
-// 		position: relative;
-// 		@include clearfix;
-// 		background: white;
-// 		padding: $base-padding;
-// 		padding-top: $base-padding*3;
-// 		@include grid(20,0,0);
-// 		.project-plan-main {
-// 			position: relative;
-// 			padding: 0 ($base-padding * 2);
-// 			background: $white;
-// 			overflow-y: auto;
-// 			overflow-x: hidden;
-// 			color: $gray-darker;
-// 			p {
-// 				text-align: justify;
-// 			}
-		
-// 			h3:first-of-type {
-// 				font-size: $font-size-larger;
-// 				margin-top: 0;
-// 			}
-		
-// 			h1, h2, h3, h4, h5, h6 {
-// 				color: $color-primary;
-// 			}		
-// 		}
-// 		.project-plan-back-link {
-// 			position: absolute;
-// 			top: 10px;
-// 			right: 10px;
-// 			text-decoration: none;
-// 			text-transform: uppercase;
-// 			.flaticon {
-// 				text-align: center;
-// 				vertical-align: middle;
-// 				font-size: $font-size-larger;
-// 				margin-left: $base-margin/2;
-// 			}
-// 		}
-// 	}
-	
-// 	.project-plan-map {
-// 		@include grid(12,0,0);
-// 		content: " ";
-// 	}
-	
-	
+// #project-plan-modal {
+// 	top: 50%;
+// 	left: 50%;
 // }
+#project-plan {
+
+  position: relative;  
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: $projects-project-plan-bg-color;
+
+	.project-plan-navigation {
+		
+		@include grid(16, 4, 0);
+		
+		position: relative;
+		min-height: 100%;
+        background-color: $projects-project-plan-navigation-bg-color;
+			
+		.project-plan-title {
+			position: relative;
+			padding: $base-padding;
+			h4 {
+				color: $color-secondary;
+			}
+			&:after {
+				left: 100%;
+				top: 60px;
+				border: solid transparent;
+				content: " ";
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-left-color: $projects-project-plan-navigation-bg-color;
+				border-width: 10px;
+				margin-top: -10px;
+				z-index: 10;
+			}
+		}		
+		.project-plan-navigation-links {
+			padding: $base-padding 0;
+			li {
+				@include resetlist();
+				text-align: right;
+				a {
+					display: block;
+					text-decoration: none;
+					padding: ($base-padding/2) $base-padding * 2;
+					&.active {
+						background: white;					
+					}
+				}
+			}
+			.project-plan-download-pdf {
+				@include clear;
+				margin-top: $base-margin * 2;
+				a {
+					border: 2px solid $color-primary;
+					padding: ($base-padding/2) $base-padding;
+					margin: $base-margin;
+					text-decoration: none;
+					float: right;			
+				}
+			}
+		}
+		
+	}
+	.project-plan-main-container {
+		position: relative;
+		@include clearfix;
+		padding: $base-padding;
+		padding-top: $base-padding*3;
+		@include grid(20,0,0);
+        background-color: $projects-project-plan-main-content-bg-color;
+		.project-plan-main {
+			position: relative;
+			padding: 0 ($base-padding * 2);
+			background: $white;
+			overflow-y: auto;
+			overflow-x: hidden;
+			color: $gray-darker;
+			p {
+				text-align: justify;
+			}
+		
+			h3:first-of-type {
+				font-size: $font-size-larger;
+				margin-top: 0;
+			}
+		
+			h1, h2, h3, h4, h5, h6 {
+				color: $color-primary;
+			}		
+		}
+		.project-plan-back-link {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			text-decoration: none;
+			text-transform: uppercase;
+			.flaticon {
+				text-align: center;
+				vertical-align: middle;
+				font-size: $font-size-larger;
+				margin-left: $base-margin/2;
+			}
+		}
+	}
+	
+	.project-plan-map {
+		@include grid(12,0,0);
+		content: " ";
+	}
+	
+	
+}
 
 #project-dashboard {
     margin-bottom: $base-margin * 6;

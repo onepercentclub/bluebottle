@@ -6,8 +6,8 @@
 // Grays
 // --------------------------------
 
-$black                                                     : #000 !default; 
-$gray-darkest                                              : #222 !default;     
+$black                                                     : #000 !default;
+$gray-darkest                                              : #222 !default;
 $gray-darker                                               : #444 !default;
 $gray-dark                                                 : #666 !default;
 $gray                                                      : #999 !default;
@@ -28,20 +28,20 @@ $color-deselect                                            : #bfbfbf !default;
 // Social                                                       
 // ----------------------------------                           
                                                                 
-$facebook-blue                                             : #45619d !default;                  
+$facebook-blue                                             : #45619d !default;
 $twitter-blue                                              : #33b9e2 !default;
                                                                 
 // Typography                                                   
 // --------------------------------                             
                                                                 
 //$font-family                                             : Arial, Helvetica, sans-serif;
-//$font-family-heavy                                       : Arial, Helvetica, sans-serif;  
+//$font-family-heavy                                       : Arial, Helvetica, sans-serif;
 //$font-family-bold                                        : Arial, Helvetica, sans-serif;
                                                                 
                                                                 
 $font-family                                               : 'Futura W01 Book', 'Trebuchet MS', Helvetica, Arial, sans-serif;
-$font-family-heavy                                         : 'Futura W02 Heavy', 'Trebuchet MS', Helvetica, Arial, sans-serif;          
-$font-family-bold                                          : 'Futura W01 Bold', 'Trebuchet MS', Helvetica, Arial, sans-serif;   
+$font-family-heavy                                         : 'Futura W02 Heavy', 'Trebuchet MS', Helvetica, Arial, sans-serif;
+$font-family-bold                                          : 'Futura W01 Bold', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-small                                         : 'Trebuchet MS', Helvetica, Arial, sans-serif;
                                                                 
 $base-font-size                                            : 1em !default;
@@ -165,7 +165,7 @@ $form-legend-bg-color                                      : $white !default;
 $form-legend-strong-color                                  : $color-secondary !default;
 
 $form-fieldset-legend-bg-color                             : $gray-light !default;
-$form-fieldset-legend-strong-color                         : $white !default;                                                                
+$form-fieldset-legend-strong-color                         : $white !default;
 
 $form-message-color                                        : $color-text-light !default;
 $form-message-bg-color                                     : $color-secondary !default;
@@ -207,8 +207,8 @@ $carousel-nav-item-active-color                            : $white !default;
 // Fund
 // ----------------------------------                           
 
-$fund-header-bg-color                                      : $gray-lighter !default; 
-$fund-header-color                                         : $color-heading !default;                                                        
+$fund-header-bg-color                                      : $gray-lighter !default;
+$fund-header-color                                         : $color-heading !default;
 $fund-empty-icon-color                                     : $gray-lighter !default;
 $fund-empty-legend-color                                   : $color-text !default;
 $fund-empty-legend-strong-color                            : $color-primary !default;
@@ -271,6 +271,11 @@ $projects-tasks-task-status-bg-color                       : $gray-light !defaul
 $projects-tasks-task-status-color                          : $gray-dark !default;
 $projects-tasks-task-content-color                         : $gray-light !default;
 $projects-tasks-task-content-task-name                     : $white !default;
+
+// task previews
+$tasks-task-list-color: $gray-darker !default;
+$tasks-task-list-bg-color: $white !default;
+$tasks-task-list-heading-color: $gray-darker !default;
 
 // project - search results
 $projects-project-item-bg-color                            : $gray-lighter !default;
@@ -365,12 +370,12 @@ $table-cell-border-color                                   : $gray-light !defaul
 
 // Static                                                           
 // -----------------------------------                          
-$static-page-nav-border-color                              : $gray-lighter !default;        
-$static-page-nav-heading-color                             : $color-heading !default;       
-$static-page-nav-list-border-top-color                     : $white !default;       
-$static-page-nav-list-hover-link-color                     : $color-text !default;      
-$static-page-nav-link-hover-color                          : $white !default;       
-$static-page-nav-link-hover-bg-color                       : $color-secondary !default;     
+$static-page-nav-border-color                              : $gray-lighter !default;
+$static-page-nav-heading-color                             : $color-heading !default;
+$static-page-nav-list-border-top-color                     : $white !default;
+$static-page-nav-list-hover-link-color                     : $color-text !default;
+$static-page-nav-link-hover-color                          : $white !default;
+$static-page-nav-link-hover-bg-color                       : $color-secondary !default;
                                                         
 // Tabs                                                         
 // -----------------------------------                          
@@ -424,18 +429,24 @@ $wallposts-form-tabs-active-bg-color                       : $gray-dark !default
 $wallposts-form-tabs-active-color                          : $white !default;
 $wallposts-form-upload-button-color                        : $white !default;
 
+$wallposts-wallpost-color: $gray-darker !default;
+$wallposts-wallpost-bg-color: $white !default;
 $wallposts-wallpost-member-function-bg-color               : $gray-lighter !default;
 $wallposts-wallpost-member-function-color                  : $white !default;
 $wallposts-wallpost-author-color                           : $color-primary !default;
 $wallposts-wallpost-timestamp-color                        : $gray !default;
 $wallposts-wallpost-title-color                            : $black !default;
+$wallposts-wallpost-file-link-color                        : $gray !default;
+
 $wallposts-wallpost-system-bg-color                        : $color-primary !default;
+
+$wallposts-wallpost-important-bg-color                     : $gray-lighter !default;
 $wallposts-wallpost-important-border-color                 : $color-primary !default;
 $wallposts-wallpost-important-author-color                 : $color-secondary !default;
 $wallposts-wallpost-important-title-color                  : $color-primary !default;
 $wallposts-wallpost-important-buttons-bg-color             : $color-primary !default;
 $wallposts-wallpost-important-buttons-color                : $white !default;
-$wallposts-wallpost-file-link-color                        : $gray !default;
+
                                                                 
 // Layout                                                       
 // -----------------------------------                          
@@ -546,3 +557,9 @@ $account-statistics-pagination-link-hover-color            : $gray-darker !defau
 $account-statistics-pagination-border-color                : $gray-lighter !default;
 $account-statistics-pagination-border-hover-color          : $gray-darker !default;
 $account-statistics-pagination-icon-color                  : $gray-darkest !default;
+
+
+// project plan
+$projects-project-plan-bg-color: $gray-lighter !default;
+$projects-project-plan-navigation-bg-color: $gray-lighter !default;
+$projects-project-plan-main-content-bg-color: $white !default;

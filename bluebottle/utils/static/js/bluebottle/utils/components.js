@@ -24,6 +24,30 @@ App.BbUploadImageComponent = App.BbFormFieldComponent.extend({
     buttonLabel: 'Upload image'
 });
 
+App.BbUploadImageAreaComponent = App.BbFormFieldComponent.extend({
+    accept: 'image/*',
+    buttonLabel: 'Upload image',
+    didInsertElement: function() {
+    	var file_input = this.$("input[type=file]");
+    	file_input.hide();
+    	this.$(".image-upload-controls-browse").click(function() {
+    		file_input.trigger("click");
+    	});
+    },
+});
+
+App.BbUploadFileAreaComponent = App.BbFormFieldComponent.extend({
+    accept: '*/*',
+    buttonLabel: 'Upload file',
+    didInsertElement: function() {
+    	var file_input = this.$("input[type=file]");
+    	file_input.hide();
+    	this.$(".upload").click(function() {
+    		file_input.trigger("click");
+    	});
+    },
+});
+
 App.BbVideoLinkComponent = App.BbTextFieldComponent.extend({
 });
 

@@ -215,9 +215,11 @@ App.UploadFile = Ember.TextField.extend({
         var view = this;
 
         reader.onload = function(e) {
-            var preview = "<img src='" + e.target.result + "' />";
-            view.$().parents('form').find('.preview').remove();
-            view.$().parent().after('<div class="preview">' + preview + '</div>');
+            var preview = "<figure><img src='" + e.target.result + "' /></figure>";
+            // view.$().parents('form').find('.preview').remove();
+            view.$().parents('.image-upload').find('figure').remove();
+            // view.$().parent().after('<div class="preview">' + preview + '</div>');
+            view.$().closest(".image-upload").find(".image-upload-drag").prepend(preview);
         };
         reader.readAsDataURL(file);
         var model = this.get('parentView.controller.model');

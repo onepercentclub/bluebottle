@@ -334,6 +334,10 @@ App.MyProjectPitchController = App.StandardTabController.extend({
     previousStep: 'myProject.start',
     nextStep: 'myProject.story',
 
+	allThemes: function(){
+        return App.Theme.find();
+    }.property(),
+
     canSave: function () {
         return !!this.get('model.title');
     }.property('model.title'),

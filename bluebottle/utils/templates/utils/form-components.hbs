@@ -48,6 +48,11 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
+{% tplhandlebars "components/bb-select-language" %}
+    {{#bb-form-field hint=hint label=label errors=errors}}
+        {{view "App.LanguageSelectView" selectionBinding='selection' valueBinding='value'}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-select" %}
     {{#bb-form-field hint=hint label=label errors=errors}}

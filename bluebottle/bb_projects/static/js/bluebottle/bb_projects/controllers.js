@@ -338,6 +338,10 @@ App.MyProjectPitchController = App.StandardTabController.extend({
         return !!this.get('model.title');
     }.property('model.title'),
 
+	allThemes: function(){
+        return App.Theme.find();
+    }.property(),
+
     languages: function () {
         return App.Language.find();
     }.property(),

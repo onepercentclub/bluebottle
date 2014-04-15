@@ -11,7 +11,7 @@ from django_extensions.db.fields import (
 from sorl.thumbnail import ImageField
 from django.db.models import options
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 
 class ProjectTheme(models.Model):
@@ -41,6 +41,7 @@ class ProjectTheme(models.Model):
 class ProjectPhase(models.Model):
     """ Phase of a project """
 
+    slug = models.SlugField(max_length=200, unique=True)
     name = models.CharField(max_length=100, unique=True)
     description = models.CharField(max_length=400, blank=True)
     sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
@@ -57,6 +58,9 @@ class ProjectPhase(models.Model):
     def __unicode__(self):
         return u'{0} - {1}'.format(self.sequence,  self.name)
 
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(ProjectPhase, self).save(*args, **kwargs)
 
 class BaseProject(models.Model):
     """ The base Project model. """
@@ -93,6 +97,7 @@ class BaseProject(models.Model):
         help_text=_('Main project picture'))
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
+    language = models.ForeignKey('utils.Language', blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -100,6 +105,8 @@ class BaseProject(models.Model):
         verbose_name = _('project')
         verbose_name_plural = _('projects')
         default_serializer = 'bluebottle.bb_projects.serializers.ProjectSerializer'
+        preview_serializer = 'bluebottle.bb_projects.serializers.ProjectPreviewSerializer'
+        manage_serializer = 'bluebottle.bb_projects.serializers.ManageProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title

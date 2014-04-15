@@ -336,6 +336,8 @@
 	padding: $base-padding;
 	padding-bottom: 0;
 	margin-bottom: $base-margin;
+	color: $wallposts-wallpost-color;
+	background-color: $wallposts-wallpost-bg-color;
 
 	.wallpost-header {
 
@@ -422,6 +424,7 @@
 	&.important {
 		
 		border: 1px solid $wallposts-wallpost-important-border-color;
+		background-color: $wallposts-wallpost-important-bg-color;
 		
 		.wallpost-author {
 			color: $wallposts-wallpost-important-author-color;

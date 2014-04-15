@@ -24,7 +24,6 @@ App.ProjectMapPopupView = Em.View.extend({
 App.UsedCountrySelectViewMixin = Em.Mixin.create({
 	setupController: function(model, controller) {
         this._super(model, controller);
-
         // limit the countries
         App.UsedCountry.find().then(function(list) {
             App.UsedCountrySelectView.reopen({

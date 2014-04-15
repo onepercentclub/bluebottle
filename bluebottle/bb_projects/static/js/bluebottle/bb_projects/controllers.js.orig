@@ -176,7 +176,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
 
-     tasks: function () {
+    tasks: function () {
         return App.Task.find({project: this.get('parentId')});
     }.property('parentId'),
 
@@ -184,18 +184,26 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");
         });
+<<<<<<< HEAD
+    }.property('tasks.@each.isAvailable'),
+=======
     }.property('tasks.@each.status'),
+>>>>>>> release/bb-refaktor
 
     unavailableTasks: function () {
         return this.get('tasks').filter(function(task) {
             return task.get("isUnavailable");
         });
+<<<<<<< HEAD
+    }.property('tasks.@each.isUnavailable'),
+=======
     }.property('tasks.@each.status'),
 
 
     resetShowingAll: function() {
         this.set("showingAll", false);
     }.observes('parentId'),
+>>>>>>> release/bb-refaktor
     
     actions: {
         showMore: function() {

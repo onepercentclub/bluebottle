@@ -21,6 +21,7 @@ class Migration(SchemaMigration):
         # Adding model 'ProjectPhase'
         db.create_table(u'bb_projects_projectphase', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=200)),
             ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
             ('description', self.gf('django.db.models.fields.CharField')(max_length=400, blank=True)),
             ('sequence', self.gf('django.db.models.fields.IntegerField')(unique=True)),

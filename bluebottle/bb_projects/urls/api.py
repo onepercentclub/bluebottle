@@ -30,6 +30,5 @@ urlpatterns = patterns(
 
     # Manage stuff
     url(r'^manage/$', ManageProjectList.as_view(), name='project_manage_list'),
-    url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(),
-        name='project_manage_detail'),
+    url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(), name='project_manage_detail'),
 )

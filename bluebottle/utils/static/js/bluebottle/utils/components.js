@@ -11,6 +11,18 @@ App.BbTextFieldComponent = App.BbFormFieldComponent.extend({
 });
 
 App.BbTextAreaComponent = App.BbFormFieldComponent.extend({
+
+  didInsertElement: function(){
+    var el = this.$('textarea.redactor');
+    var view = this;
+    $(el).redactor({
+        blurCallback: function(e){
+            $(el).val(view.$('.redactor').redactor('get'));
+            $(el).trigger('change');
+        }
+    });
+    $(el).redactor('insertHtml', view.get('value'));
+  }
 });
 
 App.BbMapPickerComponent = App.BbFormFieldComponent.extend({

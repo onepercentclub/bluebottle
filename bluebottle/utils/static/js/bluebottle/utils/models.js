@@ -18,3 +18,10 @@ App.Tag = DS.Model.extend({
 
 });
 
+App.Language = DS.Model.extend({
+    url: "utils/languages",
+
+    code: DS.attr('string'),
+    native_name: DS.attr('string'),
+    language_name: DS.attr('string')
+});

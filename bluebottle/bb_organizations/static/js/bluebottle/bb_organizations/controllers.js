@@ -22,6 +22,17 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
         return this.get('selectableOrganizations.length') > 0;
     }.property('selectableOrganizations.length'),
 
+    hasOneSelectableOrganization: function () {
+        return this.get('selectableOrganizations.length') == 1;
+    }.property('selectableOrganizations.length'),
+
+    firstSelectableOrganization: function () {
+        if (this.get('hasSelectableOrganizations')) {
+            return this.get('selectableOrganizations.0');          
+        }
+
+    }.property('hasSelectableOrganizations'),
+
     isPhasePlanNew: function () {
         return this.get('controllers.myProject.model.isPhasePlanNew');
     }.property('controllers.myProject.model.isPhasePlanNew'),
@@ -44,6 +55,10 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     }.observes('selectedOrganization'),
 
     actions: {
+        setFirstSelectableOrganization: function () {
+            this.set('selectedOrganization', this.get('firstSelectableOrganization'));
+        },
+
         newOrganization: function () {
             // Only create a new org if the current one isn't new
             if (!this.get('model.isNew'))

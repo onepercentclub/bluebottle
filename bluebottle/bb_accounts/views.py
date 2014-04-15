@@ -112,7 +112,7 @@ class UserActivate(generics.RetrieveAPIView):
 With a viewsets.ModelViewSet we don't need to create duplicate for
 List and Detail, we will use routers for the urls
 """
-class TimeAvailableViewSet(viewsets.ModelViewSet):
+class TimeAvailableViewSet(viewsets.ReadOnlyModelViewSet):
     """
     This viewset automatically provides 'list', 'create', 'retrieve',
     'update' and 'destroy actions'.
@@ -120,6 +120,7 @@ class TimeAvailableViewSet(viewsets.ModelViewSet):
     queryset = TimeAvailable.objects.all()
     serializer_class = TimeAvailableSerializer
     permission_classes = (IsAuthenticated, )
+
 
 class PasswordReset(views.APIView):
     """

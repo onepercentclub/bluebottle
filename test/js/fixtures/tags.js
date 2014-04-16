@@ -1,0 +1,22 @@
+App.Tag.FIXTURES = [
+    {"id": "amsterdam"},
+    {"id": "monuments"},
+    {"id": "leuk"},
+    {"id": "hoor"},
+    {"id": "environmental "},
+    {"id": "community"},
+    {"id": "sustainable "},
+    {"id": "mexico"},
+    {"id": "mexico city"},
+    {"id": "bike"},
+    {"id": "enviroment"},
+    {"id": "city"},
+    {"id": "teaching"},
+    {"id": "team"},
+    {"id": "beach "},
+    {"id": "phuket"},
+    {"id": "patong"},
+    {"id": "thailand"},
+    {"id": "art"},
+    {"id": "grand rapids"}
+];

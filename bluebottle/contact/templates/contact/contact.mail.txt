@@ -1,0 +1,13 @@
+{% extends "base.mail.txt" %}
+{# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
+{% block content %}
+Hi there!
+
+{{ message.name }} left a contact-message on {{ site.name }}:
+
+"{{ message.message }}"
+
+You can manage this message on {{ site_url }}{{ link }}.
+
+Take care!
+{% endblock content %}

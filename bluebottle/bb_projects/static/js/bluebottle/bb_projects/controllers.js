@@ -184,14 +184,13 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");
         });
-    }.property('tasks.@each.status'),
+    }.property('tasks.@each.isAvailable'),
 
     unavailableTasks: function () {
         return this.get('tasks').filter(function(task) {
             return task.get("isUnavailable");
         });
-    }.property('tasks.@each.status'),
-
+    }.property('tasks.@each.isUnavailable'),
 
     resetShowingAll: function() {
         this.set("showingAll", false);

@@ -275,9 +275,9 @@ $projects-tasks-task-content-color                         : $gray-light !defaul
 $projects-tasks-task-content-task-name                     : $white !default;
 
 // task previews
-$tasks-task-list-color: $gray-darker !default;
-$tasks-task-list-bg-color: $white !default;
-$tasks-task-list-heading-color: $gray-darker !default;
+$tasks-task-list-color                                     : $gray-darker !default;
+$tasks-task-list-bg-color                                  : $white !default;
+$tasks-task-list-heading-color                             : $gray-darker !default;
 
 // project - search results
 $projects-project-item-bg-color                            : $gray-lighter !default;
@@ -435,8 +435,8 @@ $wallposts-form-tabs-active-bg-color                       : $gray-dark !default
 $wallposts-form-tabs-active-color                          : $white !default;
 $wallposts-form-upload-button-color                        : $white !default;
 
-$wallposts-wallpost-color: $gray-darker !default;
-$wallposts-wallpost-bg-color: $white !default;
+$wallposts-wallpost-color                                  : $gray-darker !default;
+$wallposts-wallpost-bg-color                               : $white !default;
 $wallposts-wallpost-member-function-bg-color               : $gray-lighter !default;
 $wallposts-wallpost-member-function-color                  : $white !default;
 $wallposts-wallpost-author-color                           : $color-primary !default;
@@ -445,8 +445,8 @@ $wallposts-wallpost-title-color                            : $black !default;
 $wallposts-wallpost-file-link-color                        : $gray !default;
 
 $wallposts-wallpost-system-bg-color                        : $white !default;
-$wallposts-wallpost-system-color: $gray-darker !default;
-$wallposts-wallpost-system-border-color: $color-primary !default;
+$wallposts-wallpost-system-color                           : $gray-darker !default;
+$wallposts-wallpost-system-border-color                    : $color-primary !default;
 
 $wallposts-wallpost-important-color                        : $gray-darker !default;
 $wallposts-wallpost-important-bg-color                     : $color-primary !default;
@@ -570,6 +570,6 @@ $account-statistics-pagination-icon-color                  : $gray-darkest !defa
 
 
 // project plan
-$projects-project-plan-bg-color: $gray-lighter !default;
-$projects-project-plan-navigation-bg-color: $gray-lighter !default;
-$projects-project-plan-main-content-bg-color: $white !default;
+$projects-project-plan-bg-color                            : $gray-lighter !default;
+$projects-project-plan-navigation-bg-color                 : $gray-lighter !default;
+$projects-project-plan-main-content-bg-color               : $white !default;

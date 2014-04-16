@@ -42,7 +42,7 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
 
         status = self.request.QUERY_PARAMS.get('status', None)
         if status:
-            qs = qs.filter(Q(status_id=status))
+            qs = qs.filter(status__id=status)
 
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:

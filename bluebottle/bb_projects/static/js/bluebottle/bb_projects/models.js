@@ -43,7 +43,8 @@ App.Project = DS.Model.extend({
 
     owner: DS.belongsTo('App.UserPreview'),
 
-    // Start, it actually doesn't need anything, maybe the language
+    // Start
+    language: DS.belongsTo('App.Language'),
 
     // Pitch
     title: DS.attr('string'),

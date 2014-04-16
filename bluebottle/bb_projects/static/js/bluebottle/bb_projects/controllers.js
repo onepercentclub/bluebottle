@@ -175,20 +175,23 @@ App.ProjectIndexController = Em.ArrayController.extend({
         }
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
-    
-    getTasks: function() {
-        var controller = this;
-        if (!this.get("showingAll")) {
-            var now = new Date();
-            App.Task.find({project: this.get('controllers.project.id')}).then(function(tasks) {
-                controller.set("tasks", tasks.filter(function(item) {
-                    return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
-                })); 
-             });
-        } else {
-            controller.set("tasks", App.Task.find({project: this.get('controllers.project.id')}));
-        }
-    }.observes('showingAll'),
+
+     tasks: function () {
+        return App.Task.find({project: this.get('parentId')});
+    }.property('parentId'),
+
+    availableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isAvailable");
+        });
+    }.property('tasks.@each.status'),
+
+    unavailableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isUnavailable");
+        });
+    }.property('tasks.@each.status'),
+
 
     resetShowingAll: function() {
         this.set("showingAll", false);
@@ -319,7 +322,31 @@ App.MyProjectPitchController = App.StandardTabController.extend({
 
     canSave: function () {
         return !!this.get('model.title');
-    }.property('model.title')
+    }.property('model.title'),
+
+    allThemes: function(){
+        return App.Theme.find();
+    }.property(),
+
+    languages: function () {
+        return App.Language.find();
+    }.property(),
+
+    hasLanguages: function () {
+        return this.get('languages.length');
+    }.property('languages.length'),
+
+    currentLanguage: function () {
+        var results = App.Language.filter( function (language) { 
+            return language.get('code') === App.get("language");
+        });
+
+        if (results.get('length') > 0) {
+            return App.Language.find(results.get('content.0.id'));
+        }
+
+        return null;
+    }.property('App.language', 'languages.length')
 });
 
 App.MyProjectStoryController = App.StandardTabController.extend({

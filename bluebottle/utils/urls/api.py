@@ -1,10 +1,11 @@
 from django.conf import settings
 from django.conf.urls import patterns, url
-from ..views import TagList, TagSearch
+from ..views import TagList, TagSearch, LanguageList
 
 
 urlpatterns = patterns(
     '',
+    url(r'^languages/$', LanguageList.as_view(), name='utils_language_list'),
     url(r'^tags/$', TagList.as_view(), name='utils_tag_list'),
     url(r'^tags/(?P<search>[-\w]+)$', TagSearch.as_view(), name='utils_tag_list'),
 )

@@ -267,7 +267,7 @@ App.UploadMultipleFiles = Ember.TextField.extend({
     }
 });
 
-App.UploadFileAndSendToSidebar = App.UploadFile.extend({
+App.UploadedImageView = App.UploadFile.extend({
     attributeBindings: ['name', 'accept'],
     type: 'file',
 
@@ -278,9 +278,7 @@ App.UploadFileAndSendToSidebar = App.UploadFile.extend({
         var view = this;
 
         reader.onload = function(e) {
-			debugger
             var preview = "<img src='" + e.target.result + "' />";
-//			view.$().parents('.l-wrapper').find('.preview').remove();
 			view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
         };
         reader.readAsDataURL(file);

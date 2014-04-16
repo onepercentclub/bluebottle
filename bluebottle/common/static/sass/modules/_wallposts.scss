@@ -418,12 +418,15 @@
 	}
 	
 	&.wallpost-system {
+		border: 1px solid $wallposts-wallpost-system-border-color;
+		color: $wallposts-wallpost-system-color;
 		background-color: $wallposts-wallpost-system-bg-color;
 	}
 	
 	&.important {
 		
 		border: 1px solid $wallposts-wallpost-important-border-color;
+		color: $wallposts-wallpost-important-color;
 		background-color: $wallposts-wallpost-important-bg-color;
 		
 		.wallpost-author {

@@ -175,22 +175,8 @@ App.ProjectIndexController = Em.ArrayController.extend({
         }
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
-    
-    getTasks: function() {
-        var controller = this;
-        if (!this.get("showingAll")) {
-            var now = new Date();
-            App.Task.find({project: this.get('controllers.project.id')}).then(function(tasks) {
-                controller.set("tasks", tasks.filter(function(item) {
-                    return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
-                })); 
-             });
-        } else {
-            controller.set("tasks", App.Task.find({project: this.get('controllers.project.id')}));
-        }
-    }.observes('showingAll'),
 
-    tasks: function () {
+     tasks: function () {
         return App.Task.find({project: this.get('parentId')});
     }.property('parentId'),
 

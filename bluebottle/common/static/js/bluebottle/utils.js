@@ -267,6 +267,28 @@ App.UploadMultipleFiles = Ember.TextField.extend({
     }
 });
 
+App.UploadedImageView = App.UploadFile.extend({
+    attributeBindings: ['name', 'accept'],
+    type: 'file',
+
+    change: function (evt) {
+        var files = evt.target.files;
+        var reader = new FileReader();
+        var file = files[0];
+        var view = this;
+
+        reader.onload = function(e) {
+            var preview = "<img src='" + e.target.result + "' />";
+			view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
+        };
+        reader.readAsDataURL(file);
+        var model = this.get('parentView.controller.model');
+        this.set('file', file);
+    }
+});
+
+
+
 
 // See/Use App.DatePicker
 App.DatePickerValue = Ember.TextField.extend({

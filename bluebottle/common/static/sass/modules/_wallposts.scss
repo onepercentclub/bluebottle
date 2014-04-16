@@ -359,24 +359,22 @@
 			}
 		}
 
-		.wallpost-meta {
 
-			.wallpost-author {
-				text-transform: none;
-				color: $wallposts-wallpost-author-color;
-				display: inline;
-			}
+		.wallpost-author {
+			text-transform: none;
+			color: $wallposts-wallpost-author-color;
+			display: inline;
+		}
 
-			.wallpost-timestamp {
-				color: $wallposts-wallpost-timestamp-color;
-				font-size: $font-size-small;
-			}
-			
-			.wallpost-edit {
-				float: right;
-				text-decoration: none;
-				padding: $base-padding / 2;
-			}
+		.wallpost-timestamp {
+			color: $wallposts-wallpost-timestamp-color;
+			font-size: $font-size-small;
+		}
+		
+		.wallpost-edit {
+			float: right;
+			text-decoration: none;
+			padding: $base-padding / 2;
 		}
 
 		.wallpost-title {
@@ -421,6 +419,12 @@
 		border: 1px solid $wallposts-wallpost-system-border-color;
 		color: $wallposts-wallpost-system-color;
 		background-color: $wallposts-wallpost-system-bg-color;
+		.wallpost-author, .member-name {
+			color: $wallposts-wallpost-system-author-color;
+		}
+		.wallpost-title {
+			color: $wallposts-wallpost-system-title-color;
+		}
 	}
 	
 	&.important {
@@ -429,7 +433,7 @@
 		color: $wallposts-wallpost-important-color;
 		background-color: $wallposts-wallpost-important-bg-color;
 		
-		.wallpost-author {
+		.wallpost-author, .member-name {
 			color: $wallposts-wallpost-important-author-color;
 		}
 		.wallpost-title {

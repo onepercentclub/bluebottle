@@ -129,7 +129,31 @@ App.ProjectController = Em.ObjectController.extend({
 
 });
 
-App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {});
+App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
+    counter: 0,
+
+    storyWithHeaderIds: function() {
+        var story = this.get("story");
+        var $story = jQuery("<div>", {html: story});
+        var headers = $story.find("h1,h2,h3,h4,h5,h6")
+        var controller = this;
+        $.each(headers, function() {
+            var counter = controller.get("counter");
+            counter++;
+            $(this).attr("id", "header-" + counter);       
+            controller.set("counter", counter);
+        });
+        return $story.html();
+    }.property("story"),
+
+    getHeaderLinks: function() {
+        var $html = jQuery("<div>", {html: this.get("storyWithHeaderIds")});
+        var elements = $html.find("h1, h2, h3, h4, h5, h6")
+        var arr = $.map(elements, function(element) {return {href: "#" + $(element).attr("id"), name: $(element).text()}});
+        return arr;
+    }.property("story")
+});
+
 
 App.ProjectSupporterListController = Em.ArrayController.extend({
     supportersLoaded: function(sender, key) {
@@ -176,7 +200,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
 
-     tasks: function () {
+    tasks: function () {
         return App.Task.find({project: this.get('parentId')});
     }.property('parentId'),
 

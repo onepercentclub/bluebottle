@@ -313,6 +313,9 @@ $projects-project-list-listitem-highlight-header-color     : $color-primary !def
 $projects-project-list-listitem-first-top-border-color     : $white !default;
 $projects-project-list-listitem-last-bottom-border-color   : $white !default;
 
+// project-plan
+$projects-project-plan-navigation-links-color: $gray-dark !default;
+$projects-project-plan-download-pdf-border-color: $gray-light !default;
 // Media                                                        
 // ----------------------------------                           
                                                                 
@@ -368,7 +371,10 @@ $popover-arrow-color                                       : $gray-lighter !defa
 $reactions-reaction-form-bg-color                          : $gray-lighter !default;
 $reactions-reaction-form-avatar-border-color               : $form-input-border-color !default;
 $reactions-selected-avatar-border-color                    : $form-input-border-color !default;
-                                                                
+$reactions-color                                           : $white !default;
+$reactions-bg-color                                        : $gray-light !default;
+$reactions-reaction-member-name-color                      : $color-primary !default;
+$reactions-reaction-border-bottom-color: $gray-lighter !default;                                                      
 // Tables                                                       
 // -----------------------------------                          
                                                                 
@@ -446,23 +452,20 @@ $wallposts-wallpost-file-link-color                        : $gray !default;
 
 $wallposts-wallpost-system-bg-color                        : $white !default;
 $wallposts-wallpost-system-color                           : $gray-darker !default;
-// $wallposts-wallpost-system-border-color                    : $color-primary !default;
+// $wallposts-wallpost-system-border-color                 : $color-primary !default;
 $wallposts-wallpost-system-author-color                    : $color-secondary !default;
 $wallposts-wallpost-system-title-color                     : $color-primary !default;
-$wallposts-wallpost-system-timestamp-color: $gray !default;
+$wallposts-wallpost-system-timestamp-color                 : $gray !default;
 
 
 $wallposts-wallpost-important-color                        : $gray-darker !default;
 $wallposts-wallpost-important-bg-color                     : $color-primary !default;
-// $wallposts-wallpost-important-border-color                 : $color-secondary !default;
+// $wallposts-wallpost-important-border-color              : $color-secondary !default;
 $wallposts-wallpost-important-author-color                 : $color-secondary !default;
 $wallposts-wallpost-important-title-color                  : $color-primary !default;
 $wallposts-wallpost-important-buttons-bg-color             : $color-primary !default;
 $wallposts-wallpost-important-buttons-color                : $white !default;
-$wallposts-wallpost-important-timestamp-color: $gray !default;
-
-$wallposts-wallpost-reactions-color: $white !default;
-$wallposts-wallpost-reactions-bg-color: $gray-light !default;
+$wallposts-wallpost-important-timestamp-color              : $gray !default;
                                                                 
 // Layout                                                       
 // -----------------------------------                          

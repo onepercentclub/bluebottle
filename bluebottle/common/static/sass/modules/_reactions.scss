@@ -72,8 +72,8 @@
     margin-top: 0;
     margin-bottom: 0;
     position: relative;
-    color: $wallposts-wallpost-reactions-color;
-    background-color: $wallposts-wallpost-reactions-bg-color; 
+    color: $reactions-color;
+    background-color: $reactions-bg-color; 
 }
 
 .reactions {
@@ -91,7 +91,7 @@
         width: 0;
         position: absolute;
         pointer-events: none;
-        border-bottom-color: $wallposts-wallpost-reactions-bg-color;
+        border-bottom-color: $reactions-bg-color;
         border-width: 10px;
         margin-left: -10px;
     }  
@@ -102,10 +102,12 @@
         display: block;
         position: relative;
         margin-bottom: 1px;
-        background-color: $wallposts-wallpost-reactions-bg-color;
+        background-color: $reactions-bg-color;
         padding: $base-padding;
-			
-
+        border-bottom: 1px solid $reactions-reaction-border-bottom-color;
+        // &:last-child {
+        //     border-bottom: none;
+        // }
 		.reaction-avatar {
 			@include grid(7,0,1);
 		}
@@ -113,7 +115,7 @@
 			@include grid(41,0,0);	
 			
 			.member-name {
-				color: $color-primary;
+				color: $reactions-reaction-member-name-color;
 			}
 			.text {
 				margin: 0;

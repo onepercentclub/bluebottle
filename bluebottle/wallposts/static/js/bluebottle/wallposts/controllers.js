@@ -11,7 +11,6 @@ App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
         return this.get('fundraiser');
     }.property('fundraiser', 'parent_type'),
 
-
     newReaction: function(){
         var transaction = this.get('store').transaction();
         return transaction.createRecord(App.WallPostReaction, {'wallpost': this.get('model')});

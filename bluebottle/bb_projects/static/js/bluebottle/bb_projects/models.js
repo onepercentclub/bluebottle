@@ -57,6 +57,9 @@ App.Project = DS.Model.extend({
     effects: DS.attr('string'),
     reach: DS.attr('number'),
 
+    // new story field
+    story: DS.attr('string'),
+
     // Location
     country: DS.belongsTo('App.Country'),
     latitude: DS.attr('string', {defaultValue: 54}),

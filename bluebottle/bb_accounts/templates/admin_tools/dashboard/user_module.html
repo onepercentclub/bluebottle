@@ -1,0 +1,19 @@
+{% extends "admin_tools/dashboard/module.html" %}
+{% load i18n %}
+
+{% block module_content %}
+    <ul>
+        {% spaceless %}
+            {% for member in module.children %}
+                <li class="{% cycle 'odd' 'even' %}">
+                    <a href="{{ member.admin_url }}" >{% if member.get_full_name %}{{ member.get_full_name }}{% else %}{{ member.email }}{% endif %}</a>
+                    <ul>
+                        <li>
+                            <b>{{ member.updated|date }}</b>
+                        </li>
+                    </ul>
+                </li>
+            {% endfor %}
+        {% endspaceless %}
+    </ul>
+{% endblock %}

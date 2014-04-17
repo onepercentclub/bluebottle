@@ -12,8 +12,8 @@
 			</div>
 			
 			<ul class="project-plan-navigation-links">
-				{{#each header in headerLinks}}
-				<li><a class="project-plan-main-link" {{bindAttr href=header.href}}>{{header.name}}</a></li>
+				{{#each headerLinks}}
+				<li><a class="project-plan-main-link" {{bindAttr href=this.href}}>{{this.name}}</a></li>
 				{{/each}}
 				<li class="project-plan-download-pdf">
 					<a href="#"><span class="flaticon solid download-document-1"></span> Download as PDF</a>

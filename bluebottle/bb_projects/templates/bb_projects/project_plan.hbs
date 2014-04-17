@@ -12,7 +12,7 @@
 			</div>
 			
 			<ul class="project-plan-navigation-links">
-				{{#each header in getHeaderLinks}}
+				{{#each header in headerLinks}}
 				<li><a class="project-plan-main-link" {{bindAttr href=header.href}}>{{header.name}}</a></li>
 				{{/each}}
 				<li class="project-plan-download-pdf">

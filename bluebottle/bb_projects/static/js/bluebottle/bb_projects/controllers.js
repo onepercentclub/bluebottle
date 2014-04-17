@@ -146,7 +146,7 @@ App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
         return $story.html();
     }.property("story"),
 
-    getHeaderLinks: function() {
+    headerLinks: function() {
         var $html = jQuery("<div>", {html: this.get("storyWithHeaderIds")});
         var elements = $html.find("h1, h2, h3, h4, h5, h6")
         var arr = $.map(elements, function(element) {return {href: "#" + $(element).attr("id"), name: $(element).text()}});

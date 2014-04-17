@@ -228,7 +228,7 @@ App.Store = DS.Store.extend({
 });
 
 DS.Model.reopen({
-    meta: DS.attr('object')
+    meta_data: DS.attr('object')
 });
 
 /* Routing */

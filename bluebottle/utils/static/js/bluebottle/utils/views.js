@@ -97,3 +97,101 @@ App.SocialShareView = Em.View.extend({
         window.open(shareUrl + urlArgs, type + '-share-dialog', 'width=' + this.get('dialogW') + ',height=' + this.get('dialogH'));
     }
 });
+
+
+// See/Use App.DatePicker
+App.DatePickerValue = Ember.TextField.extend({
+    type: 'hidden',
+    valueBinding: "parentView.value"
+});
+
+// See/Use App.DatePicker
+App.DatePickerWidget = Ember.TextField.extend({
+
+    dateBinding: "parentView.value",
+    configBinding: "parentView.config",
+
+    didInsertElement: function(){
+        var config = this.get('config');
+        this.$().datepicker(config);
+        this.$().datepicker('setDate', this.get('date'));
+    },
+
+    change: function(){
+        this.set('date', this.$().datepicker('getDate'));
+    }
+});
+
+App.DatePickerButtonWidget = Ember.View.extend({
+    templateName: 'date_picker_button',
+    dateBinding: "parentView.value",
+    configBinding: "parentView.config",
+    didInsertElement: function(){
+        var config = this.get('config');
+        var view = this;
+        config.onSelect = function(date, dp){
+            console.log(view.$('input').datepicker('getDate'));
+            view.set('date', view.$('input').datepicker('getDate'));
+        }
+        this.$('input').datepicker(config);
+        this.$('input').datepicker('setDate', this.get('date'));
+
+    },
+    actions: {
+        showDatePicker: function(){
+            this.$('input').datepicker('show');
+        }
+    }
+});
+
+// This renders a TextField with the localized date.
+// On click it will use jQuery UI date picker dialog so the user can select a date.
+// valueBinding should bind to a  DS.attr('date') property of an Ember model.
+App.DatePicker = Ember.ContainerView.extend({
+    config: {changeMonth: true, changeYear: true, yearRange: "c-100:c+10"},
+    childViews: [App.DatePickerValue, App.DatePickerWidget]
+});
+
+App.DateSliderWidget = Ember.TextField.extend({
+    type: 'range',
+    dateBinding: "parentView.value",
+    configBinding: "parentView.config",
+    didInsertElement: function(){
+        var config = this.get('config');
+        var view = this;
+        config.callback = function(days){
+            var date = new Date(Date.now() + days * 24*3600*1000);
+            view.set('date', date);
+        },
+        config.dimension = '&nbsp;days';
+
+        this.$().slider(config);
+    },
+    updateSlider: function(){
+        var date = this.get('date');
+        var now = new Date();
+        var microseconds = date.getTime() - now.getTime();
+        var days =  Math.ceil(microseconds / (1000 * 60 * 60 * 24));
+        this.set('value', days);
+        this.$().slider('value', days);
+    }.observes('date')
+});
+
+
+// This renders a TextField with the localized date.
+// On click it will use jQuery UI date picker dialog so the user can select a date.
+// valueBinding should bind to a  DS.attr('date') property of an Ember model.
+App.DatePickerSlider = Ember.ContainerView.extend({
+    config: {changeMonth: true, changeYear: true, minDate: '+7d', maxDate:'+100d', from: 7, to: 100},
+    childViews: [App.DatePickerValue, App.DatePickerButtonWidget, App.DateSliderWidget]
+});
+
+
+App.CustomDatePicker = App.DatePicker.extend({
+    init: function(){
+        this._super();
+        if (this.get("minDate") != undefined) {
+            this.config.minDate = this.get("minDate");
+        }
+    }
+});

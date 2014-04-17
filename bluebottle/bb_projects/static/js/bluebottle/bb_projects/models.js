@@ -13,7 +13,6 @@ App.Adapter.map('App.ProjectPreview', {
 });
 
 App.Adapter.map('App.MyProject', {
-    budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
 });
 
@@ -22,7 +21,7 @@ App.Adapter.map('App.PartnerOrganization', {
 });
 
 App.Adapter.map('App.ProjectDonation', {
-    member: {embedded: 'both'}
+    member: {embedded: 'load'}
 });
 
 /* Models */
@@ -219,8 +218,6 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
     friendlyFieldNames: null,
-
-
 
     init: function () {
         this._super();

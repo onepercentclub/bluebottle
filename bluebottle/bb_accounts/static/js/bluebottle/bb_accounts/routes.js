@@ -51,8 +51,7 @@ App.UserProfileRoute = Em.Route.extend({
         });
     },
 
-    exit: function() {
-        this._super();
+    deactivate: function() {
         this.controllerFor('userProfile').stopEditing();
     }
 
@@ -79,8 +78,7 @@ App.UserSettingsRoute = Em.Route.extend({
         });
     },
 
-    exit: function() {
-        this._super();
+    deactivate: function() {
         this.controllerFor('userSettings').stopEditing();
     }
 });
@@ -121,8 +119,7 @@ App.UserOrdersRoute = Em.Route.extend({
         });
     },
 
-    exit: function() {
-        this._super();
+    deactivate: function() {
         this.controllerFor('userOrders').stopEditing();
     },
 

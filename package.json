@@ -23,7 +23,8 @@
     "grunt-hashres": "~0.4.1",
     "grunt-contrib-uglify": "~0.3.2",
     "grunt-ember-handlebars": "~0.8.0",
-    "grunt-shell": "~0.6.4"
+    "grunt-shell": "~0.6.4",
+    "grunt-contrib-compass": "^0.7.2"
   },
   "devDependencies": {
     "karma-handlebars-preprocessor": "~0.1.2",

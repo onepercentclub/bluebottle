@@ -101,19 +101,13 @@
 			}
 		}
 	}
-	.campaign-duration {
-		.slider {
-			padding-top: $base-padding;
-			td {
-				padding: 0;
-			}
-			@include grid(34,0,2);
-		}
-		.btn {
-			margin-top: $base-margin;
-			@include grid(14,2,0);	
-		}
-	}
+    .jslider {
+        padding-top: $base-padding;
+        td {
+            padding: 0;
+        }
+        @include grid(34,0,2);
+    }
 
 	.campaign-budget-breakdown {
 		tfoot {

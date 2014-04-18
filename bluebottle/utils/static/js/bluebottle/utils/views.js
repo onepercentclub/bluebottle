@@ -130,7 +130,6 @@ App.DatePickerButtonWidget = Ember.View.extend({
         var config = this.get('config');
         var view = this;
         config.onSelect = function(date, dp){
-            console.log(view.$('input').datepicker('getDate'));
             view.set('date', view.$('input').datepicker('getDate'));
         }
         this.$('input').datepicker(config);
@@ -164,8 +163,9 @@ App.DateSliderWidget = Ember.TextField.extend({
             view.set('date', date);
         },
         config.dimension = '&nbsp;days';
-
+        config.className = 'slider';
         this.$().slider(config);
+        this.updateSlider();
     },
     updateSlider: function(){
         var date = this.get('date');
@@ -178,12 +178,22 @@ App.DateSliderWidget = Ember.TextField.extend({
 });
 
 
-// This renders a TextField with the localized date.
-// On click it will use jQuery UI date picker dialog so the user can select a date.
-// valueBinding should bind to a  DS.attr('date') property of an Ember model.
+// This renders a slider and datepicker button.
+// The slider counts in days. minDate and maxDate should be formated as '+30d'.
 App.DatePickerSlider = Ember.ContainerView.extend({
-    config: {changeMonth: true, changeYear: true, minDate: '+7d', maxDate:'+100d', from: 7, to: 100},
-    childViews: [App.DatePickerValue, App.DatePickerButtonWidget, App.DateSliderWidget]
+    config: {minDate: 0, maxDate: '+100d'},
+    init: function(){
+        this._super();
+        if (this.get("minDate") != undefined) {
+            this.config.minDate = this.get("minDate");
+        }
+        if (this.get("maxDate") != undefined) {
+            this.config.maxDate = this.get("maxDate");
+        }
+        this.config.from = parseInt(this.config.minDate.replace(/[\+d]/g, ''));
+        this.config.to = parseInt(this.config.maxDate.replace(/[\+d]/g, ''));
+    },
+    childViews: [App.DatePickerValue, App.DateSliderWidget, App.DatePickerButtonWidget]
 });
 
 

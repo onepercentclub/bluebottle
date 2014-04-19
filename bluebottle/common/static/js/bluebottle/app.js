@@ -51,6 +51,11 @@ App = Em.Application.create({
 
         this.setLocale(locale);
         this.initSelectViews();
+
+        App.Router.reopen({
+            location: 'history',
+            rootURL: '/' + this.get('language')
+        });
     },
 
     initSelectViews: function() {
@@ -242,10 +247,6 @@ App.SlugRouter = Em.Mixin.create({
 
         return object;
     }
-});
-
-App.Router.reopen({
-    location: 'hashbang'
 });
 
 //Enable Google Analytics with Ember

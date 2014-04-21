@@ -13,7 +13,6 @@ App.Adapter.map('App.ProjectPreview', {
 });
 
 App.Adapter.map('App.MyProject', {
-    budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
 });
 

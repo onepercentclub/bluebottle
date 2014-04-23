@@ -71,33 +71,25 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
 	requiredNotEuropeanBankOrganizationFields: ['account_bic', 'account_number', 'account_bank_name', 'account_bank_address',
 										  'account_bank_postal_code', 'account_bank_city', 'account_bank_country'],
 
-	requiredBankOrganizationFields: [],
-
     init: function () {
 		this._super();
 
-		this.validatedFieldsProperty('validOrganization', this.get('requiredOrganizationFields'));
-//		this.validatedFieldsProperty('validBankOrganization', this.get('requiredBaseBankOrganizationFields'));
-
-		this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredOrganizationFields'));
-//		this.missingFieldsProperty('missingFieldsBankOrganization', this.get('requiredBaseBankOrganizationFields'));
-    },
-
-	validateEuropeanBank: function() {
-		this.requiredBankOrganizationFields = this.get('requiredBaseBankOrganizationFields').
+		this.validEuropeanBankOrganizationFields = this.get('requiredBaseBankOrganizationFields').
 														concat(this.get('requiredEuropeanBankOrganizationFields'));
-		this.validatedFieldsProperty('validBankOrganization', this.requiredBankOrganizationFields);
-		this.missingFieldsProperty('missingFieldsBankOrganization', this.requiredBankOrganizationFields);
-	},
 
-	validateNotEuropeanBank: function() {
-		this.requiredBankOrganizationFields = this.get('requiredBaseBankOrganizationFields').
+		this.validNotEuropeanBankOrganizationFields = this.get('requiredBaseBankOrganizationFields').
 														concat(this.get('requiredNotEuropeanBankOrganizationFields'));
 
-		this.validatedFieldsProperty('validBankOrganization', this.requiredBankOrganizationFields);
-		this.missingFieldsProperty('missingFieldsBankOrganization', this.requiredBankOrganizationFields);
-	},
 
+		this.validatedFieldsProperty('validOrganization', this.get('requiredOrganizationFields'));
+		this.validatedFieldsProperty('validEuropeanBankOrganization', this.get('validEuropeanBankOrganizationFields'));
+		this.validatedFieldsProperty('validNotEuropeanBankOrganization', this.get('validNotEuropeanBankOrganizationFields'));
+
+
+		this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredOrganizationFields'));
+		this.missingFieldsProperty('missingFieldsEuropeanBankOrganization', this.get('validEuropeanBankOrganizationFields'));
+		this.missingFieldsProperty('missingFieldsNotEuropeanBankOrganization', this.get('validNotEuropeanBankOrganizationFields'));
+    },
 
     save: function () {
         this.one('becameInvalid', function(record) {
@@ -160,6 +152,8 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
         return false;
     }.property('legalStatus', 'documents.length'),
 
+	inEurope: DS.attr('boolean', {defaultValue: true}),
+
 	//Account holder
 	account_holder_name: DS.attr('string', {defaultValue: ""}),
 	account_holder_address: DS.attr('string', {defaultValue: ""}),
@@ -175,22 +169,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
 	account_bank_address: DS.attr('string', {defaultValue: ""}),
 	account_bank_postal_code: DS.attr('string', {defaultValue: ""}),
 	account_bank_city: DS.attr('string', {defaultValue: ""}),
-	account_bank_country: DS.belongsTo('App.Country'),
-
-    validBank: function(){
-        if (this.get('account_holder_name') && this.get('account_holder_address') && this.get('account_holder_postal_code')
-			&& this.get('account_holder_city') && this.get('account_holder_country')
-			&& // here the condition if in europe or not
-			((this.get('account_iban') && this.get('account_bic')) || this.get('account_bic') && this.get('account_number')
-			&& this.get('account_bank_name') && this.get('account_bank_address') && this.get('account_bank_postal_code')
-			&& this.get('account_bank_city') && this.get('account_bank_country'))){
-            return true;
-        }
-        return false;
-    }.property('account_holder_name', 'account_holder_address', 'account_holder_postal_code','account_holder_city',
-			   'account_holder_country', 'account_iban', 'account_bic', 'account_number',
-			   'account_bank_name', 'account_bank_address', 'account_bank_postal_code', 'account_bank_city',
-			   'account_bank_country')
+	account_bank_country: DS.belongsTo('App.Country')
 
 });
 

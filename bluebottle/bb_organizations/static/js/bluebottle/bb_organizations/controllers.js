@@ -146,7 +146,7 @@ App.MyProjectBankController = App.StandardTabController.extend({
 			$(".outEurope-container").hide();
 			$(".inEurope-container").show();
 			model = this.get('model');
-			model.validateEuropeanBank();
+			model.set('inEurope', true);
 		},
 
 		showOutEurope: function() {
@@ -156,7 +156,7 @@ App.MyProjectBankController = App.StandardTabController.extend({
 			$(".outEurope-container").show();
 			$(".inEurope-container").hide();
 			model = this.get('model');
-			model.validateNotEuropeanBank();
+			model.set('inEurope', false);
 		}
 
     }

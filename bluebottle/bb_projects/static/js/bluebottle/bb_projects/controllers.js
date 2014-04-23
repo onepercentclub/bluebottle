@@ -330,7 +330,14 @@ App.MyProjectController = Em.ObjectController.extend({
         } else {
             return project.get('organization.validOrganization');
         }
-    }.property('myOrganization', 'model.organization')
+    }.property('myOrganization', 'model.organization'),
+
+	validBankOrganization: function () {
+		var organization = this.get('organization');
+		if (organization){
+			return organization.get('validBankOrganization');
+		}
+	}.property('organization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

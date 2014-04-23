@@ -7,7 +7,7 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     selectedOrganization: null,
     
     previousStep: 'myProject.story',
-    nextStep: 'myProject.submit',
+    nextStep: 'myProject.bank',
 
     // Before the organisation is saved the documents will
     // be temporarily stored in the tempDocuments array.
@@ -133,39 +133,32 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     }
 });
 
-App.MyProjectBankController = Em.ObjectController.extend(App.Editable, {
+App.MyProjectBankController = App.StandardTabController.extend({
 
+	previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
 
-    shouldSave: function(){
-        // Determine if any part is dirty, project plan, org or any of the org addresses
-        if (this.get('isDirty')) {
-            return true;
-        }
-        if (this.get('organization.isDirty')) {
-            return true;
-        }
-        return false;
-    }.property('organization.isLoaded', 'isDirty'),
-
     actions: {
-        updateRecordOnServer: function(){
-            var controller = this;
-            var model = this.get('model.organization');
-            model.one('becameInvalid', function(record){
-                model.set('errors', record.get('errors'));
-            });
-            model.one('didUpdate', function(){
-                controller.transitionToRoute(controller.get('nextStep'));
-                window.scrollTo(0);
-            });
-            model.one('didCreate', function(){
-                controller.transitionToRoute(controller.get('nextStep'));
-                window.scrollTo(0);
-            });
+		showInEurope: function(event) {
+			$(".inEurope-tab").addClass("active");
+			$(".outEurope-tab").removeClass("active");
 
-            model.save();
-        }
+			$(".outEurope-container").hide();
+			$(".inEurope-container").show();
+			model = this.get('model');
+			model.validateEuropeanBank();
+		},
+
+		showOutEurope: function() {
+			$(".inEurope-tab").removeClass("active");
+			$(".outEurope-tab").addClass("active");
+
+			$(".outEurope-container").show();
+			$(".inEurope-container").hide();
+			model = this.get('model');
+			model.validateNotEuropeanBank();
+		}
+
     }
 });
 

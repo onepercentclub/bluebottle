@@ -267,36 +267,24 @@ App.UploadMultipleFiles = Ember.TextField.extend({
     }
 });
 
+App.UploadedImageView = App.UploadFile.extend({
+    attributeBindings: ['name', 'accept'],
+    type: 'file',
 
-// See/Use App.DatePicker
-App.DatePickerValue = Ember.TextField.extend({
-    type: 'hidden',
-    valueBinding: "parentView.value"
-});
+    change: function (evt) {
+        var files = evt.target.files;
+        var reader = new FileReader();
+        var file = files[0];
+        var view = this;
 
-// See/Use App.DatePicker
-App.DatePickerWidget = Ember.TextField.extend({
-
-    dateBinding: "parentView.value",
-    configBinding: "parentView.config",
-
-    didInsertElement: function(){
-        var config = this.get('config');
-        this.$().datepicker(config);
-        this.$().datepicker('setDate', this.get('date'));
-    },
-
-    change: function(){
-        this.set('date', this.$().datepicker('getDate'));
-    }
-});
-
-// This renders a TextField with the localized date.
-// On click it will use jQuery UI date picker dialog so the user can select a date.
-// valueBinding should bind to a  DS.attr('date') property of an Ember model.
-App.DatePicker = Ember.ContainerView.extend({
-    config: {changeMonth: true, changeYear: true, yearRange: "c-100:c+10"},
-    childViews: [App.DatePickerValue, App.DatePickerWidget]
+        reader.onload = function(e) {
+            var preview = "<img src='" + e.target.result + "' />";
+			view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
+        };
+        reader.readAsDataURL(file);
+        var model = this.get('parentView.controller.model');
+        this.set('file', file);
+    }
 });
 
 
@@ -400,15 +388,6 @@ App.MapPicker = Em.View.extend({
          });
      }
 
-});
-
-App.CustomDatePicker = App.DatePicker.extend({
-    init: function(){
-        this._super();
-        if (this.get("minDate") != undefined) {
-            this.config.minDate = this.get("minDate");
-        }
-    }
 });
 
 App.FlashView = Em.View.extend();

@@ -250,6 +250,8 @@
             text-align: center;
             
             img {
+                background-position:center;
+                background-size: contain;
         		position: absolute;
 				top: 0;
 				left: 0;
@@ -513,32 +515,6 @@
 	}
 }
 
-// Full project plan
-
-#project-plan {
-	
-	header {
-	    margin-top: $base-margin*2;
-		@include grid(48,1,1);
-	}
-	
-	article {
-	  margin-bottom: $base-margin;
-//		@include grid(24,1,1);
-		clear: none !important;
-		
-		br {
-			content: " " !important;
-			display: block !important;
-			margin-bottom: 1.5em !important;
-		}
-		
-		img {
-			width: 100%;
-		}
-	}
-}
-
 // task list for in project view
 .task-list {
 	
@@ -582,12 +558,31 @@
 // }
 #project-plan {
 
-  position: relative;  
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: $projects-project-plan-bg-color;
+    position: relative;  
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: $projects-project-plan-bg-color;
 
+    header {
+        margin-top: $base-margin*2;
+        @include grid(48,1,1);
+    }
+    
+    article {
+      margin-bottom: $base-margin;
+        clear: none !important;
+        
+        br {
+            content: " " !important;
+            display: block !important;
+            margin-bottom: 1.5em !important;
+        }
+        
+        img {
+            width: 100%;
+        }
+    }
 	.project-plan-navigation {
 		
 		@include grid(16, 4, 0);
@@ -626,6 +621,7 @@
 					display: block;
 					text-decoration: none;
 					padding: ($base-padding/2) $base-padding * 2;
+                    color: $projects-project-plan-navigation-links-color;
 					&.active {
 						background: white;					
 					}
@@ -635,7 +631,7 @@
 				@include clear;
 				margin-top: $base-margin * 2;
 				a {
-					border: 2px solid $color-primary;
+					border: 2px solid $projects-project-plan-download-pdf-border-color;
 					padding: ($base-padding/2) $base-padding;
 					margin: $base-margin;
 					text-decoration: none;

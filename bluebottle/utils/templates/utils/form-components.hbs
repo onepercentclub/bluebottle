@@ -54,6 +54,13 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
+{% tplhandlebars "components/bb-select-generic" %}
+    {{#bb-form-field hint=hint label=label errors=errors}}
+        {{view Em.Select contentBinding='options' nameBinding=name optionValuePathBinding='valueProperty' optionLabelPathBinding='labelProperty'
+               promptBinding='prompt' selectionBinding='value' classBinding="errors.length:error"}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}
+
 {% tplhandlebars "components/bb-select" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
         {{view Em.Select contentBinding='options' nameBinding=name optionValuePath="content.value" optionLabelPath="content.text"
@@ -77,8 +84,17 @@
 {% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-date-picker" %}
-    {{#bb-form-field hint=hint label=label errors=errors}}
+    {{#bb-form-field hint=hint label=label errors=errors undertext=undertext}}
         {{view App.DatePicker valueBinding='value' minDateBinding=minDate nameBinding=name
+            classBinding="errors.length:error" classBinding=extraClasses}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}
+
+
+
+{% tplhandlebars "components/bb-date-picker-slider" %}
+    {{#bb-form-field hint=hint label=label errors=errors undertext=undertext}}
+        {{view App.DatePickerSlider valueBinding='value' minSliderBinding=minSlider maxSliderBinding=maxSlider minDateBinding=minDate nameBinding=name
             classBinding="errors.length:error" classBinding=extraClasses}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
@@ -98,6 +114,17 @@
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
+{% tplhandlebars "components/bb-upload-display-image" %}
+    {{#bb-form-field hint=hint label=label errors=errors undertext=undertext}}
+        <a class="btn btn-iconed btn-upload">
+            {{view App.UploadedImageView nameBinding=name fileBinding='file' acceptBinding=accept classBinding=extraClasses}}
+            <span class="flaticon solid upload-document-1"></span>
+            {{buttonLabel}}
+        </a>
+        <br />
+    {{/bb-form-field}}
+{% endtplhandlebars %}
+
 {% tplhandlebars "components/bb-video-link" %}
     {{#bb-form-field label=label errors=errors hint=hint undertext=undertext}}
         {{view Em.TextField stepBinding=step valueBinding='value' nameBinding=name
@@ -110,9 +137,14 @@
 {% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-datepicker" %}
-    {{#bb-form-field hint=hint label=label errors=errors}}
+    {{#bb-form-field hint=hint label=label errors=errors undertext=undertext}}
         {{view App.CustomDatePicker minDateBinding='minDate' valueBinding='value'
             nameBinding=name placeholderBinding=placeholder classBinding=extraClasses}}
     {{/bb-form-field}}
 
+{% endtplhandlebars %}
+
+{% tplhandlebars "date_picker_button" %}
+    <input type="text" style="display: none"/>
+    <a {{action "showDatePicker" target="view"}} class="btn btn-modest"><span class="flaticon solid calendar-3"></span> {% trans "Pick date" %}</a>
 {% endtplhandlebars %}

@@ -13,7 +13,6 @@ App.Adapter.map('App.ProjectPreview', {
 });
 
 App.Adapter.map('App.MyProject', {
-    budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
 });
 
@@ -56,6 +55,9 @@ App.Project = DS.Model.extend({
     description: DS.attr('string'),
     effects: DS.attr('string'),
     reach: DS.attr('number'),
+
+    // new story field
+    story: DS.attr('string'),
 
     // Location
     country: DS.belongsTo('App.Country'),

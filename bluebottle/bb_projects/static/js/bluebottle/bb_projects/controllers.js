@@ -129,7 +129,31 @@ App.ProjectController = Em.ObjectController.extend({
 
 });
 
-App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {});
+App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
+    counter: 0,
+
+    storyWithHeaderIds: function() {
+        var story = this.get("story");
+        var $story = jQuery("<div>", {html: story});
+        var headers = $story.find("h1,h2,h3,h4,h5,h6")
+        var controller = this;
+        $.each(headers, function() {
+            var counter = controller.get("counter");
+            counter++;
+            $(this).attr("id", "header-" + counter);       
+            controller.set("counter", counter);
+        });
+        return $story.html();
+    }.property("story"),
+
+    headerLinks: function() {
+        var $html = jQuery("<div>", {html: this.get("storyWithHeaderIds")});
+        var elements = $html.find("h1, h2, h3, h4, h5, h6")
+        var arr = $.map(elements, function(element) {return {href: "#" + $(element).attr("id"), name: $(element).text()}});
+        return arr;
+    }.property("story")
+});
+
 
 App.ProjectSupporterListController = Em.ArrayController.extend({
     supportersLoaded: function(sender, key) {
@@ -175,20 +199,6 @@ App.ProjectIndexController = Em.ArrayController.extend({
         }
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
-    
-    getTasks: function() {
-        var controller = this;
-        if (!this.get("showingAll")) {
-            var now = new Date();
-            App.Task.find({project: this.get('controllers.project.id')}).then(function(tasks) {
-                controller.set("tasks", tasks.filter(function(item) {
-                    return (item.get("isStatusOpen") || item.get("isStatusInProgress")) && item.get("people_needed") > item.get("membersCount") && item.get('deadline') > now;
-                })); 
-             });
-        } else {
-            controller.set("tasks", App.Task.find({project: this.get('controllers.project.id')}));
-        }
-    }.observes('showingAll'),
 
     tasks: function () {
         return App.Task.find({project: this.get('parentId')});
@@ -198,14 +208,13 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");
         });
-    }.property('tasks.@each.status'),
+    }.property('tasks.@each.isAvailable'),
 
     unavailableTasks: function () {
         return this.get('tasks').filter(function(task) {
             return task.get("isUnavailable");
         });
-    }.property('tasks.@each.status'),
-
+    }.property('tasks.@each.isUnavailable'),
 
     resetShowingAll: function() {
         this.set("showingAll", false);
@@ -337,6 +346,10 @@ App.MyProjectPitchController = App.StandardTabController.extend({
     canSave: function () {
         return !!this.get('model.title');
     }.property('model.title'),
+
+    allThemes: function(){
+        return App.Theme.find();
+    }.property(),
 
     languages: function () {
         return App.Language.find();

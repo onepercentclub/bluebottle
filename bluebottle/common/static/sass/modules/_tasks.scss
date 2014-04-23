@@ -198,13 +198,12 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 	.task-member-status, .task-content, .task-arrow {
 		min-height: 90px;
 	}
-	
 	.task-member-status {
 		@include grid(8,0,0);
 		background-color: $task-preview-open-member-status-background;
 		text-align: center;
 		color: $white;
-		padding: $base-padding 0;
+		padding: $base-padding;
 		
 		big {
 			font-weight: bold;
@@ -228,6 +227,9 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 	
 	.task-title {
 		margin-top: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 	
 	.task-theme {
@@ -288,7 +290,7 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 	.task-list-wrapper {
 		position: relative;
 		border-bottom: 1px solid $white;
-		padding: 0 $base-padding $base-padding $base-padding;
+		padding: $base-padding 0;
 		margin: 0;
 		
 		&.task-list-open {

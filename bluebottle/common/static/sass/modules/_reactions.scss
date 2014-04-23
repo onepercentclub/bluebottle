@@ -67,12 +67,34 @@
         }
     }
 }
+.wallpost-reactions {
+    margin: -$base-margin;
+    margin-top: 0;
+    margin-bottom: 0;
+    position: relative;
+    color: $reactions-color;
+    background-color: $reactions-bg-color; 
+}
 
 .reactions {
     @include clear;
     font-size: $font-size-small;
     position: relative;
     margin: 0;
+
+    &:after {
+        left: 50px;
+        bottom: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+        border-bottom-color: $reactions-bg-color;
+        border-width: 10px;
+        margin-left: -10px;
+    }  
     
     .reaction {
         @include clear;
@@ -80,74 +102,12 @@
         display: block;
         position: relative;
         margin-bottom: 1px;
-        background-color: $gray-lighter;
+        background-color: $reactions-bg-color;
         padding: $base-padding;
-			
-//        header {
-//            @include clear;
-            
-//            .reaction-member {
-////                @include grid(29,0,0);
-//                
-//                .member-avatar {
-//                    @include grid(9,0,2);
-//                    position: absolute;
-//                    left: 0;
-//                }
-//            
-//                .member-name {
-//                    @include prepend(10);
-//                    width: 100%;
-//                    color: $color-primary;
-//					text-transform: none;
-//                }
-//            }
-//            
-//            .reaction-meta {
-//				
-//                @include grid(20,1,0);
-//                text-align: right;
-//                color: $gray;
-//                font-style: normal;
-//                font-size: $font-size-smallest;
-//                text-transform: uppercase; 
-//                
-//                .manage-delete {
-//                    color: $gray;
-//                
-//                    &:hover {
-//                        color: $color-text;
-//                    }
-//                }
-//            }
-//        }
-//        
-//        &:hover {
-//            
-//            .manage {
-//                display: block;
-//            }
-//        }
-//        
-//        .reaction-content {
-//			
-//            @include clear;
-//            @include prepend(6);
-//            vertical-align: baseline;
-//            word-wrap: break-word;
-//            
-//            .text {
-//                margin: 0;
-//                padding: 0;
-//            }
-//            
-//            p {
-//                margin: 0;
-//                padding: 0;
-//                margin-bottom: $base-margin/2;
-//            }
-//        }
-
+        border-bottom: 1px solid $reactions-reaction-border-bottom-color;
+        // &:last-child {
+        //     border-bottom: none;
+        // }
 		.reaction-avatar {
 			@include grid(7,0,1);
 		}
@@ -155,7 +115,7 @@
 			@include grid(41,0,0);	
 			
 			.member-name {
-				color: $color-primary;
+				color: $reactions-reaction-member-name-color;
 			}
 			.text {
 				margin: 0;

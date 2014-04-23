@@ -10,10 +10,10 @@
 
 
 {% tplhandlebars "components/bb-form-field" %}
-    <li class="control-group has-popover" {{bindAttr data-content=hint}}>
+    <li class="control-group has-popover">
         <label class="control-label">
             {{label}}
-            <br /><small>{{undertext}}</small>
+            <br /><small>{{hint}}</small>
         </label>
         <div {{bindAttr class=":controls className"}}>
             {{yield}}
@@ -26,7 +26,7 @@
 
 
 {% tplhandlebars "components/bb-text-area" %}
-    {{#bb-form-field hint=hint label=label errors=errors undertext=undertext}}
+    {{#bb-form-field hint=hint label=label errors=errors}}
         {{view Em.TextArea valueBinding="value" nameBinding=name placeholderBinding=placeholder maxlengthBinding=maxlength
                rowsBinding=rows colsBinding=cols classBinding="errors.length:error"}}
     {{/bb-form-field}}
@@ -80,7 +80,7 @@
 
 
 {% tplhandlebars "components/bb-upload-image" %}
-    {{#bb-form-field hint=hint label=label errors=errors undertext=undertext}}
+    {{#bb-form-field hint=hint label=label errors=errors}}
         <a class="btn btn-iconed btn-upload">
             {{view App.UploadFile nameBinding=name fileBinding='file' acceptBinding=accept}}
             <span class="flaticon solid upload-document-1"></span>
@@ -94,7 +94,7 @@
 {% endtplhandlebars %}
 
 {% tplhandlebars "components/bb-video-link" %}
-    {{#bb-form-field label=label errors=errors hint=hint undertext=undertext}}
+    {{#bb-form-field label=label errors=errors hint=hint}}
         {{view Em.TextField stepBinding=step valueBinding='value' nameBinding=name
             placeholderBinding=placeholder classBinding="errors.length:error" typeBinding=type}}
         <br />

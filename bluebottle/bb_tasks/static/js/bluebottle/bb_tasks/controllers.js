@@ -284,13 +284,14 @@ App.TaskEditController = App.TaskNewController.extend({
             controller.transitionToRoute('task', task);
         });
         task.on('becameInvalid', function(record) {
-            //controller.set('errors', record.get('errors'));
+            controller.set('errors', record.get('errors'));
         });
         task.save();
     },
     cancelChangesToTask: function(event){
         var task = this.get('content');
-        task.rollback();
+        //Don't do a rollback on the object directly, but, via the transaction
+        task.get('transaction').rollback();
         this.transitionToRoute('task', task);
     }
 

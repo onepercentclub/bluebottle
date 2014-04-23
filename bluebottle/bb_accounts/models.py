@@ -82,7 +82,6 @@ class TimeAvailable(models.Model):
     type = models.CharField(_('type'), max_length=100, unique=True)
     description = models.TextField(_('description'))
 
-
     class Meta:
         ordering = ['type']
         verbose_name = _('time available')

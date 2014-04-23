@@ -190,6 +190,23 @@ App.ProjectIndexController = Em.ArrayController.extend({
         }
     }.observes('showingAll'),
 
+    tasks: function () {
+        return App.Task.find({project: this.get('parentId')});
+    }.property('parentId'),
+
+    availableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isAvailable");
+        });
+    }.property('tasks.@each.status'),
+
+    unavailableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isUnavailable");
+        });
+    }.property('tasks.@each.status'),
+
+
     resetShowingAll: function() {
         this.set("showingAll", false);
     }.observes('parentId'),
@@ -319,7 +336,27 @@ App.MyProjectPitchController = App.StandardTabController.extend({
 
     canSave: function () {
         return !!this.get('model.title');
-    }.property('model.title')
+    }.property('model.title'),
+
+    languages: function () {
+        return App.Language.find();
+    }.property(),
+
+    hasLanguages: function () {
+        return this.get('languages.length');
+    }.property('languages.length'),
+
+    currentLanguage: function () {
+        var results = App.Language.filter( function (language) { 
+            return language.get('code') === App.get("language");
+        });
+
+        if (results.get('length') > 0) {
+            return App.Language.find(results.get('content.0.id'));
+        }
+
+        return null;
+    }.property('App.language', 'languages.length')
 });
 
 App.MyProjectStoryController = App.StandardTabController.extend({

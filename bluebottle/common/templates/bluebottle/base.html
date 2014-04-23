@@ -35,6 +35,7 @@
     {% compress css %}
 		{% block screen_css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" media="screen" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/vendor/redactor.css" media="screen" />
 		{% endblock screen_css %}
     {% endcompress %}
 
@@ -82,6 +83,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-bootstrap-df3e710.js"></script>
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-validation/jquery.validate{% if not debug %}.min{% endif %}.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/redactor.min.js"></script>
 
         {# Plugins #}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-radio-button.js"></script>

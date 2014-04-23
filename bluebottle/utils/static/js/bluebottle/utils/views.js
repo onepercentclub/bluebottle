@@ -168,7 +168,7 @@ App.DateSliderWidget = Ember.TextField.extend({
         this.updateSlider();
     },
     updateSlider: function(){
-        var date = this.get('date');
+        var date = this.get('date') || new Date();
         var now = new Date();
         var microseconds = date.getTime() - now.getTime();
         var days =  Math.ceil(microseconds / (1000 * 60 * 60 * 24));

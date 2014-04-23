@@ -79,12 +79,6 @@ class BaseOrganization(models.Model):
 
     tags = TaggableManager(blank=True, verbose_name=_('tags'))
 
- # account_name               -> account_holder_name
- # account_city               -> account_holder_city
- # address_line1              -> account_holder_address
- # address_line2              -> account_holder_address
-
-
     #Account holder Info
     account_holder_name = models.CharField(_("account holder name"), max_length=255, blank=True)
     account_holder_address = models.CharField(_("account holder address"), max_length=255, blank=True)

@@ -178,7 +178,6 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
 	account_bank_country: DS.belongsTo('App.Country'),
 
     validBank: function(){
-		debugger
         if (this.get('account_holder_name') && this.get('account_holder_address') && this.get('account_holder_postal_code')
 			&& this.get('account_holder_city') && this.get('account_holder_country')
 			&& // here the condition if in europe or not

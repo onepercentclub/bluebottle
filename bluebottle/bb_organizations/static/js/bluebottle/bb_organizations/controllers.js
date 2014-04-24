@@ -135,30 +135,29 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
 
 App.MyProjectBankController = App.StandardTabController.extend({
 
-	previousStep: "myProject.organisation",
+    previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
 
     actions: {
-		showInEurope: function(event) {
-			$(".inEurope-tab").addClass("active");
-			$(".outEurope-tab").removeClass("active");
+      showInEurope: function(event) {
+          $(".inEurope-tab").addClass("active");
+          $(".outEurope-tab").removeClass("active");
 
-			$(".outEurope-container").hide();
-			$(".inEurope-container").show();
-			model = this.get('model');
-			model.set('inEurope', true);
-		},
+          $(".outEurope-container").hide();
+          $(".inEurope-container").show();
+          model = this.get('model');
+          model.set('inEurope', true);
+      },
 
-		showOutEurope: function() {
-			$(".inEurope-tab").removeClass("active");
-			$(".outEurope-tab").addClass("active");
+      showOutEurope: function() {
+          $(".inEurope-tab").removeClass("active");
+          $(".outEurope-tab").addClass("active");
 
-			$(".outEurope-container").show();
-			$(".inEurope-container").hide();
-			model = this.get('model');
-			model.set('inEurope', false);
-		}
-
+          $(".outEurope-container").show();
+          $(".inEurope-container").hide();
+          model = this.get('model');
+          model.set('inEurope', false);
+      }
     }
 });
 

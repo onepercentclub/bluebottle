@@ -15,6 +15,7 @@ PROJECT_MODEL = get_project_model()
 
 class ProjectThemeFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ProjectTheme
+    FACTORY_DJANGO_GET_OR_CREATE = ('name', )
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
     name_nl = name
@@ -24,6 +25,7 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
 
 class ProjectPhaseFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ProjectPhase
+    FACTORY_DJANGO_GET_OR_CREATE = ('name',)
 
     name = factory.Sequence(lambda n: 'Phase_{0}'.format(n))
     sequence = factory.Sequence(lambda n: n)

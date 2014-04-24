@@ -168,12 +168,14 @@ App.DateSliderWidget = Ember.TextField.extend({
         this.updateSlider();
     },
     updateSlider: function(){
-        var date = this.get('date') || new Date();
-        var now = new Date();
-        var microseconds = date.getTime() - now.getTime();
-        var days =  Math.ceil(microseconds / (1000 * 60 * 60 * 24));
-        this.set('value', days);
-        this.$().slider('value', days);
+        var date = this.get('date');
+        if (date) {
+            var now = new Date();
+            var microseconds = date.getTime() - now.getTime();
+            var days =  Math.ceil(microseconds / (1000 * 60 * 60 * 24));
+            this.set('value', days);
+            this.$().slider('value', days);
+        }
     }.observes('date')
 });
 

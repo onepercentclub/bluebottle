@@ -73,13 +73,13 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
                                                 'account_bank_city', 'account_bank_country'],
 
     init: function () {
-        this._super();
+    	this._super();
 
         this.validatedFieldsProperty('validOrganization', this.get('requiredOrganizationFields'));
-		this.validatedFieldsProperty('validBaseBankOrganization', this.get('requiredBaseBankOrganizationFields'));
-		this.validatedFieldsProperty('validEuropeanBankOrganization', this.get('requiredEuropeanBankOrganizationFields'));
-		this.validatedFieldsProperty('validNotEuropeanBankOrganization', this.get('requiredNotEuropeanBankOrganizationFields'));
-
+        this.validatedFieldsProperty('validBaseBankOrganization', this.get('requiredBaseBankOrganizationFields'));
+        this.validatedFieldsProperty('validEuropeanBankOrganization', this.get('requiredEuropeanBankOrganizationFields'));
+        this.validatedFieldsProperty('validNotEuropeanBankOrganization', this.get('requiredNotEuropeanBankOrganizationFields'));
+        
         this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredOrganizationFields'));
         this.missingFieldsProperty('missingFieldsBaseBankOrganization', this.get('requiredBaseBankOrganizationFields'));
         this.missingFieldsProperty('missingFieldsEuropeanBankOrganization', this.get('requiredEuropeanBankOrganizationFields'));

@@ -214,19 +214,18 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
 });
 
 App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
-	model: function(params) {
-		var project = this.modelFor('myProject'),
-            organization = this.modelFor('myProjectOrganization');
+    model: function(params) {
+        var project = this.modelFor('myProject'),
+        organization = this.modelFor('myProjectOrganization');
 
-		if (project.get('organization')) {
+        if (organization) {
+            return organization;
+        } else if (project.get('organization')) {
             return project.get('organization');
-		} else if (organization) {
-		    return organization;
         } else {
             return App.MyOrganization.createRecord();
         }
-	}
-
+    }
 });
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});

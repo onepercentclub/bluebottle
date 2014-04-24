@@ -31,6 +31,11 @@ App.BbMapPickerComponent = App.BbFormFieldComponent.extend({
 App.BbDatePickerComponent = App.BbFormFieldComponent.extend({
 });
 
+App.BbDatePickerSliderComponent = App.BbFormFieldComponent.extend({
+});
+
+
+
 App.BbUploadImageComponent = App.BbFormFieldComponent.extend({
     accept: 'image/*',
     buttonLabel: 'Upload image'

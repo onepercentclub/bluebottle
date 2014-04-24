@@ -316,10 +316,9 @@ App.MyProjectController = Em.ObjectController.extend({
         return !!this.get('model.title');
     }.property('model.title'),
 
-	isSubmittable: function(){
-		return (this.get('isPhasePlanNew') || this.get('isPhaseNeedsWork'))
-	}.property('isPhasePlanNew', 'isPhaseNeedsWork'),
-
+    isSubmittable: function(){
+        return (this.get('isPhasePlanNew') || this.get('isPhaseNeedsWork'));
+    }.property('isPhasePlanNew', 'isPhaseNeedsWork'),
 
     validOrganization: function () {
         var organization = this.get('myOrganization'),
@@ -330,8 +329,7 @@ App.MyProjectController = Em.ObjectController.extend({
         } else {
             return project.get('organization.validOrganization');
         }
-    }.property('myOrganization', 'model.organization'),
-
+    }.property('myOrganization.validOrganization', 'model.organization.validOrganization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

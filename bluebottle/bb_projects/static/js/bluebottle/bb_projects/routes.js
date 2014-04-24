@@ -99,7 +99,7 @@ App.MyProjectRoute = Em.Route.extend({
         var project = store.find('myProject', params.id);
 
         return project;
-    },
+    }
 });
 
 App.MyProjectIndexRoute = Em.Route.extend({
@@ -192,6 +192,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
 App.MyProjectOrganisationRoute = Em.Route.extend({
     model: function(params) {
         var project = this.modelFor('myProject');
+
         if (project.get('organization')) {
             return project.get('organization');
         } else {
@@ -212,7 +213,21 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
+	model: function(params) {
+		var project = this.modelFor('myProject'),
+            organization = this.modelFor('myProjectOrganization');
+
+		if (project.get('organization')) {
+            return project.get('organization');
+		} else if (organization) {
+		    return organization;
+        } else {
+            return App.MyOrganization.createRecord();
+        }
+	}
+
+});
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
 

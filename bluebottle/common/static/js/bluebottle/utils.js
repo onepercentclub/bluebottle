@@ -40,6 +40,7 @@ App.ModelValidationMixin = Ember.Mixin.create({
     // fields: an array of properties which will be checked
     //
     validatedFieldsProperty: function(name, fields) {
+
         if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
 
         var self = this;

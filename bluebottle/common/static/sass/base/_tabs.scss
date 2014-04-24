@@ -214,3 +214,14 @@ $step-validated-icon-color: $white;
 		}
 	}
 }
+
+.tab-control li.control-group {
+
+    &.hide {
+        display: none;
+    }
+
+    &.show {
+        display: list-item;
+    }
+}

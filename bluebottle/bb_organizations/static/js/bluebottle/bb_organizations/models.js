@@ -67,6 +67,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
 
     requiredOrganizationFields: ['name', 'email', 'phone_number', 'website'],
     requiredBaseBankOrganizationFields: ['account_holder_name', 'account_holder_address', 'account_holder_postal_code',
+                                         'account_holder_city', 'account_holder_country'],
     requiredEuropeanBankOrganizationFields: ['account_iban', 'account_bic'],
     requiredNotEuropeanBankOrganizationFields: ['account_bic', 'account_number', 'account_bank_name',
                                                 'account_bank_address', 'account_bank_postal_code',

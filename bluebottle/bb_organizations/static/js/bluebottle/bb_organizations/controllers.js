@@ -134,17 +134,16 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
 });
 
 App.MyProjectBankController = App.StandardTabController.extend({
-
     previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
 
     actions: {
       showInEurope: function(event) {
-          model.set('inEurope', true);
+          this.set('model.inEurope', true);
       },
 
       showOutEurope: function() {
-          model.set('inEurope', false);
+          this.set('model.inEurope', false);
       }
     }
 });

@@ -160,23 +160,22 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
         return !this.get('inEurope');
     }.property('inEurope'),
 
-	//Account holder
-	account_holder_name: DS.attr('string', {defaultValue: ""}),
-	account_holder_address: DS.attr('string', {defaultValue: ""}),
-	account_holder_postal_code: DS.attr('string', {defaultValue: ""}),
-	account_holder_city: DS.attr('string', {defaultValue: ""}),
-	account_holder_country: DS.belongsTo('App.Country'),
-
-	//Bank details
-	account_iban: DS.attr('string', {defaultValue: ""}),
-	account_bic: DS.attr('string', {defaultValue: ""}),
-	account_number: DS.attr('string', {defaultValue: ""}),
-	account_bank_name: DS.attr('string', {defaultValue: ""}),
-	account_bank_address: DS.attr('string', {defaultValue: ""}),
-	account_bank_postal_code: DS.attr('string', {defaultValue: ""}),
-	account_bank_city: DS.attr('string', {defaultValue: ""}),
-	account_bank_country: DS.belongsTo('App.Country')
-
+    //Account holder
+    account_holder_name: DS.attr('string', {defaultValue: ""}),
+    account_holder_address: DS.attr('string', {defaultValue: ""}),
+    account_holder_postal_code: DS.attr('string', {defaultValue: ""}),
+    account_holder_city: DS.attr('string', {defaultValue: ""}),
+    account_holder_country: DS.belongsTo('App.Country'),
+    
+    //Bank details
+    account_iban: DS.attr('string', {defaultValue: ""}),
+    account_bic: DS.attr('string', {defaultValue: ""}),
+    account_number: DS.attr('string', {defaultValue: ""}),
+    account_bank_name: DS.attr('string', {defaultValue: ""}),
+    account_bank_address: DS.attr('string', {defaultValue: ""}),
+    account_bank_postal_code: DS.attr('string', {defaultValue: ""}),
+    account_bank_city: DS.attr('string', {defaultValue: ""}),
+    account_bank_country: DS.belongsTo('App.Country')
 });
 
 

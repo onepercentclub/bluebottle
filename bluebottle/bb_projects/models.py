@@ -62,6 +62,7 @@ class ProjectPhase(models.Model):
         self.slug = slugify(self.name)
         super(ProjectPhase, self).save(*args, **kwargs)
 
+
 class BaseProject(models.Model):
     """ The base Project model. """
     owner = models.ForeignKey(

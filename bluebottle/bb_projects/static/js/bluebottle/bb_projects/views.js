@@ -71,7 +71,7 @@ App.ProjectPlanView = Em.View.extend({
 });
 
 App.ProjectIndexView = Em.View.extend({
-    templateName: 'project_wall',
+    templateName: 'project_wall'
 });
 
 /* Form Elements */
@@ -184,8 +184,9 @@ App.MyProjectAmbassadorsView = Em.View.extend({
     templateName: 'my_project_ambassadors'
 });
 
-App.MyProjectBankView = Em.View.extend({
-    templateName: 'my_project_bank'
+App.MyProjectBankView = Em.View.extend(Em.TargetActionSupport, {
+    templateName: 'my_project_bank',
+
 });
 
 App.MyProjectBudgetView = Em.View.extend({

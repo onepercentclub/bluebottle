@@ -330,7 +330,8 @@ App.MyProjectController = Em.ObjectController.extend({
         } else {
             return project.get('organization.validOrganization');
         }
-    }.property('myOrganization', 'model.organization')
+    }.property('myOrganization', 'model.organization'),
+
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

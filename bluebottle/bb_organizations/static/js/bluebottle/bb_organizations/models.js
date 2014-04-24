@@ -65,30 +65,29 @@ App.MyOrganizationDocument = DS.Model.extend({
 App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     url: 'bb_organizations/manage',
     requiredOrganizationFields: ['name', 'email', 'phone_number', 'website'],
+
 	requiredBaseBankOrganizationFields: ['account_holder_name', 'account_holder_address', 'account_holder_postal_code',
-									 'account_holder_city', 'account_holder_country'],
+									 	 'account_holder_city', 'account_holder_country'],
+
 	requiredEuropeanBankOrganizationFields: ['account_iban', 'account_bic'],
-	requiredNotEuropeanBankOrganizationFields: ['account_bic', 'account_number', 'account_bank_name', 'account_bank_address',
-										  'account_bank_postal_code', 'account_bank_city', 'account_bank_country'],
+
+	requiredNotEuropeanBankOrganizationFields: ['account_bic', 'account_number', 'account_bank_name',
+												'account_bank_address', 'account_bank_postal_code',
+												'account_bank_city', 'account_bank_country'],
 
     init: function () {
 		this._super();
 
-		this.validEuropeanBankOrganizationFields = this.get('requiredBaseBankOrganizationFields').
-														concat(this.get('requiredEuropeanBankOrganizationFields'));
-
-		this.validNotEuropeanBankOrganizationFields = this.get('requiredBaseBankOrganizationFields').
-														concat(this.get('requiredNotEuropeanBankOrganizationFields'));
-
-
 		this.validatedFieldsProperty('validOrganization', this.get('requiredOrganizationFields'));
-		this.validatedFieldsProperty('validEuropeanBankOrganization', this.get('validEuropeanBankOrganizationFields'));
-		this.validatedFieldsProperty('validNotEuropeanBankOrganization', this.get('validNotEuropeanBankOrganizationFields'));
+		this.validatedFieldsProperty('validBaseBankOrganization', this.get('requiredBaseBankOrganizationFields'));
+		this.validatedFieldsProperty('validEuropeanBankOrganization', this.get('requiredEuropeanBankOrganizationFields'));
+		this.validatedFieldsProperty('validNotEuropeanBankOrganization', this.get('requiredNotEuropeanBankOrganizationFields'));
 
 
 		this.missingFieldsProperty('missingFieldsOrganization', this.get('requiredOrganizationFields'));
-		this.missingFieldsProperty('missingFieldsEuropeanBankOrganization', this.get('validEuropeanBankOrganizationFields'));
-		this.missingFieldsProperty('missingFieldsNotEuropeanBankOrganization', this.get('validNotEuropeanBankOrganizationFields'));
+		this.missingFieldsProperty('missingFieldsBaseBankOrganization', this.get('requiredBaseBankOrganizationFields'));
+		this.missingFieldsProperty('missingFieldsEuropeanBankOrganization', this.get('requiredEuropeanBankOrganizationFields'));
+		this.missingFieldsProperty('missingFieldsNotEuropeanBankOrganization', this.get('requiredNotEuropeanBankOrganizationFields'));
     },
 
     save: function () {
@@ -145,6 +144,13 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     legalStatus: DS.attr('string', {defaultValue: ""}),
     documents: DS.hasMany('App.MyOrganizationDocument'),
 
+	validBank: function() {
+		return this.get('validBaseBankOrganization')
+			&& ((this.get('validEuropeanBankOrganization') && this.get('inEurope'))
+			|| (this.get('validNotEuropeanBankOrganization') && !this.get('inEurope')))
+	}.property('validBaseBankOrganization', 'validEuropeanBankOrganization',
+			   'validNotEuropeanBankOrganization', 'inEurope'),
+
     validLegalStatus: function(){
         if (this.get('legalStatus') &&  this.get('documents.length') > 0){
             return true;
@@ -153,6 +159,10 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     }.property('legalStatus', 'documents.length'),
 
 	inEurope: DS.attr('boolean', {defaultValue: true}),
+
+	outsideEurope: function() {
+		return !this.get('inEurope');
+	}.property('inEurope'),
 
 	//Account holder
 	account_holder_name: DS.attr('string', {defaultValue: ""}),

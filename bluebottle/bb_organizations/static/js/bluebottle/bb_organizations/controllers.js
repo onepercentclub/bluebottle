@@ -139,27 +139,16 @@ App.MyProjectBankController = App.StandardTabController.extend({
     nextStep: 'myProject.submit',
 
     actions: {
-		showInEurope: function(event) {
-			$(".inEurope-tab").addClass("active");
-			$(".outEurope-tab").removeClass("active");
 
-			$(".outEurope-container").hide();
-			$(".inEurope-container").show();
-			model = this.get('model');
-			model.set('inEurope', true);
+		showInEurope: function(event) {
+			this.set('model.inEurope', true);
 		},
 
 		showOutEurope: function() {
-			$(".inEurope-tab").removeClass("active");
-			$(".outEurope-tab").addClass("active");
-
-			$(".outEurope-container").show();
-			$(".inEurope-container").hide();
-			model = this.get('model');
-			model.set('inEurope', false);
+			this.set('model.inEurope', false);
 		}
-
     }
+
 });
 
 

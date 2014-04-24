@@ -332,19 +332,6 @@ App.MyProjectController = Em.ObjectController.extend({
         }
     }.property('myOrganization', 'model.organization'),
 
-	validEuropeanBankOrganization: function () {
-		var organization = this.get('organization');
-		if (organization){
-			return organization.get('validEuropeanBankOrganization');
-		}
-	}.property('organization'),
-
-	validNotEuropeanBankOrganization: function () {
-		var organization = this.get('organization');
-		if (organization){
-			return organization.get('validNotEuropeanBankOrganization');
-		}
-	}.property('organization')
 });
 
 App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {

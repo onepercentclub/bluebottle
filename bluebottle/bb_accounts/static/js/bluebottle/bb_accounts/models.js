@@ -2,14 +2,6 @@
  Models
  */
 
-//Configure the embedded object. Embed UserAddress object in user settings.
-// (see: http://stackoverflow.com/questions/14521182/ember-data-does-not-support-embedded-objects
-App.Adapter.map('App.UserSettings', {
-   address: {
-       embedded: 'always'
-  }
-});
-
 /*
   A data model representing a user.
 

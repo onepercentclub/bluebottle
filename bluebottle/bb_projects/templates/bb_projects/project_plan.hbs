@@ -13,22 +13,27 @@
 			
 			<ul class="project-plan-navigation-links">
 				{{#each headerLinks}}
-				<li><a class="project-plan-main-link" {{bindAttr href=this.href}}>{{this.name}}</a></li>
+				<li><a class="project-plan-main-link" {{bindAttr href=href}}>{{name}}</a></li>
 				{{/each}}
+				<li><a class="project-plan-main-link" href="#map">Map</a></li>		
 				<li class="project-plan-download-pdf">
-					<a href="#"><span class="flaticon solid download-document-1"></span> Download as PDF</a>
+					<a><span class="flaticon solid download-document-1"></span> Download as PDF</a>
 				<li>
 			</ul>
 		</nav>
 		
 		<div class="project-plan-main-container">
-			<a class="project-plan-back-link" data-dismiss="modal" href="#">Back to project<span class="flaticon stroke x-1"></span></a>
+			{{!-- TODO: This should be the close button, but a standard modal already has a close button. Could we do something about that? --}}
+			{{!-- <a class="project-plan-back-link close-modal">Back to project<span class="flaticon stroke x-1"></span></a> --}}
 			<article class="project-plan-main">
 				{{{storyWithHeaderIds}}}
+				<br />
+				<h3 id="map">Map</h3>
+				<img src="{{unbound staticMap}}" />
 			</article>
 		</div>
 		<div class="project-plan-map">
-			<img {{bindAttr src=staticMap}} />
+			<img src="{{unbound staticMap}}" />
 		</div>
     </div>
 

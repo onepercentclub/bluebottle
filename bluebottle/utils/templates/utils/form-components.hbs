@@ -50,7 +50,7 @@
 
 {% tplhandlebars "components/bb-select-language" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view "App.LanguageSelectView" selectionBinding='selection' valueBinding='value'}}
+        {{view "App.LanguageSelectView" selectionBinding='selection' nameBinding=name valueBinding='value'}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 
@@ -152,5 +152,5 @@
 
 {% tplhandlebars "date_picker_button" %}
     <input type="text" style="display: none"/>
-    <a {{action "showDatePicker" target="view"}} class="btn btn-modest"><span class="flaticon solid calendar-3"></span> {% trans "Pick date" %}</a>
+    <a {{action "showDatePicker" target="view"}} class="btn btn-modest btn-date-picker"><span class="flaticon solid calendar-3"></span> {% trans "Pick date" %}</a>
 {% endtplhandlebars %}

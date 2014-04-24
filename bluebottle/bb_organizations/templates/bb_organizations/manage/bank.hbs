@@ -32,15 +32,15 @@
         </fieldset>
 
         <fieldset>
-            <ul>
+            <ul class="tab-control">
                 <li>
                     Where is your bank located:
                     <ul class="tabs two">
-                        <li class="tab-item tab-first inEurope-tab active"><a {{action "showInEurope"}}>In Europe</a></li>
-                        <li class="tab-item outEurope-tab"><a {{action "showOutEurope"}}>Out Europe</a></li>
+                        <li {{bindAttr class=":tab-item :tab-first inEurope:active"}}><a {{action "showInEurope"}}>In Europe</a></li>
+                        <li {{bindAttr class=":tab-item outsideEurope:active"}}><a {{action "showOutEurope"}}>Out Europe</a></li>
                     </ul>
                 </li>
-                <li class="control-group inEurope-container">
+                <li {{bindAttr class=":control-group inEurope:show outsideEurope:hide"}}>
                     <ul>
                         {% bb_component 'bb-text-field' label=_("IBAN") name='account iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("The IBAN code") %}
 
@@ -48,7 +48,7 @@
                     </ul>
                 </li>
 
-                <li class="control-group outEurope-container">
+                <li {{bindAttr class=":control-group outsideEurope:show inEurope:hide"}}>
                     <ul>
                         {% bb_component 'bb-text-field' label=_("Account Number") name='account number' valueBinding='account_number' errorsBinding='errors.account_number' maxlength=255 placeholder=_("Can be found on your bank statement") %}
 

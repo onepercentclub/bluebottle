@@ -140,22 +140,10 @@ App.MyProjectBankController = App.StandardTabController.extend({
 
     actions: {
       showInEurope: function(event) {
-          $(".inEurope-tab").addClass("active");
-          $(".outEurope-tab").removeClass("active");
-
-          $(".outEurope-container").hide();
-          $(".inEurope-container").show();
-          model = this.get('model');
           model.set('inEurope', true);
       },
 
       showOutEurope: function() {
-          $(".inEurope-tab").removeClass("active");
-          $(".outEurope-tab").addClass("active");
-
-          $(".outEurope-container").show();
-          $(".inEurope-container").hide();
-          model = this.get('model');
           model.set('inEurope', false);
       }
     }

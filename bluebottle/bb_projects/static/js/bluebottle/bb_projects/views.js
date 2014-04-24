@@ -187,9 +187,6 @@ App.MyProjectAmbassadorsView = Em.View.extend({
 App.MyProjectBankView = Em.View.extend(Em.TargetActionSupport, {
     templateName: 'my_project_bank',
 
-	didInsertElement: function() {
-		this.get('controller').send('showInEurope');
-	}
 });
 
 App.MyProjectBudgetView = Em.View.extend({

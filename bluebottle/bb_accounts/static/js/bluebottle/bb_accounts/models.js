@@ -162,13 +162,15 @@ App.UserSettings = DS.Model.extend({
     birthdate: DS.attr('birthdate'),
     user_type: DS.attr('string'),
     primary_language: DS.attr('string'),
+    address: DS.belongsTo('App.UserAddress')
+});
 
-    // Address
+App.UserAddress = DS.Model.extend({
     line1: DS.attr('string'),
     line2: DS.attr('string'),
     city: DS.attr('string'),
     state: DS.attr('string'),
-    country: DS.attr('string'),
+    country: DS.belongsTo('App.Country'),
     postal_code: DS.attr('string')
 });
 

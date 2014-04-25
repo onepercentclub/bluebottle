@@ -419,9 +419,9 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
         }
     },
 
-	currentOrganization: function() {
-		return (this.get('model.organization') || this.get('controllers.myProjectOrganisation.model'));
-	}.property('model.organization.id', 'controllers.myProjectOrganisation.model.id'),
+    currentOrganization: function() {
+        return (this.get('model.organization') || this.get('controllers.myProjectOrganisation.model'));
+    }.property('model.organization.id', 'controllers.myProjectOrganisation.model.id'),
 
 	//TODO: is this needed?
     exit: function(){

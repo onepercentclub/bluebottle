@@ -388,10 +388,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
         return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');
     }.property('controllers.myProjectOrganisation.model.isNew', 'model.isNew'),
 
-    missingFieldsOrganization: function () {
-        return this.get('controllers.myProjectOrganisation.model.missingFieldsOrganization');
-    }.property('controllers.myProjectOrganisation.model.missingFieldsOrganization'),
-
     actions: {
         submitPlan: function(e) {
             var controller = this;
@@ -423,6 +419,11 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
         }
     },
 
+    currentOrganization: function() {
+        return (this.get('model.organization') || this.get('controllers.myProjectOrganisation.model'));
+    }.property('model.organization.id', 'controllers.myProjectOrganisation.model.id'),
+
+    //TODO: is this needed?
     exit: function(){
         this.set('model.status', 'new');
         this._super();

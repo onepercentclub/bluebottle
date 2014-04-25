@@ -66,10 +66,12 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     url: 'bb_organizations/manage',
 
     requiredOrganizationFields: ['name', 'email', 'phone_number', 'website'],
+    // since 'account_bic' is common for European and not European bank account
+    // it's base required field, this also avoid a "ping pong" in the bank tab
     requiredBaseBankOrganizationFields: ['account_holder_name', 'account_holder_address', 'account_holder_postal_code',
-                                         'account_holder_city', 'account_holder_country'],
-    requiredEuropeanBankOrganizationFields: ['account_iban', 'account_bic'],
-    requiredNotEuropeanBankOrganizationFields: ['account_bic', 'account_number', 'account_bank_name',
+                                         'account_holder_city', 'account_holder_country', 'account_bic'],
+    requiredEuropeanBankOrganizationFields: ['account_iban'],
+    requiredNotEuropeanBankOrganizationFields: ['account_number', 'account_bank_name',
                                                 'account_bank_address', 'account_bank_postal_code',
                                                 'account_bank_city', 'account_bank_country'],
 
@@ -103,6 +105,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     },
 
     name: DS.attr('string'),
+
     nameOrDefault: function () {
         return this.get('name') || '-- No Name --';
     }.property('name'),
@@ -127,39 +130,20 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     twitter: DS.attr('string', {defaultValue: ""}),
     skype: DS.attr('string', {defaultValue: ""}),
 
-    validProfile: function(){
-        if (this.get('name') &&  this.get('description') && this.get('email') &&
-              this.get('address_line1') && this.get('city') && this.get('country')
-            ){
-            return true;
-        }
-        return false;
-    }.property('name', 'description', 'email', 'address_line1', 'city', 'country'),
-
+    validProfile: Em.computed.and('name', 'description', 'email', 'address_line1', 'city', 'country'),
 
     // Legal
     legalStatus: DS.attr('string', {defaultValue: ""}),
+
     documents: DS.hasMany('App.MyOrganizationDocument'),
 
-    validBank: function() {
-        return this.get('validBaseBankOrganization')
-            && ((this.get('validEuropeanBankOrganization') && this.get('inEurope'))
-            || (this.get('validNotEuropeanBankOrganization') && !this.get('inEurope')))
-    }.property('validBaseBankOrganization', 'validEuropeanBankOrganization',
-               'validNotEuropeanBankOrganization', 'inEurope'),
+    validBank: Em.computed.and('validBaseBankOrganization', 'validBankAccountInfo'),
 
-    validLegalStatus: function(){
-        if (this.get('legalStatus') &&  this.get('documents.length') > 0){
-            return true;
-        }
-        return false;
-    }.property('legalStatus', 'documents.length'),
+    validBankAccountInfo: Em.computed.or('validEuropeanBankOrganization', 'validNotEuropeanBankOrganization'),
 
-	inEurope: DS.attr('boolean', {defaultValue: true}),
+    hasDocument: Em.computed.gt('documents.length', 0),
 
-    outsideEurope: function() {
-        return !this.get('inEurope');
-    }.property('inEurope'),
+    validLegalStatus: Em.computed.and('legalStatus', 'hasDocument'),
 
     //Account holder
     account_holder_name: DS.attr('string', {defaultValue: ""}),

@@ -1,4 +1,3 @@
-
 App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerObjectSaveMixin, App.ControllerObjectStatusMixin, {
     needs: ['myProject'],
 
@@ -147,16 +146,15 @@ App.MyProjectBankController = App.StandardTabController.extend({
       }
     },
 
-	setInEurope: function () {
-		if (this.get('model.validEuropeanBankOrganization')){
-			this.set('inEurope', true);
-		} else if (this.get('model.validNotEuropeanBankOrganization')){
-			this.set('inEurope', false);
-		}
-	}.observes('model.validBankAccountInfo'),
+    setInEurope: function () {
+        if (this.get('model.validEuropeanBankOrganization')){
+            this.set('inEurope', true);
+        } else if (this.get('model.validNotEuropeanBankOrganization')){
+                this.set('inEurope', false);
+        }
+    }.observes('model.validBankAccountInfo'),
 
-	outsideEurope: Em.computed.not('inEurope')
-
+    outsideEurope: Em.computed.not('inEurope')
 });
 
 

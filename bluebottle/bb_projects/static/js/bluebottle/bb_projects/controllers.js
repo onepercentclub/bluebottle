@@ -423,7 +423,7 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
         return (this.get('model.organization') || this.get('controllers.myProjectOrganisation.model'));
     }.property('model.organization.id', 'controllers.myProjectOrganisation.model.id'),
 
-	//TODO: is this needed?
+    //TODO: is this needed?
     exit: function(){
         this.set('model.status', 'new');
         this._super();

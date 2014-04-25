@@ -150,7 +150,7 @@ App.MyProjectBankController = App.StandardTabController.extend({
         if (this.get('model.validEuropeanBankOrganization')){
             this.set('inEurope', true);
         } else if (this.get('model.validNotEuropeanBankOrganization')){
-                this.set('inEurope', false);
+            this.set('inEurope', false);
         }
     }.observes('model.validBankAccountInfo'),
 

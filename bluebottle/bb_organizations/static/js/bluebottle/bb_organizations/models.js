@@ -130,20 +130,20 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     twitter: DS.attr('string', {defaultValue: ""}),
     skype: DS.attr('string', {defaultValue: ""}),
 
-	validProfile: Em.computed.and('name', 'description', 'email', 'address_line1', 'city', 'country'),
+    validProfile: Em.computed.and('name', 'description', 'email', 'address_line1', 'city', 'country'),
 
     // Legal
     legalStatus: DS.attr('string', {defaultValue: ""}),
 
     documents: DS.hasMany('App.MyOrganizationDocument'),
 
-	validBank: Em.computed.and('validBaseBankOrganization', 'validBankAccountInfo'),
+    validBank: Em.computed.and('validBaseBankOrganization', 'validBankAccountInfo'),
 
-	validBankAccountInfo: Em.computed.or('validEuropeanBankOrganization', 'validNotEuropeanBankOrganization'),
+    validBankAccountInfo: Em.computed.or('validEuropeanBankOrganization', 'validNotEuropeanBankOrganization'),
 
-	hasDocument: Em.computed.gt('documents.length', 0),
+    hasDocument: Em.computed.gt('documents.length', 0),
 
-	validLegalStatus: Em.computed.and('legalStatus', 'hasDocument'),
+    validLegalStatus: Em.computed.and('legalStatus', 'hasDocument'),
 
     //Account holder
     account_holder_name: DS.attr('string', {defaultValue: ""}),

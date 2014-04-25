@@ -7,72 +7,17 @@
         <p>{% trans "We'd like to match you to projects and events based on your location & a personal thank you in your mailbox." %}</p>
     </legend>
     <ul>
-        <li class="control-group">
-            <label class="control-label">
-                {% trans "Address Line 1" %}
-            </label>
 
-            <div class="controls">
-                {{view Em.TextField valueBinding="line1" classBinding="errors.line1.length:error"}}
-            </div>
+        {% bb_component 'bb-text-field' label=_('Address Line 1') valueBinding='address.line1' errors='errors.address.0.line1' %}
 
-            {{#if errors.line1}}
-                <div class="has-errors">{{#each errors.line1}}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-        </li>
-        <li class="control-group">
-            <label class="control-label">
-                {% trans "Address Line 2" %}
-            </label>
+        {% bb_component 'bb-text-field' label=_('Address Line 2') valueBinding='address.line2' errors='errors.address.0.line2' %}
 
-            <div class="controls">
-                {{view Em.TextField valueBinding="line2" classBinding="errors.line2.length:error"}}
-            </div>
+        {% bb_component 'bb-text-field' label=_('City') valueBinding='address.city' errors='errors.address.0.city' %}
 
-            {{#if errors.line2}}
-                <div class="has-errors">{{#each errors.line2}}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-        </li>
-        <li class="control-group">
-            <label class="control-label">
-                {% trans "City" %}
-            </label>
+        {% bb_component 'bb-text-field' label=_('State') valueBinding='address.state' errors='errors.address.0.state' %}
 
-            <div class="controls">
-                {{view Em.TextField valueBinding="city" classBinding="errors.city.length:error"}}
-            </div>
+        {% bb_component 'bb-text-field' label=_('Postal Code') valueBinding='address.postal_code' errors='errors.address.0.postal_code' %}
 
-            {{#if errors.city}}
-                <div class="has-errors">{{#each errors.city}}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-        </li>
-        <li class="control-group">
-            <label class="control-label">
-                {% trans "Province / State" %}
-            </label>
-
-            <div class="controls">
-                {{view Em.TextField valueBinding="state" classBinding="errors.state.length:error"}}
-            </div>
-
-            {{#if errors.state}}
-                <div class="has-errors">{{#each errors.state}}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-        </li>
-        <li class="control-group">
-            <label class="control-label">
-                {% trans "Postal Code" %}
-            </label>
-
-            <div class="controls">
-                {{view Em.TextField valueBinding="postal_code" classBinding="errors.postal_code.length:error"}}
-            </div>
-
-            {{#if errors.postal_code}}
-                <div class="has-errors">{{#each errors.postal_code}}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-
-        </li>
 
         <li class="control-group">
             <label class="control-label">
@@ -80,11 +25,11 @@
             </label>
 
             <div class="controls">
-                {{view App.CountryCodeSelectView valueBinding="country" classBinding="errors.country.length:error"}}
+                {{view App.CountryCodeSelectView selectionBinding="address.country" classBinding="errors.address.country.length:error"}}
             </div>
 
-            {{#if error.country}}
-                <div class="has-errors">{{#each errors.country}}<p>{{this}}</p>{{/each}}</div>
+            {{#if error.address.country}}
+                <div class="has-errors">{{#each errors.address.country}}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
         </li>
 
@@ -102,19 +47,8 @@
             </div>
         </li>
 
-        <li class="control-group">
-            <label class="control-label">
-                {% trans "Date of birth" %}
-            </label>
+        {% bb_component 'bb-datepicker' valueBinding='birthdate' label=_('Birthdate') name='birthdate' errors='errors.birthdate' %}
 
-            <div class="controls">
-                {{view App.DatePicker valueBinding="birthdate" classBinding="errors.birthdate.length:error"}}
-            </div>
-
-            {{#if errors.birthdate}}
-                <div class="has-errors">{{#each errors.birthdate}}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-        </li>
     </ul>
 </fieldset>
 {% endbb_verbatim %}

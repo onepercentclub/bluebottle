@@ -151,6 +151,15 @@ App.User.reopen({
 //   }
 // });
 
+
+//Configure the embedded object. Embed UserAddress object in user settings.
+// (see: http://stackoverflow.com/questions/14521182/ember-data-does-not-support-embedded-objects/14521612#14521612)
+App.Adapter.map('App.UserSettings', {
+   address: {
+       embedded: 'always'
+   }
+});
+
 App.UserSettings = DS.Model.extend({
     url: 'users/settings',
 
@@ -162,13 +171,15 @@ App.UserSettings = DS.Model.extend({
     birthdate: DS.attr('birthdate'),
     user_type: DS.attr('string'),
     primary_language: DS.attr('string'),
+    address: DS.belongsTo('App.UserAddress')
+});
 
-    // Address
+App.UserAddress = DS.Model.extend({
     line1: DS.attr('string'),
     line2: DS.attr('string'),
     city: DS.attr('string'),
     state: DS.attr('string'),
-    country: DS.attr('string'),
+    country: DS.belongsTo('App.Country'),
     postal_code: DS.attr('string')
 });
 

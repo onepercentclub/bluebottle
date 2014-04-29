@@ -25,8 +25,3 @@ class CountryFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Country_{0}'.format(n))
     subregion = factory.SubFactory(SubRegionFactory)
-    oda_recipient = True
-    
-    # TODO: Should use lazy_attribute below to create unique values
-    alpha2_code = "AF"
-    alpha3_code = "AFG"

@@ -132,9 +132,15 @@ App.MyProjectOrganisationController = Em.ObjectController.extend(App.ControllerO
     }
 });
 
-App.MyProjectBankController = App.StandardTabController.extend({
+App.MyProjectBankController = App.StandardTabController.extend(App.ControllerObjectStatusMixin, {
+    needs: ['myProject'],
+    
     previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
+
+    isPhasePlanNew: function () {
+        return this.get('controllers.myProject.model.isPhasePlanNew');
+    }.property('controllers.myProject.model.isPhasePlanNew'),
 
     actions: {
       showInEurope: function(event) {

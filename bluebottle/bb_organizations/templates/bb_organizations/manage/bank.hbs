@@ -13,20 +13,20 @@
 
         <fieldset>
             <ul>
-                {% bb_component 'bb-text-field' label=_("Organization name") name='name' valueBinding='name' errorsBinding='errors.name' maxlength=255 placeholder=_("Name of your organisation") %}
+                {% bb_component 'bb-text-field' label=_("Organization name") name='organization-name' valueBinding='name' errorsBinding='errors.name' maxlength=255 placeholder=_("Name of your organisation") %}
             </ul>
         </fieldset>
         <fieldset>
             <ul>
-                {% bb_component 'bb-text-field' label=_("Account holder name") name='account holder name' valueBinding='account_holder_name' errorsBinding='errors.account_holder_name' maxlength=255 placeholder=_("Account holder\'s full name") %}
+                {% bb_component 'bb-text-field' label=_("Account holder name") name='account-holder-name' valueBinding='account_holder_name' errorsBinding='errors.account_holder_name' maxlength=255 placeholder=_("Account holder\'s full name") %}
 
-                {% bb_component 'bb-text-field' label=_("Account holder full address") name='account holder address' valueBinding='account_holder_address' errorsBinding='errors.account_holder_address' maxlength=255 placeholder=_("Street and number") %}
+                {% bb_component 'bb-text-field' label=_("Account holder full address") name='account-holder-address' valueBinding='account_holder_address' errorsBinding='errors.account_holder_address' maxlength=255 placeholder=_("Street and number") %}
 
-                {% bb_component 'bb-text-field' name='account holder postcode' valueBinding='account_holder_postal_code' errorsBinding='errors.account_holder_postcode' maxlength=20 placeholder=_("Zipcode") %}
+                {% bb_component 'bb-text-field' name='account-holder-postcode' valueBinding='account_holder_postal_code' errorsBinding='errors.account_holder_postcode' maxlength=20 placeholder=_("Zipcode") %}
 
-                {% bb_component 'bb-text-field' name='account holder city' valueBinding='account_holder_city' errorsBinding='errors.account_holder_city' maxlength=255 placeholder=_("City") %}
+                {% bb_component 'bb-text-field' name='account-holder-city' valueBinding='account_holder_city' errorsBinding='errors.account_holder_city' maxlength=255 placeholder=_("City") %}
 
-                {% bb_component 'bb-select-country' name='account holder country' selectionBinding='account_holder_country' errorsBinding='errors.account_holder_country' maxlength=255 %}
+                {% bb_component 'bb-select-country' name='account-holder-country' selectionBinding='account_holder_country' errorsBinding='errors.account_holder_country' maxlength=255 %}
 
             </ul>
         </fieldset>
@@ -42,27 +42,27 @@
                 </li>
                 <li {{bindAttr class=":control-group inEurope:show outsideEurope:hide"}}>
                     <ul>
-                        {% bb_component 'bb-text-field' label=_("IBAN") name='account iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("The IBAN code") %}
+                        {% bb_component 'bb-text-field' label=_("IBAN") name='account-iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("The IBAN code") %}
 
-                        {% bb_component 'bb-text-field' label=_("BIC/SWIFT code") undertext=_("addLink4Info") name='account bic' valueBinding='account_bic' errorsBinding='errors.account_bic' maxlength=255 placeholder=_("The BIC/SWIFT code contains 8 or 11 characters") %}
+                        {% bb_component 'bb-text-field' label=_("BIC/SWIFT code") undertext=_("addLink4Info") name='account-bic' valueBinding='account_bic' errorsBinding='errors.account_bic' maxlength=255 placeholder=_("The BIC/SWIFT code contains 8 or 11 characters") %}
                     </ul>
                 </li>
 
                 <li {{bindAttr class=":control-group outsideEurope:show inEurope:hide"}}>
                     <ul>
-                        {% bb_component 'bb-text-field' label=_("Account Number") name='account number' valueBinding='account_number' errorsBinding='errors.account_number' maxlength=255 placeholder=_("Can be found on your bank statement") %}
+                        {% bb_component 'bb-text-field' label=_("Account Number") name='account-number' valueBinding='account_number' errorsBinding='errors.account_number' maxlength=255 placeholder=_("Can be found on your bank statement") %}
 
-                        {% bb_component 'bb-text-field' label=_("BIC/SWIFT code") undertext=_("addLink4Info") name='account bic' valueBinding='account_bic' errorsBinding='errors.account_bic' maxlength=255 placeholder=_("The BIC/SWIFT code contains 8 or 11 characters") %}
+                        {% bb_component 'bb-text-field' label=_("BIC/SWIFT code") undertext=_("addLink4Info") name='account-bic' valueBinding='account_bic' errorsBinding='errors.account_bic' maxlength=255 placeholder=_("The BIC/SWIFT code contains 8 or 11 characters") %}
 
-                        {% bb_component 'bb-text-field' label=_("Bank name") name='account bank name' valueBinding='account_bank_name' errorsBinding='errors.account_bank_name' maxlength=255 placeholder=_("Your bank\'s full name") %}
+                        {% bb_component 'bb-text-field' label=_("Bank name") name='account-bank-name' valueBinding='account_bank_name' errorsBinding='errors.account_bank_name' maxlength=255 placeholder=_("Your bank\'s full name") %}
 
-                        {% bb_component 'bb-text-field' label=_("Bank\'s full address") name='account bank address' valueBinding='account_bank_address' errorsBinding='errors.account_bank_address' maxlength=255 placeholder=_("Street and number") %}
+                        {% bb_component 'bb-text-field' label=_("Bank\'s full address") name='account-bank-address' valueBinding='account_bank_address' errorsBinding='errors.account_bank_address' maxlength=255 placeholder=_("Street and number") %}
 
-                        {% bb_component 'bb-text-field' name='account bank postal code' valueBinding='account_bank_postal_code' errorsBinding='errors.account_bank_postal_code' maxlength=255 placeholder=_("Zipcode") %}
+                        {% bb_component 'bb-text-field' name='account-bank-postal-code' valueBinding='account_bank_postal_code' errorsBinding='errors.account_bank_postal_code' maxlength=255 placeholder=_("Zipcode") %}
 
-                        {% bb_component 'bb-text-field' name='account bank city' valueBinding='account_bank_city' errorsBinding='errors.account_bank_city' maxlength=255 placeholder=_("City") %}
+                        {% bb_component 'bb-text-field' name='account-bank-city' valueBinding='account_bank_city' errorsBinding='errors.account_bank_city' maxlength=255 placeholder=_("City") %}
 
-                        {% bb_component 'bb-select-country' name='account bank country' selectionBinding='account_bank_country' errorsBinding='errors.account_bank_country' maxlength=255 %}
+                        {% bb_component 'bb-select-country' name='account-bank-country' selectionBinding='account_bank_country' errorsBinding='errors.account_bank_country' maxlength=255 %}
 
                     </ul>
                 </li>
@@ -75,16 +75,13 @@
                 {% bb_component 'bb-text-field' label=_("Extra Info") name='account other' valueBinding='account_other' errorsBinding='errors.account_other' maxlength=255 placeholder=_("If you have extra info") %}
             </ul>
         </fieldset>
-        {{#if shouldSave}}
-            <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
-        {{else}}
-            <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
-        {{/if}}
 
 
     {{else}}
         {% trans "You should create an organisation profile first." %}
     {{/if}}
+
+    {{ partial '_my_project_save_edit_footer'}}
 
 {% endtplhandlebars %}
 

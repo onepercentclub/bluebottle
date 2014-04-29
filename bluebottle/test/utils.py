@@ -9,8 +9,11 @@ from django.test.utils import override_settings
 from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
 from splinter.exceptions import DriverNotFoundError
+
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from splinter.browser import ChromeWebDriver, PhantomJSWebDriver, FirefoxWebDriver
 
 # from apps.projects.models import Project
@@ -303,28 +306,43 @@ class SeleniumTestCase(LiveServerTestCase):
         self.assertTrue(self.browser.is_text_present("10"))
         self.browser.find_link_by_text("10").first.click()
 
-    def scroll_to_and_click_by_css(self, selector):
-        if self.browser.is_element_present_by_css(selector):
-            element = self.browser.driver.find_element_by_css_selector(selector)
+    def scroll_to_by_css(self, selector):
+        element = self.wait_for_element_css(selector)
+
+        if element:
             self.browser.execute_script("window.scrollTo(0,%s)" % element.location['y']);
+
+        return element
+
+    def scroll_to_and_click_by_css(self, selector):
+        element = self.scroll_to_by_css(selector);
+        
+        if element:
             element.click()
             return True
         else:
             return False
 
     def scroll_to_and_fill_by_css(self, selector, text):
-        if self.browser.is_element_present_by_css(selector):
-            element = self.browser.driver.find_element_by_css_selector(selector)
-            self.browser.execute_script("window.scrollTo(0,%s)" % element.location['y']);
+        element = self.scroll_to_by_css(selector);
 
-            print element.location, selector
+        if element:
             element.send_keys(text)
             return True
         else:
             return False
             
-    def wait_for_element_css(self, selector):
-        WebDriverWait(self.browser.driver, 10).until(lambda s: s.find_element(By.CSS_SELECTOR, selector).is_displayed())
+    def wait_for_element_css(self, selector, timeout=5):
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+
+            return element
+        except TimeoutException:
+            return None
+
+    def is_visible(self, selector, timeout=5):
+        return not self.wait_for_element_css(selector, timeout) is None
 
     def assert_css(self, selector, wait_time=5):
         return self.assertTrue(self.browser.is_element_present_by_css(selector, wait_time=wait_time) )

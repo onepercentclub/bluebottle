@@ -435,3 +435,4 @@ class WallpostMailTests(TestCase): #ProjectWallPostTestsMixin,
         m2 = mail.outbox[1]
 
         self.assertListEqual([m2.to[0], m1.to[0]], [self.user_a.email, self.user_b.email])
+

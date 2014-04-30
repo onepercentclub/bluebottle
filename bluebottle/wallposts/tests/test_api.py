@@ -350,7 +350,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         # |
         # +-- Wallpost by A (+)
 
-        #self.create_project_text_wallpost(project=self.project_1, author=self.user_a)
         post = TextWallPostFactory.create(content_object=self.project_1, author=self.user_a)
 
         # Mailbox should not contain anything.
@@ -364,7 +363,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         # |
         # +-- Wallpost by B (+)
 
-        #self.create_project_text_wallpost(project=self.project_1, author=self.user_b)
         post = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
@@ -383,7 +381,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         # |   |
         # |   +-- Reaction by A (+)
 
-        #w = self.create_project_text_wallpost(project=self.project, author=self.user_a)
         w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_a)
 
         # Empty outbox.
@@ -405,7 +402,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         # |   |
         # |   +-- Reaction by B (+)
 
-        #w = self.create_project_text_wallpost(project=self.project, author=self.user_a)
         w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_a)
 
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
@@ -430,7 +426,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         #     |
         #     +-- Reaction by A (+)
 
-        #w = self.create_project_text_wallpost(project=self.project, author=self.user_b)
         w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
 
         # Empty outbox.
@@ -455,7 +450,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         #     |
         #     +-- Reaction by B (+)
 
-        #w = self.create_project_text_wallpost(project=self.project, author=self.user_b)
         w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
 
@@ -483,7 +477,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         #     |
         #     +-- Reaction by C (+)
 
-        #w = self.create_project_text_wallpost(project=self.project, author=self.user_b)
         w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_b)
@@ -507,7 +500,6 @@ class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
         # |
         # +-- Wallpost by B (+)
 
-        #self.create_project_text_wallpost(project=self.project_1, author=self.user_b)
         post = TextWallPostFactory.create(content_object=self.task_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.

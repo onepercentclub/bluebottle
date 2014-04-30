@@ -40,7 +40,7 @@
                         <li {{bindAttr class=":tab-item outsideEurope:active"}}><a {{action "showOutEurope"}}>Out Europe</a></li>
                     </ul>
                 </li>
-                <li {{bindAttr class=":control-group inEurope:show outsideEurope:hide"}}>
+                <li {{bindAttr class=":control-group inEurope:show:hide"}}>
                     <ul>
                         {% bb_component 'bb-text-field' label=_("IBAN") name='account iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("The IBAN code") %}
 
@@ -48,7 +48,7 @@
                     </ul>
                 </li>
 
-                <li {{bindAttr class=":control-group outsideEurope:show inEurope:hide"}}>
+                <li {{bindAttr class=":control-group inEurope:hide:show"}}>
                     <ul>
                         {% bb_component 'bb-text-field' label=_("Account Number") name='account number' valueBinding='account_number' errorsBinding='errors.account_number' maxlength=255 placeholder=_("Can be found on your bank statement") %}
 

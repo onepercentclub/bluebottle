@@ -285,6 +285,10 @@ App.MyProjectListController = Em.ArrayController.extend({
 App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser', 'myProjectOrganisation'],
 
+    // A way to automate things in the frontend, not yet used
+//	tabs: ['MyProjectStart', 'MyProjectPitch', 'MyProjectStory',
+//           'MyProjectOrganisation', 'MyProjectSubmit'],
+
     // Create a one way binding so that changes in the MyProject controller don't alter the value in
     // the MyProjectOrganization controller. This way the MyProjectOrganization controller is in 
     // control of the value
@@ -381,8 +385,17 @@ App.MyProjectStoryController = App.StandardTabController.extend({
 });
 
 App.MyProjectSubmitController = App.StandardTabController.extend({
-    needs: ['myProjectOrganisation'],
+    needs: ['myProjectOrganisation', 'myProject'],
     previousStep: 'myProject.organisation',
+
+    // to automate things check the projectController
+//	tabControllersBinding: function () {
+//		var tabs = this.get('controllers.myProject.tabs');
+//
+//		return tabs.map( function (tab) {
+//			return App.__container__.lookup('controller:' + tab);
+//		});
+//	}.property(),
 
     validSubmit: function () {
         return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');

@@ -223,8 +223,6 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
     friendlyFieldNames: null,
 
-
-
     init: function () {
         this._super();
 

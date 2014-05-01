@@ -127,12 +127,6 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
 
     model: function(params) {
         return this.modelFor('myProject');
-    },
-
-    deactivate: function() {
-        if (!this.skipExitSignal) {
-            this.get('controller').send('goToStep');
-        }
     }
 });
 
@@ -197,12 +191,6 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
             return project.get('organization');
         } else {
             return App.MyOrganization.createRecord();
-        }
-    },
-    
-    deactivate: function() {
-        if (!this.skipExitSignal) {
-            this.get('controller').send('goToStep');
         }
     },
 

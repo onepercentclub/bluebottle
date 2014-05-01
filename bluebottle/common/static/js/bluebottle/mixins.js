@@ -5,28 +5,32 @@
  */
 App.SaveOnExitMixin = Ember.Mixin.create({
     actions : {
-        goToStep: function(step){
+        goToStep: function(step) {
+            if (!step) {
+                throw new Ember.Logger.error('You should not call `goToStep` without a step.', this); 
+            }
+
             $("body").animate({ scrollTop: 0 }, 600);
             var model = this.get('model');
             var controller = this;
 
             if (!model.get('isDirty')) {
-                if (step) controller.transitionToRoute(step);
+                controller.transitionToRoute(step);
             }
 
             if (model.get('isNew')) {
                 model.one('didCreate', function(){
-                    if (step) controller.transitionToRoute(step);
+                    controller.transitionToRoute(step);
                 });
             } else {
                 model.one('didUpdate', function(){
-                    if (step) controller.transitionToRoute(step);
+                    controller.transitionToRoute(step);
                 });
             }
 
             // If there is a flash property on the controller then 
             // reset as we are changing steps now
-            if (this.get('flash') && step)
+            if (this.get('flash'))
                 this.set('flash', null);
 
             // The class using this mixin must have an implementation of _save()

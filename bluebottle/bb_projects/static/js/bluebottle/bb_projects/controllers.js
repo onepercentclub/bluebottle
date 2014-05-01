@@ -284,7 +284,7 @@ App.MyProjectListController = Em.ArrayController.extend({
 
 });
 
-App.MyProjectController = Em.ObjectController.extend({
+App.MyProjectController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     needs: ['currentUser', 'myProjectOrganisation'],
 
     // Create a one way binding so that changes in the MyProject controller don't alter the value in

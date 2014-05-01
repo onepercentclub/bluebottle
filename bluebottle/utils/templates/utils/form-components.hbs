@@ -56,7 +56,7 @@
 
 {% tplhandlebars "components/bb-select-country" %}
     {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view "App.CountrySelectView" selectionBinding='selection' valueBinding='value'}}
+        {{view "App.CountrySelectView" selectionBinding='selection' nameBinding=name valueBinding='value'}}
     {{/bb-form-field}}
 {% endtplhandlebars %}
 

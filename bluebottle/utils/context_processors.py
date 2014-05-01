@@ -34,3 +34,13 @@ def google_maps_api_key(request):
     except AttributeError:
         context = {}
     return context
+
+def git_commit(request):
+    """
+    Make the git commit hash available in the templates.
+    """
+    try:
+        context = {'GIT_COMMIT': settings.GIT_COMMIT}
+    except AttributeError:
+        context = {}
+    return context

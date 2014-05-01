@@ -69,10 +69,6 @@ Please add 5% administration fee to your budget. The total amount, including the
         </legend>
     </fieldset>
 
-    {{#if shouldSave}}
-        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Save & Next" %}</button>
-    {{else}}
-        <button {{bindAttr class=":btn :btn-iconed :btn-next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
-    {{/if}}
+    {{ partial '_my_project_save_edit_footer'}}
 
 {% endtplhandlebars %}

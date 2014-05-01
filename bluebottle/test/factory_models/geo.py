@@ -25,4 +25,3 @@ class CountryFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Country_{0}'.format(n))
     subregion = factory.SubFactory(SubRegionFactory)
-

@@ -15,7 +15,9 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
         return this.get('controllers.projectList');
     }.property(),
 
-    init: function(){
+    init: function() {
+        this._super();
+
         // Make sure this record is in it's own transaction so it will never pollute other commits.
         var transaction = this.get('store').transaction();
         var form =  transaction.createRecord(App.ProjectSearch);

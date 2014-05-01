@@ -106,7 +106,7 @@ tests_require = [
     'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
-    'nose==1.3.0',
+    #'nose==1.3.0',
     'pylint==0.28.0',
     'selenium==2.41.0',
     'South==0.8.1', # Functional testing libraries

@@ -33,7 +33,7 @@ App.SaveOnTransitionRouteMixin = Ember.Mixin.create({
             // Try to save the controllers data and retry transition if save successful
             controller.saveData().then(function (response) {
                 transition.retry();
-            });
+            }, null);
 
             return true;
         }
@@ -68,12 +68,10 @@ App.SaveOnExitMixin = Ember.Mixin.create({
             // The class using this mixin must have an implementation of _save()
             // or use a mixin which includes one, eg App.ControllerObjectSaveMixin
             if (typeof self._save === 'function') {
-                var promise = this;
-
                 self._save().then(function () {
-                    promise.resolve(gettext('Model saved successfully.'));
+                    resolve(gettext('Model saved successfully.'));
                 }, function () {
-                    promise.reject(gettext('Model could not be saved.'));
+                    reject(gettext('Model could not be saved.'));
                 });
             } else {
                 resolve(gettext('Instance does not implement `_save`.'));

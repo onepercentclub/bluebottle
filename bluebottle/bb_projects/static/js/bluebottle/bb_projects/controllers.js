@@ -390,15 +390,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
     needs: ['myProjectOrganisation', 'myProject'],
     previousStep: 'myProject.organisation',
 
-    // to automate things check the projectController
-//	tabControllersBinding: function () {
-//		var tabs = this.get('controllers.myProject.tabs');
-//
-//		return tabs.map( function (tab) {
-//			return App.__container__.lookup('controller:' + tab);
-//		});
-//	}.property(),
-
     validSubmit: function () {
         return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');
     }.property('controllers.myProjectOrganisation.model.isNew', 'model.isNew'),

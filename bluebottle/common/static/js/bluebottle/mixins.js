@@ -1,17 +1,55 @@
 /*
+ Route mixin which will abort transition if the model save fails
+
+ Note: Use route with a controller which has the App.ControllerObjectStatusMixin,
+ or add modelStatus property to the controllers model.
+ */
+
+App.SaveOnTransitionRouteMixin = Ember.Mixin.create({
+    skipExitSignal: true,
+    _transitioning: false,
+
+    deactivate: function() { 
+      this._transitioning = false; 
+    },
+
+    actions: {
+        willTransition: function(transition) {
+            var self = this,
+                controller = self.get('controller');
+              
+            // Don't try to save data if:
+            // 1) it isn't dirty
+            // 2) the route has skipExitSignal set to true
+            // 3) a transition is already in progress
+            if (controller.get('modelStatus') != 'dirty') { return true; }
+            if (this.skipExitSignal) { return true; }
+            if (this._transitioning) { return true; }
+
+            // Create a promise => if successfully then retry transition
+            this._transitioning = true;
+            transition.abort();
+            
+            // Try to save the controllers data and retry transition if save successful
+            controller.saveData().then(function (response) {
+                transition.retry();
+            });
+
+            return true;
+        }
+    }
+ });
+
+/*
  Mixin that controllers with editable models can use. E.g. App.UserProfileController
 
  @see App.UserProfileRoute and App.UserProfileController to see it in action.
  */
 App.SaveOnExitMixin = Ember.Mixin.create({
-    goToStep: function(step) {
+    saveData: function() {
         var self = this;
 
         return new Ember.RSVP.Promise(function(resolve, reject) {
-            if (!step) {
-                reject('You should not call `goToStep` without a step.');
-            }
-
             $("body").animate({ scrollTop: 0 }, 600);
 
             var model = self.get('model'),

@@ -71,14 +71,10 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
         }
     },
 
-    goToStep: function(step){
+    saveData: function(){
         var controller = this;
 
         return new Ember.RSVP.Promise(function(resolve, reject) {
-            if (!step) {
-                reject('You should not call `goToStep` without a step.');
-            }
-
             $("body").animate({ scrollTop: 0 }, 600);
 
             var organization = controller.get('model'),

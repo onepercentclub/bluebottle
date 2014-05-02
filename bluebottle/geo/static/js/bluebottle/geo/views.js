@@ -32,4 +32,4 @@ App.UsedCountrySelectViewMixin = Em.Mixin.create({
             });
         });
     }
-})
+});

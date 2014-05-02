@@ -199,7 +199,7 @@ def bb_component(component, *args, **kwargs):
     for key, value in kwargs.items():
         # trigger translation if we're dealing with Lazy translatable strings
         if isinstance(value, Promise):
-            value = '\'{0}\''.format(force_str(value))
+            value = '\'{0}\''.format(force_str(value).replace("'", "\\'"))
         if key in ('name', 'type') or 'Binding' in key:
             value = '\'{0}\''.format(value)
         bit = '{key}={value}'.format(key=key, value=value)

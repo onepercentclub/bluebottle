@@ -127,6 +127,18 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
 
     model: function(params) {
         return this.modelFor('myProject');
+    },
+
+    actions: {
+        willTransition: function(transition) {
+            if (!this.skipExitSignal) {
+                // Create a promise => if successfully then do nothing, otherwise 
+                // the transition should be aborted
+                this.get('controller').goToStep(transition.targetName).then(null, function() {
+                    transition.abort();
+                });
+            }
+        }
     }
 });
 
@@ -183,7 +195,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = Em.Route.extend({
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
     model: function(params) {
         var project = this.modelFor('myProject');
 

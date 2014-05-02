@@ -34,7 +34,7 @@
                     </div>
                     <ul id="campaign-steps" class="{{#if isPhasePlanNew}} steps {{else}} tabs {{/if}}">
                         {{#if isPhasePlanNew}}
-                            <li class="tab" {{action goToStep "myProject.start"}}>
+                            <li class="tab">
                                 {{#link-to "myProject.start" classBinding=":tab-link :validated"}}
                                     {{#if validStart}}
                                         <span class="flaticon solid checkmark-1 "></span>
@@ -44,7 +44,7 @@
                             </li>
                         {{/if}}
 
-                        <li class="tab" {{action goToStep "myProject.pitch"}}>
+                        <li class="tab">
                             {{#link-to "myProject.pitch" classBinding=":tab-link validPitch:validated"}}
                                 {{#if validPitch}}
                                     {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
@@ -53,7 +53,7 @@
                             {{/link-to}}
                         </li>
 
-                        <li class="tab" {{action goToStep "myProject.story"}}>
+                        <li class="tab">
                             {{#link-to "myProject.story" classBinding=":tab-link validStory:validated"}}
                                 {{#if validStory}}
                                     {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
@@ -62,7 +62,7 @@
                             {{/link-to}}
                         </li>
 
-                        <li class="tab" {{action goToStep "myProject.organisation"}}>
+                        <li class="tab">
                             {{#link-to "myProject.organisation" classBinding=":tab-link validOrganization:validated"}}
                                 {{#if validOrganization}}
                                     {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
@@ -72,7 +72,7 @@
                         </li>
 
                         {{#if this.controller.isSubmittable}}
-                            <li class="tab" {{action goToStep "myProject.submit"}}>
+                            <li class="tab">
                                 {{#link-to "myProject.submit" classBinding=":tab-link validSubmit:validated"}}
                                     {{#if validsubmit}}
                                         <span class="flaticon solid checkmark-1"></span>

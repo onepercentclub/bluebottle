@@ -100,7 +100,6 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
             this.set('model.theme', null);
             this.set('model.phase', null);
         }
-
     }
 });
 
@@ -284,7 +283,7 @@ App.MyProjectListController = Em.ArrayController.extend({
 
 });
 
-App.MyProjectController = Em.ObjectController.extend(App.SaveOnExitMixin, {
+App.MyProjectController = Em.ObjectController.extend({
     needs: ['currentUser', 'myProjectOrganisation'],
 
     // Create a one way binding so that changes in the MyProject controller don't alter the value in
@@ -334,7 +333,7 @@ App.MyProjectController = Em.ObjectController.extend(App.SaveOnExitMixin, {
     }.property('myOrganization.validOrganization', 'model.organization.validOrganization')
 });
 
-App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
+App.MyProjectStartController = App.StandardTabController.extend({
     needs: ['currentUser'],
 
     nextStep: 'myProject.pitch'

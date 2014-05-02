@@ -4,63 +4,57 @@
  @see App.UserProfileRoute and App.UserProfileController to see it in action.
  */
 App.SaveOnExitMixin = Ember.Mixin.create({
-    actions : {
-        goToStep: function(step) {
+    goToStep: function(step) {
+        var self = this;
+
+        return new Ember.RSVP.Promise(function(resolve, reject) {
             if (!step) {
-                throw new Ember.Logger.error('You should not call `goToStep` without a step.', this); 
+                reject('You should not call `goToStep` without a step.');
             }
 
             $("body").animate({ scrollTop: 0 }, 600);
-            var model = this.get('model');
-            var controller = this;
+
+            var model = self.get('model'),
+                controller = self;
 
             if (!model.get('isDirty')) {
-                controller.transitionToRoute(step);
-            }
-
-            if (model.get('isNew')) {
-                model.one('didCreate', function(){
-                    controller.transitionToRoute(step);
-                });
-            } else {
-                model.one('didUpdate', function(){
-                    controller.transitionToRoute(step);
-                });
+                resolve(gettext('Model is not dirty.'));
+                return;
             }
 
             // If there is a flash property on the controller then 
             // reset as we are changing steps now
-            if (this.get('flash'))
-                this.set('flash', null);
+            if (self.get('flash'))
+                self.set('flash', null);
 
             // The class using this mixin must have an implementation of _save()
             // or use a mixin which includes one, eg App.ControllerObjectSaveMixin
-            if (typeof this._save === 'function')
-              this._save();
-        },
+            if (typeof self._save === 'function') {
+                var promise = this;
 
-        goToPreviousStep: function(){
-            var step = this.get('previousStep');
-            this.send('goToStep', step);
-        },
+                self._save().then(function () {
+                    promise.resolve(gettext('Model saved successfully.'));
+                }, function () {
+                    promise.reject(gettext('Model could not be saved.'));
+                });
+            } else {
+                resolve(gettext('Instance does not implement `_save`.'));
+            }
+        });
+    },
 
+    actions: {
         goToNextStep: function(){
-            var step = this.get('nextStep');
-            this.send('goToStep', step);
-        },
-
-        goToNextNoSave: function(){
             if (this.get('nextStep')){
                 this.transitionToRoute(this.get('nextStep'));
             }
         },
 
-        goToPreviousNoSave: function(){
+        goToPreviousStep: function(){
             if (this.get('previousStep')){
                 this.transitionToRoute(this.get('previousStep'));
             }
         }
-
     }
 });
 
@@ -104,23 +98,49 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
     },
 
     _save: function () {
-        var self = this,
-            model = this.get('model');        
+        var self = this;
 
-        if (this.get('flash'))
-            this.set('flash', null);
+        return new Ember.RSVP.Promise(function(resolve, reject) {
+            var model = self.get('model'),
+                saveEvent = model.get('isNew') ? 'didCreate' : 'didUpdate',
+                timer;        
 
-        model.one('didUpdate', function () {
-            self._setFlash('success', gettext('Successfully saved'));
+            if (self.get('flash'))
+                self.set('flash', null);
+
+            model.one(saveEvent, function() {
+                var message = gettext('Successfully saved.');
+                self._setFlash('success', message);
+                clearTimeout(timer);
+                resolve(message);
+            });
+
+            model.one('becameInvalid', function () {
+                clearTimeout(timer);
+                reject(gettext('Model is invalid.'));
+            });
+
+            model.one('didError', function () {
+                clearTimeout(timer);
+                reject(gettext('Error saving model.'));
+            });
+
+            if (model) {
+                model.set('errors', {});
+                model.save();
+            }
+
+            // TODO: ugly hack until we start using Ember Data 1.0+ with it's
+            //       save/find... thenable niceties
+            timer = setTimeout( function () {
+                // should never get here - didCreate, becameInvalid etc events should be triggered.
+                reject(gettext('Hey! What are you doing here? Saving model failed.'));
+            }, 10 * 1000);
         });
-
-        if (model) {
-          model.set('errors', {});
-          model.save();
-        }
     },
 
     actions: {
+        // TODO: can we remove this action? 
         saveAndRedirect: function () {
             var model = this.get('model');
             

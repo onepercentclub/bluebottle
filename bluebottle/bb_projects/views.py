@@ -31,6 +31,8 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
             qs = qs.order_by('title')
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
+        elif ordering:
+            qs = qs.order_by(ordering)
 
         country = self.request.QUERY_PARAMS.get('country', None)
         if country:

@@ -110,7 +110,7 @@ App.MyProjectIndexRoute = Em.Route.extend({
 });
 
 
-App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
+App.MyProjectSubRoute = Em.Route.extend(App.SaveOnTransitionRouteMixin, App.ScrollToTop, {
     skipExitSignal: false,
 
     redirect: function() {
@@ -127,12 +127,6 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
 
     model: function(params) {
         return this.modelFor('myProject');
-    },
-
-    deactivate: function() {
-        if (!this.skipExitSignal) {
-            this.get('controller').send('goToStep');
-        }
     }
 });
 
@@ -160,10 +154,7 @@ App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
-
 App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
-
-
 App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
 
     setupController: function(controller, model) {
@@ -189,7 +180,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = Em.Route.extend({
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
     model: function(params) {
         var project = this.modelFor('myProject');
 
@@ -197,12 +188,6 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
             return project.get('organization');
         } else {
             return App.MyOrganization.createRecord();
-        }
-    },
-    
-    deactivate: function() {
-        if (!this.skipExitSignal) {
-            this.get('controller').send('goToStep');
         }
     },
 

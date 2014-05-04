@@ -100,7 +100,6 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
             this.set('model.theme', null);
             this.set('model.phase', null);
         }
-
     }
 });
 
@@ -338,7 +337,7 @@ App.MyProjectController = Em.ObjectController.extend({
     }.property('myOrganization.validOrganization', 'model.organization.validOrganization')
 });
 
-App.MyProjectStartController = Em.ObjectController.extend(App.MoveOnMixin, {
+App.MyProjectStartController = App.StandardTabController.extend({
     needs: ['currentUser'],
 
     nextStep: 'myProject.pitch'

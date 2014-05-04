@@ -1,62 +1,96 @@
 /*
+ Route mixin which will abort transition if the model save fails
+
+ Note: Use route with a controller which has the App.ControllerObjectStatusMixin,
+ or add modelStatus property to the controllers model.
+ */
+
+App.SaveOnTransitionRouteMixin = Ember.Mixin.create({
+    skipExitSignal: true,
+    _transitioning: false,
+
+    deactivate: function() { 
+      this._transitioning = false; 
+    },
+
+    actions: {
+        willTransition: function(transition) {
+            var self = this,
+                controller = self.get('controller');
+              
+            // Don't try to save data if:
+            // 1) it isn't dirty
+            // 2) the route has skipExitSignal set to true
+            // 3) a transition is already in progress
+            if (controller.get('modelStatus') != 'dirty') { return true; }
+            if (this.skipExitSignal) { return true; }
+            if (this._transitioning) { return true; }
+
+            // Create a promise => if successfully then retry transition
+            this._transitioning = true;
+            transition.abort();
+            
+            // Try to save the controllers data and retry transition if save successful
+            controller.saveData().then(function (response) {
+                transition.retry();
+            }, null);
+
+            return true;
+        }
+    }
+ });
+
+/*
  Mixin that controllers with editable models can use. E.g. App.UserProfileController
 
  @see App.UserProfileRoute and App.UserProfileController to see it in action.
  */
 App.SaveOnExitMixin = Ember.Mixin.create({
-    actions : {
-        goToStep: function(step){
+    saveData: function() {
+        var self = this;
+
+        return new Ember.RSVP.Promise(function(resolve, reject) {
             $("body").animate({ scrollTop: 0 }, 600);
-            var model = this.get('model');
-            var controller = this;
+
+            var model = self.get('model'),
+                controller = self;
 
             if (!model.get('isDirty')) {
-                if (step) controller.transitionToRoute(step);
-            }
-
-            if (model.get('isNew')) {
-                model.one('didCreate', function(){
-                    if (step) controller.transitionToRoute(step);
-                });
-            } else {
-                model.one('didUpdate', function(){
-                    if (step) controller.transitionToRoute(step);
-                });
+                resolve(gettext('Model is not dirty.'));
+                return;
             }
 
             // If there is a flash property on the controller then 
             // reset as we are changing steps now
-            if (this.get('flash') && step)
-                this.set('flash', null);
+            if (self.get('flash'))
+                self.set('flash', null);
 
             // The class using this mixin must have an implementation of _save()
             // or use a mixin which includes one, eg App.ControllerObjectSaveMixin
-            if (typeof this._save === 'function')
-              this._save();
-        },
+            if (typeof self._save === 'function') {
+                self._save().then(function () {
+                    resolve(gettext('Model saved successfully.'));
+                }, function () {
+                    reject(gettext('Model could not be saved.'));
+                });
+            } else {
+                resolve(gettext('Instance does not implement `_save`.'));
+            }
+        });
+    },
 
-        goToPreviousStep: function(){
-            var step = this.get('previousStep');
-            this.send('goToStep', step);
-        },
-
+    actions: {
         goToNextStep: function(){
-            var step = this.get('nextStep');
-            this.send('goToStep', step);
-        },
-
-        goToNextNoSave: function(){
             if (this.get('nextStep')){
                 this.transitionToRoute(this.get('nextStep'));
             }
         },
 
-        goToPreviousNoSave: function(){
+        goToPreviousStep: function(){
             if (this.get('previousStep')){
                 this.transitionToRoute(this.get('previousStep'));
             }
         }
-
     }
 });
 
@@ -100,23 +134,49 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
     },
 
     _save: function () {
-        var self = this,
-            model = this.get('model');        
+        var self = this;
 
-        if (this.get('flash'))
-            this.set('flash', null);
+        return new Ember.RSVP.Promise(function(resolve, reject) {
+            var model = self.get('model'),
+                saveEvent = model.get('isNew') ? 'didCreate' : 'didUpdate',
+                timer;        
 
-        model.one('didUpdate', function () {
-            self._setFlash('success', gettext('Successfully saved'));
+            if (self.get('flash'))
+                self.set('flash', null);
+
+            model.one(saveEvent, function() {
+                var message = gettext('Successfully saved.');
+                self._setFlash('success', message);
+                clearTimeout(timer);
+                resolve(message);
+            });
+
+            model.one('becameInvalid', function () {
+                clearTimeout(timer);
+                reject(gettext('Model is invalid.'));
+            });
+
+            model.one('didError', function () {
+                clearTimeout(timer);
+                reject(gettext('Error saving model.'));
+            });
+
+            if (model) {
+                model.set('errors', {});
+                model.save();
+            }
+
+            // TODO: ugly hack until we start using Ember Data 1.0+ with it's
+            //       save/find... thenable niceties
+            timer = setTimeout( function () {
+                // should never get here - didCreate, becameInvalid etc events should be triggered.
+                reject(gettext('Hey! What are you doing here? Saving model failed.'));
+            }, 10 * 1000);
         });
-
-        if (model) {
-          model.set('errors', {});
-          model.save();
-        }
     },
 
     actions: {
+        // TODO: can we remove this action? 
         saveAndRedirect: function () {
             var model = this.get('model');
             

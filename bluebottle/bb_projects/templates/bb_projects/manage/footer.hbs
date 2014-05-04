@@ -22,7 +22,6 @@
                 <button {{bindAttr class=":btn :btn-modest :btn-primary :next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
             {{ else }}
                 <button {{bindAttr class=":btn :btn-modest :btn-primary :next modelStatus"}} {{action save}}><span class="flaticon solid right-2"></span>{% trans "Save" %}</button>
-
             {{/if}}
         </div>
     </footer>

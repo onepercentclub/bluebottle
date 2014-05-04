@@ -160,7 +160,6 @@ App.ProjectSearch = DS.Model.extend({
 
 });
 
-
 App.ProjectDonation = DS.Model.extend({
     url: 'bb_projects/donations',
 

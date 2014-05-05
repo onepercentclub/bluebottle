@@ -48,7 +48,9 @@ App = Em.Application.create({
                 locale = 'en';
             }
         }
-
+        App.Page.reopen({
+            url: 'pages/' + language + '/pages'
+        });
         this.setLocale(locale);
         this.initSelectViews();
     },

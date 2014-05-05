@@ -76,18 +76,6 @@ App.ProjectIndexView = Em.View.extend({
 
 /* Form Elements */
 
-App.ProjectOrderList = [
-    {value: 'title', title: gettext("title")},
-    {value: 'money_needed', title: gettext("money needed")},
-    {value: 'deadline', title: gettext("deadline")}
-];
-
-App.ProjectOrderSelectView = Em.Select.extend({
-    content: App.ProjectOrderList,
-    optionValuePath: "content.value",
-    optionLabelPath: "content.title"
-});
-
 App.ProjectPhaseSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",

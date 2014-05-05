@@ -83,11 +83,15 @@ App = Em.Application.create({
         });
 
         App.ProjectPhase.find().then(function(data){
-
-            var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
-
+            var list = [
+                {id: 5, name: gettext("Campaign")},
+                {id: 7, name: gettext("Done - Complete")},
+                {id: 8, name: gettext("Done - Incomplete")},
+            ];
+            // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
+            // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
             App.ProjectPhaseSelectView.reopen({
-            content: list
+                content: list
             });
         });
     },

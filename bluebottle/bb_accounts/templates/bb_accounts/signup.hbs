@@ -4,7 +4,6 @@
 {# Main template, responsible for including the partials #}
 {% block signup_wrapper %}
     {% tplhandlebars "signup" %}
-
         {% block_verbatim signup_container %}
             
             <div class="l-section" id="signup">
@@ -58,7 +57,7 @@
                                     </label>
                     
                                     <div class="controls">
-                                        {{view Em.TextField valueBinding="first_name" placeholder="{% trans "First name" %}"
+                                        {{view Em.TextField valueBinding="first_name" placeholder="{% trans 'First name' %}"
                                         class="inline-prepend" classBinding="errors.first_name.length:error"}}
                     
                                         {{view Em.TextField valueBinding="last_name" placeholder="Surname" 
@@ -76,7 +75,7 @@
                                     </div>
                                     
                                     {{#if errors.email}}
-                                        <divclass="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
+                                        <div class="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
                                     {{/if}}
                                     
                                 </div>
@@ -91,7 +90,7 @@
                                     </div>
                     
                                     {{#if errors.password}}
-                                        <divclass="has-errors">{{#each errors.password}}<p>{{this}}</p>{{/each}}</div>
+                                        <div class="has-errors">{{#each errors.password}}<p>{{this}}</p>{{/each}}</div>
                                     {{/if}}
                                 </div>
                                 

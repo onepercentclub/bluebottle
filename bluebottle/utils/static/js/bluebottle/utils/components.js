@@ -16,6 +16,7 @@ App.BbTextAreaComponent = App.BbFormFieldComponent.extend({
     var el = this.$('textarea.redactor');
     var view = this;
     $(el).redactor({
+        buttons: ['html', 'bold', 'italic', 'deleted', 'unorderedlist', 'orderedlist', 'link', 'horizontalrule'],
         blurCallback: function(e){
             $(el).val(view.$('.redactor').redactor('get'));
             $(el).trigger('change');

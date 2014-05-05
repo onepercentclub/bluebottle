@@ -132,6 +132,7 @@ App.MyProjectSubRoute = Em.Route.extend(App.SaveOnTransitionRouteMixin, App.Scro
 
 App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
     skipExitSignal: true,
+
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -153,16 +154,14 @@ App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
-
     setupController: function(controller, model) {
         this._super(controller, model);
         controller.set('fields', App.ProjectDetailField.find());
     }
 });
-
+App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({skipExitSignal: true});
 
 App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     setupController: function(controller, model){

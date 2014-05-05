@@ -57,7 +57,7 @@ App.Project = DS.Model.extend({
     reach: DS.attr('number'),
 
     // new story field
-    story: DS.attr('string'),
+    story: DS.attr('string', {defaultValue: gettext("<h1>Introductie</h1> <p>Leg uit waar je campagne voor is, vertel iets over bijvoorbeeld het doel van de campagne. Supporters zullen ook benieuwd zijn waar het geld precies voor gebruikt gaat worden.</p></br><h1>Waarom</h1><p>Licht eventueel de grote waarom vragen toe: waarom is deze campagne zo belangrijk? waarom zouden mensen deze campagne moeten supporten?</p><p>We laten je helemaal vrij in het schrijven van je verhaal. Eventueel kun je hier ook nog informatie later aan toevoegen of aanpassen. Let wel op dat je dit niet te veel doet, je verhaal moet altijd concreet, urgent en persoonlijk blijven.</p>")}),
 
     // Location
     country: DS.belongsTo('App.Country'),

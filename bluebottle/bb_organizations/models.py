@@ -10,6 +10,10 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
+from django.db.models import options
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'manage_serializer')
+
 
 class BaseOrganizationMember(models.Model):
     """ Members from a Organization """
@@ -103,6 +107,8 @@ class BaseOrganization(models.Model):
         ordering = ['name']
         verbose_name = _('organization')
         verbose_name_plural = _('organizations')
+        default_serializer = 'bluebottle.bb_organizations.serializers.OrganizationSerializer'
+        manage_serializer = 'bluebottle.bb_organizations.serializers.ManageOrganizationSerializer'
 
     def __unicode__(self):
         return self.name

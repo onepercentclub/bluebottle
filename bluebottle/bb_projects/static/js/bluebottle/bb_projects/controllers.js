@@ -64,10 +64,9 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
             // If the query changes we should jump back to page 1
             this.set('page', 1);
         }
-        if (this.get('model.isDirty') ) {
+        if (this.get('model.isDirty')) {
             var list = this.get('listController');
             var controller = this;
-
             var query = {
                 'page_size': this.get('pageSize'),
                 'page': this.get('page'),
@@ -98,7 +97,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
             this.set('model.text', '');
             this.set('model.country', null);
             this.set('model.theme', null);
-            this.set('model.phase', null);
+            this.set('model.status', null);
         }
 
     }
@@ -109,8 +108,8 @@ App.ProjectController = Em.ObjectController.extend({
     needs: ['projectIndex', 'currentUser'],
 
     isFundable: function(){
-       return (this.get('phase') == 'campaign' && this.get('campaign.money_asked'));
-    }.property('phase', 'campaign'),
+       return (this.get('status') == '5' && this.get('campaign.money_asked'));
+    }.property('status'),
 
     allTags: function() {
         var tags = this.get('plan.tags');
@@ -280,7 +279,7 @@ App.MyProjectListController = Em.ArrayController.extend({
             }
         });
         return can;
-    }.property('model.@each.phase')
+    }.property('model.@each.status')
 
 });
 

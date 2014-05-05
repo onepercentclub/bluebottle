@@ -155,7 +155,7 @@ App.ProjectSearch = DS.Model.extend({
     country: DS.attr('number'),
     theme:  DS.attr('number'),
     ordering: DS.attr('string', {defaultValue: 'popularity'}),
-    phase: DS.attr('string', {defaultValue: 'campaign'}),
+    status: DS.attr('number', {defaultValue: 5}),
     page: DS.attr('number', {defaultValue: 1})
 
 });

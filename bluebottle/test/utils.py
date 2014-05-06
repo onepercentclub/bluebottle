@@ -332,7 +332,7 @@ class SeleniumTestCase(LiveServerTestCase):
         else:
             return False
             
-    def wait_for_element_css(self, selector, timeout=5):
+    def wait_for_element_css(self, selector, timeout=10):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
@@ -341,11 +341,11 @@ class SeleniumTestCase(LiveServerTestCase):
         except TimeoutException:
             return None
 
-    def is_visible(self, selector, timeout=5):
+    def is_visible(self, selector, timeout=10):
         return not self.wait_for_element_css(selector, timeout) is None
 
-    def assert_css(self, selector, wait_time=5):
+    def assert_css(self, selector, wait_time=10):
         return self.assertTrue(self.browser.is_element_present_by_css(selector, wait_time=wait_time) )
 
-    def assert_text(self, text, wait_time=5):
+    def assert_text(self, text, wait_time=10):
         return self.assertTrue(self.browser.is_text_present(text, wait_time=wait_time) )

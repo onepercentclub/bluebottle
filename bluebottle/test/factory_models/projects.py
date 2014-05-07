@@ -39,19 +39,3 @@ class ProjectFactory(factory.DjangoModelFactory):
     status = factory.SubFactory(ProjectPhaseFactory)
     theme = factory.SubFactory(ProjectThemeFactory)
     country = factory.SubFactory(CountryFactory)
-
-
-# class ProjectDetailFieldFactory(factory.DjangoModelFactory):
-#     FACTORY_FOR = ProjectDetailField
-#
-#     name = factory.Sequence(lambda n: 'Field_{0}'.format(n))
-#     description = 'DetailField factory model'
-#     slug = name
-#     type = 'text'
-
-
-# class ProjectBudgetLineFactory(factory.DjangoModelFactory):
-#     FACTORY_FOR = ProjectBudgetLine
-#
-#     project = factory.SubFactory(ProjectFactory)
-#     amount = 100000

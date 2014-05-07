@@ -25,6 +25,7 @@ def google_analytics_code(request):
         context ={}
     return context
 
+
 def google_maps_api_key(request):
     """
     Add Google Maps API key from settings file to general request context.
@@ -35,12 +36,26 @@ def google_maps_api_key(request):
         context = {}
     return context
 
+
 def git_commit(request):
     """
     Make the git commit hash available in the templates.
     """
     try:
         context = {'GIT_COMMIT': settings.GIT_COMMIT}
+    except AttributeError:
+        context = {}
+    return context
+
+
+def conf_settings(request):
+    """
+    Some settings we want to make available in templates.
+    """
+    try:
+        context = {'settings': {
+            'DEBUG': settings.DEBUG,
+        }}
     except AttributeError:
         context = {}
     return context

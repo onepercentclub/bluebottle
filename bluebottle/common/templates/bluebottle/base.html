@@ -45,7 +45,7 @@
         var STATIC_URL = '{{ STATIC_URL }}';
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
-        var DEBUG = {{ debug|yesno:"true,false" }};
+        var DEBUG = {{ settings.DEBUG|yesno:"true,false" }};
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
 

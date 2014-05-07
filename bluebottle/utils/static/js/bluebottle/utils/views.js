@@ -69,9 +69,10 @@ App.SocialShareView = Em.View.extend({
     actions: {
         shareOnFacebook: function() {
             var meta_data = this.get('context').get('meta_data');
-            if(meta_data.url){
+            if(meta_data && meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
             } else {
+                console.log('meta data not found');
                 var currentLink = encodeURIComponent(location.href);
             }
             this.showDialog('https://www.facebook.com/sharer/sharer.php?u=', currentLink, 'facebook');

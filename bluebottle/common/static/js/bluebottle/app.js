@@ -233,6 +233,7 @@ App.Store = DS.Store.extend({
     adapter: 'App.Adapter'
 });
 
+
 DS.Model.reopen({
     meta_data: DS.attr('object')
 });

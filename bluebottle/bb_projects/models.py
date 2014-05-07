@@ -125,15 +125,10 @@ class BaseProject(models.Model):
 
         super(BaseProject, self).save(*args, **kwargs)
 
+    @models.permalink
     def get_absolute_url(self):
-        """ Get the URL for the current project. """
-        return reverse('project_detail', kwargs={'slug': self.slug})
-
-    def get_absolute_frontend_url(self):
         """ Insert the hashbang, after the language string """
-        url = self.get_absolute_url()
-        bits = url.split('/')
-        url = '/'.join(bits[:2] + ['#!'] + bits[2:])
+        url = "/#!/projects/{0}".format(self.slug)
 
         return url
 

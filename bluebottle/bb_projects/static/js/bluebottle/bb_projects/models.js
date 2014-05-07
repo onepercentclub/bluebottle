@@ -3,7 +3,7 @@
 App.Adapter.map('App.Project', {
     owner: {embedded: 'load'},
     country: {embedded: 'load'},
-    meta: {embedded: 'load'},
+    meta_data: {embedded: 'load'},
     tags: {embedded: 'load'}
 });
 

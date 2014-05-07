@@ -17,7 +17,6 @@ TASK_MEMBER_MODEL = get_taskmember_model()
 def new_reaction_notification(sender, instance, created, **kwargs):
     task_member = instance
     task = instance.task
-
     site = 'https://' + Site.objects.get_current().domain
 
     # Project Wall Post

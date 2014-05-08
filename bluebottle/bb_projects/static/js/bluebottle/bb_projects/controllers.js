@@ -131,6 +131,7 @@ App.ProjectController = Em.ObjectController.extend({
 
 App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
     counter: 0,
+    hasPdfDownload: true,
 
     storyWithHeaderIds: function() {
         var story = this.get("story");

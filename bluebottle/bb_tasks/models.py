@@ -76,7 +76,7 @@ class BaseTask(models.Model):
 
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
-        in_progress = ChoiceItem('in progress', label=_('In progress'))
+        in_progress = ChoiceItem('in progress', label=_('Running'))
         closed = ChoiceItem('closed', label=_('Closed'))
         realized = ChoiceItem('realized', label=_('Completed'))
 

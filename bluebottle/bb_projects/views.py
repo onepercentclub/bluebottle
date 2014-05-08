@@ -20,8 +20,8 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     max_paginate_by = 100
 
     def get_queryset(self):
-        qs = PROJECT_MODEL.objects.filter(status__viewable=True)
 
+        qs = PROJECT_MODEL.objects.filter(status__viewable=True)
         # For some reason the query fails if the country filter is defined before this.
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
 

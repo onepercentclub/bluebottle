@@ -29,7 +29,7 @@ App.Adapter.map('App.WallPostReaction', {
 App.WallPostPhoto = DS.Model.extend({
     url: 'wallposts/photos',
     photo: DS.attr('image'),
-    mediawallpost: DS.belongsTo('App.MediaWallPost'),	
+    mediawallpost: DS.belongsTo('App.MediaWallPost')
 });
 
 // This is union of all different wallposts.

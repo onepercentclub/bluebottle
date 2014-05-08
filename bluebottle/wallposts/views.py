@@ -37,7 +37,7 @@ class WallPostList(ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
-
+        import
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(PROJECT_MODEL)
         else:

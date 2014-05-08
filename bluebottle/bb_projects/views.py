@@ -21,9 +21,9 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
 
     def get_queryset(self):
         qs = PROJECT_MODEL.objects.filter(status__viewable=True)
-
         # For some reason the query fails if the country filter is defined before this.
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
+
 
         if ordering == 'newest':
             qs = qs.order_by('-created')
@@ -31,6 +31,8 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
             qs = qs.order_by('title')
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
+        elif ordering == 'popularity':
+            qs = qs.order_by('-popularity')
         elif ordering:
             qs = qs.order_by(ordering)
 

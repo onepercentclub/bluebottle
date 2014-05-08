@@ -30,9 +30,9 @@
 				{% if 'fund' in bb_apps %}
 				{% block_verbatim "project_preview_funding" %}
                 {{#if isPhaseCampaign}}
-                    {{#if campaign.money_asked}}
+                    {{#if campaign.amount_asked}}
                         <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
-                        <span class="project-fund-amount"><strong>&euro;{{localize campaign.money_needed}}</strong> <em>{% trans "To go" %}</em></span>
+                        <span class="project-fund-amount"><strong>&euro;{{localize campaign.amount_needed}}</strong> <em>{% trans "To go" %}</em></span>
                     {{/if}}
                     {{#if campaign.deadline }}
                         <span class="project-days-left"><span class="flaticon solid clock-1"></span> <strong>{{campaign.daysToGo}}</strong> <em>{% trans "days" %}</em></span>

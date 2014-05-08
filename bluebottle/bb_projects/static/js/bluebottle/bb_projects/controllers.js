@@ -52,9 +52,6 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
     orderedByNewest: function(){
         return (this.get('ordering') == 'newest');
     }.property('ordering'),
-    orderedByNeeded: function(){
-        return (this.get('ordering') == 'money_needed');
-    }.property('ordering'),
     orderedByDeadline: function(){
         return (this.get('ordering') == 'deadline');
     }.property('ordering'),
@@ -131,6 +128,7 @@ App.ProjectController = Em.ObjectController.extend({
 
 App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
     counter: 0,
+    hasPdfDownload: true,
 
     storyWithHeaderIds: function() {
         var story = this.get("story");

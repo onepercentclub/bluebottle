@@ -14,3 +14,8 @@ App.NewsView = Em.View.extend({
 App.NewsItemView = Em.View.extend({
     templateName: 'news_item'
 });
+
+
+App.NewsPreviewListView = Em.View.extend({
+    templateName: 'news_preview_list'
+});

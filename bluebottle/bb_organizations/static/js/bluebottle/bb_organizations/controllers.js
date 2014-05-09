@@ -136,13 +136,29 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
 
 App.MyProjectBankController = App.StandardTabController.extend({
     needs: ['myProject'],
-    
+
+	init: function () {
+		this._super();
+		if (this.get('model.validNotEuropeanBankOrganization')){
+			this.set('inEurope', false);
+		} else {
+			this.set('inEurope', true);
+		}
+	},
     previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
 
     isPhasePlanNew: function () {
         return this.get('controllers.myProject.model.isPhasePlanNew');
     }.property('controllers.myProject.model.isPhasePlanNew'),
+
+	setInEurope: function () {
+		if (this.get('model.validEuropeanBankOrganization')){
+			this.set('inEurope', true);
+		} else if (this.get('model.validNotEuropeanBankOrganization')){
+			this.set('inEurope', false);
+		}
+	}.observes('model.validBankAccountInfo'),
 
     actions: {
       showInEurope: function(event) {

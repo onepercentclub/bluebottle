@@ -173,8 +173,7 @@ App.MyProjectAmbassadorsView = Em.View.extend({
 });
 
 App.MyProjectBankView = Em.View.extend(Em.TargetActionSupport, {
-    templateName: 'my_project_bank',
-
+    templateName: 'my_project_bank'
 });
 
 App.MyProjectBudgetView = Em.View.extend({

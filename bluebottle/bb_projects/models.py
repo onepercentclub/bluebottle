@@ -1,3 +1,4 @@
+from django.db.models.query_utils import Q
 from taggit.managers import TaggableManager
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -63,6 +64,50 @@ class ProjectPhase(models.Model):
         super(ProjectPhase, self).save(*args, **kwargs)
 
 
+class BaseProjectManager(models.Manager):
+
+    def search(self, query):
+        qs = super(BaseProjectManager, self).get_query_set()
+
+        # Apply filters
+        status = query.get('status', None)
+        if status:
+            qs = qs.filter(status_id=status)
+
+        country = query.get('country', None)
+        if country:
+            qs = qs.filter(country=country)
+
+        theme = query.get('theme', None)
+        if theme:
+            qs = qs.filter(theme_id=theme)
+
+        text = query.get('text', None)
+        if text:
+            qs = qs.filter(Q(title__icontains=text) |
+                           Q(pitch__icontains=text) |
+                           Q(description__icontains=text))
+
+        ordering = query.get('ordering', None)
+
+        if ordering == 'deadline':
+            qs = self.get_query_set()
+            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = qs.order_by('deadline')
+            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+        elif ordering == 'newest':
+            qs = self.get_query_set()
+            qs = qs.order_by('amount_needed')
+            qs = qs.filter(amount_needed__gt=0)
+            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+        elif ordering:
+            print 'ordering'
+            print ordering
+            qs = qs.order_by(ordering)
+
+        return qs
+
+
 class BaseProject(models.Model):
     """ The base Project model. """
     owner = models.ForeignKey(
@@ -99,6 +144,8 @@ class BaseProject(models.Model):
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
+
+    objects = BaseProjectManager()
 
     class Meta:
         abstract = True

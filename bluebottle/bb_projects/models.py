@@ -67,7 +67,7 @@ class ProjectPhase(models.Model):
 class BaseProjectManager(models.Manager):
 
     def search(self, query):
-        qs = qs = super(BaseProjectManager, self).get_query_set()
+        qs = super(BaseProjectManager, self).get_query_set()
 
         # Apply filters
         status = query.get('status', None)

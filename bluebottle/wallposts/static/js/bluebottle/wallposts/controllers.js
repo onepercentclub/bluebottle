@@ -59,7 +59,7 @@ App.TextWallPostNewController = Em.ObjectController.extend({
     },
     actions: {
         saveWallPost: function() {
-			var parent_type = this.get('parentType')
+            var parent_type = this.get('parentType')
             var wallPost = this.get('model');
             wallPost.set('parent_id', this.get('parentId'));
             wallPost.set('parent_type', parent_type);

@@ -8,9 +8,6 @@ App.WallRouteMixin = Em.Mixin.create({
         // Only reload wall-posts if switched to another project.
         var parentType = this.get('parentType');
         var parent = this.modelFor(parentType);
-		if (parentType == "fundRaiser") {
-			parentType = "fund raiser";
-		}
         var parentId = parent.id;
 
         if (controller.get('parentId') != parentId){

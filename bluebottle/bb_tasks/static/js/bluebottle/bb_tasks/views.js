@@ -94,7 +94,7 @@ App.TaskDeadLineDatePicker = App.DatePicker.extend({
 App.TaskStatusList = [
     {value: 'open', title: "open"},
     {value: 'in progress', title: "running"},
-    {value: 'realized', title: "realized"}
+    {value: 'realized', title: "realised"}
 ];
 
 App.TaskStatusSelectView = Em.Select.extend({

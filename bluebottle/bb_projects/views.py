@@ -20,7 +20,8 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     max_paginate_by = 100
 
     def get_queryset(self):
-        qs = PROJECT_MODEL.objects.search(query=self.request.QUERY_PARAMS)
+        query = self.request.QUERY_PARAMS
+        qs = PROJECT_MODEL.objects.search(query=query)
         return qs.filter(status__viewable=True).all()
 
 

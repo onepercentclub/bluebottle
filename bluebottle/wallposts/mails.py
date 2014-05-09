@@ -64,7 +64,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
        if post_author != project_owner:
            send_mail(
                template_name='project_wallpost_new.mail',
-               subject=_('%(author)s has left a message on your project page.') % {'author': post_author.first_name},
+               subject=_('%(author)s has left a message on your project page.') % {'author': post_author.full_name},
                to=project_owner,
                project=project,
                link='/go/projects/{0}'.format(project.slug),
@@ -80,7 +80,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
 
        # Compose the mail
        translation.activate(receiver.primary_language)
-       subject = _('%(author)s has left a message on your task page.') % {'author': author.first_name}
+       subject = _('%(author)s has left a message on your task page.') % {'author': author.full_name}
        context = Context({'task': task, 'receiver': receiver, 'author': author, 'link': link, 'site': site})
        text_content = get_template('task_wallpost_new.mail.txt').render(context)
        html_content = get_template('task_wallpost_new.mail.html').render(context)
@@ -127,7 +127,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if reaction_author not in mailed_users and post_author:
                send_mail(
                    template_name='project_wallpost_reaction_new.mail',
-                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
                    to=post_author,
 
                    project=project,
@@ -141,7 +141,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if project_owner not in mailed_users:
                send_mail(
                    template_name='project_wallpost_reaction_project.mail',
-                   subject=_('%(author)s commented on your project page.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your project page.') % {'author': reaction_author.full_name},
                    to=project_owner,
                    author=reaction_author
                )
@@ -177,7 +177,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if reaction_author not in mailed_users and post_author:
                send_mail(
                    template_name='task_wallpost_reaction_new.mail',
-                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
                    to=post_author,
 
                    project=task,
@@ -191,7 +191,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if task_author not in mailed_users:
                send_mail(
                    template_name='task_wallpost_reaction_task.mail',
-                   subject=_('%(author)s commented on your task page.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your task page.') % {'author': reaction_author.full_name},
                    to=task_author,
                    author=reaction_author
                )

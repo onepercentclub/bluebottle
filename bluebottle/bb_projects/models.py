@@ -88,24 +88,24 @@ class BaseProjectManager(models.Manager):
                            Q(pitch__icontains=text) |
                            Q(description__icontains=text))
 
-        ordering = query.get('ordering', None)
+        return self._ordering(query.get('ordering', None), qs)
+
+    def _ordering(self, ordering, queryset):
 
         if ordering == 'deadline':
-            qs = self.get_query_set()
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = queryset.filter(status=ProjectPhase.objects.get(slug="campaign"))
             qs = qs.order_by('deadline')
             qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
         elif ordering == 'newest':
-            qs = self.get_query_set()
-            qs = qs.order_by('amount_needed')
+            qs = queryset.order_by('amount_needed')
             qs = qs.filter(amount_needed__gt=0)
             qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
         elif ordering:
-            print 'ordering'
-            print ordering
-            qs = qs.order_by(ordering)
+            qs = queryset.order_by(ordering)
 
         return qs
+
+
 
 
 class BaseProject(models.Model):

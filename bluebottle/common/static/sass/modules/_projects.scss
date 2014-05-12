@@ -551,11 +551,7 @@
 }
 
 
-// new project plan
-// #project-plan-modal {
-// 	top: 50%;
-// 	left: 50%;
-// }
+// Project plan
 #project-plan {
 
     position: relative;  
@@ -593,7 +589,9 @@
 			
 		.project-plan-title {
 			position: relative;
+			margin-left: 1em;
 			padding: $base-padding;
+			
 			h4 {
 				color: $color-secondary;
 			}

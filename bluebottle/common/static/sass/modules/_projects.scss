@@ -457,6 +457,7 @@
                 text-transform: uppercase;
 				margin-top: 0;
                 padding: 0;
+                font-size: $base-font-size;
                 color: $projects-project-list-listitem-project-title-color;
             }
             
@@ -480,6 +481,8 @@
 
         .fund-amount, .project-actions {
             @include grid(16);
+            text-align: right;
+            color: $gray-light;
         }
         
         .project-actions {

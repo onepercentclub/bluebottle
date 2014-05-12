@@ -106,12 +106,13 @@
 }
 
 .modal-header {
+    background-color: $modal-header-bg-color;
     
     .modal-title, h3 {
         font-size: $font-size-larger;
         color: $modal-header-color;
-        background-color: $modal-header-bg-color;
     }
+    
 }
 
 .modal-body {

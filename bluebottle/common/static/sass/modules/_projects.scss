@@ -168,8 +168,9 @@
 }
     
 .fund-amount {
-    color: $projects-project-fund-amount-color;
+    color: $gray-light;
     text-transform: uppercase;
+    text-align: right;
 }
 
 //
@@ -437,7 +438,7 @@
 		border-left: 1px solid $projects-project-list-listitem-border-left-right-color;
 		border-right: 1px solid $projects-project-list-listitem-border-left-right-color;
         border-bottom: 1px solid $projects-project-list-listitem-border-bottom-color;
-		background-color: $projects-project-list-listitem-bg-color;
+		//background-color: $projects-project-list-listitem-bg-color;
         
         .project-header {
             @include grid(32,1,1);
@@ -457,7 +458,9 @@
                 text-transform: uppercase;
 				margin-top: 0;
                 padding: 0;
+                font-size: $base-font-size;
                 color: $projects-project-list-listitem-project-title-color;
+                font-size: 1em; 
             }
             
             .fundraiser-subtitle {
@@ -480,6 +483,8 @@
 
         .fund-amount, .project-actions {
             @include grid(16);
+            text-align: right;
+            color: $gray-light;
         }
         
         .project-actions {
@@ -551,11 +556,7 @@
 }
 
 
-// new project plan
-// #project-plan-modal {
-// 	top: 50%;
-// 	left: 50%;
-// }
+// Project plan
 #project-plan {
 
     position: relative;  
@@ -593,7 +594,9 @@
 			
 		.project-plan-title {
 			position: relative;
+			margin-left: 1em;
 			padding: $base-padding;
+			
 			h4 {
 				color: $color-secondary;
 			}

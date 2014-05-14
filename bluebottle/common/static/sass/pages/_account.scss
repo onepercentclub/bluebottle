@@ -341,10 +341,10 @@
         }
 	}
 	.account-preview {
-		@include grid(14,1,1);
+		@include grid(10,1,1);
 		color: $gray;
 		//TODO: remove second float
-        float: none;
+        //float: none;
         margin-top: $base-margin*2;
 		font-size: $font-size-small;
 		text-align: right;

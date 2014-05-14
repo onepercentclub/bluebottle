@@ -4807,7 +4807,7 @@ table td td {
   overflow: hidden;
   background-color: #e9e9e9;
 }
-/* line 96, ../sass/modules/_projects.scss */
+/* line 95, ../sass/modules/_projects.scss */
 .project-fund-amount-slider .slider-progress {
   position: relative;
   display: block;
@@ -4819,24 +4819,24 @@ table td td {
   line-height: 1em;
   height: 1em;
 }
-/* line 107, ../sass/modules/_projects.scss */
+/* line 106, ../sass/modules/_projects.scss */
 .project-fund-amount-slider .slider-progress .slider {
   padding: 0 0.5em;
   font-style: normal;
 }
-/* line 112, ../sass/modules/_projects.scss */
+/* line 111, ../sass/modules/_projects.scss */
 .project-fund-amount-slider .slider-progress .slider-percentage {
   visibility: hidden;
 }
 
-/* line 118, ../sass/modules/_projects.scss */
+/* line 117, ../sass/modules/_projects.scss */
 .fund-amount-control {
   float: right;
   margin-top: 1em;
   background: #003580;
   text-transform: uppercase;
 }
-/* line 124, ../sass/modules/_projects.scss */
+/* line 123, ../sass/modules/_projects.scss */
 .fund-amount-control label {
   float: left;
   width: 33.33333%;
@@ -4848,7 +4848,7 @@ table td td {
   line-height: 1em;
   text-align: center;
 }
-/* line 133, ../sass/modules/_projects.scss */
+/* line 132, ../sass/modules/_projects.scss */
 .fund-amount-control .currency {
   float: left;
   width: 66.66667%;
@@ -4859,7 +4859,7 @@ table td td {
   font-family: "Futura W01 Bold", "Trebuchet MS", Helvetica, Arial, sans-serif;
   color: #444444;
 }
-/* line 140, ../sass/modules/_projects.scss */
+/* line 139, ../sass/modules/_projects.scss */
 .fund-amount-control .currency em {
   position: absolute;
   display: block;
@@ -4871,7 +4871,7 @@ table td td {
   padding: 0.5em 0.33333em;
   font-style: normal;
 }
-/* line 152, ../sass/modules/_projects.scss */
+/* line 151, ../sass/modules/_projects.scss */
 .fund-amount-control .currency .fund-amount-input {
   font-size: 1.75em;
   text-align: right;
@@ -4879,7 +4879,7 @@ table td td {
   font-family: "Futura W01 Bold", "Trebuchet MS", Helvetica, Arial, sans-serif;
 }
 
-/* line 161, ../sass/modules/_projects.scss */
+/* line 160, ../sass/modules/_projects.scss */
 .divided-amount {
   height: 54px;
   line-height: 54px;
@@ -4887,14 +4887,14 @@ table td td {
   font-weight: 600;
 }
 
-/* line 170, ../sass/modules/_projects.scss */
+/* line 169, ../sass/modules/_projects.scss */
 .fund-amount {
   color: #cccccc;
   text-transform: uppercase;
   text-align: right;
 }
 
-/* line 180, ../sass/modules/_projects.scss */
+/* line 179, ../sass/modules/_projects.scss */
 .project-item {
   display: block;
   position: relative;
@@ -4905,20 +4905,20 @@ table td td {
   height: 260px;
   border: 1px solid #999999;
 }
-/* line 190, ../sass/modules/_projects.scss */
+/* line 189, ../sass/modules/_projects.scss */
 .project-item.project-item-small {
   height: 230px;
 }
-/* line 194, ../sass/modules/_projects.scss */
+/* line 193, ../sass/modules/_projects.scss */
 .project-item:hover {
   border-color: black;
 }
-/* line 198, ../sass/modules/_projects.scss */
+/* line 197, ../sass/modules/_projects.scss */
 .project-item a {
   display: block;
   text-decoration: none;
 }
-/* line 203, ../sass/modules/_projects.scss */
+/* line 202, ../sass/modules/_projects.scss */
 .project-item a:before {
   content: '';
   position: absolute;
@@ -4927,7 +4927,7 @@ table td td {
   bottom: 0;
   left: 0;
 }
-/* line 213, ../sass/modules/_projects.scss */
+/* line 212, ../sass/modules/_projects.scss */
 .project-item .project-header {
   display: block;
   position: relative;
@@ -4939,7 +4939,7 @@ table td td {
   -o-transition: all 0.2s ease-out;
   transition: all 0.2s ease-out;
 }
-/* line 221, ../sass/modules/_projects.scss */
+/* line 220, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title {
   z-index: 11;
   width: 100%;
@@ -4950,21 +4950,21 @@ table td td {
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
 }
-/* line 231, ../sass/modules/_projects.scss */
+/* line 230, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title h3 {
   font-size: 1em;
   color: white;
   padding: 0;
   margin: 0;
 }
-/* line 238, ../sass/modules/_projects.scss */
+/* line 237, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title .project-location {
   font-size: 0.875em;
   text-transform: none;
   padding: 0;
   margin: 0;
 }
-/* line 246, ../sass/modules/_projects.scss */
+/* line 245, ../sass/modules/_projects.scss */
 .project-item .project-header .project-image {
   position: relative;
   display: block;
@@ -4972,7 +4972,7 @@ table td td {
   height: 160px;
   text-align: center;
 }
-/* line 253, ../sass/modules/_projects.scss */
+/* line 252, ../sass/modules/_projects.scss */
 .project-item .project-header .project-image img {
   background-position: center;
   background-size: contain;
@@ -4981,7 +4981,7 @@ table td td {
   left: 0;
   width: 100%;
 }
-/* line 265, ../sass/modules/_projects.scss */
+/* line 264, ../sass/modules/_projects.scss */
 .project-item .project-status {
   height: 100px;
   padding: 0 1em;
@@ -4989,29 +4989,29 @@ table td td {
   display: block;
   color: #444444;
 }
-/* line 272, ../sass/modules/_projects.scss */
+/* line 271, ../sass/modules/_projects.scss */
 .project-item .project-status .project-fund-amount-slider {
   background-color: white;
 }
-/* line 276, ../sass/modules/_projects.scss */
+/* line 275, ../sass/modules/_projects.scss */
 .project-item .project-status .project-fund-amount {
   font-size: 0.75em;
   float: left;
 }
-/* line 281, ../sass/modules/_projects.scss */
+/* line 280, ../sass/modules/_projects.scss */
 .project-item .project-status .project-days-left {
   font-size: 0.75em;
   float: right;
   width: auto;
 }
-/* line 287, ../sass/modules/_projects.scss */
+/* line 286, ../sass/modules/_projects.scss */
 .project-item .project-status .project-phase {
   display: block;
   padding: 1em 0;
   text-align: center;
   text-transform: uppercase;
 }
-/* line 293, ../sass/modules/_projects.scss */
+/* line 292, ../sass/modules/_projects.scss */
 .project-item .project-status .project-phase em {
   font-style: normal;
 }
@@ -5028,14 +5028,14 @@ table td td {
 .project-item .project-meta {
   *zoom: 1;
 }
-/* line 301, ../sass/modules/_projects.scss */
+/* line 300, ../sass/modules/_projects.scss */
 .project-item .project-meta .project-location, .project-item .project-meta .project-deadline, .project-item .project-meta .project-theme {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 306, ../sass/modules/_projects.scss */
+/* line 305, ../sass/modules/_projects.scss */
 .project-item .project-description {
   display: none;
   font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
@@ -5050,7 +5050,7 @@ table td td {
   overflow: hidden;
   z-index: 100;
 }
-/* line 320, ../sass/modules/_projects.scss */
+/* line 319, ../sass/modules/_projects.scss */
 .project-item .project-description .project-view {
   position: absolute;
   display: block;
@@ -5062,7 +5062,7 @@ table td td {
   text-transform: uppercase;
   padding: 0.5em 1em;
 }
-/* line 333, ../sass/modules/_projects.scss */
+/* line 332, ../sass/modules/_projects.scss */
 .project-item .project-tasks {
   display: block;
   position: absolute;
@@ -5076,26 +5076,26 @@ table td td {
   color: #999999;
   font-size: 0.75em;
 }
-/* line 346, ../sass/modules/_projects.scss */
+/* line 345, ../sass/modules/_projects.scss */
 .project-item .project-tasks strong {
   color: #444444;
   font-weight: bold;
   font-style: normal;
 }
-/* line 352, ../sass/modules/_projects.scss */
+/* line 351, ../sass/modules/_projects.scss */
 .project-item .project-tasks em {
   font-style: normal;
 }
-/* line 356, ../sass/modules/_projects.scss */
+/* line 355, ../sass/modules/_projects.scss */
 .project-item .project-tasks:hover, .project-item .project-tasks:active {
   color: #444444;
 }
 
-/* line 372, ../sass/modules/_projects.scss */
+/* line 371, ../sass/modules/_projects.scss */
 .project-slider {
   background-color: white;
 }
-/* line 375, ../sass/modules/_projects.scss */
+/* line 374, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev, .project-slider .project-slider-next {
   position: absolute;
   text-indent: -119988px;
@@ -5115,12 +5115,12 @@ table td td {
   cursor: pointer;
   background-color: #e9e9e9;
 }
-/* line 388, ../sass/modules/_projects.scss */
+/* line 387, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev:hover, .project-slider .project-slider-next:hover {
   background-color: #0896ff;
   color: white;
 }
-/* line 394, ../sass/modules/_projects.scss */
+/* line 393, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev {
   margin-left: 2.08333%;
   left: 0;
@@ -5128,7 +5128,7 @@ table td td {
   background-position: 10px -2195px;
   background-repeat: no-repeat;
 }
-/* line 402, ../sass/modules/_projects.scss */
+/* line 401, ../sass/modules/_projects.scss */
 .project-slider .project-slider-next {
   margin-right: 2.08333%;
   right: 0;
@@ -5136,14 +5136,14 @@ table td td {
   background-repeat: no-repeat;
   background-position: 12px -2255px;
 }
-/* line 409, ../sass/modules/_projects.scss */
+/* line 408, ../sass/modules/_projects.scss */
 .project-slider .project-image {
   float: left;
   width: 41.66667%;
   margin-left: 8.33333%;
   margin-right: 0%;
 }
-/* line 412, ../sass/modules/_projects.scss */
+/* line 411, ../sass/modules/_projects.scss */
 .project-slider .project-info {
   float: left;
   width: 41.66667%;
@@ -5151,13 +5151,13 @@ table td td {
   margin-right: 8.33333%;
 }
 
-/* line 422, ../sass/modules/_projects.scss */
+/* line 421, ../sass/modules/_projects.scss */
 .project-list {
   list-style: none;
   background-color: white;
   margin: 1em 0;
 }
-/* line 428, ../sass/modules/_projects.scss */
+/* line 427, ../sass/modules/_projects.scss */
 .project-list .project-list-item {
   padding-left: 0;
   text-indent: 0;
@@ -5225,7 +5225,7 @@ table td td {
 .project-list .project-list-item:hover .manage-delete {
   display: block;
 }
-/* line 443, ../sass/modules/_projects.scss */
+/* line 442, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header {
   float: left;
   width: 62.5%;
@@ -5233,7 +5233,7 @@ table td td {
   margin-right: 2.08333%;
   text-decoration: none;
 }
-/* line 447, ../sass/modules/_projects.scss */
+/* line 446, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-image {
   float: left;
   width: 22.91667%;
@@ -5241,18 +5241,18 @@ table td td {
   margin-right: 2.08333%;
   float: left;
 }
-/* line 451, ../sass/modules/_projects.scss */
+/* line 450, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-info {
   float: left;
   width: 75%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 453, ../sass/modules/_projects.scss */
+/* line 452, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-info a {
   text-decoration: none;
 }
-/* line 457, ../sass/modules/_projects.scss */
+/* line 456, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-title, .project-list .project-list-item .project-header .fundraiser-title {
   text-transform: uppercase;
   margin-top: 0;
@@ -5261,23 +5261,23 @@ table td td {
   color: #444444;
   font-size: 1em;
 }
-/* line 466, ../sass/modules/_projects.scss */
+/* line 465, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .fundraiser-subtitle {
   font-family: "Futura W01 Book", "Trebuchet MS", Helvetica, Arial, sans-serif;
   color: #999999;
   font-size: 0.875em;
 }
-/* line 471, ../sass/modules/_projects.scss */
+/* line 470, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .fundraiser-subtitle em {
   font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
 }
-/* line 476, ../sass/modules/_projects.scss */
+/* line 475, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-location, .project-list .project-list-item .project-header .project-status, .project-list .project-list-item .project-header .project-preview {
   margin-top: 0.5em;
   color: #999999;
   display: block;
 }
-/* line 484, ../sass/modules/_projects.scss */
+/* line 483, ../sass/modules/_projects.scss */
 .project-list .project-list-item .fund-amount, .project-list .project-list-item .project-actions {
   float: left;
   width: 33.33333%;
@@ -5286,39 +5286,39 @@ table td td {
   text-align: right;
   color: #cccccc;
 }
-/* line 490, ../sass/modules/_projects.scss */
+/* line 489, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-actions {
   color: #999999;
 }
-/* line 493, ../sass/modules/_projects.scss */
+/* line 492, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-actions .btn-link {
   padding: 0.25em;
   width: 100%;
   text-align: left;
 }
-/* line 500, ../sass/modules/_projects.scss */
+/* line 499, ../sass/modules/_projects.scss */
 .project-list .project-list-item .fund-amount-divided {
   padding: 0.5em;
   font-size: 1.75em;
 }
-/* line 505, ../sass/modules/_projects.scss */
+/* line 504, ../sass/modules/_projects.scss */
 .project-list .project-list-item:hover, .project-list .project-list-item.is-highlighted {
   border-color: #e9e9e9 !important;
 }
-/* line 508, ../sass/modules/_projects.scss */
+/* line 507, ../sass/modules/_projects.scss */
 .project-list .project-list-item:hover .project-header h2, .project-list .project-list-item.is-highlighted .project-header h2 {
   color: #0896ff !important;
 }
-/* line 513, ../sass/modules/_projects.scss */
+/* line 512, ../sass/modules/_projects.scss */
 .project-list .project-list-item:first-of-type {
   border-top: 1px solid white;
 }
-/* line 517, ../sass/modules/_projects.scss */
+/* line 516, ../sass/modules/_projects.scss */
 .project-list .project-list-item:last-of-type {
   border-bottom-color: white;
 }
 
-/* line 526, ../sass/modules/_projects.scss */
+/* line 525, ../sass/modules/_projects.scss */
 .task-list .task {
   border: 1px solid #cccccc;
   background-color: #666666;
@@ -5327,7 +5327,7 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 533, ../sass/modules/_projects.scss */
+/* line 532, ../sass/modules/_projects.scss */
 .task-list .task .task-status {
   float: left;
   width: 25%;
@@ -5337,7 +5337,7 @@ table td td {
   color: #666666;
   text-transform: uppercase;
 }
-/* line 540, ../sass/modules/_projects.scss */
+/* line 539, ../sass/modules/_projects.scss */
 .task-list .task .task-content {
   float: left;
   width: 75%;
@@ -5345,18 +5345,18 @@ table td td {
   margin-right: 0%;
   color: #cccccc;
 }
-/* line 544, ../sass/modules/_projects.scss */
+/* line 543, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-name {
   color: white;
 }
-/* line 548, ../sass/modules/_projects.scss */
+/* line 547, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-time-needed {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 551, ../sass/modules/_projects.scss */
+/* line 550, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-time-deadline {
   float: left;
   width: 33.33333%;
@@ -5364,7 +5364,7 @@ table td td {
   margin-right: 0%;
 }
 
-/* line 560, ../sass/modules/_projects.scss */
+/* line 559, ../sass/modules/_projects.scss */
 #project-plan {
   position: relative;
   width: 100%;
@@ -5372,7 +5372,7 @@ table td td {
   overflow: hidden;
   background-color: #e9e9e9;
 }
-/* line 568, ../sass/modules/_projects.scss */
+/* line 567, ../sass/modules/_projects.scss */
 #project-plan header {
   margin-top: 2em;
   float: left;
@@ -5380,22 +5380,22 @@ table td td {
   margin-left: 2.08333%;
   margin-right: 2.08333%;
 }
-/* line 573, ../sass/modules/_projects.scss */
+/* line 572, ../sass/modules/_projects.scss */
 #project-plan article {
   margin-bottom: 1em;
   clear: none !important;
 }
-/* line 577, ../sass/modules/_projects.scss */
+/* line 576, ../sass/modules/_projects.scss */
 #project-plan article br {
   content: " " !important;
   display: block !important;
   margin-bottom: 1.5em !important;
 }
-/* line 583, ../sass/modules/_projects.scss */
+/* line 582, ../sass/modules/_projects.scss */
 #project-plan article img {
   width: 100%;
 }
-/* line 587, ../sass/modules/_projects.scss */
+/* line 586, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation {
   float: left;
   width: 25%;
@@ -5405,17 +5405,17 @@ table td td {
   min-height: 100%;
   background-color: #e9e9e9;
 }
-/* line 595, ../sass/modules/_projects.scss */
+/* line 594, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title {
   position: relative;
   margin-left: 1em;
   padding: 1em;
 }
-/* line 600, ../sass/modules/_projects.scss */
+/* line 599, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title h4 {
   color: #003580;
 }
-/* line 603, ../sass/modules/_projects.scss */
+/* line 602, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title:after {
   left: 100%;
   top: 60px;
@@ -5430,11 +5430,11 @@ table td td {
   margin-top: -10px;
   z-index: 10;
 }
-/* line 618, ../sass/modules/_projects.scss */
+/* line 617, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links {
   padding: 1em 0;
 }
-/* line 620, ../sass/modules/_projects.scss */
+/* line 619, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li {
   padding-left: 0;
   text-indent: 0;
@@ -5448,18 +5448,18 @@ table td td {
 #project-plan .project-plan-navigation .project-plan-navigation-links li li {
   list-style: none;
 }
-/* line 623, ../sass/modules/_projects.scss */
+/* line 622, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li a {
   display: block;
   text-decoration: none;
   padding: 0.5em 2em;
   color: #666666;
 }
-/* line 628, ../sass/modules/_projects.scss */
+/* line 627, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li a.active {
   background: white;
 }
-/* line 633, ../sass/modules/_projects.scss */
+/* line 632, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf {
   margin-top: 2em;
 }
@@ -5476,7 +5476,7 @@ table td td {
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf {
   *zoom: 1;
 }
-/* line 636, ../sass/modules/_projects.scss */
+/* line 635, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf a {
   border: 2px solid #cccccc;
   padding: 0.5em 1em;
@@ -5484,7 +5484,7 @@ table td td {
   text-decoration: none;
   float: right;
 }
-/* line 647, ../sass/modules/_projects.scss */
+/* line 646, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container {
   position: relative;
   *zoom: 1;
@@ -5509,7 +5509,7 @@ table td td {
 #project-plan .project-plan-main-container:after {
   clear: both;
 }
-/* line 654, ../sass/modules/_projects.scss */
+/* line 653, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main {
   position: relative;
   padding: 0 2em;
@@ -5518,20 +5518,20 @@ table td td {
   overflow-x: hidden;
   color: #444444;
 }
-/* line 661, ../sass/modules/_projects.scss */
+/* line 660, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main p {
   text-align: justify;
 }
-/* line 665, ../sass/modules/_projects.scss */
+/* line 664, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main h3:first-of-type {
   font-size: 1.75em;
   margin-top: 0;
 }
-/* line 670, ../sass/modules/_projects.scss */
+/* line 669, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main h1, #project-plan .project-plan-main-container .project-plan-main h2, #project-plan .project-plan-main-container .project-plan-main h3, #project-plan .project-plan-main-container .project-plan-main h4, #project-plan .project-plan-main-container .project-plan-main h5, #project-plan .project-plan-main-container .project-plan-main h6 {
   color: #0896ff;
 }
-/* line 674, ../sass/modules/_projects.scss */
+/* line 673, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-back-link {
   position: absolute;
   top: 10px;
@@ -5539,14 +5539,14 @@ table td td {
   text-decoration: none;
   text-transform: uppercase;
 }
-/* line 680, ../sass/modules/_projects.scss */
+/* line 679, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-back-link .flaticon {
   text-align: center;
   vertical-align: middle;
   font-size: 1.75em;
   margin-left: 0.5em;
 }
-/* line 689, ../sass/modules/_projects.scss */
+/* line 688, ../sass/modules/_projects.scss */
 #project-plan .project-plan-map {
   float: left;
   width: 25%;
@@ -5555,15 +5555,15 @@ table td td {
   content: " ";
 }
 
-/* line 697, ../sass/modules/_projects.scss */
+/* line 696, ../sass/modules/_projects.scss */
 #project-dashboard {
   margin-bottom: 6em;
 }
-/* line 700, ../sass/modules/_projects.scss */
+/* line 699, ../sass/modules/_projects.scss */
 #project-dashboard .campaign-header {
   background-color: #e9e9e9;
 }
-/* line 703, ../sass/modules/_projects.scss */
+/* line 702, ../sass/modules/_projects.scss */
 #project-dashboard .campaign-header .page-title {
   float: left;
   width: 95.83333%;

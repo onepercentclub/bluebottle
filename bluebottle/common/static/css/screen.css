@@ -3493,24 +3493,23 @@ textarea[readonly] {
   background: #cccccc !important;
   color: #e9e9e9 !important;
   cursor: default;
-  padding: 0.5em 1em;
 }
-/* line 96, ../sass/base/_buttons.scss */
+/* line 95, ../sass/base/_buttons.scss */
 .btn.disabled .flaticon, .btn.disabled .icon, .btn[disabled] .flaticon, .btn[disabled] .icon, .btn.disabled:hover .flaticon, .btn.disabled:hover .icon, .btn[disabled]:hover .flaticon, .btn[disabled]:hover .icon, .btn.disabled:active .flaticon, .btn.disabled:active .icon, .btn[disabled]:active .flaticon, .btn[disabled]:active .icon {
   background: #bfbfbf !important;
   color: #e9e9e9 !important;
 }
-/* line 103, ../sass/base/_buttons.scss */
+/* line 102, ../sass/base/_buttons.scss */
 .btn:hover {
   border-color: black;
   background-color: #444444;
   color: white;
 }
-/* line 109, ../sass/base/_buttons.scss */
+/* line 108, ../sass/base/_buttons.scss */
 .btn:focus {
   outline: 0;
 }
-/* line 113, ../sass/base/_buttons.scss */
+/* line 112, ../sass/base/_buttons.scss */
 .btn:active {
   top: 0;
   background-color: #222222;
@@ -3519,7 +3518,7 @@ textarea[readonly] {
   border-color: #666666;
   padding: 0.5em 1em 0.25em 1em;
 }
-/* line 123, ../sass/base/_buttons.scss */
+/* line 122, ../sass/base/_buttons.scss */
 .btn:before {
   content: '';
   position: absolute;
@@ -3528,17 +3527,17 @@ textarea[readonly] {
   bottom: 0;
   left: 0;
 }
-/* line 131, ../sass/base/_buttons.scss */
+/* line 130, ../sass/base/_buttons.scss */
 .btn.btn-block {
   width: 100%;
   text-align: center;
 }
 
-/* line 139, ../sass/base/_buttons.scss */
+/* line 138, ../sass/base/_buttons.scss */
 .btn-upload {
   position: relative;
 }
-/* line 142, ../sass/base/_buttons.scss */
+/* line 141, ../sass/base/_buttons.scss */
 .btn-upload input {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
   opacity: 0;
@@ -3552,17 +3551,17 @@ textarea[readonly] {
   width: auto;
 }
 
-/* line 158, ../sass/base/_buttons.scss */
+/* line 157, ../sass/base/_buttons.scss */
 .btn-submit, .btn-next, .btn-save {
   float: right;
 }
 
-/* line 162, ../sass/base/_buttons.scss */
+/* line 161, ../sass/base/_buttons.scss */
 .btn-cancel {
   float: left;
 }
 
-/* line 178, ../sass/base/_buttons.scss */
+/* line 177, ../sass/base/_buttons.scss */
 .btn-login {
   display: inline-block;
   padding: 0.5em 0;
@@ -3571,21 +3570,21 @@ textarea[readonly] {
   text-decoration: none;
   margin: 1em 0;
 }
-/* line 186, ../sass/base/_buttons.scss */
+/* line 185, ../sass/base/_buttons.scss */
 .btn-login .flaticon {
   float: left;
   margin-right: 0.5em;
 }
-/* line 191, ../sass/base/_buttons.scss */
+/* line 190, ../sass/base/_buttons.scss */
 .btn-login strong {
   color: #003580;
 }
-/* line 195, ../sass/base/_buttons.scss */
+/* line 194, ../sass/base/_buttons.scss */
 .btn-login:hover, .btn-login:hover strong {
   color: #0896ff;
 }
 
-/* line 204, ../sass/base/_buttons.scss */
+/* line 203, ../sass/base/_buttons.scss */
 .btn-link {
   display: inline-block;
   font-size: 1.25em;
@@ -3595,11 +3594,11 @@ textarea[readonly] {
   text-decoration: none;
   padding: 0.5em 0;
 }
-/* line 213, ../sass/base/_buttons.scss */
+/* line 212, ../sass/base/_buttons.scss */
 .btn-link .flaticon {
   margin-right: 0.25em;
 }
-/* line 221, ../sass/base/_buttons.scss */
+/* line 220, ../sass/base/_buttons.scss */
 .btn-link:hover, .btn-link:active {
   color: #003580;
 }
@@ -3724,8 +3723,8 @@ textarea[readonly] {
 }
 /* line 95, ../sass/base/_tabs.scss */
 .tabs li.is-active > a, .tabs li > a.active, .tabs li.is-active > span, .tabs li > span.active {
-  background-color: #00c051;
-  border-color: #00c051;
+  background-color: white;
+  border-color: white;
   color: #444444;
 }
 /* line 100, ../sass/base/_tabs.scss */
@@ -3800,16 +3799,16 @@ textarea[readonly] {
 }
 /* line 177, ../sass/base/_tabs.scss */
 .steps li a.active {
-  background-color: #444444;
-  color: #999999;
+  background-color: #00c051;
+  color: white;
 }
 /* line 181, ../sass/base/_tabs.scss */
 .steps li a.active .flaticon {
-  color: #999999;
+  color: white;
 }
 /* line 185, ../sass/base/_tabs.scss */
 .steps li a.active:after {
-  border-left-color: #444444;
+  border-left-color: #00c051;
 }
 /* line 190, ../sass/base/_tabs.scss */
 .steps li a:after, .steps li a:before {
@@ -3956,49 +3955,52 @@ textarea[readonly] {
   color: #666666;
 }
 
-/* line 110, ../sass/base/_modals.scss */
+/* line 108, ../sass/base/_modals.scss */
+.modal-header {
+  background-color: #e9e9e9;
+}
+/* line 111, ../sass/base/_modals.scss */
 .modal-header .modal-title, .modal-header h3 {
   font-size: 1.75em;
   color: #0896ff;
-  background-color: #e9e9e9;
 }
 
-/* line 117, ../sass/base/_modals.scss */
+/* line 118, ../sass/base/_modals.scss */
 .modal-body {
   position: relative;
   overflow-y: auto;
 }
-/* line 123, ../sass/base/_modals.scss */
+/* line 124, ../sass/base/_modals.scss */
 .modal-body form, .modal-body fieldset, .modal-body legend {
   padding: 0;
   margin: 0;
   background: none;
 }
-/* line 129, ../sass/base/_modals.scss */
+/* line 130, ../sass/base/_modals.scss */
 .modal-body .control-label {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 132, ../sass/base/_modals.scss */
+/* line 133, ../sass/base/_modals.scss */
 .modal-body .control-label.wide {
   width: 100% !important;
   margin: 0 !important;
 }
-/* line 138, ../sass/base/_modals.scss */
+/* line 139, ../sass/base/_modals.scss */
 .modal-body .controls {
   float: left;
   width: 66.66667%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 141, ../sass/base/_modals.scss */
+/* line 142, ../sass/base/_modals.scss */
 .modal-body .controls.wide {
   width: 100% !important;
   margin: 0 !important;
 }
-/* line 147, ../sass/base/_modals.scss */
+/* line 148, ../sass/base/_modals.scss */
 .modal-body .has-errors {
   display: block;
   left: auto;
@@ -4009,7 +4011,7 @@ textarea[readonly] {
   right: 0;
 }
 
-/* line 159, ../sass/base/_modals.scss */
+/* line 160, ../sass/base/_modals.scss */
 .modal-footer {
   margin-bottom: 0;
   background-color: #e9e9e9;
@@ -4028,24 +4030,24 @@ textarea[readonly] {
 .modal-footer {
   *zoom: 1;
 }
-/* line 166, ../sass/base/_modals.scss */
+/* line 167, ../sass/base/_modals.scss */
 .modal-footer a:not(.btn) {
   line-height: 3em;
   color: #003580;
 }
-/* line 170, ../sass/base/_modals.scss */
+/* line 171, ../sass/base/_modals.scss */
 .modal-footer a:not(.btn):hover, .modal-footer a:not(.btn):active {
   color: #444444;
 }
-/* line 175, ../sass/base/_modals.scss */
+/* line 176, ../sass/base/_modals.scss */
 .modal-footer .btn {
   float: right;
 }
-/* line 178, ../sass/base/_modals.scss */
+/* line 179, ../sass/base/_modals.scss */
 .modal-footer .btn.btn-primary {
   float: right;
 }
-/* line 182, ../sass/base/_modals.scss */
+/* line 183, ../sass/base/_modals.scss */
 .modal-footer .btn.btn-secondary {
   float: left;
 }
@@ -4887,11 +4889,12 @@ table td td {
 
 /* line 170, ../sass/modules/_projects.scss */
 .fund-amount {
-  color: #666666;
+  color: #cccccc;
   text-transform: uppercase;
+  text-align: right;
 }
 
-/* line 179, ../sass/modules/_projects.scss */
+/* line 180, ../sass/modules/_projects.scss */
 .project-item {
   display: block;
   position: relative;
@@ -4902,20 +4905,20 @@ table td td {
   height: 260px;
   border: 1px solid #999999;
 }
-/* line 189, ../sass/modules/_projects.scss */
+/* line 190, ../sass/modules/_projects.scss */
 .project-item.project-item-small {
   height: 230px;
 }
-/* line 193, ../sass/modules/_projects.scss */
+/* line 194, ../sass/modules/_projects.scss */
 .project-item:hover {
   border-color: black;
 }
-/* line 197, ../sass/modules/_projects.scss */
+/* line 198, ../sass/modules/_projects.scss */
 .project-item a {
   display: block;
   text-decoration: none;
 }
-/* line 202, ../sass/modules/_projects.scss */
+/* line 203, ../sass/modules/_projects.scss */
 .project-item a:before {
   content: '';
   position: absolute;
@@ -4924,7 +4927,7 @@ table td td {
   bottom: 0;
   left: 0;
 }
-/* line 212, ../sass/modules/_projects.scss */
+/* line 213, ../sass/modules/_projects.scss */
 .project-item .project-header {
   display: block;
   position: relative;
@@ -4936,7 +4939,7 @@ table td td {
   -o-transition: all 0.2s ease-out;
   transition: all 0.2s ease-out;
 }
-/* line 220, ../sass/modules/_projects.scss */
+/* line 221, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title {
   z-index: 11;
   width: 100%;
@@ -4947,21 +4950,21 @@ table td td {
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
 }
-/* line 230, ../sass/modules/_projects.scss */
+/* line 231, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title h3 {
   font-size: 1em;
   color: white;
   padding: 0;
   margin: 0;
 }
-/* line 237, ../sass/modules/_projects.scss */
+/* line 238, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title .project-location {
   font-size: 0.875em;
   text-transform: none;
   padding: 0;
   margin: 0;
 }
-/* line 245, ../sass/modules/_projects.scss */
+/* line 246, ../sass/modules/_projects.scss */
 .project-item .project-header .project-image {
   position: relative;
   display: block;
@@ -4969,7 +4972,7 @@ table td td {
   height: 160px;
   text-align: center;
 }
-/* line 252, ../sass/modules/_projects.scss */
+/* line 253, ../sass/modules/_projects.scss */
 .project-item .project-header .project-image img {
   background-position: center;
   background-size: contain;
@@ -4978,7 +4981,7 @@ table td td {
   left: 0;
   width: 100%;
 }
-/* line 264, ../sass/modules/_projects.scss */
+/* line 265, ../sass/modules/_projects.scss */
 .project-item .project-status {
   height: 100px;
   padding: 0 1em;
@@ -4986,29 +4989,29 @@ table td td {
   display: block;
   color: #444444;
 }
-/* line 271, ../sass/modules/_projects.scss */
+/* line 272, ../sass/modules/_projects.scss */
 .project-item .project-status .project-fund-amount-slider {
   background-color: white;
 }
-/* line 275, ../sass/modules/_projects.scss */
+/* line 276, ../sass/modules/_projects.scss */
 .project-item .project-status .project-fund-amount {
   font-size: 0.75em;
   float: left;
 }
-/* line 280, ../sass/modules/_projects.scss */
+/* line 281, ../sass/modules/_projects.scss */
 .project-item .project-status .project-days-left {
   font-size: 0.75em;
   float: right;
   width: auto;
 }
-/* line 286, ../sass/modules/_projects.scss */
+/* line 287, ../sass/modules/_projects.scss */
 .project-item .project-status .project-phase {
   display: block;
   padding: 1em 0;
   text-align: center;
   text-transform: uppercase;
 }
-/* line 292, ../sass/modules/_projects.scss */
+/* line 293, ../sass/modules/_projects.scss */
 .project-item .project-status .project-phase em {
   font-style: normal;
 }
@@ -5025,14 +5028,14 @@ table td td {
 .project-item .project-meta {
   *zoom: 1;
 }
-/* line 300, ../sass/modules/_projects.scss */
+/* line 301, ../sass/modules/_projects.scss */
 .project-item .project-meta .project-location, .project-item .project-meta .project-deadline, .project-item .project-meta .project-theme {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 305, ../sass/modules/_projects.scss */
+/* line 306, ../sass/modules/_projects.scss */
 .project-item .project-description {
   display: none;
   font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
@@ -5047,7 +5050,7 @@ table td td {
   overflow: hidden;
   z-index: 100;
 }
-/* line 319, ../sass/modules/_projects.scss */
+/* line 320, ../sass/modules/_projects.scss */
 .project-item .project-description .project-view {
   position: absolute;
   display: block;
@@ -5059,7 +5062,7 @@ table td td {
   text-transform: uppercase;
   padding: 0.5em 1em;
 }
-/* line 332, ../sass/modules/_projects.scss */
+/* line 333, ../sass/modules/_projects.scss */
 .project-item .project-tasks {
   display: block;
   position: absolute;
@@ -5073,26 +5076,26 @@ table td td {
   color: #999999;
   font-size: 0.75em;
 }
-/* line 345, ../sass/modules/_projects.scss */
+/* line 346, ../sass/modules/_projects.scss */
 .project-item .project-tasks strong {
   color: #444444;
   font-weight: bold;
   font-style: normal;
 }
-/* line 351, ../sass/modules/_projects.scss */
+/* line 352, ../sass/modules/_projects.scss */
 .project-item .project-tasks em {
   font-style: normal;
 }
-/* line 355, ../sass/modules/_projects.scss */
+/* line 356, ../sass/modules/_projects.scss */
 .project-item .project-tasks:hover, .project-item .project-tasks:active {
   color: #444444;
 }
 
-/* line 371, ../sass/modules/_projects.scss */
+/* line 372, ../sass/modules/_projects.scss */
 .project-slider {
   background-color: white;
 }
-/* line 374, ../sass/modules/_projects.scss */
+/* line 375, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev, .project-slider .project-slider-next {
   position: absolute;
   text-indent: -119988px;
@@ -5112,12 +5115,12 @@ table td td {
   cursor: pointer;
   background-color: #e9e9e9;
 }
-/* line 387, ../sass/modules/_projects.scss */
+/* line 388, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev:hover, .project-slider .project-slider-next:hover {
   background-color: #0896ff;
   color: white;
 }
-/* line 393, ../sass/modules/_projects.scss */
+/* line 394, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev {
   margin-left: 2.08333%;
   left: 0;
@@ -5125,7 +5128,7 @@ table td td {
   background-position: 10px -2195px;
   background-repeat: no-repeat;
 }
-/* line 401, ../sass/modules/_projects.scss */
+/* line 402, ../sass/modules/_projects.scss */
 .project-slider .project-slider-next {
   margin-right: 2.08333%;
   right: 0;
@@ -5133,14 +5136,14 @@ table td td {
   background-repeat: no-repeat;
   background-position: 12px -2255px;
 }
-/* line 408, ../sass/modules/_projects.scss */
+/* line 409, ../sass/modules/_projects.scss */
 .project-slider .project-image {
   float: left;
   width: 41.66667%;
   margin-left: 8.33333%;
   margin-right: 0%;
 }
-/* line 411, ../sass/modules/_projects.scss */
+/* line 412, ../sass/modules/_projects.scss */
 .project-slider .project-info {
   float: left;
   width: 41.66667%;
@@ -5148,13 +5151,13 @@ table td td {
   margin-right: 8.33333%;
 }
 
-/* line 421, ../sass/modules/_projects.scss */
+/* line 422, ../sass/modules/_projects.scss */
 .project-list {
   list-style: none;
   background-color: white;
   margin: 1em 0;
 }
-/* line 427, ../sass/modules/_projects.scss */
+/* line 428, ../sass/modules/_projects.scss */
 .project-list .project-list-item {
   padding-left: 0;
   text-indent: 0;
@@ -5172,7 +5175,6 @@ table td td {
   border-left: 1px solid white;
   border-right: 1px solid white;
   border-bottom: 1px solid #e9e9e9;
-  background-color: #e9e9e9;
 }
 /* line 6, ../sass/mixins/_utilities.scss */
 .project-list .project-list-item:after, .project-list .project-list-item:before {
@@ -5223,7 +5225,7 @@ table td td {
 .project-list .project-list-item:hover .manage-delete {
   display: block;
 }
-/* line 442, ../sass/modules/_projects.scss */
+/* line 443, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header {
   float: left;
   width: 62.5%;
@@ -5231,7 +5233,7 @@ table td td {
   margin-right: 2.08333%;
   text-decoration: none;
 }
-/* line 446, ../sass/modules/_projects.scss */
+/* line 447, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-image {
   float: left;
   width: 22.91667%;
@@ -5239,80 +5241,84 @@ table td td {
   margin-right: 2.08333%;
   float: left;
 }
-/* line 450, ../sass/modules/_projects.scss */
+/* line 451, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-info {
   float: left;
   width: 75%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 452, ../sass/modules/_projects.scss */
+/* line 453, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-info a {
   text-decoration: none;
 }
-/* line 456, ../sass/modules/_projects.scss */
+/* line 457, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-title, .project-list .project-list-item .project-header .fundraiser-title {
   text-transform: uppercase;
   margin-top: 0;
   padding: 0;
+  font-size: 1em;
   color: #444444;
+  font-size: 1em;
 }
-/* line 463, ../sass/modules/_projects.scss */
+/* line 466, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .fundraiser-subtitle {
   font-family: "Futura W01 Book", "Trebuchet MS", Helvetica, Arial, sans-serif;
   color: #999999;
   font-size: 0.875em;
 }
-/* line 468, ../sass/modules/_projects.scss */
+/* line 471, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .fundraiser-subtitle em {
   font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
 }
-/* line 473, ../sass/modules/_projects.scss */
+/* line 476, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-location, .project-list .project-list-item .project-header .project-status, .project-list .project-list-item .project-header .project-preview {
   margin-top: 0.5em;
   color: #999999;
   display: block;
 }
-/* line 481, ../sass/modules/_projects.scss */
+/* line 484, ../sass/modules/_projects.scss */
 .project-list .project-list-item .fund-amount, .project-list .project-list-item .project-actions {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
+  text-align: right;
+  color: #cccccc;
 }
-/* line 485, ../sass/modules/_projects.scss */
+/* line 490, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-actions {
   color: #999999;
 }
-/* line 488, ../sass/modules/_projects.scss */
+/* line 493, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-actions .btn-link {
   padding: 0.25em;
   width: 100%;
   text-align: left;
 }
-/* line 495, ../sass/modules/_projects.scss */
+/* line 500, ../sass/modules/_projects.scss */
 .project-list .project-list-item .fund-amount-divided {
   padding: 0.5em;
   font-size: 1.75em;
 }
-/* line 500, ../sass/modules/_projects.scss */
+/* line 505, ../sass/modules/_projects.scss */
 .project-list .project-list-item:hover, .project-list .project-list-item.is-highlighted {
   border-color: #e9e9e9 !important;
 }
-/* line 503, ../sass/modules/_projects.scss */
+/* line 508, ../sass/modules/_projects.scss */
 .project-list .project-list-item:hover .project-header h2, .project-list .project-list-item.is-highlighted .project-header h2 {
   color: #0896ff !important;
 }
-/* line 508, ../sass/modules/_projects.scss */
+/* line 513, ../sass/modules/_projects.scss */
 .project-list .project-list-item:first-of-type {
   border-top: 1px solid white;
 }
-/* line 512, ../sass/modules/_projects.scss */
+/* line 517, ../sass/modules/_projects.scss */
 .project-list .project-list-item:last-of-type {
   border-bottom-color: white;
 }
 
-/* line 521, ../sass/modules/_projects.scss */
+/* line 526, ../sass/modules/_projects.scss */
 .task-list .task {
   border: 1px solid #cccccc;
   background-color: #666666;
@@ -5321,7 +5327,7 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 528, ../sass/modules/_projects.scss */
+/* line 533, ../sass/modules/_projects.scss */
 .task-list .task .task-status {
   float: left;
   width: 25%;
@@ -5331,7 +5337,7 @@ table td td {
   color: #666666;
   text-transform: uppercase;
 }
-/* line 535, ../sass/modules/_projects.scss */
+/* line 540, ../sass/modules/_projects.scss */
 .task-list .task .task-content {
   float: left;
   width: 75%;
@@ -5339,18 +5345,18 @@ table td td {
   margin-right: 0%;
   color: #cccccc;
 }
-/* line 539, ../sass/modules/_projects.scss */
+/* line 544, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-name {
   color: white;
 }
-/* line 543, ../sass/modules/_projects.scss */
+/* line 548, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-time-needed {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 546, ../sass/modules/_projects.scss */
+/* line 551, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-time-deadline {
   float: left;
   width: 33.33333%;
@@ -5358,7 +5364,7 @@ table td td {
   margin-right: 0%;
 }
 
-/* line 559, ../sass/modules/_projects.scss */
+/* line 560, ../sass/modules/_projects.scss */
 #project-plan {
   position: relative;
   width: 100%;
@@ -5366,7 +5372,7 @@ table td td {
   overflow: hidden;
   background-color: #e9e9e9;
 }
-/* line 567, ../sass/modules/_projects.scss */
+/* line 568, ../sass/modules/_projects.scss */
 #project-plan header {
   margin-top: 2em;
   float: left;
@@ -5374,22 +5380,22 @@ table td td {
   margin-left: 2.08333%;
   margin-right: 2.08333%;
 }
-/* line 572, ../sass/modules/_projects.scss */
+/* line 573, ../sass/modules/_projects.scss */
 #project-plan article {
   margin-bottom: 1em;
   clear: none !important;
 }
-/* line 576, ../sass/modules/_projects.scss */
+/* line 577, ../sass/modules/_projects.scss */
 #project-plan article br {
   content: " " !important;
   display: block !important;
   margin-bottom: 1.5em !important;
 }
-/* line 582, ../sass/modules/_projects.scss */
+/* line 583, ../sass/modules/_projects.scss */
 #project-plan article img {
   width: 100%;
 }
-/* line 586, ../sass/modules/_projects.scss */
+/* line 587, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation {
   float: left;
   width: 25%;
@@ -5399,16 +5405,17 @@ table td td {
   min-height: 100%;
   background-color: #e9e9e9;
 }
-/* line 594, ../sass/modules/_projects.scss */
+/* line 595, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title {
   position: relative;
+  margin-left: 1em;
   padding: 1em;
 }
-/* line 597, ../sass/modules/_projects.scss */
+/* line 600, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title h4 {
   color: #003580;
 }
-/* line 600, ../sass/modules/_projects.scss */
+/* line 603, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title:after {
   left: 100%;
   top: 60px;
@@ -5423,11 +5430,11 @@ table td td {
   margin-top: -10px;
   z-index: 10;
 }
-/* line 615, ../sass/modules/_projects.scss */
+/* line 618, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links {
   padding: 1em 0;
 }
-/* line 617, ../sass/modules/_projects.scss */
+/* line 620, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li {
   padding-left: 0;
   text-indent: 0;
@@ -5441,18 +5448,18 @@ table td td {
 #project-plan .project-plan-navigation .project-plan-navigation-links li li {
   list-style: none;
 }
-/* line 620, ../sass/modules/_projects.scss */
+/* line 623, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li a {
   display: block;
   text-decoration: none;
   padding: 0.5em 2em;
   color: #666666;
 }
-/* line 625, ../sass/modules/_projects.scss */
+/* line 628, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li a.active {
   background: white;
 }
-/* line 630, ../sass/modules/_projects.scss */
+/* line 633, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf {
   margin-top: 2em;
 }
@@ -5469,7 +5476,7 @@ table td td {
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf {
   *zoom: 1;
 }
-/* line 633, ../sass/modules/_projects.scss */
+/* line 636, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf a {
   border: 2px solid #cccccc;
   padding: 0.5em 1em;
@@ -5477,7 +5484,7 @@ table td td {
   text-decoration: none;
   float: right;
 }
-/* line 644, ../sass/modules/_projects.scss */
+/* line 647, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container {
   position: relative;
   *zoom: 1;
@@ -5502,7 +5509,7 @@ table td td {
 #project-plan .project-plan-main-container:after {
   clear: both;
 }
-/* line 651, ../sass/modules/_projects.scss */
+/* line 654, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main {
   position: relative;
   padding: 0 2em;
@@ -5511,20 +5518,20 @@ table td td {
   overflow-x: hidden;
   color: #444444;
 }
-/* line 658, ../sass/modules/_projects.scss */
+/* line 661, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main p {
   text-align: justify;
 }
-/* line 662, ../sass/modules/_projects.scss */
+/* line 665, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main h3:first-of-type {
   font-size: 1.75em;
   margin-top: 0;
 }
-/* line 667, ../sass/modules/_projects.scss */
+/* line 670, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main h1, #project-plan .project-plan-main-container .project-plan-main h2, #project-plan .project-plan-main-container .project-plan-main h3, #project-plan .project-plan-main-container .project-plan-main h4, #project-plan .project-plan-main-container .project-plan-main h5, #project-plan .project-plan-main-container .project-plan-main h6 {
   color: #0896ff;
 }
-/* line 671, ../sass/modules/_projects.scss */
+/* line 674, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-back-link {
   position: absolute;
   top: 10px;
@@ -5532,14 +5539,14 @@ table td td {
   text-decoration: none;
   text-transform: uppercase;
 }
-/* line 677, ../sass/modules/_projects.scss */
+/* line 680, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-back-link .flaticon {
   text-align: center;
   vertical-align: middle;
   font-size: 1.75em;
   margin-left: 0.5em;
 }
-/* line 686, ../sass/modules/_projects.scss */
+/* line 689, ../sass/modules/_projects.scss */
 #project-plan .project-plan-map {
   float: left;
   width: 25%;
@@ -5548,15 +5555,15 @@ table td td {
   content: " ";
 }
 
-/* line 694, ../sass/modules/_projects.scss */
+/* line 697, ../sass/modules/_projects.scss */
 #project-dashboard {
   margin-bottom: 6em;
 }
-/* line 697, ../sass/modules/_projects.scss */
+/* line 700, ../sass/modules/_projects.scss */
 #project-dashboard .campaign-header {
   background-color: #e9e9e9;
 }
-/* line 700, ../sass/modules/_projects.scss */
+/* line 703, ../sass/modules/_projects.scss */
 #project-dashboard .campaign-header .page-title {
   float: left;
   width: 95.83333%;
@@ -8005,18 +8012,22 @@ table td td {
   color: white;
 }
 /* line 107, ../sass/pages/_project-detail.scss */
+#project-detail .project-plan-link {
+  color: #003580;
+}
+/* line 111, ../sass/pages/_project-detail.scss */
 #project-detail .project-days-left {
   color: #cccccc;
 }
-/* line 110, ../sass/pages/_project-detail.scss */
+/* line 114, ../sass/pages/_project-detail.scss */
 #project-detail .project-days-left strong {
   color: #e9e9e9;
 }
-/* line 113, ../sass/pages/_project-detail.scss */
+/* line 117, ../sass/pages/_project-detail.scss */
 #project-detail .project-days-left strong em {
   color: #cccccc;
 }
-/* line 119, ../sass/pages/_project-detail.scss */
+/* line 123, ../sass/pages/_project-detail.scss */
 #project-detail .project-deadline-badge {
   padding: 0.5em 0;
   color: white;
@@ -8025,15 +8036,15 @@ table td td {
   margin-left: 2.08333%;
   margin-right: 2.08333%;
 }
-/* line 123, ../sass/pages/_project-detail.scss */
+/* line 127, ../sass/pages/_project-detail.scss */
 #project-detail .project-deadline-badge big {
   font-size: 1.75em;
 }
-/* line 127, ../sass/pages/_project-detail.scss */
+/* line 131, ../sass/pages/_project-detail.scss */
 #project-detail .project-deadline-badge small {
   font-size: 0.75em;
 }
-/* line 130, ../sass/pages/_project-detail.scss */
+/* line 134, ../sass/pages/_project-detail.scss */
 #project-detail .project-deadline-badge .flaticon {
   padding-top: 0.5em;
   display: block;
@@ -8043,7 +8054,7 @@ table td td {
   margin-right: 4.16667%;
   font-size: 2.5em;
 }
-/* line 136, ../sass/pages/_project-detail.scss */
+/* line 140, ../sass/pages/_project-detail.scss */
 #project-detail .project-deadline-badge .text {
   clear: none;
   display: block;
@@ -8052,39 +8063,39 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 143, ../sass/pages/_project-detail.scss */
+/* line 147, ../sass/pages/_project-detail.scss */
 #project-detail .project-fund-amount {
   color: #cccccc;
 }
-/* line 146, ../sass/pages/_project-detail.scss */
+/* line 150, ../sass/pages/_project-detail.scss */
 #project-detail .project-fund-amount .amount-donated {
   color: #f4f4f4;
 }
-/* line 150, ../sass/pages/_project-detail.scss */
+/* line 154, ../sass/pages/_project-detail.scss */
 #project-detail .project-fund-amount strong {
   color: #cccccc;
 }
 
-/* line 156, ../sass/pages/_project-detail.scss */
+/* line 160, ../sass/pages/_project-detail.scss */
 #project-members {
   padding: 1em 0;
   background-color: #444444;
 }
-/* line 160, ../sass/pages/_project-detail.scss */
+/* line 164, ../sass/pages/_project-detail.scss */
 #project-members .task-list {
   float: left;
   width: 47.91667%;
   margin-left: 0%;
   margin-right: 2.08333%;
 }
-/* line 164, ../sass/pages/_project-detail.scss */
+/* line 168, ../sass/pages/_project-detail.scss */
 #project-members .member-list {
   float: left;
   width: 47.91667%;
   margin-left: 2.08333%;
   margin-right: 0%;
 }
-/* line 167, ../sass/pages/_project-detail.scss */
+/* line 171, ../sass/pages/_project-detail.scss */
 #project-members .member-initiator {
   float: left;
   width: 50%;
@@ -8092,12 +8103,12 @@ table td td {
   margin-right: 0%;
 }
 
-/* line 172, ../sass/pages/_project-detail.scss */
+/* line 176, ../sass/pages/_project-detail.scss */
 #project-actions {
   border-top: 1px solid #cccccc;
   background-color: #e9e9e9;
 }
-/* line 176, ../sass/pages/_project-detail.scss */
+/* line 180, ../sass/pages/_project-detail.scss */
 #project-actions .tabs {
   float: left;
   width: 95.83333%;
@@ -8861,6 +8872,28 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
+/* line 22, ../sass/pages/_profile.scss */
+#profile-preview ul.account-achievements {
+  margin: 0;
+}
+
+/* line 29, ../sass/pages/_profile.scss */
+.account-achievements li {
+  font-size: 11px;
+  line-height: 1.5em;
+  padding-left: 85px;
+  height: 75px;
+  color: #444444;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+/* line 38, ../sass/pages/_profile.scss */
+.account-achievements li strong {
+  margin-top: 0.25em;
+  display: block;
+  line-height: 1em;
+  font-size: 25px;
+}
 
 /* line 6, ../sass/pages/_account.scss */
 #project-select {
@@ -8900,76 +8933,66 @@ table td td {
 .account-achievements {
   margin-top: 2em;
 }
-/* line 57, ../sass/pages/_account.scss */
+/* line 56, ../sass/pages/_account.scss */
 .account-achievements li {
   float: left;
   float: left;
   width: 31.25%;
   margin-left: 0%;
   margin-right: 2.08333%;
-  padding-left: 0;
-  text-indent: 0;
-  background-image: none;
-  margin-bottom: 0;
-  margin-top: 0;
-  list-style: none;
   text-transform: uppercase;
   font-size: 0.75em;
 }
-/* line 36, ../sass/mixins/_utilities.scss */
-.account-achievements li li {
-  list-style: none;
-}
-/* line 63, ../sass/pages/_account.scss */
+/* line 61, ../sass/pages/_account.scss */
 .account-achievements li strong {
   font-size: 1.75em;
 }
-/* line 66, ../sass/pages/_account.scss */
+/* line 64, ../sass/pages/_account.scss */
 .account-achievements li .account-achievement-icon {
   float: left;
   margin-right: 1em;
 }
 
-/* line 72, ../sass/pages/_account.scss */
+/* line 70, ../sass/pages/_account.scss */
 .account-header {
   background-color: #e9e9e9;
   padding: 2em 0;
 }
-/* line 77, ../sass/pages/_account.scss */
+/* line 74, ../sass/pages/_account.scss */
 .account-header .account-personal {
   float: left;
-  width: 31.25%;
-  margin-left: 0%;
+  width: 45.83333%;
+  margin-left: 2.08333%;
   margin-right: 2.08333%;
 }
-/* line 83, ../sass/pages/_account.scss */
+/* line 78, ../sass/pages/_account.scss */
 .account-header .account-title {
   margin-top: 1.5em;
   text-transform: none;
   color: #444444;
 }
-/* line 89, ../sass/pages/_account.scss */
+/* line 84, ../sass/pages/_account.scss */
 .account-header .account-edit-link {
   color: #999999;
   text-decoration: none;
 }
-/* line 92, ../sass/pages/_account.scss */
+/* line 88, ../sass/pages/_account.scss */
 .account-header .account-edit-link:hover {
   color: #222222;
 }
-/* line 97, ../sass/pages/_account.scss */
+/* line 93, ../sass/pages/_account.scss */
 .account-header .account-avatar {
   float: left;
-  width: 14.58333%;
+  width: 25%;
   margin-left: 0%;
-  margin-right: 2.08333%;
+  margin-right: 4.16667%;
 }
-/* line 110, ../sass/pages/_account.scss */
+/* line 97, ../sass/pages/_account.scss */
 .account-header .account-achievements {
   float: left;
-  width: 50%;
+  width: 43.75%;
   margin-left: 0%;
-  margin-right: 0%;
+  margin-right: 2.08333%;
   padding-left: 0;
   text-indent: 0;
   background-image: none;
@@ -8982,35 +9005,35 @@ table td td {
   list-style: none;
 }
 
-/* line 117, ../sass/pages/_account.scss */
+/* line 104, ../sass/pages/_account.scss */
 .account-body {
   background-color: white;
   padding: 2em 0;
 }
-/* line 122, ../sass/pages/_account.scss */
+/* line 109, ../sass/pages/_account.scss */
 .account-body .account-info {
   float: left;
-  width: 47.91667%;
-  margin-left: 0%;
+  width: 45.83333%;
+  margin-left: 2.08333%;
   margin-right: 2.08333%;
 }
-/* line 126, ../sass/pages/_account.scss */
+/* line 113, ../sass/pages/_account.scss */
 .account-body .account-info .account-about-header, .account-body .account-info .account-why-header {
   text-transform: none;
 }
-/* line 130, ../sass/pages/_account.scss */
+/* line 117, ../sass/pages/_account.scss */
 .account-body .account-info .account-about-header {
   color: #0896ff;
 }
-/* line 134, ../sass/pages/_account.scss */
+/* line 121, ../sass/pages/_account.scss */
 .account-body .account-details {
   float: left;
-  width: 47.91667%;
+  width: 45.83333%;
   margin-left: 2.08333%;
-  margin-right: 0%;
+  margin-right: 2.08333%;
   margin-top: 4em;
 }
-/* line 139, ../sass/pages/_account.scss */
+/* line 126, ../sass/pages/_account.scss */
 .account-body .account-details dl {
   padding: 0;
   font-size: 1em;
@@ -9029,14 +9052,14 @@ table td td {
 .account-body .account-details dl {
   *zoom: 1;
 }
-/* line 145, ../sass/pages/_account.scss */
+/* line 132, ../sass/pages/_account.scss */
 .account-body .account-details dl > dt, .account-body .account-details dl > dd {
   min-height: 60px;
   margin: 0;
   padding: 1em;
   border-bottom: 1px solid #cccccc;
 }
-/* line 152, ../sass/pages/_account.scss */
+/* line 139, ../sass/pages/_account.scss */
 .account-body .account-details dl > dd {
   float: left;
   width: 66.66667%;
@@ -9044,23 +9067,23 @@ table td td {
   margin-right: 0%;
   text-transform: none;
 }
-/* line 157, ../sass/pages/_account.scss */
+/* line 144, ../sass/pages/_account.scss */
 .account-body .account-details dl > dt {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 160, ../sass/pages/_account.scss */
+/* line 147, ../sass/pages/_account.scss */
 .account-body .account-details dl > dt .flaticon {
   display: inline-block;
   width: 30px;
 }
-/* line 167, ../sass/pages/_account.scss */
+/* line 154, ../sass/pages/_account.scss */
 .account-body .account-links {
   font-size: 0.875em;
 }
-/* line 169, ../sass/pages/_account.scss */
+/* line 156, ../sass/pages/_account.scss */
 .account-body .account-links .account-facebook, .account-body .account-links .account-twitter, .account-body .account-links .account-website {
   float: left;
   width: 31.25%;
@@ -9068,30 +9091,30 @@ table td td {
   margin-right: 2.08333%;
   text-decoration: none;
 }
-/* line 173, ../sass/pages/_account.scss */
+/* line 160, ../sass/pages/_account.scss */
 .account-body .account-links .account-facebook {
   color: #45619d;
 }
-/* line 175, ../sass/pages/_account.scss */
+/* line 162, ../sass/pages/_account.scss */
 .account-body .account-links .account-facebook:hover {
   color: #263556;
 }
-/* line 179, ../sass/pages/_account.scss */
+/* line 166, ../sass/pages/_account.scss */
 .account-body .account-links .account-twitter {
   color: #33b9e2;
 }
-/* line 181, ../sass/pages/_account.scss */
+/* line 168, ../sass/pages/_account.scss */
 .account-body .account-links .account-twitter:hover {
   color: #167a99;
 }
 
-/* line 187, ../sass/pages/_account.scss */
+/* line 174, ../sass/pages/_account.scss */
 .account-statistics {
   background-color: white;
   padding: 2em 0;
   color: #666666;
 }
-/* line 193, ../sass/pages/_account.scss */
+/* line 180, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-header {
   margin-bottom: 1em;
 }
@@ -9108,7 +9131,7 @@ table td td {
 .account-statistics .account-statistics-header {
   *zoom: 1;
 }
-/* line 198, ../sass/pages/_account.scss */
+/* line 185, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-header .account-statistics-header-title {
   color: #0896ff;
   text-transform: none;
@@ -9117,7 +9140,7 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 204, ../sass/pages/_account.scss */
+/* line 191, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-header .account-statistics-header-facets {
   float: left;
   width: 37.5%;
@@ -9126,7 +9149,7 @@ table td td {
   padding: 1em;
   padding-top: 1.5em;
 }
-/* line 210, ../sass/pages/_account.scss */
+/* line 197, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-header .account-statistics-header-map {
   float: left;
   width: 20.83333%;
@@ -9136,48 +9159,48 @@ table td td {
   padding-top: 1.5em;
   text-align: right;
 }
-/* line 216, ../sass/pages/_account.scss */
+/* line 203, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-header a {
   color: #999999;
   text-decoration: none;
   padding: 0 1em;
 }
-/* line 220, ../sass/pages/_account.scss */
+/* line 207, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-header a:hover {
   color: #444444;
 }
-/* line 226, ../sass/pages/_account.scss */
+/* line 213, ../sass/pages/_account.scss */
 .account-statistics table {
   margin-bottom: 2em;
 }
-/* line 231, ../sass/pages/_account.scss */
+/* line 218, ../sass/pages/_account.scss */
 .account-statistics table tr:nth-child(even) {
   background: white;
 }
-/* line 235, ../sass/pages/_account.scss */
+/* line 222, ../sass/pages/_account.scss */
 .account-statistics table tr:nth-child(odd) {
   background: #e9e9e9;
 }
-/* line 239, ../sass/pages/_account.scss */
+/* line 226, ../sass/pages/_account.scss */
 .account-statistics table tr td {
   vertical-align: middle;
   border: none;
 }
-/* line 242, ../sass/pages/_account.scss */
+/* line 229, ../sass/pages/_account.scss */
 .account-statistics table tr td a {
   text-decoration: none;
 }
-/* line 246, ../sass/pages/_account.scss */
+/* line 233, ../sass/pages/_account.scss */
 .account-statistics table tr .account-statistics-image {
   width: 100px;
   padding: 0.25em;
 }
-/* line 253, ../sass/pages/_account.scss */
+/* line 240, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-pagination {
   width: 100%;
   text-align: center;
 }
-/* line 258, ../sass/pages/_account.scss */
+/* line 245, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-pagination a {
   text-transform: uppercase;
   color: #999999;
@@ -9186,26 +9209,26 @@ table td td {
   border: 1px solid #e9e9e9;
   padding: 1em;
 }
-/* line 266, ../sass/pages/_account.scss */
+/* line 253, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-pagination a:hover {
   color: #444444;
   border: 1px solid #444444;
 }
-/* line 271, ../sass/pages/_account.scss */
+/* line 258, ../sass/pages/_account.scss */
 .account-statistics .account-statistics-pagination a strong, .account-statistics .account-statistics-pagination a .flaticon {
   color: #222222;
 }
 
 /* profile preview modal */
-/* line 281, ../sass/pages/_account.scss */
+/* line 268, ../sass/pages/_account.scss */
 #profile-preview .member-name {
   text-transform: none;
 }
-/* line 284, ../sass/pages/_account.scss */
+/* line 271, ../sass/pages/_account.scss */
 #profile-preview .member-since {
   text-transform: uppercase;
 }
-/* line 295, ../sass/pages/_account.scss */
+/* line 282, ../sass/pages/_account.scss */
 #profile-preview .profile-preview-actions {
   background-color: #e9e9e9;
 }
@@ -9222,33 +9245,33 @@ table td td {
 #profile-preview .profile-preview-actions {
   *zoom: 1;
 }
-/* line 301, ../sass/pages/_account.scss */
+/* line 288, ../sass/pages/_account.scss */
 #profile-preview .profile-preview-actions a {
   text-decoration: none;
 }
-/* line 304, ../sass/pages/_account.scss */
+/* line 291, ../sass/pages/_account.scss */
 #profile-preview .profile-preview-actions .close-link {
   float: left;
   color: #999999;
 }
-/* line 308, ../sass/pages/_account.scss */
+/* line 295, ../sass/pages/_account.scss */
 #profile-preview .profile-preview-actions .go-to-profile {
   float: right;
   text-align: right;
   color: #0896ff;
 }
 
-/* line 317, ../sass/pages/_account.scss */
+/* line 304, ../sass/pages/_account.scss */
 #public-profile-page .account-achievements {
-  margin: 2em 0;
+  margin-top: 1em;
 }
 
-/* line 323, ../sass/pages/_account.scss */
+/* line 310, ../sass/pages/_account.scss */
 #account .account-header {
   padding: 1em 0;
   padding-bottom: 0;
 }
-/* line 327, ../sass/pages/_account.scss */
+/* line 314, ../sass/pages/_account.scss */
 #account .account-avatar {
   float: left;
   width: 12.5%;
@@ -9256,11 +9279,11 @@ table td td {
   margin-right: 2.08333%;
   border: none;
 }
-/* line 330, ../sass/pages/_account.scss */
+/* line 317, ../sass/pages/_account.scss */
 #account .account-avatar img {
   display: block;
 }
-/* line 334, ../sass/pages/_account.scss */
+/* line 321, ../sass/pages/_account.scss */
 #account .account-title {
   margin: 0;
   float: left;
@@ -9268,11 +9291,11 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 337, ../sass/pages/_account.scss */
+/* line 324, ../sass/pages/_account.scss */
 #account .account-title h2 {
   margin: none;
 }
-/* line 341, ../sass/pages/_account.scss */
+/* line 328, ../sass/pages/_account.scss */
 #account .account-preview {
   margin-bottom: 2em;
   float: left;
@@ -9281,7 +9304,7 @@ table td td {
   margin-right: 2.08333%;
   text-align: right;
 }
-/* line 346, ../sass/pages/_account.scss */
+/* line 333, ../sass/pages/_account.scss */
 #account .tabs {
   *zoom: 1;
 }
@@ -9299,12 +9322,12 @@ table td td {
   clear: both;
 }
 
-/* line 352, ../sass/pages/_account.scss */
+/* line 339, ../sass/pages/_account.scss */
 #SkypeButton_Call img {
   margin: 0 !important;
   margin-bottom: 1em;
 }
-/* line 357, ../sass/pages/_account.scss */
+/* line 344, ../sass/pages/_account.scss */
 #SkypeButton_Call ul li {
   padding-left: 0;
   text-indent: 0;
@@ -9733,8 +9756,9 @@ form#manage-project-new {
 #campaign-create .missing-steps {
   margin: 0;
   padding: 0;
+  margin-top: 4em;
 }
-/* line 139, ../sass/pages/_campaign-create.scss */
+/* line 140, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li {
   padding-left: 0;
   text-indent: 0;
@@ -9764,59 +9788,48 @@ form#manage-project-new {
 #campaign-create .missing-steps li:after {
   clear: both;
 }
-/* line 145, ../sass/pages/_campaign-create.scss */
-#campaign-create .missing-steps li .category {
-  position: relative;
+/* line 146, ../sass/pages/_campaign-create.scss */
+#campaign-create .missing-steps li .problem {
   float: left;
-  width: 20.83333%;
+  width: 70.83333%;
   margin-left: 0%;
   margin-right: 4.16667%;
 }
 /* line 148, ../sass/pages/_campaign-create.scss */
-#campaign-create .missing-steps li .category:after {
-  content: "\203A";
-  color: #999999;
-  position: absolute;
-  right: 0;
+#campaign-create .missing-steps li .problem a {
+  text-transform: lowercase;
 }
-/* line 155, ../sass/pages/_campaign-create.scss */
-#campaign-create .missing-steps li .details {
-  float: left;
-  width: 50%;
-  margin-left: 0%;
-  margin-right: 0%;
-}
-/* line 158, ../sass/pages/_campaign-create.scss */
+/* line 152, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li .action {
   float: left;
   width: 20.83333%;
   margin-left: 4.16667%;
   margin-right: 0%;
 }
-/* line 160, ../sass/pages/_campaign-create.scss */
+/* line 154, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li .action a {
   color: #5da423;
   text-decoration: none;
 }
-/* line 165, ../sass/pages/_campaign-create.scss */
+/* line 159, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li.introduction {
   color: white;
   background-color: #999999;
   padding: 2em;
 }
-/* line 169, ../sass/pages/_campaign-create.scss */
+/* line 163, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li.introduction strong {
   display: block;
   color: #222222;
 }
-/* line 173, ../sass/pages/_campaign-create.scss */
+/* line 167, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li.introduction h3 {
   margin: 0;
   color: white;
   font-weight: bold;
   text-transform: none;
 }
-/* line 179, ../sass/pages/_campaign-create.scss */
+/* line 173, ../sass/pages/_campaign-create.scss */
 #campaign-create .missing-steps li.introduction .flaticon {
   float: left;
   width: 8.33333%;
@@ -9825,14 +9838,14 @@ form#manage-project-new {
   font-size: 2.5em;
   text-align: center;
 }
-/* line 188, ../sass/pages/_campaign-create.scss */
+/* line 182, ../sass/pages/_campaign-create.scss */
 #campaign-create .in-review {
   padding: 2em;
   background-color: #5da423;
   color: black;
   margin-bottom: 2em;
 }
-/* line 193, ../sass/pages/_campaign-create.scss */
+/* line 187, ../sass/pages/_campaign-create.scss */
 #campaign-create .in-review .flaticon {
   float: left;
   width: 4.16667%;
@@ -9842,14 +9855,14 @@ form#manage-project-new {
   text-align: center;
   color: white;
 }
-/* line 200, ../sass/pages/_campaign-create.scss */
+/* line 194, ../sass/pages/_campaign-create.scss */
 #campaign-create .in-review .in-review-text h3 {
   color: white;
   margin: 0;
   text-transform: none;
   font-weight: bold;
 }
-/* line 208, ../sass/pages/_campaign-create.scss */
+/* line 202, ../sass/pages/_campaign-create.scss */
 #campaign-create .suggestion {
   text-align: center;
 }

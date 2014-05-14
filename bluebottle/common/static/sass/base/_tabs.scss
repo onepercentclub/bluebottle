@@ -23,14 +23,13 @@
 	li {
         //@include grid(12,0,0); default
         @include resetlist;
-        @include grid(9,0,0);
         display: inline;
         position: relative;
         
        	> a, > span {
             //color: $tabs-tabitem-bg-color;
             display: block;
-            //float: left;
+            float: left;
             text-decoration: none;
             //padding: $base-padding $base-padding $base-padding/2 $base-padding;
 			padding: $base-padding ($base-padding*2);
@@ -39,7 +38,7 @@
             color: $gray-light;
 			font-weight: bold;
 			background-color: $gray-lighter;
-			//width: 175px;
+			width: 175px;
 			text-transform: uppercase;
 			
             .tab-icon {

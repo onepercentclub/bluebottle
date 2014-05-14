@@ -75,10 +75,12 @@
     	border: 1px solid $button-primary-border-color; 
 		background-color: $button-primary-bg-color;
 		
+		&.btn-iconed {
 		
-		.flaticon, .icon {
-			background-color: $button-primary-icon-bg-color;
-			color: $button-primary-icon-color;
+			.flaticon, .icon {
+				background-color: $button-primary-icon-bg-color;
+				color: $button-primary-icon-color;
+			}
 		}
 	}
 

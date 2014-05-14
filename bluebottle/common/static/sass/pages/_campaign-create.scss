@@ -19,12 +19,12 @@
 			text-align: right;
 		}
 		
-		.steps {
+		#campaign-steps {
+			padding: 0;
+			font-size: $font-size-small;
 			@include clear;
 			@include grid(48,1,1);
-			margin-bottom: -1px;
 		}
-		
 		// .campaign-preview-button {
 		// 	// @include grid(8,0,1);
 		// }
@@ -110,6 +110,9 @@
     }
 
 	.campaign-budget-breakdown {
+		margin-top: $base-margin;
+		border-top: 1px solid $gray-light;
+		
 		tfoot {
 			color: $gray;
 			td {
@@ -137,20 +140,26 @@
 		margin: 0;
 		padding: 0;
 		margin-top: $base-margin * 4;
+		
 		li {
 			@include resetlist;
 			@include clearfix;
 			padding: $base-padding $base-padding * 2;
 			background: $gray-lighter;
 			border-bottom: 1px solid $white;
-			.problem {
-				@include grid(36,0,2);
+			
+			.category {
+				display: inline;
 				a {
 					text-transform: lowercase;
 				}
 			}
+			.details {
+				display: inline;
+			}
 			.action {
-				@include grid(12,2,0);				
+				display: inline;
+				float: right;			
 				a {
 					color: $color-success;
 					text-decoration: none;

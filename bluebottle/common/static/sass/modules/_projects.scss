@@ -90,7 +90,6 @@
     @include border-radius(1em);
     display: block;
     overflow: hidden;
-    margin: 0 0 $base-margin/2 0;
     background-color: $projects-project-fund-amount-slider-bg-color;
     
     .slider-progress {

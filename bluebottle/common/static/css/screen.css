@@ -3648,6 +3648,10 @@ textarea[readonly] {
   margin-bottom: 0;
   margin-top: 0;
   list-style: none;
+  float: left;
+  width: 18.75%;
+  margin-left: 0%;
+  margin-right: 0%;
   display: inline;
   position: relative;
 }
@@ -3655,10 +3659,9 @@ textarea[readonly] {
 .tabs li li {
   list-style: none;
 }
-/* line 29, ../sass/base/_tabs.scss */
+/* line 30, ../sass/base/_tabs.scss */
 .tabs li > a, .tabs li > span {
   display: block;
-  float: left;
   text-decoration: none;
   padding: 1em 2em;
   margin-right: 0.5em;
@@ -3666,10 +3669,9 @@ textarea[readonly] {
   color: #cccccc;
   font-weight: bold;
   background-color: #e9e9e9;
-  width: 175px;
   text-transform: uppercase;
 }
-/* line 44, ../sass/base/_tabs.scss */
+/* line 45, ../sass/base/_tabs.scss */
 .tabs li > a .tab-icon, .tabs li > span .tab-icon {
   -webkit-transition: all 0.1s ease-out;
   -moz-transition: all 0.1s ease-out;
@@ -3690,29 +3692,29 @@ textarea[readonly] {
   text-align: center;
   color: #f4f4f4;
 }
-/* line 58, ../sass/base/_tabs.scss */
+/* line 59, ../sass/base/_tabs.scss */
 .tabs li > a .tab-title, .tabs li > span .tab-title {
   display: block;
   font-size: 0.875em;
   line-height: 1.3em;
   margin-left: 3em;
 }
-/* line 65, ../sass/base/_tabs.scss */
+/* line 66, ../sass/base/_tabs.scss */
 .tabs li > a .tab-subtitle, .tabs li > span .tab-subtitle {
   display: block;
   font-size: 0.75em;
   font-style: normal;
   font-family: "Futura W01 Book", "Trebuchet MS", Helvetica, Arial, sans-serif;
 }
-/* line 72, ../sass/base/_tabs.scss */
+/* line 73, ../sass/base/_tabs.scss */
 .tabs li > a:hover, .tabs li > span:hover {
   color: #444444;
 }
-/* line 75, ../sass/base/_tabs.scss */
+/* line 76, ../sass/base/_tabs.scss */
 .tabs li > a:hover .tab-icon, .tabs li > span:hover .tab-icon {
   background-color: #444444;
 }
-/* line 81, ../sass/base/_tabs.scss */
+/* line 82, ../sass/base/_tabs.scss */
 .tabs li > a:before, .tabs li > span:before {
   content: '';
   position: absolute;
@@ -3721,32 +3723,32 @@ textarea[readonly] {
   bottom: 0;
   left: 0;
 }
-/* line 95, ../sass/base/_tabs.scss */
+/* line 96, ../sass/base/_tabs.scss */
 .tabs li.is-active > a, .tabs li > a.active, .tabs li.is-active > span, .tabs li > span.active {
   background-color: white;
   border-color: white;
   color: #444444;
 }
-/* line 100, ../sass/base/_tabs.scss */
+/* line 101, ../sass/base/_tabs.scss */
 .tabs li.is-active > a .tab-icon, .tabs li > a.active .tab-icon, .tabs li.is-active > span .tab-icon, .tabs li > span.active .tab-icon {
   background-color: #003580;
   color: white;
 }
-/* line 105, ../sass/base/_tabs.scss */
+/* line 106, ../sass/base/_tabs.scss */
 .tabs li.is-active > a .tab-title, .tabs li > a.active .tab-title, .tabs li.is-active > span .tab-title, .tabs li > span.active .tab-title {
   color: #003580;
 }
-/* line 109, ../sass/base/_tabs.scss */
+/* line 110, ../sass/base/_tabs.scss */
 .tabs li.is-active > a .tab-subtitle, .tabs li > a.active .tab-subtitle, .tabs li.is-active > span .tab-subtitle, .tabs li > span.active .tab-subtitle {
   color: #444444;
 }
 
-/* line 132, ../sass/base/_tabs.scss */
+/* line 133, ../sass/base/_tabs.scss */
 .steps {
   overflow: hidden;
   border-bottom: 1px solid #e9e9e9;
 }
-/* line 136, ../sass/base/_tabs.scss */
+/* line 137, ../sass/base/_tabs.scss */
 .steps li {
   padding-left: 0;
   text-indent: 0;
@@ -3761,7 +3763,7 @@ textarea[readonly] {
 .steps li li {
   list-style: none;
 }
-/* line 141, ../sass/base/_tabs.scss */
+/* line 142, ../sass/base/_tabs.scss */
 .steps li a {
   position: relative;
   background-color: white;
@@ -3773,44 +3775,44 @@ textarea[readonly] {
   display: block;
   width: 33.33333%;
 }
-/* line 153, ../sass/base/_tabs.scss */
+/* line 154, ../sass/base/_tabs.scss */
 .steps li a .flaticon {
   color: #e9e9e9;
   border-radius: 50%;
   padding: 0.5em;
   text-align: center;
 }
-/* line 160, ../sass/base/_tabs.scss */
+/* line 161, ../sass/base/_tabs.scss */
 .steps li a:nth-child(2), .steps li a:last-child {
   margin-left: -8px;
 }
-/* line 164, ../sass/base/_tabs.scss */
+/* line 165, ../sass/base/_tabs.scss */
 .steps li a.validated {
   background-color: #5da423;
   color: white;
 }
-/* line 168, ../sass/base/_tabs.scss */
+/* line 169, ../sass/base/_tabs.scss */
 .steps li a.validated .flaticon {
   color: white;
 }
-/* line 172, ../sass/base/_tabs.scss */
+/* line 173, ../sass/base/_tabs.scss */
 .steps li a.validated:after {
   border-left-color: #5da423;
 }
-/* line 177, ../sass/base/_tabs.scss */
+/* line 178, ../sass/base/_tabs.scss */
 .steps li a.active {
   background-color: #00c051;
   color: white;
 }
-/* line 181, ../sass/base/_tabs.scss */
+/* line 182, ../sass/base/_tabs.scss */
 .steps li a.active .flaticon {
   color: white;
 }
-/* line 185, ../sass/base/_tabs.scss */
+/* line 186, ../sass/base/_tabs.scss */
 .steps li a.active:after {
   border-left-color: #00c051;
 }
-/* line 190, ../sass/base/_tabs.scss */
+/* line 191, ../sass/base/_tabs.scss */
 .steps li a:after, .steps li a:before {
   content: " ";
   left: 100%;
@@ -3825,7 +3827,7 @@ textarea[readonly] {
   margin-top: -28px;
   z-index: 2;
 }
-/* line 205, ../sass/base/_tabs.scss */
+/* line 206, ../sass/base/_tabs.scss */
 .steps li a:before {
   border-left-color: #e9e9e9;
   left: 100%;
@@ -3833,16 +3835,16 @@ textarea[readonly] {
   border-width: 30px;
   margin-top: -30px;
 }
-/* line 215, ../sass/base/_tabs.scss */
+/* line 216, ../sass/base/_tabs.scss */
 .steps li:last-of-type a:after, .steps li:last-of-type a:before {
   display: none;
 }
 
-/* line 224, ../sass/base/_tabs.scss */
+/* line 225, ../sass/base/_tabs.scss */
 .tab-control li.control-group.hide {
   display: none;
 }
-/* line 228, ../sass/base/_tabs.scss */
+/* line 229, ../sass/base/_tabs.scss */
 .tab-control li.control-group.show {
   display: list-item;
 }
@@ -4893,7 +4895,7 @@ table td td {
   text-align: right;
 }
 
-/* line 179, ../sass/modules/_projects.scss */
+/* line 180, ../sass/modules/_projects.scss */
 .project-item {
   display: block;
   position: relative;
@@ -4904,20 +4906,20 @@ table td td {
   height: 260px;
   border: 1px solid #999999;
 }
-/* line 189, ../sass/modules/_projects.scss */
+/* line 190, ../sass/modules/_projects.scss */
 .project-item.project-item-small {
   height: 230px;
 }
-/* line 193, ../sass/modules/_projects.scss */
+/* line 194, ../sass/modules/_projects.scss */
 .project-item:hover {
   border-color: black;
 }
-/* line 197, ../sass/modules/_projects.scss */
+/* line 198, ../sass/modules/_projects.scss */
 .project-item a {
   display: block;
   text-decoration: none;
 }
-/* line 202, ../sass/modules/_projects.scss */
+/* line 203, ../sass/modules/_projects.scss */
 .project-item a:before {
   content: '';
   position: absolute;
@@ -4926,7 +4928,7 @@ table td td {
   bottom: 0;
   left: 0;
 }
-/* line 212, ../sass/modules/_projects.scss */
+/* line 213, ../sass/modules/_projects.scss */
 .project-item .project-header {
   display: block;
   position: relative;
@@ -4938,7 +4940,7 @@ table td td {
   -o-transition: all 0.2s ease-out;
   transition: all 0.2s ease-out;
 }
-/* line 220, ../sass/modules/_projects.scss */
+/* line 221, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title {
   z-index: 11;
   width: 100%;
@@ -4949,21 +4951,21 @@ table td td {
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
 }
-/* line 230, ../sass/modules/_projects.scss */
+/* line 231, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title h3 {
   font-size: 1em;
   color: white;
   padding: 0;
   margin: 0;
 }
-/* line 237, ../sass/modules/_projects.scss */
+/* line 238, ../sass/modules/_projects.scss */
 .project-item .project-header .project-title .project-location {
   font-size: 0.875em;
   text-transform: none;
   padding: 0;
   margin: 0;
 }
-/* line 245, ../sass/modules/_projects.scss */
+/* line 246, ../sass/modules/_projects.scss */
 .project-item .project-header .project-image {
   position: relative;
   display: block;
@@ -4971,7 +4973,7 @@ table td td {
   height: 160px;
   text-align: center;
 }
-/* line 252, ../sass/modules/_projects.scss */
+/* line 253, ../sass/modules/_projects.scss */
 .project-item .project-header .project-image img {
   background-position: center;
   background-size: contain;
@@ -4980,7 +4982,7 @@ table td td {
   left: 0;
   width: 100%;
 }
-/* line 264, ../sass/modules/_projects.scss */
+/* line 265, ../sass/modules/_projects.scss */
 .project-item .project-status {
   height: 100px;
   padding: 0 1em;
@@ -4988,29 +4990,29 @@ table td td {
   display: block;
   color: #444444;
 }
-/* line 271, ../sass/modules/_projects.scss */
+/* line 272, ../sass/modules/_projects.scss */
 .project-item .project-status .project-fund-amount-slider {
   background-color: white;
 }
-/* line 275, ../sass/modules/_projects.scss */
+/* line 276, ../sass/modules/_projects.scss */
 .project-item .project-status .project-fund-amount {
   font-size: 0.75em;
   float: left;
 }
-/* line 280, ../sass/modules/_projects.scss */
+/* line 281, ../sass/modules/_projects.scss */
 .project-item .project-status .project-days-left {
   font-size: 0.75em;
   float: right;
   width: auto;
 }
-/* line 286, ../sass/modules/_projects.scss */
+/* line 287, ../sass/modules/_projects.scss */
 .project-item .project-status .project-phase {
   display: block;
   padding: 1em 0;
   text-align: center;
   text-transform: uppercase;
 }
-/* line 292, ../sass/modules/_projects.scss */
+/* line 293, ../sass/modules/_projects.scss */
 .project-item .project-status .project-phase em {
   font-style: normal;
 }
@@ -5027,14 +5029,14 @@ table td td {
 .project-item .project-meta {
   *zoom: 1;
 }
-/* line 300, ../sass/modules/_projects.scss */
+/* line 301, ../sass/modules/_projects.scss */
 .project-item .project-meta .project-location, .project-item .project-meta .project-deadline, .project-item .project-meta .project-theme {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 305, ../sass/modules/_projects.scss */
+/* line 306, ../sass/modules/_projects.scss */
 .project-item .project-description {
   display: none;
   font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
@@ -5049,7 +5051,7 @@ table td td {
   overflow: hidden;
   z-index: 100;
 }
-/* line 319, ../sass/modules/_projects.scss */
+/* line 320, ../sass/modules/_projects.scss */
 .project-item .project-description .project-view {
   position: absolute;
   display: block;
@@ -5061,7 +5063,7 @@ table td td {
   text-transform: uppercase;
   padding: 0.5em 1em;
 }
-/* line 332, ../sass/modules/_projects.scss */
+/* line 333, ../sass/modules/_projects.scss */
 .project-item .project-tasks {
   display: block;
   position: absolute;
@@ -5075,26 +5077,26 @@ table td td {
   color: #999999;
   font-size: 0.75em;
 }
-/* line 345, ../sass/modules/_projects.scss */
+/* line 346, ../sass/modules/_projects.scss */
 .project-item .project-tasks strong {
   color: #444444;
   font-weight: bold;
   font-style: normal;
 }
-/* line 351, ../sass/modules/_projects.scss */
+/* line 352, ../sass/modules/_projects.scss */
 .project-item .project-tasks em {
   font-style: normal;
 }
-/* line 355, ../sass/modules/_projects.scss */
+/* line 356, ../sass/modules/_projects.scss */
 .project-item .project-tasks:hover, .project-item .project-tasks:active {
   color: #444444;
 }
 
-/* line 371, ../sass/modules/_projects.scss */
+/* line 372, ../sass/modules/_projects.scss */
 .project-slider {
   background-color: white;
 }
-/* line 374, ../sass/modules/_projects.scss */
+/* line 375, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev, .project-slider .project-slider-next {
   position: absolute;
   text-indent: -119988px;
@@ -5114,12 +5116,12 @@ table td td {
   cursor: pointer;
   background-color: #e9e9e9;
 }
-/* line 387, ../sass/modules/_projects.scss */
+/* line 388, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev:hover, .project-slider .project-slider-next:hover {
   background-color: #0896ff;
   color: white;
 }
-/* line 393, ../sass/modules/_projects.scss */
+/* line 394, ../sass/modules/_projects.scss */
 .project-slider .project-slider-prev {
   margin-left: 2.08333%;
   left: 0;
@@ -5127,7 +5129,7 @@ table td td {
   background-position: 10px -2195px;
   background-repeat: no-repeat;
 }
-/* line 401, ../sass/modules/_projects.scss */
+/* line 402, ../sass/modules/_projects.scss */
 .project-slider .project-slider-next {
   margin-right: 2.08333%;
   right: 0;
@@ -5135,14 +5137,14 @@ table td td {
   background-repeat: no-repeat;
   background-position: 12px -2255px;
 }
-/* line 408, ../sass/modules/_projects.scss */
+/* line 409, ../sass/modules/_projects.scss */
 .project-slider .project-image {
   float: left;
   width: 41.66667%;
   margin-left: 8.33333%;
   margin-right: 0%;
 }
-/* line 411, ../sass/modules/_projects.scss */
+/* line 412, ../sass/modules/_projects.scss */
 .project-slider .project-info {
   float: left;
   width: 41.66667%;
@@ -5150,13 +5152,13 @@ table td td {
   margin-right: 8.33333%;
 }
 
-/* line 421, ../sass/modules/_projects.scss */
+/* line 422, ../sass/modules/_projects.scss */
 .project-list {
   list-style: none;
   background-color: white;
   margin: 1em 0;
 }
-/* line 427, ../sass/modules/_projects.scss */
+/* line 428, ../sass/modules/_projects.scss */
 .project-list .project-list-item {
   padding-left: 0;
   text-indent: 0;
@@ -5224,7 +5226,7 @@ table td td {
 .project-list .project-list-item:hover .manage-delete {
   display: block;
 }
-/* line 442, ../sass/modules/_projects.scss */
+/* line 443, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header {
   float: left;
   width: 62.5%;
@@ -5232,7 +5234,7 @@ table td td {
   margin-right: 2.08333%;
   text-decoration: none;
 }
-/* line 446, ../sass/modules/_projects.scss */
+/* line 447, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-image {
   float: left;
   width: 22.91667%;
@@ -5240,18 +5242,18 @@ table td td {
   margin-right: 2.08333%;
   float: left;
 }
-/* line 450, ../sass/modules/_projects.scss */
+/* line 451, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-info {
   float: left;
   width: 75%;
   margin-left: 0%;
   margin-right: 0%;
 }
-/* line 452, ../sass/modules/_projects.scss */
+/* line 453, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-info a {
   text-decoration: none;
 }
-/* line 456, ../sass/modules/_projects.scss */
+/* line 457, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .project-title, .project-list .project-list-item .project-header .fundraiser-title {
   text-transform: uppercase;
   margin-top: 0;
@@ -5260,23 +5262,39 @@ table td td {
   color: #444444;
   font-size: 1em;
 }
+<<<<<<< HEAD
 /* line 465, ../sass/modules/_projects.scss */
+=======
+/* line 466, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .project-list .project-list-item .project-header .fundraiser-subtitle {
   font-family: "Futura W01 Book", "Trebuchet MS", Helvetica, Arial, sans-serif;
   color: #999999;
   font-size: 0.875em;
 }
+<<<<<<< HEAD
 /* line 470, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-header .fundraiser-subtitle em {
   font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
 }
 /* line 475, ../sass/modules/_projects.scss */
+=======
+/* line 471, ../sass/modules/_projects.scss */
+.project-list .project-list-item .project-header .fundraiser-subtitle em {
+  font-family: "Futura W02 Heavy", "Trebuchet MS", Helvetica, Arial, sans-serif;
+}
+/* line 476, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .project-list .project-list-item .project-header .project-location, .project-list .project-list-item .project-header .project-status, .project-list .project-list-item .project-header .project-preview {
   margin-top: 0.5em;
   color: #999999;
   display: block;
 }
+<<<<<<< HEAD
 /* line 483, ../sass/modules/_projects.scss */
+=======
+/* line 484, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .project-list .project-list-item .fund-amount, .project-list .project-list-item .project-actions {
   float: left;
   width: 33.33333%;
@@ -5285,21 +5303,34 @@ table td td {
   text-align: right;
   color: #cccccc;
 }
+<<<<<<< HEAD
 /* line 489, ../sass/modules/_projects.scss */
 .project-list .project-list-item .project-actions {
   color: #999999;
 }
 /* line 492, ../sass/modules/_projects.scss */
+=======
+/* line 490, ../sass/modules/_projects.scss */
+.project-list .project-list-item .project-actions {
+  color: #999999;
+}
+/* line 493, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .project-list .project-list-item .project-actions .btn-link {
   padding: 0.25em;
   width: 100%;
   text-align: left;
 }
+<<<<<<< HEAD
 /* line 499, ../sass/modules/_projects.scss */
+=======
+/* line 500, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .project-list .project-list-item .fund-amount-divided {
   padding: 0.5em;
   font-size: 1.75em;
 }
+<<<<<<< HEAD
 /* line 504, ../sass/modules/_projects.scss */
 .project-list .project-list-item:hover, .project-list .project-list-item.is-highlighted {
   border-color: #e9e9e9 !important;
@@ -5313,11 +5344,30 @@ table td td {
   border-top: 1px solid white;
 }
 /* line 516, ../sass/modules/_projects.scss */
+=======
+/* line 505, ../sass/modules/_projects.scss */
+.project-list .project-list-item:hover, .project-list .project-list-item.is-highlighted {
+  border-color: #e9e9e9 !important;
+}
+/* line 508, ../sass/modules/_projects.scss */
+.project-list .project-list-item:hover .project-header h2, .project-list .project-list-item.is-highlighted .project-header h2 {
+  color: #0896ff !important;
+}
+/* line 513, ../sass/modules/_projects.scss */
+.project-list .project-list-item:first-of-type {
+  border-top: 1px solid white;
+}
+/* line 517, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .project-list .project-list-item:last-of-type {
   border-bottom-color: white;
 }
 
+<<<<<<< HEAD
 /* line 525, ../sass/modules/_projects.scss */
+=======
+/* line 526, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .task-list .task {
   border: 1px solid #cccccc;
   background-color: #666666;
@@ -5326,7 +5376,11 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
+<<<<<<< HEAD
 /* line 532, ../sass/modules/_projects.scss */
+=======
+/* line 533, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .task-list .task .task-status {
   float: left;
   width: 25%;
@@ -5336,7 +5390,11 @@ table td td {
   color: #666666;
   text-transform: uppercase;
 }
+<<<<<<< HEAD
 /* line 539, ../sass/modules/_projects.scss */
+=======
+/* line 540, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .task-list .task .task-content {
   float: left;
   width: 75%;
@@ -5344,18 +5402,30 @@ table td td {
   margin-right: 0%;
   color: #cccccc;
 }
+<<<<<<< HEAD
 /* line 543, ../sass/modules/_projects.scss */
 .task-list .task .task-content .task-name {
   color: white;
 }
 /* line 547, ../sass/modules/_projects.scss */
+=======
+/* line 544, ../sass/modules/_projects.scss */
+.task-list .task .task-content .task-name {
+  color: white;
+}
+/* line 548, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .task-list .task .task-content .task-time-needed {
   float: left;
   width: 33.33333%;
   margin-left: 0%;
   margin-right: 0%;
 }
+<<<<<<< HEAD
 /* line 550, ../sass/modules/_projects.scss */
+=======
+/* line 551, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 .task-list .task .task-content .task-time-deadline {
   float: left;
   width: 33.33333%;
@@ -5363,7 +5433,7 @@ table td td {
   margin-right: 0%;
 }
 
-/* line 559, ../sass/modules/_projects.scss */
+/* line 560, ../sass/modules/_projects.scss */
 #project-plan {
   position: relative;
   width: 100%;
@@ -5371,7 +5441,7 @@ table td td {
   overflow: hidden;
   background-color: #e9e9e9;
 }
-/* line 567, ../sass/modules/_projects.scss */
+/* line 568, ../sass/modules/_projects.scss */
 #project-plan header {
   margin-top: 2em;
   float: left;
@@ -5379,22 +5449,22 @@ table td td {
   margin-left: 2.08333%;
   margin-right: 2.08333%;
 }
-/* line 572, ../sass/modules/_projects.scss */
+/* line 573, ../sass/modules/_projects.scss */
 #project-plan article {
   margin-bottom: 1em;
   clear: none !important;
 }
-/* line 576, ../sass/modules/_projects.scss */
+/* line 577, ../sass/modules/_projects.scss */
 #project-plan article br {
   content: " " !important;
   display: block !important;
   margin-bottom: 1.5em !important;
 }
-/* line 582, ../sass/modules/_projects.scss */
+/* line 583, ../sass/modules/_projects.scss */
 #project-plan article img {
   width: 100%;
 }
-/* line 586, ../sass/modules/_projects.scss */
+/* line 587, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation {
   float: left;
   width: 25%;
@@ -5404,17 +5474,25 @@ table td td {
   min-height: 100%;
   background-color: #e9e9e9;
 }
-/* line 594, ../sass/modules/_projects.scss */
+/* line 595, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title {
   position: relative;
   margin-left: 1em;
   padding: 1em;
 }
+<<<<<<< HEAD
 /* line 599, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-title h4 {
   color: #003580;
 }
 /* line 602, ../sass/modules/_projects.scss */
+=======
+/* line 600, ../sass/modules/_projects.scss */
+#project-plan .project-plan-navigation .project-plan-title h4 {
+  color: #003580;
+}
+/* line 603, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-navigation .project-plan-title:after {
   left: 100%;
   top: 60px;
@@ -5429,11 +5507,19 @@ table td td {
   margin-top: -10px;
   z-index: 10;
 }
+<<<<<<< HEAD
 /* line 617, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links {
   padding: 1em 0;
 }
 /* line 619, ../sass/modules/_projects.scss */
+=======
+/* line 618, ../sass/modules/_projects.scss */
+#project-plan .project-plan-navigation .project-plan-navigation-links {
+  padding: 1em 0;
+}
+/* line 620, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-navigation .project-plan-navigation-links li {
   padding-left: 0;
   text-indent: 0;
@@ -5447,18 +5533,30 @@ table td td {
 #project-plan .project-plan-navigation .project-plan-navigation-links li li {
   list-style: none;
 }
+<<<<<<< HEAD
 /* line 622, ../sass/modules/_projects.scss */
+=======
+/* line 623, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-navigation .project-plan-navigation-links li a {
   display: block;
   text-decoration: none;
   padding: 0.5em 2em;
   color: #666666;
 }
+<<<<<<< HEAD
 /* line 627, ../sass/modules/_projects.scss */
 #project-plan .project-plan-navigation .project-plan-navigation-links li a.active {
   background: white;
 }
 /* line 632, ../sass/modules/_projects.scss */
+=======
+/* line 628, ../sass/modules/_projects.scss */
+#project-plan .project-plan-navigation .project-plan-navigation-links li a.active {
+  background: white;
+}
+/* line 633, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf {
   margin-top: 2em;
 }
@@ -5475,7 +5573,11 @@ table td td {
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf {
   *zoom: 1;
 }
+<<<<<<< HEAD
 /* line 635, ../sass/modules/_projects.scss */
+=======
+/* line 636, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-navigation .project-plan-navigation-links .project-plan-download-pdf a {
   border: 2px solid #cccccc;
   padding: 0.5em 1em;
@@ -5483,7 +5585,11 @@ table td td {
   text-decoration: none;
   float: right;
 }
+<<<<<<< HEAD
 /* line 646, ../sass/modules/_projects.scss */
+=======
+/* line 647, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-main-container {
   position: relative;
   *zoom: 1;
@@ -5508,7 +5614,11 @@ table td td {
 #project-plan .project-plan-main-container:after {
   clear: both;
 }
+<<<<<<< HEAD
 /* line 653, ../sass/modules/_projects.scss */
+=======
+/* line 654, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-main-container .project-plan-main {
   position: relative;
   padding: 0 2em;
@@ -5517,20 +5627,36 @@ table td td {
   overflow-x: hidden;
   color: #444444;
 }
+<<<<<<< HEAD
 /* line 660, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main p {
   text-align: justify;
 }
 /* line 664, ../sass/modules/_projects.scss */
+=======
+/* line 661, ../sass/modules/_projects.scss */
+#project-plan .project-plan-main-container .project-plan-main p {
+  text-align: justify;
+}
+/* line 665, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-main-container .project-plan-main h3:first-of-type {
   font-size: 1.75em;
   margin-top: 0;
 }
+<<<<<<< HEAD
 /* line 669, ../sass/modules/_projects.scss */
 #project-plan .project-plan-main-container .project-plan-main h1, #project-plan .project-plan-main-container .project-plan-main h2, #project-plan .project-plan-main-container .project-plan-main h3, #project-plan .project-plan-main-container .project-plan-main h4, #project-plan .project-plan-main-container .project-plan-main h5, #project-plan .project-plan-main-container .project-plan-main h6 {
   color: #0896ff;
 }
 /* line 673, ../sass/modules/_projects.scss */
+=======
+/* line 670, ../sass/modules/_projects.scss */
+#project-plan .project-plan-main-container .project-plan-main h1, #project-plan .project-plan-main-container .project-plan-main h2, #project-plan .project-plan-main-container .project-plan-main h3, #project-plan .project-plan-main-container .project-plan-main h4, #project-plan .project-plan-main-container .project-plan-main h5, #project-plan .project-plan-main-container .project-plan-main h6 {
+  color: #0896ff;
+}
+/* line 674, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-main-container .project-plan-back-link {
   position: absolute;
   top: 10px;
@@ -5538,14 +5664,22 @@ table td td {
   text-decoration: none;
   text-transform: uppercase;
 }
+<<<<<<< HEAD
 /* line 679, ../sass/modules/_projects.scss */
+=======
+/* line 680, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-main-container .project-plan-back-link .flaticon {
   text-align: center;
   vertical-align: middle;
   font-size: 1.75em;
   margin-left: 0.5em;
 }
+<<<<<<< HEAD
 /* line 688, ../sass/modules/_projects.scss */
+=======
+/* line 689, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-plan .project-plan-map {
   float: left;
   width: 25%;
@@ -5554,6 +5688,7 @@ table td td {
   content: " ";
 }
 
+<<<<<<< HEAD
 /* line 696, ../sass/modules/_projects.scss */
 #project-dashboard {
   margin-bottom: 6em;
@@ -5563,6 +5698,17 @@ table td td {
   background-color: #e9e9e9;
 }
 /* line 702, ../sass/modules/_projects.scss */
+=======
+/* line 697, ../sass/modules/_projects.scss */
+#project-dashboard {
+  margin-bottom: 6em;
+}
+/* line 700, ../sass/modules/_projects.scss */
+#project-dashboard .campaign-header {
+  background-color: #e9e9e9;
+}
+/* line 703, ../sass/modules/_projects.scss */
+>>>>>>> styled header, title, preview btn profile page
 #project-dashboard .campaign-header .page-title {
   float: left;
   width: 95.83333%;
@@ -9273,16 +9419,26 @@ table td td {
 /* line 314, ../sass/pages/_account.scss */
 #account .account-avatar {
   float: left;
-  width: 12.5%;
+  width: 8.33333%;
   margin-left: 2.08333%;
   margin-right: 2.08333%;
+  margin-top: 1.2em;
+  margin-right: none;
   border: none;
 }
+<<<<<<< HEAD
 /* line 317, ../sass/pages/_account.scss */
 #account .account-avatar img {
   display: block;
 }
 /* line 321, ../sass/pages/_account.scss */
+=======
+/* line 319, ../sass/pages/_account.scss */
+#account .account-avatar img {
+  display: block;
+}
+/* line 323, ../sass/pages/_account.scss */
+>>>>>>> styled header, title, preview btn profile page
 #account .account-title {
   margin: 0;
   float: left;
@@ -9290,20 +9446,49 @@ table td td {
   margin-left: 0%;
   margin-right: 0%;
 }
+<<<<<<< HEAD
 /* line 324, ../sass/pages/_account.scss */
+=======
+/* line 326, ../sass/pages/_account.scss */
+>>>>>>> styled header, title, preview btn profile page
 #account .account-title h2 {
   margin: none;
-}
-/* line 328, ../sass/pages/_account.scss */
-#account .account-preview {
-  margin-bottom: 2em;
+  width: 100%;
+  color: #444444;
   float: left;
-  width: 20.83333%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* line 335, ../sass/pages/_account.scss */
+#account .account-title .account-subtitle {
+  color: #999999;
+  font-family: "Futura W01 Book", "Trebuchet MS", Helvetica, Arial, sans-serif;
+  padding-left: 1em;
+  margin-left: 0.25em;
+  background: url('../images/list-item.png?1399276443') transparent no-repeat 0 50%;
+}
+<<<<<<< HEAD
+/* line 328, ../sass/pages/_account.scss */
+=======
+/* line 343, ../sass/pages/_account.scss */
+>>>>>>> styled header, title, preview btn profile page
+#account .account-preview {
+  float: left;
+  width: 25%;
   margin-left: 2.08333%;
   margin-right: 2.08333%;
+  color: #999999;
+  float: none;
+  margin-top: 2em;
+  font-size: 0.875em;
   text-align: right;
 }
+<<<<<<< HEAD
 /* line 333, ../sass/pages/_account.scss */
+=======
+/* line 352, ../sass/pages/_account.scss */
+>>>>>>> styled header, title, preview btn profile page
 #account .tabs {
   *zoom: 1;
 }
@@ -9321,12 +9506,20 @@ table td td {
   clear: both;
 }
 
+<<<<<<< HEAD
 /* line 339, ../sass/pages/_account.scss */
+=======
+/* line 358, ../sass/pages/_account.scss */
+>>>>>>> styled header, title, preview btn profile page
 #SkypeButton_Call img {
   margin: 0 !important;
   margin-bottom: 1em;
 }
+<<<<<<< HEAD
 /* line 344, ../sass/pages/_account.scss */
+=======
+/* line 363, ../sass/pages/_account.scss */
+>>>>>>> styled header, title, preview btn profile page
 #SkypeButton_Call ul li {
   padding-left: 0;
   text-indent: 0;

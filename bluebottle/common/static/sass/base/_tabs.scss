@@ -149,6 +149,7 @@ $step-validated-icon-color: $white;
 			color: $gray-lighter;
 			display: block;
 			width: 33.33333%;
+			white-space: nowrap;
 			
 			.flaticon {
 				color: $gray-lighter;
@@ -215,6 +216,23 @@ $step-validated-icon-color: $white;
 			&:after, &:before {
 				display: none;
 			}
+		}
+	}
+}
+
+#campaign-create {
+				
+	// For campaign create
+	li a.active {
+		background-color: $gray-dark;
+		color: $white;
+		
+		.flaticon { 
+			color: $white;
+		}
+		
+		&:after {
+			border-left-color: $gray-dark;
 		}
 	}
 }

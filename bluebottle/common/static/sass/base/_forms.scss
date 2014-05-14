@@ -96,6 +96,17 @@ fieldset legend {
     }
 }
 
+label, .control-label {
+        
+    small {
+    	display: block;
+        font-family: $base-font-family;
+        color: $gray;
+        margin-top: 0.2em;
+        line-height: 1.2em;
+    }
+}
+
 .control-group {
     @include clear;
     padding-bottom: $base-padding/2;

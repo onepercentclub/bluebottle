@@ -312,7 +312,9 @@
 		padding-bottom: 0;
 	}
 	.account-avatar {
-		@include grid(8,1,1);
+		@include grid(6,1,1);
+		margin-top: 1.2em;
+		margin-right: none;
 		border: none;
 		img {
 			display: block;
@@ -323,11 +325,28 @@
 		@include grid(28,0,0);	
 		h2 {
 			margin: none;
+			width: 100%;
+            color: $color-heading;
+            float: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
 		}
+		.account-subtitle {
+            color: $gray;
+            font-family: $base-font-family;
+            padding-left: $base-padding;
+            margin-left: $base-margin/4;
+            background: image-url("list-item.png") transparent no-repeat 0 50%;
+        }
 	}
 	.account-preview {
-		margin-bottom: $base-margin*2;
-		@include grid(12,1,1);
+		@include grid(10,1,1);
+		color: $gray;
+		//TODO: remove second float
+        //float: none;
+        margin-top: $base-margin*2;
+		font-size: $font-size-small;
 		text-align: right;
 	}
 	.tabs {

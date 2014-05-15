@@ -1,0 +1,44 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "project_plan" %}
+    <div class="l-section" id="project-plan">
+		<nav class="project-plan-navigation">
+			
+			<div class="project-plan-title">
+				<h1>Project plan</h1>
+				<h4>{{title}}</h4>
+			</div>
+			
+			<ul class="project-plan-navigation-links">
+				{{#each headerLinks}}
+				<li><a class="project-plan-main-link" {{bindAttr href=href}}>{{name}}</a></li>
+				{{/each}}
+				<li><a class="project-plan-main-link" href="#map">Map</a></li>
+				{{#if hasPdfDownload}}		
+					<li class="project-plan-download-pdf">
+						<a><span class="flaticon solid download-document-1"></span> Download as PDF</a>
+					<li>
+				{{/if}}
+			</ul>
+		</nav>
+		
+		<div class="project-plan-main-container">
+			{{!-- TODO: This should be the close button, but a standard modal already has a close button. Could we do something about that? --}}
+			<a class="project-plan-back-link close-modal">Back to project<span class="flaticon stroke x-1"></span></a>
+			<article class="project-plan-main">
+				{{{storyWithHeaderIds}}}
+				{{!-- 
+				<br />
+				<h3 id="map">Map</h3>
+				<img src="{{unbound staticMap}}" />
+				 --}}
+			</article>
+		</div>
+		<div class="project-plan-map">
+			<img src="{{unbound staticMap}}" />
+		</div>
+    </div>
+
+{% endtplhandlebars %}

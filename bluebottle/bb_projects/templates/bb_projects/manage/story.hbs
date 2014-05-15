@@ -1,0 +1,25 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_story" %}
+
+    {{#unless isPhasePlanNew}}
+        {{bb-flash data=flash}}
+    {{/unless}}
+
+    <legend>
+        <strong>{% trans "Project Description" %}</strong>
+        <p>{% trans "Time to blow us away with the details! Tell us about your motivation, why this project is important and what the impact will be." %}</p>
+    </legend>
+
+    <fieldset>
+        <ul>
+            {{ partial "_my_project_story_fields" }}
+        </ul>
+    </fieldset>
+
+    {{ partial '_my_project_save_edit_footer'}}
+
+{% endtplhandlebars %}

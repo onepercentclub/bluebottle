@@ -1,3 +1,4 @@
+# coding: utf-8
 from django import template
 from django.conf import settings
 from django.template.base import TemplateSyntaxError, TextNode
@@ -192,21 +193,26 @@ def bb_component(component, *args, **kwargs):
     Usage: {% bb_component 'my-component' myFirstArg="'foo'" mySecondArg='bar' %}
     Translates to: {{my-component myFirstArg='foo' mySecondArg=bar}}
     """
+    import sys
+    reload(sys)
+    sys.setdefaultencoding("utf8")
+
     if not isinstance(component, basestring) or not len(component):
         raise template.TemplateSyntaxError("bb-component tag requires at least one argument")
 
     component_bits = [component]
+    bits = u''
     for key, value in kwargs.items():
         # trigger translation if we're dealing with Lazy translatable strings
         if isinstance(value, Promise):
             value = '\'{0}\''.format(force_str(value).replace("'", "\\'"))
         if key in ('name', 'type') or 'Binding' in key:
             value = '\'{0}\''.format(value)
-        bit = '{key}={value}'.format(key=key, value=value)
+        bit = u'{key}={value}'.format(key=key, value=value)
+        bits += bit
         component_bits.append(bit)
 
-    return '{{' + ' '.join(component_bits) + '}}'
-
+    return u'{{ ' + u' '.join(component_bits) + ' }}'
 
 @register.tag(name='bb_block_component')
 def do_bb_block_component(parser, token, *args, **kwargs):

@@ -212,7 +212,7 @@ def bb_component(component, *args, **kwargs):
         bits += bit
         component_bits.append(bit)
 
-    return u'{{ ' + u' '.join(component_bits) + ' }}'
+    return u'{{' + u' '.join(component_bits) + '}}'
 
 @register.tag(name='bb_block_component')
 def do_bb_block_component(parser, token, *args, **kwargs):

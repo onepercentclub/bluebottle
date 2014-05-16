@@ -109,6 +109,10 @@
 	.account-info {
 		
 		@include grid(24,1,1);
+
+		.account-why-header {
+			color: $color-primary;
+		}
 		
 		.account-about-header, .account-why-header {
 			text-transform: none;

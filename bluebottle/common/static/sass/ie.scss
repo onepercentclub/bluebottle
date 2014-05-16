@@ -10,3 +10,13 @@
 		background-position-x: -40px;
 	}
 }
+
+.tabs {
+	li {
+		> a, > span  {
+			&:before {
+				position: inherit;
+			}
+		}
+	}
+}

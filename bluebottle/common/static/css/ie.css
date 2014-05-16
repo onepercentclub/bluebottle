@@ -10,3 +10,8 @@
 .account-achievements .account-achievements-time {
   background-position-x: -40px;
 }
+
+/* line 17, ../sass/ie.scss */
+.tabs li > a:before, .tabs li > span:before {
+  position: inherit;
+}

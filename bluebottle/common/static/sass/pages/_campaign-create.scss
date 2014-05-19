@@ -139,11 +139,11 @@
 	.select-organisation {
 		
 		select {
-			@include grid(40,1,0);
+			@include grid(42,0,1);
 		}
 		
 		.add-org {
-			@include grid(8,0,0);
+			@include grid(6,0,0);
 		}
 		
 	}

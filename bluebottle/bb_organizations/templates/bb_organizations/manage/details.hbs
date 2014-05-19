@@ -31,7 +31,7 @@
                                                             optionValuePath='content.id'
                                                             optionLabelPath='content.nameOrDefault'
                                                             selectionBinding='controller.selectedOrganization'}} 
-                        <button class="btn btn-modest add-org" style="float: right" {{action newOrganization}}>New</button>
+                        <button class="btn btn-modest add-org" {{action newOrganization}}>New</button>
                 	</li>
                 </ul>
             </fieldset>
@@ -52,9 +52,9 @@
     </legend>
 
 
-    <fieldset>
+        <fieldset>
         <ul>
-             has-popoverdata-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
+            <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
                 <label class="control-label">
                     {% trans "Partner Passport" %} ({{attachedDocuments.length}})<br />
                     <small>

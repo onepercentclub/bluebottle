@@ -383,7 +383,7 @@ App.MyProjectStoryController = App.StandardTabController.extend({
 });
 
 App.MyProjectSubmitController = App.StandardTabController.extend({
-    needs: ['myProjectOrganisation', 'myProject'],
+    needs: ['myProjectOrganisation', 'myProject', 'myProjectBank'],
     previousStep: 'myProject.organisation',
 
     validSubmit: function () {

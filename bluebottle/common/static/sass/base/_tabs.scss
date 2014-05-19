@@ -19,13 +19,13 @@
     margin-top: $base-margin;
     margin-left: 0;
     margin-bottom: 0;
-	
+
 	li {
         //@include grid(12,0,0); default
         @include resetlist;
         display: inline;
         position: relative;
-        
+
        	> a, > span {
             //color: $tabs-tabitem-bg-color;
             display: block;
@@ -220,17 +220,17 @@ $step-validated-icon-color: $white;
 	}
 }
 
-#campaign-create {
-				
+#campaign-steps {
+
 	// For campaign create
 	li a.active {
 		background-color: $gray-dark;
 		color: $white;
-		
-		.flaticon { 
+
+		.flaticon {
 			color: $white;
 		}
-		
+
 		&:after {
 			border-left-color: $gray-dark;
 		}

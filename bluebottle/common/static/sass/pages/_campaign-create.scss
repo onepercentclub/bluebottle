@@ -135,6 +135,18 @@
 	.add-budget {
 		@include grid(6,0,0);
 	}
+	
+	.select-organisation {
+		
+		select {
+			@include grid(40,1,0);
+		}
+		
+		.add-org {
+			@include grid(8,0,0);
+		}
+		
+	}
 
 	.missing-steps {
 		margin: 0;

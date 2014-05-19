@@ -163,12 +163,10 @@ App.MyProjectBankController = App.StandardTabController.extend({
     actions: {
       showInEurope: function(event) {
           this.set('inEurope', true);
-          console.log('test');
       },
 
       showOutEurope: function() {
           this.set('inEurope', false);
-          console.log('test 2');
       }
     },
     outsideEurope: Em.computed.not('inEurope')

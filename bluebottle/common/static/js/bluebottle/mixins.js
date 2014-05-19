@@ -1,10 +1,40 @@
 /*
+  Add mixin to routes which require authentication
+ */
+
+App.AuthenticatedRouteMixin = Ember.Mixin.create({
+    beforeModel: function(transition) {
+        var applicationController = this.controllerFor('application');
+        
+        // If not logged in then display the login popup for the user.
+        if (!this.controllerFor('currentUser').get('isAuthenticated')) {
+            // The popup box method is on the application route
+            // TODO: is there a more elegant way to call the function from here?
+            var self = this;
+
+            // Abort the transition as the login controller will handle the redirect after a successful login.
+            // We only need to handle the case when the user clicks the close link on the login popup - this
+            // is done below in a callback to the openInBox. 
+            transition.abort();
+
+            App.__container__.lookup("route:application").openInBox('login', null, null, function (options, event) {
+                // If the user closed the login popup and there was no last url then transition to the home page
+                var lastUrl = App.__container__.lookup('router:main').location.lastSetURL;
+                if (!lastUrl && options.close) {
+                    self.transitionTo('home');
+                }
+            });
+        }
+    }
+});
+
+/*
  Route mixin which will abort transition if the model save fails
 
  Note: Use route with a controller which has the App.ControllerObjectStatusMixin,
  or add modelStatus property to the controllers model.
  */
-
+ 
 App.SaveOnTransitionRouteMixin = Ember.Mixin.create({
     skipExitSignal: true,
     _transitioning: false,

@@ -28,8 +28,7 @@
         
        	> a, > span {
             //color: $tabs-tabitem-bg-color;
-            display: block;
-            float: left;
+            display: inline-block;
             text-decoration: none;
             //padding: $base-padding $base-padding $base-padding/2 $base-padding;
 			padding: $base-padding ($base-padding*2);
@@ -38,7 +37,6 @@
             color: $gray-light;
 			font-weight: bold;
 			background-color: $gray-lighter;
-			width: 175px;
 			text-transform: uppercase;
 			
             .tab-icon {

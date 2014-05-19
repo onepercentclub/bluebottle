@@ -119,8 +119,18 @@
 				border-bottom: none;
 			}
 		}
+		
 		a {
 			text-decoration: none;
+		}
+		
+		.campaign-budget-breakdown-desc {
+			width: 60%;
+		}
+		
+		.campaign-budget-breakdown-amount {
+			width: 20%;
+			white-space: nowrap;
 		}
 	}
 

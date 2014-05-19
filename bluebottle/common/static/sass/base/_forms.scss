@@ -290,6 +290,12 @@ select::-ms-expand {
 	visibility: hidden;
 }
 
+// Different select color
+select:focus::-ms-value {
+	color: $black;
+	background: transparent;
+}
+
 select,
 option,
 textarea,

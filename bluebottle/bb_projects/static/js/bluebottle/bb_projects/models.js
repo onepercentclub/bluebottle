@@ -160,19 +160,6 @@ App.ProjectSearch = DS.Model.extend({
 
 });
 
-App.ProjectDonation = DS.Model.extend({
-    url: 'bb_projects/donations',
-
-    member: DS.belongsTo('App.UserPreview'),
-    amount: DS.attr('number'),
-    date_donated: DS.attr('date'),
-
-    time_since: function(){
-        return Globalize.format(this.get('date_donated'), 'X');
-    }.property('date_donated')
-});
-
-
 
 App.Theme = DS.Model.extend({
     url: 'bb_projects/themes',

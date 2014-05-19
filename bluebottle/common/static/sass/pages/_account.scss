@@ -51,13 +51,11 @@
 
 
 .account-achievements {
-
-	margin-top: $base-margin * 2;	
+	margin-top: $base-margin * 2;
 	
 	li {
 		float: left;
 		@include grid(16,0,1);
-		@include resetlist();
 		text-transform: uppercase;
 		font-size: $font-size-smallest;
 		strong {
@@ -70,14 +68,11 @@
 	}
 }
 .account-header {
-	
 	background-color: $account-header-bg-color;
 	padding: $base-padding * 2 0;
 
 	.account-personal {
-	
-		@include grid(16,0,1);
-			
+		@include grid(24,1,1);
 	}	
 	
 	.account-title {
@@ -89,26 +84,18 @@
 	.account-edit-link {
 		color: $account-header-edit-link-color;
 		text-decoration: none;
+		
 		&:hover {
 			color: $account-header-edit-link-hover-color;
 		}
 	}
 
 	.account-avatar {
-		// width: 150px;
-		// height: 150px;
-		// float: left;
-		@include grid(8,0,1);
-		// border: 1px solid $account-header-avatar-border-color;
-		// margin-right: $base-margin;
+		@include grid(14,0,2);
 	}
 	
-	// .account-edit {
-	// 	@include grid(48,1,1);
-	// }
-	
 	.account-achievements {
-		@include grid(24,0,0);
+		@include grid(22,0,1);
 		@include resetlist();
 
 	}	
@@ -121,7 +108,11 @@
 
 	.account-info {
 		
-		@include grid(24,0,1);
+		@include grid(24,1,1);
+
+		.account-why-header {
+			color: $color-primary;
+		}
 		
 		.account-about-header, .account-why-header {
 			text-transform: none;
@@ -133,7 +124,7 @@
 	}
 	.account-details {
 		
-		@include grid(24,1,0);
+		@include grid(24,1,1);
 		margin-top: $base-margin * 4;
 		
 		dl {
@@ -315,7 +306,7 @@
 
 #public-profile-page {
 	.account-achievements {
-		margin: $base-margin*2 0;
+		margin-top: $base-margin;
 	}
 }
 
@@ -325,7 +316,9 @@
 		padding-bottom: 0;
 	}
 	.account-avatar {
-		@include grid(8,1,1);
+		@include grid(6,1,1);
+		margin-top: 1.2em;
+		margin-right: none;
 		border: none;
 		img {
 			display: block;
@@ -336,11 +329,28 @@
 		@include grid(28,0,0);	
 		h2 {
 			margin: none;
+			width: 100%;
+            color: $color-heading;
+            float: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
 		}
+		.account-subtitle {
+            color: $gray;
+            font-family: $base-font-family;
+            padding-left: $base-padding;
+            margin-left: $base-margin/4;
+            background: image-url("list-item.png") transparent no-repeat 0 50%;
+        }
 	}
 	.account-preview {
-		margin-bottom: $base-margin*2;
-		@include grid(12,1,1);
+		@include grid(10,1,1);
+		color: $gray;
+		//TODO: remove second float
+        //float: none;
+        margin-top: $base-margin*2;
+		font-size: $font-size-small;
 		text-align: right;
 	}
 	.tabs {

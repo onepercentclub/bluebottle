@@ -164,6 +164,8 @@ App.DateSliderWidget = Ember.TextField.extend({
             view.set('date', date);
         },
         config.dimension = '&nbsp;days';
+        config.scale = [0, 100],
+        config.limits = false,
         config.className = 'slider';
         this.$().slider(config);
         this.updateSlider();

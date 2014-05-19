@@ -75,10 +75,12 @@
     	border: 1px solid $button-primary-border-color; 
 		background-color: $button-primary-bg-color;
 		
+		&.btn-iconed {
 		
-		.flaticon, .icon {
-			background-color: $button-primary-icon-bg-color;
-			color: $button-primary-icon-color;
+			.flaticon, .icon {
+				background-color: $button-primary-icon-bg-color;
+				color: $button-primary-icon-color;
+			}
 		}
 	}
 
@@ -91,7 +93,6 @@
         background: $button-disabled-bg-color !important;
         color: $button-disabled-color !important;
         cursor: default;
-        padding: $base-padding/2 $base-padding;
 
         .flaticon, .icon {
             background: $button-disabled-icon-bg-color !important;

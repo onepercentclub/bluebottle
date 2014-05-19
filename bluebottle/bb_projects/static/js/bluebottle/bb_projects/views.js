@@ -67,7 +67,7 @@ App.ProjectPlanView = Em.View.extend({
             view.$(event.target).addClass("active");
             event.preventDefault();
         }); 
-    }    
+    }
 });
 
 App.ProjectIndexView = Em.View.extend({
@@ -173,8 +173,7 @@ App.MyProjectAmbassadorsView = Em.View.extend({
 });
 
 App.MyProjectBankView = Em.View.extend(Em.TargetActionSupport, {
-    templateName: 'my_project_bank',
-
+    templateName: 'my_project_bank'
 });
 
 App.MyProjectBudgetView = Em.View.extend({

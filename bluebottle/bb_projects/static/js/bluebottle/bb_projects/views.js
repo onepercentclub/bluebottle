@@ -45,9 +45,9 @@ App.ProjectPlanView = Em.View.extend({
 
     didInsertElement: function(){
         // project plan
-        var height = $(window).height();
-        var width = $(window).width();
-        this.$(".project-plan-navigation, .project-plan-main").height(height);
+        //var height = $(window).height();
+        //var width = $(window).width();
+        //this.$(".project-plan-navigation, .project-plan-main").height(height+60);
         
         var view = this;
         view.$(".project-plan-main-link:first").addClass("active");

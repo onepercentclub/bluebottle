@@ -42,7 +42,6 @@ class Address(models.Model):
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
 if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
-    print 'more nice models here'
     import re
 
     from fluent_contents.models import PlaceholderField

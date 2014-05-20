@@ -9,12 +9,8 @@
         {{bb-flash data=flash}}
     {{/unless}}
 
-    <legend>
-        <strong>{% trans "Partner organisation" %}</strong>
-        <p>
-            {% trans "Give us the details about your partner organisation whose sole purpose in life it is to address the topic that you care about!" %}
-        </p>
-    </legend>
+    {{ partial "_organisation_legend" }}
+
 
     {{#if hasSelectableOrganizations}}
         {{#if hasOneSelectableOrganization}}
@@ -56,7 +52,7 @@
         <ul>
             <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
                 <label class="control-label">
-                    {% trans "Partner Passport" %} ({{attachedDocuments.length}})<br />
+                    {% trans "Passport or ID" %} ({{attachedDocuments.length}})<br />
                     <small>
                         {% trans ".jpg, .png or .pdf" %}
                     </small>

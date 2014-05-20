@@ -481,9 +481,11 @@
         }
 
         .fund-amount, .project-actions {
-            @include grid(16);
+            @include grid(12);
             text-align: right;
             color: $gray-light;
+            float: right;
+            font-size: 0.75em;
         }
         
         .project-actions {

@@ -233,4 +233,25 @@
 	.suggestion {
 		text-align: center;
 	}
+	
+	.l-sidebar {
+		margin-top: $base-margin*4;
+	}
+	
+	.steps {
+				
+		// For campaign create
+		li a.active {
+			background-color: $gray-dark;
+			color: $white;
+			
+			.flaticon { 
+				color: $white;
+			}
+			
+			&:after {
+				border-left-color: $gray-dark;
+			}
+		}
+	}
 }

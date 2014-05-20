@@ -218,24 +218,6 @@ $step-validated-icon-color: $white;
 	}
 }
 
-#campaign-create {
-				
-	// For campaign create
-	li a.active {
-		background-color: $gray-dark;
-		color: $white;
-		
-		.flaticon { 
-			color: $white;
-		}
-		
-		&:after {
-			border-left-color: $gray-dark;
-		}
-	}
-}
-
-
 .hide {
     display: none;
 }

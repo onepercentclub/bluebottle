@@ -211,7 +211,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(len(data), 3)
 
         for item in data['results']:
             self.assertIn('id', item)

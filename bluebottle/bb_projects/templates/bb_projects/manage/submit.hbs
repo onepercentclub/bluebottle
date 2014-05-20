@@ -17,10 +17,11 @@
             <h3>{% trans "Final Check!" %}</h3>
             {% trans "You are ready to submit your project now!" %}
         </div>
+     </fieldset>
+
         {% blocktrans %}
         <p>I agree to the <a href="">terms of service</a> when submitting my campaign plan</p>
         {% endblocktrans %}
-    </fieldset>
     <button {{bindAttr class=":btn :btn-iconed :btn-submit :btn-primary"}} {{action submitPlan}}><span class="flaticon solid right-2"></span>{% trans "Submit" %}</button>
 {{else}}
     <h4>{% trans "Almost ready…" %}</h4>

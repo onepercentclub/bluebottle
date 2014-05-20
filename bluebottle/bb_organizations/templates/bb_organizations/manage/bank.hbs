@@ -14,7 +14,7 @@
 
         <fieldset>
             <ul>
-                {% bb_component 'bb-text-field' label=_("Organization name") name='organization-name' valueBinding='name' errorsBinding='errors.name' maxlength=255 placeholder=_("Name of your organisation") %}
+                {% bb_component 'bb-text-field' label=_("Name") name='organization-name' valueBinding='name' errorsBinding='errors.name' maxlength=255 placeholder=_("Name of your organisation") %}
             </ul>
         </fieldset>
         <fieldset>
@@ -38,10 +38,10 @@
                     {% trans "Where is your bank located:" %}
                     <ul class="tabs two">
                         <li {{bindAttr class=":tab-item :tab-first inEurope:active"}}>
-                            <a {{action "showInEurope"}} {{bindAttr class="inEurope:active"}}>In Europe</a>
+                            <a {{action "showInEurope"}} {{bindAttr class="inEurope:active"}}>{% trans "Inside Europe" %}</a>
                         </li>
                         <li {{bindAttr class=":tab-item outsideEurope:active"}}>
-                            <a {{action "showOutEurope"}} {{bindAttr class="inEurope::active"}}>Out Europe</a>
+                            <a {{action "showOutEurope"}} {{bindAttr class="inEurope::active"}}>{% trans "Outside Europe" %}</a>
                         </li>
                     </ul>
                 </li>

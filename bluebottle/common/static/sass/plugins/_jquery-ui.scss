@@ -10,6 +10,7 @@
 	padding: .2em .2em 0;
 	display: none;
 	background: $white;
+	z-index: 9999 !important; 
 }
 .ui-datepicker .ui-datepicker-header {
 	position: relative;

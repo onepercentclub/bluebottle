@@ -139,10 +139,14 @@ App.MyProjectBankController = App.StandardTabController.extend({
 
 	init: function () {
 		this._super();
-		if (this.get('model.validNotEuropeanBankOrganization')){
-			this.set('inEurope', false);
-		} else {
+		if (this.get('model.validEuropeanBankOrganization')){
 			this.set('inEurope', true);
+		} else {
+            if (this.get('model.account_number')){
+                this.set('inEurope', false);
+            } else {
+    			this.set('inEurope', true);
+            }
 		}
 	},
     previousStep: "myProject.organisation",
@@ -155,9 +159,13 @@ App.MyProjectBankController = App.StandardTabController.extend({
 	setInEurope: function () {
 		if (this.get('model.validEuropeanBankOrganization')){
 			this.set('inEurope', true);
-		} else if (this.get('model.validNotEuropeanBankOrganization')){
-			this.set('inEurope', false);
-		}
+		} else {
+            if (this.get('model.account_number')){
+                this.set('inEurope', false);
+            } else {
+    			this.set('inEurope', true);
+            }
+        }
 	}.observes('model.validBankAccountInfo'),
 
     actions: {

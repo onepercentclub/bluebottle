@@ -6,7 +6,7 @@
 
 {% tplhandlebars "tag_widget" %}
 
-    {{view App.TagField valueBinding="view.new_tag" name="tag" placeholder="Add a tag" class="tag"}} <button class="btn btn-modest add-tag" {{action addTag target=view}}>Add</button>
+    {{view App.TagField valueBinding="view.new_tag" name="tag" placeholder="Choose max. 5 keywords" class="tag"}} <button class="btn btn-modest add-tag" {{action addTag target=view}}>Add</button>
 
     <ul class="tags">
         {{#each tags}}

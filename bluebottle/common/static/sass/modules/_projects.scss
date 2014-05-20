@@ -481,9 +481,11 @@
         }
 
         .fund-amount, .project-actions {
-            @include grid(16);
+            @include grid(12);
             text-align: right;
             color: $gray-light;
+            float: right;
+            font-size: 0.75em;
         }
         
         .project-actions {
@@ -557,11 +559,10 @@
 
 // Project plan
 #project-plan {
-
+	
     position: relative;  
     width: 100%;
     height: 100%;
-    overflow: hidden;
     background-color: $projects-project-plan-bg-color;
 
     header {
@@ -650,13 +651,18 @@
 		padding-top: $base-padding*3;
 		@include grid(20,0,0);
         background-color: $projects-project-plan-main-content-bg-color;
+		height: 100%;
+		
 		.project-plan-main {
 			position: relative;
 			padding: 0 ($base-padding * 2);
 			background: $white;
 			overflow-y: auto;
 			overflow-x: hidden;
+			height: 100%;
 			color: $gray-darker;
+			padding-bottom: $base-padding*4;
+			
 			p {
 				text-align: justify;
 			}
@@ -689,8 +695,6 @@
 		@include grid(12,0,0);
 		content: " ";
 	}
-	
-	
 }
 
 #project-dashboard {

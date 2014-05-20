@@ -149,7 +149,6 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
 class ProjectThemeList(generics.ListAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
-    paginate_by = 10
 
 
 class ProjectUsedThemeList(ProjectThemeList):

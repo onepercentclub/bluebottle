@@ -29,21 +29,15 @@
                 {% bb_component 'bb-select-country' name='account-holder-country' selectionBinding='account_holder_country' errorsBinding='errors.account_holder_country' maxlength=255 %}
 
             </ul>
-        </fieldset>
 
+            <ul class="fieldset-tabs">
+                <li class="label">Where is your bank located:</li>
+                <li {{bindAttr class=":tab-item :tab-first inEurope:selected"}}><a {{action "showInEurope"}}>In Europe</a></li>
+                <li {{bindAttr class=":tab-item outsideEurope:selected"}}><a {{action "showOutEurope"}}>Out Europe</a></li>
+            </ul>
+        </fieldset>
         <fieldset>
-            <ul class="tab-control">
-                <li>
-                    {% trans "Where is your bank located:" %}
-                    <ul class="tabs two">
-                        <li {{bindAttr class=":tab-item :tab-first inEurope:active"}}>
-                            <a {{action "showInEurope"}} {{bindAttr class="inEurope:active"}}>In Europe</a>
-                        </li>
-                        <li {{bindAttr class=":tab-item outsideEurope:active"}}>
-                            <a {{action "showOutEurope"}} {{bindAttr class="inEurope::active"}}>Out Europe</a>
-                        </li>
-                    </ul>
-                </li>
+        	<ul>
                 <li {{bindAttr class=":control-group inEurope:show:hide"}}>
                     <ul>
                         {% bb_component 'bb-text-field' label=_("IBAN") name='account-iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("The IBAN code") %}

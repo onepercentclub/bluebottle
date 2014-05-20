@@ -32,12 +32,12 @@ small {
     font-size: $font-size-smallest;
 }
 
-strong { 
+strong, b { 
     font-weight: normal; 
     font-family: $font-family-heavy; 
 }
 
-em { 
+em, i { 
     font-weight: normal; 
     font-style: italic; 
 }

@@ -28,8 +28,7 @@
 
        	> a, > span {
             //color: $tabs-tabitem-bg-color;
-            display: block;
-            float: left;
+            display: inline-block;
             text-decoration: none;
             //padding: $base-padding $base-padding $base-padding/2 $base-padding;
 			padding: $base-padding ($base-padding*2);
@@ -38,7 +37,6 @@
             color: $gray-light;
 			font-weight: bold;
 			background-color: $gray-lighter;
-			width: 175px;
 			text-transform: uppercase;
 			
             .tab-icon {
@@ -146,7 +144,7 @@ $step-validated-icon-color: $white;
 			text-align: center;
 			font-weight: bold;
 			text-decoration: none;
-			color: $gray-lighter;
+			color: $gray;
 			display: block;
 			width: 33.33333%;
 			white-space: nowrap;
@@ -220,30 +218,10 @@ $step-validated-icon-color: $white;
 	}
 }
 
-#campaign-steps {
-
-	// For campaign create
-	li a.active {
-		background-color: $gray-dark;
-		color: $white;
-
-		.flaticon {
-			color: $white;
-		}
-
-		&:after {
-			border-left-color: $gray-dark;
-		}
-	}
+.hide {
+    display: none;
 }
 
-.tab-control li.control-group {
-
-    &.hide {
-        display: none;
-    }
-
-    &.show {
-        display: list-item;
-    }
+.show {
+    display: list-item;
 }

@@ -253,9 +253,15 @@ class EuroField(serializers.WritableField):
 class FileSerializer(serializers.FileField):
     def to_native(self, value):
         if value:
-            return {'name': os.path.basename(value.name),
-                    'url': value.url,
-                    'size': defaultfilters.filesizeformat(value.size)}
+            try:
+                return {'name': os.path.basename(value.name),
+                        'url': value.url,
+                        'size': defaultfilters.filesizeformat(value.size)}
+            except OSError:
+                return {'name': '',
+                        'url': '',
+                        'size': ''}
+
         else:
             return {'name': '',
                     'url': '',

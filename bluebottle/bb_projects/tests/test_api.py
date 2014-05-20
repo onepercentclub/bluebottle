@@ -213,7 +213,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
         self.assertEqual(len(data), 3)
 
-        for item in data['results']:
+        for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
 

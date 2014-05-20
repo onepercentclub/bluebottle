@@ -1,3 +1,4 @@
+from bluebottle.bb_accounts.models import TimeAvailable
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import AnonymousUser
@@ -10,17 +11,15 @@ from django.utils.http import base36_to_int, int_to_base36
 
 from registration import signals
 from registration.models import RegistrationProfile
-from rest_framework import generics
-from rest_framework import response
-from rest_framework import status
-from rest_framework import views
+from rest_framework import status, views, response, generics, viewsets
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
 from bluebottle.utils.serializers import DefaultSerializerMixin
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import (
     CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
-    PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
+    PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL, TimeAvailableSerializer)
 
 
 class UserProfileDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
@@ -107,6 +106,20 @@ class UserActivate(generics.RetrieveAPIView):
             return response.Response(serializer.data)
         # Return 400 when the activation didn't work.
         return response.Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+"""
+With a viewsets.ModelViewSet we don't need to create duplicate for
+List and Detail, we will use routers for the urls
+"""
+class TimeAvailableViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    This viewset automatically provides 'list', 'create', 'retrieve',
+    'update' and 'destroy actions'.
+    """
+    queryset = TimeAvailable.objects.all()
+    serializer_class = TimeAvailableSerializer
+    permission_classes = (IsAuthenticated, )
 
 
 class PasswordReset(views.APIView):

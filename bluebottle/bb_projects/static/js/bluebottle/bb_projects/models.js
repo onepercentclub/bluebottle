@@ -3,7 +3,7 @@
 App.Adapter.map('App.Project', {
     owner: {embedded: 'load'},
     country: {embedded: 'load'},
-    meta: {embedded: 'load'},
+    meta_data: {embedded: 'load'},
     tags: {embedded: 'load'}
 });
 
@@ -13,7 +13,6 @@ App.Adapter.map('App.ProjectPreview', {
 });
 
 App.Adapter.map('App.MyProject', {
-    budgetLines: {embedded: 'load'},
     tags: {embedded: 'always'}
 });
 
@@ -43,7 +42,8 @@ App.Project = DS.Model.extend({
 
     owner: DS.belongsTo('App.UserPreview'),
 
-    // Start, it actually doesn't need anything, maybe the language
+    // Start
+    language: DS.belongsTo('App.Language'),
 
     // Pitch
     title: DS.attr('string'),
@@ -55,6 +55,9 @@ App.Project = DS.Model.extend({
     description: DS.attr('string'),
     effects: DS.attr('string'),
     reach: DS.attr('number'),
+
+    // new story field
+    story: DS.attr('string'),
 
     // Location
     country: DS.belongsTo('App.Country'),
@@ -69,7 +72,7 @@ App.Project = DS.Model.extend({
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
 
-    //organization: DS.belongsTo("App.Organization"),
+    organization: DS.belongsTo("App.Organization"),
 
     phaseName: function(){
         return this.get('status').get('name');
@@ -152,37 +155,10 @@ App.ProjectSearch = DS.Model.extend({
     country: DS.attr('number'),
     theme:  DS.attr('number'),
     ordering: DS.attr('string', {defaultValue: 'popularity'}),
-    phase: DS.attr('string', {defaultValue: 'campaign'}),
+    status: DS.attr('number', {defaultValue: 5}),
     page: DS.attr('number', {defaultValue: 1})
 
 });
-
-// TODO: Refactor App.DonationPreview to ProjectSupporter
-App.DonationPreview = DS.Model.extend({
-    url: 'bb_projects/supporters',
-
-    project: DS.belongsTo('App.ProjectPreview'),
-    member: DS.belongsTo('App.UserPreview'),
-    date_donated: DS.attr('date'),
-
-    time_since: function(){
-        return Globalize.format(this.get('date_donated'), 'X');
-    }.property('date_donated')
-});
-
-
-App.ProjectDonation = DS.Model.extend({
-    url: 'bb_projects/donations',
-
-    member: DS.belongsTo('App.UserPreview'),
-    amount: DS.attr('number'),
-    date_donated: DS.attr('date'),
-
-    time_since: function(){
-        return Globalize.format(this.get('date_donated'), 'X');
-    }.property('date_donated')
-});
-
 
 
 App.Theme = DS.Model.extend({
@@ -218,15 +194,31 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     
     requiredStoryFields: ['description', 'reach'],
     requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    friendlyFieldNames: null,
 
     init: function () {
-      this._super();
+        this._super();
 
         this.validatedFieldsProperty('validStory', this.get('requiredStoryFields'));
         this.validatedFieldsProperty('validPitch', this.get('requiredPitchFields'));
 
         this.missingFieldsProperty('missingFieldsStory', this.get('requiredStoryFields'));
         this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
+    },
+
+    save: function () {
+        this.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        this._super();
     },
 
     valid: function(){

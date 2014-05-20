@@ -394,7 +394,9 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
         if(record.constructor.toString() == 'App.User') {
             relationship.childReference.parent = relationship.parentReference;
             this._dirtyTree(dirtySet, record);
-        }
+        } else {
+            this._super(dirtySet, record, relationship);
+         }
     }
 });
 

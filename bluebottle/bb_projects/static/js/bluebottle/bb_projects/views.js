@@ -36,8 +36,14 @@ App.ProjectView = Em.View.extend({
 
     didInsertElement: function(){
         this._super();
-        this.$('.tags').popover({trigger: 'hover', placement: 'top', width: '100px'});
-        
+        this.$('.tags').popover({trigger: 'hover', placement: 'top', width: '100px'});       
+    } 
+});
+
+App.ProjectPlanView = Em.View.extend({
+    templateName: 'project_plan',
+
+    didInsertElement: function(){
         // project plan
         var height = $(window).height();
         var width = $(window).width();
@@ -60,40 +66,15 @@ App.ProjectView = Em.View.extend({
             view.$(".project-plan-main-link.active").removeClass("active");
             view.$(event.target).addClass("active");
             event.preventDefault();
-        });        
-    },
-    staticMap: function(){
-        var latlng = this.get('controller.latitude') + ',' + this.get('controller.longitude');
-        return "http://maps.googleapis.com/maps/api/staticmap?" + latlng + "&zoom=8&size=600x300&maptype=roadmap" +
-            "&markers=color:pink%7Clabel:P%7C" + latlng + "&sensor=false";
-    }.property('latitude', 'longitude')    
-});
-
-App.ProjectPlanView = Em.View.extend({
-    templateName: 'project_plan',
-});
-
-App.ProjectIndexView = Em.View.extend({
-    templateName: 'project_wall',
-    willInsertElement: function() {
-        this.get("controller").getTasks();
-        this.get("controller").set("showingAll", false);
+        }); 
     }
 });
 
-/* Form Elements */
-
-App.ProjectOrderList = [
-    {value: 'title', title: gettext("title")},
-    {value: 'money_needed', title: gettext("money needed")},
-    {value: 'deadline', title: gettext("deadline")}
-];
-
-App.ProjectOrderSelectView = Em.Select.extend({
-    content: App.ProjectOrderList,
-    optionValuePath: "content.value",
-    optionLabelPath: "content.title"
+App.ProjectIndexView = Em.View.extend({
+    templateName: 'project_wall'
 });
+
+/* Form Elements */
 
 App.ProjectPhaseSelectView = Em.Select.extend({
     optionValuePath: "content.id",
@@ -114,7 +95,6 @@ App.GenericFieldView = Em.View.extend({
             return 'generic_radio';
         }
         if (this.get('controller.model.type') == 'select') {
-            console.log(this.get('controller.model.values'));
             return 'generic_select';
         }
         return 'generic_textarea';
@@ -135,12 +115,6 @@ App.GenericFieldView = Em.View.extend({
 App.MyProjectListView = Em.View.extend({
     templateName: 'my_project_list'
 });
-
-App.MyProjectView = Em.View.extend({
-    templateName: 'my_project'
-
-});
-
 
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
@@ -180,14 +154,25 @@ App.MyProjectMediaView = Em.View.extend({
 });
 
 App.MyProjectOrganisationView = Em.View.extend({
-    templateName: 'my_project_organisation'
+    templateName: 'my_project_organisation',
+
+    focusNameField: function () {
+        // If there is already a focused element then don't 
+        // auto focus the first one
+        if (this.$('input:focus'))
+            return;
+
+        var nameInput = this.$('input:first');
+        if (nameInput)
+            nameInput.focus();
+    }.observes('controller.model.isNew')
 });
 
 App.MyProjectAmbassadorsView = Em.View.extend({
     templateName: 'my_project_ambassadors'
 });
 
-App.MyProjectBankView = Em.View.extend({
+App.MyProjectBankView = Em.View.extend(Em.TargetActionSupport, {
     templateName: 'my_project_bank'
 });
 

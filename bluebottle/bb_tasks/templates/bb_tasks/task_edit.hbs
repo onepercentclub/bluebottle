@@ -10,8 +10,8 @@
             <form class="l-content" id="task-form">
                 <legend>
                     <strong>{% trans "Edit current task" %}</strong>
+                    {% trans "For campaign:" %} {{ project.title }}
                 </legend>
-
                 <fieldset>
                     <ul>
                         {% bb_component 'bb-text-field' label=_('Title of your task') valueBinding='title' errors='errors.title' %}
@@ -51,9 +51,9 @@
 
                         {% bb_component 'bb-text-area' label=_('Deliverable') valueBinding='end_goal' rows='3' errors='errors.end_goal' placeholder=_('What do you expect to have in the end?') %}
 
-                        {% bb_component 'bb-text-field' label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type="'number'" %}
+                        {% bb_component 'bb-text-field' label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type='number' %}
 
-                        {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate="'12M'" valueBinding='deadline' errors='errors.deadline' %}
+                        {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate='12M' valueBinding='deadline' errors='errors.deadline' %}
 
                         {% bb_component 'bb-text-field' label=_('Location') valueBinding='location' errors='errors.location' placeholder=_('Can this be done online or on location?') %}
 

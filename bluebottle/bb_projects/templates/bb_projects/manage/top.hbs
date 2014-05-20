@@ -4,23 +4,24 @@
 
 {% tplhandlebars "_my_project_top" %}
 
-<div class="l-section account-header">
+<div class="l-section campaign-header">
     <nav class="l-wrapper">
 
-        <header class="account-title">
-            <h2>{% trans "My Projects"%}
+        <header>
+            <h1 class="page-title">{% trans "My projects"%}
             {{#if title}}
-                : <em class="account-subtitle">{{ title }}</em>
+                &rsaquo; <small class="campaign-subtitle">{{ title }}</small>
 			{{/if}}
-            </h2>
+            </h1>
         </header>
 
-        {{#if id}}
-            {{#link-to 'project' id href=true class="account-preview btn-link"}}
+        {{!--#if id}}
+            <div class="steps">&nbsp;</div>
+            {{#link-to 'project' id href=true class="campaign-preview-button btn btn-modest"}}
                 <span class="flaticon solid eye-1"></span>
                 {% trans "View project" %}
             {{/link-to}}
-        {{/if}}
+        {{/if--}}
     </nav>
 </div>
 

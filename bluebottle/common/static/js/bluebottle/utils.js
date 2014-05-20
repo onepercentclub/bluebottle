@@ -40,6 +40,7 @@ App.ModelValidationMixin = Ember.Mixin.create({
     // fields: an array of properties which will be checked
     //
     validatedFieldsProperty: function(name, fields) {
+
         if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
 
         var self = this;
@@ -62,11 +63,21 @@ App.ModelValidationMixin = Ember.Mixin.create({
 
         var self = this;
         var checkFunc = function() {
-            var missing = Em.A();
+            var missing = Em.A(),
+                friendlyNames = self.get('friendlyFieldNames');
 
             fields.forEach(function (field) {
-                if (!self.get(field))
-                    missing.addObject(field);
+                var fieldName;
+
+                if (!self.get(field)) {
+                    if (friendlyNames && friendlyNames[field]) {
+                        fieldName = friendlyNames[field];
+                    } else {
+                        fieldName = field;
+                    }
+
+                    missing.addObject(fieldName);
+                }
             });
             return missing;
         };
@@ -100,6 +111,10 @@ App.Editable = Ember.Mixin.create({
                 // record was saved
                 controller.set('saving', false);
                 controller.set('saved', true);
+            });
+
+            record.one('becameInvalid', function(record) {
+                controller.set('saving', false);
             });
 
             record.save();
@@ -205,9 +220,11 @@ App.UploadFile = Ember.TextField.extend({
         var view = this;
 
         reader.onload = function(e) {
-            var preview = "<img src='" + e.target.result + "' />";
-            view.$().parents('form').find('.preview').remove();
-            view.$().parent().after('<div class="preview">' + preview + '</div>');
+            var preview = "<figure><img src='" + e.target.result + "' /></figure>";
+            // view.$().parents('form').find('.preview').remove();
+            view.$().parents('.image-upload').find('figure').remove();
+            // view.$().parent().after('<div class="preview">' + preview + '</div>');
+            view.$().closest(".image-upload").find(".image-upload-drag").prepend(preview);
         };
         reader.readAsDataURL(file);
         var model = this.get('parentView.controller.model');
@@ -257,36 +274,24 @@ App.UploadMultipleFiles = Ember.TextField.extend({
     }
 });
 
+App.UploadedImageView = App.UploadFile.extend({
+    attributeBindings: ['name', 'accept'],
+    type: 'file',
 
-// See/Use App.DatePicker
-App.DatePickerValue = Ember.TextField.extend({
-    type: 'hidden',
-    valueBinding: "parentView.value"
-});
+    change: function (evt) {
+        var files = evt.target.files;
+        var reader = new FileReader();
+        var file = files[0];
+        var view = this;
 
-// See/Use App.DatePicker
-App.DatePickerWidget = Ember.TextField.extend({
-
-    dateBinding: "parentView.value",
-    configBinding: "parentView.config",
-
-    didInsertElement: function(){
-        var config = this.get('config');
-        this.$().datepicker(config);
-        this.$().datepicker('setDate', this.get('date'));
-    },
-
-    change: function(){
-        this.set('date', this.$().datepicker('getDate'));
-    }
-});
-
-// This renders a TextField with the localized date.
-// On click it will use jQuery UI date picker dialog so the user can select a date.
-// valueBinding should bind to a  DS.attr('date') property of an Ember model.
-App.DatePicker = Ember.ContainerView.extend({
-    config: {changeMonth: true, changeYear: true, yearRange: "c-100:c+10"},
-    childViews: [App.DatePickerValue, App.DatePickerWidget]
+        reader.onload = function(e) {
+            var preview = "<img src='" + e.target.result + "' />";
+			view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
+        };
+        reader.readAsDataURL(file);
+        var model = this.get('parentView.controller.model');
+        this.set('file', file);
+    }
 });
 
 
@@ -323,9 +328,11 @@ App.MapPicker = Em.View.extend({
 						if (status == google.maps.GeocoderStatus.OK) {
 							for (var i = 0; i < results[0].address_components.length; i++) {
 								if (results[0].address_components[i].types[0] == "country") {
-									results[0].address_components[i].short_name
-									view.get('model').set('country', App.Country.find(
-										alpha2_code=results[0].address_components[i].short_name))
+									var code = results[0].address_components[i].short_name,
+									    country = App.Country.find().filterProperty('code', code)[0];
+
+									if (country)
+										view.get('model').set('country', country);
 								}
 							}
 						}
@@ -388,15 +395,6 @@ App.MapPicker = Em.View.extend({
          });
      }
 
-});
-
-App.CustomDatePicker = App.DatePicker.extend({
-    init: function(){
-        this._super();
-        if (this.get("minDate") != undefined) {
-            this.config.minDate = this.get("minDate");
-        }
-    }
 });
 
 App.FlashView = Em.View.extend();

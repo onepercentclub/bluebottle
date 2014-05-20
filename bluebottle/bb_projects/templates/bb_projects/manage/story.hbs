@@ -5,28 +5,18 @@
 
 {% tplhandlebars "my_project_story" %}
 
-    <legend>
-        <strong>{% trans "Project Description" %}</strong>
-        <p>{% trans "Time to blow us away with the details! Tell us about your motivation, why this project is important and what the impact will be." %}</p>
-    </legend>
+    {{#unless isPhasePlanNew}}
+        {{bb-flash data=flash}}
+    {{/unless}}
 
-    {{bb-flash data=flash}}
+    {{ partial "_story_legend" }}
 
     <fieldset>
         <ul>
-            {{bb-text-area rows='10' name='whywhat' label='Why, what and how' undertext='Describe your project in more detail.' valueBinding=description
-                placeholder='Describe your project' errors=errors.description maxlength=800}}
-
-            {{bb-text-area rows='5' label='Goal' name='goal' undertext='What do you want to achieve with this project and how will you measure your success?' valueBinding=goal
-                placeholder='Describe the goal of the project' maxlength=800}}
-
-            {{bb-text-area rows='5' label='Destination Impact' name='destination_impact' undertext='How will your project improve your destination, now and maybe even in the future?'
-                placeholder='Describe how the project improves your destination' valueBinding=destination_impact maxlength=800}}
-
-
+            {{ partial "_my_project_story_fields" }}
         </ul>
     </fieldset>
 
-{{ partial '_my_project_save_edit_footer'}}
+    {{ partial '_my_project_save_edit_footer'}}
 
 {% endtplhandlebars %}

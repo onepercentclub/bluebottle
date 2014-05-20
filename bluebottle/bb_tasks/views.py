@@ -97,8 +97,9 @@ class TaskMemberList(generics.ListCreateAPIView):
     model = BB_TASKMEMBER_MODEL
     serializer_class = TaskMemberSerializer
     paginate_by = 50
-    filter_fields = ('task', )
+    filter_fields = ('task', 'status', )
     permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = model.objects.all()
 
     def pre_save(self, obj):
         # When creating a task member it should always be by the request.user and have status 'applied'

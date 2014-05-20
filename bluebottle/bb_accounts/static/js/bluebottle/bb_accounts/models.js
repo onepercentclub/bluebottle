@@ -23,7 +23,7 @@ App.User = DS.Model.extend({
 
     about: DS.attr('string'),
     why: DS.attr('string'),
-    availability: DS.attr('string'),
+    time_available: DS.belongsTo('App.TimeAvailable'),
     location: DS.attr('string'),
 
     picture: DS.attr('image'),
@@ -47,6 +47,38 @@ App.User = DS.Model.extend({
 
     tags: DS.hasMany("App.Tag", {embedded: "always"}),
 
+    themes_list: function() {
+        var arr = [];
+        this.get('favourite_themes').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('favourite_themes.@each.name'),
+
+    countries_list: function() {
+        var arr = [];
+        this.get('favourite_countries').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('favourite_countries.@each.name'),
+
+    skills_list: function() {
+        var arr = [];
+        this.get('skills').forEach(function (item, index, self) {
+            arr.push(item.get('name'));
+        });
+        return arr.join(', ');
+    }.property('skills.@each.name'),
+
+    tags_list: function() {
+        var arr = [];
+        this.get('tags').forEach(function(item, index, self) {
+            arr.push(item.get('id'));
+        });
+        return arr.join(', ');
+    }.property('tags.@each.id'),
+
     getPicture: function() {
         if (this.get('picture')) {
             return this.get('picture.large')
@@ -69,11 +101,13 @@ App.User = DS.Model.extend({
     }.property('first_name'),
 
     get_website: function() {
-        if (this.get('website').substr(0,7) != 'http://') {
-            return "http://" + this.get('website');
+        if (this.get('website').substr(0,7) == 'http://') {
+            return this.get('website').replace('http://', '');
+        } else if ((this.get('website').substr(0,11) == 'http://www.')) {
+            return this.get('website').replace('http://www.', '');
         } else {
-            return this.get('website');
-        }
+			return this.get('website');
+		}
     }.property('website'),
 
     user_since: function() {
@@ -87,7 +121,6 @@ App.User = DS.Model.extend({
     get_facebook: function() {
         return '//www.facebook.com/' + this.get('facebook');
     }.property('facebook')
-
 });
 
 
@@ -118,6 +151,15 @@ App.User.reopen({
 //   }
 // });
 
+
+//Configure the embedded object. Embed UserAddress object in user settings.
+// (see: http://stackoverflow.com/questions/14521182/ember-data-does-not-support-embedded-objects/14521612#14521612)
+App.Adapter.map('App.UserSettings', {
+   address: {
+       embedded: 'always'
+   }
+});
+
 App.UserSettings = DS.Model.extend({
     url: 'users/settings',
 
@@ -129,13 +171,15 @@ App.UserSettings = DS.Model.extend({
     birthdate: DS.attr('birthdate'),
     user_type: DS.attr('string'),
     primary_language: DS.attr('string'),
+    address: DS.belongsTo('App.UserAddress')
+});
 
-    // Address
+App.UserAddress = DS.Model.extend({
     line1: DS.attr('string'),
     line2: DS.attr('string'),
     city: DS.attr('string'),
     state: DS.attr('string'),
-    country: DS.attr('string'),
+    country: DS.belongsTo('App.Country'),
     postal_code: DS.attr('string')
 });
 
@@ -225,4 +269,11 @@ App.PasswordReset = DS.Model.extend({
 
     new_password1: DS.attr('string'),
     new_password2: DS.attr('string')
+});
+
+
+App.TimeAvailable = DS.Model.extend({
+    url: 'users/time_available',
+	type: DS.attr('string'),
+	description : DS.attr('string')
 });

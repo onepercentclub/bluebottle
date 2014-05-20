@@ -9,8 +9,16 @@
     .project-meta {
         font-family: $font-family-heavy;
 		@include clear;
-		.project-location, .project-deadline, .project-theme {
-			@include grid(16,0,0);
+		.project-location, .project-theme {
+			@include grid(20,0,0);
+		}
+		.project-edit {
+			@include grid(8,0,0);
+			text-align: right;
+			
+			a {
+				text-decoration: none;
+			}
 		}
     }
     
@@ -81,19 +89,23 @@
 		padding: ($base-padding*2) 0;
 	}
 	
-    
     .project-image {
 		@include grid(24,1,1);
 		img {
 		       border: 1px solid $gray-lighter; 
 		}	
     } 
+    
 	.project-info {
 		@include grid(24,1,1);
 	}
     
     .project-title {
         color: $white;
+    }
+    
+    .project-plan-link {
+	    color: $color-secondary;
     }
     
     .project-days-left {

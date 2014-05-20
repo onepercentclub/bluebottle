@@ -29,7 +29,7 @@ App.Adapter.map('App.WallPostReaction', {
 App.WallPostPhoto = DS.Model.extend({
     url: 'wallposts/photos',
     photo: DS.attr('image'),
-    mediawallpost: DS.belongsTo('App.MediaWallPost'),	
+    mediawallpost: DS.belongsTo('App.MediaWallPost')
 });
 
 // This is union of all different wallposts.
@@ -54,7 +54,6 @@ App.WallPost = DS.Model.extend({
     related_id: DS.attr('string'),
     related_type: DS.attr('string'),
 
-    related_type: DS.attr('string'),
     related_object: DS.attr('object'), // keep it generic
 
     isSystemWallPost: function(){

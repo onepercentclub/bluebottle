@@ -61,6 +61,7 @@ fieldset {
 }
 
 fieldset {
+    background-color: $form-fieldset-bg-color;
     .fieldset-tabs {
         margin-bottom: -$base-margin / 2;
     }
@@ -72,7 +73,7 @@ legend {
 	padding: $base-padding*3/2 $base-padding*2;
 	background-color: $form-legend-bg-color;
 	width: 100%;
-		
+	color: $form-legend-color;	
 	strong {
 		display: block;
 		font-family: $font-family-heavy;
@@ -92,6 +93,17 @@ fieldset legend {
       
     strong {
         color: $form-fieldset-legend-strong-color;
+    }
+}
+
+label, .control-label {
+        
+    small {
+    	display: block;
+        font-family: $base-font-family;
+        color: $gray;
+        margin-top: 0.2em;
+        line-height: 1.2em;
     }
 }
 
@@ -149,8 +161,11 @@ fieldset legend {
     &.success {
         text-align: center;
         padding: 10px;
-        border: 2px solid green;
-        background-color: lightgreen;
+        border: 2px solid darken($color-success, 20%);
+        background-color: $color-success;
+        margin: $base-margin 0;
+        color: $white;
+        font-weight: bold;
     }
 }
 
@@ -210,14 +225,13 @@ p.error, label.error {
     position: absolute;
     right: -50%;
     @include single-box-shadow( rgba(0,0,0,0.25) , 0, 0, 12px, 0px);
-
-
     background-color: $form-message-error-bg-color;
     border: 1px solid darken($form-message-error-bg-color, 10%);
     padding: $base-padding/2 $base-padding;
     color: $form-message-error-color;
     font-size: $font-size-small;
     font-family: $font-family-heavy;
+    z-index: 100;
 	
     p {
         margin: 0;
@@ -387,6 +401,7 @@ input[type=range]::-webkit-slider-thumb {
         background-color: $color-secondary;
         overflow: hidden;
         border: 1px solid $gray-darkest;
+
         .flaticon {
             text-shadow: 0 0 1px $gray-darkest;
         }
@@ -395,7 +410,6 @@ input[type=range]::-webkit-slider-thumb {
             cursor: pointer;
             // padding: $base-padding;
             background: $gray-dark;
-            color: $gray-light;
             font-size: $font-size-larger;
             text-decoration: none;
             text-align:center;
@@ -407,7 +421,7 @@ input[type=range]::-webkit-slider-thumb {
             padding: 0;
             width: 40px;
             height: 40px;
-            line-height: 40px;
+            line-height: 42px;
             @include box-shadow(inset 0 0 2px $gray-dark);
             &:hover {
                 color: $form-tags-delete-hover-color;
@@ -417,6 +431,9 @@ input[type=range]::-webkit-slider-thumb {
     }
 }
 
+.btn.add-tag {
+    margin: 0 $base-margin;
+}
 .btn-tag, .btn-modest {
     font-size: $font-size-small !important;
 }

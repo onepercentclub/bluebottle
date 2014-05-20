@@ -118,6 +118,31 @@ App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMi
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, {
     needs: ['currentUser'],
 
+	// you can apply to a task only if:
+	// the task is not closed, realized or completed
+	// (strange behaviour since completed is not a status but just a label)
+	// and if:
+	// you are not a already a member or if you already applied
+	isApplicable: function(){
+		var model = this.get('model');
+        if (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted')){
+            return false;
+        }
+        if (this.get('isMember')) {
+            return false;
+        }
+        if (this.get('acceptedMemberCount') >=  this.get('people_needed')) {
+            return false;
+
+        }
+        return true;
+	}.property('status', 'isMember', 'model.isStatusClosed', 'model.isStatusRealized', 'model.isStatusCompleted',
+		'model.@members.isStatusAccepted'),
+
+    acceptedMemberCount: function(){
+        return (this.get('members').filterBy('isAccepted').get('length'));
+    }.property('model.members.@each.status'),
+
     isMember: function() {
         var user = this.get('controllers.currentUser.username');
         var isMember = false;
@@ -134,13 +159,13 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         return (this.get('isMember') || this.get('isAuthor'));
     }.property('isMember', 'isAuthor'),
 
-	acceptedMembers: function() {
-		return this.get('model').get('members').filterBy('isStatusAccepted', true);
-	}.property('members.@each.member.isStatusAccepted'),
+    acceptedMembers: function() {
+      return this.get('model').get('members').filterBy('isStatusAccepted', true);
+    }.property('members.@each.member.isStatusAccepted'),
 
-	notAcceptedMembers: function() {
-		return this.get('model').get('members').filterBy('isStatusAccepted', false);
-	}.property('members.@each.member.isStatusAccepted')
+    notAcceptedMembers: function() {
+      return this.get('model').get('members').filterBy('isStatusAccepted', false);
+    }.property('members.@each.member.isStatusAccepted')
 
 });
 

@@ -75,6 +75,22 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
+class TimeAvailable(models.Model):
+    """
+    A class for modeling the time available
+    """
+    type = models.CharField(_('type'), max_length=100, unique=True)
+    description = models.TextField(_('description'))
+
+    class Meta:
+        ordering = ['type']
+        verbose_name = _('time available')
+        verbose_name_plural = _('times available')
+
+    def __unicode__(self):
+        return u'{0} - {1}'.format(self.type, self.description)
+
+
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.
@@ -127,7 +143,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
     about = models.TextField(_('about'), max_length=265, blank=True)
     why = models.TextField(_('why'), max_length=265, blank=True)
-    availability = models.CharField(_('availability'), max_length=25, blank=True, choices=Availability.choices)
+
+    time_available = models.ForeignKey('bb_accounts.TimeAvailable', null=True, blank=True)
     # max length is not entirely clear, however over 50 characters throws errors on facebook
     facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
     # max length: see https://support.twitter.com/articles/14609-changing-your-username
@@ -235,16 +252,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg = EmailMessage(subject, message, from_email, [self.email])
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
-
-    @property
-    # For now return the first address found on this user.
-    def address(self):
-        # addresses = self.useraddress_set.all()
-        # if addresses:
-        #     return addresses[0]
-        # else:
-        #     return None
-        return None
 
     @property
     def short_name(self):

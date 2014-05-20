@@ -9,45 +9,36 @@
 
         <header class="wallpost-header">
 
-            <span class="wallpost-system-type">
-                <span class="flaticon solid wallet-1"></span>
-                {{#if showFundRaiser}}
-                    {% trans "Fundraiser" %}
-                {{else}}
-                    {% trans "Donation" %}
-                {{/if}}
-            </span>
-
             <div class="wallpost-member">
-                {{#if author}}
                 <a {{action openInBigBox "userModal" author}} class="member">
-                    <strong class="member-name">{{author.full_name}}</strong>
+                    <figure class="member-avatar">
+                        {{#if author}}
+                        <img {{bindAttr src="author.getAvatar" alt="author.full_name"}} />
+                        {{else}}
+                        <img src="{% get_static_prefix %}/images/default-avatar.png" alt="someone" />
+                        {{/if}}
+
+                        {{#if isInitiator}}
+                            <span class="member-function">Initiator</span>
+                        {{/if}}
+                    </figure>
                 </a>
-                {{else}}
-                <span class="member">
-                    <span class="member member-guest"><strong class="member-name">{% trans "Someone" %}</strong></span>
-                </span>
-                {{/if}}
-                <span class="wallpost-system-action">
-                    {% trans "made a donation" %}
-                </span>
             </div>
-            {{#if showFundRaiser}}
-                <div class="wallpost-system-message">
-                    {{#link-to 'fundRaiser' fundraiser.id class="wallpost-fundraiser-link"}}{{fundraiser.title}}{{/link-to}}
-                </div>
-            {{/if}}
 
-
-            {{#if created}}
             <div class="wallpost-meta">
-                <em class="timestamp">{{ localize created formatting="X" }}</em>
-                {{#if isAuthor}}
-                    <a {{ action "deleteWallPost" target="view" }} class="manage-delete">{% trans "Delete" %}</a>
+                {{#if author}}
+                <h4 class="wallpost-author">{{author.full_name}}</h4>
+                {{else}}
+                <h4 class="wallpost-author">{% trans "Someone" %}</h4>
+                {{/if}}
+                {{#if created}}
+                    <span class="wallpost-timestamp">{{ localize created formatting="X" }}</span>
                 {{/if}}
             </div>
-            {{/if}}
 
+            <h3 class="wallpost-title">
+                {% trans "made a donation" %}
+            </h3>
         </header>
 
         <div class="wallpost-reactions">

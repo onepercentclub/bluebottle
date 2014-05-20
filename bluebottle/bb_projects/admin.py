@@ -27,9 +27,9 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     actions = ('set_failed', 'toggle_campaign')
 
     list_filter = ('status', )
-    list_display = ('get_title_display', 'get_owner_display', 'created')
+    list_display = ('get_title_display', 'get_owner_display', 'created', 'status')
 
-    search_fields = ('title', 'owner__first_name', 'owner__last_name', 'partner_organization__name')
+    search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
 
     raw_id_fields = ('owner', 'organization')
 
@@ -39,7 +39,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
         # Optimization: Select related fields that are used in admin specific display fields.
         queryset = super(BaseProjectAdmin, self).queryset(request)
         return queryset.select_related('projectpitch', 'projectplan', 'projectcampaign', 'owner',
-                                       'partner_organization')
+                                       'organization')
 
     def get_title_display(self, obj):
         if len(obj.title) > 50:

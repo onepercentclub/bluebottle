@@ -110,8 +110,9 @@ App.MyProjectIndexRoute = Em.Route.extend({
 });
 
 
-App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
+App.MyProjectSubRoute = Em.Route.extend(App.SaveOnTransitionRouteMixin, App.ScrollToTop, {
     skipExitSignal: false,
+
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -126,17 +127,12 @@ App.MyProjectSubRoute = Em.Route.extend(App.ScrollToTop, {
 
     model: function(params) {
         return this.modelFor('myProject');
-    },
-
-    exit: function() {
-        if (!this.skipExitSignal) {
-            this.get('controller').send('goToStep');
-        }
     }
 });
 
 App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
     skipExitSignal: true,
+
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -158,19 +154,14 @@ App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({});
-
 App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
-
-
 App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
-
     setupController: function(controller, model) {
         this._super(controller, model);
         controller.set('fields', App.ProjectDetailField.find());
     }
 });
-
+App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({skipExitSignal: true});
 
 App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     setupController: function(controller, model){
@@ -188,21 +179,17 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     }
 });
 
-App.MyProjectOrganisationRoute = Em.Route.extend({
-    model: function(params){
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
+    model: function(params) {
         var project = this.modelFor('myProject');
+
         if (project.get('organization')) {
             return project.get('organization');
         } else {
-            var organization = App.MyOrganization.createRecord();
-            return organization;
+            return App.MyOrganization.createRecord();
         }
     },
-    exit: function() {
-        if (!this.skipExitSignal) {
-            this.get('controller').send('goToStep');
-        }
-    },
+
     setupController: function (controller, model) {
       this._super(controller, model);
 
@@ -210,7 +197,20 @@ App.MyProjectOrganisationRoute = Em.Route.extend({
     }
 });
 
-App.MyProjectBankRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
+    model: function(params) {
+        var project = this.modelFor('myProject'),
+        organization = this.modelFor('myProjectOrganization');
+
+        if (organization) {
+            return organization;
+        } else if (project.get('organization')) {
+            return project.get('organization');
+        } else {
+            return App.MyOrganization.createRecord();
+        }
+    }
+});
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
 

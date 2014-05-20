@@ -35,6 +35,10 @@
     {% compress css %}
 		{% block screen_css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" media="screen" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/vendor/redactor.css" media="screen" />
+        <!--[if IE]>
+            <link rel="stylesheet" href="{{ STATIC_URL }}css/ie.css" media="screen" />
+        <![endif]-->
 		{% endblock screen_css %}
     {% endcompress %}
 
@@ -44,7 +48,8 @@
         var STATIC_URL = '{{ STATIC_URL }}';
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
-        var DEBUG = {{ debug|yesno:"true,false" }};
+        var DEBUG = {{ settings.DEBUG|yesno:"true,false" }};
+        var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
 
     {# The Ember stack. jQuery, jQuery-ui, Ember, Ember-data, Ember-drf2-adapter, Ember meta #}
@@ -53,6 +58,7 @@
     {% else %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     {% endif %}
+    <script type="text/javascript" src="https://cdn.dev.skype.com/uri/skype-uri.js"></script>
 
     {% compress js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-ui/minified/jquery.ui.core.min.js"></script>
@@ -80,6 +86,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-bootstrap-df3e710.js"></script>
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-validation/jquery.validate{% if not debug %}.min{% endif %}.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/redactor.min.js"></script>
 
         {# Plugins #}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-radio-button.js"></script>
@@ -87,6 +94,14 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/plugins/handlebars.helpers.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/plugins/unslider.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/plugins/ember.hashbang.js"></script>
+
+        {# JS slider #}
+        <script src="/static/assets/js/vendor/jslider/draggable-0.1.js"></script>
+        <script src="/static/assets/js/vendor/jslider/tmpl.js"></script>
+        <script src="/static/assets/js/vendor/jslider/jquery.dependClass-0.1.js"></script>
+        <script src="/static/assets/js/vendor/jslider/jshashtable-2.1_src.js"></script>
+        <script src="/static/assets/js/vendor/jslider/jquery.numberformatter-1.2.3.js"></script>
+        <script src="/static/assets/js/vendor/jslider/jquery.slider.js"></script>
 
         {# BlueBottle Application #}
 
@@ -97,6 +112,7 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/mixins.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/controllers.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/overrides.js"></script>
 
             {% for app in bb_apps %}
                 <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/routes.js"></script>
@@ -114,8 +130,10 @@
             {% include app|add:"/base.hbs" %}
         {% endfor %}
     {% endblock handlebars_templates %}
-		<script src="{{ STATIC_URL }}js/vendor/jquery.scrollTo.min.js" type="text/javascript" charset="utf-8"></script>
-		<!--script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js"></script-->
+
+
+    <script src="{{ STATIC_URL }}js/vendor/jquery.scrollTo.min.js" type="text/javascript" charset="utf-8"></script>
+    <!--script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js"></script-->
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
     <script src="{{ STATIC_URL }}js/infobox.js"></script>
     <script src="{{ STATIC_URL }}js/marker_clusterer.js"></script>
@@ -220,15 +238,16 @@
     <div id="fb-root"></div>
 
 	{% block google_analytics %}
-    {#  Google analytics #}
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-2761714-4']);
-        _gaq.push(['_trackPageview']);
-        (function()
-        { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
-        )();
-    </script>
+        <script type="text/javascript">
+          var _gaq = _gaq || [];
+            {% if ANALYTICS_CODE %}
+                _gaq.push(['_setAccount', '{{  ANALYTICS_CODE }}']);
+                _gaq.push(['_trackPageview']);
+                (function()
+                { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
+                )();
+            {%  endif %}
+        </script>
 	{% endblock %}
 	
     <!--[if lte IE 9]>

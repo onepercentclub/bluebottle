@@ -13,3 +13,49 @@ def installed_apps_context_processor(request):
         'bb_apps': bb_apps,
     }
     return context
+
+
+def google_analytics_code(request):
+    """
+    Add Google Analytics code from settings file to general request context.
+    """
+    try:
+        context = {'ANALYTICS_CODE': settings.ANALYTICS_CODE}
+    except AttributeError:
+        context ={}
+    return context
+
+
+def google_maps_api_key(request):
+    """
+    Add Google Maps API key from settings file to general request context.
+    """
+    try:
+        context = {'MAPS_API_KEY': settings.MAPS_API_KEY}
+    except AttributeError:
+        context = {}
+    return context
+
+
+def git_commit(request):
+    """
+    Make the git commit hash available in the templates.
+    """
+    try:
+        context = {'GIT_COMMIT': settings.GIT_COMMIT}
+    except AttributeError:
+        context = {}
+    return context
+
+
+def conf_settings(request):
+    """
+    Some settings we want to make available in templates.
+    """
+    try:
+        context = {'settings': {
+            'DEBUG': settings.DEBUG,
+        }}
+    except AttributeError:
+        context = {}
+    return context

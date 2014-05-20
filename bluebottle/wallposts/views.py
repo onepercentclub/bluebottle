@@ -29,7 +29,6 @@ class WallPostFilter(django_filters.FilterSet):
 class WallPostList(ListAPIView):
     model = WallPost
     serializer_class = WallPostSerializer
-    filter_class = WallPostFilter
     paginate_by = 5
 
     def get_queryset(self):
@@ -38,13 +37,11 @@ class WallPostList(ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
-
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(PROJECT_MODEL)
         else:
             white_listed_apps = ['projects', 'tasks', 'fundraisers']
             content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(name=parent_type)
-
         queryset = queryset.filter(content_type=content_type)
 
         if parent_type == 'project' and parent_id:
@@ -53,7 +50,6 @@ class WallPostList(ListAPIView):
             except PROJECT_MODEL.DoesNotExist:
                 return WallPost.objects.none()
             queryset = queryset.filter(object_id=project.id)
-
         else:
             queryset = queryset.filter(object_id=parent_id)
 
@@ -70,7 +66,6 @@ class TextWallPostList(ListCreateAPIView):
 
     def get_queryset(self):
         queryset = super(TextWallPostList, self).get_queryset()
-
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)

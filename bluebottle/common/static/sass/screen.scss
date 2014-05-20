@@ -16,7 +16,6 @@
 @import "mixins/grid";
 @import "mixins/utilities";
 
-
 /* Icons */
 @import "icons/flaticons-social";
 @import "icons/flaticons-solid";
@@ -56,9 +55,10 @@
 @import "modules/project-iframe";
 @import "modules/owner-actions";
 @import "modules/maps";
-@import "modules/steps";
-@import "modules/image_upload";
-@import "modules/document_upload";
+// @import "modules/steps";
+@import "modules/image-upload";
+@import "modules/document-upload";
+
 
 /* Pages */
 @import "pages/home";
@@ -86,3 +86,4 @@
 /* Plugins */
 @import "plugins/jquery-ui";
 @import "plugins/colorbox";
+@import "plugins/jslider";

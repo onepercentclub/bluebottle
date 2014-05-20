@@ -1,3 +1,4 @@
+from django.db.models.query_utils import Q
 from taggit.managers import TaggableManager
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -9,6 +10,9 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from sorl.thumbnail import ImageField
+from django.db.models import options
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 
 class ProjectTheme(models.Model):
@@ -38,6 +42,7 @@ class ProjectTheme(models.Model):
 class ProjectPhase(models.Model):
     """ Phase of a project """
 
+    slug = models.SlugField(max_length=200, unique=True)
     name = models.CharField(max_length=100, unique=True)
     description = models.CharField(max_length=400, blank=True)
     sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
@@ -53,6 +58,56 @@ class ProjectPhase(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.sequence,  self.name)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(ProjectPhase, self).save(*args, **kwargs)
+
+
+class BaseProjectManager(models.Manager):
+
+    def search(self, query):
+        qs = super(BaseProjectManager, self).get_query_set()
+
+        # Apply filters
+        status = query.get('status', None)
+        if status:
+            qs = qs.filter(status_id=status)
+
+        country = query.get('country', None)
+        if country:
+            qs = qs.filter(country=country)
+
+        theme = query.get('theme', None)
+        if theme:
+            qs = qs.filter(theme_id=theme)
+
+        text = query.get('text', None)
+        if text:
+            qs = qs.filter(Q(title__icontains=text) |
+                           Q(pitch__icontains=text) |
+                           Q(description__icontains=text))
+
+        return self._ordering(query.get('ordering', None), qs)
+
+    def _ordering(self, ordering, queryset):
+
+        qs = queryset
+
+        if ordering == 'deadline':
+            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = qs.order_by('deadline')
+            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+        elif ordering == 'newest':
+            qs = qs.order_by('amount_needed')
+            qs = qs.filter(amount_needed__gt=0)
+            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+        elif ordering:
+            qs = qs.order_by(ordering)
+
+        return qs
+
+
 
 
 class BaseProject(models.Model):
@@ -90,12 +145,18 @@ class BaseProject(models.Model):
         help_text=_('Main project picture'))
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
+    language = models.ForeignKey('utils.Language', blank=True, null=True)
+
+    objects = BaseProjectManager()
 
     class Meta:
         abstract = True
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')
+        default_serializer = 'bluebottle.bb_projects.serializers.ProjectSerializer'
+        preview_serializer = 'bluebottle.bb_projects.serializers.ProjectPreviewSerializer'
+        manage_serializer = 'bluebottle.bb_projects.serializers.ManageProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title
@@ -113,15 +174,10 @@ class BaseProject(models.Model):
 
         super(BaseProject, self).save(*args, **kwargs)
 
+    @models.permalink
     def get_absolute_url(self):
-        """ Get the URL for the current project. """
-        return reverse('project_detail', kwargs={'slug': self.slug})
-
-    def get_absolute_frontend_url(self):
         """ Insert the hashbang, after the language string """
-        url = self.get_absolute_url()
-        bits = url.split('/')
-        url = '/'.join(bits[:2] + ['#!'] + bits[2:])
+        url = "/#!/projects/{0}".format(self.slug)
 
         return url
 

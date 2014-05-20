@@ -336,6 +336,8 @@
 	padding: $base-padding;
 	padding-bottom: 0;
 	margin-bottom: $base-margin;
+	color: $wallposts-wallpost-color;
+	background-color: $wallposts-wallpost-bg-color;
 
 	.wallpost-header {
 
@@ -357,24 +359,22 @@
 			}
 		}
 
-		.wallpost-meta {
 
-			.wallpost-author {
-				text-transform: none;
-				color: $wallposts-wallpost-author-color;
-				display: inline;
-			}
+		.wallpost-author {
+			text-transform: none;
+			color: $wallposts-wallpost-author-color;
+			display: inline;
+		}
 
-			.wallpost-timestamp {
-				color: $wallposts-wallpost-timestamp-color;
-				font-size: $font-size-small;
-			}
-			
-			.wallpost-edit {
-				float: right;
-				text-decoration: none;
-				padding: $base-padding / 2;
-			}
+		.wallpost-timestamp {
+			color: $wallposts-wallpost-timestamp-color;
+			font-size: $font-size-small;
+		}
+		
+		.wallpost-edit {
+			float: right;
+			text-decoration: none;
+			padding: $base-padding / 2;
 		}
 
 		.wallpost-title {
@@ -391,43 +391,36 @@
 		}
 	}
 	
-	.wallpost-reactions {
-		
-		margin: -$base-margin;
-		margin-top: 0;
-		margin-bottom: 0;
-		position: relative;
-		
-		.reactions {
-			&:after {
-				left: 50px;
-				bottom: 100%;
-				border: solid transparent;
-				content: " ";
-				height: 0;
-				width: 0;
-				position: absolute;
-				pointer-events: none;
-				border-bottom-color: $gray-lighter;
-				border-width: 10px;
-				margin-left: -10px;
-			}	
-		}
-	}
 	
 	&.wallpost-system {
+		// border: 1px solid $wallposts-wallpost-system-border-color;
+		color: $wallposts-wallpost-system-color;
 		background-color: $wallposts-wallpost-system-bg-color;
+		.wallpost-author, .member-name {
+			color: $wallposts-wallpost-system-author-color;
+		}
+		.wallpost-title {
+			color: $wallposts-wallpost-system-title-color;
+		}
+		.wallpost-timestamp {
+			color: $wallposts-wallpost-system-timestamp-color;
+		}
 	}
 	
 	&.important {
 		
-		border: 1px solid $wallposts-wallpost-important-border-color;
+		// border: 1px solid $wallposts-wallpost-important-border-color;
+		color: $wallposts-wallpost-important-color;
+		background-color: $wallposts-wallpost-important-bg-color;
 		
-		.wallpost-author {
+		.wallpost-author, .member-name {
 			color: $wallposts-wallpost-important-author-color;
 		}
 		.wallpost-title {
 			color: $wallposts-wallpost-important-title-color;
+		}
+		.wallpost-timestamp {
+			color: $wallposts-wallpost-important-timestamp-color;
 		}
 	}
 	

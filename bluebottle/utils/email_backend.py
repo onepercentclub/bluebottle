@@ -32,7 +32,6 @@ class TestMailBackend(EmailBackend):
             recipient = request.user.email
         else:
             recipient = str(email_message.recipients()[0])
-            print recipient
             if '+test' not in recipient:
                 return False
 

@@ -14,9 +14,16 @@ from taggit.managers import _TaggableManager
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 
 from .validators import validate_postal_code
-from .models import Address
+from .models import Address, Language
 
 from HTMLParser import HTMLParser
+
+
+class LanguageSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Language
+        fields = ('id', 'code', 'language_name', 'native_name')
 
 
 class MLStripper(HTMLParser):
@@ -267,13 +274,26 @@ class MetaField(serializers.Field):
 
 
 class DefaultSerializerMixin(object):
+    def get_custom_serializer(self):
+        return self.model._meta.default_serializer
+
     def get_serializer_class(self):
-        dotted_path = self.model._meta.default_serializer
+        dotted_path = self.get_custom_serializer()
         bits = dotted_path.split('.')
         module_name = '.'.join(bits[:-1])
         module = import_module(module_name)
         cls_name = bits[-1]
         return getattr(module, cls_name)
+
+
+class ManageSerializerMixin(DefaultSerializerMixin):
+    def get_custom_serializer(self):
+        return self.model._meta.manage_serializer
+
+
+class PreviewSerializerMixin(DefaultSerializerMixin):
+    def get_custom_serializer(self):
+        return self.model._meta.preview_serializer
 
 
 class HumanReadableChoiceField(serializers.ChoiceField):

@@ -28,6 +28,7 @@
     outline: none;
 
 	.close {
+        z-index: 100;
 	}
     &.large {
         width: 600px;
@@ -40,20 +41,51 @@
 
   &.scalable {
     height: 80%;
-    width: 80%;
-    left: 10%;
+    width: 60%;
+    left: 20%;
     margin-left: auto;
     margin-right: auto;
     overflow: hidden;
 
+    .modal-wrapper {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+
+        #project-plan {
+            overflow-y: auto;
+            position: relative;
+            height: 100%;
+        }
+
+        // this is needed because of nesting
+        .ember-view {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+    }
     .modal-body {
-      max-height: 100%;
+    	max-height: initial;
+    }
+  }
+  &.full-screen {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin-left: 0;
+    margin-top: 0;
+    .modal-wrapper, .ember-view {
+        position: relative;
+        height: 100%;
     }
   }
 }
 
 .modal-header, .modal-body, .modal-footer {
-    padding: $base-padding $base-padding*2;
+    padding: $base-padding*1.5 $base-padding*2.5;
 }
 
 .modal-close, .modal .close {
@@ -74,17 +106,19 @@
 }
 
 .modal-header {
+    background-color: $modal-header-bg-color;
     
     .modal-title, h3 {
         font-size: $font-size-larger;
         color: $modal-header-color;
     }
+    
 }
 
 .modal-body {
     position: relative;
     overflow-y: auto;
-    max-height: 400px;
+    // max-height: 400px;
     
     // Reset form margins
     form, fieldset, legend {
@@ -165,4 +199,6 @@
     //margin-left: 0;
     }
 }
+
+
 

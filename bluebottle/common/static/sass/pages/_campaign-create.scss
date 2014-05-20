@@ -6,19 +6,28 @@
 		background-color: $gray-lighter;
 		
 		.page-title {
-			@include grid(48,1,1);
+			@include grid(36,1,1);
 			padding: $base-padding/2 0;
 			margin-top: 0;
 			margin-bottom: 0;
+			// width: auto;
+		}
+
+		.page-actions {
+			@include grid(12,1,1);
+			padding: $base-padding*2 0;
+			text-align: right;
 		}
 		
-		.steps {
-			@include grid(40,1,2);
+		#campaign-steps {
+			padding: 0;
+			font-size: $font-size-small;
+			@include clear;
+			@include grid(48,1,1);
 		}
-		
-		.campaign-preview-button {
-			@include grid(8,0,1);
-		}
+		// .campaign-preview-button {
+		// 	// @include grid(8,0,1);
+		// }
 	}
 
 	.campaign-campaigner {
@@ -31,23 +40,27 @@
 	}
 
 	.campaign-footer {
-		width: 100%;
-		bottom: 0;
-		left: 0;
-		background: $gray-dark;
+		// width: 100%;
+		// bottom: 0;
+		// left: 0;
+		@include clear;
 		padding: $base-padding;
-		z-index: 100;
-		.navigation {
-			@include grid(32,1,1);
-		}
-		.actions {
-			@include grid(16, 1,1);
-			text-align: right;
-			padding: ($base-padding/2) 0
-		}
+		background: $gray-lighter;
+		padding: $base-padding;
+		// z-index: 100;
+		// position: fixed;
+		// .navigation {
+		// 	@include grid(32,1,1);
+		// }
+		// .actions {
+		// 	@include grid(16, 1,1);
+		// 	text-align: right;
+		// 	padding: ($base-padding/2) 0
+		// }
 		.save {
 			text-decoration: none;
 			color: $gray-light;
+			float: right;
 		}
 		.next {
 			float: right;
@@ -88,21 +101,18 @@
 			}
 		}
 	}
-	.campaign-duration {
-		.slider {
-			padding-top: $base-padding;
-			td {
-				padding: 0;
-			}
-			@include grid(34,0,2);
-		}
-		.btn {
-			margin-top: $base-margin;
-			@include grid(14,2,0);	
-		}
-	}
+    .jslider {
+        padding-top: $base-padding;
+        td {
+            padding: 0;
+        }
+        @include grid(34,0,2);
+    }
 
 	.campaign-budget-breakdown {
+		margin-top: $base-margin;
+		border-top: 1px solid $gray-light;
+		
 		tfoot {
 			color: $gray;
 			td {
@@ -129,27 +139,27 @@
 	.missing-steps {
 		margin: 0;
 		padding: 0;
+		margin-top: $base-margin * 4;
+		
 		li {
 			@include resetlist;
 			@include clearfix;
 			padding: $base-padding $base-padding * 2;
 			background: $gray-lighter;
 			border-bottom: 1px solid $white;
+			
 			.category {
-				position: relative;
-				@include grid(12,0,2);
-				&:after {
-					content: "\203A";
-					color: $gray;
-					position: absolute;
-					right: 0;
+				display: inline;
+				a {
+					text-transform: lowercase;
 				}
 			}
 			.details {
-				@include grid(24,0,0);
+				display: inline;
 			}
 			.action {
-				@include grid(12,2,0);				
+				display: inline;
+				float: right;			
 				a {
 					color: $color-success;
 					text-decoration: none;

@@ -1,4 +1,4 @@
-{% load templatetag_handlebars %}
+{% load bb_ember %}
 {% load i18n %}
 {% load static %}
 
@@ -24,13 +24,11 @@
                         {{else}}
                             <fieldset>
                                 <ul>
-                                    {{!-- FIXME: label and placeholder translations? --}}
-                                    {{bb-text-field label='Name' valueBinding=name placeholder='Enter your name' errors=errors.name}}
+                                    {% bb_component 'bb-text-field' label=_("Name") name='name' valueBinding='name' errorsBinding='errors.name' placeholder=_("Enter your name") %}
 
-                                    {{bb-text-field label='Email' valueBinding=email placeholder='example@my-domain.com' errors=errors.email}}
+                                    {% bb_component 'bb-text-field' label=_("Email") name='email' valueBinding='email' errorsBinding='errors.email' placeholder=_("example@my-domain.com") %}
 
-                                    {{bb-text-area label='Message' valueBinding=message rows="6" errors=errors.message}}
-
+                                    {% bb_component 'bb-text-field' label=_("Message") name='message' valueBinding='message' errorsBinding='errors.message' rows="6" %}
                                 </ul>
                             </fieldset>
                             <button {{bindAttr class=":btn :btn-iconed :btn-primary :btn-submit"}} {{action updateRecordOnServer}}><span class="flaticon solid envelope-1"></span>{% trans "Send Message" %}</button>

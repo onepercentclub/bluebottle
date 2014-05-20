@@ -42,7 +42,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
         model = BB_TASKFILE_MODEL
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     members = TaskMemberSerializer(many=True, source='members', read_only=True)
     files = TaskFileSerializer(many=True, source='files', read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug')
@@ -61,6 +61,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
+        fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'tags', 'description', 'end_goal',
+        'location', 'deadline', 'time_needed', 'title', 'people_needed')
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):

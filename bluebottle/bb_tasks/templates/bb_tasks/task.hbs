@@ -9,10 +9,10 @@
             <section class="l-wrapper">
 
                 <div class="task-badge">
-                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div> 
-					{{#if project.image.small}}
-					<img {{bindAttr src="project.image.small" alt="project.title"}} />
-					{{/if}}
+                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div>
+                    {{#if project.image.small}}
+                        <img {{bindAttr src="project.image.small" alt="project.title"}} />
+                    {{/if}}
                 </div>
 
                 <article class="task-description">
@@ -23,11 +23,11 @@
                     <p class="task-project">{% trans "For project" %} {{#link-to 'project' project}}{{project.title}}{{/link-to}}</p>
 
                     {{#if description}}
-                    <p>{{linebreaks description}}</p>
+                        <p>{{linebreaks description}}</p>
                     {{/if}}
 
                     {{#if end_goal}}
-                    <p><strong>{% trans "Deliverable" %}:</strong> {{linebreaks end_goal}}</p>
+                        <p><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}</p>
                     {{/if}}
 
                     {# TODO: commented out until we have pagination #}
@@ -37,19 +37,15 @@
                 </article>
 
                 <sidebar class="task-sidebar">
-					
-					{{#if canEdit}}
-					<div class="edit-task">
+                    
+                    {{#if canEdit}}
+                    <div class="edit-task">
                     {{#link-to 'taskEdit' model}}
                         <span class="flaticon solid settings-1"></span>
                         {% trans 'Edit' %}
                     {{/link-to}}
-					</div>
-					{{/if}}
-
-                    {% block_verbatim task_share %}
-                    {{view App.SocialShareView classNames="task-share"}}
-                    {% endblock_verbatim task_share %}
+                    </div>
+                    {{/if}}
 
                     <div class="task-section task-meta">
 
@@ -75,10 +71,14 @@
                             <dt>
                                 <span class="flaticon solid calendar-1"></span>
                             </dt>
-                            {{# if deadline }}
-                            <dd>{{localize deadline formatting="X"}}</dd>
+                            {{#if deadline}}
+                                {{#ifExpired deadline}}
+                                    <dd>{% trans "Deadline passed" %}</dd>
+                                {{else}}
+                                    <dd>{{localize deadline formatting="X"}}</dd>
+                                {{/ifExpired}}
                             {{else}}
-                            <dd>{% trans "No deadline" %}</dd>
+                                <dd>{% trans "No deadline" %}</dd>
                             {{/if}}
                         </dl>
                         <dl>
@@ -86,9 +86,26 @@
                                 <span class="flaticon solid tag-1"></span>
                             </dt>
                             <dd>
-                               	{{tags_list}}
+                                {{tags_list}}
                             </dd>
                         </dl>
+                        {{#if people_needed}}
+                            <dl>
+                                <dt>
+                                    <span class="flaticon solid group-1"></span>
+                                </dt>
+                                <dd>
+                                    {{#if moreThanOnePersonNeeded}}
+                                        {{people_needed}} {% trans "people needed" %}
+                                    {{else}}
+                                        {{people_needed}} {% trans "person needed" %}
+                                    {{/if}}
+                                    {{#if acceptedMemberCount}}
+                                        / {{acceptedMemberCount}}  {% trans "accepted" %}
+                                    {{/if}}
+                                </dd>
+                            </dl>
+                        {{/if}}
                     </div>
 
                 </sidebar>
@@ -155,12 +172,12 @@
                             {% trans 'Edit task' %}
                         {{/link-to}}
                     {{else}}
-                        {{#unless isMember}}
-                            <a {{action applyForTask this }} class="btn btn-primary btn-iconed"}}>
+                        {{#if isApplicable}}
+                            <a {{action applyForTask this }} class="btn btn-primary btn-iconed">
                                 <span class="flaticon stroke work-1"></span>
                                 {% trans "Apply for task" %}
                             </a>
-                        {{/unless}}
+                        {{/if}}
                     {{/if}}
                 </div>
             </section>
@@ -171,8 +188,8 @@
         <section class="l-wrapper">
             {{render 'taskIndex'}}
             {{render 'taskActivity' model}}
-		</section>
-	</div>
+        </section>
+    </div>
 
 
 {% endtplhandlebars %}

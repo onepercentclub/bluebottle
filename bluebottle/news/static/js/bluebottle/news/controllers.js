@@ -1,5 +1,3 @@
-App.NewsController = Em.ObjectController.extend({});
-
 App.NewsController = Em.ArrayController.extend({
 
     page: 1,
@@ -32,4 +30,11 @@ App.NewsController = Em.ArrayController.extend({
             controller.set('model', news);
         });
     }
+});
+
+
+App.NewsPreviewListController = Em.ArrayController.extend({
+    model: function(){
+        return App.NewsItem.find({language: App.get('language')});
+    }.property()
 });

@@ -25,6 +25,7 @@ class BaseSkill(models.Model):
         ordering = ('id', )
         abstract = True
 
+
 class BaseTaskMember(models.Model):
     class TaskMemberStatuses(DjangoChoices):
         applied = ChoiceItem('applied', label=_('Applied'))
@@ -35,9 +36,8 @@ class BaseTaskMember(models.Model):
 
     member = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="members")
-    status = models.CharField(
-        _('status'), max_length=20, choices=TaskMemberStatuses.choices)
-
+    status = models.CharField(_('status'), max_length=20, choices=TaskMemberStatuses.choices,
+                              default=TaskMemberStatuses.applied)
     motivation = models.TextField(
         _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
     comment = models.TextField(_('Comment'), help_text=_('Comment by task owner.'), blank=True)
@@ -84,6 +84,7 @@ class BaseTask(models.Model):
     description = models.TextField(_('description'))
     end_goal = models.TextField(_('end_goal'))
     location = models.CharField(_('location'), max_length=200)
+    people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     # See Django docs on issues with related name and an (abstract) base class:
@@ -111,7 +112,7 @@ class BaseTask(models.Model):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
-        default_serializer = 'bluebottle.bb_tasks.serializers.TaskSerializer'
+        default_serializer = 'bluebottle.bb_tasks.serializers.BaseTaskSerializer'
         abstract = True
         ordering = ['-created']
         verbose_name = _(u'task')

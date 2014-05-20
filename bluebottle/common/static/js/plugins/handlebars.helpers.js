@@ -10,6 +10,7 @@
 Em.Handlebars.registerBoundHelper('localize', function (value, options) {
     // Unfortunately although this is 'bound' it won't update it since the value doesn't change.
 
+
     // If there's no second argument then formatting will be an object. Set it to null instead.
     var formatting = options.hash['formatting'];
     // Check if it's a Ember Data number or a date
@@ -27,9 +28,8 @@ Em.Handlebars.registerBoundHelper('localize', function (value, options) {
     }
 
     //Usisng typeof here since false can be safely rendered
-    if (Ember.typeOf(value) == 'undefined'){
-
-	return "";
+    if (Ember.typeOf(value) == 'undefined' || Ember.isNone(value)){
+	    return "";
     }
     
     return new Handlebars.SafeString(Globalize.format(value));
@@ -47,3 +47,47 @@ Em.Handlebars.registerBoundHelper('linebreaks', function(value, options) {
     }
 });
 
+Ember.Handlebars.registerHelper('ifExpired', function (property, options) {
+  var value,
+      now = new Date();
+  
+  // If context is an ObjectController then property
+  // should be found on the associated model
+  if (this instanceof Ember.ObjectController) {
+      value = Em.get(this, 'model').get(property);
+  } else {
+      value = Em.get(this, property);
+  }
+
+  if (typeof value.getMonth !== 'function') {
+    throw new Error('Property is not a date');
+  }
+ 
+  if (now < value) {
+     return options.inverse(this);      
+  }
+  else {
+     return options.fn(this);
+  }
+});
+
+Ember.Handlebars.helper('daysToGoText', function(value, options) {
+  var text = '',
+      reachedText = gettext('Deadline<br /> reached');
+  
+  if (typeof value == 'number') {
+      if (value > 0) {
+          var daysText = gettext('days'),
+              dayText = gettext('day'),
+              plural = value > 1 ? daysText : dayText,
+              supportText = gettext('to support this project');
+
+          text = '<strong>' + value + ' ' + plural + ' left' + '</strong>';
+          text += '<br />' + supportText;
+      } else {
+          text = '<strong class="deadline-reached">' + reachedText + '</strong>';
+      }
+  }
+
+  return new Handlebars.SafeString(text);
+});

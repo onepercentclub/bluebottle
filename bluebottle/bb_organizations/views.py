@@ -1,5 +1,7 @@
 import os
 
+from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin
+
 from django.http import HttpResponseForbidden
 from django.views.generic.detail import DetailView
 
@@ -18,18 +20,18 @@ MEMBER_MODEL = get_organizationmember_model()
 DOCUMENT_MODEL = get_organizationdocument_model()
 
 
-class OrganizationList(generics.ListAPIView):
+class OrganizationList(DefaultSerializerMixin, generics.ListAPIView):
     model = ORGANIZATION_MODEL
     serializer_class = OrganizationSerializer
     paginate_by = 10
 
 
-class OrganizationDetail(generics.RetrieveAPIView):
+class OrganizationDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
     model = ORGANIZATION_MODEL
     serializer_class = OrganizationSerializer
 
 
-class ManageOrganizationList(generics.ListCreateAPIView):
+class ManageOrganizationList(ManageSerializerMixin, generics.ListCreateAPIView):
     model = ORGANIZATION_MODEL
     serializer_class = ManageOrganizationSerializer
     paginate_by = 10
@@ -48,7 +50,7 @@ class ManageOrganizationList(generics.ListCreateAPIView):
             member.save()
 
 
-class ManageOrganizationDetail(generics.RetrieveUpdateAPIView):
+class ManageOrganizationDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = ORGANIZATION_MODEL
     serializer_class = ManageOrganizationSerializer
     permission_classes = (IsOrganizationMember, )

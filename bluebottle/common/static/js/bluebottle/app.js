@@ -48,7 +48,9 @@ App = Em.Application.create({
                 locale = 'en';
             }
         }
-
+        App.Page.reopen({
+            url: 'pages/' + language + '/pages'
+        });
         this.setLocale(locale);
         this.initSelectViews();
     },
@@ -76,12 +78,21 @@ App = Em.Application.create({
             });
         });
 
+        App.Language.find().then(function(list) {
+            App.LanguageSelectView.reopen({
+                content: list
+            });
+        });
+
         App.ProjectPhase.find().then(function(data){
-
-            var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
-
+            var list = [
+                {id: 5, name: gettext("Campaign")},
+                {id: 7, name: gettext("Finished")},
+            ];
+            // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
+            // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
             App.ProjectPhaseSelectView.reopen({
-            content: list
+                content: list
             });
         });
     },
@@ -172,6 +183,7 @@ App.Adapter = DS.DRF2Adapter.extend({
         "bb_projects/budgetlines/manage": "bb_projects/budgetlines/manage",
         "users/activate": "users/activate",
         "users/passwordset": "users/passwordset",
+        "users/time_available": "users/time_available",
         "homepage": "homepage",
         "contact/contact": "contact/contact",
         // TODO: Are the plurals below still needed?
@@ -221,6 +233,10 @@ App.Store = DS.Store.extend({
 });
 
 
+DS.Model.reopen({
+    meta_data: DS.attr('object')
+});
+
 /* Routing */
 
 App.SlugRouter = Em.Mixin.create({
@@ -238,6 +254,7 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
+//Enable Google Analytics with Ember
 App.Router.reopen({
     /**
      * Tracks pageviews if google analytics is used
@@ -245,26 +262,18 @@ App.Router.reopen({
      */
     didTransition: function(infos) {
         this._super(infos);
-        if (window._gaq === undefined) { return; }
 
-        Ember.run.next(function(){
-            _gaq.push(['_trackPageview', window.location.hash.substr(1)]);
-        });
-    }
-});
-
-App.Router.reopen({
-    didTransition: function(infos) {
-        this._super(infos);
         Ember.run.next(function() {
             // the meta module will now go trough the routes and look for data
             App.meta.trigger('reloadDataFromRoutes');
         });
-    }
-});
 
-DS.Model.reopen({
-    meta: DS.attr('object')
+        if (window._gaq !== undefined) {
+            Ember.run.next(function() {
+                _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
+            });
+        }
+    }
 });
 
 Em.Route.reopen({
@@ -340,45 +349,30 @@ App.ApplicationRoute = Em.Route.extend({
                 settings.save();
                 return true;
             });
+            
             return true;
         },
+
+        openInFullScreenBox: function(name, context) {
+            this.send('openInBox', name, context, 'full-screen');
+        },
+
         openInScalableBox: function(name, context) {
             this.send('openInBox', name, context, 'scalable');
         },
+
         openInBigBox: function(name, context) {
             this.send('openInBox', name, context, 'large');
         },
-        openInBox: function(name, context, type) {
-            // Close all other modals.
-            $('.close-modal').click();
 
-            // Get the controller or create one
-            var controller = this.controllerFor(name);
-            if (context) {
-                controller.set('model', context);
-            }
-
-            if (typeof type === 'undefined')
-              type = 'normal'
-
-            var classNames = [type];
-
-            // Get the view. This should be defined.
-            var view = App[name.classify() + 'View'].create();
-            view.set('controller', controller);
-
-            var modalPaneTemplate = ['<div class="modal-body"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
-
-            Bootstrap.ModalPane.popup({
-                classNames: classNames,
-                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-                bodyViewClass: view
-            });
-
+        openInBox: function(name, context, type, callback) {
+            this.openInBox(name, context, type, callback);
         },
+        
         closeAllModals: function(){
             $('[rel=close]').click();
         },
+
         showProjectTaskList: function(project_id) {
             var route = this;
             App.Project.find(project_id).then(function(project) {
@@ -386,6 +380,7 @@ App.ApplicationRoute = Em.Route.extend({
                 route.transitionTo('projectTaskList');
             });
         },
+
         showPage: function(page_id) {
             var route = this;
             App.Page.find(page_id).then(function(page) {
@@ -405,6 +400,42 @@ App.ApplicationRoute = Em.Route.extend({
                 route.transitionTo('currentOrder.donationList');
             });
         }
+    },
+
+    // Add openInBox as function on ApplicationRoute so that it can be used
+    // outside the usual template/action context
+    openInBox: function(name, context, type, callback) {
+        // Close all other modals.
+        $('.close-modal').click();
+
+        // Get the controller or create one
+        var controller = this.controllerFor(name);
+        if (context) {
+            controller.set('model', context);
+        }
+
+        if (typeof type === 'undefined')
+          type = 'normal'
+
+        var classNames = [type];
+
+        // Get the view. This should be defined.
+        var view = App[name.classify() + 'View'].create();
+        view.set('controller', controller);
+
+        var modalPaneTemplate = ['<div class="modal-wrapper"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
+
+        var options = {
+            classNames: classNames,
+            defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
+            bodyViewClass: view
+        }
+
+        if (callback) {
+            options.callback = callback;
+        }
+
+        Bootstrap.ModalPane.popup(options);
     },
 
     urlForEvent: function(actionName, context) {
@@ -441,6 +472,12 @@ App.LanguageSwitchView = Em.CollectionView.extend({
     itemViewClass: App.LanguageView
 });
 
+App.LanguageSelectView = Em.Select.extend({
+    classNames: ['language'],
+    optionValuePath: 'content.id',
+    optionLabelPath: 'content.native_name',
+    prompt: gettext('Pick a language')
+});
 
 App.ApplicationView = Em.View.extend({
     elementId: 'site'

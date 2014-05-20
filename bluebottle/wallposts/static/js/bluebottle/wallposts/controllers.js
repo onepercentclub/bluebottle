@@ -11,7 +11,6 @@ App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
         return this.get('fundraiser');
     }.property('fundraiser', 'parent_type'),
 
-
     newReaction: function(){
         var transaction = this.get('store').transaction();
         return transaction.createRecord(App.WallPostReaction, {'wallpost': this.get('model')});
@@ -60,9 +59,10 @@ App.TextWallPostNewController = Em.ObjectController.extend({
     },
     actions: {
         saveWallPost: function() {
+            var parent_type = this.get('parentType')
             var wallPost = this.get('model');
             wallPost.set('parent_id', this.get('parentId'));
-            wallPost.set('parent_type', this.get('parentType'));
+            wallPost.set('parent_type', parent_type);
             wallPost.set('type', 'text');
 
             var controller = this;
@@ -80,7 +80,6 @@ App.TextWallPostNewController = Em.ObjectController.extend({
         },
 		
 		showImages: function(event) {
-			console.log(event);
 			$(".photos-tab").addClass("active");
 			$(".video-tab").removeClass("active");
 
@@ -231,6 +230,7 @@ App.FundRaiserWallPostMixin = Em.Mixin.create({
 
     needs: ['currentUser', 'fundRaiser', 'fundRaiserIndex'],
     type: 'fundraiser',
+    parentType: 'fundraiser',
 
     parentId: function(){
         return this.get('controllers.fundRaiser.model.id');

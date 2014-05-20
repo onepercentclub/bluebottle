@@ -15,9 +15,6 @@
                     {{else}}
                         {{ render "textWallPostNew" }}
                     {{/if}}
-                {{else}}
-                    Login?
-
                 {{/if}}
 
                 {{#each item in controller itemController="wallPost"}}
@@ -40,82 +37,43 @@
 
 
 			<div class="wallposts-important">
-				<section id="task-previews">
-					<div class="container">
-						<h3>Tasks available</h3>
-						{{#each tasks}}
-							{{#link-to "task" this}}
-								<article class="task-preview">
-									<div class="task-member-status">
-										{{#if hasMembers}}
-											<big>{{membersCount}}</big>
-											<small>Members<br />assigned</small>
-										{{else}}
-											<big class="flaticon stroke work-1"></big>
-											<small>Task open<br />to apply</small>
-										{{/if}}
-									</div>
-									<div class="task-content">
-										<h6 class="task-title">{{title}}</h6>
-										<div class="task-theme">{{skill.name}}</div>
-										<div class="task-status"><span class="flaticon solid user-1"></span> {{status}}</div>
-										<div class="task-time-needed"><span class="flaticon stroke time-1"></span> {{time_needed}} Hour(s)</div>
-										<div class="task-deadline"><span class="flaticon stroke stopwatch-1"></span> {{localize deadline formatting="X"}}</div>
-									</div>
-									<div class="task-arrow">
-										<span class="flaticon stroke right-2"></span>
-									</div>
-								</article>
-							{{/link-to}}
-						{{/each}}
-						{{#if showingAll}}
-						<a {{action "showActiveTasks"}} class="task-previews-show-more">Show active tasks <span class="flaticon stroke up-2"></span></a>
-						{{else}}
-						<a {{action "showAllTasks"}} class="task-previews-show-more">Show full & completed tasks <span class="flaticon stroke down-2"></span></a>
-						{{/if}}
-					</div>
+				<section id="task-list">
+					
+	                {{#if availableTasks}}
+						<div class="task-list-wrapper task-list-open">
+							<h3>{% trans "Open tasks" %}</h3>
+							
+							{{#if isProjectOwner }}
+	                            {{#link-to "taskNew" controllers.project.id class="btn btn-modest right task-create"}}
+	                                <span class="flaticon solid pencil-3"></span>
+	                                {% trans "Create task" %}
+	                            {{/link-to}}
+		                    {{/if}}
+	                    
+							{{#each availableTasks}}
+								{{view App.TaskSummaryView contentBinding='this'}}
+							{{/each}}
+						</div>
+                    {{else}}
+                            {{#if isProjectOwner }}
+						        <div class="task-list-wrapper task-list-open">
+                                    {{#link-to "taskNew" controllers.project.id class="btn btn-modest right task-create"}}
+                                        <span class="flaticon solid pencil-3"></span>
+                                        {% trans "Create task" %}
+                                    {{/link-to}}
+						        </div>
+                            {{/if}}
+                    {{/if}}
+					
+                    {{#if unavailableTasks}}
+                        <div class="task-list-wrapper task-list-closed">
+                            <h3>{% trans "In progress & closed tasks" %}</h3>
+                            {{#each unavailableTasks}}
+                                {{view App.TaskSummaryView contentBinding='this'}}
+                            {{/each}}
+                        </div>
+                    {{/if}}
 				</section>
-				
-				{# TODO: make dynamic and refactor into seperate view file #}
-				{{!--}}
-				<article class="wallpost important">
-
-				    <header class="wallpost-header">
-
-				        <div class="wallpost-member">
-				            <a {{action openInBigBox "userModal" author}} class="member">
-				                <figure class="member-avatar">
-				                    <img src="http://placehold.it/200x200" alt="author.full_name"}} />
-				                </figure>
-				            </a>
-				        </div>
-
-				        <div class="wallpost-meta">
-							<h3 class="wallpost-author">Frans Twisk</h3>
-				            <span class="wallpost-timestamp">21 days ago</span>
-				        </div>
-
-						<h2 class="wallpost-title">
-							Got a nice task for you here....
-						</h2>
-				    </header>
-
-				    <div class="wallpost-content">
-
-				        <div class="text">
-				        	<strong>Task:</strong> Yeah! yeah!
-
-				        </div>
-
-				    </div>
-
-					<div class="wallpost-buttons">
-						<a class="btn wallpost-action-accept" href="#">Go for it!</a>
-						 <span class="btn-spacer">or</span>
-						<a class="wallpost-action-decline" href="#">View all tasks..</a>
-					</div>
-				</article>
-				{{--}}
 			</div>
 
 		</section>

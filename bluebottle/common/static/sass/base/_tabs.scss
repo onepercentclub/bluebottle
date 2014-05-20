@@ -2,27 +2,45 @@
 // Tabs
 // --------------------------------------------------
 
+#campaign-steps {
+	clear: both;
+	@include grid(48,1,1);
+	margin-top: 0;
+	
+	&.steps li a {
+		@include grid(9.6,0,0);
+	}
+}
+
+
 .tabs {
-    @include clear;
+	@include clear;
     padding: 0;
     margin-top: $base-margin;
     margin-left: 0;
     margin-bottom: 0;
-    
-    li {
-        @include grid(12,0,0); // default
+
+	li {
+        //@include grid(12,0,0); default
         @include resetlist;
         display: inline;
         position: relative;
-        
+
        	> a, > span {
-            color: $tabs-tabitem-bg-color;
+            //color: $tabs-tabitem-bg-color;
             display: block;
-            overflow: hidden;
+            float: left;
             text-decoration: none;
-            padding: $base-padding $base-padding $base-padding/2 $base-padding;
-            text-transform: uppercase;
-            
+            //padding: $base-padding $base-padding $base-padding/2 $base-padding;
+			padding: $base-padding ($base-padding*2);
+			margin-right: $base-margin/2;
+			margin-bottom: 0;
+            color: $gray-light;
+			font-weight: bold;
+			background-color: $gray-lighter;
+			width: 175px;
+			text-transform: uppercase;
+			
             .tab-icon {
                 @include transition(all 0.1s ease-out);
                 display: block;
@@ -57,10 +75,9 @@
                 .tab-icon {
                     background-color: $tabs-tabitem-hover-icon-text-color;
                 }
-                
             }
             
-            // Needed for position changing on active
+            //Needed for position changing on active
             &:before {
         	    content: '';
         	    position: absolute;
@@ -71,9 +88,6 @@
         	}
 	        
 	    }
-        
-        &:first-of-type > a, &:first-of-type > span {
-		}
 
     }
     
@@ -81,7 +95,7 @@
     li.is-active > a, li > a.active, li.is-active > span, li > span.active {
     	background-color: $tabs-tabitem-active-bg-color;
     	border-color: $tabs-tabitem-active-border-color;
-    	border-bottom: 6px solid $tabs-tabitem-active-border-color;
+    	color: $gray-darker;
     	
     	.tab-icon {
             background-color: $tabs-tabitem-active-icon-bg-color;
@@ -96,106 +110,140 @@
             color: $tabs-tabitem-active-subtitle-color;
         } 
     }
-    
-    
-    /* 
-    &.steps {
-    	margin-bottom: 2px;
-    	font-family: $font-family-heavy;
-    	
-        &.two li {
-            @include grid(24,0,0);
-        } 
-         
-        &.three li {
-            @include grid(16,0,0);
-        } 
-        
-        &.four li {
-            @include grid(12,0,0);
-        }
-        
-        &.five li {
-            @include grid(9.5,0,0);
-        }
-     
-	    li > a, li > span {
-	    	display: block;
-		    padding: $base-padding;
-		    color: $tabs-steps-tabitem-color;
-		    background: image-url("steps-back.png") $tabs-steps-tabitem-bg-color no-repeat 100% 50%;
-		    border: none;
-		    
-		    .flaticon {
-			    margin: 0 $base-margin/2;
-		    }
-		    
-		    &:hover, &:active {
-			    color: $gray;
-		    }
-	    }
-	    
-		li.is-selected > a, li.is-selected > span {
-			background: image-url("steps-back-selected.png") $tabs-steps-tabitem-selected-bg-color no-repeat 100% 50%;
-			color: $tabs-steps-tabitem-selected-color;
-			
-			.tab-icon .flaticon:before {
-				content: "\e1ba"; // replace with ok
-			}
-			
-			&:hover, &:active {
-				color: $tabs-steps-tabitem-selected-hover-color;
-			}
-			
-		}
-	    
-	   	li > a.active, li > span.active  {
-			border-color: $tabs-steps-tabitem-active-border-color;
-			color: $tabs-steps-tabitem-active-color;
-			background: image-url("steps-back-active.png") $tabs-steps-tabitem-active-color no-repeat 100% 50%;
-			
-			.tab-icon {
-				background-color: $tabs-steps-tabitem-active-icon-bg-color;
-				color: $tabs-steps-tabitem-active-icon-color;
-			}
-			
-			.tab-title {
-				color: $tabs-steps-tabitem-active-title-color;
-			}
-			
-			.tab-subtitle {
-				color: $tabs-steps-tabitem-active-subtitle-color;
-			} 
-			
-		} 
-		
-		li.is-inactive > a, li.is-inactive > span {
-			
-			.tab-icon {
-				background-color: $tabs-steps-tabitem-inactive-icon-bg-color;
-				color: $tabs-steps-tabitem-inactive-icon-color;
-			}
-			
-			.tab-title {
-				color: $tabs-steps-tabitem-inactive-title-color;
-			}
-			
-			.tab-subtitle {
-				color: $tabs-steps-tabitem-inactive-subtitle-color;
-			} 
-			
-		}
-		
-		li:last-of-type > a, li:last-of-type > span {
-			background: $tabs-steps-tabitem-last-bg-color;
-		}
-		
-		li:last-of-type > a.active, li:last-of-type > span.active {
-			background: $tabs-steps-tabitem-last-active-bg-color;
-		}
-    }
-    */
 }
 
 
+// Tabs as steps
 
+$steps-border: $gray-lighter;
+
+$step-color: $gray-dark;
+$step-background-color: $white;
+$step-icon-color: $white;
+
+$step-active-color: $white;
+$step-active-background-color: #00c051;
+$step-active-icon-color: $white;
+
+$step-validated-color: $white;
+$step-validated-background-color: $color-success;
+$step-validated-icon-color: $white;
+
+.steps {
+	overflow: hidden;
+	border-bottom: 1px solid $steps-border;
+	
+	li {
+        @include resetlist;
+        display: inline;
+        position: relative;
+        
+       	a {
+       		position: relative;
+			background-color: $step-background-color;
+			float: left;
+			//line-height: $base-line-height * 2.2;
+			text-align: center;
+			font-weight: bold;
+			text-decoration: none;
+			color: $gray-lighter;
+			display: block;
+			width: 33.33333%;
+			white-space: nowrap;
+			
+			.flaticon {
+				color: $gray-lighter;
+				border-radius: 50%;
+				padding: $base-padding/2;
+				text-align: center;
+			}
+
+			&:nth-child(2), &:last-child {
+				margin-left: -8px;
+			}
+			
+			&.validated {
+				background-color: $step-validated-background-color;
+				color: $step-validated-color;
+				
+				.flaticon { 
+					color: $step-validated-icon-color;
+				}
+				
+				&:after {
+					border-left-color: $step-validated-background-color;
+				}
+			}
+			
+			&.active {
+				background-color: $step-active-background-color;
+				color: $white;
+				
+				.flaticon { 
+					color: $white;
+				}
+				
+				&:after {
+					border-left-color: $step-active-background-color;
+				}
+			}
+			
+			&:after, &:before {
+				content: " ";
+				left: 100%;
+				top: 50%;
+				border: solid transparent;
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-left-color: $white;
+				border-width: 28px;
+				margin-top: -28px;
+				z-index: 2;
+			}
+			
+			&:before {
+				border-left-color: $steps-border;
+				left: 100%;
+				z-index: 1;	
+				border-width: 30px;
+				margin-top: -30px;
+			}
+		}
+		
+		&:last-of-type a {
+			&:after, &:before {
+				display: none;
+			}
+		}
+	}
+}
+
+#campaign-steps {
+
+	// For campaign create
+	li a.active {
+		background-color: $gray-dark;
+		color: $white;
+
+		.flaticon {
+			color: $white;
+		}
+
+		&:after {
+			border-left-color: $gray-dark;
+		}
+	}
+}
+
+.tab-control li.control-group {
+
+    &.hide {
+        display: none;
+    }
+
+    &.show {
+        display: list-item;
+    }
+}

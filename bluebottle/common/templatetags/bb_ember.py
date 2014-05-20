@@ -1,3 +1,4 @@
+# coding: utf-8
 from django import template
 from django.conf import settings
 from django.template.base import TemplateSyntaxError, TextNode
@@ -192,15 +193,52 @@ def bb_component(component, *args, **kwargs):
     Usage: {% bb_component 'my-component' myFirstArg="'foo'" mySecondArg='bar' %}
     Translates to: {{my-component myFirstArg='foo' mySecondArg=bar}}
     """
+    import sys
+    reload(sys)
+    sys.setdefaultencoding("utf8")
+
     if not isinstance(component, basestring) or not len(component):
         raise template.TemplateSyntaxError("bb-component tag requires at least one argument")
 
     component_bits = [component]
+    bits = u''
     for key, value in kwargs.items():
         # trigger translation if we're dealing with Lazy translatable strings
         if isinstance(value, Promise):
-            value = '\'{0}\''.format(force_str(value))
-        bit = '{key}={value}'.format(key=key, value=value)
+            value = '\'{0}\''.format(force_str(value).replace("'", "\\'"))
+        if key in ('name', 'type') or 'Binding' in key:
+            value = '\'{0}\''.format(value)
+        bit = u'{key}={value}'.format(key=key, value=value)
+        bits += bit
         component_bits.append(bit)
 
-    return '{{' + ' '.join(component_bits) + '}}'
+    return u'{{' + u' '.join(component_bits) + '}}'
+
+@register.tag(name='bb_block_component')
+def do_bb_block_component(parser, token, *args, **kwargs):
+    params = token.split_contents()
+    params.pop(0)
+
+    nodelist = parser.parse(('endbb_block_component',))
+    parser.delete_first_token()
+
+    component_bits = []
+    for param in params:
+        key, value = param.split('=')
+        # trigger translation if we're dealing with Lazy translatable strings
+        if isinstance(value, Promise):
+            value = '\'{0}\''.format(force_str(value))
+        # bit = '{key}={value}'.format(key=key, value=value)
+        # component_bits.append(param)
+
+    return BbBlockComponentNode(nodelist, component_bits)
+
+
+class BbBlockComponentNode(template.Node):
+
+    def __init__(self, nodelist, params=[]):
+        self.nodelist = nodelist
+        self.params = params
+
+    def render(self, context):
+        return '{{#bb-form-field ' + ' '.join(self.params) + ' }}' + self.nodelist.render(context) +'{{/bb-form-field}}'

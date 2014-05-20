@@ -1,0 +1,28 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_review" %}
+
+    <div class="l-section" id="campaign-create">
+
+    	{{partial "my_project_top"}}
+
+        <div class="l-section" id="manage-project">
+
+            <div class="l-wrapper">
+
+                <article class="l-content">
+                    <header class="page-header">
+                        <h2>{% trans "Your campaign is in review now" %}</h2>
+                        <p>We'll get back to you soon!</p>
+                    </header>
+                </article>
+            </div>
+
+        </div>
+    </div>
+
+
+{% endtplhandlebars %}

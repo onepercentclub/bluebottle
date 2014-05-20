@@ -1,0 +1,35 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "my_project_submit" %}
+
+{{#if valid}}
+    <legend>
+        <strong>{% trans "Review Plan" %}</strong>
+    </legend>
+    <fieldset>
+        <div class="fieldset-content">
+            <h3>{% trans "Final Check!" %}</h3>
+            {% trans "You are ready to submit your project now!" %}
+
+        </div>
+
+    </fieldset>
+    <button {{bindAttr class=":btn :btn-iconed :btn-submit :btn-primary"}} {{action submitPlan}}><span class="flaticon solid right-2"></span>{% trans "Submit plan" %}</button>
+{{else}}
+    <ul class="missing-steps">
+        <li class="introduction">
+            <span class="flaticon solid post-comment-1"></span>
+            <div class="introduction-text">
+                <h3>Please fill in all information before submitting</h3>
+                <strong>The following information is still missing:</strong>
+            </div>
+        </li>
+        {{ partial "my_project_submit_fields" }}
+    </ul>
+
+{{/if}}
+
+{% endtplhandlebars %}

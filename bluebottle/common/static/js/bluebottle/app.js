@@ -466,7 +466,6 @@ App.LanguageView = Em.View.extend({
 });
 
 App.LanguageSwitchView = Em.CollectionView.extend({
-    tagName: 'ul',
     classNames: ['nav-language'],
     content: App.interfaceLanguages,
     itemViewClass: App.LanguageView

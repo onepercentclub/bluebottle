@@ -7,6 +7,7 @@
 
     <legend>
         <strong>{% trans "Bank details" %}</strong>
+        <p>{% trans "And the boring part… we know there is no fun in filling in these details, but please make sure everything you fill in is correct and double checked. Errors in bank details means delays in payments." %}</p>
     </legend>
 
     {{#if this}}
@@ -18,7 +19,7 @@
         </fieldset>
         <fieldset>
             <ul>
-                {% bb_component 'bb-text-field' label=_("Account holder name") name='account-holder-name' valueBinding='account_holder_name' errorsBinding='errors.account_holder_name' maxlength=255 placeholder=_("Account holder\'s full name") %}
+                {% bb_component 'bb-text-field' label=_("Account holder name") hint=_("Who will receive the money") name='account-holder-name' valueBinding='account_holder_name' errorsBinding='errors.account_holder_name' maxlength=255 placeholder=_("Account holder\'s full name") %}
 
                 {% bb_component 'bb-text-field' label=_("Account holder full address") name='account-holder-address' valueBinding='account_holder_address' errorsBinding='errors.account_holder_address' maxlength=255 placeholder=_("Street and number") %}
 
@@ -46,7 +47,7 @@
                 </li>
                 <li {{bindAttr class=":control-group inEurope:show:hide"}}>
                     <ul>
-                        {% bb_component 'bb-text-field' label=_("IBAN") name='account-iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("The IBAN code") %}
+                        {% bb_component 'bb-text-field' label=_("IBAN") name='account-iban' valueBinding='account_iban' errorsBinding='errors.account_iban' maxlength=255 placeholder=_("For example NL12RABO0123467890 ") %}
 
                         {% bb_component 'bb-text-field' label=_("BIC/SWIFT code") hint=_("BIC or SWIFT code") name='account-bic' valueBinding='account_bic' errorsBinding='errors.account_bic' maxlength=255 placeholder=_("The BIC/SWIFT code contains 8 or 11 characters") %}
                     </ul>

@@ -119,8 +119,18 @@
 				border-bottom: none;
 			}
 		}
+		
 		a {
 			text-decoration: none;
+		}
+		
+		.campaign-budget-breakdown-desc {
+			width: 60%;
+		}
+		
+		.campaign-budget-breakdown-amount {
+			width: 20%;
+			white-space: nowrap;
 		}
 	}
 
@@ -134,6 +144,18 @@
 
 	.add-budget {
 		@include grid(6,0,0);
+	}
+	
+	.select-organisation {
+		
+		select {
+			@include grid(42,0,1);
+		}
+		
+		.add-org {
+			@include grid(6,0,0);
+		}
+		
 	}
 
 	.missing-steps {
@@ -210,5 +232,26 @@
 	}
 	.suggestion {
 		text-align: center;
+	}
+	
+	.l-sidebar {
+		margin-top: $base-margin*4;
+	}
+	
+	.steps {
+				
+		// For campaign create
+		li a.active {
+			background-color: $gray-dark;
+			color: $white;
+			
+			.flaticon { 
+				color: $white;
+			}
+			
+			&:after {
+				border-left-color: $gray-dark;
+			}
+		}
 	}
 }

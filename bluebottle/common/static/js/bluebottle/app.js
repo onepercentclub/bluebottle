@@ -86,8 +86,8 @@ App = Em.Application.create({
 
         App.ProjectPhase.find().then(function(data){
             var list = [
-                {id: 5, name: gettext("Campaign")},
-                {id: 7, name: gettext("Finished")},
+                {id: 5, name: gettext("Running campaigns")},
+                {id: 7, name: gettext("Finished campaigns")}
             ];
             // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
             // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
@@ -466,7 +466,6 @@ App.LanguageView = Em.View.extend({
 });
 
 App.LanguageSwitchView = Em.CollectionView.extend({
-    tagName: 'ul',
     classNames: ['nav-language'],
     content: App.interfaceLanguages,
     itemViewClass: App.LanguageView

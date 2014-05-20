@@ -77,6 +77,11 @@
         {# Other libs #}
         <script type="text/javascript" src="{{ STATIC_URL }}jsi18n/{{ LANGUAGE_CODE }}/djangojs.js"></script>
 
+        {% if debug %}
+            {# Ember profiling #}
+            <script type="text/javascript" src="{% static 'js/ember-renderspeed.js' %}"></script>
+        {% endif %}
+
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-transition.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-modal.js"></script>
@@ -159,7 +164,7 @@
                     <div id="logo">
                         {% block_verbatim nav_logo %}
                             {{#link-to 'home' class="logo-link"}}
-                                <object type="image/svg+xml" data="{% static "images/global/logo.svg" %}" class="logo-image"></object>
+                                <object type="image/svg+xml" data="{% static "images/img/1procentclub.svg" %}" class="logo-image"></object>
                             {{/link-to}}
                         {% endblock_verbatim %}
                     </div>

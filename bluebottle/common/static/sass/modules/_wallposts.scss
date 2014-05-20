@@ -389,6 +389,10 @@
 				@include grid(48,0,0);
 			}
 		}
+		
+		a {
+			word-break: break-all;
+		}
 	}
 	
 	

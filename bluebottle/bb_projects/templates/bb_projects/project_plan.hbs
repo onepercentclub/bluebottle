@@ -7,7 +7,7 @@
 		<nav class="project-plan-navigation">
 			
 			<div class="project-plan-title">
-				<h1>Project plan</h1>
+				<h1>{% trans "Campaign" %}</h1>
 				<h4>{{title}}</h4>
 			</div>
 			
@@ -15,17 +15,17 @@
 				{{#each headerLinks}}
 				<li><a class="project-plan-main-link" {{bindAttr href=href}}>{{name}}</a></li>
 				{{/each}}
-				<li><a class="project-plan-main-link" href="#map">Map</a></li>
+				<li><a class="project-plan-main-link" href="#map">{% trans "Map" %}</a></li>
 				{{#if hasPdfDownload}}		
 					<li class="project-plan-download-pdf">
-						<a><span class="flaticon solid download-document-1"></span> Download as PDF</a>
+						<a><span class="flaticon solid download-document-1"></span>{% trans "Download as PDF" %}</a>
 					<li>
 				{{/if}}
 			</ul>
 		</nav>
 		
 		<div class="project-plan-main-container">
-			<a rel='close' class="project-plan-back-link close-modal">Back to project<span class="flaticon stroke x-1"></span></a>
+			<a rel='close' class="project-plan-back-link close-modal">{% trans "Back to campaign" %}<span class="flaticon stroke x-1"></span></a>
 			<article class="project-plan-main">
 				{{{storyWithHeaderIds}}}
 				{{!-- 

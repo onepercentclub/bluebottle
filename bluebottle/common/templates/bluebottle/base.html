@@ -204,22 +204,24 @@
                     </nav>
                     <!-- end: main navigation -->
 
-                    {{#if display_message}}
+                    
+                </header>
+                
+                {{#if display_message}}
 
-                        <div {{bindAttr class=":message l-full isError"}}>
-                            <a {{ action 'hideMessage' }} class="message-close" rel="close">&times;</a>
+                    <div {{bindAttr class=":message l-full isError"}}>
+                        <a {{ action 'hideMessage' }} class="message-close" rel="close">&times;</a>
 
-                            <div class="message-title">
-                                {{ message_title }}
-                            </div>
-
-                            <div class="message-content">
-                                {{ message_content }}
-                            </div>
+                        <div class="message-title">
+                            {{ message_title }}
                         </div>
 
-                    {{/if}}
-                </header>
+                        <div class="message-content">
+                            {{ message_content }}
+                        </div>
+                    </div>
+
+                {{/if}}
             </div>
 
             <!-- end: main header -->

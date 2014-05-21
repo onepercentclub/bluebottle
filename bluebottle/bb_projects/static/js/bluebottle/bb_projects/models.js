@@ -8,6 +8,7 @@ App.Adapter.map('App.Project', {
 });
 
 App.Adapter.map('App.ProjectPreview', {
+    owner: {embedded: 'load'},
     country: {embedded: 'load'},
     theme: {embedded: 'load'}
 });
@@ -142,6 +143,7 @@ App.ProjectPhase = DS.Model.extend({
 
 App.ProjectPreview = App.Project.extend({
     url: 'bb_projects/previews',
+    owner: DS.attr('App.UserPreview'),
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
     pitch: DS.attr('string'),

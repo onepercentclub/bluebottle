@@ -11,36 +11,11 @@
 
     {{ partial "_organisation_legend" }}
 
-
-    {{#if hasSelectableOrganizations}}
-        {{#if hasOneSelectableOrganization}}
-            <p>
-                {% trans "You can import this from a previous campaign: " %}<a {{action setFirstSelectableOrganization}}>{% trans "Import:" %} {{firstSelectableOrganization.name}}</a>
-            </p>    
-        {{else}}
-            <fieldset>
-                <ul class="control-group select-organisation">
-                	<li class="control-label wide">
-                        {% trans "You can import this from a previous campaign:" %}
-                        {{view App.MyOrganizationSelectView name='organization' 
-                                                            contentBinding='selectableOrganizations'
-                                                            optionValuePath='content.id'
-                                                            optionLabelPath='content.nameOrDefault'
-                                                            selectionBinding='controller.selectedOrganization'}} 
-                        <button class="btn btn-modest add-org" {{action newOrganization}}>New</button>
-                	</li>
-                </ul>
-            </fieldset>
-        {{/if}}
-    {{/if}}
-
-
     <fieldset>
         <ul>
             {{partial "my_project_organisation_fields"}}
         </ul>
     </fieldset>
-
 
     <legend>
         <strong>{% trans "Legal status" %}</strong>

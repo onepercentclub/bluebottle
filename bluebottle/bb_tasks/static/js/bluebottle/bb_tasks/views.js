@@ -109,7 +109,7 @@ App.TaskStatusSelectView = Em.Select.extend({
 App.SkillSelectView = Em.Select.extend({
     optionValuePath: "content",
     optionLabelPath: "content.name",
-    prompt: "Pick a skill"
+    prompt: gettext("Pick a skill")
 });
 
 

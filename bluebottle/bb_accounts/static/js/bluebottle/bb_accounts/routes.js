@@ -43,7 +43,7 @@ App.UserIndexRoute = Em.Route.extend({
 });
 
 
-App.UserProfileRoute = Em.Route.extend({
+App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, {
     model: function() {
         var route = this;
         return App.CurrentUser.find('current').then(function(user) {

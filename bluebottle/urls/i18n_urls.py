@@ -8,7 +8,6 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    url(r'^$', HomeView.as_view(), name='home'),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset', name='admin_password_reset'),
@@ -26,4 +25,6 @@ urlpatterns = patterns(
 
     # account login/logout, password reset, and password change
     url(r'^accounts/', include('django.contrib.auth.urls', namespace='accounts')),
+
+    url(r'^([a-zA-Z0-9\-\_]*)', HomeView.as_view(), name='home'),
 )

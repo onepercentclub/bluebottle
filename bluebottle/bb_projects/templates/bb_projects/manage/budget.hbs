@@ -25,15 +25,15 @@ Please add 5% administration fee to your budget. The total amount, including the
         <ul>
             {{#each line in budgetLines}}
                 <li class="control-group">
-                    <label class="control-label">{% trans "Budget item description" %}</label>
+                    <label class="control-label">{% trans "Budget item description" context "Budget page" %}</label>
                     <div class="controls">
-                       {{view Em.TextField valueBinding="line.description" placeholder="Description"}}
+                       {% bb_component 'view Em.TextField' valueBinding="line.description" placeholder=_("Description")%}
                     </div>
                 </li>
                 <li class="control-group">
-                    <label class="control-label">{% trans "Amount" %}</label>
+                    <label class="control-label">{% trans "Amount" context "Budget page" %}</label>
                     <div class="controls">
-                       {{view Em.TextField valueBinding="line.amount" placeholder="Amount euro"}}
+                       {% bb_component 'view Em.TextField' valueBinding="line.amount" placeholder=_("Amount euro") %}
                     </div>
                 </li>
                 <li class="control-group">

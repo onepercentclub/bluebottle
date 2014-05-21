@@ -443,6 +443,18 @@ App.ApplicationRoute = Em.Route.extend({
     }
 });
 
+// FIXME: we should make this cleaner by ensuring the current
+//        user is fetched before we do any routing.
+App.ErrorNotAllowedRoute = Em.Route.extend({
+    beforeModel: function() {
+        var self = this;
+        App.CurrentUser.find('current').then( function (user) {
+            if (user.get('isAuthenticated')) {
+                self.transitionTo('home');
+            }
+        });
+    }
+});
 
 App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {

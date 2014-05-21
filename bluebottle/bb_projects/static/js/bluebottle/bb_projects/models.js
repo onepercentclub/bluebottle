@@ -143,7 +143,7 @@ App.ProjectPhase = DS.Model.extend({
 
 App.ProjectPreview = App.Project.extend({
     url: 'bb_projects/previews',
-    owner: DS.attr('App.UserPreview'),
+    owner: DS.belongsTo('App.UserPreview'),
     image: DS.attr('string'),
     country: DS.belongsTo('App.ProjectCountry'),
     pitch: DS.attr('string'),

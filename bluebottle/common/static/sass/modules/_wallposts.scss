@@ -297,11 +297,25 @@
 			}
 		}
 		.tabs {
+			position: relative;
+			top: 1;
+			text-align: left;
 			
+			.tab-item a {
+				border: 1px solid 1px solid #cccccc;
+				
+				&.active {
+					z-index: 2;
+				}
+				
+			}
+			
+			/*
 			margin: 0;
 			
 			.tab-item {
 				text-align: center;
+				
 				&.active {
 					background: $wallposts-form-tabs-active-bg-color;
 					a {
@@ -309,6 +323,7 @@
 					}
 				}
 			}
+			*/
 		}
 		
 		.btn {

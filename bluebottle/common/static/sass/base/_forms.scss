@@ -518,6 +518,8 @@ label.radio {
             @include border-radius(1px);
             text-align: center;
             
+            white-space: nowrap; 
+            
         }
         
         input[type=radio]:checked + span {

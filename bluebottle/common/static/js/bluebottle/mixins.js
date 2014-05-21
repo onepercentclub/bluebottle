@@ -12,7 +12,7 @@ App.AuthenticatedRouteMixin = Ember.Mixin.create({
             // TODO: is there a more elegant way to call the function from here?
             var self = this;
 
-            self.transitionTo('error.notAllowed');
+            self.transitionTo('signup');
 
             // Abort the transition as the login controller will handle the redirect after a successful login.
             // We only need to handle the case when the user clicks the close link on the login popup - this

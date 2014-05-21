@@ -47,16 +47,17 @@ Em.Handlebars.registerBoundHelper('linebreaks', function(value, options) {
     }
 });
 
-Ember.Handlebars.registerHelper('ifExpired', function (property, options) {
+Ember.Handlebars.registerHelper('ifExpired', function (property, options, scope) {
   var value,
-      now = new Date();
+      now = new Date()
+      self = scope || this;
   
   // If context is an ObjectController then property
   // should be found on the associated model
-  if (this instanceof Ember.ObjectController) {
-      value = Em.get(this, 'model').get(property);
+  if (self instanceof Ember.ObjectController) {
+      value = Em.get(self, 'model').get(property);
   } else {
-      value = Em.get(this, property);
+      value = Em.get(self, property);
   }
 
   if (typeof value.getMonth !== 'function') {
@@ -64,11 +65,21 @@ Ember.Handlebars.registerHelper('ifExpired', function (property, options) {
   }
  
   if (now < value) {
-     return options.inverse(this);      
+     return options.inverse(self);      
   }
   else {
-     return options.fn(this);
+     return options.fn(self);
   }
+});
+
+
+Ember.Handlebars.registerHelper('ifNotExpired', function (property, options) {
+    var fn = options.fn, inverse = options.inverse;
+
+    options.fn = inverse;
+    options.inverse = fn;
+
+    return Ember.Handlebars.helpers.ifExpired(property, options, this);
 });
 
 Ember.Handlebars.helper('daysToGoText', function(value, options) {

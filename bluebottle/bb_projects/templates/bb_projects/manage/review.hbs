@@ -15,8 +15,16 @@
 
                 <article class="l-content">
                     <header class="page-header">
-                        <h2>{% trans "Your campaign is in review now" %}</h2>
-                        <p>We'll get back to you soon!</p>
+                        <h2>{% trans "Thank your for sending us your campaign story!" %}</h2>
+                        <p>{% trans "We are busy reading your plan and check all the details. After the final check you can start your crowdfunding campaign. You’ll receive an email from us within 4 working days!" %}</p>
+                        <p>
+                        {% blocktrans %}
+                        Why don’t you complete your profile or read the latest tips & tricks about crowdfunding in the meantime?
+                        {% endblocktrans %}</p>
+                        <ul>
+                          <li>{{#link-to 'userProfile'}}{% trans "Visit profile" %}{{/link-to}}</li>
+                          <li>{{#link-to ''}}{% trans "Latest tips & tricks" %}{{/link-to}}</li>
+                        </ul>
                     </header>
                 </article>
             </div>

@@ -170,13 +170,16 @@ label, .control-label {
 }
 
 .message {
+    position: absolute;
     display: block;
+    width: 98%;
+    top: 0;
+    margin: 10px 1%;
     @include clear;
-    position: relative;
+    z-index: 9999;
     color: $form-message-color;
     font-family: $font-family-heavy;
     padding: $base-padding $base-padding*2;
-    margin-top: 1px;
     margin-bottom: $base-margin;
     background-color: $form-message-bg-color;
     

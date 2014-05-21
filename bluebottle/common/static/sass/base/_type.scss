@@ -131,7 +131,7 @@ a {
 	}
 }
 
-ul {
+ul, ul.bullets {
 	margin: $base-margin 0 $base-margin*2 $base-margin*2;
 
 	> li {
@@ -140,6 +140,8 @@ ul {
 		background: image-url("list-item.png") transparent no-repeat 0 0;
 	}
 }
+
+
 
 ol { 
 	margin: $base-padding 0 $base-padding*2 $base-padding*2;

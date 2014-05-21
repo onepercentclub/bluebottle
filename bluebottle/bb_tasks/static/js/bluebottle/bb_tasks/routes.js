@@ -38,7 +38,7 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
 });
 
 
-App.TaskRoute = Em.Route.extend({
+App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         return App.Task.find(params.task_id);
     },

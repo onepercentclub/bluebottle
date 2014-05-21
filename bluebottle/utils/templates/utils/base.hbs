@@ -1,12 +1,13 @@
 {% load templatetag_handlebars %}
 {% load i18n %}
 {% load static %}
+{% load bb_ember %}
 
 {% include 'utils/form-components.hbs' %}
 
 {% tplhandlebars "tag_widget" %}
 
-    {{view App.TagField valueBinding="view.new_tag" name="tag" placeholder="Add a tag" class="tag"}} <button class="btn btn-modest add-tag" {{action addTag target=view}}>Add</button>
+    {% bb_component 'view App.TagField' valueBinding="view.new_tag" name="tag" placeholder=_("Choose max. 5 keywords") class="tag" %} <button class="btn btn-modest add-tag" {{action addTag target=view}}>{% trans "Add" context "Add tag CC" %}</button>
 
     <ul class="tags">
         {{#each tags}}

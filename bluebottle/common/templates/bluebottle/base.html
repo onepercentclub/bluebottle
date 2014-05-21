@@ -77,6 +77,11 @@
         {# Other libs #}
         <script type="text/javascript" src="{{ STATIC_URL }}jsi18n/{{ LANGUAGE_CODE }}/djangojs.js"></script>
 
+        {% if debug %}
+            {# Ember profiling #}
+            <script type="text/javascript" src="{% static 'js/ember-renderspeed.js' %}"></script>
+        {% endif %}
+
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-transition.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-modal.js"></script>
@@ -233,6 +238,7 @@
     {% endtplhandlebars %}
 
 	{% include "bluebottle/footer.hbs" %}
+  {% include "bluebottle/not_allowed.hbs" %}
 
 </head>
 <body id="body">

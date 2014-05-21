@@ -59,15 +59,16 @@ class MediaWallPost(WallPost):
     def __unicode__(self):
         return Truncator(self.text).words(10)
 
-    def save(self, *args, **kwargs):
-        super(MediaWallPost, self).save(*args, **kwargs)
-
-        # Mark the photos as deleted when the MediaWallPost is deleted.
-        if self.deleted:
-            for photo in self.photos.all():
-                if not photo.deleted:
-                    photo.deleted = self.deleted
-                    photo.save()
+    # FIXME: See how we can re-enable this
+    # def save(self, *args, **kwargs):
+    #     super(MediaWallPost, self).save(*args, **kwargs)
+    #
+    #     # Mark the photos as deleted when the MediaWallPost is deleted.
+    #     if self.deleted:
+    #         for photo in self.photos.all():
+    #             if not photo.deleted:
+    #                 photo.deleted = self.deleted
+    #                 photo.save()
 
 
 class MediaWallPostPhoto(models.Model):

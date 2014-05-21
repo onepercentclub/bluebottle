@@ -64,6 +64,7 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
     country = ProjectCountrySerializer(source='country')
     pitch = serializers.CharField(source='pitch')
     theme = ProjectThemeSerializer(source='theme')
+    owner = UserPreviewSerializer()
 
     class Meta:
         model = PROJECT_MODEL

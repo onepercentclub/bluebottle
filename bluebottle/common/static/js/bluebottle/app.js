@@ -86,8 +86,8 @@ App = Em.Application.create({
 
         App.ProjectPhase.find().then(function(data){
             var list = [
-                {id: 5, name: gettext("Campaign")},
-                {id: 7, name: gettext("Finished")},
+                {id: 5, name: gettext("Running campaigns")},
+                {id: 7, name: gettext("Finished campaigns")}
             ];
             // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
             // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
@@ -443,6 +443,18 @@ App.ApplicationRoute = Em.Route.extend({
     }
 });
 
+// FIXME: we should make this cleaner by ensuring the current
+//        user is fetched before we do any routing.
+App.ErrorNotAllowedRoute = Em.Route.extend({
+    beforeModel: function() {
+        var self = this;
+        App.CurrentUser.find('current').then( function (user) {
+            if (user.get('isAuthenticated')) {
+                self.transitionTo('home');
+            }
+        });
+    }
+});
 
 App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {

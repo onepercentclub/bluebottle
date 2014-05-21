@@ -155,6 +155,7 @@ App.UserActivateRoute = Em.Route.extend({
         // This seems the only way to (more or less) always load the logged in user,
         Em.run.later(function() {
             currentUser.transitionTo('loaded.saved');
+            window.csrf_token = getCookie('csrftoken');
             currentUser.reload();
         }, 3000);
 

@@ -163,7 +163,7 @@ App.DateSliderWidget = Ember.TextField.extend({
             var date = new Date(Date.now() + days * 24*3600*1000);
             view.set('date', date);
         },
-        config.dimension = '&nbsp;days';
+        config.dimension = gettext('&nbsp;days');
         config.scale = [0, 100],
         config.limits = false,
         config.className = 'slider';

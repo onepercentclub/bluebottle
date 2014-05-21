@@ -12,18 +12,20 @@ App.AuthenticatedRouteMixin = Ember.Mixin.create({
             // TODO: is there a more elegant way to call the function from here?
             var self = this;
 
+            self.transitionTo('signup');
+
             // Abort the transition as the login controller will handle the redirect after a successful login.
             // We only need to handle the case when the user clicks the close link on the login popup - this
             // is done below in a callback to the openInBox. 
-            transition.abort();
+            // transition.abort();
 
-            App.__container__.lookup("route:application").openInBox('login', null, null, function (options, event) {
-                // If the user closed the login popup and there was no last url then transition to the home page
-                var lastUrl = App.__container__.lookup('router:main').location.lastSetURL;
-                if (!lastUrl && options.close) {
-                    self.transitionTo('home');
-                }
-            });
+            // App.__container__.lookup("route:application").openInBox('login', null, null, function (options, event) {
+            //     // If the user closed the login popup and there was no last url then transition to the home page
+            //     var lastUrl = App.__container__.lookup('router:main').location.lastSetURL;
+            //     if (!lastUrl && options.close) {
+            //         self.transitionTo('home');
+            //     }
+            // });
         }
     }
 });

@@ -7,16 +7,20 @@
 
    And, In your template,
 
-   <a class="goto" data-target="#Destination">Source</a>
+   <a class="goto" href="#Destination" data-target="#Destination">Source</a>
 
    Or,
 
    <a {{action 'goTo' '#Destination' target="view" bubbles=false}}>Source</a>
  */
 App.GoTo = Ember.Mixin.create({
+
+	setUpLinks: function() {
+
+	}.on('didInsertElement'),
+
     click: function(e) {
         var $target = $(e.target);
-
         if ($target.hasClass('goto')) {
             this.goTo($target.data('target'));
             e.preventDefault();
@@ -25,7 +29,7 @@ App.GoTo = Ember.Mixin.create({
 
     goTo: function(target) {
         $('html, body').stop().animate({
-            scrollTop: $(target).offset().top
+            scrollTop: $(target).offset().top - $('#header').height()
         }, 500);
     }
 });

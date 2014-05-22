@@ -1,16 +1,17 @@
 language: python
-
 python:
-#  - "2.6"
-  - "2.7"
-
+- '2.7'
 install:
-  - "pip install --upgrade setuptools --use-mirrors"
-  - "pip install nose"
-
+- pip install --upgrade setuptools --use-mirrors
+- pip install nose
 before_script:
-  - npm install
-
+- npm install
 script:
-  - python setup.py test
-  - grunt travis --verbose # add --force to overlook JS test failures
+- python setup.py test
+- grunt travis --verbose
+notifications:
+  hipchat:
+    rooms:
+      secure: A7SQlgtz1wTbt5wSpP5inxXAB7Gxmss6KIjnV0RdcU1jzKbf/umrAWgLIb/M6vr/zO/YwZCa60SkYm7yn0fGEU3fVjA7rWy5w1yllMEgxxEUy4E2DF1pL/0vryI4GwgcNzre0XA1o/Lx5/8cq6FB1fZ0V5yDyIl8xxMdWFb++X4=
+    template:
+    - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}'

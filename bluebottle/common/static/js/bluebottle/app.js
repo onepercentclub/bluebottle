@@ -387,18 +387,6 @@ App.ApplicationRoute = Em.Route.extend({
                 route.transitionTo('page', page);
                 window.scrollTo(0, 0);
             });
-        },
-
-        addDonation: function (project) {
-            var route = this;
-            App.CurrentOrder.find('current').then(function(order) {
-                var store = route.get('store');
-                var donation = store.createRecord(App.CurrentOrderDonation);
-                donation.set('project', project);
-                donation.set('order', order);
-                donation.save();
-                route.transitionTo('currentOrder.donationList');
-            });
         }
     },
 

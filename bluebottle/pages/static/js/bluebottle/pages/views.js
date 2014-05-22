@@ -15,10 +15,6 @@
  */
 App.GoTo = Ember.Mixin.create({
 
-	setUpLinks: function() {
-
-	}.on('didInsertElement'),
-
     click: function(e) {
         var $target = $(e.target);
         if ($target.hasClass('goto')) {

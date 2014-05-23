@@ -48,9 +48,14 @@ Em.Handlebars.registerBoundHelper('linebreaks', function(value, options) {
 });
 
 Ember.Handlebars.registerHelper('ifExpired', function (property, options, scope) {
-  var value,
-      now = new Date()
-      self = scope || this;
+  var value, self,
+      now = new Date();
+
+  if (typeof scope == 'undefined') {
+      self = this;
+  } else {
+      self = scope;
+  }
   
   // If context is an ObjectController then property
   // should be found on the associated model

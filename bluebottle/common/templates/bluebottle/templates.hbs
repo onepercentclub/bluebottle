@@ -1,0 +1,10 @@
+{% load i18n %}
+{% load bb_ember %}
+{% load static %}
+
+
+{% block handlebars_templates %}
+    {% for app in bb_apps %}
+        {% include app|add:"/base.hbs" %}
+    {% endfor %}
+{% endblock handlebars_templates %}

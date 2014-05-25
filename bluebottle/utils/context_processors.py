@@ -52,10 +52,8 @@ def conf_settings(request):
     """
     Some settings we want to make available in templates.
     """
-    try:
-        context = {'settings': {
-            'DEBUG': settings.DEBUG,
-        }}
-    except AttributeError:
-        context = {}
+    context = {}
+    context['DEBUG'] = getattr(settings, 'DEBUG', False)
+    context['COMPRESS_TEMPLATES'] = getattr(settings, 'COMPRESS_TEMPLATES', False)
+
     return context

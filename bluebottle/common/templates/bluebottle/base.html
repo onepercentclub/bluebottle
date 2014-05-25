@@ -49,7 +49,7 @@
         var STATIC_URL = '{{ STATIC_URL }}';
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
-        var DEBUG = {{ settings.DEBUG|yesno:"true,false" }};
+        var DEBUG = {{ DEBUG|yesno:"true,false" }};
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
 
@@ -63,11 +63,11 @@
     {% compress js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-ui/minified/jquery.ui.core.min.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-ui/minified/jquery.ui.datepicker.min.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/handlebars-1.0.0{% if not debug %}.min{% endif %}.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/handlebars-1.0.0{% if not DEBUG %}.min{% endif %}.js"></script>
     {% endcompress %}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0{% if not debug %}.min{% endif %}.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14{% if not debug %}.min{% endif %}.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-v1.0.0{% if not DEBUG %}.min{% endif %}.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-v0.14{% if not DEBUG %}.min{% endif %}.js"></script>
 
     {% compress js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-data-drf2-adapter.js"></script>
@@ -77,9 +77,9 @@
         {# Other libs #}
         <script type="text/javascript" src="{{ STATIC_URL }}jsi18n/{{ LANGUAGE_CODE }}/djangojs.js"></script>
 
-        {% if debug %}
+        {% if DEBUG %}
             {# Ember profiling #}
-            <script type="text/javascript" src="{% static 'js/ember-renderspeed.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/vendor/ember-renderspeed.js' %}"></script>
         {% endif %}
 
 
@@ -90,7 +90,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-typeahead.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/ember-bootstrap-df3e710.js"></script>
 
-        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-validation/jquery.validate{% if not debug %}.min{% endif %}.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-validation/jquery.validate{% if not DEBUG %}.min{% endif %}.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/redactor.min.js"></script>
 
         {# Plugins #}
@@ -136,20 +136,17 @@
         {% endfor %}
     {% endblock handlebars_templates %}
 
-
     <script src="{{ STATIC_URL }}js/vendor/jquery.scrollTo.min.js" type="text/javascript" charset="utf-8"></script>
     <!--script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js"></script-->
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
     <script src="{{ STATIC_URL }}js/infobox.js"></script>
     <script src="{{ STATIC_URL }}js/marker_clusterer.js"></script>
 
-
     {% block htmlheader %}{% endblock %}
 
     {% tplhandlebars "language" %}
         <a {{action "selectLanguage" view.content.code}}{{bindAttr title=view.content.name}}>{{ view.content.code }}</a>
     {% endtplhandlebars %}
-
 
     {% tplhandlebars "application" %}
 
@@ -237,9 +234,8 @@
 
     {% endtplhandlebars %}
 
-	{% include "bluebottle/footer.hbs" %}
-  {% include "bluebottle/not_allowed.hbs" %}
-
+    {% include "bluebottle/footer.hbs" %}
+    {% include "bluebottle/not_allowed.hbs" %}
 </head>
 <body id="body">
     <!-- Scripts -->

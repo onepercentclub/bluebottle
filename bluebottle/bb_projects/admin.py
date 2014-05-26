@@ -38,8 +38,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     def queryset(self, request):
         # Optimization: Select related fields that are used in admin specific display fields.
         queryset = super(BaseProjectAdmin, self).queryset(request)
-        return queryset.select_related('projectpitch', 'projectplan', 'projectcampaign', 'owner',
-                                       'organization')
+        return queryset.select_related('owner', 'organization')
 
     def get_title_display(self, obj):
         if len(obj.title) > 50:
@@ -61,7 +60,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     get_owner_display.short_description = _('owner')
 
     def project_organization(self, obj):
-        object = obj.projectplan.organization
+        object = obj.organization
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(str(url), object.name)
 

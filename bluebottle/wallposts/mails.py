@@ -37,12 +37,13 @@ from django.template import Context
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.utils import get_project_model, get_task_model
 from bluebottle.bb_tasks.models import BaseTask
 from bluebottle.mail import send_mail
 
 from .models import TextWallPost, Reaction
 
+TASK_MODEL = get_task_model()
 PROJECT_MODEL = get_project_model()
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
            )
 
    # Task Wall Post
-   if isinstance(post.content_object, BaseTask):
+   if isinstance(post.content_object, TASK_MODEL):
        task = post.content_object
        receiver = task.author
        author = post.author

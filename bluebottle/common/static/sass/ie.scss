@@ -11,12 +11,23 @@
 	}
 }
 
-.tabs {
-	li {
-		> a, > span  {
-			&:before {
-				position: inherit;
+
+.wall-form {
+	.tabs {
+		li {
+			> a, > span  {
+				&:before {
+					position: inherit;
+				}
 			}
 		}
+	}	
+}
+
+select {
+	background-image: none\9\0; // only IE9
+	
+	&:hover, &:focus {
+		background-image: none\9\0; // only IE9
 	}
 }

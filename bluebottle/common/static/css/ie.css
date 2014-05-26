@@ -11,7 +11,16 @@
   background-position-x: -40px;
 }
 
-/* line 17, ../sass/ie.scss */
-.tabs li > a:before, .tabs li > span:before {
+/* line 19, ../sass/ie.scss */
+.wall-form .tabs li > a:before, .wall-form .tabs li > span:before {
   position: inherit;
+}
+
+/* line 27, ../sass/ie.scss */
+select {
+  background-image: none\9\0;
+}
+/* line 30, ../sass/ie.scss */
+select:hover, select:focus {
+  background-image: none\9\0;
 }

@@ -7,6 +7,10 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('fluent_contents', '0001_initial'),
+    )
+
     def forwards(self, orm):
         # Adding model 'PictureItem'
         db.create_table('contentitem_contentplugins_pictureitem', (

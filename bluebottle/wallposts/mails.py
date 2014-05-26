@@ -182,7 +182,6 @@ def new_reaction_notification(sender, instance, created, **kwargs):
                    template_name='task_wallpost_reaction_new.mail',
                    subject=_('%(author)s commented on your post.') % {'author': reaction_author.first_name},
                    to=post_author,
-
                    project=task,
                    link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
                    author=reaction_author

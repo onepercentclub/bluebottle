@@ -31,14 +31,3 @@ App.ItemSelectView = Em.Select.extend({
     prompt: "Pick an item"
 });
 
-App.ViewProfileView= Em.View.extend({
-    didInsertElement: function () {
-        if (this.$('#SkypeButton_Call')) {
-            Skype.ui({
-              "name": "dropdown",
-              "element": "SkypeButton_Call",
-              "participants": [this.get('controller.model.skypename')]
-            });
-        }
-    }
-});

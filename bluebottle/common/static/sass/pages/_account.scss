@@ -157,7 +157,7 @@
 	}
 	.account-links {
 		font-size: $font-size-small;
-		.account-facebook, .account-twitter, .account-website {
+		.account-facebook, .account-twitter, .account-website, .account-skype {
 			@include grid(16,0,1);
 			text-decoration: none;
 		}
@@ -173,6 +173,9 @@
 				color: darken($twitter-blue, 20%);
 			}
 		}
+    .account-skype {
+      color: $skype-blue;     
+    }
 	}	
 }
 .account-statistics {

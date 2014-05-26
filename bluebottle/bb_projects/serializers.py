@@ -8,9 +8,25 @@ from bluebottle.utils.utils import get_project_model
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.serializers import CountrySerializer
+from bs4 import BeautifulSoup
 
 PROJECT_MODEL = get_project_model()
 
+
+
+class StoryField(serializers.WritableField):
+    def to_native(self, value):
+        """ Reading / Loading the story field """
+        return value
+
+    def from_native(self, data):
+        """ Saving the story text """
+        #Convert &gt; and &lt; back to HTML tags so Beautiful Soup can clean unwanted tags.
+        #Script tags are sent by redactor as "&lt;;script&gt;;", Iframe tags have just one semicolon.
+        data = data.replace("&lt;;", "<").replace("&gt;;", ">").replace("&lt;", "<").replace("&gt;", ">")
+        soup = BeautifulSoup(data, "html.parser")
+        [s.extract() for s in soup(['script', 'iframe'])]
+        return str(soup)
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,5 +107,5 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
 
     class Meta:
         model = PROJECT_MODEL
-        fields = ('id', 'title', 'description', 'editable', 'viewable', 'status', 'image', 'pitch',
+        fields = ('id', 'title', 'description', 'editable', 'viewable', 'status', 'image', 'pitch', 'deadline',
                   'slug', 'tags', 'created', 'url', 'country', 'theme', 'organization', 'language')

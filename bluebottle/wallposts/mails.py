@@ -184,7 +184,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
                    to=post_author,
 
                    project=task,
-                   link='/go/projects/{0}'.format(task.slug),
+                   link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
                    author=reaction_author
                )
                mailed_users.add(post_author)

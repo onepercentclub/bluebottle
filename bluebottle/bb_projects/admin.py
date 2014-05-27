@@ -29,7 +29,7 @@ class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
     actions = ('set_failed', 'toggle_campaign')
 
     list_filter = ('status', )
-    list_display = ('get_title_display', 'get_owner_display', 'created', 'status')
+    list_display = ('get_title_display', 'get_owner_display', 'created', 'status', 'deadline')
 
     search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
 

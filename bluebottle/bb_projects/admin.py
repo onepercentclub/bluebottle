@@ -1,6 +1,8 @@
+from bluebottle.common.admin_utils import ImprovedModelForm
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
+from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
@@ -19,7 +21,7 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
-class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
+class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
@@ -31,7 +33,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
 
-    raw_id_fields = ('owner', 'organization')
+    raw_id_fields = ('owner', 'organization',)
 
     prepopulated_fields = {'slug': ('title',)}
 
@@ -59,13 +61,6 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     get_owner_display.admin_order_field = 'owner__last_name'
     get_owner_display.short_description = _('owner')
-
-    def project_organization(self, obj):
-        object = obj.projectplan.organization
-        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), object.name)
-
-    project_organization.allow_tags = True
 
     def project_owner(self, obj):
         object = obj.owner

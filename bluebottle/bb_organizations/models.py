@@ -12,6 +12,8 @@ from djchoices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 from django.db.models import options
 
+from bluebottle.utils.utils import get_organizationdocument_model
+
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'manage_serializer')
 
 
@@ -47,8 +49,8 @@ class BaseOrganizationDocument(models.Model):
 
     @property
     def document_url(self):
-        content_type = ContentType.objects.get_for_model(settings.ORGANIZATIONS_DOCUMENT_MODEL).id
-        return reverse('document-download-detail', kwargs={'content_type': content_type, 'pk': self.pk})
+        content_type = ContentType.objects.get_for_model(get_organizationdocument_model()).id
+        return reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': self.pk})
 
 
 class BaseOrganization(models.Model):

@@ -18,6 +18,11 @@
             var default_description = '{% blocktrans %}Site meta description{% endblocktrans %}';
             var default_keywords = '{% blocktrans %}Site meta keywords{% endblocktrans %}';
         </script>
+        {% if DEBUG %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/raven.js"></script>
+        {% else %}
+            <script src="//cdn.ravenjs.com/1.1.15/ember,jquery,native/raven.min.js"></script>
+        {% endif %}
     {% endblock defaults_js %}
 
     {% block meta %}
@@ -46,6 +51,8 @@
     {# Scripts #}
     <!-- avoid hardcoding these urls -->
     <script type="text/javascript">
+        var GIT_COMMIT = '{{ GIT_COMMIT }}';
+        var SENTRY_DSN = '{{ SENTRY_DSN }}';
         var STATIC_URL = '{{ STATIC_URL }}';
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
@@ -54,7 +61,7 @@
     </script>
 
     {# The Ember stack. jQuery, jQuery-ui, Ember, Ember-data, Ember-drf2-adapter, Ember meta #}
-    {% if debug %}
+    {% if DEBUG %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-1.8.3.min.js"></script>
     {% else %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
@@ -81,7 +88,6 @@
             {# Ember profiling #}
             <script type="text/javascript" src="{% static 'js/ember-renderspeed.js' %}"></script>
         {% endif %}
-
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-transition.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-modal.js"></script>
@@ -112,6 +118,10 @@
 
         {% block ember_scripts %}
             {{ block.super }}
+
+            {% if SENTRY_DSN %}
+                <script type="text/javascript" src="{{ STATIC_URL }}js/configs/raven.js"></script>
+            {% endif %}
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/presets.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/app.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>

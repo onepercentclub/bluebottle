@@ -90,7 +90,6 @@ App.TaskDeadLineDatePicker = App.DatePicker.extend({
 /*
  Form Elements
  */
-console.log("load2");
 App.TaskStatusList = [
     {value: 'open', title: gettext("open")},
     {value: 'in progress', title: gettext("in progress")},

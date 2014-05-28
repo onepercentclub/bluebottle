@@ -290,8 +290,8 @@ App.UploadedImageView = App.UploadFile.extend({
         };
         reader.readAsDataURL(file);
         var model = this.get('parentView.controller.model');
-        this.set('file', file);
-    }
+        this.set('file', file);
+   }
 });
 
 

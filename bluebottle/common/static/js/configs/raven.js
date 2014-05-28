@@ -9,6 +9,9 @@ if (SENTRY_DSN) {
             // Chrome extensions
             /extensions\//i,
             /^chrome:\/\//i,
-        ]
+        ],
+        tags: {
+            git_commit: GIT_COMMIT
+        }
     }).install();
 }

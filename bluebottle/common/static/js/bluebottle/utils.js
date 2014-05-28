@@ -285,7 +285,7 @@ App.UploadedImageView = App.UploadFile.extend({
         var view = this;
 
         reader.onload = function(e) {
-	    var preview = "<img src='" + e.target.result + "' />";
+            var preview = "<img src='" + e.target.result + "' />";
             view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
         };
         reader.readAsDataURL(file);

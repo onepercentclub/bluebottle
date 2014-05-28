@@ -48,6 +48,17 @@ def git_commit(request):
     return context
 
 
+def sentry_dsn(request):
+    """
+    Make the Sentry DSN available in the templates.
+    """
+    try:
+        context = {'SENTRY_DSN': settings.SENTRY_DSN}
+    except AttributeError:
+        context = {}
+    return context
+
+
 def conf_settings(request):
     """
     Some settings we want to make available in templates.

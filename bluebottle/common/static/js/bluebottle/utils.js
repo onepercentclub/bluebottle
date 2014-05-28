@@ -279,13 +279,13 @@ App.UploadedImageView = App.UploadFile.extend({
     type: 'file',
 
     change: function (evt) {
-		var files = evt.target.files;
-		var reader = new FileReader();
-		var file = files[0];
-		var view = this;
+        var files = evt.target.files;
+        var reader = new FileReader();
+        var file = files[0];
+        var view = this;
 
-		reader.onload = function(e) {
-			var preview = "<img src='" + e.target.result + "' />";
+        reader.onload = function(e) {
+	    var preview = "<img src='" + e.target.result + "' />";
             view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
         };
         reader.readAsDataURL(file);

@@ -131,14 +131,7 @@
     {% endcompress %}
 
     {% block handlebars_templates %}
-        {% for app in bb_apps %}
-            {% include app|add:"/base.hbs" %}
-        {% endfor %}
-
-        {% include "bluebottle/_main_nav.hbs" %}
-        {% include "bluebottle/application.hbs" %}
-        {% include "bluebottle/footer.hbs" %}
-        {% include "bluebottle/not_allowed.hbs" %}
+        {% include "bluebottle/templates.hbs" %}
     {% endblock handlebars_templates %}
 
     <script src="{{ STATIC_URL }}js/vendor/jquery.scrollTo.min.js" type="text/javascript" charset="utf-8"></script>

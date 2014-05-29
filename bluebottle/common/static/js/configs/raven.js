@@ -7,8 +7,8 @@ if (SENTRY_DSN) {
         ],
         ignoreUrls: [
             // Chrome extensions
-            /extensions\//i,
-            /^chrome:\/\//i,
+            (/extensions\//i),
+            (/^chrome:\/\//i),
         ],
         tags: {
             git_commit: GIT_COMMIT

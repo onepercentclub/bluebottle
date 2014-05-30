@@ -18,8 +18,11 @@ App.GoTo = Ember.Mixin.create({
     click: function(e) {
         var $target = $(e.target);
         if ($target.hasClass('goto')) {
-            this.goTo($target.data('target'));
-            e.preventDefault();
+            var anchor = $target.data('target') || $target.attr('rel');
+            if (anchor) {
+                this.goTo(anchor);
+                e.preventDefault();
+            }
         }
     },
 

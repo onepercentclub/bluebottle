@@ -47,7 +47,7 @@
     <!-- avoid hardcoding these urls -->
     <script type="text/javascript">
         var GIT_COMMIT = '{{ GIT_COMMIT }}';
-        var SENTRY_DSN = '{{ SENTRY_DSN }}';
+        var RAVEN_DSN = '{{ RAVEN_DSN }}';
         var STATIC_URL = '{{ STATIC_URL }}';
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
@@ -55,7 +55,7 @@
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
 
-    {% if SENTRY_DSN %}
+    {% if RAVEN_DSN %}
         <script src="//cdn.ravenjs.com/1.1.15/ember,jquery,native/raven.min.js"></script>
     {% endif %}
 
@@ -118,9 +118,6 @@
         {% block ember_scripts %}
             {{ block.super }}
 
-            {% if SENTRY_DSN %}
-                <script type="text/javascript" src="{{ STATIC_URL }}js/configs/raven.js"></script>
-            {% endif %}
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/presets.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/app.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>

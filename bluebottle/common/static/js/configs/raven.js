@@ -1,5 +1,5 @@
-if (SENTRY_DSN) {
-    Raven.config(SENTRY_DSN, {
+if (RAVEN_DSN) {
+    Raven.config(RAVEN_DSN, {
         whitelistUrls: ['/static/assets/js'],
         ignoreErrors: [
             // Random plugins/extensions

@@ -18,11 +18,6 @@
             var default_description = '{% blocktrans %}Site meta description{% endblocktrans %}';
             var default_keywords = '{% blocktrans %}Site meta keywords{% endblocktrans %}';
         </script>
-        {% if DEBUG %}
-            <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/raven.js"></script>
-        {% else %}
-            <script src="//cdn.ravenjs.com/1.1.15/ember,jquery,native/raven.min.js"></script>
-        {% endif %}
     {% endblock defaults_js %}
 
     {% block meta %}
@@ -59,6 +54,10 @@
         var DEBUG = {{ settings.DEBUG|yesno:"true,false" }};
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
+
+    {% if SENTRY_DSN %}
+        <script src="//cdn.ravenjs.com/1.1.15/ember,jquery,native/raven.min.js"></script>
+    {% endif %}
 
     {# The Ember stack. jQuery, jQuery-ui, Ember, Ember-data, Ember-drf2-adapter, Ember meta #}
     {% if DEBUG %}

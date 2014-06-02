@@ -46,6 +46,8 @@
     {# Scripts #}
     <!-- avoid hardcoding these urls -->
     <script type="text/javascript">
+        var GIT_COMMIT = '{{ GIT_COMMIT }}';
+        var RAVEN_DSN = '{{ RAVEN_DSN }}';
         var STATIC_URL = '{{ STATIC_URL }}';
         var MEDIA_URL = '{{ MEDIA_URL }}';
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
@@ -53,8 +55,12 @@
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
     </script>
 
+    {% if RAVEN_DSN %}
+        <script src="//cdn.ravenjs.com/1.1.15/ember,jquery,native/raven.min.js"></script>
+    {% endif %}
+
     {# The Ember stack. jQuery, jQuery-ui, Ember, Ember-data, Ember-drf2-adapter, Ember meta #}
-    {% if debug %}
+    {% if DEBUG %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/jquery-1.8.3.min.js"></script>
     {% else %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
@@ -81,7 +87,6 @@
             {# Ember profiling #}
             <script type="text/javascript" src="{% static 'js/ember-renderspeed.js' %}"></script>
         {% endif %}
-
 
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-transition.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/vendor/bootstrap/bootstrap-modal.js"></script>
@@ -112,6 +117,7 @@
 
         {% block ember_scripts %}
             {{ block.super }}
+
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/presets.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/app.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/utils.js"></script>

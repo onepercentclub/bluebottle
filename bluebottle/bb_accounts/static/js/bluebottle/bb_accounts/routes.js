@@ -20,7 +20,7 @@ App.Router.map(function(){
 /*
  *  Routes
  */
-App.SignupRoute = Em.Route.extend({
+App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
     redirect: function() {
         if (this.controllerFor('currentUser').get('isAuthenticated')) {
             this.transitionTo('home');

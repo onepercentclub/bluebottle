@@ -1,3 +1,34 @@
+Ember.Application.initializer({
+    name: 'currentUser',
+    after: 'store',
+    initialize: function(container, application) {
+        // delay boot until the current user promise resolves
+        App.deferReadiness();
+
+        // Try to fetch the current user
+        App.CurrentUser.find('current').then(function(user) {
+            // Read language string from url.
+            var language = window.location.pathname.split('/')[1];
+
+            // Setup language
+            var primaryLanguage = user.get('primary_language');
+            primaryLanguage = primaryLanguage.replace('_', '-').toLowerCase();
+            if (primaryLanguage && primaryLanguage != language) {
+                document.location = '/' + primaryLanguage + document.location.hash;
+            }
+
+            // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
+            application.set('language', language);
+
+            // boot the app
+            App.advanceReadiness();
+        }, function(error) {
+            // boot the app without a currect user
+            App.advanceReadiness();
+        });
+    }
+});
+
 App = Em.Application.create({
     VERSION: '1.0.0',
 
@@ -15,19 +46,7 @@ App = Em.Application.create({
 
     ready: function() {
         // Read language string from url.
-        var language = window.location.pathname.split('/')[1];
-        App.CurrentUser.find('current').then(
-            function(user){
-                var primaryLanguage = user.get('primary_language');
-                primaryLanguage = primaryLanguage.replace('_', '-').toLowerCase();
-                if (primaryLanguage && primaryLanguage != language) {
-                    document.location = '/' + primaryLanguage + document.location.hash;
-                }
-            }
-        );
-
-        // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
-        this.set('language', language);
+        var language = this.get('language');
 
         // Now that we know the language we can load the handlebars templates.
         //this.loadTemplates(this.templates);

@@ -6,17 +6,9 @@
 
         <h1 class="page-title">{% trans "Project start" %}</h1>
         <br />
-        <p>
-            <strong>
-                {% blocktrans %}
-                Do you want to improve your destination? Improve it by cleaning up the beach or the canals? By supporting that iconic landmark? By teaching students the skills to make it in tourism? To help out after an emergency? By helping that local handicraft shop expand their business online?
-                Then you’ve come to the right place!
-                All you need now is a local partner and a sound idea for a project that fits our theme's on destination improvement. Our current themes are Environment, Cultural heritage, Entrepreneurship, Platform and Emergency response. (the last in case of big emergencies, let's hope we don't use this one!)
-                Any preconditions? Yes, but just a few.
-                {% endblocktrans %}
 
-            </strong>
-        </p>
+        {{ partial "_my_project_start_intro" }}
+
         <h3>{% trans "Your project is really about destination improvement when your project will…" %}</h3>
         <br />
         {% blocktrans %}

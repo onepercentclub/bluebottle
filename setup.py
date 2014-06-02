@@ -69,6 +69,7 @@ install_requires = [
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz',
+    'beautifulsoup4==4.3.2'
 ]
 
 
@@ -86,7 +87,6 @@ dependency_links = [
 
 # TODO: update
 tests_require = [
-    'BeautifulSoup==3.2.1',
     'coverage==3.6',
     'django-nose',
     'django-admin-tools==0.5.1',

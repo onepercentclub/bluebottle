@@ -72,14 +72,10 @@
 					{{/each}}
 	            </ul>
 			</div>
+
+			{{ partial "_project_list_create_btn" }}
 			
-			
-            <div class="l-sidebar">
-		    	{{#link-to "myProject.start" 'new' elementId="create_project" tagName="button" class="btn btn-primary btn-iconed"}}
-		            <span class="flaticon solid lightbulb-3"></span>
-		            {% trans "Create new campaign" %}
-		        {{/link-to}}
-            </div>
+
         </div>
     </div>
 

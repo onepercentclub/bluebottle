@@ -173,10 +173,13 @@
                         {{/link-to}}
                     {{else}}
                         {{#if isApplicable}}
+                          {{#ifExpired deadline }}
+                          {{ else }}
                             <a {{action applyForTask this }} class="btn btn-primary btn-iconed">
                                 <span class="flaticon stroke work-1"></span>
                                 {% trans "Apply for task" %}
                             </a>
+                           {{/ifExpired}}
                         {{/if}}
                     {{/if}}
                 </div>

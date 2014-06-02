@@ -52,7 +52,7 @@ def git_commit(request):
 
 def sentry_dsn(request):
     """
-    Make the Sentry / Raven DSN available in the templates with the secret key.
+    Make the Sentry / Raven DSN available in the templates *without* the secret key.
     """
     try:
         raven_config = settings.RAVEN_CONFIG['dsn']

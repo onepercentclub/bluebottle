@@ -90,11 +90,11 @@ App.TaskDeadLineDatePicker = App.DatePicker.extend({
 /*
  Form Elements
  */
-
+console.log("load2");
 App.TaskStatusList = [
-    {value: 'open', title: "open"},
-    {value: 'in progress', title: "in progress"},
-    {value: 'realized', title: "completed"}
+    {value: 'open', title: gettext("open")},
+    {value: 'in progress', title: gettext("in progress")},
+    {value: 'realized', title: gettext("completed")}
 ];
 
 App.TaskStatusSelectView = Em.Select.extend({

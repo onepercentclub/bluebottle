@@ -119,7 +119,7 @@ App.MyProjectListView = Em.View.extend({
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: "Pick a theme"
+    prompt: gettext("Pick a theme")
 });
 
 App.UsedThemeSelectView = App.ThemeSelectView.extend();

@@ -1,3 +1,4 @@
+from bluebottle.utils.utils import get_taskmember_model
 from django.conf import settings
 from django.db import models
 import django.db.models.options as options
@@ -10,7 +11,6 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
-
 
 class BaseSkill(models.Model):
 
@@ -54,6 +54,20 @@ class BaseTaskMember(models.Model):
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
         self._initial_status = self.status
+
+    def save(self, *args, **kwargs):
+        if self._initial_status != self.status:
+            self._number_of_members_needed(self.task)
+
+        super(BaseTaskMember, self).save(*args, **kwargs)
+        self._initial_status = self.status
+
+    def _number_of_members_needed(self, task):
+        BB_TASKMEMBER_MODEL = get_taskmember_model()
+        members_accepted = BB_TASKMEMBER_MODEL.objects.filter(task=task).all().count()
+        if task.people_needed <= members_accepted:
+            task.set_in_progress()
+
 
     class Meta:
         abstract = True
@@ -125,5 +139,8 @@ class BaseTask(models.Model):
     def __unicode__(self):
         return self.title
 
+    def set_in_progress(self):
+        self.status = self.TaskStatuses.in_progress
+        self.save()
 
 

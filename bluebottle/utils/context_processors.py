@@ -67,7 +67,7 @@ def sentry_dsn(request):
         public_key = match.group(1)
         project_id = match.group(3)
 
-        return {'RAVEN_DSN': "https://{}@app.getsentry.com/{}".format(public_key, project_id)}
+        return {'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key, project_id)}
 
 
 def conf_settings(request):

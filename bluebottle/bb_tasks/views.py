@@ -123,6 +123,17 @@ class TaskMemberDetail(generics.RetrieveUpdateAPIView):
 
     permission_classes = (IsTaskAuthorOrReadOnly, )
 
+    # def pre_save(self, obj):
+    #     import ipdb; ipdb.set_trace()
+    #     if self._initial_status != self.status:
+    #         self._number_of_members_needed(self.task)
+    #
+    # def _number_of_members_needed(self, task):
+    #
+    #     members_accepted = self.model.objects.filter(task=task).all().count()
+    #     if task.people_needed <= members_accepted:
+    #         task.set_in_progress()
+
 
 class TaskFileList(generics.ListCreateAPIView):
     model = BB_TASKFILE_MODEL

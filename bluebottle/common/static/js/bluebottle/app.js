@@ -104,16 +104,33 @@ App = Em.Application.create({
         });
 
         App.ProjectPhase.find().then(function(data){
-            var list = [
+
+			var list = [
                 {id: 5, name: gettext("Running campaigns")},
                 {id: 7, name: gettext("Finished campaigns")}
             ];
+
             // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
             // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
             App.ProjectPhaseSelectView.reopen({
                 content: list
             });
+
+			App.ProjectPhaseChoiceView.reopen({
+
+				phases: function() {
+					return App.ProjectPhases.find()
+				}.property(),
+
+				data: function() {
+					return App.ProjectPhase.filter(function(item){ return item.get('editable') })
+				}.property('phases.length'),
+
+				contentBinding: 'data'
+			});
+
         });
+
     },
 
     setLocale: function(locale) {

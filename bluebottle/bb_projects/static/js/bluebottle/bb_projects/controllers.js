@@ -344,6 +344,15 @@ App.MyProjectPitchController = App.StandardTabController.extend({
     previousStep: 'myProject.start',
     nextStep: 'myProject.story',
 
+	allPhases: function() {
+		return App.ProjectPhase.find();
+	}.property(),
+
+	selectablePhases: function() {
+		return App.ProjectPhase.filter(function(item){ return item.get('editable') });
+
+	}.property('allPhases.length'),
+
     canSave: function () {
         return !!this.get('model.title');
     }.property('model.title'),

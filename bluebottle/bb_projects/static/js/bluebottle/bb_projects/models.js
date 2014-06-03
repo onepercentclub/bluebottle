@@ -134,7 +134,10 @@ App.ProjectPhase = DS.Model.extend({
     sequence: DS.attr('number'),
     active: DS.attr('boolean'),
     editable: DS.attr('boolean'),
-    viewable: DS.attr('boolean')
+    viewable: DS.attr('boolean'),
+
+	label: Em.computed.alias('name')
+
 });
 
 App.ProjectPreview = App.Project.extend({

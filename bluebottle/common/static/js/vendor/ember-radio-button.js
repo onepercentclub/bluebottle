@@ -86,6 +86,7 @@ Ember.RadioButton = Ember.View.extend(
          @private
          */
         change: function() {
+			debugger
             Ember.run.once(this, this._elementCheckedDidChange);
         },
 

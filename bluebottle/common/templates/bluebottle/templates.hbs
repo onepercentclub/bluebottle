@@ -1,0 +1,15 @@
+{% load i18n %}
+{% load bb_ember %}
+{% load static %}
+
+
+{% block handlebars_templates %}
+    {% for app in bb_apps %}
+        {% include app|add:"/base.hbs" %}
+    {% endfor %}
+
+    {% include "bluebottle/_main_nav.hbs" %}
+    {% include "bluebottle/application.hbs" %}
+    {% include "bluebottle/footer.hbs" %}
+    {% include "bluebottle/not_allowed.hbs" %}
+{% endblock handlebars_templates %}

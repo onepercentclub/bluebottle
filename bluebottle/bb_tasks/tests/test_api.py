@@ -7,7 +7,7 @@ from bluebottle.utils.utils import get_project_model, get_task_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
-from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory
+from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory, TaskMemberFactory
 
 import json
 
@@ -225,6 +225,34 @@ class TaskApiIntegrationTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+
+
+    def test_delete_task_member(self):
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.some_user, task=task)
+
+        self.assertEquals(task.members.count(), 1)
+
+        self.client.login(username=self.some_user.email, password='testing')
+
+        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 'application/json')
+
+        self.assertEquals(task.members.count(),0)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_delete_task_member_unauthorized(self):
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.another_user, task=task)
+
+        self.assertEquals(task.members.count(), 1)
+
+        self.client.login(username=self.some_user.email, password='testing')
+
+        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 'application/json')
+
+        self.assertEquals(task.members.count(),1)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
 
 # TODO: Test edit task
 # TODO: Test change TaskMember edit status

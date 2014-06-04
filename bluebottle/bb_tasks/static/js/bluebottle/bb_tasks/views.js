@@ -113,3 +113,8 @@ App.SkillSelectView = Em.Select.extend({
 
 
 App.UsedSkillSelectView = App.SkillSelectView.extend();
+
+
+App.TaskMemberView = Ember.View.extend({
+    templateName: '_task_detail_member_partial'
+});

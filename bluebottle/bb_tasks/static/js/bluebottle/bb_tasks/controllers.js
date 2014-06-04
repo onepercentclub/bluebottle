@@ -267,16 +267,12 @@ App.TaskMemberController = Em.ObjectController.extend({
             return true;
         }
         return false;
-    }.property(),
+    }.property('status'),
 
     actions: {
         withdrawTaskMember: function(member){
-           member.deleteRecord()
-           member.save()
-
-        },
-        testing: function(memer){
-            console.log("testing!");
+           member.deleteRecord();
+           member.save();
         }
     }
 });

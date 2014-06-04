@@ -50,7 +50,7 @@
         <h3>{% trans "Task members" %}</h3>
         <div class="task-pending-requests">
         {{#each members}}
-            {{partial '_task_detail_member_partial'}}
+            {{render "taskMember" this}}
         {{/each}}
         {{/if}}
 

@@ -126,24 +126,30 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
               https://pypi.python.org/pypi/django-fsm/1.2.0
     """
     def pre_save(self, obj):
-        submit_status = ProjectPhase.objects.get(slug='plan-submitted')
-        status_id = self.request.DATA.get('status')
-
-        """
-        TODO: what to do if the expected status (plan-submitted) is
-              no found?! Hard fail?
-        """
-        if submit_status and status_id:
-            max_sequence = submit_status.sequence
-            new_status = ProjectPhase.objects.get(id=status_id)
-
+        try:
+            #this can raise an Exception
+            submit_status = ProjectPhase.objects.get(slug='plan-submitted')
+            status_id = self.request.DATA.get('status')
             """
-            Reset the status if the owner is trying to set the status
-            higher than the max permitted, or the user is trying to
-            set the status back to a lower state
+            TODO: what to do if the expected status (plan-submitted) is
+                  no found?! Hard fail?
             """
-            if new_status and (new_status.sequence > max_sequence or new_status.sequence < self.current_status.sequence):
-                obj.status = self.current_status
+            if submit_status and status_id:
+                max_sequence = submit_status.sequence
+                new_status = ProjectPhase.objects.get(id=status_id)
+
+                """
+                Reset the status if the owner is trying to set the status
+                higher than the max permitted, or the user is trying to
+                set the status back to a lower state
+                """
+                if new_status and (new_status.sequence > max_sequence or new_status.sequence < self.current_status.sequence):
+                    obj.status = self.current_status
+
+        except:
+            pass
+
+
 
 
 class ProjectThemeList(generics.ListAPIView):

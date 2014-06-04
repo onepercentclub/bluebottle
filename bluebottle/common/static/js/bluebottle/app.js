@@ -113,6 +113,21 @@ App = Em.Application.create({
             App.ProjectPhaseSelectView.reopen({
                 content: list
             });
+
+			App.ProjectPhaseChoiceView.reopen({
+				sortProperties: ['sequence'],
+
+				phases: function () {
+					return App.ProjectPhase.find()
+				}.property(),
+
+				data: function () {
+					return App.ProjectPhase.filter(function(item){return item.get('ownerEditable')})
+				}.property('phases.length'),
+
+				contentBinding: 'data'
+			});
+
         });
     },
 

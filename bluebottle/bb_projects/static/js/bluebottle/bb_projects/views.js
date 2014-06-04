@@ -83,6 +83,13 @@ App.ProjectPhaseSelectView = Em.Select.extend({
 
 });
 
+App.ProjectPhaseChoiceView = Em.Select.extend({
+    optionValuePath: "content.id",
+    optionLabelPath: "content.name",
+    prompt: gettext("Pick a phase")
+
+});
+
 App.GenericFieldView = Em.View.extend({
     templateName: function(){
         if (this.get('controller.model.type') == 'textarea') {

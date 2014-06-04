@@ -65,7 +65,7 @@ class BaseTaskMember(models.Model):
     def _number_of_members_needed(self, task):
         BB_TASKMEMBER_MODEL = get_taskmember_model()
         members_accepted = BB_TASKMEMBER_MODEL.objects.filter(task=task).all().count()
-        if task.people_needed <= members_accepted:
+        if task.status == 'open' and task.people_needed <= members_accepted:
             task.set_in_progress()
 
 

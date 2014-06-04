@@ -122,7 +122,7 @@ class TaskMemberDetail(generics.RetrieveUpdateAPIView):
     serializer_class = TaskMemberSerializer
 
     permission_classes = (IsTaskAuthorOrReadOnly, )
-
+    
 
 class TaskFileList(generics.ListCreateAPIView):
     model = BB_TASKFILE_MODEL

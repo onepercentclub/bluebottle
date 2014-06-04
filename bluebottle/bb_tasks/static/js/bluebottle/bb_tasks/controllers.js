@@ -256,11 +256,11 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property(),
 
     canEditStatus: function(){
-       if (this.get('status') != 'stopped' && this.get('status') != 'realized'){
+       if (this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
         return true;
        }
        return false;
-    }.property('status'),
+    }.property('task.status'),
 
     canWithdraw: function(){
         if (this.get('isCurrentUser') && (this.get('isStatusAccepted') || this.get('isStatusApplied')) ){

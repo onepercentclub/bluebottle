@@ -147,6 +147,8 @@ class BaseProject(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
 
+    _initial_status = None
+
     objects = BaseProjectManager()
 
     class Meta:
@@ -173,6 +175,7 @@ class BaseProject(models.Model):
             self.slug = original_slug
 
         super(BaseProject, self).save(*args, **kwargs)
+        _ = ProjectPhaseLog.objects.get_or_create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):
@@ -220,3 +223,10 @@ class BaseProject(models.Model):
     @property
     def viewable(self):
         return self.status.viewable
+
+
+class ProjectPhaseLog(models.Model):
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    status = models.ForeignKey("bb_projects.ProjectPhase")
+    start = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
+

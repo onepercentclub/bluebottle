@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.utils.utils import get_project_model
-from .models import ProjectPhase, ProjectTheme
+from .models import ProjectPhase, ProjectTheme, ProjectPhaseLog
 
 
 PROJECT_MODEL = get_project_model()
@@ -83,3 +83,13 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
     list_display = ['sequence', 'name', 'active', 'editable', 'viewable']
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
+
+
+class ProjectPhaseLogAdmin(admin.ModelAdmin):
+    model = ProjectPhaseLog
+    ordering = ['project', 'status__sequence']
+    list_display = ['project', 'status', 'start']
+    list_filter = ['status', ]
+    list_display_links = ['project', 'status']
+
+admin.site.register(ProjectPhaseLog, ProjectPhaseLogAdmin)

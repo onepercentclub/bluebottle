@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import get_template, render_to_string
 from django.template import Context
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail import EmailMultiAlternatives
 
 from bluebottle.utils.utils import get_task_model, get_taskmember_model
 
@@ -83,7 +83,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         # Set the language for the receiver
         translation.activate(receiver.primary_language)
         subject = _('You realized your Booking Cares task!')
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site, 'task':task, 'task_list':task_list})
+        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site, 'task_list':task_list})
         text_content = get_template('task_member_realized.mail.txt').render(context)
         html_content = get_template('task_member_realized.mail.html').render(context)
         translation.deactivate()

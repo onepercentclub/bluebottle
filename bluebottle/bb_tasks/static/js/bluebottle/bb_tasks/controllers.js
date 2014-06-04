@@ -267,6 +267,9 @@ App.TaskMemberController = Em.ObjectController.extend({
            member.deleteRecord()
            member.save()
 
+        },
+        testing: function(memer){
+            console.log("testing!");
         }
     }
 });

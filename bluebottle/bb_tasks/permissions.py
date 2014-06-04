@@ -75,3 +75,4 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
             return True
 
         return False
+

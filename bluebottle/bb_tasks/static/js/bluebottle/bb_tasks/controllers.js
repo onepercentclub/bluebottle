@@ -255,6 +255,13 @@ App.TaskMemberController = Em.ObjectController.extend({
         return false;
     }.property(),
 
+    canEditStatus: function(){
+       if (this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
+        return true;
+       }
+       return false;
+    }.property('task.status'),
+
     canWithdraw: function(){
         if (this.get('isCurrentUser') && (this.get('isStatusAccepted') || this.get('isStatusApplied')) ){
             return true;
@@ -267,6 +274,9 @@ App.TaskMemberController = Em.ObjectController.extend({
            member.deleteRecord()
            member.save()
 
+        },
+        testing: function(memer){
+            console.log("testing!");
         }
     }
 });

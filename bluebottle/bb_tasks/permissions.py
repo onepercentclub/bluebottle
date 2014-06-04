@@ -32,8 +32,11 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
 
         # Test for objects/lists related to a Task (e.g TaskMember).
         # Get the project form the request
+
         task = self._get_task_from_request(request)
-        return task.author == request.user
+        if task:
+            return task.author == request.user
+        return False
 
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
@@ -57,4 +60,19 @@ class IsMemberOrReadOnly(permissions.BasePermission):
 
         # Test for project model object-level permissions.
         return isinstance(obj, BB_TASKMEMBER_MODEL) and obj.member == request.user
+
+
+class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if isinstance(obj, BB_TASKMEMBER_MODEL) and obj.task.author == request.user:
+            return True
+
+        if isinstance(obj, BB_TASKMEMBER_MODEL) and obj.member == request.user:
+            return True
+
+        return False
 

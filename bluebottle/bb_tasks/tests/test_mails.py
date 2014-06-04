@@ -56,7 +56,7 @@ class TaskEmailTests(TestCase):
 
         As 'collateral' the test for the taskmember-rejected e-mail is contained in this test.
         """
-
+        self.skipTest("No longer relevant. Task Members receive an email when they are confirmed.")
         # there should be two mails in the outbox from the application
         self.assertEqual(len(mail.outbox), 2)
         # delete them, they're not relevant for this test

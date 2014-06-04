@@ -6,9 +6,9 @@ from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 
-from .permissions import IsTaskAuthorOrReadOnly
+from .permissions import IsTaskAuthorOrReadOnly, IsMemberOrReadOnly, IsMemberOrAuthorOrReadOnly
 from .serializers import (
-    TaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
+    BaseTaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
     MyTaskMemberSerializer, SkillSerializer)
 
 from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
@@ -95,7 +95,7 @@ class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
 
 class TaskMemberList(generics.ListCreateAPIView):
     model = BB_TASKMEMBER_MODEL
-    serializer_class = TaskMemberSerializer
+    serializer_class = BaseTaskMemberSerializer
     paginate_by = 50
     filter_fields = ('task', 'status', )
     permission_classes = (IsAuthenticatedOrReadOnly, )
@@ -117,11 +117,11 @@ class MyTaskMemberList(generics.ListAPIView):
         return queryset.filter(member=self.request.user)#, status__in=valid_statuses)
 
 
-class TaskMemberDetail(generics.RetrieveUpdateAPIView):
+class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
     model = BB_TASKMEMBER_MODEL
-    serializer_class = TaskMemberSerializer
+    serializer_class = BaseTaskMemberSerializer
 
-    permission_classes = (IsTaskAuthorOrReadOnly, )
+    permission_classes = (IsMemberOrAuthorOrReadOnly, )
     
 
 class TaskFileList(generics.ListCreateAPIView):

@@ -24,7 +24,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.applied:
         receiver = task.author
         sender = task_member.member
-        link = '/go/tasks/{0}'.format(task.id)
+        link = '/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
@@ -42,7 +42,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.rejected:
         sender = task.author
         receiver = task_member.member
-        link = '/go/tasks/{0}'.format(task.id)
+        link = '/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
@@ -59,7 +59,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.accepted:
         sender = task.author
         receiver = task_member.member
-        link = '/go/tasks/{0}'.format(task.id)
+        link = '/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
@@ -76,7 +76,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.realized:
         sender = task.author
         receiver = task_member.member
-        link = '/go/tasks/{0}'.format(task.id)
+        link = '/#!/tasks/{0}'.format(task.id)
         task_list = '/go/tasks'
 
         # Compose the mail

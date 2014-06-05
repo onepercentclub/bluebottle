@@ -108,8 +108,6 @@ class BaseProjectManager(models.Manager):
         return qs
 
 
-
-
 class BaseProject(models.Model):
     """ The base Project model. """
     owner = models.ForeignKey(
@@ -175,7 +173,8 @@ class BaseProject(models.Model):
             self.slug = original_slug
 
         super(BaseProject, self).save(*args, **kwargs)
-        _ = ProjectPhaseLog.objects.get_or_create(project=self, status=self.status)
+        if self != None:
+            _ = ProjectPhaseLog.objects.get_or_create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):
@@ -228,5 +227,5 @@ class BaseProject(models.Model):
 class ProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     status = models.ForeignKey("bb_projects.ProjectPhase")
-    start = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
+    start = CreationDateTimeField(_('created'), help_text=_('When this project entered in this status.'))
 

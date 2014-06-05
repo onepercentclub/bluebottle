@@ -1,3 +1,4 @@
+from django import forms
 from bluebottle.common.admin_utils import ImprovedModelForm
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -21,7 +22,21 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
+class ProjectPhaseLogForm(forms.ModelForm):
+
+    class Meta:
+        model = ProjectPhaseLog
+
+
+class ProjectPhaseLogInline(admin.TabularInline):
+    model = ProjectPhaseLog
+    readonly_fields = ('status', 'start',)
+    form = ProjectPhaseLogForm
+    extra = 0
+
+
 class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
+    inlines = [ProjectPhaseLogInline, ]
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
@@ -85,11 +100,11 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
 
 
-class ProjectPhaseLogAdmin(admin.ModelAdmin):
-    model = ProjectPhaseLog
-    ordering = ['project', 'status__sequence']
-    list_display = ['project', 'status', 'start']
-    list_filter = ['status', ]
-    list_display_links = ['project', 'status']
-
-admin.site.register(ProjectPhaseLog, ProjectPhaseLogAdmin)
+# class ProjectPhaseLogAdmin(admin.ModelAdmin):
+#     model = ProjectPhaseLog
+#     ordering = ['project', 'status__sequence']
+#     list_display = ['project', 'status', 'start']
+#     list_filter = ['status', ]
+#     list_display_links = ['project', 'status']
+#
+# admin.site.register(ProjectPhaseLog, ProjectPhaseLogAdmin)

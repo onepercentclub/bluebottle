@@ -386,6 +386,11 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
     needs: ['myProjectOrganisation', 'myProject', 'myProjectBank'],
     previousStep: 'myProject.organisation',
 
+    // data has loaded when the project isLoaded and the organization (if set) isLoaded
+    hasLoaded: function () {
+        return !!this.get('model.isLoaded') && (!this.get('model.organization') || this.get('model.organization.isLoaded'));
+    }.property('model.isLoaded', 'model.organization.isLoaded'),
+
     validSubmit: function () {
         return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');
     }.property('controllers.myProjectOrganisation.model.isNew', 'model.isNew'),

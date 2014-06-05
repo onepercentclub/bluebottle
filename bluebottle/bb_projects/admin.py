@@ -22,16 +22,9 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
-class ProjectPhaseLogForm(forms.ModelForm):
-
-    class Meta:
-        model = ProjectPhaseLog
-
-
 class ProjectPhaseLogInline(admin.TabularInline):
     model = ProjectPhaseLog
     readonly_fields = ('status', 'start',)
-    form = ProjectPhaseLogForm
     extra = 0
 
 
@@ -98,13 +91,3 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
     list_display = ['sequence', 'name', 'active', 'editable', 'viewable']
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
-
-
-# class ProjectPhaseLogAdmin(admin.ModelAdmin):
-#     model = ProjectPhaseLog
-#     ordering = ['project', 'status__sequence']
-#     list_display = ['project', 'status', 'start']
-#     list_filter = ['status', ]
-#     list_display_links = ['project', 'status']
-#
-# admin.site.register(ProjectPhaseLog, ProjectPhaseLogAdmin)

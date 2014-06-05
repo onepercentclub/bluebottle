@@ -70,6 +70,9 @@ class ProjectPhaseLogList(generics.ListAPIView):
         qs = super(ProjectPhaseLogList, self).get_queryset()
         return qs
 
+class ProjectPhaseLogDetail(generics.RetrieveAPIView):
+    model = ProjectPhaseLog
+    serializer_class = ProjectPhaseLogSerializer
 
 class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL

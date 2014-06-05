@@ -125,7 +125,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 	// you are not a already a member or if you already applied
 	isApplicable: function(){
 		var model = this.get('model');
-        if (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted')){
+        if (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted') || model.get('isStatusInProgress')){
             return false;
         }
         if (this.get('isMember')) {
@@ -171,7 +171,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
 
 App.TaskActivityController = App.TaskController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task', 'currentUser', 'taskMember'],
 
     canEditTask: function() {
         var user = this.get('controllers.currentUser.username');
@@ -180,7 +180,7 @@ App.TaskActivityController = App.TaskController.extend({
             return (username == author_name);
         }
         return false;
-    }.property('controllers.task.author', 'controllers.currentUser.username')
+    }.property('controllers.task.author', 'controllers.currentUser.username'),
 
 });
 
@@ -224,8 +224,14 @@ App.TaskIndexController = Em.ArrayController.extend({
 
 
 App.TaskMemberController = Em.ObjectController.extend({
+    needs: ['task', 'currentUser'],
+
     isStatusApplied: function(){
         return this.get('status') == 'applied';
+    }.property('status'),
+
+    isStatusAccepted: function(){
+        return this.get('status') == 'accepted';
     }.property('status'),
 
     isStatusInProgress: function(){
@@ -238,7 +244,37 @@ App.TaskMemberController = Em.ObjectController.extend({
 
     isStatusRealized: function(){
         return this.get('status') == 'realized';
-    }.property('status')
+    }.property('status'),
+
+    isCurrentUser: function(){
+        var currentUser = this.get('controllers.currentUser.username');
+        var member = this.get('member.username');
+        if (member == currentUser){
+            return true;
+        }
+        return false;
+    }.property(),
+
+    canEditStatus: function(){
+       if (this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
+        return true;
+       }
+       return false;
+    }.property('task.status'),
+
+    canWithdraw: function(){
+        if (this.get('isCurrentUser') && (this.get('isStatusAccepted') || this.get('isStatusApplied')) ){
+            return true;
+        }
+        return false;
+    }.property('status'),
+
+    actions: {
+        withdrawTaskMember: function(member){
+           member.deleteRecord();
+           member.save();
+        }
+    }
 });
 
 App.MyTaskMemberController = Em.ObjectController.extend({

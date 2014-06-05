@@ -52,6 +52,9 @@ class ProjectPhase(models.Model):
                                    help_text=_('Whether the project owner can change the details of the project.'))
     viewable = models.BooleanField(default=True,
                                    help_text=_('Whether this phase, and projects in it show up at the website'))
+    owner_editable = models.BooleanField(default=False,
+                                   help_text=_('The owner can manually select between these phases'))
+
 
     class Meta():
         ordering = ['sequence']

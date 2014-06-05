@@ -67,6 +67,9 @@
     {% endif %}
 
     {% compress js %}
+        {% if RAVEN_DSN %}
+            <script type="text/javascript" src="{% static 'js/configs/raven.js' %}"></script>
+        {% endif %}
         <script type="text/javascript" src="{% static 'js/vendor/jquery-ui/minified/jquery.ui.core.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/jquery-ui/minified/jquery.ui.datepicker.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/handlebars-1.0.0.js' %}"></script>

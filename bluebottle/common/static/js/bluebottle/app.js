@@ -104,15 +104,20 @@ App = Em.Application.create({
         });
 
         App.ProjectPhase.find().then(function(data){
-            var list = [
-                {id: 5, name: gettext("Running campaigns")},
-                {id: 7, name: gettext("Finished campaigns")}
-            ];
-            // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
-            // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
-            App.ProjectPhaseSelectView.reopen({
-                content: list
-            });
+
+			App.ProjectPhaseSelectView.reopen({
+				contentBinding: 'data',
+
+				phases: function () {
+					return App.ProjectPhase.find()
+				}.property(),
+
+				data: function () {
+					return App.ProjectPhase.filter(function(item){
+						return item.get('viewable')})
+				}.property('phases.length')
+
+			});
 
 			App.ProjectPhaseChoiceView.reopen({
 				sortProperties: ['sequence'],
@@ -122,7 +127,8 @@ App = Em.Application.create({
 				}.property(),
 
 				data: function () {
-					return App.ProjectPhase.filter(function(item){return item.get('ownerEditable')})
+					return App.ProjectPhase.filter(function(item){
+						return item.get('ownerEditable')})
 				}.property('phases.length'),
 
 				contentBinding: 'data'

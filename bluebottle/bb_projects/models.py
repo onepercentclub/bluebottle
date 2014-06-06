@@ -95,18 +95,14 @@ class BaseProjectManager(models.Manager):
 
     def _ordering(self, ordering, queryset):
 
-        qs = queryset
-
         if ordering == 'deadline':
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
-            qs = qs.order_by('deadline')
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = queryset.order_by('deadline')
         elif ordering == 'newest':
-            qs = qs.order_by('amount_needed')
-            qs = qs.filter(amount_needed__gt=0)
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = queryset.order_by('-created')
         elif ordering:
-            qs = qs.order_by(ordering)
+            qs = queryset.order_by(ordering)
+        else:
+            qs = queryset
 
         return qs
 

@@ -29,7 +29,7 @@
                         {% endblock password_reset_success %}
                     {{/if}}
                     
-                    {% csrf_token %}
+                    <input type='hidden' name='csrfmiddlewaretoken' {{bindAttr value='App.csrfToken'}} />
                     <div class="control-group">
                         <label class="control-label" for="id_email">{% trans "Email" %}:</label>
 

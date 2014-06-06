@@ -45,6 +45,8 @@ App = Em.Application.create({
     ],
 
     ready: function() {
+        this.set('csrfToken', getCookie('csrftoken'));
+
         // Read language string from url.
         var language = this.get('language');
 

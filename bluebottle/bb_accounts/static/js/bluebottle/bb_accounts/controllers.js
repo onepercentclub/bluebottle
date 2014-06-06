@@ -119,10 +119,6 @@ App.UserModalController = Ember.ObjectController.extend({
 
 
 App.LoginController = Em.Controller.extend({
-    csrfToken: function () {
-        return window.csrf_token;
-    }.property(),
-
     actions: {
         requestPasswordReset: function() {
             // Close previous modal, if any.

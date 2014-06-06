@@ -53,6 +53,8 @@
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
         var DEBUG = {{ DEBUG|yesno:"true,false" }};
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
+        {# Setting CSRF_TOKEN here only so that django will set the csrf cookie. We don't use the variable below. #}
+        var CSRF_TOKEN = '{{ csrf_token }}';
     </script>
 
     {% if RAVEN_DSN %}

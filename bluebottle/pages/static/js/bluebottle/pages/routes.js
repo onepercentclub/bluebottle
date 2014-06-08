@@ -11,11 +11,14 @@ App.Router.map(function() {
 
 App.PageRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
-        var model = App.Page.find(params.page_id);
-        var route = this;
-        model.on('becameError', function() {
-            route.transitionTo('error.notFound');
-        });
-        return model;
+        return App.Page.find(params.page_id);
+    },
+    actions: {
+        error: function(error, transition) {
+            // TODO: maybe we shouldn't transition. Instead we keep the 
+            //       same route and render the error template. This would
+            //       allow the user to check the url and correct easily.
+            this.transitionTo('error.notFound');
+        }
     }
 });

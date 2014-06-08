@@ -297,12 +297,6 @@ App.Router.reopen({
     }
 });
 
-Em.Route.reopen({
-    meta_data: function(){
-        return this.get('context.meta_data');
-    }.property('context.meta_data')
-});
-
 App.Router.map(function() {
 
     this.resource('language', {path:'/:lang'});

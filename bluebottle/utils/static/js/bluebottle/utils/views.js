@@ -68,7 +68,8 @@ App.SocialShareView = Em.View.extend({
 
     actions: {
         shareOnFacebook: function() {
-            var meta_data = this.get('context').get('meta_data');
+            // context is the model object defined in the associated controller/route
+            var meta_data = this.get('context.meta_data');
             if(meta_data && meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
             } else {
@@ -79,7 +80,7 @@ App.SocialShareView = Em.View.extend({
         },
 
         shareOnTwitter: function() {
-            var meta_data = this.get('context').get('meta_data');
+            var meta_data = this.get('context.meta_data');
 
             if(meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);

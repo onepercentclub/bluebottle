@@ -1,3 +1,4 @@
+from django import forms
 from bluebottle.common.admin_utils import ImprovedModelForm
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -8,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.utils.utils import get_project_model
-from .models import ProjectPhase, ProjectTheme
+from .models import ProjectPhase, ProjectTheme, ProjectPhaseLog
 
 
 PROJECT_MODEL = get_project_model()
@@ -21,7 +22,14 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
+class ProjectPhaseLogInline(admin.TabularInline):
+    model = ProjectPhaseLog
+    readonly_fields = ('status', 'start',)
+    extra = 0
+
+
 class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
+    inlines = [ProjectPhaseLogInline, ]
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True

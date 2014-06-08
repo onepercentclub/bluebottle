@@ -6,7 +6,7 @@ from bluebottle.geo.models import Country
 
 from bluebottle.utils.utils import get_project_model
 from bluebottle.utils.serializers import MetaField
-from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase, ProjectPhaseLog
 from bluebottle.geo.serializers import CountrySerializer
 from bs4 import BeautifulSoup
 
@@ -27,6 +27,12 @@ class StoryField(serializers.WritableField):
         soup = BeautifulSoup(data, "html.parser")
         [s.extract() for s in soup(['script', 'iframe'])]
         return str(soup)
+
+
+class ProjectPhaseLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectPhaseLog
+
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:

@@ -5,8 +5,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.utils.utils import get_project_model
-from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer)
+from .models import ProjectTheme, ProjectPhase, ProjectPhaseLog
+from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
 from .permissions import IsProjectOwner
 
 
@@ -60,6 +60,19 @@ class ProjectPhaseDetail(generics.RetrieveAPIView):
     model = ProjectPhase
     serializer_class = ProjectPhaseSerializer
 
+
+class ProjectPhaseLogList(generics.ListAPIView):
+    model = ProjectPhaseLog
+    serializer_class = ProjectPhaseLogSerializer
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = super(ProjectPhaseLogList, self).get_queryset()
+        return qs
+
+class ProjectPhaseLogDetail(generics.RetrieveAPIView):
+    model = ProjectPhaseLog
+    serializer_class = ProjectPhaseLogSerializer
 
 class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL

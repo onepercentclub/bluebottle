@@ -88,6 +88,7 @@ class BaseTaskFile(models.Model):
 class BaseTask(models.Model):
     """ The base Task model """
 
+    # We should probably turn this into another class model like the projectphase
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
         in_progress = ChoiceItem('in progress', label=_('In progress'))

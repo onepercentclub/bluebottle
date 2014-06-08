@@ -28,7 +28,7 @@
 	                    {{/if}}
 	                    {{#if task.isStatusInProgress}}
 	                        <span class="flaticon solid upload-to-clipboard-1"></span>
-	                        {% trans "In progress" %}
+	                        {% trans "Running" %}
 	                    {{/if}}
 	                    {{#if task.isStatusClosed}}
 	                        <span class="flaticon solid delete-from-clipboard-1"></span>
@@ -36,7 +36,7 @@
 	                    {{/if}}
 	                    {{#if task.isStatusRealized}}
 	                        <span class="flaticon solid clipboard-checkmark-1"></span>
-	                        {% trans "Completed" %}
+	                        {% trans "Realised" %}
 	                    {{/if}}
 
 	                </li>

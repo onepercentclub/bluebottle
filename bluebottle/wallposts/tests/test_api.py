@@ -295,9 +295,9 @@ class WallPostReactionApiIntegrationTest(TestCase):
 #
 class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
     def setUp(self):
-        self.user_a = self.create_user(email='a@example.com')
-        self.user_b = self.create_user(email='b@example.com')
-        self.user_c = self.create_user(email='c@example.com')
+        self.user_a = self.create_user(email='a@example.com', full_name="A")
+        self.user_b = self.create_user(email='b@example.com', full_name="B")
+        self.user_c = self.create_user(email='c@example.com', full_name="C")
 
         #self.project = self.create_project(owner=self.user_a)
 

@@ -6,14 +6,9 @@
 
 Hi {{ receiver_name }},
 
-Woohoo, you’re the one! The project owner, {{ sender_name }}, assigned the task to you!
-Good luck and please keep us updated about the progress!
+Congratulations! The project owner, {{ sender_name }}, assigned the task "{{ task_title }}" to you!
 
-Start right away? Leave a short first reaction!
-
-Go to task: {{ site }}{{ link }}.
-
-Good luck!
+Good luck with the task and feel free to keep your colleagues updated on the progress.
 
 {{ site_name }}
 {% endblocktrans %}

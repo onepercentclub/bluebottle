@@ -166,7 +166,14 @@ App.Task = DS.Model.extend({
     image: function(){
         return this.get('project.image.small');
     }.property('project.image'),
-    
+
+    maxDate: function(){
+        if (!this.get('project.deadline')) {
+            return null;
+        }
+        return '+' + this.get('project.daysToGo') + 'd';
+    }.property('project.deadline'),
+
     daysToGo: function(){
         if (!this.get('deadline')) {
             return null;

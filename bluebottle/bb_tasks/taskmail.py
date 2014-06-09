@@ -77,13 +77,15 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         sender = task.author
         receiver = task_member.member
         link = '/#!/tasks/{0}'.format(task.id)
-        task_list = '/go/tasks'
+        task_list = '/#!/tasks'
+        project_link = '/#!/projects/{0}'.format(task.project.slug)
 
         # Compose the mail
         # Set the language for the receiver
         translation.activate(receiver.primary_language)
-        subject = _('You realized your Booking Cares task!')
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site, 'task_list':task_list})
+        subject = _('You realised your Booking Cares task!')
+        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+                           'task_list':task_list, 'project_link':project_link})
         text_content = get_template('task_member_realized.mail.txt').render(context)
         html_content = get_template('task_member_realized.mail.html').render(context)
         translation.deactivate()

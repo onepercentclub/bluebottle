@@ -65,7 +65,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
        if post_author != project_owner:
            send_mail(
                template_name='project_wallpost_new.mail',
-               subject=_('%(author)s has left a message on your project page.') % {'author': post_author.first_name},
+               subject=_('%(author)s has left a message on your project page.') % {'author': post_author.full_name},
                to=project_owner,
 
                project=project,
@@ -83,7 +83,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
 
        # Compose the mail
        translation.activate(receiver.primary_language)
-       subject = _('%(author)s has left a message on your task page.') % {'author': author.first_name}
+       subject = _('%(author)s has left a message on your task page.') % {'author': author.full_name}
        context = Context({'task': task, 'receiver': receiver, 'author': author, 'link': link, 'site': site})
        text_content = get_template('task_wallpost_new.mail.txt').render(context)
        html_content = get_template('task_wallpost_new.mail.html').render(context)

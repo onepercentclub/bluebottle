@@ -130,7 +130,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if reaction_author not in mailed_users and post_author:
                send_mail(
                    template_name='project_wallpost_reaction_new.mail',
-                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
                    to=post_author,
 
                    project=project,
@@ -144,7 +144,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if project_owner not in mailed_users:
                send_mail(
                    template_name='project_wallpost_reaction_project.mail',
-                   subject=_('%(author)s commented on your project page.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your project page.') % {'author': reaction_author.full_name},
                    to=project_owner,
                    author=reaction_author
                )
@@ -180,7 +180,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if reaction_author not in mailed_users and post_author:
                send_mail(
                    template_name='task_wallpost_reaction_new.mail',
-                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
                    to=post_author,
                    project=task,
                    link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
@@ -193,7 +193,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
            if task_author not in mailed_users:
                send_mail(
                    template_name='task_wallpost_reaction_task.mail',
-                   subject=_('%(author)s commented on your task page.') % {'author': reaction_author.first_name},
+                   subject=_('%(author)s commented on your task page.') % {'author': reaction_author.full_name},
                    to=task_author,
                    author=reaction_author
                )

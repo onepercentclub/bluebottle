@@ -248,9 +248,9 @@ class WallPostApiRegressionTests(TestCase): #ProjectWallPostTestsMixin,
 
 class WallpostMailTests(TestCase): #ProjectWallPostTestsMixin,
     def setUp(self):
-        self.user_a = self.create_user(email='a@example.com')
-        self.user_b = self.create_user(email='b@example.com')
-        self.user_c = self.create_user(email='c@example.com')
+        self.user_a = self.create_user(email='a@example.com', first_name="AName", last_name="ALast")
+        self.user_b = self.create_user(email='b@example.com', first_name="BName", last_name="BLast")
+        self.user_c = self.create_user(email='c@example.com', first_name="CName", last_name="CLast")
 
         self.project = self.create_project(owner=self.user_a)
 

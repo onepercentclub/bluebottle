@@ -42,13 +42,15 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.rejected:
         sender = task.author
         receiver = task_member.member
+        task_list = '/#!/tasks'
         link = '/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
         translation.activate(receiver.primary_language)
         subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.get_short_name()}
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
+        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+                           'task_list': task_list})
         text_content = get_template('task_member_rejected.mail.txt').render(context)
         html_content = get_template('task_member_rejected.mail.html').render(context)
         translation.deactivate()

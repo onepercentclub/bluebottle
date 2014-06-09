@@ -205,7 +205,7 @@ class WallPostReactionApiIntegrationTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, response.data)
 
 
-    def test_embedded_reactions(self):
+    # def test_embedded_reactions(self):
         """
             Test reactions embedded in Project WallPost Api calls
         """
@@ -295,9 +295,9 @@ class WallPostReactionApiIntegrationTest(TestCase):
 #
 class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
     def setUp(self):
-        self.user_a = self.create_user(email='a@example.com', full_name="A")
-        self.user_b = self.create_user(email='b@example.com', full_name="B")
-        self.user_c = self.create_user(email='c@example.com', full_name="C")
+        self.user_a = self.create_user(email='a@example.com', first_name='aname ', last_name='alast')
+        self.user_b = self.create_user(email='b@example.com', first_name='bname ', last_name='blast')
+        self.user_c = self.create_user(email='c@example.com', first_name='cname ', last_name='clast')
 
         #self.project = self.create_project(owner=self.user_a)
 

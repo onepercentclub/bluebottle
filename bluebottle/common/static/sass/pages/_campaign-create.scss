@@ -21,7 +21,7 @@
 		
 		#campaign-steps {
 			padding: 0;
-			font-size: $font-size-small;
+			margin-bottom: -1px;
 			@include clear;
 			@include grid(48,1,1);
 		}

@@ -256,3 +256,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def short_name(self):
         return self.get_short_name()
+
+    @property
+    def full_name(self):
+        return self.get_full_name()

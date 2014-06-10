@@ -51,7 +51,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
 from ..models import Reaction
 
-class WallPostReactionApiIntegrationTest(TestCase):
+class WallPostReactionApiIntegrationTest(UserTestsMixin, TestCase):
     """
     Integration tests for the Project Media WallPost API.
     """
@@ -60,8 +60,8 @@ class WallPostReactionApiIntegrationTest(TestCase):
         self.some_wallpost = TextWallPostFactory.create()
         self.another_wallpost = TextWallPostFactory.create()
 
-        self.some_user = BlueBottleUserFactory.create(password='testing')
-        self.another_user = BlueBottleUserFactory.create(password='testing2')
+        self.some_user = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
+        self.another_user = BlueBottleUserFactory.create(password='testing2', first_name='anotherName', last_name='anotherLast')
 
         self.wallpost_reaction_url = reverse('wallpost_reaction_list')
         self.wallpost_url = reverse('wallpost_list')

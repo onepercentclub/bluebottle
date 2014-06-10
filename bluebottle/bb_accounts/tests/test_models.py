@@ -75,7 +75,7 @@ class BlueBottleUserTestCase(TestCase):
         Tests the ``generate_username`` method when no username was provided.
         It should create the username from the name of the user email.
         """
-        user = BlueBottleUserFactory.create(username='')
+        user = BlueBottleUserFactory.create(username='', first_name='', last_name='')
         user.generate_username()
 
         email_name, domain_part = user.email.strip().rsplit('@', 1)

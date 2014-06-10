@@ -57,7 +57,6 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
     # Project Wall Post
     if isinstance(post.content_object, PROJECT_MODEL):
         project = post.content_object
-        import ipdb; ipdb.set_trace()
         project_owner = project.owner
         post_author = post.author
 

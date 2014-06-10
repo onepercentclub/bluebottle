@@ -85,9 +85,9 @@ admin.site.register(PROJECT_MODEL, BaseProjectAdmin)
 class ProjectPhaseAdmin(admin.ModelAdmin):
     model = ProjectPhase
     ordering = ['sequence']
-    list_editable = ['active', 'editable', 'viewable']
+    list_editable = ['active', 'editable', 'viewable', 'owner_editable']
     list_filter = ['active', ]
     list_display_links = ['name']
-    list_display = ['sequence', 'name', 'active', 'editable', 'viewable']
+    list_display = ['sequence', 'name', 'active', 'editable', 'viewable', 'owner_editable']
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)

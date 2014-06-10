@@ -36,7 +36,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     ],
 
     clusterOptions: {
-        gridSize: 30,
+        gridSize: 10,
         styles: [{
             url: "/static/assets/images/icons/marker_cluster.png",
             height: 23,

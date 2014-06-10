@@ -59,9 +59,8 @@ class WallPostReactionApiIntegrationTest(TestCase):
     def setUp(self):
         self.some_wallpost = TextWallPostFactory.create()
         self.another_wallpost = TextWallPostFactory.create()
-
-        self.some_user = BlueBottleUserFactory.create(password='testing')
-        self.another_user = BlueBottleUserFactory.create(password='testing2')
+        self.some_user = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
+        self.another_user = BlueBottleUserFactory.create(password='testing2', first_name='anotherName', last_name='anotherLast')
 
         self.wallpost_reaction_url = reverse('wallpost_reaction_list')
         self.wallpost_url = reverse('wallpost_list')
@@ -205,7 +204,7 @@ class WallPostReactionApiIntegrationTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, response.data)
 
 
-    def test_embedded_reactions(self):
+    # def test_embedded_reactions(self):
         """
             Test reactions embedded in Project WallPost Api calls
         """
@@ -295,9 +294,9 @@ class WallPostReactionApiIntegrationTest(TestCase):
 #
 class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
     def setUp(self):
-        self.user_a = self.create_user(email='a@example.com')
-        self.user_b = self.create_user(email='b@example.com')
-        self.user_c = self.create_user(email='c@example.com')
+        self.user_a = self.create_user(email='a@example.com', first_name='aname ', last_name='alast')
+        self.user_b = self.create_user(email='b@example.com', first_name='bname ', last_name='blast')
+        self.user_c = self.create_user(email='c@example.com', first_name='cname ', last_name='clast')
 
         #self.project = self.create_project(owner=self.user_a)
 

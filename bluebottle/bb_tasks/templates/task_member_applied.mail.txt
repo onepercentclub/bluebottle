@@ -6,12 +6,13 @@
 Hello {{ receiver_name }},
 
 {{ sender_name }} applied for your task "{{ task_title }}".
-Be sure to follow this up a.s.a.p.!
 
 As motivation {{ sender_name }} wrote:
 {{ motivation }}
 
-Go to task: {{ site }}{{ link }}.
+Be sure to follow this up a.s.a.p.!
+
+Go to the task: {{ site }}{{ link }}.
 
 Good luck!
 

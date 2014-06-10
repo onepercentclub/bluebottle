@@ -59,9 +59,9 @@ class WallPostReactionApiIntegrationTest(TestCase):
     def setUp(self):
         self.some_wallpost = TextWallPostFactory.create()
         self.another_wallpost = TextWallPostFactory.create()
-
-        self.some_user = BlueBottleUserFactory.create(password='testing', full_name='full name')
-        self.another_user = BlueBottleUserFactory.create(password='testing', full_name='full name')
+        import ipdb; ipdb.set_trace()
+        self.some_user = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
+        self.another_user = BlueBottleUserFactory.create(password='testing', first_name='anotherName', last_name='anotherLast')
 
         self.wallpost_reaction_url = reverse('wallpost_reaction_list')
         self.wallpost_url = reverse('wallpost_list')

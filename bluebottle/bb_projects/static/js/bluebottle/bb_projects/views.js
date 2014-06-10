@@ -26,6 +26,9 @@ App.ProjectPreviewView = Em.View.extend({
     templateName: 'project_preview'
 });
 
+App.ProjectSearchInput = Em.TextField.extend({
+    placeholder: gettext('Search')
+});
 
 App.ProjectSearchFormView = Em.View.extend({
     templateName: 'project_search_form'

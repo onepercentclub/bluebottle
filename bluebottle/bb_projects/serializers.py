@@ -108,6 +108,35 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
         value = attrs.get(source, None)
         if not value:
             value = ProjectPhase.objects.order_by('sequence').all()[0]
+        else:
+            """
+            Don't let the owner set a status with a sequence number higher than 2 
+            They can set 1: plan-new or 2: plan-submitted
+
+            TODO: This needs work. Maybe we could use a FSM for the project status
+                  transitions, e.g.: 
+                      https://pypi.python.org/pypi/django-fsm/1.2.0
+            """
+
+            submit_status = ProjectPhase.objects.get(slug='plan-submitted')
+            proposed_status = value
+            """
+            TODO: what to do if the expected status (plan-submitted) is
+                  not found?! Hard fail?
+            """
+            if submit_status and proposed_status:
+                max_sequence = submit_status.sequence
+                current_status = PROJECT_MODEL.objects.get(slug=self.data['slug']).status
+
+                """
+                Reset the status if the owner is trying to set the status
+                higher than the max permitted, or the user is trying to
+                set the status back to a lower state
+                """
+                if (proposed_status and (proposed_status.sequence > max_sequence 
+                                            or proposed_status.sequence < current_status.sequence)):
+                    raise serializers.ValidationError(_("You can not change the project state."))
+
         attrs[source] = value
         return attrs
 

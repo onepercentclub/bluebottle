@@ -48,6 +48,10 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
         // Only set the actual organization when the selected one is an already saved org
         var selected = this.get('selectedOrganization');
 
+        // No organization selected
+        if (!selected) return;
+
+        // Only set the model if the selected org is not new
         if (!selected.get('isNew'))
             this.set('model', selected);
     }.observes('selectedOrganization'),

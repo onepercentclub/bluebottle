@@ -50,85 +50,86 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, weak=False, sender=TextWallPost)
 def new_wallpost_notification(sender, instance, created, **kwargs):
-   post = instance
+    post = instance
 
-   site = 'https://' + Site.objects.get_current().domain
+    site = 'https://' + Site.objects.get_current().domain
 
-   # Project Wall Post
-   if isinstance(post.content_object, PROJECT_MODEL):
-       project = post.content_object
-       project_owner = project.owner
+    # Project Wall Post
+    if isinstance(post.content_object, PROJECT_MODEL):
+        project = post.content_object
+        import ipdb; ipdb.set_trace()
+        project_owner = project.owner
+        post_author = post.author
 
-       post_author = post.author
+        # Implement 1a: send email to Object owner, if Wallpost author is not the Object owner.
+        if post_author != project_owner:
+            send_mail(
+                template_name='project_wallpost_new.mail',
+                subject=_('%(author)s has left a message on your project page.') % {'author': post_author.full_name},
+                to=project_owner,
 
-       # Implement 1a: send email to Object owner, if Wallpost author is not the Object owner.
-       if post_author != project_owner:
-           send_mail(
-               template_name='project_wallpost_new.mail',
-               subject=_('%(author)s has left a message on your project page.') % {'author': post_author.full_name},
-               to=project_owner,
+                project=project,
+                link='/go/projects/{0}'.format(project.slug),
+                author=post_author,
+                receiver=project_owner
+            )
 
-               project=project,
-               link='/go/projects/{0}'.format(project.slug),
-               author=post_author
-           )
+    # Task Wall Post
+    if isinstance(post.content_object, TASK_MODEL):
+        task = post.content_object
+        receiver = task.author
+        author = post.author
 
-   # Task Wall Post
-   if isinstance(post.content_object, TASK_MODEL):
-       task = post.content_object
-       receiver = task.author
-       author = post.author
+        link = '/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id)
 
-       link = '/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id)
+        # Compose the mail
+        translation.activate(receiver.primary_language)
+        subject = _('%(author)s has left a message on your task page.') % {'author': author.full_name}
+        context = Context({'task': task, 'receiver': receiver, 'author': author, 'link': link, 'site': site})
+        text_content = get_template('task_wallpost_new.mail.txt').render(context)
+        html_content = get_template('task_wallpost_new.mail.html').render(context)
+        translation.deactivate()
 
-       # Compose the mail
-       translation.activate(receiver.primary_language)
-       subject = _('%(author)s has left a message on your task page.') % {'author': author.full_name}
-       context = Context({'task': task, 'receiver': receiver, 'author': author, 'link': link, 'site': site})
-       text_content = get_template('task_wallpost_new.mail.txt').render(context)
-       html_content = get_template('task_wallpost_new.mail.html').render(context)
-       translation.deactivate()
-
-       msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-       msg.attach_alternative(html_content, "text/html")
-       msg.send()
+        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
 
 
 @receiver(post_save, weak=False, sender=Reaction)
 def new_reaction_notification(sender, instance, created, **kwargs):
-   reaction = instance
-   post = instance.wallpost
+    reaction = instance
+    post = instance.wallpost
 
-   # Project Wall Post
-   if isinstance(post.content_object, PROJECT_MODEL):
-       project = post.content_object
-       project_owner = project.owner
+    # Project Wall Post
+    if isinstance(post.content_object, PROJECT_MODEL):
+        project = post.content_object
+        project_owner = project.owner
 
-       post_author = post.author
-       reaction_author = reaction.author
+        post_author = post.author
+        reaction_author = reaction.author
 
-       # Make sure users only get mailed once!
-       mailed_users = set()
+        # Make sure users only get mailed once!
+        mailed_users = set()
 
-       # Implement 2c: send email to other Reaction authors that are not the Object owner or the post author.
-       reactions = post.reactions.exclude(Q(author=post_author) | Q(author=project_owner) | Q(author=reaction_author))
-       for r in reactions:
-           if r.author not in mailed_users:
-               send_mail(
-                   template_name='project_wallpost_reaction_same_wallpost.mail',
-                   subject=_('%(author)s commented on a post you reacted on.') % {'author': reaction_author.full_name},
-                   to=r.author,
+        # Implement 2c: send email to other Reaction authors that are not the Object owner or the post author.
+        reactions = post.reactions.exclude(Q(author=post_author) | Q(author=project_owner) | Q(author=reaction_author))
+        for r in reactions:
+            if r.author not in mailed_users:
+                send_mail(
+                    template_name='project_wallpost_reaction_same_wallpost.mail',
+                    subject=_('%(author)s commented on a post you reacted on.') % {'author': reaction_author.full_name},
+                    to=r.author,
 
-                   project=project,
-                   link='/go/projects/{0}'.format(project.slug),
-                   author=reaction_author
-               )
-               mailed_users.add(r.author)
+                    project=project,
+                    link='/go/projects/{0}'.format(project.slug),
+                    author=reaction_author
+                )
+                mailed_users.add(r.author)
 
-       # Implement 2b: send email to post author, if Reaction author is not the post author.
-       if reaction_author != post_author:
-           if reaction_author not in mailed_users and post_author:
-               send_mail(
+        # Implement 2b: send email to post author, if Reaction author is not the post author.
+        if reaction_author != post_author:
+            if reaction_author not in mailed_users and post_author:
+                send_mail(
                    template_name='project_wallpost_reaction_new.mail',
                    subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
                    to=post_author,
@@ -136,64 +137,64 @@ def new_reaction_notification(sender, instance, created, **kwargs):
                    project=project,
                    link='/go/projects/{0}'.format(project.slug),
                    author=reaction_author
-               )
-               mailed_users.add(post_author)
+                )
+                mailed_users.add(post_author)
 
-       # Implement 2a: send email to Object owner, if Reaction author is not the Object owner.
-       if reaction_author != project_owner:
-           if project_owner not in mailed_users:
-               send_mail(
-                   template_name='project_wallpost_reaction_project.mail',
-                   subject=_('%(author)s commented on your project page.') % {'author': reaction_author.full_name},
-                   to=project_owner,
-                   author=reaction_author
-               )
+        # Implement 2a: send email to Object owner, if Reaction author is not the Object owner.
+        if reaction_author != project_owner:
+            if project_owner not in mailed_users:
+                send_mail(
+                    template_name='project_wallpost_reaction_project.mail',
+                    subject=_('%(author)s commented on your project page.') % {'author': reaction_author.full_name},
+                    to=project_owner,
+                    author=reaction_author
+                )
 
-   # Task Wall Post
-   if isinstance(post.content_object, TASK_MODEL):
-       task = post.content_object
-       task_author = task.author
+    # Task Wall Post
+    if isinstance(post.content_object, TASK_MODEL):
+        task = post.content_object
+        task_author = task.author
 
-       post_author = post.author
-       reaction_author = reaction.author
+        post_author = post.author
+        reaction_author = reaction.author
 
-       # Make sure users only get mailed once!
-       mailed_users = set()
+        # Make sure users only get mailed once!
+        mailed_users = set()
 
-       # # Implement 2c: send email to other Reaction authors that are not the Object owner or the post author.
-       # reactions = post.reactions.exclude(Q(author=post_author) | Q(author=project_owner) | Q(author=reaction_author))
-       # for r in reactions:
-       #     if r.author not in mailed_users:
-       #         send_mail(
-       #             template_name='project_wallpost_reaction_same_wallpost.mail',
-       #             subject=_('%(author)s commented on a post you reacted on.') % {'author': reaction_author.first_name},
-       #             to=r.author,
-       #
-       #             project=project,
-       #             link='/go/projects/{0}'.format(project.slug),
-       #             author=reaction_author
-       #         )
-       #         mailed_users.add(r.author)
+        # # Implement 2c: send email to other Reaction authors that are not the Object owner or the post author.
+        # reactions = post.reactions.exclude(Q(author=post_author) | Q(author=project_owner) | Q(author=reaction_author))
+        # for r in reactions:
+        #     if r.author not in mailed_users:
+        #         send_mail(
+        #             template_name='project_wallpost_reaction_same_wallpost.mail',
+        #             subject=_('%(author)s commented on a post you reacted on.') % {'author': reaction_author.first_name},
+        #             to=r.author,
+        #
+        #             project=project,
+        #             link='/go/projects/{0}'.format(project.slug),
+        #             author=reaction_author
+        #         )
+        #         mailed_users.add(r.author)
 
-       # # Implement 2b: send email to post author, if Reaction author is not the post author.
-       if reaction_author != post_author:
-           if reaction_author not in mailed_users and post_author:
-               send_mail(
-                   template_name='task_wallpost_reaction_new.mail',
-                   subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
-                   to=post_author,
-                   project=task,
-                   link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
-                   author=reaction_author
-               )
-               mailed_users.add(post_author)
+        # # Implement 2b: send email to post author, if Reaction author is not the post author.
+        if reaction_author != post_author:
+            if reaction_author not in mailed_users and post_author:
+                send_mail(
+                    template_name='task_wallpost_reaction_new.mail',
+                    subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
+                    to=post_author,
+                    project=task,
+                    link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
+                    author=reaction_author
+                )
+                mailed_users.add(post_author)
 
-       # Implement 2a: send email to Object owner, if Reaction author is not the Object owner.
-       if reaction_author != task_author:
-           if task_author not in mailed_users:
-               send_mail(
-                   template_name='task_wallpost_reaction_task.mail',
-                   subject=_('%(author)s commented on your task page.') % {'author': reaction_author.full_name},
-                   to=task_author,
-                   author=reaction_author
-               )
+        # Implement 2a: send email to Object owner, if Reaction author is not the Object owner.
+        if reaction_author != task_author:
+            if task_author not in mailed_users:
+                send_mail(
+                    template_name='task_wallpost_reaction_task.mail',
+                    subject=_('%(author)s commented on your task page.') % {'author': reaction_author.full_name},
+                    to=task_author,
+                    author=reaction_author
+                )

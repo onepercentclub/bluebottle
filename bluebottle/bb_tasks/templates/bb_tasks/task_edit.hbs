@@ -31,13 +31,13 @@
                                         {{view view.RadioButton value="in progress" id="status_in_progress"}}
                                         <span>{% trans "Running" %}</span>
                                     </label>
-                                    <label for="status_closed" class="radio">
-                                        {{view view.RadioButton value="closed" id="status_closed"}}
-                                        <span>{% trans "Closed" %}</span>
-                                    </label>
                                     <label for="status_realised" class="radio">
                                         {{view view.RadioButton value="realized" id="status_realised"}}
                                         <span>{% trans "Completed" %}</span>
+                                    </label>
+                                    <label for="status_closed" class="radio">
+                                        {{view view.RadioButton value="closed" id="status_closed"}}
+                                        <span>{% trans "Closed" %}</span>
                                     </label>
                                 {{/view}}
                             </div>

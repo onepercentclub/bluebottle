@@ -173,7 +173,7 @@ class BaseProject(models.Model):
 
         super(BaseProject, self).save(*args, **kwargs)
         if self != None:
-            _ = ProjectPhaseLog.objects.create(project=self, status=self.status)
+            ProjectPhaseLog.objects.create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):

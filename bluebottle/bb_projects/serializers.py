@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils.translation import ugettext as _
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer, OEmbedField, TaggableSerializerMixin, TagSerializer)
@@ -116,17 +117,22 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
             TODO: This needs work. Maybe we could use a FSM for the project status
                   transitions, e.g.: 
                       https://pypi.python.org/pypi/django-fsm/1.2.0
-            """
 
-            submit_status = ProjectPhase.objects.get(slug='plan-submitted')
-            proposed_status = value
-            """
             TODO: what to do if the expected status (plan-submitted) is
                   not found?! Hard fail?
             """
-            if submit_status and proposed_status:
-                max_sequence = submit_status.sequence
+            submit_status = ProjectPhase.objects.get(slug='plan-submitted')
+            proposed_status = value
+            current_status = None
+
+            # Get the current status or the first if not found
+            try:
                 current_status = PROJECT_MODEL.objects.get(slug=self.data['slug']).status
+            except KeyError:
+                current_status = ProjectPhase.objects.order_by('sequence').all()[0]
+
+            if current_status and submit_status and proposed_status:
+                max_sequence = submit_status.sequence
 
                 """
                 Reset the status if the owner is trying to set the status

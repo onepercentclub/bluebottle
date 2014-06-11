@@ -16,7 +16,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from splinter.browser import ChromeWebDriver, PhantomJSWebDriver, FirefoxWebDriver
 
-# from apps.projects.models import Project
+from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
+from bluebottle.test.factory_models.utils import LanguageFactory
 
 
 def css_dict(style):
@@ -194,6 +195,39 @@ class WebDriverAdditionMixin(object):
             if link.text == text or (not exact and link.text.lower() == text.lower()):
                 result.append(link)
         return ElementList(result, find_by='link by itext', query=text)
+
+
+class InitProjectDataMixin(object):
+
+    def init_projects(self):
+        """
+        Set up some basic models needed for project creation.
+        """
+        phase_data = [{'id': 1, 'name': 'Plan - New', 'viewable': False},
+                      {'id': 2, 'name': 'Plan - Submitted', 'viewable': False},
+                      {'id': 3, 'name': 'Plan - Needs Work', 'viewable': False},
+                      {'id': 4, 'name': 'Plan - Rejected', 'viewable': False},
+                      {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
+                      {'id': 5, 'name': 'Campaign', 'viewable': True},
+                      {'id': 7, 'name': 'Stopped', 'viewable': False},
+                      {'id': 8, 'name': 'Done - Complete', 'viewable': True},
+                      {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
+
+        theme_data = [{'id': 1, 'name': 'Education'},
+                      {'id': 2, 'name': 'Environment'},
+                      {'id': 3, 'name': 'Health'}]
+
+        language_data = [{'id': 1, 'code': 'en', 'language_name': 'English', 'native_name': 'English'},
+                         {'id': 2, 'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
+
+        for phase in phase_data:
+            ProjectPhaseFactory.create(**phase)
+
+        for theme in theme_data:
+            ProjectThemeFactory.create(**theme)
+
+        for language in language_data:
+            LanguageFactory.create(**language)
 
 
 @override_settings(DEBUG=True)

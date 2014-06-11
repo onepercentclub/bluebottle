@@ -7,11 +7,12 @@ from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectThemeFactory,
     ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import InitProjectDataMixin
 
-from ..models import ProjectPhase
+from ..models import ProjectPhase, ProjectTheme
 
 
-class ProjectEndpointTestCase(TestCase):
+class ProjectEndpointTestCase(InitProjectDataMixin, TestCase):
     """
     Base class for ``projects`` app API endpoints test cases.
 
@@ -21,13 +22,15 @@ class ProjectEndpointTestCase(TestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
 
-        self.phase_1 = ProjectPhaseFactory.create()
-        self.phase_2 = ProjectPhaseFactory.create()
-        self.phase_3 = ProjectPhaseFactory.create()
+        self.init_projects()
 
-        self.theme_1 = ProjectThemeFactory.create()
-        self.theme_2 = ProjectThemeFactory.create()
-        self.theme_3 = ProjectThemeFactory.create()
+        self.phase_1 = ProjectPhase.objects.get(slug='plan-new')
+        self.phase_2 = ProjectPhase.objects.get(slug='plan-submitted')
+        self.phase_3 = ProjectPhase.objects.get(slug='campaign')
+
+        self.theme_1 = ProjectTheme.objects.get(id=1)
+        self.theme_2 = ProjectTheme.objects.get(id=2)
+        self.theme_3 = ProjectTheme.objects.get(id=3)
 
         self.project_1 = ProjectFactory.create(
             owner=self.user, status=self.phase_1, theme=self.theme_1)
@@ -87,8 +90,8 @@ class TestProjectList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        # Check that it is returning our 3 viewable factory-model projects.
-        self.assertEqual(data['count'], 3)
+        # Check that it is returning our 1 viewable factory-model project.
+        self.assertEqual(data['count'], 1)
 
         # Check sanity on the JSON response.
         for item in data['results']:
@@ -115,8 +118,8 @@ class TestProjectList(ProjectEndpointTestCase):
         response = self.client.get(reverse('project_list'))
 
         data = json.loads(response.content)
-        # We created 3 projects, but one is non viewable...
-        self.assertEqual(data['count'], 2)
+        # We created 3 projects, but none are viewable with the updated to phase_3...
+        self.assertEqual(data['count'], 0)
 
 
 class TestProjectDetail(ProjectEndpointTestCase):
@@ -160,7 +163,7 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['count'], 1)
 
         for item in data['results']:
             self.assertIn('id', item)
@@ -287,6 +290,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         list.
         """
         post_data = {
+            'slug': 'test-project',
             'title': 'Testing Project POST request',
             'pitch': 'A new project to be used in unit tests',
             'theme': self.theme_1.pk,

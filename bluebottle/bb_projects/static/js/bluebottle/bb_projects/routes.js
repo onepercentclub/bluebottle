@@ -194,6 +194,7 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
       this._super(controller, model);
 
       controller.set('organizations', App.MyOrganization.find());
+      controller.set('selectedOrganization', null);
     }
 });
 

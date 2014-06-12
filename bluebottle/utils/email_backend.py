@@ -27,10 +27,13 @@ class DKIMBackend(EmailBackend):
 class TestMailBackend(EmailBackend):
     def _send(self, email_message):
         """ Force recipient to the current user."""
+        import ipdb; ipdb.set_trace()
         request = ThreadLocal.get_current_request()
-        if request.user.is_authenticated():
+
+        try:
+            request.user.is_authenticated()
             recipient = request.user.email
-        else:
+        except:
             recipient = str(email_message.recipients()[0])
             if '+test' not in recipient:
                 return False

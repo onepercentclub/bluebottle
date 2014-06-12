@@ -1,8 +1,9 @@
+from bluebottle.bb_tasks.models import BaseTask
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField, HumanReadableChoiceField
+from bluebottle.utils.serializers import MetaField, ObjectChoiceField, HumanReadableChoiceField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 
@@ -48,8 +49,8 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
     author = UserPreviewSerializer()
-    status = HumanReadableChoiceField(
-        choices=BB_TASK_MODEL.TaskStatuses.choices, default=BB_TASK_MODEL.TaskStatuses.open)
+    status = serializers.ChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices,
+                                     default=BB_TASK_MODEL.TaskStatuses.open)
     tags = TagSerializer()
 
     meta_data = MetaField(

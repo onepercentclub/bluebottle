@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField, ObjectChoiceField, HumanReadableChoiceField
+from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallPostSerializer
 

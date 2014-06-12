@@ -27,7 +27,6 @@ class DKIMBackend(EmailBackend):
 class TestMailBackend(EmailBackend):
     def _send(self, email_message):
         """ Force recipient to the current user."""
-        import ipdb; ipdb.set_trace()
         request = ThreadLocal.get_current_request()
 
         try:

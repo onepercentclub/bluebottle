@@ -255,11 +255,19 @@ App.TaskMemberController = Em.ObjectController.extend({
         return false;
     }.property(),
 
+    currentUserIsAuthor: function () {
+        // TODO: move this into a function which can be accessed app-wide => pass a user instance and
+        //       the result will be true if the user is the current user.
+        // TODO: we should be injecting the currentUser into all controllers so we can do this.get('currentUser')
+        //       in the controller and {{ currentUser }} in the templates.
+        return (this.get('controllers.currentUser.id_for_ember').toString() == this.get('task.author.id'));
+    }.property('task.author.id'),
+
     canEditStatus: function(){
-       if (this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
-        return true;
-       }
-       return false;
+        if (this.get('currentUserIsAuthor') && this.get('task') && this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
+            return true;
+        }
+        return false;
     }.property('task.status'),
 
     canWithdraw: function(){

@@ -1,5 +1,5 @@
 from django.dispatch import receiver
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
@@ -94,6 +94,33 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
         msg.attach_alternative(html_content, "text/html")
         msg.send()
+
+
+@receiver(pre_delete, weak=False, sender=TASK_MEMBER_MODEL)
+def task_member_withdraw(sender, instance, **kwargs):
+    task_member = instance
+    task = instance.task
+
+    site = 'https://' + Site.objects.get_current().domain
+
+    receiver = task.author
+    sender = task_member.member
+    link = '/#!/tasks/{0}'.format(task.id)
+    task_list = '/#!/tasks'
+    project_link = '/#!/projects/{0}'.format(task.project.slug)
+
+    # Compose the mail
+    # Set the language for the receiver
+    translation.activate(receiver.primary_language)
+    subject = _('{name} is no longer available for the task').format(name=task_member.member.get_short_name())
+    context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+                       'task_list':task_list, 'project_link':project_link})
+    text_content = get_template('task_member_withdrew.mail.txt').render(context)
+    html_content = get_template('task_member_withdrew.mail.html').render(context)
+    translation.deactivate()
+    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
 
 
 

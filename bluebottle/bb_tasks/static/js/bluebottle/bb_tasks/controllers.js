@@ -313,7 +313,6 @@ App.TaskNewController = Em.ObjectController.extend({
         });
 
         task.save();
-        this.get('controllers.projectIndex.tasks').pushObject(task);
     }
 });
 

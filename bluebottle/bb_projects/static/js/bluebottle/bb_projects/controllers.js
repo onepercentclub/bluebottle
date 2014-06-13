@@ -198,10 +198,6 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
 
-    tasks: function () {
-        return App.Task.find({project: this.get('parentId')});
-    }.property('parentId'),
-
     availableTasks: function () {
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");

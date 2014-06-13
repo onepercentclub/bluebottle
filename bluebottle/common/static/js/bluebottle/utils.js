@@ -308,10 +308,14 @@ App.MapPicker = Em.View.extend({
 	templateName: 'map_picker',
 	marker: null,
 
-	submit: function(e){
-		e.preventDefault();
-		this.lookUpLocation();
-	},
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.send('lookUpLocation');
+        }
+    },
 	actions: {
 		lookUpLocation: function() {
 			var address = this.get('lookup');

@@ -317,7 +317,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['currentUser', 'taskIndex'],
+    needs: ['currentUser', 'taskIndex', 'projectIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');

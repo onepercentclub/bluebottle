@@ -10,13 +10,15 @@ App.WallRouteMixin = Em.Mixin.create({
         var parent = this.modelFor(parentType);
         var parentId = parent.id;
 
-        if (controller.get('parentId') != parentId){
+        var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
+        var textWallPostNewController = this.controllerFor('textWallPostNew');
+
+        if (controller.get('parentId') != parentId || textWallPostNewController.set('parentType') != parentType){
             controller.set('page', 1);
             controller.set('parentId', parentId);
             controller.set('parentType', parentType);
+
             var route = this;
-            var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
-            var textWallPostNewController = this.controllerFor('textWallPostNew');
 
             var store = this.get('store');
             store.find('wallPost', {'parent_type': parentType, 'parent_id': parentId}).then(function(items){

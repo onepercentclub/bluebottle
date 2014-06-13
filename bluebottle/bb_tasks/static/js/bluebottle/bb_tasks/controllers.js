@@ -277,7 +277,30 @@ App.TaskMemberController = Em.ObjectController.extend({
         return false;
     }.property('status'),
 
+
+    confirmation: function(){
+        var task = this.get('task');
+        var currentUser = this.get('controllers.currentUser');
+        if (task.get('author.id') == currentUser.get('id_for_ember') &&
+            task.get('isStatusRealized') && this.get('isStatusAccepted')) {
+            return true;
+        }
+
+        return false;
+    }.property('status'),
+
     actions: {
+        confirmMember: function( member){
+            console.log(member);
+            member.set('status', 'realized');
+            member.save()
+        },
+
+        didNotComplete: function( member){
+            console.log("Did not complete!");
+            member.set('status', 'stopped');
+            member.save()
+        },
         withdrawTaskMember: function(member){
            member.deleteRecord();
            member.save();

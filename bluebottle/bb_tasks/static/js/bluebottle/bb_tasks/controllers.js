@@ -291,13 +291,11 @@ App.TaskMemberController = Em.ObjectController.extend({
 
     actions: {
         confirmMember: function( member){
-            console.log(member);
             member.set('status', 'realized');
             member.save()
         },
 
         didNotComplete: function( member){
-            console.log("Did not complete!");
             member.set('status', 'stopped');
             member.save()
         },
@@ -312,7 +310,6 @@ App.MyTaskMemberController = Em.ObjectController.extend({
     actions: {
         editTimeSpent: function() {
             this.set('isEditing', true);
-            console.log(this.get('itemController'));
         }
     },
 

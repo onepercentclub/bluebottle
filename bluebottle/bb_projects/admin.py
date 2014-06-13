@@ -24,6 +24,7 @@ admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 class ProjectPhaseLogInline(admin.TabularInline):
     model = ProjectPhaseLog
+    ordering = ('-start',)
     readonly_fields = ('status', 'start',)
     extra = 0
 

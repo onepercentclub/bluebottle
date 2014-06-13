@@ -171,8 +171,13 @@ class BaseProject(models.Model):
                 counter += 1
             self.slug = original_slug
 
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
         super(BaseProject, self).save(*args, **kwargs)
-        if self != None:
+
+        # Only log project phase if the status has changed
+        if self != None and previous_status != self.status:
             ProjectPhaseLog.objects.create(project=self, status=self.status)
 
     @models.permalink

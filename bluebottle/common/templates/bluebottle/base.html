@@ -9,6 +9,8 @@
 <head>
     <meta charset="utf-8" />
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    {# Setting meta csrf-token here only so that django will set the csrf cookie. We don't currently use this meta value. #}
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
     <title>{% block title %}Bluebottle Project{% endblock %}</title>
 
@@ -53,8 +55,6 @@
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
         var DEBUG = {{ DEBUG|yesno:"true,false" }};
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
-        {# Setting CSRF_TOKEN here only so that django will set the csrf cookie. We don't use the variable below. #}
-        var CSRF_TOKEN = '{{ csrf_token }}';
     </script>
 
     {% if RAVEN_DSN %}

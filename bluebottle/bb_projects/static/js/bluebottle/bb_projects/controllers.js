@@ -206,7 +206,7 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");
         });
-    }.property('tasks.@each.isAvailable'),
+    }.property('tasks.@each.isAvailable', 'tasks.length'),
 
     unavailableTasks: function () {
         return this.get('tasks').filter(function(task) {

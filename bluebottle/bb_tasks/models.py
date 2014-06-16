@@ -53,21 +53,16 @@ class BaseTaskMember(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
-        self._initial_status = self.status
 
     def save(self, *args, **kwargs):
-        if self._initial_status != self.status:
-            self._number_of_members_needed(self.task)
-
         super(BaseTaskMember, self).save(*args, **kwargs)
-        self._initial_status = self.status
+        self.check_number_of_members_needed(self.task)
 
-    def _number_of_members_needed(self, task):
+    def check_number_of_members_needed(self, task):
         BB_TASKMEMBER_MODEL = get_taskmember_model()
-        members_accepted = BB_TASKMEMBER_MODEL.objects.filter(task=task).all().count()
+        members_accepted = BB_TASKMEMBER_MODEL.objects.filter(task=task, status='accepted').count()
         if task.status == 'open' and task.people_needed <= members_accepted:
             task.set_in_progress()
-
 
     class Meta:
         abstract = True

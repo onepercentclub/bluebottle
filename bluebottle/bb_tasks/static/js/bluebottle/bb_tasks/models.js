@@ -181,7 +181,30 @@ App.Task = DS.Model.extend({
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
-    }.property('deadline')
+    }.property('deadline'),
+
+    // Return individual labels here so they're added to translations.
+    statusLabel: function(){
+        var status = this.get('status');
+        switch (status) {
+            case 'open':
+                return gettext('open');
+                break;
+            case 'in progress':
+                return gettext('in progress');
+                break;
+            case 'realized':
+                return gettext('realised');
+                break;
+            case 'closed':
+                return gettext('closed');
+                break;
+            default:
+                Em.Logger.error('Task status not found: ' + status);
+                return status;
+        }
+
+    }.property('status')
 
 });
 

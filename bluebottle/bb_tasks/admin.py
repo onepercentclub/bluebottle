@@ -45,7 +45,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('author', 'project')
     list_filter = ('status', )
-    list_display = ('title', 'project', 'status', 'date_status_change')
+    list_display = ('title', 'project', 'status', 'deadline')
 
     readonly_fields = ('date_status_change',)
 

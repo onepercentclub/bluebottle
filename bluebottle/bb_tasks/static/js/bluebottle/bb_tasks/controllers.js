@@ -277,7 +277,28 @@ App.TaskMemberController = Em.ObjectController.extend({
         return false;
     }.property('status'),
 
+
+    confirmation: function(){
+        var task = this.get('task');
+        var currentUser = this.get('controllers.currentUser');
+        if (task.get('author.id') == currentUser.get('id_for_ember') &&
+            task.get('isStatusRealized') && this.get('isStatusAccepted')) {
+            return true;
+        }
+
+        return false;
+    }.property('status'),
+
     actions: {
+        confirmMember: function( member){
+            member.set('status', 'realized');
+            member.save()
+        },
+
+        didNotComplete: function( member){
+            member.set('status', 'stopped');
+            member.save()
+        },
         withdrawTaskMember: function(member){
            member.deleteRecord();
            member.save();
@@ -289,7 +310,6 @@ App.MyTaskMemberController = Em.ObjectController.extend({
     actions: {
         editTimeSpent: function() {
             this.set('isEditing', true);
-            console.log(this.get('itemController'));
         }
     },
 
@@ -297,7 +317,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['currentUser', 'taskIndex'],
+    needs: ['currentUser', 'taskIndex', 'projectIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');

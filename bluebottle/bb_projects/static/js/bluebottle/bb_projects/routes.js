@@ -73,7 +73,12 @@ App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
 
     setupController: function(controller, model) {
         this._super(controller, model);
-        controller.set('tasks',App.Task.find({project: this.get('parentId')}));
+
+        var parentType = this.get('parentType');
+        var parent = this.modelFor(parentType);
+        var parentId = parent.id;
+
+        controller.set('tasks',App.Task.find({project: parentId}));
     }
 
 

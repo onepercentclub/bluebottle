@@ -29,15 +29,15 @@
                                     </label>
                                     <label for="status_in_progress" class="radio">
                                         {{view view.RadioButton value="in progress" id="status_in_progress"}}
-                                        <span>{% trans "In progress" %}</span>
+                                        <span>{% trans "Running" %}</span>
+                                    </label>
+                                    <label for="status_realised" class="radio">
+                                        {{view view.RadioButton value="realized" id="status_realised"}}
+                                        <span>{% trans "Realised" %}</span>
                                     </label>
                                     <label for="status_closed" class="radio">
                                         {{view view.RadioButton value="closed" id="status_closed"}}
                                         <span>{% trans "Closed" %}</span>
-                                    </label>
-                                    <label for="status_realised" class="radio">
-                                        {{view view.RadioButton value="realized" id="status_realised"}}
-                                        <span>{% trans "Completed" %}</span>
                                     </label>
                                 {{/view}}
                             </div>
@@ -47,13 +47,13 @@
                             {{/if}}
                         </li>
 
+                        {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate='12M' valueBinding='deadline' errors='errors.deadline' %}
+
                         {% bb_component 'bb-text-area' label=_('Description') valueBinding='description' rows='5' errors='errors.description' placeholder=_('What do you need? Give a clear description of the task') %}
 
                         {% bb_component 'bb-text-area' label=_('Deliverable') valueBinding='end_goal' rows='3' errors='errors.end_goal' placeholder=_('What do you expect to have in the end?') %}
 
                         {% bb_component 'bb-text-field' label=_('People needed') valueBinding='people_needed' errors='errors.people_needed' type='number' %}
-
-                        {% bb_component 'bb-datepicker' label=_('Deadline') minDate='0' maxDate='12M' valueBinding='deadline' errors='errors.deadline' %}
 
                         {% bb_component 'bb-text-field' label=_('Location') valueBinding='location' errors='errors.location' placeholder=_('Can this be done online or on location?') %}
 

@@ -149,6 +149,15 @@ App.DatePickerButtonWidget = Ember.View.extend({
 // On click it will use jQuery UI date picker dialog so the user can select a date.
 // valueBinding should bind to a  DS.attr('date') property of an Ember model.
 App.DatePicker = Ember.ContainerView.extend({
+    init: function(){
+        this._super();
+        if (this.get("minDate") != undefined) {
+            this.config.minDate = this.get("minDate");
+        }
+        if (this.get("maxDate") != undefined) {
+            this.config.maxDate = this.get("maxDate");
+        }
+    },
     config: {changeMonth: true, changeYear: true, yearRange: "c-100:c+10"},
     childViews: [App.DatePickerValue, App.DatePickerWidget]
 });
@@ -208,6 +217,9 @@ App.CustomDatePicker = App.DatePicker.extend({
         this._super();
         if (this.get("minDate") != undefined) {
             this.config.minDate = this.get("minDate");
+        }
+        if (this.get("maxDate") != undefined) {
+            this.config.maxDate = this.get("maxDate");
         }
     }
 });

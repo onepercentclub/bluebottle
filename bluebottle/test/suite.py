@@ -28,4 +28,7 @@ class BlueBottleTestSuite(setuptest.SetupTestSuite):
         for app in settings.INSTALLED_APPS:
             if 'bluebottle.' in app:
                 top_packages.append(app.split('.')[-1])
+        print "Importing mail modules in test runner"
+        from bluebottle.bb_tasks import taskmail
+        from bluebottle.wallposts import mails
         return top_packages

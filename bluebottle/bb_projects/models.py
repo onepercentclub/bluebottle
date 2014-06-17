@@ -52,6 +52,9 @@ class ProjectPhase(models.Model):
                                    help_text=_('Whether the project owner can change the details of the project.'))
     viewable = models.BooleanField(default=True,
                                    help_text=_('Whether this phase, and projects in it show up at the website'))
+    owner_editable = models.BooleanField(default=False,
+                                   help_text=_('The owner can manually select between these phases'))
+
 
     class Meta():
         ordering = ['sequence']
@@ -92,22 +95,16 @@ class BaseProjectManager(models.Manager):
 
     def _ordering(self, ordering, queryset):
 
-        qs = queryset
-
         if ordering == 'deadline':
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
-            qs = qs.order_by('deadline')
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = queryset.order_by('deadline')
         elif ordering == 'newest':
-            qs = qs.order_by('amount_needed')
-            qs = qs.filter(amount_needed__gt=0)
-            qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
+            qs = queryset.order_by('-created')
         elif ordering:
-            qs = qs.order_by(ordering)
+            qs = queryset.order_by(ordering)
+        else:
+            qs = queryset
 
         return qs
-
-
 
 
 class BaseProject(models.Model):
@@ -147,6 +144,8 @@ class BaseProject(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
 
+    _initial_status = None
+
     objects = BaseProjectManager()
 
     class Meta:
@@ -172,7 +171,14 @@ class BaseProject(models.Model):
                 counter += 1
             self.slug = original_slug
 
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
         super(BaseProject, self).save(*args, **kwargs)
+
+        # Only log project phase if the status has changed
+        if self != None and previous_status != self.status:
+            ProjectPhaseLog.objects.create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):
@@ -220,3 +226,10 @@ class BaseProject(models.Model):
     @property
     def viewable(self):
         return self.status.viewable
+
+
+class ProjectPhaseLog(models.Model):
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    status = models.ForeignKey("bb_projects.ProjectPhase")
+    start = CreationDateTimeField(_('created'), help_text=_('When this project entered in this status.'))
+

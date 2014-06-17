@@ -5,8 +5,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.utils.utils import get_project_model
-from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer)
+from .models import ProjectTheme, ProjectPhase, ProjectPhaseLog
+from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
 from .permissions import IsProjectOwner
 
 
@@ -60,6 +60,19 @@ class ProjectPhaseDetail(generics.RetrieveAPIView):
     model = ProjectPhase
     serializer_class = ProjectPhaseSerializer
 
+
+class ProjectPhaseLogList(generics.ListAPIView):
+    model = ProjectPhaseLog
+    serializer_class = ProjectPhaseLogSerializer
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = super(ProjectPhaseLogList, self).get_queryset()
+        return qs
+
+class ProjectPhaseLogDetail(generics.RetrieveAPIView):
+    model = ProjectPhaseLog
+    serializer_class = ProjectPhaseLogSerializer
 
 class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL
@@ -116,34 +129,6 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
         self.current_status = object.status
 
         return object
-
-    """
-    Don't let the owner set a status with a sequence number higher than 2 
-    They can set 1: plan-new or 2: plan-submitted
-
-    TODO: This needs work. Maybe we could use a FSM for the project status
-          transitions, e.g.: 
-              https://pypi.python.org/pypi/django-fsm/1.2.0
-    """
-    def pre_save(self, obj):
-        submit_status = ProjectPhase.objects.get(slug='plan-submitted')
-        status_id = self.request.DATA.get('status')
-
-        """
-        TODO: what to do if the expected status (plan-submitted) is
-              no found?! Hard fail?
-        """
-        if submit_status and status_id:
-            max_sequence = submit_status.sequence
-            new_status = ProjectPhase.objects.get(id=status_id)
-
-            """
-            Reset the status if the owner is trying to set the status
-            higher than the max permitted, or the user is trying to
-            set the status back to a lower state
-            """
-            if new_status and (new_status.sequence > max_sequence or new_status.sequence < self.current_status.sequence):
-                obj.status = self.current_status
 
 
 class ProjectThemeList(generics.ListAPIView):

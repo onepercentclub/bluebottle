@@ -198,10 +198,6 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return false;
     }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
 
-    tasks: function () {
-        return App.Task.find({project: this.get('parentId')});
-    }.property('parentId'),
-
     availableTasks: function () {
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");
@@ -318,9 +314,7 @@ App.MyProjectController = Em.ObjectController.extend({
         return !!this.get('model.title');
     }.property('model.title'),
 
-    isSubmittable: function(){
-        return (this.get('isPhasePlanNew') || this.get('isPhaseNeedsWork'));
-    }.property('isPhasePlanNew', 'isPhaseNeedsWork'),
+    isSubmittable: Em.computed.or('model.isPhasePlanNew', 'model.isPhaseNeedsWork'),
 
     validOrganization: function () {
         var organization = this.get('myOrganization'),
@@ -415,8 +409,17 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             // TODO: should we move this to the controller??
             var organization = this.get('controllers.myProjectOrganisation.model');
 
-            if (!organization.get('isNew'))
-                model.set('organization', organization);
+            // There won't be an organization associated with the myProjectOrganisation
+            // controller if the user hasn't loaded the org tab - even if the project has one.
+            // So we only set the organization if there is one associated with the controller
+            // and it isn't new. 
+            if (organization) {
+                if (organization.get('isNew')) {
+                    throw new Ember.Error('It shouldn\'t be possible to submit a project with an unsaved organization!');
+                } else {
+                    model.set('organization', organization);
+                }
+            }
 
             model.on('didUpdate', function() {
                 controller.transitionToRoute('myProjectReview');

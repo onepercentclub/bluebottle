@@ -72,7 +72,7 @@
 	padding: $base-padding * 2 0;
 
 	.account-personal {
-		@include grid(24,1,1);
+		@include grid(19,0,1);
 	}	
 	
 	.account-title {
@@ -91,7 +91,7 @@
 	}
 
 	.account-avatar {
-		@include grid(14,0,2);
+		@include grid(8,0,1);
 	}
 	
 	.account-achievements {

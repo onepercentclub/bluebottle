@@ -279,19 +279,19 @@ App.UploadedImageView = App.UploadFile.extend({
     type: 'file',
 
     change: function (evt) {
-        var files = evt.target.files;
-        var reader = new FileReader();
-        var file = files[0];
-        var view = this;
+        var files = evt.target.files;
+        var reader = new FileReader();
+        var file = files[0];
+        var view = this;
 
-        reader.onload = function(e) {
-            var preview = "<img src='" + e.target.result + "' />";
-			view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
-        };
+        reader.onload = function(e) {
+            var preview = "<img src='" + e.target.result + "' />";
+            view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
+        };
         reader.readAsDataURL(file);
         var model = this.get('parentView.controller.model');
-        this.set('file', file);
-    }
+        this.set('file', file);
+   }
 });
 
 
@@ -304,97 +304,94 @@ App.PopOverMixin = Em.Mixin.create({
 
 
 App.MapPicker = Em.View.extend({
+    templateName: 'map_picker',
+    marker: null,
 
-	templateName: 'map_picker',
-	marker: null,
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.send('lookUpLocation');
+        }
+    },
+    actions: {
+        lookUpLocation: function() {
+            var address = this.get('lookup');
+            var view = this;
 
-	submit: function(e){
-		e.preventDefault();
-		this.lookUpLocation();
-	},
-	actions: {
-		lookUpLocation: function() {
-			var address = this.get('lookup');
-			var view = this;
+            view.geocoder.geocode( {'address': address}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    view.placeMarker(results[0].geometry.location);
+                    view.set('latitude',  '' + results[0].geometry.location.lat().toString());
+                    view.set('longitude', '' + results[0].geometry.location.lng().toString());
 
-			view.geocoder.geocode( {'address': address}, function(results, status) {
-				if (status == google.maps.GeocoderStatus.OK) {
-					view.placeMarker(results[0].geometry.location);
-					view.set('latitude',  '' + results[0].geometry.location.lat().toString());
-					view.set('longitude', '' + results[0].geometry.location.lng().toString());
+                    var latlng = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
+                    view.geocoder.geocode({'latLng': latlng}, function(results, status) {
+                        if (status == google.maps.GeocoderStatus.OK) {
+                            for (var i = 0; i < results[0].address_components.length; i++) {
+                                if (results[0].address_components[i].types[0] == "country") {
+                                    var code = results[0].address_components[i].short_name,
+                                        country = App.Country.find().filterProperty('code', code)[0];
 
-					var latlng = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
-					view.geocoder.geocode({'latLng': latlng}, function(results, status) {
-						if (status == google.maps.GeocoderStatus.OK) {
-							for (var i = 0; i < results[0].address_components.length; i++) {
-								if (results[0].address_components[i].types[0] == "country") {
-									var code = results[0].address_components[i].short_name,
-									    country = App.Country.find().filterProperty('code', code)[0];
+                                    if (country)
+                                        view.get('model').set('country', country);
+                                }
+                            }
+                        }
 
-									if (country)
-										view.get('model').set('country', country);
-								}
-							}
-						}
-
-					});
-				} else {
-					alert('Geocode was not successful for the following reason: ' + status);
-				}
-			});
-		}
-	},
-     placeMarker: function (position) {
-         var view = this;
-         if (view.marker) {
-             view.marker.setMap(null)
-         }
-
-         view.marker = new google.maps.Marker({
-             draggable: true,
-             position: position,
-             map: view.map
-         });
-         google.maps.event.addListener(view.marker, 'dragend', function(){
-              var pos = view.marker.getPosition();
-              view.set('latitude', pos.lat().toString());
-              view.set('longitude', pos.lng().toString());
-         });
-
-         view.map.panTo(position);
-     },
-
-     didInsertElement: function(){
-         var view = this;
-         this.geocoder = new google.maps.Geocoder();
-         var view = this;
-         var point = new google.maps.LatLng(52.3747157,4.8986167);
-         var latitude = view.get('latitude');
-         var longitude = view.get('longitude');
-         if (latitude && longitude){
-             point = new google.maps.LatLng(latitude, longitude);
-         }
-         var mapOptions = {
-             zoom: 2,
-             center: point,
-             mapTypeId: google.maps.MapTypeId.ROADMAP,
-             mapTypeControlOptions: {
-                 style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-                 position: google.maps.ControlPosition.BOTTOM_RIGHT
-             }
-         };
-         view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
-
-         view.placeMarker(point);
-
-         google.maps.event.addListener(view.map, 'click', function(e) {
-             var loc = {};
-             view.set('latitude', e.latLng.lat().toString());
-             view.set('longitude', e.latLng.lng().toString());
-             view.placeMarker(e.latLng);
-         });
-     }
-
+                    });
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+    },
+    placeMarker: function (position) {
+        var view = this;
+        if (view.marker) {
+            view.marker.setMap(null)
+        }
+        view.marker = new google.maps.Marker({
+            draggable: true,
+            position: position,
+            map: view.map
+        });
+        google.maps.event.addListener(view.marker, 'dragend', function(){
+             var pos = view.marker.getPosition();
+             view.set('latitude', pos.lat().toString());
+             view.set('longitude', pos.lng().toString());
+        });
+        view.map.panTo(position);
+    },
+    didInsertElement: function(){
+        var view = this;
+        this.geocoder = new google.maps.Geocoder();
+        var view = this;
+        var point = new google.maps.LatLng(52.3747157,4.8986167);
+        var latitude = view.get('latitude');
+        var longitude = view.get('longitude');
+        if (latitude && longitude){
+            point = new google.maps.LatLng(latitude, longitude);
+        }
+        var mapOptions = {
+            zoom: 2,
+            center: point,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                position: google.maps.ControlPosition.BOTTOM_RIGHT
+            }
+        };
+        view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
+        view.placeMarker(point);
+        google.maps.event.addListener(view.map, 'click', function(e) {
+            var loc = {};
+            view.set('latitude', e.latLng.lat().toString());
+            view.set('longitude', e.latLng.lng().toString());
+            view.placeMarker(e.latLng);
+        });
+    }
 });
 
 App.FlashView = Em.View.extend();

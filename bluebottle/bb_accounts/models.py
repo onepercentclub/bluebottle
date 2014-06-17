@@ -194,7 +194,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             username = 'x'
             if self.first_name or self.last_name:
                 # The ideal condition.
-                username = slugify((self.first_name + self.last_name).replace(' ', ''))
+                username = slugify(unicode((self.first_name + self.last_name).replace(' ', '')))
             elif self.email and '@' in self.email:
                 # The best we can do if there's no first or last name.
                 email_name, domain_part = self.email.strip().rsplit('@', 1)
@@ -256,3 +256,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def short_name(self):
         return self.get_short_name()
+
+    def full_name(self):
+        return self.get_full_name()

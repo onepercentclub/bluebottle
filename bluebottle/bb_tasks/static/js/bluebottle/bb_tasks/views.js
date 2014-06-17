@@ -90,11 +90,10 @@ App.TaskDeadLineDatePicker = App.DatePicker.extend({
 /*
  Form Elements
  */
-
 App.TaskStatusList = [
-    {value: 'open', title: "open"},
-    {value: 'in progress', title: "in progress"},
-    {value: 'realized', title: "completed"}
+    {value: 'open', title: gettext("Open")},
+    {value: 'in progress', title: gettext("Running")},
+    {value: 'realized', title: gettext("Realised")}
 ];
 
 App.TaskStatusSelectView = Em.Select.extend({
@@ -114,3 +113,8 @@ App.SkillSelectView = Em.Select.extend({
 
 
 App.UsedSkillSelectView = App.SkillSelectView.extend();
+
+
+App.TaskMemberView = Ember.View.extend({
+    templateName: '_task_detail_member_partial'
+});

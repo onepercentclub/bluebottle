@@ -1,3 +1,4 @@
+from bluebottle.utils.utils import get_taskmember_model
 from django.conf import settings
 from django.db import models
 import django.db.models.options as options
@@ -10,7 +11,6 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
-
 
 class BaseSkill(models.Model):
 
@@ -55,6 +55,20 @@ class BaseTaskMember(models.Model):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
         self._initial_status = self.status
 
+    def save(self, *args, **kwargs):
+        if self._initial_status != self.status:
+            self._number_of_members_needed(self.task)
+
+        super(BaseTaskMember, self).save(*args, **kwargs)
+        self._initial_status = self.status
+
+    def _number_of_members_needed(self, task):
+        BB_TASKMEMBER_MODEL = get_taskmember_model()
+        members_accepted = BB_TASKMEMBER_MODEL.objects.filter(task=task).all().count()
+        if task.status == 'open' and task.people_needed <= members_accepted:
+            task.set_in_progress()
+
+
     class Meta:
         abstract = True
 
@@ -74,11 +88,12 @@ class BaseTaskFile(models.Model):
 class BaseTask(models.Model):
     """ The base Task model """
 
+    # We should probably turn this into another class model like the projectphase
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
         in_progress = ChoiceItem('in progress', label=_('In progress'))
         closed = ChoiceItem('closed', label=_('Closed'))
-        realized = ChoiceItem('realized', label=_('Completed'))
+        realized = ChoiceItem('realized', label=_('Realised'))
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
@@ -125,5 +140,8 @@ class BaseTask(models.Model):
     def __unicode__(self):
         return self.title
 
+    def set_in_progress(self):
+        self.status = self.TaskStatuses.in_progress
+        self.save()
 
 

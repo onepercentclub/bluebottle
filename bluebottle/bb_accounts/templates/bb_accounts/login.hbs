@@ -11,6 +11,11 @@
                 </div>
 
                 <div class="modal-body">
+                    {{#if error}}
+                        <p class="error">
+                            {{error.non_field_errors}}
+                        </p>
+                    {{/if}}
                     {{#if post_password_reset }}
                         {% block password_reset_success %}
                             <p class="succes">{%  trans "Override block password_reset_success to display your own password reset success message." %}</p>

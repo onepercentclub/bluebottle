@@ -111,7 +111,6 @@
         <script type="text/javascript" src="{% static 'js/plugins/unslider.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/plugins/ember.hashbang.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/jquery.scrollTo.min.js' %}" charset="utf-8"></script>
-        <script type="text/javascript" src="{% static 'js/infobox.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/marker_clusterer.js' %}"></script>
 
         {# JS slider #}
@@ -159,7 +158,8 @@
         {% include "bluebottle/templates.hbs" %}
     {% endblock handlebars_templates %}
 
-    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
+    <script src="//maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
+    <script src="//google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/src/infobox.js"></script>
 
     {% block htmlheader %}{% endblock %}
 

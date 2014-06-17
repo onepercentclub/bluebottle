@@ -45,8 +45,6 @@ App = Em.Application.create({
     ],
 
     ready: function() {
-        this.set('csrfToken', getCookie('csrftoken'));
-
         // Read language string from url.
         var language = this.get('language');
 
@@ -246,6 +244,7 @@ App.Adapter.configure("plurals", {
 
 App.ApplicationController = Ember.Controller.extend({
     needs: ['currentUser'],
+
     display_message: false,
     displayMessage: (function() {
         if (this.get('display_message') == true) {
@@ -257,6 +256,18 @@ App.ApplicationController = Ember.Controller.extend({
 
     hideMessage: function() {
         this.set('display_message', false);
+    },
+
+    actions: {
+        logout: function () {
+            App.set('jwtToken', null);
+            this.set('controllers.currentUser.model', null);
+
+            // Redirect to?? If the user is in a restricted route then 
+            // they should be redirected to the home route. For now we 
+            // always force them to the home
+            this.transitionToRoute('home');
+        }
     }
 });
 

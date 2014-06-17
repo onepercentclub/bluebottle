@@ -119,7 +119,14 @@ App.UserModalController = Ember.ObjectController.extend({
 
 
 App.LoginController = Em.Controller.extend({
+    loginTitle: 'Log in to <Bluebottle Project>',
+    username: '',
+    password: '',
+
     actions: {
+        loginUser: function () {
+            console.log('No authentication implemented!');
+        },
         requestPasswordReset: function() {
             // Close previous modal, if any.
             $('.close').click();

@@ -117,9 +117,25 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-
 App.LoginController = Em.Controller.extend({
+    needs: ['currentUser'],
+
+    loginTitle: 'Log in to <Bluebottle Project>',
+    username: '',
+    password: '',
+
     actions: {
+        login: function () {
+            Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
+
+            var _this = this;
+            this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
+                _this.set('controllers.currentUser.model', user);
+                _this.send('closeAllModals');
+            }, function (error) {
+                _this.set('error', error);
+            });
+        },
         requestPasswordReset: function() {
             // Close previous modal, if any.
             $('.close').click();

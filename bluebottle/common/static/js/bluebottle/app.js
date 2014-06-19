@@ -45,8 +45,6 @@ App = Em.Application.create({
     ],
 
     ready: function() {
-        this.set('csrfToken', getCookie('csrftoken'));
-
         // Read language string from url.
         var language = this.get('language');
 
@@ -246,6 +244,7 @@ App.Adapter.configure("plurals", {
 
 App.ApplicationController = Ember.Controller.extend({
     needs: ['currentUser'],
+
     display_message: false,
     displayMessage: (function() {
         if (this.get('display_message') == true) {
@@ -257,7 +256,7 @@ App.ApplicationController = Ember.Controller.extend({
 
     hideMessage: function() {
         this.set('display_message', false);
-    }
+    },
 });
 
 // Embedded Model Mapping
@@ -341,6 +340,9 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend({
 
     actions: {
+        logout: function () {
+            // Do some logout stuff here!
+        },
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
             if (!user.get('id_for_ember')) {

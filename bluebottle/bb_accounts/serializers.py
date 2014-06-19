@@ -124,10 +124,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, max_length=254)
     password = PasswordField(required=True, max_length=128)
     username = serializers.CharField(read_only=True)
+    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'jwt_token')
 
 
 class PasswordResetSerializer(serializers.Serializer):

@@ -14,6 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
+from rest_framework_jwt import utils
 
 from taggit.managers import TaggableManager
 
@@ -253,9 +254,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
+    def full_name(self):
+        return self.get_full_name()
+
+    def get_jwt_token(self):
+        # import ipdb; ipdb.set_trace()
+        payload = utils.jwt_payload_handler(self)
+        token = utils.jwt_encode_handler(payload)
+        return token
+
     @property
     def short_name(self):
         return self.get_short_name()
 
-    def full_name(self):
-        return self.get_full_name()

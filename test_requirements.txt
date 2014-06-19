@@ -25,3 +25,6 @@ sorl-thumbnail==11.12
 splinter==0.5.4
 django-tools==0.25.0
 django-loginas==0.1.3
+
+# JSON Web Token based authentication for Django REST framework
+djangorestframework-jwt==0.1.5

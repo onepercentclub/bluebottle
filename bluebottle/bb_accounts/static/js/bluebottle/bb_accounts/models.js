@@ -241,9 +241,9 @@ App.CurrentUser = App.UserPreview.extend({
 });
 
 
-App.UserActivation = App.CurrentUser.extend({
-    url: 'users/activate'
-});
+//App.UserActivation = App.CurrentUser.extend({
+//    url: 'users/activate'
+//});
 
 
 /*
@@ -260,7 +260,8 @@ App.UserCreate = DS.Model.extend({
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
     email: DS.attr('string'),
-    password: DS.attr('string')
+    password: DS.attr('string'),
+    jwt_token: DS.attr('string', {readOnly: true})
 });
 
 

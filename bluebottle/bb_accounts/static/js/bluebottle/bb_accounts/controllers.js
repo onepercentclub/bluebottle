@@ -3,21 +3,29 @@
  */
 
 App.SignupController = Ember.ObjectController.extend({
-    isUserCreated: false,
-
     needs: "currentUser",
 
     actions: {
         createUser: function(user) {
-            var self = this;
-
-            user.on('didCreate', function() {
-                self.set('isUserCreated', true);
-            });
+            var _this = this;
 
             // Change the model URL to the User creation API.
             user.set('url', 'users');
-            user.save();
+            user.save().then(function(createdUser) {
+                var response = {
+                    token: createdUser.get('jwt_token')
+                };
+
+                App.AuthJwt.processSuccessResponse(response);
+            }, function() {
+                // Handle error message here!
+            }).then(function (currentUser) {
+                // This is for successfully setting the currentUser.
+                _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
+                _this.transitionToRoute('home');
+            }, function () {
+                // Handle failure to create currentUser
+            });
         }
     }
 });
@@ -117,7 +125,7 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.Controller.extend({
+App.LoginController = Em.Controller.extend(App.AuthJwtMixin, {
     needs: ['currentUser'],
 
     loginTitle: 'Log in to <Bluebottle Project>',
@@ -129,7 +137,7 @@ App.LoginController = Em.Controller.extend({
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
 
             var _this = this;
-            this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
+            return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
                 _this.set('controllers.currentUser.model', user);
                 _this.send('closeAllModals');
             }, function (error) {

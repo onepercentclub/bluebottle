@@ -45,6 +45,12 @@ App = Em.Application.create({
     ],
 
     ready: function() {
+
+        // only needed when submitting a form if the user isn't authenticated
+        var metaCsrf = $('meta[name=csrf-token]')
+        if (metaCsrf)
+            this.set('csrfToken', metaCsrf.attr('content'));
+
         // Read language string from url.
         var language = this.get('language');
 

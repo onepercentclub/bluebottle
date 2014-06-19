@@ -1,0 +1,61 @@
+.tooltip-holder {
+
+	.tooltip {
+		background: rgb(65,65,65);
+		bottom: 100%;
+		color: #fff;
+		display: block;
+		margin-bottom: 15px;
+		opacity: 0;
+		padding: 10px;
+		pointer-events: none;
+		position: absolute;
+		width: 100%;
+		font-size: 11px;
+		line-height: 18px;
+		border-radius: 6px;
+		@include animation(fadeOutDown .25s ease-out);
+
+		&.input {
+			right: -5px;
+			width: 60%;
+			margin-bottom: -2px;
+			padding: 5px;
+
+			&:after {
+				margin-left: 45px;
+			}
+		}
+
+		&:before {
+			bottom: -20px;
+			content: " ";
+			display: block;
+			height: 20px;
+			left: 0;
+			position: absolute;
+			width: 100%;
+		}
+
+		&:after {
+			border-left: solid transparent 10px;
+			border-right: solid transparent 10px;
+			border-top: solid rgb(65,65,65) 10px;
+			bottom: -10px;
+			content: " ";
+			height: 0;
+			left: 50%;
+			margin-left: -13px;
+			position: absolute;
+			width: 0;
+		}
+	}
+	
+	&:hover {
+		.tooltip {
+			opacity: 1;
+			pointer-events: auto;
+			@include animation(fadeInUp .25s ease-out);
+		}
+	}
+}

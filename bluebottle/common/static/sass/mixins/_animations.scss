@@ -41,6 +41,28 @@
   }
 }
 
+@include keyframes(fadeInDownBig) {
+  0% {
+    @include opacity(0);
+    @include transform(translateY(-2000px));
+  }
+  100% {
+    @include opacity(1);
+    @include transform(translateY(0));
+  }
+}
+
+@include keyframes(fadeOutUpBig) {
+  0% {
+    @include opacity(1);
+    @include transform(translateY(0));
+  }
+  100% {
+    @include opacity(0);
+    @include transform(translateY(-2000px));
+  }
+}
+
 ////// Rotate //////
 @include keyframes(rotateOutDownRight) {
   0% {

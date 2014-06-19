@@ -257,12 +257,6 @@ App.ApplicationController = Ember.Controller.extend({
     hideMessage: function() {
         this.set('display_message', false);
     },
-
-    actions: {
-        logout: function () {
-            // Do some logout stuff here!
-        }
-    }
 });
 
 // Embedded Model Mapping
@@ -346,6 +340,9 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend({
 
     actions: {
+        logout: function () {
+            // Do some logout stuff here!
+        },
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
             if (!user.get('id_for_ember')) {

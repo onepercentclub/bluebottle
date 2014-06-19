@@ -1,0 +1,293 @@
+
+$black                                                     : #3C3C3C;
+$gray-darkest											   : #3C3C3C;
+$gray-darker											   : #676767;
+$gray-dark                                                 : #8A9993;
+$gray-middle                                               : #E4EDE9;
+$gray-medium                                               : #F5F4F6; // Todo same as light
+$gray-light                                                : #F8F7F8;
+$gray-border                                               : #D8D8D8;
+
+
+
+// Colors                                                       
+// --------------------------------                             
+
+$color-primary                                             : #00C051; // green
+$color-secondary                                           : #FF619A; // pink
+$color-primary-shadow									   : #008438; // shadow green
+$color-secondary-shadow									   : #B42A5C; // shadow pink
+                                                                   
+$color-error                                               : #b84040 !default;
+$color-success                                             : #5da423 !default;
+$color-deselect                                            : #bfbfbf !default;
+                                                                
+// Social                                                       
+// ----------------------------------                           
+                                                                
+$facebook-blue                                             : #45619d !default;
+$twitter-blue                                              : #33b9e2 !default;
+                                                       
+$font-family                                               : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
+$font-family-heavy                                         : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
+$font-family-bold                                          : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
+$font-family-body										   : 'Neue Helvetica W01';
+                                                                
+$base-font-size                                            : 1em !default;
+$base-font-family                                          : $font-family !default;
+$base-line-height                                          : 1.5em !default;
+
+
+
+.modal-fullscreen-background {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: rgba(68,68,68, .7);
+	z-index: 999;
+	 @include perspective(1000);
+
+	//TODO: remove this, is already used.
+	.btn {
+		font-size: 18px;
+		position: relative;
+		display: inline-block;
+		background: $color-secondary;
+		padding: 0.75em 1.25em;
+		vertical-align: center;
+		border-radius: 8px;
+		color: white;
+		font-family: $font-family-bold;
+		font-weight: 700;
+		border: none;
+		text-transform: inherit;
+		@include single-box-shadow($color-secondary-shadow, 0, -2px, 0, 0, true);
+		@include single-transition(all, .1s ease-in-out);
+		
+		&:hover {
+			top: -1px;
+			@include single-box-shadow($color-secondary-shadow, 0, -4px, 0, 0, true);
+			@include single-transition(none);
+		}
+		
+		&.btn-sec {
+			color: $color-primary;
+			font-weight: normal;
+			background: none;
+			border: 1px solid $color-primary;
+			@include single-box-shadow(none);
+			
+			&:hover {
+				top: 0;
+				background-color: $color-primary;
+				color: $white;
+			}
+			
+			&:active, &:focus {
+				border: 1px solid $gray-darker;
+			}
+		}
+		
+		&:active, &:focus {
+			top: 1px !important;
+			background: $gray-darker !important;
+			color: $gray-light !important;
+			@include single-box-shadow($gray-darkest, 0, 2px, 0, 0, true);
+		}
+
+		&.is-inactive {
+			background: $gray-dark;
+			@include single-box-shadow($gray-darker, 0, -2px, 0, 0, true);
+		}
+
+		&.btn-facebook {
+			background-color: #45619d;
+			padding-left: 50px;
+			@include single-box-shadow($gray-darker, 0, -2px, 0, 0, true);
+
+			span {
+				background-color: #45619d;
+				color: #fff;
+				@include single-box-shadow($gray-darker, 0, -2px, 0, 0, true);
+			}
+		}
+
+		//TODO: overwrite flaticon btn
+		.flaticon {
+			&.social {
+				&:before {
+					border-right: solid 1px;
+					padding-right: 13px;
+				}
+			}
+		}
+	}
+
+	input {
+		border-radius: 4px;
+		margin: 5px 0 5px 0;
+		border-color: #ccc;
+		height: 45px;
+	}
+
+	.password {
+		position: relative;
+		text-align: center;
+
+		.questionmark {
+			position: absolute;
+			vertical-align:middle; 
+			display:inline-block;
+			top: 35%;
+			right: 10px;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: $gray-dark;
+			font-size: 15px;
+			color: #fff;
+		}
+	}
+}
+
+.modal-fullscreen-container {
+	margin-top: 10%;
+	@include perspective(800);
+
+	.modal-fullscreen-item {
+		position: fixed;
+		top: 10%;
+		left: 50%;
+		width: 300px;
+		margin-top: -50px;
+		margin-left: -150px;
+		background-color: #f4f4f4;
+		border-radius: 8px;
+		border: solid 1px #ccc;
+		padding: 5px;
+		text-align: center;
+		@include transform-style(preserve-3d);
+
+		&.back {
+			z-index: 0;
+			display: none;
+			@include transform(rotateY(-180deg));
+
+			.modal-fullscreen-content {
+				position: relative;
+
+				.top {
+					position: absolute;
+					top: 0;
+					right: 0;
+					bottom: 0;
+					left: 0;
+					background: red;
+					z-index: 99;
+					@include transition(opacity, .5s ease-in-out);
+				}
+			}
+			
+			&.is-flip-front {
+				display: block;
+				@include transform(rotateY(0deg));
+				@include animation(flip-front .5s);
+
+				.modal-fullscreen-content {
+					
+					.top {
+						@include opacity(0);
+					}
+				}
+			}
+
+			&.is-flip-back {
+				display: none;
+				@include transform(rotateY(-180deg));
+				@include animation(flip-back .5s);
+			}
+		}
+
+		&.front {
+			z-index: 5;
+			@include transform(rotateY(0deg));
+			
+			&.is-flip-back {
+				display: none;
+				@include transform(rotateY(-180deg));
+				@include animation(flip-back .5s);
+			}
+
+			&.is-flip-front {
+				display: block;
+				@include transform(rotateY(0deg));
+				@include animation(flip-front .5s);
+
+				.modal-fullscreen-content {
+					//@include animation(fade-out .5s);
+				}
+			}
+
+
+		}
+
+		.modal-fullscreen-content {
+			width: 100%;
+			height: 100%;
+			background: white;
+			border-radius: 8px;
+			border: solid 1px #ccc;
+			padding: 10px;
+
+			h4 {
+				text-transform: inherit;
+				font-weight: 700;
+			}
+
+			.btn {
+				margin-top: 20px;
+				width: 100%;
+				border-radius: 8px;
+			}
+
+			.or-hr {
+				width: 100%;
+				height: 20px;
+				margin: 10px 0 30px 0;
+				color: #ccc;
+				font-size: 14px;
+				.first {
+					float: left;
+					width: 45%;
+					height: 100%;
+					border-bottom: solid 2px #ccc;
+				}
+				.middle {
+					float: left;
+					width: 10%;
+					height: 20px;
+					margin-top: 6px;
+				}
+				.last {
+					float: left;
+					width: 45%;
+					height: 100%;
+					border-bottom: solid 2px #ccc;
+				}
+			}
+		}
+
+		.modal-fullscreen-footer {
+			padding: 15px 5px 15px 5px;
+			font-size: 14px;
+
+			a {
+				text-decoration: none;
+				text-transform: 700;
+			}
+		}
+	}
+}
+

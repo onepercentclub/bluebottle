@@ -1,3 +1,4 @@
+////// Flip ///////
 @include keyframes(flip-back) {
  	0% {
  			@include transform(rotateY(0deg));
@@ -9,7 +10,6 @@
 
 }
 
-
 @include keyframes(flip-front) {
  	0% {
  			@include transform(rotateY(-180deg));
@@ -20,7 +20,7 @@
  		}
 }
 
-
+////// Fade //////
 @include keyframes(fade-in) {
   0% {
     @include opacity(0);
@@ -30,7 +30,6 @@
     @include opacity(1);
   }
 }
-
 
 @include keyframes(fade-out) {
   0% {
@@ -42,8 +41,7 @@
   }
 }
 
-
-
+////// Rotate //////
 @include keyframes(rotateOutDownRight) {
   0% {
     @include transform-origin(right bottom);
@@ -57,4 +55,55 @@
   }
 }
 
+////// Shake //////
+@include keyframes(shake) {
+  0% {-webkit-transform: translateX(0)}
+  10% { -webkit-transform: translateX(-10px);}
+  20% {-webkit-transform: translateX(10px);}
+  30% {-webkit-transform: translateX(-10px);}
+  40% {-webkit-transform: translateX(10px);}
+  50% {-webkit-transform: translateX(-10px);}
+  60% {-webkit-transform: translateX(10px);}
+  70% {-webkit-transform: translateX(-10px);}
+  80% {-webkit-transform: translateX(10px);}
+  90% {-webkit-transform: translateX(-10px);}
+  100% {-webkit-transform: translateX(0);}
+}
 
+
+////// Expose //////
+@include keyframes(tada) {
+  0%{ 
+    @include transform(scale(1));
+  }
+  10% {
+    @include transform(scale(0.9), rotate(-3deg));
+  }
+  20% {
+    @include transform(scale(0.9), rotate(-3deg));
+  }
+  30% {
+    @include transform(scale(1.1), rotate(3deg));
+  }
+  40% {
+    @include transform(scale(1.1), rotate(-3deg));
+  }
+  50% {
+    @include transform(scale(1.1), rotate(3deg));
+  }
+  60% {
+    @include transform(scale(1.1), rotate(-3deg));
+  }
+  70% {
+    @include transform(scale(1.1), rotate(3deg));
+  }
+  80% {
+    @include transform(scale(1.1), rotate(-3deg));
+  }
+  90% {
+    @include transform(scale(1.1), rotate(3deg));
+  }
+  100% {
+    @include transform(scale(1), rotate(0));
+  }
+}

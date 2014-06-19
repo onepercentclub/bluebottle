@@ -135,6 +135,9 @@ $base-line-height                                          : 1.5em !default;
 	.password {
 		position: relative;
 		text-align: center;
+		&.is-incorrect {
+			@include animation(shake .8s ease-in-out)
+		}
 
 		.questionmark {
 			position: absolute;
@@ -174,33 +177,11 @@ $base-line-height                                          : 1.5em !default;
 			z-index: 0;
 			display: none;
 			@include transform(rotateY(-180deg));
-
-			.modal-fullscreen-content {
-				position: relative;
-
-				.top {
-					position: absolute;
-					top: 0;
-					right: 0;
-					bottom: 0;
-					left: 0;
-					background: red;
-					z-index: 99;
-					@include transition(opacity, .5s ease-in-out);
-				}
-			}
 			
 			&.is-flip-front {
 				display: block;
 				@include transform(rotateY(0deg));
 				@include animation(flip-front .5s);
-
-				.modal-fullscreen-content {
-					
-					.top {
-						@include opacity(0);
-					}
-				}
 			}
 
 			&.is-flip-back {
@@ -224,10 +205,6 @@ $base-line-height                                          : 1.5em !default;
 				display: block;
 				@include transform(rotateY(0deg));
 				@include animation(flip-front .5s);
-
-				.modal-fullscreen-content {
-					//@include animation(fade-out .5s);
-				}
 			}
 
 

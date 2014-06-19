@@ -29,7 +29,7 @@ Ember.Application.initializer({
     }
 });
 
-App = Em.Application.create({
+App = Em.Application.createWithMixins(Em.Facebook,{
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -169,6 +169,8 @@ App = Em.Application.create({
         }
     }
 });
+
+App.set('appId', '1438115069790112');
 
 // Mixin to scroll view top top of the screen
 App.ScrollInView = Em.Mixin.create({

@@ -260,13 +260,7 @@ App.ApplicationController = Ember.Controller.extend({
 
     actions: {
         logout: function () {
-            App.set('jwtToken', null);
-            this.set('controllers.currentUser.model', null);
-
-            // Redirect to?? If the user is in a restricted route then 
-            // they should be redirected to the home route. For now we 
-            // always force them to the home
-            this.transitionToRoute('home');
+            // Do some logout stuff here!
         }
     }
 });

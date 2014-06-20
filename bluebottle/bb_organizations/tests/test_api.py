@@ -2,6 +2,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations_factories import (
@@ -17,6 +18,8 @@ class OrganizationsEndpointTestCase(TestCase):
     """
     def setUp(self):
         self.user_1 = BlueBottleUserFactory.create()
+        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
+        
         self.user_2 = BlueBottleUserFactory.create()
 
         self.organization_1 = OrganizationFactory.create()
@@ -78,8 +81,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the organizations returned are those which belongs to the
         logged-in user.
         """
-        self.client.login(email=self.user_1.email, password='testing')
-        response = self.client.get(reverse('manage_organization_list'))
+        response = self.client.get(reverse('manage_organization_list'), HTTP_AUTHORIZATION=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -108,8 +110,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             'skype': 'onepercentclub'
         }
 
-        self.client.login(email=self.user_1.email, password='testing')
-        response = self.client.post(reverse('manage_organization_list'), post_data)
+        response = self.client.post(reverse('manage_organization_list'), post_data, HTTP_AUTHORIZATION=self.user_1_token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -143,18 +144,17 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         # Making the request without logging in...
         response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}))
-
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_manage_organizations_detail_user_restricted(self):
         """
         Tests that the endpoint restricts the access to the users who have
         membership for the requested organization.
         """
-        self.client.login(email=self.user_1.email, password='testing')
-
         # Requesting an organization for which the user have no membership...
-        response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_3.pk}))
+        response = self.client.get(
+            reverse('manage_organization_detail', kwargs={'pk': self.organization_3.pk}),
+            HTTP_AUTHORIZATION=self.user_1_token)
 
         # ...it fails.
         self.assertEqual(response.status_code, 403)
@@ -163,8 +163,8 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         Tests a successful GET request over the endpoint.
         """
-        self.client.login(email=self.user_1.email, password='testing')
-        response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}))
+        response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}), 
+                                                                         HTTP_AUTHORIZATION=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -191,10 +191,9 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
 
         data = json.dumps(put_data)
 
-        self.client.login(email=self.user_1.email, password='testing')
         response = self.client.put(
             reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}), data,
-            content_type='application/json')
+            content_type='application/json', HTTP_AUTHORIZATION=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 

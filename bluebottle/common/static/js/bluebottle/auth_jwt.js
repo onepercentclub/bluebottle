@@ -23,6 +23,7 @@ App.AuthJwt = {
     //    {token: '123abc'}
     processSuccessResponse: function (response) {
         return Ember.RSVP.Promise(function (resolve, reject) {
+            debugger
             // User authentication succeeded. Store the token:
             // 1) in the local store for use if the user reloads the page
             // 2) in a property on the App 
@@ -54,7 +55,7 @@ App.AuthJwt = {
  */
 // TODO: Enable this once we work out why we can't use the jwt token after
 //       a reload. It seems it is only valid for one session??
-// Ember.Application.initializer({
+//Ember.Application.initializer({
 //     name: 'setJwtToken',
 //     before: 'currentUser',
 //     initialize: function(container, application) {
@@ -62,7 +63,7 @@ App.AuthJwt = {
 //         if (jwtToken)
 //             App.set('jwtToken', jwtToken);
 //     }
-// });
+//});
 
 /* 
  A mixin for JWT authentication - this will be called from the BB LoginController

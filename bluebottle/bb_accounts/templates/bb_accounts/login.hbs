@@ -16,28 +16,49 @@
                             {{error.non_field_errors}}
                         </p>
                     {{/if}}
-                    {{#if post_password_reset }}
-                        {% block password_reset_success %}
-                            <p class="succes">{%  trans "Override block password_reset_success to display your own password reset success message." %}</p>
-                        {% endblock password_reset_success %}
+
+
+                    {{#if App.FBUser}}
+                      <div>
+                        <img {{bindAttr src="App.FBUser.picture" alt="App.FBUser.name"}} />
+                        {{App.FBUser.name}}
+                        <a href="#" {{action "logout" target="FB"}}>Logout</a>
+                      </div>
+                    {{else}}
+                      {{#view Em.FacebookView type="login-button" data-size="xlarge"
+                                              data-scope="email, offline_access"}}
+                        Connect
+                      {{/view}}
                     {{/if}}
-                    
-                    <div class="control-group">
-                        <label class="control-label" for="id_email">{% trans "Email" %}:</label>
+                    <hr/>
 
-                        <div class="controls">
-                            {# The key for the login needs to be 'username' for logins to work. #}
-                            {{input valueBinding='username' type="text" name="username" maxlength="254"}}
+                    {{#if App.currentUser }}
+                        {{#if post_password_reset }}
+                            {% block password_reset_success %}
+                                <p class="succes">{%  trans "Override block password_reset_success to display your own password reset success message." %}</p>
+                            {% endblock password_reset_success %}
+                        {{/if}}
+                    {{/if}}
+
+
+                    {{#unless App.FBUser}}
+                        <div class="control-group">
+                            <label class="control-label" for="id_email">{% trans "Email" %}:</label>
+
+                            <div class="controls">
+                                {# The key for the login needs to be 'username' for logins to work. #}
+                                {{input valueBinding='username' type="text" name="username" maxlength="254"}}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="control-group">
-                        <label class="control-label" for="id_password">{% trans "Password" %}:</label>
+                        <div class="control-group">
+                            <label class="control-label" for="id_password">{% trans "Password" %}:</label>
 
-                        <div class="controls">
-                            {{input valueBinding='password' type="password" name="password"}}
+                            <div class="controls">
+                                {{input valueBinding='password' type="password" name="password"}}
+                            </div>
                         </div>
-                    </div>
+                    {{/unless}}
                 </div>
 
                 <div class="modal-footer">

@@ -42,11 +42,20 @@
         FB.init(facebookParams);
         this.set('FBloading', true);
         FB.Event.subscribe('auth.authResponseChange', function(response) {
+            if (typeof _this.appLogin == 'function') {
+                console.log("Bla");
+                _this.appLogin(response.authResponse);
+            }
           return _this.updateFBUser(response);
         });
         return FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
                 console.log("FB accesstoken", response.authResponse.accessToken);
+
+                if (typeof _this.appLogin == 'function') {
+
+                    _this.appLogin(response.authResponse);
+                }
              }
           return _this.updateFBUser(response);
         });
@@ -58,7 +67,9 @@
             var FBUser;
             FBUser = Ember.Object.create(user);
             FBUser.set('accessToken', response.authResponse.accessToken);
+            FBUser.set('accessToken', response.authResponse.accessToken);
             FBUser.set('expiresIn', response.authResponse.expiresIn);
+
             if (_this.get('fetchPicture')) {
               return FB.api('/me/picture', function(resp) {
                 FBUser.picture = resp.data.url;

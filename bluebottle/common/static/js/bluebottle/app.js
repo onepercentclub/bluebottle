@@ -80,6 +80,38 @@ App = Em.Application.createWithMixins(Em.Facebook,{
         this.initSelectViews();
     },
 
+    appLogin: function (fbResponse) {
+        var _this = this;
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            var hash = {
+              url: "/api/social-login/facebook/",
+              dataType: "json",
+              type: 'post',
+              data: fbResponse
+            };
+
+            hash.success = function (response) {
+                App.AuthJwt.processSuccessResponse(response).then(function (user) {
+                    // If success
+                    debugger
+                    var currentUsercontroller = App.__container__.lookup('controller:CurrentUser');
+                    currentUsercontroller.set('model', user);
+                    $('[rel=close]').click();
+                }, function (error) {
+                    // If failed
+                    console.log("fail");
+                });
+            };
+
+            hash.error = function (response) {
+                var error = JSON.parse(response.responseText);
+                Ember.run(null, reject, error);
+            };
+
+            Ember.$.ajax(hash);
+        });
+    },
+
     initSelectViews: function() {
         // Pre-load these lists so we avoid race conditions when displaying forms
         App.Country.find().then(function(list) {

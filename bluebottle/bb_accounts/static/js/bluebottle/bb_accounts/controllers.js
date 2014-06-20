@@ -64,6 +64,7 @@ App.SignupController = Ember.ObjectController.extend({
 // http://stackoverflow.com/questions/14388249/accessing-controllers-from-other-controllers
 App.CurrentUserController = Ember.ObjectController.extend({
     init: function() {
+        debugger
         this._super();
         this.set("model", App.CurrentUser.find('current'));
     }

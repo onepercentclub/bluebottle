@@ -228,8 +228,10 @@ class BaseProject(models.Model):
         return self.status.viewable
 
 
-class ProjectPhaseLog(models.Model):
+class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     status = models.ForeignKey("bb_projects.ProjectPhase")
     start = CreationDateTimeField(_('created'), help_text=_('When this project entered in this status.'))
 
+    class Meta():
+        abstract = True

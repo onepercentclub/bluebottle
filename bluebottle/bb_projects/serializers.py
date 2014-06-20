@@ -5,14 +5,14 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer, OEmbedField, TaggableSerializerMixin, TagSerializer)
 from bluebottle.geo.models import Country
 
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
 from bluebottle.utils.serializers import MetaField
-from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase, ProjectPhaseLog
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.serializers import CountrySerializer
 from bs4 import BeautifulSoup
 
 PROJECT_MODEL = get_project_model()
-
+PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 
 
 class StoryField(serializers.WritableField):
@@ -32,7 +32,7 @@ class StoryField(serializers.WritableField):
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProjectPhaseLog
+        model = PROJECT_PHASELOG_MODEL
 
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):

@@ -4,8 +4,13 @@
 
 App.SignupController = Ember.ObjectController.extend({
     needs: "currentUser",
+    createAttempt: false,
 
     validationErrors: function () {
+        // Only check error validations after submitting
+        if (!this.get('createAttempt'))
+            return;
+
         var errors = Em.Object.create(this.get('model.errors'))
 
         if (!this.get('model.matchingEmail')) {
@@ -24,26 +29,29 @@ App.SignupController = Ember.ObjectController.extend({
         }
 
         return errors
-    }.property('model.matchingEmail', 'model.validPassword'),
+    }.property('model.errors', 'model.matchingEmail', 'model.validPassword'),
 
 
     actions: {
         createUser: function(user) {
             var _this = this;
 
-            // Change the model URL to the User creation API.
-            user.set('url', 'users');
+            this.set('createAttempt', true);
             user.save().then(function(createdUser) {
                 var response = {
                     token: createdUser.get('jwt_token')
                 };
 
-                App.AuthJwt.processSuccessResponse(response);
+                return App.AuthJwt.processSuccessResponse(response);
             }, function() {
                 // Handle error message here!
             }).then(function (currentUser) {
                 // This is for successfully setting the currentUser.
                 _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
+                // TODO: close the modal when we start using one for signup
+                //      _this.send('closeAllModals');
+                // For now we just transition to home page
+                _this.transitionToRoute('/');
             }, function () {
                 // Handle failure to create currentUser
             });

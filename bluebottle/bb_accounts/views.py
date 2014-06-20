@@ -17,6 +17,8 @@ from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCu
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from rest_framework.permissions import IsAuthenticated
 
+#this belongs now to onepercent should be here in bluebottle
+
 from .serializers import (
     CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
     PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL, TimeAvailableSerializer)
@@ -53,35 +55,52 @@ class UserCreate(generics.CreateAPIView):
     def pre_save(self, obj):
         obj.primary_language = self.request.LANGUAGE_CODE[:2]
 
+    def _login_user(self, request, user):
+        # Auto login the user after activation
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        return login(request, user)
+
     def post_save(self, obj, created=False):
         # Create a RegistrationProfile and email its activation key to the User.
         registration_profile = RegistrationProfile.objects.create_profile(obj)
 
-        if created:
-            current_site = get_current_site(self.request)
-            site_name = current_site.name
-            domain = current_site.domain
-            site = 'https://' + domain
-            c = {
-                'email': obj.email,
-                'site': site,
-                'site_name': site_name,
-                'user': obj,
-                'activation_key': registration_profile.activation_key,
-                'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-            }
-            subject_template_name = 'registration/activation_email_subject.txt'
+        # Activate user
+        activated_user = RegistrationProfile.objects.activate_user(registration_profile.activation_key)
+        if activated_user:
+            # Log the user in when the user has been activated and return the current user object.
 
-            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
-            email_template_name = 'registration/activation_email.' + extension
+            self._login_user(self.request, activated_user)
+            self.object = activated_user
 
-            subject = loader.render_to_string(subject_template_name, c)
-            # Email subject *must not* contain newlines
-            subject = ''.join(subject.splitlines())
-            email = loader.render_to_string(email_template_name, c)
 
-            obj.email_user(subject, email)
+
+
+        # NO MORE EMAIL
+        # if created:
+        #     current_site = get_current_site(self.request)
+        #     site_name = current_site.name
+        #     domain = current_site.domain
+        #     site = 'https://' + domain
+        #     c = {
+        #         'email': obj.email,
+        #         'site': site,
+        #         'site_name': site_name,
+        #         'user': obj,
+        #         'activation_key': registration_profile.activation_key,
+        #         'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+        #         'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
+        #     }
+        #     subject_template_name = 'registration/activation_email_subject.txt'
+        #
+        #     extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
+        #     email_template_name = 'registration/activation_email.' + extension
+        #
+        #     subject = loader.render_to_string(subject_template_name, c)
+        #     # Email subject *must not* contain newlines
+        #     subject = ''.join(subject.splitlines())
+        #     email = loader.render_to_string(email_template_name, c)
+        #
+        #     obj.email_user(subject, email)
 
 
 class UserActivate(generics.RetrieveAPIView):

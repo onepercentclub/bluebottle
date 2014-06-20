@@ -26,92 +26,90 @@
     
         {% block_verbatim signup_content %}
             
-            <div class="l-content">
+        <div class="l-content">
 
-                {{#if isUserCreated}}
-                    <header class="page-header">
-                    {% block user_created_message %}
-                        
-                        <h1>{% trans "'Thank you' note for signing up." %}</h1>
-                        <p>{% trans "e.g.: Email information." %}</p>
-                    
-                    {% endblock user_created_message %}
-                    </header>
-                {{else}}
-                    
-                    <header class="page-header">
-                    {% block signup_form_top %}
-                        <h1>{% trans "Join &lt;BlueBottle-project-name&gt;" %}</h1>
-                        <p>
-                            {% trans "Override block 'signup_form_top' to display your description here." %}
-                        </p>
-                    {% endblock signup_form_top %}
-                    </header>
-                    
-                    {% block_verbatim signup_form %}
-                        <form class="signup-form">
-                            <fieldset>
-                                <div class="control-group">
-                                    <label class="control-label">
-                                        {% trans "Name" %}
-                                    </label>
-                    
-                                    <div class="controls">
-                                        {{view Em.TextField valueBinding="first_name" placeholder="{% trans 'First name' %}"
-                                        class="inline-prepend" classBinding="errors.first_name.length:error"}}
-                    
-                                        {{view Em.TextField valueBinding="last_name" placeholder="Surname" 
-                                        class="inline-append" classBinding="errors.last_name.length:error"}}
-                                    </div>
+                <header class="page-header">
+                {% block signup_form_top %}
+                    <h1>{% trans "Join &lt;BlueBottle-project-name&gt;" %}</h1>
+                    <p>
+                        {% trans "Override block 'signup_form_top' to display your description here." %}
+                    </p>
+                {% endblock signup_form_top %}
+                </header>
+
+                {% block_verbatim signup_form %}
+                    <form class="signup-form">
+                        <fieldset>
+                            <div class="control-group">
+                                <label class="control-label">
+                                    {% trans "Name" %}
+                                </label>
+
+                                <div class="controls">
+                                    {{view Em.TextField valueBinding="first_name" placeholder="{% trans 'First name' %}"
+                                    class="inline-prepend" classBinding="validationErrors.first_name.length:error"}}
+
+                                    {{view Em.TextField valueBinding="last_name" placeholder="Surname"
+                                    class="inline-append" classBinding="validationErrors.last_name.length:error"}}
                                 </div>
-                    
-                                <div class="control-group">
-                                    <label class="control-label">
-                                        {% trans "Email" %}
-                                    </label>
-                    
-                                    <div class="controls">
-                                        {{view Em.TextField valueBinding="email" type="email" classBinding="errors.email.length:error"}}
-                                    </div>
-                                    
-                                    {{#if errors.email}}
-                                        <div class="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
-                                    {{/if}}
-                                    
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label">
+                                    {% trans "Email" %}
+                                </label>
+
+                                <div class="controls">
+                                    {{view Em.TextField valueBinding="email" type="email" classBinding="validationErrors.email.length:error"}}
                                 </div>
-                    
-                                <div class="control-group">
-                                    <label class="control-label">
-                                        {% trans "Password" %}
-                                    </label>
-                    
-                                    <div class="controls">
-                                        {{view Em.TextField valueBinding="password" type="password" classBinding="errors.password.length:error"}}
-                                    </div>
-                    
-                                    {{#if errors.password}}
-                                        <div class="has-errors">{{#each errors.password}}<p>{{this}}</p>{{/each}}</div>
-                                    {{/if}}
+
+
+                                {{#if validationErrors.email}}
+                                    <div class="has-errors">{{#each validationErrors.email}}<p>{{this}}</p>{{/each}}</div>
+                                {{/if}}
+
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">
+                                    {% trans "Email Confirmation" %}
+                                </label>
+                                 <div class="controls">
+                                    {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error"}}
                                 </div>
-                                
-                                <p class="control-group agree">
-                                {% block_verbatim user_agreement %}
-                                    <small class="controls">
-                                        By joining &lt;BlueBottle-project-name&gt; I hereby agree to the 
-                                        <a {{action showPage 'terms-and-conditions'}} href="/#!/pages/terms-and-conditions">&lt;BlueBottle-project-name&gt; Terms of service</a>
-                                    </small>
-                                {% endblock_verbatim user_agreement %}
-                                </p>
-                                
-                            </fieldset>
-                            
-                            <button class="btn btn-iconed btn-primary btn-submit" {{action 'createUser' model}}>
-                                <span class="flaticon solid user-1"></span>
-                                {% trans "Sign up" %}
-                            </button>
-                        </form>
-                    {% endblock_verbatim signup_form %}
-                {{/if}}
+
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label">
+                                    {% trans "Password" %}
+                                </label>
+
+                                <div class="controls">
+                                    {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error"}}
+                                </div>
+
+                                {{#if validationErrors.password}}
+                                    <div class="has-errors">{{#each validationErrors.password}}<p>{{this}}</p>{{/each}}</div>
+                                {{/if}}
+                            </div>
+
+                            <p class="control-group agree">
+                            {% block_verbatim user_agreement %}
+                                <small class="controls">
+                                    By joining &lt;BlueBottle-project-name&gt; I hereby agree to the
+                                    <a {{action showPage 'terms-and-conditions'}} href="/#!/pages/terms-and-conditions">&lt;BlueBottle-project-name&gt; Terms of service</a>
+                                </small>
+                            {% endblock_verbatim user_agreement %}
+                            </p>
+
+                        </fieldset>
+
+                        <button class="btn btn-iconed btn-primary btn-submit" {{action 'createUser' model}}>
+                            <span class="flaticon solid user-1"></span>
+                            {% trans "Sign up" %}
+                        </button>
+                    </form>
+                {% endblock_verbatim signup_form %}
             </div>
 
         {% endblock_verbatim signup_content %}

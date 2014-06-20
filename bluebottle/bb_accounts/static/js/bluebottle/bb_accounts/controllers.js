@@ -3,21 +3,50 @@
  */
 
 App.SignupController = Ember.ObjectController.extend({
-    isUserCreated: false,
-
     needs: "currentUser",
+
+    validationErrors: function () {
+        var errors = Em.Object.create(this.get('model.errors'))
+
+        if (!this.get('model.matchingEmail')) {
+            var msg = gettext('Emails don\'t match');
+            if (errors.get('email'))
+                errors.get('email').push(msg);
+            else
+                errors.set('email', [msg]);
+        }
+        if (!this.get('model.validPassword')) {
+            var msg = gettext('Password is too short (at least 5 characters)');
+            if (errors.get('password'))
+                errors.get('password').push(msg);
+            else
+                errors.set('password', [msg]);
+        }
+
+        return errors
+    }.property('model.matchingEmail', 'model.validPassword'),
+
 
     actions: {
         createUser: function(user) {
-            var self = this;
-
-            user.on('didCreate', function() {
-                self.set('isUserCreated', true);
-            });
+            var _this = this;
 
             // Change the model URL to the User creation API.
             user.set('url', 'users');
-            user.save();
+            user.save().then(function(createdUser) {
+                var response = {
+                    token: createdUser.get('jwt_token')
+                };
+
+                App.AuthJwt.processSuccessResponse(response);
+            }, function() {
+                // Handle error message here!
+            }).then(function (currentUser) {
+                // This is for successfully setting the currentUser.
+                _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
+            }, function () {
+                // Handle failure to create currentUser
+            });
         }
     }
 });
@@ -117,7 +146,7 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.Controller.extend({
+App.LoginController = Em.Controller.extend(App.AuthJwtMixin, {
     needs: ['currentUser'],
 
     loginTitle: 'Log in to <Bluebottle Project>',
@@ -129,7 +158,7 @@ App.LoginController = Em.Controller.extend({
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
 
             var _this = this;
-            this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
+            return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
                 _this.set('controllers.currentUser.model', user);
                 _this.send('closeAllModals');
             }, function (error) {

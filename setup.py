@@ -76,6 +76,8 @@ install_requires = [
 
 
 dependency_links = [
+    'https://github.com/GetBlimp/django-rest-framework-jwt/archive/0.1.5.zip#egg=djangorestframework-jwt-0.1.5',
+
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',

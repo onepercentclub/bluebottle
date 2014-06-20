@@ -150,6 +150,7 @@ $base-line-height                                          : 1.5em !default;
 		margin: 5px 0 5px 0;
 		border-color: #ccc;
 		height: 45px;
+		box-shadow: none;
 	}
 
 	.password {
@@ -240,6 +241,58 @@ $base-line-height                                          : 1.5em !default;
 			border-radius: 8px;
 			border: solid 1px #ccc;
 			padding: 10px;
+			
+
+			.modal-flash-message {
+				width: 288px;
+				text-align: center;
+				margin: 15px 0 15px -11px;
+				padding: 10px;
+				font-size: 10px;
+				line-height: 15px;
+				color: white;
+				display: none;
+
+				&.error {
+					background: red;
+				}
+
+				&.success {
+					background: green;
+				}
+			}
+
+			.modal-fullscreen-profile {
+				width: 288px;
+				height: 70px;
+				background: #f4f4f4;
+				text-align: left;
+				border-top: solid 1px #ccc;
+				border-bottom: solid 1px #ccc;
+				margin: 15px 0 15px -11px;
+
+				.photo {
+					float: left;
+					height: 51px;
+					width: 51px;
+					border-radius: 50%;
+					display: inline-block;
+					overflow: hidden;
+					margin: 10px;
+					border: solid 2px white;
+				}
+
+				.already-registerd {
+					float: right;
+					display: block;
+					width: 70%;
+					height: 50px;
+					margin: 7px 15px 0 0;
+					padding: 9px;
+					font-size: 10px;
+					line-height: 15px;
+				}
+			}
 
 			.modal-fullscreen-close {
 				position: absolute;

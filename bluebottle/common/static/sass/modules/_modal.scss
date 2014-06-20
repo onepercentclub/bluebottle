@@ -52,20 +52,20 @@ $base-line-height                                          : 1.5em !default;
 
 	&.is-active {
 		visibility: visible;
-		@include animation(fade-in .3s ease-in);
+		@include animation(fadeIn .3s ease-out);
 
 		.modal-fullscreen-container {
 			@include opacity(1);
-			@include animation(fadeInDownBig .3s ease-in .1s);
+			@include animation(fadeInDownBig .3s ease-out);
 		}
 	}
 
 	&.is-inactive {
-		@include animation(fade-out .3s ease-out);
+		@include animation(fadeOut .3s ease-in);
 
 		.modal-fullscreen-container {
-			@include opacity(0);
-			@include animation(fadeOutUpBig .3s ease-out .1s);
+			//@include opacity(0);
+			@include animation(fadeOutUpBig .3s ease-in);
 		}
 	}
 
@@ -204,13 +204,13 @@ $base-line-height                                          : 1.5em !default;
 			&.is-flip-front {
 				display: block;
 				@include transform(rotateY(0deg));
-				@include animation(flip-front .5s);
+				@include animation(flipFront .5s);
 			}
 
 			&.is-flip-back {
 				display: none;
 				@include transform(rotateY(-180deg));
-				@include animation(flip-back .5s);
+				@include animation(flipBack .5s);
 			}
 		}
 
@@ -221,13 +221,13 @@ $base-line-height                                          : 1.5em !default;
 			&.is-flip-back {
 				display: none;
 				@include transform(rotateY(-180deg));
-				@include animation(flip-back .5s);
+				@include animation(flipBack .5s);
 			}
 
 			&.is-flip-front {
 				display: block;
 				@include transform(rotateY(0deg));
-				@include animation(flip-front .5s);
+				@include animation(flipFront .5s);
 			}
 
 

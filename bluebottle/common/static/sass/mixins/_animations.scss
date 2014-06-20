@@ -1,5 +1,5 @@
 ////// Flip ///////
-@include keyframes(flip-back) {
+@include keyframes(flipBack) {
  	0% {
  			@include transform(rotateY(0deg));
  		}
@@ -10,7 +10,7 @@
 
 }
 
-@include keyframes(flip-front) {
+@include keyframes(flipFront) {
  	0% {
  			@include transform(rotateY(-180deg));
  		}
@@ -21,7 +21,7 @@
 }
 
 ////// Fade //////
-@include keyframes(fade-in) {
+@include keyframes(fadeIn) {
   0% {
     @include opacity(0);
   }
@@ -31,7 +31,7 @@
   }
 }
 
-@include keyframes(fade-out) {
+@include keyframes(fadeOut) {
   0% {
     @include opacity(1);
   }
@@ -66,10 +66,9 @@
 @include keyframes(fadeInDownBig) {
   0% {
     @include opacity(0);
-    @include transform(translateY(-2000px));
+    @include transform(translateY(100px));
   }
   100% {
-    @include opacity(1);
     @include transform(translateY(0));
   }
 }
@@ -81,7 +80,7 @@
   }
   100% {
     @include opacity(0);
-    @include transform(translateY(-2000px));
+    @include transform(translateY(100px));
   }
 }
 

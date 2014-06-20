@@ -5,6 +5,28 @@
 App.SignupController = Ember.ObjectController.extend({
     needs: "currentUser",
 
+    validationErrors: function () {
+        var errors = Em.Object.create(this.get('model.errors'))
+
+        if (!this.get('model.matchingEmail')) {
+            var msg = gettext('Emails don\'t match');
+            if (errors.get('email'))
+                errors.get('email').push(msg);
+            else
+                errors.set('email', [msg]);
+        }
+        if (!this.get('model.validPassword')) {
+            var msg = gettext('Password is too short (at least 5 characters)');
+            if (errors.get('password'))
+                errors.get('password').push(msg);
+            else
+                errors.set('password', [msg]);
+        }
+
+        return errors
+    }.property('model.matchingEmail', 'model.validPassword'),
+
+
     actions: {
         createUser: function(user) {
             var _this = this;
@@ -22,7 +44,6 @@ App.SignupController = Ember.ObjectController.extend({
             }).then(function (currentUser) {
                 // This is for successfully setting the currentUser.
                 _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
-                _this.transitionToRoute('home');
             }, function () {
                 // Handle failure to create currentUser
             });

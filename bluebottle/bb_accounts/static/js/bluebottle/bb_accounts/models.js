@@ -254,14 +254,32 @@ App.CurrentUser = App.UserPreview.extend({
  User (POST):   /users/
 
  */
-App.UserCreate = DS.Model.extend({
+App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     url: 'users',
+
+    requiredFields: ['matchingEmail', 'validPassword'],
+
+    init: function () {
+        this._super();
+
+        this.validatedFieldsProperty('validSignup', this.get('requiredFields'));
+//        this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
+    },
 
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
     email: DS.attr('string'),
     password: DS.attr('string'),
-    jwt_token: DS.attr('string', {readOnly: true})
+    jwt_token: DS.attr('string', {readOnly: true}),
+    emailConfirmation: DS.attr('string'),
+
+    validPassword: Em.computed.gte('password.length', 5),
+
+    matchingEmail: function () {
+
+        return !Em.compare(this.get('email'), this.get('emailConfirmation'));
+    }.property('email', 'emailConfirmation')
+
 });
 
 

@@ -22,7 +22,6 @@ App.Router.map(function(){
  */
 App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
     redirect: function() {
-        debugger
         if (this.controllerFor('currentUser').get('isAuthenticated')) {
             this.transitionTo('home');
         }
@@ -32,7 +31,11 @@ App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
         var transaction = this.get('store').transaction();
         // FIXME We need to set the first and last name to an empty string or we'll get a 500 error.
         // FIXME This is a workaround for a bug in DRF2.
-        return transaction.createRecord(App.UserCreate, {first_name: '', last_name: ''});
+        return transaction.createRecord(App.UserCreate, {
+            first_name: '',
+            last_name: '',
+            password: '',
+        });
     }
 });
 

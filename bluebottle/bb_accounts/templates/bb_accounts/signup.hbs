@@ -47,10 +47,10 @@
 
                                 <div class="controls">
                                     {{view Em.TextField valueBinding="first_name" placeholder="{% trans 'First name' %}"
-                                    class="inline-prepend" classBinding="errors.first_name.length:error"}}
+                                    class="inline-prepend" classBinding="validationErrors.first_name.length:error"}}
 
                                     {{view Em.TextField valueBinding="last_name" placeholder="Surname"
-                                    class="inline-append" classBinding="errors.last_name.length:error"}}
+                                    class="inline-append" classBinding="validationErrors.last_name.length:error"}}
                                 </div>
                             </div>
 
@@ -60,12 +60,22 @@
                                 </label>
 
                                 <div class="controls">
-                                    {{view Em.TextField valueBinding="email" type="email" classBinding="errors.email.length:error"}}
+                                    {{view Em.TextField valueBinding="email" type="email" classBinding="validationErrors.email.length:error"}}
                                 </div>
 
-                                {{#if errors.email}}
-                                    <div class="has-errors">{{#each errors.email}}<p>{{this}}</p>{{/each}}</div>
+
+                                {{#if validationErrors.email}}
+                                    <div class="has-errors">{{#each validationErrors.email}}<p>{{this}}</p>{{/each}}</div>
                                 {{/if}}
+
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">
+                                    {% trans "Email Confirmation" %}
+                                </label>
+                                 <div class="controls">
+                                    {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error"}}
+                                </div>
 
                             </div>
 
@@ -75,11 +85,11 @@
                                 </label>
 
                                 <div class="controls">
-                                    {{view Em.TextField valueBinding="password" type="password" classBinding="errors.password.length:error"}}
+                                    {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error"}}
                                 </div>
 
-                                {{#if errors.password}}
-                                    <div class="has-errors">{{#each errors.password}}<p>{{this}}</p>{{/each}}</div>
+                                {{#if validationErrors.password}}
+                                    <div class="has-errors">{{#each validationErrors.password}}<p>{{this}}</p>{{/each}}</div>
                                 {{/if}}
                             </div>
 

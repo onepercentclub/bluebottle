@@ -21,35 +21,29 @@ App.AuthJwt = {
     // Use this function to process the response containing a JWT token
     // It should be used with a promise and the response of the form:
     //    {token: '123abc'}
-    processSuccessResponse: function (response, resolve) {
-        // If resolve is not defined then resolve the promise
-        // by returning the currentUser
-        if (resolve === undefined) {
-            resolve = function (value) {
-                if (resolved) { return; }
-                resolved = true;
-                resolve(promise, value);
-            };
-        }
+    processSuccessResponse: function (response) {
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            // User authentication succeeded. Store the token:
+            // 1) in the local store for use if the user reloads the page
+            // 2) in a property on the App 
+            localStorage['jwtToken'] = response.token;
+            App.set('jwtToken', response.token);
 
-        // User authentication succeeded. Store the token:
-        // 1) in the local store for use if the user reloads the page
-        // 2) in a property on the App 
-        localStorage['jwtToken'] = response.token;
-        App.set('jwtToken', response.token);
-
-        // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
-        // state so we need to force a transition here before trying to fetch the
-        // user again.
-        currentUser = App.CurrentUser.find('current');
-        if (currentUser.get('currentState.error.stateName') == 'root.error') {
-            currentUser.transitionTo('deleted.saved');
-            currentUser = App.CurrentUser.find('current').then( function (user) {
-                Ember.run(null, resolve, user);
-            });
-        } else {
-            Ember.run(null, resolve, currentUser);
-        }
+            // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
+            // state so we need to force a transition here before trying to fetch the
+            // user again.
+            currentUser = App.CurrentUser.find('current');
+            if (currentUser.get('currentState.error.stateName') == 'root.error') {
+                currentUser.transitionTo('deleted.saved');
+                currentUser = App.CurrentUser.find('current').then( function (user) {
+                    Ember.run(null, resolve, user);
+                }, function () {
+                    Ember.run(null, reject, 'Failed to create currentUser');
+                });
+            } else {
+                Ember.run(null, resolve, currentUser);
+            }
+        });
     }
 }
 
@@ -81,7 +75,6 @@ App.AuthJwtMixin = Em.Mixin.create({
             password = _this.get('password');
         
         return Ember.RSVP.Promise(function (resolve, reject) {
-            debugger
             var hash = {
               url: "/api/token-auth/",
               dataType: "json",
@@ -93,7 +86,11 @@ App.AuthJwtMixin = Em.Mixin.create({
             };
            
             hash.success = function (response) {
-                App.AuthJwt.processSuccessResponse(response, resolve);
+                return App.AuthJwt.processSuccessResponse(response).then(function (user) {
+                    Ember.run(null, resolve, user);
+                }, function (error) {
+                    Ember.run(null, reject, error);
+                });
             };
            
             hash.error = function (response) {

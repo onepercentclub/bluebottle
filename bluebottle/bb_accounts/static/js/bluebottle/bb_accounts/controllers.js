@@ -121,8 +121,8 @@ App.LoginController = Em.Controller.extend({
     needs: ['currentUser'],
 
     loginTitle: 'Log in to <Bluebottle Project>',
-    username: '',
-    password: '',
+    username: null,
+    password: null,
 
     actions: {
         login: function () {

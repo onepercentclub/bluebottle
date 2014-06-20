@@ -69,7 +69,9 @@ install_requires = [
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz',
-    'beautifulsoup4==4.3.2'
+    'beautifulsoup4==4.3.2',
+    # JSON Web Token based authentication for Django REST framework
+    'djangorestframework-jwt==0.1.5'
 ]
 
 

@@ -5,7 +5,7 @@
     {% block_verbatim nav_login_content %}
 
         <ul class="nav-actions">
-            {{#if controllers.currentUser.isAuthenticated }}
+            {{#if currentUser.isAuthenticated }}
                 {% block_verbatim user_logged_in %}
                     <li class="nav-member">
 

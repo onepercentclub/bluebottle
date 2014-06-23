@@ -32,7 +32,6 @@ class LocaleMiddleware(object):
 
         This middleware is only relevant with i18n_patterns.
         """
-
         if self.enable_middleware():
             if request.user.is_authenticated():
                 lang_code = request.user.primary_language

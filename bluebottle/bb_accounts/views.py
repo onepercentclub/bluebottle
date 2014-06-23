@@ -72,35 +72,33 @@ class UserCreate(generics.CreateAPIView):
             self._login_user(self.request, activated_user)
             self.object = activated_user
 
-
-
-
-        # NO MORE EMAIL
-        # if created:
-        #     current_site = get_current_site(self.request)
-        #     site_name = current_site.name
-        #     domain = current_site.domain
-        #     site = 'https://' + domain
-        #     c = {
-        #         'email': obj.email,
-        #         'site': site,
-        #         'site_name': site_name,
-        #         'user': obj,
-        #         'activation_key': registration_profile.activation_key,
-        #         'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-        #         'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-        #     }
-        #     subject_template_name = 'registration/activation_email_subject.txt'
+        # TODO: This should be a welcome email and not an activation email
         #
-        #     extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
-        #     email_template_name = 'registration/activation_email.' + extension
-        #
-        #     subject = loader.render_to_string(subject_template_name, c)
-        #     # Email subject *must not* contain newlines
-        #     subject = ''.join(subject.splitlines())
-        #     email = loader.render_to_string(email_template_name, c)
-        #
-        #     obj.email_user(subject, email)
+        if created:
+            current_site = get_current_site(self.request)
+            site_name = current_site.name
+            domain = current_site.domain
+            site = 'https://' + domain
+            c = {
+                'email': obj.email,
+                'site': site,
+                'site_name': site_name,
+                'user': obj,
+                'activation_key': registration_profile.activation_key,
+                'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
+            }
+            subject_template_name = 'registration/activation_email_subject.txt'
+        
+            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
+            email_template_name = 'registration/activation_email.' + extension
+        
+            subject = loader.render_to_string(subject_template_name, c)
+            # Email subject *must not* contain newlines
+            subject = ''.join(subject.splitlines())
+            email = loader.render_to_string(email_template_name, c)
+        
+            obj.email_user(subject, email)
 
 
 class UserActivate(generics.RetrieveAPIView):

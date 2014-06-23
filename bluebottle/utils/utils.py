@@ -215,6 +215,6 @@ def get_project_phaselog_model():
     if project_phaselog_model is None:
         raise ImproperlyConfigured(
             "PROJECTS_PHASELOG_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.PROJECTS_PROJECT_MODEL))
+            "installed".format(settings.PROJECTS_PHASELOG_MODEL))
 
     return project_phaselog_model

@@ -45,14 +45,14 @@ $base-line-height                                          : 1.5em !default;
 	right: 0;
 	bottom: 0;
 	left: 0;
-	background: rgba(68,68,68, .7);
+	background: rgba(#f8f7f8, .9);
 	z-index: 999;
 	visibility: hidden;
 	@include perspective(1000);
 
 	&.is-active {
 		visibility: visible;
-		@include animation(fadeIn .3s ease-out);
+		@include animation(fadeIn .230s ease-out);
 
 		.modal-fullscreen-container {
 			@include opacity(1);
@@ -64,7 +64,7 @@ $base-line-height                                          : 1.5em !default;
 		@include animation(fadeOut .3s ease-in);
 
 		.modal-fullscreen-container {
-			//@include opacity(0);
+			@include opacity(0);
 			@include animation(fadeOutUpBig .3s ease-in);
 		}
 	}
@@ -231,6 +231,10 @@ $base-line-height                                          : 1.5em !default;
 			}
 
 
+		}
+
+		&.is-shake {
+			@include animation(shakeModal .4s ease-in-out);
 		}
 
 		.modal-fullscreen-content {

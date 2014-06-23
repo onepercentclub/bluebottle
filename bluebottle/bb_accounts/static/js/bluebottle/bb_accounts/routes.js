@@ -125,7 +125,7 @@ App.UserOrdersRoute = Em.Route.extend({
         this.controllerFor('userOrders').stopEditing();
     },
 
-    events: {
+    actions: {
         viewRecurringOrder: function() {
             var controller = this.controllerFor('currentOrder');
             controller.set('donationType', 'monthly');

@@ -42,18 +42,18 @@ App.SignupController = Ember.ObjectController.extend({
                     token: createdUser.get('jwt_token')
                 };
 
-                return App.AuthJwt.processSuccessResponse(response);
+                return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
+                    // This is for successfully setting the currentUser.
+                    _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
+                    // TODO: close the modal when we start using one for signup
+                    //      _this.send('closeAllModals');
+                    // For now we just transition to home page
+                    _this.transitionToRoute('/');
+                }, function () {
+                    // Handle failure to create currentUser
+                });
             }, function() {
                 // Handle error message here!
-            }).then(function (currentUser) {
-                // This is for successfully setting the currentUser.
-                _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
-                // TODO: close the modal when we start using one for signup
-                //      _this.send('closeAllModals');
-                // For now we just transition to home page
-                _this.transitionToRoute('/');
-            }, function () {
-                // Handle failure to create currentUser
             });
         }
     }
@@ -155,7 +155,7 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.Controller.extend(App.AuthJwtMixin, {
+App.LoginController = Em.Controller.extend({
     needs: ['currentUser'],
 
     loginTitle: 'Log in to <Bluebottle Project>',

@@ -154,7 +154,7 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.Controller.extend(App.AuthJwtMixin, {
+App.LoginController = Em.Controller.extend({
     needs: ['currentUser'],
 
     loginTitle: 'Log in to <Bluebottle Project>',

@@ -20,9 +20,17 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
+            // Set the current user of the currentUser controller
+            container.lookup('controller:currentUser').set('content', user);
+
+            // Inject currentUser into all controllers
+            container.typeInjection('controller', 'currentUser', 'controller:currentUser');
+
             // boot the app
             App.advanceReadiness();
-        }, function(error) {
+        }, function() {
+            container.lookup('controller:application').missingCurrentUser();
+
             // boot the app without a currect user
             App.advanceReadiness();
         });
@@ -76,6 +84,7 @@ App = Em.Application.create({
         App.Page.reopen({
             url: 'pages/' + language + '/pages'
         });
+
         this.setLocale(locale);
         this.initSelectViews();
     },
@@ -142,7 +151,6 @@ App = Em.Application.create({
 
         });
     },
-
     setLocale: function(locale) {
         if (!locale) {
             locale = this.get('locale');
@@ -263,6 +271,9 @@ App.ApplicationController = Ember.Controller.extend({
     hideMessage: function() {
         this.set('display_message', false);
     },
+
+    // Override this to do something when the currentUser call in the initializer doesn't succeed
+    missingCurrentUser: Em.K
 });
 
 // Embedded Model Mapping

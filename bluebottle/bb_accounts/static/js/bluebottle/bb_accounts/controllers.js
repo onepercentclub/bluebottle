@@ -3,7 +3,6 @@
  */
 
 App.SignupController = Ember.ObjectController.extend({
-    needs: "currentUser",
     createAttempt: false,
 
     validationErrors: function () {
@@ -44,7 +43,7 @@ App.SignupController = Ember.ObjectController.extend({
 
                 return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
                     // This is for successfully setting the currentUser.
-                    _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
+                    _this.set('currentUser.model', App.CurrentUser.find('current'));
                     // TODO: close the modal when we start using one for signup
                     //      _this.send('closeAllModals');
                     // For now we just transition to home page
@@ -62,12 +61,7 @@ App.SignupController = Ember.ObjectController.extend({
 
 // Inspiration from:
 // http://stackoverflow.com/questions/14388249/accessing-controllers-from-other-controllers
-App.CurrentUserController = Ember.ObjectController.extend({
-    init: function() {
-        this._super();
-        this.set("model", App.CurrentUser.find('current'));
-    }
-});
+App.CurrentUserController = Ember.ObjectController.extend();
 
 
 App.UserController = Ember.Controller.extend({
@@ -77,14 +71,14 @@ App.UserController = Ember.Controller.extend({
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
 
-	availableTimes: function() {
-		return App.TimeAvailable.find();
-	}.property(),
+    availableTimes: function() {
+        return App.TimeAvailable.find();
+    }.property(),
 
-    updateCurrentUser: function(record) {
-        var currentUser = App.CurrentUser.find('current');
-        currentUser.reload();
-    }
+    // updateCurrentUser: function(record) {
+    //     var currentUser = App.CurrentUser.find('current');
+    //     currentUser.reload();
+    // }
 
 });
 
@@ -136,11 +130,6 @@ App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
 
 
 App.UserModalController = Ember.ObjectController.extend({
-	// actions: function() {
-	// 	goToProfile: function() {
-	// 		
-	// 	}
-	// },
     loadProfile: function() {
         var model = this.get('model');
         var id = model.get('id');
@@ -155,8 +144,6 @@ App.UserModalController = Ember.ObjectController.extend({
 });
 
 App.LoginController = Em.Controller.extend({
-    needs: ['currentUser'],
-
     loginTitle: 'Log in to <Bluebottle Project>',
     username: null,
     password: null,
@@ -167,7 +154,7 @@ App.LoginController = Em.Controller.extend({
 
             var _this = this;
             return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
-                _this.set('controllers.currentUser.model', user);
+                _this.set('currentUser.model', user);
                 _this.send('closeAllModals');
             }, function (error) {
                 _this.set('error', error);

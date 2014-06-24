@@ -77,6 +77,7 @@
         <script type="text/javascript" src="{% static 'js/vendor/handlebars-1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-v1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-v0.14.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/plugins/ember-facebook.js' %}"></script>
     {% endcompress %}
 
     {% compress js %}
@@ -169,6 +170,8 @@
 <body id="body">
     <!-- Scripts -->
     <div id="fb-root"></div>
+
+
 
   {% block google_analytics %}
         <script type="text/javascript">

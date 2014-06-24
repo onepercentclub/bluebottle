@@ -59,14 +59,7 @@ App.SignupController = Ember.ObjectController.extend({
 });
 
 
-// Inspiration from:
-// http://stackoverflow.com/questions/14388249/accessing-controllers-from-other-controllers
-App.CurrentUserController = Ember.ObjectController.extend();
-
-
-App.UserController = Ember.Controller.extend({
-    needs: "currentUser"
-});
+App.UserController = Ember.Controller.extend({});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {

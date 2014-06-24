@@ -37,7 +37,7 @@ Ember.Application.initializer({
     }
 });
 
-App = Em.Application.create({
+App = Em.Application.createWithMixins(Em.Facebook,{
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -87,6 +87,38 @@ App = Em.Application.create({
 
         this.setLocale(locale);
         this.initSelectViews();
+    },
+
+    appLogin: function (fbResponse) {
+        var _this = this;
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            var hash = {
+              url: "/api/social-login/facebook/",
+              dataType: "json",
+              type: 'post',
+              data: fbResponse
+            };
+
+            hash.success = function (response) {
+                App.AuthJwt.processSuccessResponse(response).then(function (user) {
+                    // If success
+                    debugger
+                    var currentUsercontroller = App.__container__.lookup('controller:CurrentUser');
+                    currentUsercontroller.set('model', user);
+                    $('[rel=close]').click();
+                }, function (error) {
+                    // If failed
+                    console.log("fail");
+                });
+            };
+
+            hash.error = function (response) {
+                var error = JSON.parse(response.responseText);
+                Ember.run(null, reject, error);
+            };
+
+            Ember.$.ajax(hash);
+        });
     },
 
     initSelectViews: function() {
@@ -202,6 +234,8 @@ App = Em.Application.create({
         }
     }
 });
+
+App.set('appId', '1438115069790112');
 
 // Mixin to scroll view top top of the screen
 App.ScrollInView = Em.Mixin.create({

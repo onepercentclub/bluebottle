@@ -28,13 +28,11 @@ App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
     },
 
     model: function() {
-        var transaction = this.get('store').transaction();
         // FIXME We need to set the first and last name to an empty string or we'll get a 500 error.
         // FIXME This is a workaround for a bug in DRF2.
-        return transaction.createRecord(App.UserCreate, {
+        return App.UserCreate.createRecord({
             first_name: '',
             last_name: '',
-            password: '',
         });
     }
 });
@@ -127,7 +125,7 @@ App.UserOrdersRoute = Em.Route.extend({
         this.controllerFor('userOrders').stopEditing();
     },
 
-    events: {
+    actions: {
         viewRecurringOrder: function() {
             var controller = this.controllerFor('currentOrder');
             controller.set('donationType', 'monthly');

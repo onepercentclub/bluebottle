@@ -8,6 +8,7 @@ from bluebottle.test.factory_models.projects import (
     ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import InitProjectDataMixin
+from rest_framework import status
 
 from ..models import ProjectPhase, ProjectTheme
 
@@ -21,6 +22,7 @@ class ProjectEndpointTestCase(InitProjectDataMixin, TestCase):
     """
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
         self.init_projects()
 
@@ -254,7 +256,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         """
         response = self.client.get(reverse('project_manage_list'))
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')
@@ -264,8 +266,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         Test successful request for a logged in user over the API endpoint for
         manage Project list.
         """
-        self.client.login(email=self.user.email, password='testing')
-        response = self.client.get(reverse('project_manage_list'))
+        response = self.client.get(reverse('project_manage_list'), HTTP_AUTHORIZATION=self.user_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -297,8 +298,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
             'status': self.phase_1.pk
         }
 
-        self.client.login(email=self.user.email, password='testing')
-        response = self.client.post(reverse('project_manage_list'), post_data)
+        response = self.client.post(reverse('project_manage_list'), post_data, HTTP_AUTHORIZATION=self.user_token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -328,7 +328,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         response = self.client.get(
             reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')
@@ -342,10 +342,11 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
             email='jane.doe@onepercentclub.com',
             username='janedoe'
         )
+        token = "JWT {0}".format(user.get_jwt_token())
 
-        self.client.login(email=user.email, password='testing')
         response = self.client.get(
-            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            HTTP_AUTHORIZATION=token)
 
         self.assertEqual(response.status_code, 403)
         data = json.loads(response.content)
@@ -357,9 +358,9 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         Test successful request for a logged in user over the API endpoint for
         manage Project detail.
         """
-        self.client.login(email=self.user.email, password='testing')
         response = self.client.get(
-            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            HTTP_AUTHORIZATION=self.user_token)
 
         self.assertEqual(response.status_code, 200)
 

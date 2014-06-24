@@ -258,7 +258,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return self.get_full_name()
 
     def get_jwt_token(self):
-        # import ipdb; ipdb.set_trace()
         payload = utils.jwt_payload_handler(self)
         token = utils.jwt_encode_handler(payload)
         return token

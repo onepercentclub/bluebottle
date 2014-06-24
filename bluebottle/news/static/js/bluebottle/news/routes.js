@@ -15,7 +15,7 @@ App.NewsRoute = Em.Route.extend({
         this._super(controller, model);
         this.controllerFor('application').set('latestNews', model);
     },
-    events: {
+    actions: {
         showNews: function(news_id) {
             var route = this;
             App.NewsItem.find(news_id).then(function(news) {

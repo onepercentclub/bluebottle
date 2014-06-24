@@ -35,7 +35,7 @@ App.AuthJwt = {
             currentUser = App.CurrentUser.find('current');
             if (currentUser.get('currentState.error.stateName') == 'root.error') {
                 currentUser.transitionTo('deleted.saved');
-                currentUser = App.CurrentUser.find('current').then( function (user) {
+                return App.CurrentUser.find('current').then( function (user) {
                     Ember.run(null, resolve, user);
                 }, function () {
                     Ember.run(null, reject, 'Failed to create currentUser');
@@ -54,15 +54,15 @@ App.AuthJwt = {
  */
 // TODO: Enable this once we work out why we can't use the jwt token after
 //       a reload. It seems it is only valid for one session??
-// Ember.Application.initializer({
-//     name: 'setJwtToken',
-//     before: 'currentUser',
-//     initialize: function(container, application) {
-//         var jwtToken = localStorage['jwtToken'];
-//         if (jwtToken)
-//             App.set('jwtToken', jwtToken);
-//     }
-// });
+Ember.Application.initializer({
+    name: 'setJwtToken',
+    before: 'currentUser',
+    initialize: function(container, application) {
+        var jwtToken = localStorage['jwtToken'];
+        if (jwtToken)
+            App.set('jwtToken', jwtToken);
+    }
+});
 
 /* 
  A mixin for JWT authentication - this will be called from the BB LoginController
@@ -74,6 +74,9 @@ App.AuthJwtMixin = Em.Mixin.create({
             username = _this.get('username'),
             password = _this.get('password');
         
+        // Clear any existing tokens which might be present but expired
+        _this.send('clearJwtToken');
+
         return Ember.RSVP.Promise(function (resolve, reject) {
             var hash = {
               url: "/api/token-auth/",
@@ -108,10 +111,16 @@ App.AuthJwtMixin = Em.Mixin.create({
  */
 App.LogoutJwtMixin = Em.Mixin.create({
     actions: {
-        logout: function () {
-            // Clear the jwtToken references
+        clearJwtToken: function () {
             App.set('jwtToken', null);
             delete localStorage['jwtToken'];
+        },
+        logout: function (redirect) {
+            if (typeof redirect === 'undefined')
+                redirect = true;
+
+            // Clear the jwtToken references
+            this.send('clearJwtToken');
 
             // Clear the current user details
             this.controllerFor('currentUser').set('model', null);
@@ -119,7 +128,8 @@ App.LogoutJwtMixin = Em.Mixin.create({
             // Redirect to?? If the user is in a restricted route then 
             // they should be redirected to the home route. For now we 
             // always force them to the home
-            this.transitionTo('home');
+            if (redirect)
+                this.transitionTo('home');
         }
     },
 });

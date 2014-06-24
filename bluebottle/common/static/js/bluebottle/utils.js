@@ -31,6 +31,45 @@ App.IsAuthorMixin = Em.Mixin.create({
 });
 
 
+App.ControllerValidationMixin = Ember.Mixin.create({
+
+    errorDictionaryFields: ['property', 'validateProperty', 'message'],
+    //array of dictionaries
+    //[ ...,
+    // {'property': propertyValue,
+    //  'validateProperty': validateProperty,
+    //  'message': message},
+    // ...,]
+    validateErrors: function(arrayOfDict, model) {
+        if (!Em.isArray(arrayOfDict))
+            throw new Error('Expected an array of fields to validate');
+        var _this = this,
+            resultErrors = null,
+            currentErrors = model.get('errors');
+
+        if (currentErrors)
+            resultErrors = Em.Object.create(model.get('errors'));
+
+        arrayOfDict.forEach(function (dict) {
+            //validate if the dictionary has the right fields
+            if(Em.compare(Object.keys(dict).sort(), _this.errorDictionaryFields.sort()) < 0)
+                throw new Error('Expected a dictionary with correct keys');
+
+            if (!model.get(dict.validateProperty)) {
+                if (!resultErrors)
+                    resultErrors = Em.Object.create();
+
+                if (resultErrors.get(dict['property']))
+                    resultErrors.get(dict['property']).push(dict['message']);
+                else
+                    resultErrors.set(dict['property'], [dict['message']])
+            }
+        })
+        return resultErrors
+    }
+
+});
+
 /*
   Mixin for validating multiple properties in a model instance at runtime
 */
@@ -40,7 +79,6 @@ App.ModelValidationMixin = Ember.Mixin.create({
     // fields: an array of properties which will be checked
     //
     validatedFieldsProperty: function(name, fields) {
-
         if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
 
         var self = this;

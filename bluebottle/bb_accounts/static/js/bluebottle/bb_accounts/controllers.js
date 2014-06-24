@@ -2,59 +2,60 @@
  * Controllers
  */
 
-App.SignupController = Ember.ObjectController.extend({
+App.SignupController = Ember.ObjectController.extend(App.ControllerValidationMixin, {
     needs: "currentUser",
     createAttempt: false,
 
-    validationErrors: function () {
-        // Only check error validations after submitting
-        if (!this.get('createAttempt'))
-            return;
+    errors : [
+        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails doesn\'t match')},
+        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')}
+    ],
 
-        var errors = Em.Object.create(this.get('model.errors'))
-
-        if (!this.get('model.matchingEmail')) {
-            var msg = gettext('Emails don\'t match');
-            if (errors.get('email'))
-                errors.get('email').push(msg);
-            else
-                errors.set('email', [msg]);
-        }
-        if (!this.get('model.validPassword')) {
-            var msg = gettext('Password is too short (at least 5 characters)');
-            if (errors.get('password'))
-                errors.get('password').push(msg);
-            else
-                errors.set('password', [msg]);
-        }
-
-        return errors
-    }.property('model.errors', 'model.matchingEmail', 'model.validPassword'),
-
-
+//	wathever: Em.compare('model.email','model.emailConfirmation'),
+//    matchingEmail: Em.computed.equal('wathever', 0),
+//    validPassword: Em.computed.gte('model.password.length', 5),
+//
+//    validUserCreation: Em.computed.and('matchingEmail','validPassword'),
     actions: {
         createUser: function(user) {
             var _this = this;
-
-            this.set('createAttempt', true);
+           _this.set('validationErrors', _this.validateErrors(_this.errors, _this.get('model')));
+            if (_this.get('validationErrors')) {
+                return false
+            }
             user.save().then(function(createdUser) {
                 var response = {
                     token: createdUser.get('jwt_token')
                 };
 
                 return App.AuthJwt.processSuccessResponse(response);
-            }, function() {
-                // Handle error message here!
-            }).then(function (currentUser) {
+
                 // This is for successfully setting the currentUser.
                 _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
                 // TODO: close the modal when we start using one for signup
                 //      _this.send('closeAllModals');
                 // For now we just transition to home page
                 _this.transitionToRoute('/');
-            }, function () {
-                // Handle failure to create currentUser
+
+            }, function() {
+                _this.set('validationErrors', _this.validateErrors(_this.errors, _this.get('model')));
+
             });
+//                .then(function (currentUser) {
+//                // This is for successfully setting the currentUser.
+//
+//                // ~mg
+//                // TODO: got here also if there is an error.
+//
+//                debugger
+//                _this.set('controllers.currentUser.model', App.CurrentUser.find('current'));
+//                // TODO: close the modal when we start using one for signup
+//                //      _this.send('closeAllModals');
+//                // For now we just transition to home page
+//                _this.transitionToRoute('/');
+//            }, function () {
+//                // Handle failure to create currentUser
+//            });
         }
     }
 });

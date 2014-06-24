@@ -36,7 +36,7 @@ App.AuthJwt = {
             currentUser = App.CurrentUser.find('current');
             if (currentUser.get('currentState.error.stateName') == 'root.error') {
                 currentUser.transitionTo('deleted.saved');
-                currentUser = App.CurrentUser.find('current').then( function (user) {
+                return App.CurrentUser.find('current').then( function (user) {
                     Ember.run(null, resolve, user);
                 }, function () {
                     Ember.run(null, reject, 'Failed to create currentUser');

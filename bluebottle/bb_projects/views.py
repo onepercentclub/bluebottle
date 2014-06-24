@@ -126,7 +126,7 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
               https://pypi.python.org/pypi/django-fsm/1.2.0
     """
     def pre_save(self, obj):
-        submit_status = ProjectPhase.objects.get(slug='plan-submitted')
+        submit_status = ProjectPhase.objects.get(slug='plan-needs-work')
         status_id = self.request.DATA.get('status')
 
         """
@@ -142,7 +142,7 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
             higher than the max permitted, or the user is trying to
             set the status back to a lower state
             """
-            if new_status and (new_status.sequence > max_sequence or new_status.sequence < self.current_status.sequence):
+            if new_status and (new_status.sequence > max_sequence or max_sequence < self.current_status.sequence):
                 obj.status = self.current_status
 
 

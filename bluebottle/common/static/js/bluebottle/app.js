@@ -275,11 +275,15 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
-//Enable Google Analytics with Ember
+// Enable Google Analytics with Ember
 App.Router.reopen({
+
     /**
      * Tracks pageviews if google analytics is used
      * Source: http://www.randomshouting.com/2013/05/04/Ember-and-Google-Analytics.html
+     *
+     * TODO: With new Ember we can switch to a nicer pattern:
+     * http://emberjs.com/guides/cookbook/helpers_and_components/adding_google_analytics_tracking/
      */
     didTransition: function(infos) {
         this._super(infos);
@@ -289,13 +293,15 @@ App.Router.reopen({
             App.meta.trigger('reloadDataFromRoutes');
         });
 
+        var url = this.get('url');
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
-                _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
+                _gaq.push(['_trackPageview', url]);
             });
         }
     }
 });
+
 
 App.Router.map(function() {
 

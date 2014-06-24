@@ -291,7 +291,6 @@ App.Adapter.configure("plurals", {
 });
 
 App.ApplicationController = Ember.Controller.extend({
-    needs: ['currentUser'],
 
     display_message: false,
     displayMessage: (function() {

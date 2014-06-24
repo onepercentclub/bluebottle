@@ -22,7 +22,9 @@ App.Router.map(function(){
  */
 App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
     redirect: function() {
-        if (this.controllerFor('currentUser').get('isAuthenticated')) {
+        var applicationController = this.controllerFor('application');
+
+        if (applicationController.get('currentUser.isAuthenticated')) {
             this.transitionTo('home');
         }
     },

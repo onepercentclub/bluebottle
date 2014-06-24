@@ -79,6 +79,8 @@
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-v0.14.js' %}"></script>
     {% endcompress %}
 
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
+
     {% compress js %}
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-drf2-adapter.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-meta.js' %}"></script>
@@ -157,8 +159,6 @@
     {% block handlebars_templates %}
         {% include "bluebottle/templates.hbs" %}
     {% endblock handlebars_templates %}
-
-    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
 
     {% block htmlheader %}{% endblock %}
 

@@ -409,19 +409,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
                 model.transitionTo('loaded.updated.uncommitted');
             }
 
-            // Associate the organization with the project if the
-            // organization has been saved => not isNew
-            // We have been storing the organization in the route
-            // TODO: should we move this to the controller??
-
-            var organization = this.get('controllers.myProjectOrganisation.model');
-
-            if (organization) {
-                if (!organization.get('isNew')) {
-                    model.set('organization', organization);
-                }
-            }
-
             model.on('didUpdate', function() {
                 controller.transitionToRoute('myProjectReview');
             });

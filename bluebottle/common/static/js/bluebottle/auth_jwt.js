@@ -23,7 +23,6 @@ App.AuthJwt = {
     //    {token: '123abc'}
     processSuccessResponse: function (response) {
         return Ember.RSVP.Promise(function (resolve, reject) {
-            debugger
             // User authentication succeeded. Store the token:
             // 1) in the local store for use if the user reloads the page
             // 2) in a property on the App 

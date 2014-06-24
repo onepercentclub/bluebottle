@@ -40,14 +40,12 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     //  'validateProperty': validateProperty,
     //  'message': message},
     // ...,]
-    validateErrors: function(arrayOfDict, model) {
+    validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
         if (!Em.isArray(arrayOfDict))
             throw new Error('Expected an array of fields to validate');
         var _this = this,
-            resultErrors = null,
-            currentErrors = model.get('errors');
-
-        if (currentErrors)
+            resultErrors = null;
+        if (!ignoreApiErrors && model.get('errors'))
             resultErrors = Em.Object.create(model.get('errors'));
 
         arrayOfDict.forEach(function (dict) {

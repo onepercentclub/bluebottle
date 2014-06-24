@@ -20,16 +20,24 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
+            // Set the current user of the currentUser controller
+            container.lookup('controller:currentUser').set('content', user);
+
+            // Inject currentUser into all controllers
+            container.typeInjection('controller', 'currentUser', 'controller:currentUser');
+
             // boot the app
             App.advanceReadiness();
-        }, function(error) {
+        }, function() {
+            container.lookup('controller:application').missingCurrentUser();
+
             // boot the app without a currect user
             App.advanceReadiness();
         });
     }
 });
 
-App = Em.Application.create({
+App = Em.Application.createWithMixins(Em.Facebook,{
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -76,8 +84,41 @@ App = Em.Application.create({
         App.Page.reopen({
             url: 'pages/' + language + '/pages'
         });
+
         this.setLocale(locale);
         this.initSelectViews();
+    },
+
+    appLogin: function (fbResponse) {
+        var _this = this;
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            var hash = {
+              url: "/api/social-login/facebook/",
+              dataType: "json",
+              type: 'post',
+              data: fbResponse
+            };
+
+            hash.success = function (response) {
+                App.AuthJwt.processSuccessResponse(response).then(function (user) {
+                    // If success
+                    debugger
+                    var currentUsercontroller = App.__container__.lookup('controller:CurrentUser');
+                    currentUsercontroller.set('model', user);
+                    $('[rel=close]').click();
+                }, function (error) {
+                    // If failed
+                    console.log("fail");
+                });
+            };
+
+            hash.error = function (response) {
+                var error = JSON.parse(response.responseText);
+                Ember.run(null, reject, error);
+            };
+
+            Ember.$.ajax(hash);
+        });
     },
 
     initSelectViews: function() {
@@ -142,7 +183,6 @@ App = Em.Application.create({
 
         });
     },
-
     setLocale: function(locale) {
         if (!locale) {
             locale = this.get('locale');
@@ -194,6 +234,8 @@ App = Em.Application.create({
         }
     }
 });
+
+App.set('appId', '1438115069790112');
 
 // Mixin to scroll view top top of the screen
 App.ScrollInView = Em.Mixin.create({
@@ -263,6 +305,9 @@ App.ApplicationController = Ember.Controller.extend({
     hideMessage: function() {
         this.set('display_message', false);
     },
+
+    // Override this to do something when the currentUser call in the initializer doesn't succeed
+    missingCurrentUser: Em.K
 });
 
 // Embedded Model Mapping

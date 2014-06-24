@@ -4,14 +4,14 @@ from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.utils import get_project_model
-from .models import ProjectTheme, ProjectPhase, ProjectPhaseLog
+from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
+from .models import ProjectTheme, ProjectPhase
 from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
 from .permissions import IsProjectOwner
 
 
 PROJECT_MODEL = get_project_model()
-
+PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL
@@ -62,7 +62,7 @@ class ProjectPhaseDetail(generics.RetrieveAPIView):
 
 
 class ProjectPhaseLogList(generics.ListAPIView):
-    model = ProjectPhaseLog
+    model = PROJECT_PHASELOG_MODEL
     serializer_class = ProjectPhaseLogSerializer
     paginate_by = 10
 
@@ -71,7 +71,7 @@ class ProjectPhaseLogList(generics.ListAPIView):
         return qs
 
 class ProjectPhaseLogDetail(generics.RetrieveAPIView):
-    model = ProjectPhaseLog
+    model = PROJECT_PHASELOG_MODEL
     serializer_class = ProjectPhaseLogSerializer
 
 class ProjectList(DefaultSerializerMixin, generics.ListAPIView):

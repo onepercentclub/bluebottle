@@ -1,13 +1,12 @@
-from bluebottle.bb_projects.models import ProjectPhaseLog
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from admin_tools.dashboard.modules import DashboardModule
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
 
 PROJECT_MODEL = get_project_model()
-
+PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()
 
 class ProjectModule(DashboardModule):
     """
@@ -61,7 +60,7 @@ class SubmitAfterNeed(ProjectModule):
         submitted_project_log = []
         for project in qs:
             # I take the ones which have a need work phase in the log
-            project_log = ProjectPhaseLog.objects.filter(project=project, status__name="Plan - Needs Work").distinct('project')
+            project_log = PROJECT_PHASE_LOG_MODEL.objects.filter(project=project, status__name="Plan - Needs Work").distinct('project')
             if project_log:
                 submitted_project_log.append(project_log.get())
         # let's sort that

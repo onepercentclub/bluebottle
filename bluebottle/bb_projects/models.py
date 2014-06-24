@@ -178,8 +178,8 @@ class BaseProject(models.Model):
 
         # Only log project phase if the status has changed
         if self != None and previous_status != self.status:
-            PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()
-            PROJECT_PHASE_LOG_MODEL.objects.create(project=self, status=self.status)
+            project_phaselog_model = get_project_phaselog_model()
+            project_phaselog_model.objects.create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):

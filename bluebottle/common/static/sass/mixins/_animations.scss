@@ -150,3 +150,25 @@
     @include transform(scale(1), rotate(0));
   }
 }
+
+@include keyframes(shakeModal) {
+  0 {
+    @include transform(translateX(0));
+  }
+  12.5% {
+    @include transform(translateX(-6px) rotateY(-5deg));
+  }
+  37.5% {
+    @include transform(translateX(5px) rotateY(4deg));
+  }
+  62.5% {
+    @include transform(translateX(-3px) rotateY(-2deg));
+  }
+  87.5% {
+    @include transform(translateX(2px) rotateY(1deg));
+  }
+  100% {
+    @include transform(translateX(0));
+  }
+}
+

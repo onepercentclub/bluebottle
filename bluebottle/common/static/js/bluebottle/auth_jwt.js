@@ -116,6 +116,7 @@ App.LogoutJwtMixin = Em.Mixin.create({
             delete localStorage['jwtToken'];
         },
         logout: function (redirect) {
+            var applicationController = this.controllerFor('application');
             if (typeof redirect === 'undefined')
                 redirect = true;
 
@@ -123,7 +124,7 @@ App.LogoutJwtMixin = Em.Mixin.create({
             this.send('clearJwtToken');
 
             // Clear the current user details
-            this.controllerFor('currentUser').set('model', null);
+            applicationController.set('currentUser.model', null);
 
             // Redirect to?? If the user is in a restricted route then 
             // they should be redirected to the home route. For now we 

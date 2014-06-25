@@ -4,12 +4,21 @@
 
 App.SignupController = Ember.ObjectController.extend(App.ControllerValidationMixin, {
     createAttempt: false,
-
     errorDefinitions : [
         {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails doesn\'t match')},
         {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')}
     ],
 
+    init: function() {
+        this._super();
+
+        var user = App.UserCreate.createRecord({
+            first_name: '',
+            last_name: '',
+        });
+
+        this.set('model', user);
+    },
     actions: {
         createUser: function(user) {
             var _this = this;
@@ -45,23 +54,20 @@ App.SignupController = Ember.ObjectController.extend(App.ControllerValidationMix
 });
 
 
-// Inspiration from:
-// http://stackoverflow.com/questions/14388249/accessing-controllers-from-other-controllers
-App.CurrentUserController = Ember.ObjectController.extend();
+App.UserController = Ember.Controller.extend({});
 
 
-App.UserController = Ember.Controller.extend({
-    needs: "currentUser"
-});
+// This is only being used as a means for other controllers to access the currentUser
+// This is done by injection in the currentUser intializer.
+// TODO: we should just set the currentUser property on the application controller or route
+//       and inject that so that it is available from all controllers.
+App.CurrentUserController = Ember.ObjectController.extend({});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
-
     availableTimes: function() {
         return App.TimeAvailable.find();
     }.property(),
-
-
 });
 
 
@@ -76,12 +82,10 @@ App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
         list.addObject({ name: gettext('Club / Association'), value: 'group'});
         return list;
     }).property(),
-
 });
 
 
 App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
-
     // Don't prompt the user to save if the 'fakeRecord' is set.
     stopEditing: function() {
         var record = this.get('model');

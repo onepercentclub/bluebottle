@@ -8,12 +8,12 @@ from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.utils.utils import get_project_model
-from .models import ProjectPhase, ProjectTheme, ProjectPhaseLog
+from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
+from .models import ProjectPhase, ProjectTheme
 
 
 PROJECT_MODEL = get_project_model()
-
+PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
@@ -23,7 +23,7 @@ admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
 class ProjectPhaseLogInline(admin.TabularInline):
-    model = ProjectPhaseLog
+    model = PROJECT_PHASELOG_MODEL
     ordering = ('-start',)
     readonly_fields = ('status', 'start',)
     extra = 0

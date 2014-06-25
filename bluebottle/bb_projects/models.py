@@ -6,14 +6,14 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
+from django.db.models import options
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from sorl.thumbnail import ImageField
-from django.db.models import options
+from bluebottle.utils.utils import get_project_phaselog_model
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
-
 
 class ProjectTheme(models.Model):
     """ Themes for Projects. """
@@ -178,7 +178,8 @@ class BaseProject(models.Model):
 
         # Only log project phase if the status has changed
         if self != None and previous_status != self.status:
-            ProjectPhaseLog.objects.create(project=self, status=self.status)
+            project_phaselog_model = get_project_phaselog_model()
+            project_phaselog_model.objects.create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):
@@ -228,8 +229,10 @@ class BaseProject(models.Model):
         return self.status.viewable
 
 
-class ProjectPhaseLog(models.Model):
+class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     status = models.ForeignKey("bb_projects.ProjectPhase")
     start = CreationDateTimeField(_('created'), help_text=_('When this project entered in this status.'))
 
+    class Meta():
+        abstract = True

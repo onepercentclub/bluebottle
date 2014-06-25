@@ -7,7 +7,7 @@ App.AuthenticatedRouteMixin = Ember.Mixin.create({
         var applicationController = this.controllerFor('application');
         
         // If not logged in then display the login popup for the user.
-        if (!this.controllerFor('currentUser').get('isAuthenticated')) {
+        if (!applicationController.get('currentUser.isAuthenticated')) {
             // The popup box method is on the application route
             // TODO: is there a more elegant way to call the function from here?
             var self = this;

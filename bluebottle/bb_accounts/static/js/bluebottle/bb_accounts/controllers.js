@@ -129,7 +129,7 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.Controller.extend({
+App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
     loginTitle: 'Log in to <Bluebottle Project>',
     username: null,
     password: null,

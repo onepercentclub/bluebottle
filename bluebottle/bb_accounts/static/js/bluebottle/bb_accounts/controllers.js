@@ -2,8 +2,13 @@
  * Controllers
  */
 
-App.SignupController = Ember.ObjectController.extend({
+App.SignupController = Ember.ObjectController.extend(App.ControllerValidationMixin, {
     createAttempt: false,
+    errorDefinitions : [
+        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails doesn\'t match')},
+        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')}
+    ],
+
     init: function() {
         this._super();
 
@@ -14,43 +19,20 @@ App.SignupController = Ember.ObjectController.extend({
 
         this.set('model', user);
     },
-
-    validationErrors: function () {
-        // Only check error validations after submitting
-        if (!this.get('createAttempt'))
-            return;
-
-        var errors = Em.Object.create(this.get('model.errors'))
-
-        if (!this.get('model.matchingEmail')) {
-            var msg = gettext('Emails don\'t match');
-            if (errors.get('email'))
-                errors.get('email').push(msg);
-            else
-                errors.set('email', [msg]);
-        }
-        if (!this.get('model.validPassword')) {
-            var msg = gettext('Password is too short (at least 5 characters)');
-            if (errors.get('password'))
-                errors.get('password').push(msg);
-            else
-                errors.set('password', [msg]);
-        }
-
-        return errors
-    }.property('model.errors', 'model.matchingEmail', 'model.validPassword'),
-
-
     actions: {
         createUser: function(user) {
             var _this = this;
+            // Ignoring API errors here, we are passing ignoreApiErrors=true
+            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model.'), true));
 
-            this.set('createAttempt', true);
+            // Check client side errors
+            if (_this.get('validationErrors')) {
+                return false
+            }
             user.save().then(function(createdUser) {
                 var response = {
                     token: createdUser.get('jwt_token')
                 };
-
                 return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', App.CurrentUser.find('current'));
@@ -60,9 +42,12 @@ App.SignupController = Ember.ObjectController.extend({
                     _this.transitionToRoute('/');
                 }, function () {
                     // Handle failure to create currentUser
+                    _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
                 });
-            }, function() {
+
+            }, function () {
                 // Handle error message here!
+                _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
             });
         }
     }

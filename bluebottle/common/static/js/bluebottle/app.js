@@ -202,8 +202,6 @@ App = Em.Application.create({
     }
 });
 
-App.set('appId', '1438115069790112');
-
 // Mixin to scroll view top top of the screen
 App.ScrollInView = Em.Mixin.create({
     didInsertElement: function(a, b){

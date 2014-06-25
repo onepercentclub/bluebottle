@@ -3,8 +3,6 @@
 {% load static %}
 
 {% tplhandlebars "application" %}
-
-    {{outlet "modalContainer"}}
     <!-- global site -->
     <div id="main">
 
@@ -59,4 +57,6 @@
 
     </div>
     {{partial "footer"}}
+
+    {{outlet "modalContainer"}}
 {% endtplhandlebars %}

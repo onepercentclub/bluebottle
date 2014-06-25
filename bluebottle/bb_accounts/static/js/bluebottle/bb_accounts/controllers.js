@@ -151,12 +151,10 @@ App.LoginController = Em.Controller.extend({
 
     actions: {
         login: function () {
-            debugger;
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
 
             var _this = this;
             return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
-                debugger
                 _this.set('currentUser.model', user);
                 _this.send('closeAllModals');
             }, function (error) {

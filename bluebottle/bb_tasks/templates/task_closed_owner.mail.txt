@@ -18,6 +18,5 @@ Thanks again and we hope to see you back on Booking Cares soon!
 
 Warm regards,
 
-Marianne Gybels | Booking Cares Manager
 {% endblocktrans %}
 {% endblock %}

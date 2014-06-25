@@ -75,7 +75,8 @@ class BaseProjectManager(models.Manager):
             qs = qs.filter(status_id__in=status)
         else:
             status = query.get('status', None)
-            qs = qs.filter(status_id=status)
+            if status:
+                qs = qs.filter(status_id=status)
 
         country = query.get('country', None)
         if country:

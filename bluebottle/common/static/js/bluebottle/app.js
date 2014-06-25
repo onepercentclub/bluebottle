@@ -48,7 +48,14 @@ App = Em.Application.create({
         this.set('csrfToken', getCookie('csrftoken'));
 
         // Read language string from url.
-        var language = this.get('language');
+        var language = window.location.pathname.split('/')[1];
+        App.CurrentUser.find('current').then(function(user){
+            var primaryLanguage = user.get('primary_language');
+            if (primaryLanguage && primaryLanguage != language) {
+                document.location = '/' + primaryLanguage + document.location.hash;
+            }
+        });
+        this.set('language', language);
 
         // Now that we know the language we can load the handlebars templates.
         //this.loadTemplates(this.templates);

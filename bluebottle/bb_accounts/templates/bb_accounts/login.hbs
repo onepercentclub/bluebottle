@@ -4,70 +4,41 @@
     
     {% tplhandlebars "login" %}
 
-            <form id="login-form">
-
-                <div class="modal-header">
-                    <h3>{{loginTitle}}</h3>
+        <div class="modal-fullscreen-content">
+            <span {{action 'closeAllModals'}} class="modal-fullscreen-close">
+                <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
+            </span>
+            <h4>{{loginTitle}}</h4>
+            {{#if error}}
+                <div class="modal-flash-message">
+                    {{error.non_field_errors}}
+                </p>
+            {{/if}}
+            {{partial "social_logins"}}
+            <div class="or-hr">
+                <div class="first"></div>
+                <div class="middle">{% trans "or" %}</div>
+                <div class="last"></div>
+            </div>
+            {{input valueBinding='username' type="text" name="username" maxlength="254" placeholder="E-mailaddress"}}
+            <div class="password">
+                {{input valueBinding='password' type="password" name="password" placeholder="Password"}}
+                <div class="tooltip-holder">
+                    <span class="questionmark">?</span>
+                    <div {{ action 'modalFlip' 'passwordReset' }} class="tooltip input">{% trans "Lost your password?" %}</div>
                 </div>
-
-                <div class="modal-body">
-                    {{#if error}}
-                        <p class="error">
-                            {{error.non_field_errors}}
-                        </p>
-                    {{/if}}
-
-
-                    {{#if App.FBUser}}
-                      <div>
-                        <img {{bindAttr src="App.FBUser.picture" alt="App.FBUser.name"}} />
-                        {{App.FBUser.name}}
-                        <a href="#" {{action "logout" target="FB"}}>Logout</a>
-                      </div>
-                    {{else}}
-                      {{#view Em.FacebookView type="login-button" data-size="xlarge"
-                                              data-scope="email, offline_access"}}
-                        Connect
-                      {{/view}}
-                    {{/if}}
-                    <hr/>
-
-                    {{#if App.currentUser }}
-                        {{#if post_password_reset }}
-                            {% block password_reset_success %}
-                                <p class="succes">{%  trans "Override block password_reset_success to display your own password reset success message." %}</p>
-                            {% endblock password_reset_success %}
-                        {{/if}}
-                    {{/if}}
-
-
-                    {{#unless App.FBUser}}
-                        <div class="control-group">
-                            <label class="control-label" for="id_email">{% trans "Email" %}:</label>
-
-                            <div class="controls">
-                                {# The key for the login needs to be 'username' for logins to work. #}
-                                {{input valueBinding='username' type="text" name="username" maxlength="254"}}
-                            </div>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label" for="id_password">{% trans "Password" %}:</label>
-
-                            <div class="controls">
-                                {{input valueBinding='password' type="password" name="password"}}
-                            </div>
-                        </div>
-                    {{/unless}}
-                </div>
-
-                <div class="modal-footer">
-                    <a {{ action 'requestPasswordReset' }} class="login-forgot">{% trans "Forgot your password?" %}</a>
-                    <input {{ action 'login' }} class="btn btn-submit" type="submit" value="{% trans 'Login' %}">
-                    <input type="hidden" name="next" {{bindAttr value="view.next"}}>
-                </div>
-            </form>
-
+            </div>
+            <a {{ action 'login' }} class="btn is-inactive">{% trans "Sign in" %}</a>
+            <div class="modal-flash-message success">
+                Sorry, there was an error connecting your
+                Facebook account. Please try again.
+            </div>
+        </div>
+        <div class="modal-fullscreen-footer">
+            <span class="modal-btn-signup" href="#">
+                {% trans "Don’t have an account?" %} <a {{ action 'modalFlip' 'signup' }} class="flip-back">{% trans "Sign up here" %}</a>
+            </span>
+        </div>
 
     {% endtplhandlebars %}
 

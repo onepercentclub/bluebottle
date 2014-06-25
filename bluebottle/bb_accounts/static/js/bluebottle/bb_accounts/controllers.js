@@ -143,6 +143,7 @@ App.LoginController = Em.Controller.extend({
 
     actions: {
         login: function () {
+            debugger;
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
 
             var _this = this;

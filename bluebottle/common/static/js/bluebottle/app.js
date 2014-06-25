@@ -37,7 +37,7 @@ Ember.Application.initializer({
     }
 });
 
-App = Em.Application.createWithMixins(Em.Facebook,{
+App = Em.Application.createWithMixins({
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -387,7 +387,7 @@ App.Router.map(function() {
 });
 
 
-App.ApplicationRoute = Em.Route.extend({
+App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
         logout: function () {
@@ -441,26 +441,6 @@ App.ApplicationRoute = Em.Route.extend({
             return true;
         },
 
-        openInFullScreenBox: function(name, context) {
-            this.send('openInBox', name, context, 'full-screen');
-        },
-
-        openInScalableBox: function(name, context) {
-            this.send('openInBox', name, context, 'scalable');
-        },
-
-        openInBigBox: function(name, context) {
-            this.send('openInBox', name, context, 'large');
-        },
-
-        openInBox: function(name, context, type, callback) {
-            this.openInBox(name, context, type, callback);
-        },
-        
-        closeAllModals: function(){
-            $('[rel=close]').click();
-        },
-
         showProjectTaskList: function(project_id) {
             var route = this;
             App.Project.find(project_id).then(function(project) {
@@ -476,42 +456,6 @@ App.ApplicationRoute = Em.Route.extend({
                 window.scrollTo(0, 0);
             });
         }
-    },
-
-    // Add openInBox as function on ApplicationRoute so that it can be used
-    // outside the usual template/action context
-    openInBox: function(name, context, type, callback) {
-        // Close all other modals.
-        $('.close-modal').click();
-
-        // Get the controller or create one
-        var controller = this.controllerFor(name);
-        if (context) {
-            controller.set('model', context);
-        }
-
-        if (typeof type === 'undefined')
-          type = 'normal'
-
-        var classNames = [type];
-
-        // Get the view. This should be defined.
-        var view = App[name.classify() + 'View'].create();
-        view.set('controller', controller);
-
-        var modalPaneTemplate = ['<div class="modal-wrapper"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
-
-        var options = {
-            classNames: classNames,
-            defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-            bodyViewClass: view
-        }
-
-        if (callback) {
-            options.callback = callback;
-        }
-
-        Bootstrap.ModalPane.popup(options);
     },
 
     urlForEvent: function(actionName, context) {
@@ -536,36 +480,4 @@ App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {
         this.transitionTo('userProfile');
     }
-});
-
-
-/* Views */
-
-App.LanguageView = Em.View.extend({
-    templateName: 'language',
-    classNameBindings: ['isSelected:active'],
-    isSelected: function(){
-        if (this.get('content.code') == App.language) {
-            return true;
-        }
-        return false;
-    }.property('content.code')
-
-});
-
-App.LanguageSwitchView = Em.CollectionView.extend({
-    classNames: ['nav-language'],
-    content: App.interfaceLanguages,
-    itemViewClass: App.LanguageView
-});
-
-App.LanguageSelectView = Em.Select.extend({
-    classNames: ['language'],
-    optionValuePath: 'content.id',
-    optionLabelPath: 'content.native_name',
-    prompt: gettext('Pick a language')
-});
-
-App.ApplicationView = Em.View.extend({
-    elementId: 'site'
 });

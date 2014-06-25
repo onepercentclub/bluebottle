@@ -6,7 +6,7 @@ Ember.Application.initializer({
         App.deferReadiness();
 
         // Try to fetch the current user
-        App.CurrentUser.find('current').then(function(user) {
+        var currentUser = App.CurrentUser.find('current').then(function(user) {
             // Read language string from url.
             var language = window.location.pathname.split('/')[1];
 
@@ -20,12 +20,6 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
-            // Set the current user of the currentUser controller
-            container.lookup('controller:currentUser').set('content', user);
-
-            // Inject currentUser into all controllers
-            container.typeInjection('controller', 'currentUser', 'controller:currentUser');
-
             // boot the app
             App.advanceReadiness();
         }, function() {
@@ -34,10 +28,16 @@ Ember.Application.initializer({
             // boot the app without a currect user
             App.advanceReadiness();
         });
+
+        // Set the currentUser model/content on the currentUser controller
+        container.lookup('controller:currentUser').set('content', currentUser);
+
+        // Inject currentUser into all controllers
+        container.typeInjection('controller', 'currentUser', 'controller:currentUser');
     }
 });
 
-App = Em.Application.createWithMixins({
+App = Em.Application.create({
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -89,38 +89,6 @@ App = Em.Application.createWithMixins({
         this.initSelectViews();
     },
 
-    appLogin: function (fbResponse) {
-        var _this = this;
-        return Ember.RSVP.Promise(function (resolve, reject) {
-            var hash = {
-              url: "/api/social-login/facebook/",
-              dataType: "json",
-              type: 'post',
-              data: fbResponse
-            };
-
-            hash.success = function (response) {
-                App.AuthJwt.processSuccessResponse(response).then(function (user) {
-                    // If success
-                    debugger
-                    var currentUsercontroller = App.__container__.lookup('controller:CurrentUser');
-                    currentUsercontroller.set('model', user);
-                    $('[rel=close]').click();
-                }, function (error) {
-                    // If failed
-                    console.log("fail");
-                });
-            };
-
-            hash.error = function (response) {
-                var error = JSON.parse(response.responseText);
-                Ember.run(null, reject, error);
-            };
-
-            Ember.$.ajax(hash);
-        });
-    },
-
     initSelectViews: function() {
         // Pre-load these lists so we avoid race conditions when displaying forms
         App.Country.find().then(function(list) {
@@ -152,35 +120,34 @@ App = Em.Application.createWithMixins({
 
         App.ProjectPhase.find().then(function(data){
 
-			App.ProjectPhaseSelectView.reopen({
-				contentBinding: 'data',
+        App.ProjectPhaseSelectView.reopen({
+            contentBinding: 'data',
 
-				phases: function () {
-					return App.ProjectPhase.find()
-				}.property(),
+            phases: function () {
+                return App.ProjectPhase.find()
+            }.property(),
 
-				data: function () {
-					return App.ProjectPhase.filter(function(item){
-						return item.get('viewable')})
-				}.property('phases.length')
+            data: function () {
+                return App.ProjectPhase.filter(function(item){
+                    return item.get('viewable')})
+                }.property('phases.length')
+            });
+        });
 
-			});
+        App.ProjectPhaseChoiceView.reopen({
+            sortProperties: ['sequence'],
 
-			App.ProjectPhaseChoiceView.reopen({
-				sortProperties: ['sequence'],
+            phases: function () {
+                return App.ProjectPhase.find();
+            }.property(),
 
-				phases: function () {
-					return App.ProjectPhase.find()
-				}.property(),
+            data: function () {
+                return App.ProjectPhase.filter(function(item) {
+                    return item.get('ownerEditable');
+                });
+            }.property('phases.length'),
 
-				data: function () {
-					return App.ProjectPhase.filter(function(item){
-						return item.get('ownerEditable')})
-				}.property('phases.length'),
-
-				contentBinding: 'data'
-			});
-
+            contentBinding: 'data'
         });
     },
     setLocale: function(locale) {

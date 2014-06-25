@@ -13,11 +13,11 @@ Have all accepted members participated in your task? If you confirm that they we
 Go to task: {{ site }}{{link}}
 
 <strong>Was this the final task? If so, there are two options:</strong>
-Option 1. Create a new task and keep on caring! For example when it is possible to do it again next year. Always check the status and deadline of your project! Click here to create a new task.
+Option 1. Create a new task and keep on caring! For example when it is possible to do it again next year. Always check the status and deadline of your project! Go to {{site}}{{project_link}} to create a new task.
 
-Option 2. Are you sure that everything is done? Change the status of your project to ‘realised’ and evaluate your Cares experience by clicking here
+Option 2. Are you sure that everything is done? Change the status of your project to ‘realised’ and evaluate your Cares experience by visiting {{site}}{{edit_project_link}}
 
-Oops. Is it too early to celebrate? You can always change the deadline or status of your task(s). Close your task if it hasn’t been realised by changing the status into ‘closed’. Or change the deadline if the task has not been realised yet. Edit task(s)
+Oops. Is it too early to celebrate? You can always change the deadline or status of your task(s). Close your task if it hasn’t been realised by changing the status into ‘closed’. Or change the deadline if the task has not been realised yet. Edit your task at {{site}}{{link}}
 
 Was this not the last task from your project? Keep up the good work!
 

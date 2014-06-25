@@ -77,23 +77,20 @@ module.exports = function (grunt) {
           'bluebottle/common/static/js/vendor/jquery-1.8.3.js',
           'static/build/js/components/jquery-mockjax/jquery.mockjax.js',
           'static/build/js/components/pavlov/pavlov.js',
+
+          // Vendor
           'bluebottle/common/static/js/vendor/handlebars-1.0.0.js',
           'bluebottle/common/static/js/vendor/ember-v1.0.0.js',
           'bluebottle/common/static/js/vendor/ember-data-v0.14.js',
           'bluebottle/common/static/js/vendor/ember-data-drf2-adapter.js',
           'bluebottle/common/static/js/vendor/ember-meta.js',
-          'bluebottle/common/static/js/plugins/ember-facebook.js',
-          'bluebottle/common/static/js/plugins/ember.hashbang.js',
           'bluebottle/common/static/js/vendor/globalize.js',
           'bluebottle/common/static/jsi18n/en-us/*.js',
 
-          // Bootstrap Stuff
-          'bluebottle/common/static/js/vendor/bootstrap/bootstrap-transition.js',
-          'bluebottle/common/static/js/vendor/bootstrap/bootstrap-modal.js',
-          'bluebottle/common/static/js/vendor/bootstrap/bootstrap-tooltip.js',
-          'bluebottle/common/static/js/vendor/bootstrap/bootstrap-popover.js',
-          'bluebottle/common/static/js/vendor/bootstrap/bootstrap-typeahead.js',
-          'bluebottle/common/static/js/vendor/ember-bootstrap-df3e710.js'
+          // Plugins
+          'bluebottle/common/static/js/plugins/ember-facebook.js',
+          'bluebottle/common/static/js/plugins/ember.hashbang.js',
+          'bluebottle/common/static/js/plugins/bb_modal.js',
         ],
         dest: 'static/build/js/lib/deps.js'
       },

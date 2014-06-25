@@ -95,13 +95,6 @@
             <script type="text/javascript" src="{% static 'js/vendor/ember-renderspeed.js' %}"></script>
         {% endif %}
 
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-transition.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-modal.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-tooltip.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-popover.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-typeahead.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/ember-bootstrap-df3e710.js' %}"></script>
-
         <script type="text/javascript" src="{% static 'js/vendor/jquery-validation/jquery.validate.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/redactor.min.js' %}"></script>
 
@@ -113,6 +106,8 @@
         <script type="text/javascript" src="{% static 'js/plugins/ember.hashbang.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/jquery.scrollTo.min.js' %}" charset="utf-8"></script>
         <script type="text/javascript" src="{% static 'js/marker_clusterer.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'js/plugins/bb_modal.js' %}"></script>
 
         {# JS slider #}
         <script src="{% static 'js/vendor/jslider/draggable-0.1.js' %}"></script>
@@ -130,7 +125,7 @@
             <script type="text/javascript" src="{% static 'js/bluebottle/utils.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/overrides.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/views.js' %}"></script>
 
             {% for app in bb_apps %}
                 {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}
@@ -219,7 +214,5 @@
 
     {% block content %}
     {% endblock %}
-
-
 </body>
 </html>

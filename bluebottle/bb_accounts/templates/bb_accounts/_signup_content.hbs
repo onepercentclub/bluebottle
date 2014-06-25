@@ -1,0 +1,39 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_signup_content" %}
+    <div class="modal-fullscreen-content">
+        <span class="modal-fullscreen-close">
+            <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
+        </span>
+        <h4>{% trans 'Welcome!' %}</h4>
+        {{partial "social_logins"}}
+        {{view Em.TextField valueBinding="first_name" placeholder="First name"
+            classBinding="validationErrors.first_name.length:error"}}
+
+        {{view Em.TextField valueBinding="last_name" placeholder="Surname"
+            classBinding="validationErrors.last_name.length:error"}}
+        
+        {{view Em.TextField valueBinding="email" type="email" classBinding="validationErrors.email.length:error" placeholder="E-mailaddress"}}
+
+        {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error" placeholder="Re-enter E-mailaddress"}}
+        <div class="password">
+        {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error" placeholder="Password"}}
+            <div class="tooltip-holder">
+                <span class="questionmark">?</span>
+            <div class="tooltip input">Lost your password?</div>
+        </div>
+        </div>
+
+        <a {{action 'createUser' model}} class="btn">{% blocktrans %}Join 1%Club{% endblocktrans %}</a>
+        <small>By signing up, you accept our <a {{action showPage 'terms-and-conditions'}} target="_blank">terms of service</a></small>
+    </div>
+    <div class="modal-fullscreen-footer">
+        <span class="modal-btn-signup" href="#">
+            {% trans 'Already have an account?' %} <a class="flip-front" {{action 'modalFlip' 'login'}}>{% trans 'Sign in here' %}</a>
+        </span>
+    </div>
+
+
+
+{% endtplhandlebars %}

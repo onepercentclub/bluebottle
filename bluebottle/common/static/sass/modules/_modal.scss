@@ -178,93 +178,58 @@ $base-line-height                                          : 1.5em !default;
 }
 
 .modal-fullscreen-container {
-	margin-top: 10%;
-	@include perspective(800);
-	//width: 200px;
-	//height: 260px;
-	//position: relative;
-	//@include opacity(0);
+	position: relative;
+	margin: 10% auto;
+	width: 300px;
+	//height: 100%;
+	@include perspective(800px);
+	@include opacity(0);
 
+	#card {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		@include transform-style(preserve-3d);
+		@include transition(transform 1s);
 
-	// #card {
-	// 	position: absolute;
-	// 	width: 100%;
-	// 	height: 100%;
-	// 	@include transform-style(preserve-3d);
-	// 	@include transition(transform 1s);
+		figure {
+			display: block;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			-webkit-backface-visibility: hidden;
+		}
 
-	// 	figure {
-	// 		display: block;
-	// 		position: absolute;
-	// 		width: 100%;
-	// 		height: 100%;
-	// 		-webkit-backface-visibility: hidden;
-	// 	}
+		.front {
+			background: transparent;
+		}
 
-	// 	.front {
-	// 		background: red;
-	// 	}
+		.back {
+			background: transparent;
+			-webkit-transform: rotateY(180deg);
+		}
 
-	// 	.back {
-	// 		background: green;
-	// 		-webkit-transform: rotateY(180deg);
-	// 	}
+		&.flipped {
+			-webkit-transform: rotateY(180deg);
 
-	// 	&.flipped {
-	// 		-webkit-transform: rotateY(180deg);
-	// 	}
-	// }
+			.front {
+				z-index: 0;
+			}
+
+			.back {
+				z-index: 4;
+			}
+		}
+	}
 
 	.modal-fullscreen-item {
-		position: fixed;
-		top: 10%;
-		left: 50%;
 		width: 300px;
-		margin-top: -50px;
-		margin-left: -150px;
 		background-color: #f4f4f4;
 		border-radius: 8px;
 		border: solid 1px #ccc;
 		padding: 5px;
 		text-align: center;
 		@include transform-style(preserve-3d);
-
-		&.back {
-			z-index: 0;
-			display: none;
-			@include transform(rotateY(-180deg));
-			
-			&.is-flip-front {
-				display: block;
-				@include transform(rotateY(0deg));
-				@include animation(flipFront .5s);
-			}
-
-			&.is-flip-back {
-				display: none;
-				@include transform(rotateY(-180deg));
-				@include animation(flipBack .5s);
-			}
-		}
-
-		&.front {
-			z-index: 5;
-			@include transform(rotateY(0deg));
-			
-			&.is-flip-back {
-				display: none;
-				@include transform(rotateY(-180deg));
-				@include animation(flipBack .5s);
-			}
-
-			&.is-flip-front {
-				display: block;
-				@include transform(rotateY(0deg));
-				@include animation(flipFront .5s);
-			}
-
-
-		}
 
 		&.is-shake {
 			@include animation(shakeModal .4s ease-in-out);

@@ -6,7 +6,7 @@ Ember.Application.initializer({
         App.deferReadiness();
 
         // Try to fetch the current user
-        App.CurrentUser.find('current').then(function(user) {
+        var currentUser = App.CurrentUser.find('current').then(function(user) {
             // Read language string from url.
             var language = window.location.pathname.split('/')[1];
 
@@ -20,12 +20,6 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
-            // Set the current user of the currentUser controller
-            container.lookup('controller:currentUser').set('content', user);
-
-            // Inject currentUser into all controllers
-            container.typeInjection('controller', 'currentUser', 'controller:currentUser');
-
             // boot the app
             App.advanceReadiness();
         }, function() {
@@ -34,10 +28,16 @@ Ember.Application.initializer({
             // boot the app without a currect user
             App.advanceReadiness();
         });
+
+        // Set the currentUser model/content on the currentUser controller
+        container.lookup('controller:currentUser').set('content', currentUser);
+
+        // Inject currentUser into all controllers
+        container.typeInjection('controller', 'currentUser', 'controller:currentUser');
     }
 });
 
-App = Em.Application.createWithMixins(Em.Facebook,{
+App = Em.Application.create({
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -89,38 +89,6 @@ App = Em.Application.createWithMixins(Em.Facebook,{
         this.initSelectViews();
     },
 
-    appLogin: function (fbResponse) {
-        var _this = this;
-        return Ember.RSVP.Promise(function (resolve, reject) {
-            var hash = {
-              url: "/api/social-login/facebook/",
-              dataType: "json",
-              type: 'post',
-              data: fbResponse
-            };
-
-            hash.success = function (response) {
-                App.AuthJwt.processSuccessResponse(response).then(function (user) {
-                    // If success
-                    debugger
-                    var currentUsercontroller = App.__container__.lookup('controller:CurrentUser');
-                    currentUsercontroller.set('model', user);
-                    $('[rel=close]').click();
-                }, function (error) {
-                    // If failed
-                    console.log("fail");
-                });
-            };
-
-            hash.error = function (response) {
-                var error = JSON.parse(response.responseText);
-                Ember.run(null, reject, error);
-            };
-
-            Ember.$.ajax(hash);
-        });
-    },
-
     initSelectViews: function() {
         // Pre-load these lists so we avoid race conditions when displaying forms
         App.Country.find().then(function(list) {
@@ -152,35 +120,34 @@ App = Em.Application.createWithMixins(Em.Facebook,{
 
         App.ProjectPhase.find().then(function(data){
 
-			App.ProjectPhaseSelectView.reopen({
-				contentBinding: 'data',
+        App.ProjectPhaseSelectView.reopen({
+            contentBinding: 'data',
 
-				phases: function () {
-					return App.ProjectPhase.find()
-				}.property(),
+            phases: function () {
+                return App.ProjectPhase.find()
+            }.property(),
 
-				data: function () {
-					return App.ProjectPhase.filter(function(item){
-						return item.get('viewable')})
-				}.property('phases.length')
+            data: function () {
+                return App.ProjectPhase.filter(function(item){
+                    return item.get('viewable')})
+                }.property('phases.length')
+            });
+        });
 
-			});
+        App.ProjectPhaseChoiceView.reopen({
+            sortProperties: ['sequence'],
 
-			App.ProjectPhaseChoiceView.reopen({
-				sortProperties: ['sequence'],
+            phases: function () {
+                return App.ProjectPhase.find();
+            }.property(),
 
-				phases: function () {
-					return App.ProjectPhase.find()
-				}.property(),
+            data: function () {
+                return App.ProjectPhase.filter(function(item) {
+                    return item.get('ownerEditable');
+                });
+            }.property('phases.length'),
 
-				data: function () {
-					return App.ProjectPhase.filter(function(item){
-						return item.get('ownerEditable')})
-				}.property('phases.length'),
-
-				contentBinding: 'data'
-			});
-
+            contentBinding: 'data'
         });
     },
     setLocale: function(locale) {
@@ -387,7 +354,7 @@ App.Router.map(function() {
 });
 
 
-App.ApplicationRoute = Em.Route.extend({
+App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
         logout: function () {
@@ -441,26 +408,6 @@ App.ApplicationRoute = Em.Route.extend({
             return true;
         },
 
-        openInFullScreenBox: function(name, context) {
-            this.send('openInBox', name, context, 'full-screen');
-        },
-
-        openInScalableBox: function(name, context) {
-            this.send('openInBox', name, context, 'scalable');
-        },
-
-        openInBigBox: function(name, context) {
-            this.send('openInBox', name, context, 'large');
-        },
-
-        openInBox: function(name, context, type, callback) {
-            this.openInBox(name, context, type, callback);
-        },
-        
-        closeAllModals: function(){
-            $('[rel=close]').click();
-        },
-
         showProjectTaskList: function(project_id) {
             var route = this;
             App.Project.find(project_id).then(function(project) {
@@ -469,49 +416,13 @@ App.ApplicationRoute = Em.Route.extend({
             });
         },
 
-        showPage: function(page_id) {
+        showPage: function(pageId, newWindow) {
             var route = this;
-            App.Page.find(page_id).then(function(page) {
+            App.Page.find(pageId).then(function(page) {
                 route.transitionTo('page', page);
                 window.scrollTo(0, 0);
             });
         }
-    },
-
-    // Add openInBox as function on ApplicationRoute so that it can be used
-    // outside the usual template/action context
-    openInBox: function(name, context, type, callback) {
-        // Close all other modals.
-        $('.close-modal').click();
-
-        // Get the controller or create one
-        var controller = this.controllerFor(name);
-        if (context) {
-            controller.set('model', context);
-        }
-
-        if (typeof type === 'undefined')
-          type = 'normal'
-
-        var classNames = [type];
-
-        // Get the view. This should be defined.
-        var view = App[name.classify() + 'View'].create();
-        view.set('controller', controller);
-
-        var modalPaneTemplate = ['<div class="modal-wrapper"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
-
-        var options = {
-            classNames: classNames,
-            defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-            bodyViewClass: view
-        }
-
-        if (callback) {
-            options.callback = callback;
-        }
-
-        Bootstrap.ModalPane.popup(options);
     },
 
     urlForEvent: function(actionName, context) {
@@ -536,36 +447,4 @@ App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {
         this.transitionTo('userProfile');
     }
-});
-
-
-/* Views */
-
-App.LanguageView = Em.View.extend({
-    templateName: 'language',
-    classNameBindings: ['isSelected:active'],
-    isSelected: function(){
-        if (this.get('content.code') == App.language) {
-            return true;
-        }
-        return false;
-    }.property('content.code')
-
-});
-
-App.LanguageSwitchView = Em.CollectionView.extend({
-    classNames: ['nav-language'],
-    content: App.interfaceLanguages,
-    itemViewClass: App.LanguageView
-});
-
-App.LanguageSelectView = Em.Select.extend({
-    classNames: ['language'],
-    optionValuePath: 'content.id',
-    optionLabelPath: 'content.native_name',
-    prompt: gettext('Pick a language')
-});
-
-App.ApplicationView = Em.View.extend({
-    elementId: 'site'
 });

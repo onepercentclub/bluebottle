@@ -2,6 +2,9 @@ BB = {};
 
 BB.ModalMixin = Em.Mixin.create({
     actions: {
+        createUser: function() {
+            debugger
+        },
         openInFullScreenBox: function(name, context) {
             this.send('openInBox', name, context, 'full-screen');
         },
@@ -27,7 +30,11 @@ BB.ModalMixin = Em.Mixin.create({
             $('.modal-fullscreen-background').addClass('is-inactive');
         },
 
-        modalFlip: function() {
+        modalFlip: function(name) {
+            this.render(name, {
+                outlet: 'modalBack',
+                into: 'modalContainer',
+            });
             $('#card').addClass('flipped');
         }
     },

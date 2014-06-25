@@ -449,9 +449,9 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             });
         },
 
-        showPage: function(page_id) {
+        showPage: function(pageId, newWindow) {
             var route = this;
-            App.Page.find(page_id).then(function(page) {
+            App.Page.find(pageId).then(function(page) {
                 route.transitionTo('page', page);
                 window.scrollTo(0, 0);
             });

@@ -4,6 +4,16 @@
 
 App.SignupController = Ember.ObjectController.extend({
     createAttempt: false,
+    init: function() {
+        this._super();
+
+        var user = App.UserCreate.createRecord({
+            first_name: '',
+            last_name: '',
+        });
+
+        this.set('model', user);
+    }
 
     validationErrors: function () {
         // Only check error validations after submitting

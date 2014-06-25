@@ -35,6 +35,11 @@ BB.ModalMixin = Em.Mixin.create({
                 $('.modal-fullscreen-background').removeClass('is-inactive');
             });
             $('.modal-fullscreen-background').addClass('is-inactive');
+
+            return this.disconnectOutlet({
+                outlet: 'modalContainer',
+                parentView: 'application'
+            });
         },
 
         modalFlip: function(name) {

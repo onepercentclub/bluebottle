@@ -70,9 +70,13 @@ class BaseProjectManager(models.Manager):
         qs = super(BaseProjectManager, self).get_query_set()
 
         # Apply filters
-        status = query.get('status', None)
+        status = query.getlist(u'status[]', None)
         if status:
-            qs = qs.filter(status_id=status)
+            qs = qs.filter(status_id__in=status)
+        else:
+            status = query.get('status', None)
+            if status:
+                qs = qs.filter(status_id=status)
 
         country = query.get('country', None)
         if country:

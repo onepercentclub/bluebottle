@@ -257,26 +257,6 @@ App.CurrentUser = App.UserPreview.extend({
 App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     url: 'users',
 
-//    requiredFields: ['matchingEmail', 'validPassword'],
-
-//    emailErrorDict: {'property': 'email', 'validateProperty': 'matchingEmail', 'message': 'Emails don\'t match'},
-//    errorFields: ['emailErrorDict'],
-
-//    validateFields: function () {
-//        this.validatedFieldsProperty('validSignup', this.get('requiredFields'))
-//    }.property('matchingEmail', 'validPassword', 'email'),
-
-//    init: function () {
-//        this._super();
-//
-//        // this is not the right approach since those functions are called
-//        // when you enter the Signup page and not when you submit the
-//        // creation of the user.
-//        this.validationErrors('validUserCreate', this.get('errorFields'));
-//        this.validatedFieldsProperty('validSignup', this.get('requiredFields'));
-//        this.missingFieldsProperty('missingFieldsPitch', this.get('requiredPitchFields'));
-//    },
-
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
     email: DS.attr('string'),

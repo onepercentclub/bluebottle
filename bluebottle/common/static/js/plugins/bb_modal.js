@@ -2,9 +2,6 @@ BB = {};
 
 BB.ModalMixin = Em.Mixin.create({
     actions: {
-        createUser: function() {
-            debugger
-        },
         openInFullScreenBox: function(name, context) {
             this.send('openInBox', name, context, 'full-screen');
         },
@@ -18,7 +15,17 @@ BB.ModalMixin = Em.Mixin.create({
         },
 
         openInBox: function(name, context, type, callback) {
-            this.openInBox(name, context, type, callback);
+            this.render('modalContainer', {
+                into: 'application',
+                outlet: 'modalContainer',
+                controller: this.controllerFor('modalContainer')
+            });
+
+            return this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: this.controllerFor(name)
+            });
         },
         
         closeAllModals: function() {
@@ -32,38 +39,12 @@ BB.ModalMixin = Em.Mixin.create({
 
         modalFlip: function(name) {
             this.render(name, {
-                outlet: 'modalBack',
                 into: 'modalContainer',
+                outlet: 'modalBack',
+                controller: this.controllerFor(name)
             });
             $('#card').addClass('flipped');
         }
-    },
-
-    // Add openInBox as function on ApplicationRoute so that it can be used
-    // outside the usual template/action context
-    openInBox: function(name, context, type, callback) {
-        this.render('modalContainer', {
-            into: 'application'
-        });
-
-        this.render(name, {
-            outlet: 'modalFront',
-            into: 'modalContainer',
-        });
-
-        // var modalPaneTemplate = ['{{view view.bodyViewClass}}'].join("\n");
-
-        // var options = {
-        //     classNames: classNames,
-        //     defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-        //     bodyViewClass: view
-        // }
-
-        // if (callback) {
-        //     options.callback = callback;
-        // }
-
-        // Bootstrap.ModalPane.popup(options);
     },
 });
 

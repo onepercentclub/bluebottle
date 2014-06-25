@@ -13,7 +13,7 @@ App.SignupController = Ember.ObjectController.extend({
         });
 
         this.set('model', user);
-    }
+    },
 
     validationErrors: function () {
         // Only check error validations after submitting
@@ -72,17 +72,17 @@ App.SignupController = Ember.ObjectController.extend({
 App.UserController = Ember.Controller.extend({});
 
 
-App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
+// This is only being used as a means for other controllers to access the currentUser
+// This is done by injection in the currentUser intializer.
+// TODO: we should just set the currentUser property on the application controller or route
+//       and inject that so that it is available from all controllers.
+App.CurrentUserController = Ember.ObjectController.extend({});
 
+
+App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     availableTimes: function() {
         return App.TimeAvailable.find();
     }.property(),
-
-    // updateCurrentUser: function(record) {
-    //     var currentUser = App.CurrentUser.find('current');
-    //     currentUser.reload();
-    // }
-
 });
 
 
@@ -97,12 +97,10 @@ App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
         list.addObject({ name: gettext('Club / Association'), value: 'group'});
         return list;
     }).property(),
-
 });
 
 
 App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
-
     // Don't prompt the user to save if the 'fakeRecord' is set.
     stopEditing: function() {
         var record = this.get('model');
@@ -158,6 +156,7 @@ App.LoginController = Em.Controller.extend({
 
             var _this = this;
             return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
+                debugger
                 _this.set('currentUser.model', user);
                 _this.send('closeAllModals');
             }, function (error) {

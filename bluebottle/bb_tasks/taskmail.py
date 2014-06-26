@@ -24,7 +24,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.applied:
         receiver = task.author
         sender = task_member.member
-        link = '/#!/tasks/{0}'.format(task.id)
+        link = '/en/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
@@ -42,8 +42,8 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.rejected:
         sender = task.author
         receiver = task_member.member
-        task_list = '/#!/tasks'
-        link = '/#!/tasks/{0}'.format(task.id)
+        task_list = '/en/#!/tasks'
+        link = '/en/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
@@ -61,7 +61,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.accepted:
         sender = task.author
         receiver = task_member.member
-        link = '/#!/tasks/{0}'.format(task.id)
+        link = '/en/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         # Set the language for the receiver
@@ -78,9 +78,9 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.realized:
         sender = task.author
         receiver = task_member.member
-        link = '/#!/tasks/{0}'.format(task.id)
-        task_list = '/#!/tasks'
-        project_link = '/#!/projects/{0}'.format(task.project.slug)
+        link = '/en/#!/tasks/{0}'.format(task.id)
+        task_list = '/en/#!/tasks'
+        project_link = '/en/#!/projects/{0}'.format(task.project.slug)
 
         # Compose the mail
         # Set the language for the receiver
@@ -105,9 +105,9 @@ def task_member_withdraw(sender, instance, **kwargs):
 
     receiver = task.author
     sender = task_member.member
-    link = '/#!/tasks/{0}'.format(task.id)
-    task_list = '/#!/tasks'
-    project_link = '/#!/projects/{0}'.format(task.project.slug)
+    link = '/en/#!/tasks/{0}'.format(task.id)
+    task_list = '/en/#!/tasks'
+    project_link = '/en/#!/projects/{0}'.format(task.project.slug)
 
     # Compose the mail
     # Set the language for the receiver

@@ -9,9 +9,12 @@
                 <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
             </span>
             <h4>{{loginTitle}}</h4>
-            {{#if error}}
+            {{error.non_field_errors}}
+            {{#if error.non_field_errors.length}}
                 <div class="modal-flash-message">
-                    {{error.non_field_errors}}
+                    {{#each error.non_field_errors}}
+                        {{this}}
+                    {{/each}}
                 </p>
             {{/if}}
             {{partial "social_logins"}}
@@ -24,10 +27,6 @@
                 </div>
             </div>
             <a {{ action 'login' }} class="btn is-inactive" name="login">{% trans "Sign in" %}</a>
-            <div class="modal-flash-message success">
-                Sorry, there was an error connecting your
-                Facebook account. Please try again.
-            </div>
         </div>
         <div class="modal-fullscreen-footer">
             <span class="modal-btn-signup" href="#">

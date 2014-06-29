@@ -89,25 +89,25 @@ App.TaskSearchFormController = Em.ObjectController.extend({
 
 App.IsProjectOwnerMixin = Em.Mixin.create({
     isProjectOwner: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get'currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username')
+    }.property('controllers.project.model.owner', 'currentUser.username')
 });
 
 
 App.CanEditTaskMixin = Em.Mixin.create({
     canEdit: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var author_name = this.get('author.username');
         if (username) {
             return (username == author_name);
         }
         return false;
-    }.property('author', 'controllers.currentUser.username')
+    }.property('author', 'currentUser.username')
 });
 
 App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMixin, {
@@ -144,7 +144,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
     }.property('model.members.@each.status'),
 
     isMember: function() {
-        var user = this.get('controllers.currentUser.username');
+        var user = this.get('currentUser.username');
         var isMember = false;
         this.get('model.members').forEach(function(member) {
             var mem = member.get('member.username');
@@ -153,7 +153,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
             }
         });
         return isMember;
-    }.property('members.@each.member.username', 'controllers.currentUser.username'),
+    }.property('members.@each.member.username', 'currentUser.username'),
 
     canUpload: function(){
         return (this.get('isMember') || this.get('isAuthor'));
@@ -174,13 +174,13 @@ App.TaskActivityController = App.TaskController.extend({
     needs: ['task', 'currentUser', 'taskMember'],
 
     canEditTask: function() {
-        var user = this.get('controllers.currentUser.username');
+        var user = this.get('currentUser.username');
         var author_name = this.get('controllers.task.author.username');
         if (username) {
             return (username == author_name);
         }
         return false;
-    }.property('controllers.task.author', 'controllers.currentUser.username'),
+    }.property('controllers.task.author', 'currentUser.username'),
 
 });
 
@@ -212,13 +212,13 @@ App.TaskIndexController = Em.ArrayController.extend({
     },
 
     canAddMediaWallPost: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.task.model.author.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.task.model.author', 'controllers.currentUser.username')
+    }.property('controllers.task.model.author', 'currentUser.username')
 
 });
 
@@ -247,7 +247,7 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property('status'),
 
     isCurrentUser: function(){
-        var currentUser = this.get('controllers.currentUser.username');
+        var currentUser = this.get('currentUser.username');
         var member = this.get('member.username');
         if (member == currentUser){
             return true;
@@ -260,7 +260,7 @@ App.TaskMemberController = Em.ObjectController.extend({
         //       the result will be true if the user is the current user.
         // TODO: we should be injecting the currentUser into all controllers so we can do this.get('currentUser')
         //       in the controller and {{ currentUser }} in the templates.
-        return (this.get('controllers.currentUser.id_for_ember').toString() == this.get('task.author.id'));
+        return (this.get('currentUser.id_for_ember').toString() == this.get('task.author.id'));
     }.property('task.author.id'),
 
     canEditStatus: function(){
@@ -280,8 +280,7 @@ App.TaskMemberController = Em.ObjectController.extend({
 
     confirmation: function(){
         var task = this.get('task');
-        var currentUser = this.get('controllers.currentUser');
-        if (task.get('author.id') == currentUser.get('id_for_ember') &&
+        if (task.get('author.id') == this.get('currentUser.id_for_ember') &&
             task.get('isStatusRealized') && this.get('isStatusAccepted')) {
             return true;
         }

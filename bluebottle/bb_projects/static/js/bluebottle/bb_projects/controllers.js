@@ -116,13 +116,13 @@ App.ProjectController = Em.ObjectController.extend({
     }.property('tags.@each'),
 
     isProjectOwner: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('model.owner', 'controllers.currentUser.username')
+    }.property('model.owner', 'currentUser.username')
 
 });
 
@@ -174,8 +174,8 @@ App.ProjectIndexController = Em.ArrayController.extend({
     showingAll: null,
 
     isProjectOwner: function(){
-        return this.get('controllers.project.owner.username') == this.get('controllers.currentUser.username');
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+        return this.get('controllers.project.owner.username') == this.get('currentUser.username');
+    }.property('controllers.project.model.owner', 'currentUser.username'),
 
     remainingItemCount: function(){
         if (this.get('meta.total')) {
@@ -190,13 +190,13 @@ App.ProjectIndexController = Em.ArrayController.extend({
     }.property('perPage', 'page', 'meta.total'),
 
     canAddMediaWallPost: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+    }.property('controllers.project.model.owner', 'currentUser.username'),
 
     availableTasks: function () {
         return this.get('tasks').filter(function(task) {

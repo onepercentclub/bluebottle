@@ -263,7 +263,7 @@ App.WallPostReactionListController = Em.ArrayController.extend({
     createNewReaction: function() {
         var store = this.get('store');
         var reaction =  store.createRecord(App.WallPostReaction);
-        var name = this.get('controllers.currentUser.full_name');
+        var name = this.get('currentUser.full_name');
         var placeholder = "Hey " + name + ", you can leave a comment";
         reaction.set('placeholder', placeholder);
         this.set('newReaction', reaction);

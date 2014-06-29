@@ -2,7 +2,7 @@
  * Controllers
  */
 
-App.SignupController = Ember.ObjectController.extend(App.ControllerValidationMixin, {
+App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
     errorDefinitions : [
         {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails doesn\'t match')},

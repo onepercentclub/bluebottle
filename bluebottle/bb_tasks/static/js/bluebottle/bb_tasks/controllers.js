@@ -111,13 +111,11 @@ App.CanEditTaskMixin = Em.Mixin.create({
 });
 
 App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMixin, {
-    needs: ['currentUser', 'project']
+    needs: ['project']
 });
 
 
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, {
-    needs: ['currentUser'],
-
 	// you can apply to a task only if:
 	// the task is not closed, realized or completed
 	// (strange behaviour since completed is not a status but just a label)
@@ -171,7 +169,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
 
 App.TaskActivityController = App.TaskController.extend({
-    needs: ['task', 'currentUser', 'taskMember'],
+    needs: ['task', 'taskMember'],
 
     canEditTask: function() {
         var user = this.get('currentUser.username');
@@ -185,7 +183,7 @@ App.TaskActivityController = App.TaskController.extend({
 });
 
 App.TaskIndexController = Em.ArrayController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task'],
     perPage: 5,
     page: 1,
     remainingItemCount: function(){
@@ -224,7 +222,7 @@ App.TaskIndexController = Em.ArrayController.extend({
 
 
 App.TaskMemberController = Em.ObjectController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task'],
 
     isStatusApplied: function(){
         return this.get('status') == 'applied';
@@ -316,7 +314,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['currentUser', 'taskIndex', 'projectIndex'],
+    needs: ['taskIndex', 'projectIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
@@ -361,12 +359,10 @@ App.TaskEditController = App.TaskNewController.extend({
 });
 
 
-App.TaskPreviewController = Em.ObjectController.extend({
-});
+App.TaskPreviewController = Em.ObjectController.extend({});
 
 
-App.TaskMemberEditController = Em.ObjectController.extend({
-});
+App.TaskMemberEditController = Em.ObjectController.extend({});
 
 
 App.TaskFileNewController = Em.ObjectController.extend({

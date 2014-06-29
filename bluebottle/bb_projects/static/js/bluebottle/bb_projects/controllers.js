@@ -101,7 +101,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 
 
 App.ProjectController = Em.ObjectController.extend({
-    needs: ['projectIndex', 'currentUser'],
+    needs: ['projectIndex'],
 
     isFundable: function(){
        return (this.get('status') == '5' && this.get('campaign.money_asked'));
@@ -166,7 +166,7 @@ App.ProjectSupporterListController = Em.ArrayController.extend({
 });
 
 App.ProjectIndexController = Em.ArrayController.extend({
-    needs: ['project', 'currentUser'],
+    needs: ['project'],
     perPage: 5,
     page: 1,
     parentId: null,
@@ -263,7 +263,6 @@ App.MoveOnMixin = Ember.Mixin.create({
 });
 
 App.MyProjectListController = Em.ArrayController.extend({
-    needs: ['currentUser'],
     canPitchNew: function(){
         var can = true;
         this.get('model').forEach(function(project){
@@ -277,7 +276,7 @@ App.MyProjectListController = Em.ArrayController.extend({
 });
 
 App.MyProjectController = Em.ObjectController.extend({
-    needs: ['currentUser', 'myProjectOrganisation'],
+    needs: ['myProjectOrganisation'],
 
     // A way to automate things in the frontend, not yet used
 //	tabs: ['MyProjectStart', 'MyProjectPitch', 'MyProjectStory',
@@ -329,8 +328,6 @@ App.MyProjectController = Em.ObjectController.extend({
 });
 
 App.MyProjectStartController = App.StandardTabController.extend({
-    needs: ['currentUser'],
-
     nextStep: 'myProject.pitch'
 });
 

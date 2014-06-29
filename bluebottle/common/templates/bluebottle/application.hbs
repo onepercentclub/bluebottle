@@ -3,9 +3,11 @@
 {% load static %}
 
 {% tplhandlebars "application" %}
+    {{bb-flash data=flash}}
+    
     <!-- global site -->
     <div id="main">
-
+    
         <!-- global header -->
         <div id="header" class="l-section">
             <header class="l-wrapper">
@@ -51,6 +53,7 @@
 
         <!-- main content -->
         <div id="content">
+            <a {{action 'setFlash' 'Testing, testing!'}}>Set Flash</a>
             {{outlet}}
         </div>
         <!-- end: main content -->

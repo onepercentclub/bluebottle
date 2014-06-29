@@ -355,6 +355,15 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
+        setFlash: function (message, type) {
+            if (typeof type === 'undefined')
+                type = 'info'
+              
+            this.controllerFor('application').set('flash', {
+              text: message,
+              type: type
+            });
+        },
         logout: function () {
             // Do some logout stuff here!
         },

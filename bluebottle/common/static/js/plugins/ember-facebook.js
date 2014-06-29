@@ -50,8 +50,6 @@ Ember.FacebookMixin = Ember.Mixin.create({
         this.set('FBloading', true);
         FB.Event.subscribe('auth.authResponseChange', function(response) {
             if (typeof _this.appLogin == 'function') {
-                console.log("Bla");
-
                 _this.appLogin(response.authResponse);
             }
             return _this.updateFBUser(response);

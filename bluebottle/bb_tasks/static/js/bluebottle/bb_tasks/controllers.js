@@ -89,7 +89,7 @@ App.TaskSearchFormController = Em.ObjectController.extend({
 
 App.IsProjectOwnerMixin = Em.Mixin.create({
     isProjectOwner: function() {
-        var username = this.get'currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {
             return (username == ownername);

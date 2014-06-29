@@ -79,3 +79,13 @@ def conf_settings(request):
     context['COMPRESS_TEMPLATES'] = getattr(settings, 'COMPRESS_TEMPLATES', False)
 
     return context
+
+
+def facebook_auth_settings(request):
+    """
+    Facebook Auth client side ID.
+    """
+    context = {}
+    context['FACEBOOK_AUTH_ID'] = getattr(settings, 'FACEBOOK_AUTH_ID', '')
+
+    return context

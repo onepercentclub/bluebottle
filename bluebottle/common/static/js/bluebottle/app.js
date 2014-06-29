@@ -37,7 +37,7 @@ Ember.Application.initializer({
     }
 });
 
-App = Em.Application.create({
+App = Em.Application.createWithMixins(Em.FacebookMixin, {
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.

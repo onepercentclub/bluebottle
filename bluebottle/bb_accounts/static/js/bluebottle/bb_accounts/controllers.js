@@ -152,7 +152,7 @@ App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
     }
 });
 
-App.PasswordRequestController = Ember.Controller.extend({   //Ember.ObjectController.extend({
+App.PasswordRequestController = Ember.Controller.extend({
     needs: ['login'],
     resetPasswordTitle : 'Reset your password',
     contents: null,
@@ -161,54 +161,26 @@ App.PasswordRequestController = Ember.Controller.extend({   //Ember.ObjectContro
         requestReset: function() {
             var _this = this;
             return Ember.RSVP.Promise(function (resolve, reject) {
-                var email = this.get('controllers.login.username'),
+                var email = _this.get('controllers.login.username'),
                     hash = {
                         url: '/api/users/passwordreset',
                         dataType: "json",
                         type: 'put',
                         data: JSON.stringify({email: email}),
+                        contentType: 'application/json; charset=utf-8'
                     };
 
                 hash.success = function (response) {
                     var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
-                    var $success = $("<p>" + message +"</p>");
-
-                    $modal.find('.modal-body').html($success);
-                    $btn.remove();
+                    _this.set('successMessage', message)
                 };
 
                 hash.error = function (response) {
-                    debugger
                     var error = $.parseJSON(response.responseText);
                     _this.set('error', error);
                 };
 
                 Ember.$.ajax(hash);
-            });
-
-            $.ajax({
-                type: 'PUT',
-                url: '/api/users/passwordreset',
-                data: JSON.stringify({email: email}),
-                dataType: 'json',
-                contentType: 'application/json; charset=utf-8',
-                success: function() {
-                    var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
-                    var $success = $("<p>" + message +"</p>");
-
-                    $modal.find('.modal-body').html($success);
-                    $btn.remove();
-                },
-                error: function(xhr) {
-                    var error = $.parseJSON(xhr.responseText);
-                    $error.html(error.email);
-                    $error.removeClass('hidden');
-                    $error.fadeIn();
-                    $emailInput.addClass('error').val();
-                    $emailInput.keyUp(function() {
-                        $error.fadeOut();
-                    });
-                }
             });
         }
     }

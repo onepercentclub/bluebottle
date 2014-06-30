@@ -424,10 +424,18 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
         },
 
         showPage: function(pageId, newWindow) {
+            if (Ember.typeOf(newWindow) == 'undefined')
+                newWindow = false;
+
             var route = this;
             App.Page.find(pageId).then(function(page) {
-                route.transitionTo('page', page);
-                window.scrollTo(0, 0);
+                if (newWindow) {
+                    var url = route.router.generate('page', page);
+                    window.open(url, "_blank");
+                } else {
+                    route.transitionTo('page', page);
+                    window.scrollTo(0, 0);
+                }
             });
         }
     },

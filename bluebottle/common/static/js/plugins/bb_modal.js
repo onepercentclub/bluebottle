@@ -29,6 +29,9 @@ BB.ModalMixin = Em.Mixin.create({
                 controller: this.controllerFor('modalContainer')
             });
 
+            this.send('scrollDisableEnable');
+            this.send('closeKeyModal', '27');
+
             return this.render(name, {
                 into: 'modalContainer',
                 outlet: 'modalFront',
@@ -48,7 +51,31 @@ BB.ModalMixin = Em.Mixin.create({
                 });
             });
 
+            this.send('scrollDisableEnable');
+
             $('.modal-fullscreen-background').addClass('is-inactive');
+        },
+
+        scrollDisableEnable: function() {
+            $('body').toggleClass('is-stopped-scrolling');
+        },
+
+        closeKeyModal: function(key) {
+            var self = this;
+            $(document).on('keydown', function(e) {
+                if(e.keyCode == key) {
+                    self.send('closeModal');
+                }
+            });
+        },
+
+        closeClickModal: function() {
+            var string = event.target.className.substring();
+            var className = string.indexOf("is-active");
+
+            if (className > 0) {
+                this.send('closeModal');
+            }
         },
 
         modalFlip: function(name) {
@@ -71,7 +98,7 @@ BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin
 BB.ModalContainerView = Em.View.extend({
     tagName: null,
     template: Ember.Handlebars.compile([
-        '<div class="modal-fullscreen-background is-active">',
+        '<div class="modal-fullscreen-background is-active" {{action "closeClickModal"}}>',
             '<div class="modal-fullscreen-container">',
                 '<div id="card">',
                     '<figure class="front">',

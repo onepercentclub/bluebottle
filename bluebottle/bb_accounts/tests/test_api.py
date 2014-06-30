@@ -19,7 +19,7 @@ class UserApiIntegrationTest(TestCase):
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
         self.user_2 = BlueBottleUserFactory.create()
-        test_generate_username = "JWT {0}".format(self.user_2.get_jwt_token())
+        self.user_2_token = "JWT {0}".format(self.user_2.get_jwt_token())
 
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'

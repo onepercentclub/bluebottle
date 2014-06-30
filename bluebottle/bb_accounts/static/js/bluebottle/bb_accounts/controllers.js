@@ -188,7 +188,7 @@ App.PasswordRequestController = Ember.Controller.extend({
 
 App.PasswordResetController = Ember.ObjectController.extend({
     needs: ['login'],
-    resetPasswordTitle : 'Reset your password',
+    resetPasswordTitle : gettext('Reset your password'),
 
 
     resetDisabled: (function() {

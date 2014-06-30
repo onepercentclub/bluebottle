@@ -1,38 +1,51 @@
 {% load bb_ember i18n %}
 
 {% block login_wrapper %}
-    
+
     {% tplhandlebars "login" %}
 
         <div class="modal-fullscreen-content">
-            <span {{action 'closeAllModals'}} class="modal-fullscreen-close">
-                <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
-            </span>
+                    <span {{action 'closeAllModals'}} class="modal-fullscreen-close">
+                        <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg"
+                                class="modal-close-image"></object>
+                    </span>
             <h4>{{loginTitle}}</h4>
+
+
             {{#if error}}
                 <div class="modal-flash-message">
                     {{error.non_field_errors}}
-                </p>
+                </div>
             {{/if}}
+
+
             {{partial "social_logins"}}
             {{input valueBinding='username' type="text" name="username" maxlength="254" placeholder="E-mailaddress"}}
+
             <div class="password">
                 {{input valueBinding='password' type="password" name="password" placeholder="Password"}}
                 <div class="tooltip-holder">
                     <span class="questionmark">?</span>
-                    <div {{ action 'modalFlip' 'passwordReset' }} class="tooltip input">{% trans "Lost your password?" %}</div>
+                    <span class="modal-btn-signup" href="#">
+                        <div {{ action 'modalFlip' 'passwordRequest' }} class="tooltip input">{% trans "Lost your password?" %}</div>
+                    </span>
                 </div>
             </div>
+
             <a {{ action 'login' }} class="btn is-inactive">{% trans "Sign in" %}</a>
+
             <div class="modal-flash-message success">
                 Sorry, there was an error connecting your
                 Facebook account. Please try again.
             </div>
         </div>
         <div class="modal-fullscreen-footer">
-            <span class="modal-btn-signup" href="#">
-                {% trans "Don’t have an account?" %} <a {{ action 'modalFlip' 'signup' }} class="flip-back">{% trans "Sign up here" %}</a>
-            </span>
+                <span class="modal-btn-signup" href="#">
+                    {% trans "Don’t have an account?" %}
+                    <a {{ action 'modalFlip' 'signup' }} class="flip-back">
+                        {% trans "Sign up here" %}
+                    </a>
+                </span>
         </div>
 
     {% endtplhandlebars %}

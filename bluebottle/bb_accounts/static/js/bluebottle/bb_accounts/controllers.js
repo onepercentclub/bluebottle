@@ -16,6 +16,8 @@ App.SignupController = Ember.ObjectController.extend({
     },
 
     validationErrors: function () {
+        //TODO: ~MG update THIS with new validation controller mixin
+
         // Only check error validations after submitting
         if (!this.get('createAttempt'))
             return;
@@ -161,59 +163,77 @@ App.LoginController = Em.Controller.extend({
                 _this.set('error', error);
             });
         },
-        requestPasswordReset: function() {
-            // Close previous modal, if any.
-            $('.close').click();
 
-            var modalPaneTemplate = '<div>{{view templateName="request_password_reset"}}</div>';
 
-            Bootstrap.ModalPane.popup({
-                classNames: ['modal'],
-                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
+    }
+});
 
-                callback: function(opts, e) {
-                    if (opts.secondary) {
-                        var $btn        = $(e.target),
-                            $modal      = $btn.closest('.modal'),
-                            $emailInput = $modal.find('#passwordResetEmail'),
-                            $error      = $modal.find('#passwordResetError'),
-                            email       = $emailInput.val();
+App.PasswordRequestController = Ember.Controller.extend({   //Ember.ObjectController.extend({
+    needs: ['login'],
+    resetPasswordTitle : 'Reset your password',
+    contents: null,
 
-                        $.ajax({
-                            type: 'PUT',
-                            url: '/api/users/passwordreset',
-                            data: JSON.stringify({email: email}),
-                            dataType: 'json',
-                            contentType: 'application/json; charset=utf-8',
-                            success: function() {
-                                var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
-                                var $success = $("<p>" + message +"</p>");
+    actions: {
+        requestReset: function() {
+            var _this = this;
+            return Ember.RSVP.Promise(function (resolve, reject) {
+                var email = this.get('controllers.login.username'),
+                    hash = {
+                        url: '/api/users/passwordreset',
+                        dataType: "json",
+                        type: 'put',
+                        data: JSON.stringify({email: email}),
+                    };
 
-                                $modal.find('.modal-body').html($success);
-                                $btn.remove();
-                            },
-                            error: function(xhr) {
-                                var error = $.parseJSON(xhr.responseText);
-                                $error.html(error.email);
-                                $error.removeClass('hidden');
-                                $error.fadeIn();
-                                $emailInput.addClass('error').val();
-                                $emailInput.keyUp(function() {
-                                    $error.fadeOut();
-                                });
-                            }
-                        });
+                hash.success = function (response) {
+                    var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
+                    var $success = $("<p>" + message +"</p>");
 
-                        return false;
-                    }
+                    $modal.find('.modal-body').html($success);
+                    $btn.remove();
+                };
+
+                hash.error = function (response) {
+                    debugger
+                    var error = $.parseJSON(response.responseText);
+                    _this.set('error', error);
+                };
+
+                Ember.$.ajax(hash);
+            });
+
+            $.ajax({
+                type: 'PUT',
+                url: '/api/users/passwordreset',
+                data: JSON.stringify({email: email}),
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function() {
+                    var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
+                    var $success = $("<p>" + message +"</p>");
+
+                    $modal.find('.modal-body').html($success);
+                    $btn.remove();
+                },
+                error: function(xhr) {
+                    var error = $.parseJSON(xhr.responseText);
+                    $error.html(error.email);
+                    $error.removeClass('hidden');
+                    $error.fadeIn();
+                    $emailInput.addClass('error').val();
+                    $emailInput.keyUp(function() {
+                        $error.fadeOut();
+                    });
                 }
-            })
+            });
         }
     }
 });
 
 App.PasswordResetController = Ember.ObjectController.extend({
     needs: ['login'],
+    resetPasswordTitle : 'Reset your password',
+
 
     resetDisabled: (function() {
         return !(this.get('new_password1') || this.get('new_password2'));

@@ -187,7 +187,8 @@ App.PasswordRequestController = Ember.Controller.extend({
 
 App.PasswordRequestSuccessController = Ember.ObjectController.extend({
     needs: ['login'],
-    successRequestPasswordTitle : "Help is on its way"
+    successRequestPasswordTitle : "Help is on its way",
+    successMessage: gettext("We have sent a password reset link to")
 });
 
 App.PasswordResetController = Ember.ObjectController.extend({

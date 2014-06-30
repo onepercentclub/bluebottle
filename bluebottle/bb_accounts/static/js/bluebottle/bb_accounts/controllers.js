@@ -152,7 +152,7 @@ App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
     }
 });
 
-App.PasswordRequestController = Ember.Controller.extend({
+App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     requestResetPasswordTitle : gettext('Password reset request'),
     contents: null,
@@ -185,13 +185,13 @@ App.PasswordRequestController = Ember.Controller.extend({
     }
 });
 
-App.PasswordRequestSuccessController = Ember.ObjectController.extend({
+App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     successRequestPasswordTitle : gettext("Help is on its way"),
     successMessage: gettext("We have sent a password reset link to")
 });
 
-App.PasswordResetController = Ember.ObjectController.extend({
+App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     resetPasswordTitle : gettext('Reset your password'),
 

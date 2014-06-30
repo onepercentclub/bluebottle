@@ -86,6 +86,6 @@ def facebook_auth_settings(request):
     Facebook Auth client side ID.
     """
     context = {}
-    context['FACEBOOK_AUTH_ID'] = getattr(settings, 'FACEBOOK_AUTH_ID', '')
+    context['FACEBOOK_AUTH_ID'] = getattr(settings, 'SOCIAL_AUTH_FACEBOOK_KEY', '')
 
     return context

@@ -4,8 +4,8 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    errorDefinitions : [
-        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails doesn\'t match')},
+    errorDefinitions: [
+        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
         {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')}
     ],
 
@@ -139,7 +139,7 @@ App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
 
             var _this = this;
-            return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
+            return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');
                 _this.send('setFlash', 'Testing!')
@@ -152,7 +152,7 @@ App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
     }
 });
 
-App.PasswordRequestController = Ember.Controller.extend({
+App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     requestResetPasswordTitle : gettext('Password reset request'),
     contents: null,
@@ -185,46 +185,62 @@ App.PasswordRequestController = Ember.Controller.extend({
     }
 });
 
-App.PasswordRequestSuccessController = Ember.ObjectController.extend({
+App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     successRequestPasswordTitle : gettext("Help is on its way"),
     successMessage: gettext("We have sent a password reset link to")
 });
 
-App.PasswordResetController = Ember.ObjectController.extend({
+App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     needs: ['login'],
     resetPasswordTitle : gettext('Reset your password'),
+    successMessage: gettext('Password succesfully updated'),
 
+    errorDefinitions: [
+        {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')},
+        {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
+    ],
 
     resetDisabled: (function() {
         return !(this.get('new_password1') || this.get('new_password2'));
     }).property('new_password1', 'new_password2'),
 
-    resetPassword: function(record) {
-        var passwordResetController = this;
+    actions: {
+        resetPassword: function (record) {
+            debugger
+            var _this = this;
+            // Ignoring API errors here, we are passing ignoreApiErrors=true
+            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model.'), true));
 
-        record.one('didUpdate', function() {
-            var loginController = passwordResetController.get('controllers.login');
-            var view = App.LoginView.create({
-                next: "/"
+            // Check client side errors
+            if (_this.get('validationErrors')) {
+                return false
+            }
+            record.one('didUpdate', function() {
+                var loginController = passwordResetController.get('controllers.login');
+                var view = App.LoginView.create({
+                    next: "/"
+
+                });
+                view.set('controller', loginController);
+
+                loginController.set('post_password_reset', true);
+
             });
-            view.set('controller', loginController);
-
-            loginController.set('post_password_reset', true);
-
-            var modalPaneTemplate = '{{view view.bodyViewClass}}';
-
-            Bootstrap.ModalPane.popup({
-                classNames: ['modal'],
-                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-                bodyViewClass: view
+            record.save().then(function () {
+                return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
+                    _this.set('currentUser.model', user);
+                    _this.send('closeModal');
+                    _this.send('setFlash', 'Testing!')
+                    }, function (error) {
+                        _this.set('error', error);
+                    }, function (error) {
+                        _this.set('error', error);
+                });
             });
-        });
-
-        record.save();
+        }
     }
 });
-
 
 App.ProfileController = Ember.ObjectController.extend({
     addPhoto: function(file) {

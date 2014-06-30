@@ -188,6 +188,11 @@ App.UserOrdersRoute = Em.Route.extend({
 
 
 App.PasswordResetRoute = Em.Route.extend({
+    renderTemplate: function() {
+        this.render('home');
+        this.send('openInBox', 'passwordReset');
+    },
+
     model: function(params) {
         var route = this;
 

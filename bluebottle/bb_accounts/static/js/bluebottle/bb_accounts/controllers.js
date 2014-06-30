@@ -154,7 +154,7 @@ App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
 
 App.PasswordRequestController = Ember.Controller.extend({
     needs: ['login'],
-    resetPasswordTitle : 'Reset your password',
+    requestResetPasswordTitle : gettext('Password reset request'),
     contents: null,
 
     actions: {
@@ -171,8 +171,7 @@ App.PasswordRequestController = Ember.Controller.extend({
                     };
 
                 hash.success = function (response) {
-                    var message = gettext("YOU'VE GOT MAIL!<br /><br />We've sent you a link to reset your password, so check your mailbox.<br /><br />(No mail? It might have ended up in your spam folder)");
-                    _this.set('successMessage', message)
+                    _this.send('modalFlip', 'passwordRequestSuccess');
                 };
 
                 hash.error = function (response) {
@@ -186,9 +185,15 @@ App.PasswordRequestController = Ember.Controller.extend({
     }
 });
 
+App.PasswordRequestSuccessController = Ember.ObjectController.extend({
+    needs: ['login'],
+    successRequestPasswordTitle : gettext("Help is on its way"),
+    successMessage: gettext("We have sent a password reset link to")
+});
+
 App.PasswordResetController = Ember.ObjectController.extend({
     needs: ['login'],
-    resetPasswordTitle : 'Reset your password',
+    resetPasswordTitle : gettext('Reset your password'),
 
 
     resetDisabled: (function() {

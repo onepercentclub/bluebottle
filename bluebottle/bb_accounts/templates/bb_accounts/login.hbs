@@ -8,7 +8,7 @@
             <span {{action 'close'}} class="modal-fullscreen-close">
                 <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
             </span>
-            {{#if username}}
+            {{#if userMatch}}
                 <h4>{% trans "Hello? Is it me you’re looking for?" %}</h4>
                 <div class="modal-flash-message info">
                     {{username}} {% trans "has already been registered with Bluebottle Project. Is this you? Please sign in below." %}

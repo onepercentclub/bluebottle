@@ -70,16 +70,17 @@ class UserCreate(generics.CreateAPIView):
             self.object = serializer.save(force_insert=True)
             self.post_save(self.object, created=True)
             headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED,
+            return response.Response(serializer.data, status=status.HTTP_201_CREATED,
                             headers=headers)
 
         # If the error is due to a conflict with an existing user then the API
         # reponse should include these details
         errors = serializer.errors
         try: 
-            get_user_model().objects.get(email=request.DATA['email'])
-            errors['conflict'] = True
-        except DoesNotExist:
+            if request.DATA.has_key('email'):
+                BB_USER_MODEL.objects.get(email=request.DATA['email'])
+                errors['conflict'] = True
+        except BB_USER_MODEL.DoesNotExist:
             pass
             
         # TODO: should we be returing something like a 409_CONFLICT if there is already

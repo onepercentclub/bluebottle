@@ -49,8 +49,9 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             }, function (failedUser) {
                 // If the user create failed due to a conflict then transition to the 
                 // login modal so the user can sign in.
+                // We set userMatch = true so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
-                    var loginObject = Em.Object.create({username: failedUser.get('email')});
+                    var loginObject = Em.Object.create({userMatch: true, username: failedUser.get('email')});
 
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
@@ -139,8 +140,13 @@ App.UserModalController = Ember.ObjectController.extend({
 });
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
-    content: null,
     loginTitle: gettext('Log in to <Bluebottle Project>'),
+
+    init: function () {
+        this._super();
+
+        this.set('content', Em.Object.create());
+    },
 
     actions: {
         login: function () {

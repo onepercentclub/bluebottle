@@ -19,7 +19,7 @@ class UserApiIntegrationTest(TestCase):
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
         self.user_2 = BlueBottleUserFactory.create()
-        self.user_2_token = "JWT {0}".format(self.user_2.get_jwt_token())
+        test_generate_username = "JWT {0}".format(self.user_2.get_jwt_token())
 
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
@@ -102,8 +102,7 @@ class UserApiIntegrationTest(TestCase):
         new_user_email = 'nijntje27@hetkonijntje.nl'
         new_user_password = 'testing'
         response = self.client.post(self.user_create_api_url, {'email': new_user_email,
-                                                               'password': new_user_password},
-                                                               HTTP_AUTHORIZATION=self.user_1_token)
+                                                               'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         token = "JWT {0}".format(response.data['jwt_token'])
         user_id = response.data['id']

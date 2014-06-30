@@ -142,6 +142,7 @@ App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
             return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');
+                _this.send('setFlash', 'Testing!')
             }, function (error) {
                 _this.set('error', error);
             });

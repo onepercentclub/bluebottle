@@ -37,7 +37,7 @@ Ember.Application.initializer({
     }
 });
 
-App = Em.Application.create({
+App = Em.Application.createWithMixins(Em.FacebookMixin, {
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -355,6 +355,15 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
+        setFlash: function (message, type) {
+            if (typeof type === 'undefined')
+                type = 'info'
+              
+            this.controllerFor('application').set('flash', {
+              text: message,
+              type: type
+            });
+        },
         logout: function () {
             // Do some logout stuff here!
         },

@@ -7,8 +7,24 @@ body {
 // Global Layout Elements
 // -------------------------
 
+#site {
+  & > .flash {
+    width: 100%;
+    background-color: green;
+    position: absolute;
+    height: 24px;
+    z-index: 1000;
+    color: white;
+    text-align: center;
+
+    &.error {
+        background-color: red;
+    }
+  }
+}
+
 #main {
-	
+
 }
 
 .l-section {

@@ -21,13 +21,13 @@ App.TimeNeededSelectView = Em.Select.extend({
 
 App.IsAuthorMixin = Em.Mixin.create({
     isAuthor: function () {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var authorname = this.get('author.username');
         if (username) {
             return (username == authorname);
         }
         return false;
-    }.property('author.username', 'controllers.currentUser.username')
+    }.property('author.username', 'currentUser.username')
 });
 
 

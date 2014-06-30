@@ -43,13 +43,13 @@
 	
 	
 
-    {{#if controllers.currentUser.isAuthenticated }}
+    {{#if currentUser.isAuthenticated }}
         <form class="reaction-form">
             <fieldset>
                 <ul>
                 <li {{bindAttr class="errors.text.length:error"}}>
                     <span class="member-avatar">
-                        <img {{bindAttr src="controllers.currentUser.getAvatar" title="controllers.currentUser.fullname"}} alt="You" />
+                        <img {{bindAttr src="currentUser.getAvatar" title="currentUser.fullname"}} alt="You" />
                     </span>
 
                     {{#each errors.text}}

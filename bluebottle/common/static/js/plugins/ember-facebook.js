@@ -3,11 +3,9 @@ Ember.FacebookMixin = Ember.Mixin.create({
     appId: void 0,
     facebookParams: Ember.Object.create(),
     fetchPicture: true,
-    FBStatus: null,
 
     init: function() {
         this._super();
-
         return window.FBApp = this;
     },
 
@@ -93,16 +91,11 @@ Ember.FacebookMixin = Ember.Mixin.create({
                     });
                 } else {
                     _this.set('FBUser', FBUser);
-
                     return _this.set('FBloading', false);
                 }
             });
         } else {
             this.set('FBUser', false);
-
-            if (response.status === 'unknown'){
-                this.set('FBStatus', {notice: gettext('Facebook not connected')} );
-            }
             return this.set('FBloading', false);
         }
     }

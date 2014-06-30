@@ -60,6 +60,32 @@ class UserCreate(generics.CreateAPIView):
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         return login(request, user)
 
+    # Overriding the default create so that we can return extra info in the response
+    # if there is already a user with the same email address
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.DATA, files=request.FILES)
+
+        if serializer.is_valid():
+            self.pre_save(serializer.object)
+            self.object = serializer.save(force_insert=True)
+            self.post_save(self.object, created=True)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED,
+                            headers=headers)
+
+        # If the error is due to a conflict with an existing user then the API
+        # reponse should include these details
+        errors = serializer.errors
+        try: 
+            get_user_model().objects.get(email=request.DATA['email'])
+            errors['conflict'] = True
+        except DoesNotExist:
+            pass
+            
+        # TODO: should we be returing something like a 409_CONFLICT if there is already
+        #       an existing user with the same emails address?
+        return response.Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
     def post_save(self, obj, created=False):
         # Create a RegistrationProfile and email its activation key to the User.
         registration_profile = RegistrationProfile.objects.create_profile(obj)

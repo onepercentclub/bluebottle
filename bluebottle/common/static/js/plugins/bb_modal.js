@@ -51,12 +51,18 @@ BB.ModalMixin = Em.Mixin.create({
             $('.modal-fullscreen-background').addClass('is-inactive');
         },
 
-        modalFlip: function(name) {
+        modalFlip: function(name, model) {
+            var controller = this.controllerFor(name);
+
+            if (Em.typeOf(model) != 'undefined')
+                controller.set('model', model);
+
             this.render(name, {
                 into: 'modalContainer',
                 outlet: 'modalBack',
-                controller: this.controllerFor(name)
+                controller: controller
             });
+
             $('#card').addClass('flipped');
         }
     },

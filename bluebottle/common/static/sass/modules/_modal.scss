@@ -190,7 +190,7 @@ $base-line-height                                          : 1.5em !default;
 		width: 100%;
 		height: 100%;
 		@include transform-style(preserve-3d);
-		@include transition(transform 1s);
+		@include transition(transform .3s);
 
 		figure {
 			display: block;

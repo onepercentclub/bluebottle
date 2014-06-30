@@ -58,6 +58,10 @@ BB.ModalMixin = Em.Mixin.create({
                 controller: this.controllerFor(name)
             });
             $('#card').addClass('flipped');
+        },
+
+        modalFlipBack: function(name) {
+            $('#card').removeClass('flipped');
         }
     },
 });

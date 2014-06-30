@@ -1,5 +1,13 @@
 BB = {};
 
+BB.ModalControllerMixin = Em.Mixin.create({
+    actions: {
+        close: function () {
+            this.send('closeModal');
+        }
+    }
+})
+
 BB.ModalMixin = Em.Mixin.create({
     actions: {
         openInFullScreenBox: function(name, context) {
@@ -28,18 +36,19 @@ BB.ModalMixin = Em.Mixin.create({
             });
         },
         
-        closeAllModals: function() {
-            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd';
-            $('.modal-fullscreen-background').one(animationEnd, function(){
-                $('.modal-fullscreen-background').removeClass('is-active');
-                $('.modal-fullscreen-background').removeClass('is-inactive');
-            });
-            $('.modal-fullscreen-background').addClass('is-inactive');
+        closeModal: function() {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                _this = this;
 
-            return this.disconnectOutlet({
-                outlet: 'modalContainer',
-                parentView: 'application'
+            $('.modal-fullscreen-background').one(animationEnd, function(){
+                // Finally clear the outlet
+                _this.disconnectOutlet({
+                    outlet: 'modalContainer',
+                    parentView: 'application'
+                });
             });
+
+            $('.modal-fullscreen-background').addClass('is-inactive');
         },
 
         modalFlip: function(name) {
@@ -53,24 +62,21 @@ BB.ModalMixin = Em.Mixin.create({
     },
 });
 
-BB.ModalContainerController = Em.ObjectController.extend({});
+BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {});
 
 BB.ModalContainerView = Em.View.extend({
-	tagName: '',
-	template: Ember.Handlebars.compile([
-    '<div class="modal-fullscreen-background is-active">',
-        '<div class="modal-fullscreen-container">',
-        '<div id="card">',
-            '<figure class="front">',
-                '<div class="modal-fullscreen-item">',
-                    '{{outlet "modalFront"}}',
+    tagName: null,
+    template: Ember.Handlebars.compile([
+        '<div class="modal-fullscreen-background is-active">',
+            '<div class="modal-fullscreen-container">',
+                '<div id="card">',
+                    '<figure class="front">',
+                        '<div class="modal-fullscreen-item">{{outlet "modalFront"}}</div>',
+                    '</figure>',
+                    '<figure class="back">',
+                        '<div class="modal-fullscreen-item">{{outlet "modalBack"}}</div>',
+                    '</figure>',
                 '</div>',
-            '</figure>',
-            '<figure class="back">',
-                '<div class="modal-fullscreen-item">',
-                    '{{outlet "modalBack"}}',
-                '</div>',
-            '</figure>',
-        '</div>',
-    '</div>'].join("\n"))
+            '</div>',
+        '</div>'].join("\n"))
 });

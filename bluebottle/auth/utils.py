@@ -2,7 +2,7 @@ from requests import request, HTTPError
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from apps.auth.exceptions import EmailExists
+from bluebottle.auth.exceptions import EmailExists
 
 USER_MODEL = get_user_model()
 

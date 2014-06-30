@@ -3,6 +3,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
     appId: void 0,
     facebookParams: Ember.Object.create(),
     fetchPicture: true,
+    FBStatus: null,
 
     init: function() {
         this._super();
@@ -48,21 +49,24 @@ Ember.FacebookMixin = Ember.Mixin.create({
         FB.init(facebookParams);
 
         this.set('FBloading', true);
+
+
         FB.Event.subscribe('auth.authResponseChange', function(response) {
             if (typeof _this.appLogin == 'function') {
-                _this.appLogin(response.authResponse);
+                _this.appLogin(response.authResponse)
             }
             return _this.updateFBUser(response);
         });
 
         return FB.getLoginStatus(function(response) {
+
             if (response.status === 'connected') {
-                console.log("FB accesstoken", response.authResponse.accessToken);
 
                 if (typeof _this.appLogin == 'function') {
                     _this.appLogin(response.authResponse);
                 }
             }
+
             return _this.updateFBUser(response);
         });
     },
@@ -81,8 +85,11 @@ Ember.FacebookMixin = Ember.Mixin.create({
                     return FB.api('/me/picture', function(resp) {
                         FBUser.picture = resp.data.url;
                         _this.set('FBUser', FBUser);
-
-                        return _this.set('FBloading', false);
+                        return FB.api('/me/picture?type=large', function(resp) {
+                            FBUser.largePicture = resp.data.url;
+                            _this.set('FBUser', FBUser);
+                            return _this.set('FBloading', false);
+                        });
                     });
                 } else {
                     _this.set('FBUser', FBUser);
@@ -93,6 +100,9 @@ Ember.FacebookMixin = Ember.Mixin.create({
         } else {
             this.set('FBUser', false);
 
+            if (response.status === 'unknown'){
+                this.set('FBStatus', {notice: gettext('Facebook not connected')} );
+            }
             return this.set('FBloading', false);
         }
     }

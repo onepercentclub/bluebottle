@@ -36,8 +36,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', App.CurrentUser.find('current'));
-                    // TODO: close the modal when we start using one for signup
-                    //      _this.send('closeAllModals');
+                    _this.send('close');
+                    
                     // For now we just transition to home page
                     _this.transitionToRoute('/');
                 }, function () {

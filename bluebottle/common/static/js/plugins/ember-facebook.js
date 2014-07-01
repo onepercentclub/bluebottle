@@ -114,17 +114,37 @@ Ember.FacebookMixin = Ember.Mixin.create({
     }
 });
 
+
+
 Ember.FBView = Ember.View.extend({
    classNames: ['btn', 'btn-facebook', 'btn-iconed', 'fb-login-button'],
+   error: null,
    click: function(e){
-       FB.login(function(response){
-          console.log("KUKOO!", response);
-          if (response.authResponse == null && response.status == 'unknown'){
-              console.log("There was an error logging in the user or authorizing the app");
-          }
+       var _this = this;
+       FB.getLoginStatus(function(response) {
+            if (response.status === 'connected') {
+                App.appLogin(response.authResponse);
+
+            } else {
+               FB.login(function(response){
+                  console.log("KUKOO!", response);
+                  if (response.status === 'connected') {
+                    App.appLogin(response.authResponse);
+
+                  }
+
+                  if (response.authResponse == null && response.status == 'unknown'){
+                      console.log("There was an error logging in the user or authorizing the app");
+                      FBApp.set('connectError', gettext("There was an error logging in the user or authorizing the app"));
+                  }
+               });
+            }
        });
    }
 });
+
+
+
 Ember.FacebookView = Ember.View.extend({
     classNameBindings: ['className'],
     attributeBindings: [],

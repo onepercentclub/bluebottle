@@ -124,18 +124,15 @@ Ember.FBView = Ember.View.extend({
        FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
                 App.appLogin(response.authResponse);
-
             } else {
                FB.login(function(response){
-                  console.log("KUKOO!", response);
                   if (response.status === 'connected') {
                     App.appLogin(response.authResponse);
 
                   }
 
                   if (response.authResponse == null && response.status == 'unknown'){
-                      console.log("There was an error logging in the user or authorizing the app");
-                      FBApp.set('connectError', gettext("There was an error logging in the user or authorizing the app"));
+                      FBApp.set('connectError', gettext("There was an error connecting Facebook"));
                   }
                });
             }

@@ -252,14 +252,17 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                         Ember.run(null, reject, 'JWT token not returned!');
 
                     App.AuthJwt.processSuccessResponse(response).then(function (user) {
-                        debugger
                         // Set the current user and close the modal
                         _this.set('currentUser.model', user);
-                        _this.send('close')
+                        _this.send('setFlash', _this.get('successMessage'));
+                        _this.send('close');
 
                         // Resolve the promise
                         Ember.run(null, resolve, user);
                     }, function (error) {
+                        var msg = gettext('Huston, there was a problem!')
+                        _this.set('error', msg);
+
                         // Reject the promise
                         Ember.run(null, reject, error);
                     });
@@ -268,6 +271,9 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                 hash.error = function (response) {
                     var msg = gettext('Invalid token, try request a new password again')
                     _this.set('error', msg);
+
+                    // Reject the promise
+                    Ember.run(null, reject, msg);
                 };
 
                 Ember.$.ajax(hash);

@@ -8,15 +8,14 @@
             <span {{action 'close'}} class="modal-fullscreen-close">
                 <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
             </span>
-            <h4>{{loginTitle}}</h4>
-            {{#if error.non_field_errors.length}}
-                <div class="modal-flash-message">
-                    {{#each error.non_field_errors}}
-                        {{this}}
-                    {{/each}}
+            {{#if userMatch}}
+                <h4>{% trans "Hello? Is it me you’re looking for?" %}</h4>
+                <div class="modal-flash-message info">
+                    {{username}} {% trans "has already been registered with Bluebottle Project. Is this you? Please sign in below." %}
                 </div>
+            {{else}}
+                <h4>{{loginTitle}}</h4>
             {{/if}}
-
 
             {{partial "social_logins"}}
             {{input valueBinding='username' type="text" name="username" maxlength="254" placeholder="E-mailaddress"}}
@@ -31,10 +30,13 @@
                 </div>
             </div>
             <a {{ action 'login' }} class="btn is-inactive" name="login">{% trans "Sign in" %}</a>
-            <div class="modal-flash-message success">
-                Sorry, there was an error connecting your
-                Facebook account. Please try again.
-            </div>
+            {{#if error.non_field_errors.length}}
+                <div class="modal-flash-message error">
+                    {{#each error.non_field_errors}}
+                        {{this}}
+                    {{/each}}
+                </div>
+            {{/if}}
         </div>
         <div class="modal-fullscreen-footer">
                 <span class="modal-btn-signup" href="#">

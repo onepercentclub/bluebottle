@@ -29,15 +29,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             if (_this.get('validationErrors')) {
                 return false
             }
-            user.save().then(function(createdUser) {
+            user.save().then(function(newUser) {
                 var response = {
-                    token: createdUser.get('jwt_token')
+                    token: newUser.get('jwt_token')
                 };
+
                 return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', App.CurrentUser.find('current'));
-                    // TODO: close the modal when we start using one for signup
-                    //      _this.send('closeAllModals');
+                    _this.send('close');
+                    
                     // For now we just transition to home page
                     _this.transitionToRoute('/');
                 }, function () {
@@ -45,9 +46,18 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
                 });
 
-            }, function () {
-                // Handle error message here!
-                _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
+            }, function (failedUser) {
+                // If the user create failed due to a conflict then transition to the 
+                // login modal so the user can sign in.
+                // We set userMatch = true so the login controller can notify the user.
+                if (failedUser.errors.conflict) {
+                    var loginObject = Em.Object.create({userMatch: true, username: failedUser.get('email')});
+
+                    _this.send('modalFlip', 'login', loginObject);
+                } else {
+                    // Handle error message here!
+                    _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
+                }
             });
         }
     }
@@ -129,10 +139,14 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.Controller.extend(BB.ModalControllerMixin, {
-    loginTitle: 'Log in to <Bluebottle Project>',
-    username: null,
-    password: null,
+App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
+    loginTitle: gettext('Log in to <Bluebottle Project>'),
+
+    init: function () {
+        this._super();
+
+        this.set('content', Em.Object.create());
+    },
 
     actions: {
         login: function () {

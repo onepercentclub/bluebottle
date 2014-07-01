@@ -23,7 +23,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         createUser: function(user) {
             var _this = this;
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model.'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
@@ -172,11 +172,13 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
 
                 hash.success = function (response) {
                     _this.send('modalFlip', 'passwordRequestSuccess');
+                    Ember.run(null, resolve, response);
                 };
 
                 hash.error = function (response) {
                     var error = $.parseJSON(response.responseText);
                     _this.set('error', error);
+                    Ember.run(null, reject, error);
                 };
 
                 Ember.$.ajax(hash);
@@ -193,8 +195,8 @@ App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalCon
 
 App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     needs: ['login'],
-    resetPasswordTitle : gettext('Reset your password'),
-    successMessage: gettext('Password succesfully updated'),
+    resetPasswordTitle : gettext('Make it one to remember'),
+    successMessage: gettext('We\'ve updated your password, you\'re all set!'),
 
     errorDefinitions: [
         {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')},
@@ -207,36 +209,54 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
 
     actions: {
         resetPassword: function (record) {
-            debugger
-            var _this = this;
+            var _this = this,
+                model = this.get('model');
+
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model.'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
                 return false
             }
-            record.one('didUpdate', function() {
-                var loginController = passwordResetController.get('controllers.login');
-                var view = App.LoginView.create({
-                    next: "/"
 
-                });
-                view.set('controller', loginController);
+            return Ember.RSVP.Promise(function (resolve, reject) {
+                var token = _this.get('model.id'),
+                    hash = {
+                        url: '/api/users/passwordset/' + token,
+                        dataType: "json",
+                        type: 'put',
+                        data: JSON.stringify({
+                            new_password1: model.get('new_password1'),
+                            new_password2: model.get('new_password2')
+                        }),
+                        contentType: 'application/json; charset=utf-8'
+                    };
 
-                loginController.set('post_password_reset', true);
+                hash.success = function (response) {
+                    if (!response.token)
+                        Ember.run(null, reject, 'JWT token not returned!');
 
-            });
-            record.save().then(function () {
-                return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
-                    _this.set('currentUser.model', user);
-                    _this.send('closeModal');
-                    _this.send('setFlash', 'Testing!')
+                    App.AuthJwt.processSuccessResponse(response).then(function (user) {
+                        debugger
+                        // Set the current user and close the modal
+                        _this.set('currentUser.model', user);
+                        _this.send('close')
+
+                        // Resolve the promise
+                        Ember.run(null, resolve, user);
                     }, function (error) {
-                        _this.set('error', error);
-                    }, function (error) {
-                        _this.set('error', error);
-                });
+                        // Reject the promise
+                        Ember.run(null, reject, error);
+                    });
+                };
+
+                hash.error = function (response) {
+                    var msg = gettext('Invalid token, try request a new password again')
+                    _this.set('error', msg);
+                };
+
+                Ember.$.ajax(hash);
             });
         }
     }

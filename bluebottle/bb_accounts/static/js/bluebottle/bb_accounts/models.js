@@ -273,7 +273,7 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
 });
 
 
-App.PasswordReset = DS.Model.extend({
+App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
     url: 'users/passwordset',
 
     new_password1: DS.attr('string'),
@@ -284,6 +284,8 @@ App.PasswordReset = DS.Model.extend({
     matchingPassword: function() {
         return !Em.compare(this.get('new_password1'), this.get('new_password2'));
     }.property('new_password1', 'new_password2')
+
+
 });
 
 

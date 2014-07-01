@@ -4,8 +4,8 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    errorDefinitions: [
-        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
+    errorDefinitions : [
+        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails doesn\'t match')},
         {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')}
     ],
 
@@ -23,7 +23,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         createUser: function(user) {
             var _this = this;
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model.'), true));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
@@ -71,7 +71,7 @@ App.UserController = Ember.Controller.extend({});
 // This is done by injection in the currentUser intializer.
 // TODO: we should just set the currentUser property on the application controller or route
 //       and inject that so that it is available from all controllers.
-App.CurrentUserController = Ember.ObjectController.extend({});
+App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin, {});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
@@ -153,18 +153,10 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
 
             var _this = this;
-            return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
+            return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');
-
-                // If this is the users first login then flash a welcome message
-                if (user.get('firstLogin')) {
-                    var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
-                        msg2 = gettext(' Ready to do some good?'),
-                        msg = msg1 + ' ' + msg2;
-
-                    _this.send('setFlash', msg);
-                }
+                _this.send('setFlash', 'Testing!')
             }, function (error) {
                 _this.set('error', error);
             });
@@ -176,7 +168,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
 
 App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin, {
     needs: ['login'],
-    requestResetPasswordTitle : gettext('Trouble signin in?'),
+    requestResetPasswordTitle : gettext('Password reset request'),
     contents: null,
 
     actions: {
@@ -194,13 +186,11 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
 
                 hash.success = function (response) {
                     _this.send('modalFlip', 'passwordRequestSuccess');
-                    Ember.run(null, resolve, response);
                 };
 
                 hash.error = function (response) {
                     var error = $.parseJSON(response.responseText);
                     _this.set('error', error);
-                    Ember.run(null, reject, error);
                 };
 
                 Ember.$.ajax(hash);
@@ -212,79 +202,43 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
 App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     successRequestPasswordTitle : gettext("Help is on its way"),
-    successMessage: gettext("We\'ve sent a password reset link to")
+    successMessage: gettext("We have sent a password reset link to")
 });
 
-App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
+App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['login'],
-    resetPasswordTitle : gettext('Make it one to remember'),
-    successMessage: gettext('We\'ve updated your password, you\'re all set!'),
+    resetPasswordTitle : gettext('Reset your password'),
 
-    errorDefinitions: [
-        {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')},
-        {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
-    ],
 
-    actions: {
-        resetPassword: function (record) {
-            var _this = this,
-                model = this.get('model');
+    resetDisabled: (function() {
+        return !(this.get('new_password1') || this.get('new_password2'));
+    }).property('new_password1', 'new_password2'),
 
-            // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
+    resetPassword: function(record) {
+        var passwordResetController = this;
 
-            // Check client side errors
-            if (_this.get('validationErrors')) {
-                return false
-            }
-
-            return Ember.RSVP.Promise(function (resolve, reject) {
-                var token = _this.get('model.id'),
-                    hash = {
-                        url: '/api/users/passwordset/' + token,
-                        dataType: "json",
-                        type: 'put',
-                        data: JSON.stringify({
-                            new_password1: model.get('new_password1'),
-                            new_password2: model.get('new_password2')
-                        }),
-                        contentType: 'application/json; charset=utf-8'
-                    };
-
-                hash.success = function (response) {
-                    if (!response.token)
-                        Ember.run(null, reject, 'JWT token not returned!');
-
-                    App.AuthJwt.processSuccessResponse(response).then(function (user) {
-                        // Set the current user and close the modal
-                        _this.set('currentUser.model', user);
-                        _this.send('setFlash', _this.get('successMessage'));
-                        _this.send('close');
-
-                        // Resolve the promise
-                        Ember.run(null, resolve, user);
-                    }, function (error) {
-                        var msg = gettext('Huston, there was a problem!')
-                        _this.set('error', msg);
-
-                        // Reject the promise
-                        Ember.run(null, reject, error);
-                    });
-                };
-
-                hash.error = function (response) {
-                    var msg = gettext('Invalid token, try request a new password again')
-                    _this.set('error', msg);
-
-                    // Reject the promise
-                    Ember.run(null, reject, msg);
-                };
-
-                Ember.$.ajax(hash);
+        record.one('didUpdate', function() {
+            var loginController = passwordResetController.get('controllers.login');
+            var view = App.LoginView.create({
+                next: "/"
             });
-        }
+            view.set('controller', loginController);
+
+            loginController.set('post_password_reset', true);
+
+            var modalPaneTemplate = '{{view view.bodyViewClass}}';
+
+            Bootstrap.ModalPane.popup({
+                classNames: ['modal'],
+                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
+                bodyViewClass: view
+            });
+        });
+
+        record.save();
     }
 });
+
 
 App.ProfileController = Ember.ObjectController.extend({
     addPhoto: function(file) {

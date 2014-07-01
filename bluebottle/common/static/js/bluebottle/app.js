@@ -357,6 +357,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
         setFlash: function (message, type) {
+            debugger
             if (typeof type === 'undefined')
                 type = 'info'
               

@@ -169,6 +169,7 @@ class PasswordSetSerializer(serializers.Serializer):
         super(PasswordSetSerializer, self).__init__(*args, **kwargs)
 
     def validate_new_password2(self, attrs, source):
+
         if attrs is not None:  # Don't need this check in newer versions of DRF2.
             value = attrs[source]
             self.password_set_form.cleaned_data = {"new_password1": attrs['new_password1'], "new_password2": value}

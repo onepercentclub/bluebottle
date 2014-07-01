@@ -6,7 +6,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     createAttempt: false,
     errorDefinitions: [
         {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
-        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')}
+        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 characters long')}
     ],
 
     init: function() {
@@ -89,7 +89,7 @@ App.UserController = Ember.Controller.extend({});
 // This is done by injection in the currentUser intializer.
 // TODO: we should just set the currentUser property on the application controller or route
 //       and inject that so that it is available from all controllers.
-App.CurrentUserController = Ember.ObjectController.extend({});
+App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {

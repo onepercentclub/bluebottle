@@ -3,7 +3,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
     appId: void 0,
     facebookParams: Ember.Object.create(),
     fetchPicture: true,
-    clicked: false,
+    connectError: false,
 
     init: function() {
         this._super();

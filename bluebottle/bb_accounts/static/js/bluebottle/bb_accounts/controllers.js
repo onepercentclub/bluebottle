@@ -156,7 +156,15 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
             return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');
-                _this.send('setFlash', 'Testing!')
+
+                // If this is the users first login then flash a welcome message
+                if (user.get('firstLogin')) {
+                    var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
+                        msg2 = gettext(' Ready to do some good?'),
+                        msg = msg1 + ' ' + msg2;
+
+                    _this.send('setFlash', msg);
+                }
             }, function (error) {
                 _this.set('error', error);
             });

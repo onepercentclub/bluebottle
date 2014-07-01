@@ -228,13 +228,21 @@ App.CurrentUser = App.UserPreview.extend({
     // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
     // App.UserSettingsModel.find(App.CurrentUser.find('current').get('id_for_ember'));
     id_for_ember: DS.attr('number'),
+    last_login: DS.attr('date'),
+    date_joined: DS.attr('date'),
+
+    firstLogin: function () {
+        return Em.compare(this.get('last_login'), this.get('date_joined')) < 0;
+    }.property('last_login', 'date_joined'),
 
     getUser: function(){
         return App.User.find(this.get('id_for_ember'));
     }.property('id_for_ember'),
+
     getUserPreview: function(){
         return App.UserPreview.find(this.get('id_for_ember'));
     }.property('id_for_ember'),
+
     isAuthenticated: function(){
         return (this.get('username')) ? true : false;
     }.property('username')

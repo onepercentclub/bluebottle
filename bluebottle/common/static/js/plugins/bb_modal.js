@@ -85,10 +85,42 @@ BB.ModalMixin = Em.Mixin.create({
                 controller: this.controllerFor(name)
             });
             $('#card').addClass('flipped');
+            $('#card').attr('class', 'flipped');
+            $('.front').attr('class', 'front');
+            $('.back').attr('class', 'back');
         },
 
         modalFlipBack: function(name) {
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: this.controllerFor(name)
+            });
             $('#card').removeClass('flipped');
+        },
+
+        modalSlideLeft: function(name) {
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalBack',
+                controller: this.controllerFor(name)
+            });
+            $('.front').removeClass('slide-in-left');
+            $('.back').removeClass('slide-out-right');
+            $('.front').addClass('slide-out-left');
+            $('.back').addClass('slide-in-right');
+        },
+
+        modalSlideRight: function(name) {
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: this.controllerFor(name)
+            });
+            $('.front').removeClass('slide-out-left');
+            $('.back').removeClass('slide-in-right');
+            $('.front').addClass('slide-in-left');
+            $('.back').addClass('slide-out-right');
         }
     },
 });

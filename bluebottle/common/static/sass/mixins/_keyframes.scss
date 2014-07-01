@@ -15,6 +15,13 @@
     animation:         $animations;
 }
 
+@mixin animation-fill-mode($fill) {
+    -o-animation-fill-mode: $fill;
+    -moz-animation-fill-mode: $fill;
+    -webkit-animation-fill-mode: $fill;
+    animation-fill-mode: $fill;
+}
+
 @mixin keyframes($animationName) {
     @-webkit-keyframes #{$animationName} {
         @content;

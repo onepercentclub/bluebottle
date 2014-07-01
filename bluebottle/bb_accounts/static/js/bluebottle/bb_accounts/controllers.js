@@ -176,7 +176,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
 
 App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin, {
     needs: ['login'],
-    requestResetPasswordTitle : gettext('Password reset request'),
+    requestResetPasswordTitle : gettext('Trouble signin in?'),
     contents: null,
 
     actions: {
@@ -212,7 +212,7 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
 App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['login'],
     successRequestPasswordTitle : gettext("Help is on its way"),
-    successMessage: gettext("We have sent a password reset link to")
+    successMessage: gettext("We\'ve sent a password reset link to")
 });
 
 App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
@@ -224,10 +224,6 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')},
         {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
     ],
-
-    resetDisabled: (function() {
-        return !(this.get('new_password1') || this.get('new_password2'));
-    }).property('new_password1', 'new_password2'),
 
     actions: {
         resetPassword: function (record) {

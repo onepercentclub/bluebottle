@@ -188,6 +188,11 @@ App.UserOrdersRoute = Em.Route.extend({
 
 
 App.PasswordResetRoute = Em.Route.extend({
+    renderTemplate: function() {
+        this.render('home');
+        this.send('openInBox', 'passwordReset');
+    },
+
     model: function(params) {
         var route = this;
 
@@ -198,16 +203,6 @@ App.PasswordResetRoute = Em.Route.extend({
         // Need this so that the adapter makes a PUT instead of POST
         record.transitionTo('loaded.saved');
 
-        record.on('becameError', function() {
-            route.controllerFor('application').setProperties({
-                display_message: true,
-                isError: true,
-                message_title: '',
-                message_content: gettext('The token you provided is expired. Please reset your password again.')
-            });
-
-            route.replaceWith('home');
-        });
         return record;
     }
 });

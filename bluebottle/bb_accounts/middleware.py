@@ -55,12 +55,14 @@ class LocaleMiddleware(object):
                                 return http.HttpResponseRedirect(new_location)
                         # End early redirect.
                     
-                        if translation.check_for_language(lang_code):
-                            # activate the language
-                            translation.activate(lang_code)
-                            request.LANGUAGE_CODE = translation.get_language()
+                    if translation.check_for_language(lang_code):
+                        # activate the language
+                        translation.activate(lang_code)
+                        request.LANGUAGE_CODE = translation.get_language()
+
             else:
-                pass #TODO
+                if not request.LANGUAGE_CODE:
+                    request.LANGUAGE_CODE = settings.LANGUAGE_CODE
 
     def process_response(self, request, response):
         """ Store the language """

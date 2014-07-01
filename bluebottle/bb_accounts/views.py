@@ -60,6 +60,33 @@ class UserCreate(generics.CreateAPIView):
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         return login(request, user)
 
+    # Overriding the default create so that we can return extra info in the response
+    # if there is already a user with the same email address
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.DATA, files=request.FILES)
+
+        if serializer.is_valid():
+            self.pre_save(serializer.object)
+            self.object = serializer.save(force_insert=True)
+            self.post_save(self.object, created=True)
+            headers = self.get_success_headers(serializer.data)
+            return response.Response(serializer.data, status=status.HTTP_201_CREATED,
+                            headers=headers)
+
+        # If the error is due to a conflict with an existing user then the API
+        # reponse should include these details
+        errors = serializer.errors
+        try: 
+            if request.DATA.has_key('email'):
+                BB_USER_MODEL.objects.get(email=request.DATA['email'])
+                errors['conflict'] = True
+        except BB_USER_MODEL.DoesNotExist:
+            pass
+            
+        # TODO: should we be returing something like a 409_CONFLICT if there is already
+        #       an existing user with the same emails address?
+        return response.Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
     def post_save(self, obj, created=False):
         # Create a RegistrationProfile and email its activation key to the User.
         registration_profile = RegistrationProfile.objects.create_profile(obj)
@@ -207,20 +234,23 @@ class PasswordSet(views.APIView):
         # The uidb36 and the token are checked by the URLconf.
         uidb36 = self.kwargs.get('uidb36')
         token = self.kwargs.get('token')
-        user = get_user_model()
+        user_model = get_user_model()
+        user = None
 
         try:
             uid_int = base36_to_int(uidb36)
-            user = user._default_manager.get(pk=uid_int)
+            user = user_model._default_manager.get(pk=uid_int)
         except (ValueError, OverflowError, user.DoesNotExist):
-            user = None
+            pass
 
         if user is not None and default_token_generator.check_token(user, token):
             password_set_form = SetPasswordForm(user)
             serializer = PasswordSetSerializer(password_set_form=password_set_form, data=request.DATA)
             if serializer.is_valid():
                 password_set_form.save()  # Sets the password
-                return response.Response(status=status.HTTP_200_OK)
+
+                # return a jwt token so the user can be logged in immediately
+                return response.Response({'token': user.get_jwt_token()}, status=status.HTTP_200_OK)
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return response.Response(status=status.HTTP_404_NOT_FOUND)

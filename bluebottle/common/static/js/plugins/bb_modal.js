@@ -117,7 +117,7 @@ BB.ModalMixin = Em.Mixin.create({
             $('.back').addClass('slide-in-right');
         },
 
-        modalSlideRight: function(name) {
+        modalSlideBack: function(name) {
             this.render(name, {
                 into: 'modalContainer',
                 outlet: 'modalFront',
@@ -127,6 +127,18 @@ BB.ModalMixin = Em.Mixin.create({
             $('.back').removeClass('slide-in-right');
             $('.front').addClass('slide-in-left');
             $('.back').addClass('slide-out-right');
+        },
+
+        modalScaleBack: function(name) {
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalBack',
+                controller: this.controllerFor(name)
+            });
+            $('.front').removeClass('slide-in-left');
+            $('.back').removeClass('slide-out-right');
+            $('.front').addClass('scale-back');
+            $('.back').addClass('scale-down');
         }
     },
 });

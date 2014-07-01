@@ -216,7 +216,38 @@
   }
 }
 
+@include keyframes(scaleBack) {
+  0% {
+    @include transform(scale(1));
+    @include opacity(1);
+  }
+  100% {
+    @include transform(scale(0));
+    @include opacity(0); 
+  }
+}
 
+@include keyframes(scaleUp) {
+  0% {
+    @include transform(scale(1));
+    @include opacity(1);
+  }
+  100% {
+    @include transform(scale(2));
+    @include opacity(0); 
+  }
+}
+
+@include keyframes(scaleDown) {
+  0% {
+    @include transform(scale(2));
+    @include opacity(0);
+  }
+  100% {
+    @include transform(scale(1));
+    @include opacity(1); 
+  }
+}
 
 
 

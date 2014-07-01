@@ -212,6 +212,21 @@ $base-line-height                                          : 1.5em !default;
 				@include animation(slideOutLeft .2s ease-in);
 				@include animation-fill-mode(forwards);
 			}
+
+			&.scale-back {
+				@include animation(scaleBack .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-up {
+				@include animation(scaleUp .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-Down {
+				@include animation(scaleDown .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
 		}
 
 		.back {

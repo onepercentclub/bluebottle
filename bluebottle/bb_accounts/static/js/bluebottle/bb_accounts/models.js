@@ -232,7 +232,9 @@ App.CurrentUser = App.UserPreview.extend({
     date_joined: DS.attr('date'),
 
     firstLogin: function () {
-        return Em.compare(this.get('last_login'), this.get('date_joined')) < 0;
+        // if the last_login is equal to the date_joined then this is the users first login
+        // Ember.compare returns 1 if the values are equal, otherwise -1 is returned
+        return Em.compare(this.get('last_login'), this.get('date_joined')) > 0;
     }.property('last_login', 'date_joined'),
 
     getUser: function(){

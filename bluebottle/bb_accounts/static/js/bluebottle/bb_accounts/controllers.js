@@ -217,10 +217,6 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
     ],
 
-    resetDisabled: (function() {
-        return !(this.get('new_password1') || this.get('new_password2'));
-    }).property('new_password1', 'new_password2'),
-
     actions: {
         resetPassword: function (record) {
             var _this = this,

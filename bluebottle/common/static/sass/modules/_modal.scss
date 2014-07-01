@@ -274,10 +274,12 @@ $base-line-height                                          : 1.5em !default;
 				display: none;
 
 				&.error {
+					display: block;
 					background: red;
 				}
 
 				&.success {
+					display: block;
 					background: green;
 				}
 			}

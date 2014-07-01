@@ -3,6 +3,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
     appId: void 0,
     facebookParams: Ember.Object.create(),
     fetchPicture: true,
+    connectError: false,
 
     init: function() {
         this._super();
@@ -57,9 +58,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
         });
 
         return FB.getLoginStatus(function(response) {
-
             if (response.status === 'connected') {
-
                 if (typeof _this.appLogin == 'function') {
                     _this.appLogin(response.authResponse);
                 }
@@ -71,7 +70,9 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
     updateFBUser: function(response) {
         var _this = this;
+
         if (response.status === 'connected') {
+            FBApp.set("connectError", false);
             return FB.api('/me', function(user) {
                 var FBUser;
                 FBUser = Ember.Object.create(user);
@@ -101,37 +102,29 @@ Ember.FacebookMixin = Ember.Mixin.create({
     }
 });
 
-Ember.FacebookView = Ember.View.extend({
-    classNameBindings: ['className'],
-    attributeBindings: [],
 
-    init: function() {
-        var attr;
-        this._super();
-        this.setClassName();
-        return this.attributeBindings.pushObjects((function() {
-            var _results;
-            _results = [];
-            for (attr in this) {
-                if (attr.match(/^data-/) != null) {
-                  _results.push(attr);
-                }
+
+Ember.FBView = Ember.View.extend({
+   classNames: ['btn', 'btn-facebook', 'btn-iconed', 'fb-login-button'],
+   error: null,
+   attributeBindings: ['data-scope'],
+   click: function(e){
+       var _this = this;
+       FB.getLoginStatus(function(response) {
+            if (response.status === 'connected') {
+                App.appLogin(response.authResponse);
+            } else {
+               FB.login(function(response){
+                  if (response.status === 'connected') {
+                    App.appLogin(response.authResponse);
+
+                  }
+
+                  if (response.authResponse == null && response.status == 'unknown'){
+                      FBApp.set('connectError', gettext("There was an error connecting Facebook"));
+                  }
+               });
             }
-            return _results;
-        }).call(this));
-    },
-
-    setClassName: function() {
-        return this.set('className', "fb-" + this.type);
-    },
-
-    parse: function() {
-        if (typeof FB !== "undefined" && FB !== null) {
-          return FB.XFBML.parse(this.$().parent()[0].context);
-        }
-    },
-
-    didInsertElement: function() {
-        return this.parse();
-    }
+       });
+   }
 });

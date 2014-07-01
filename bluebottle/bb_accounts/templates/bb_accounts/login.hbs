@@ -23,9 +23,9 @@
             <div class="password">
                 {{input valueBinding='password' type="password" name="password" placeholder="Password"}}
                 <div class="tooltip-holder">
-                    <span class="questionmark">?</span>
+                    <span {{ action 'modalSlideLeft' 'passwordRequest' }} class="questionmark">?</span>
                     <span class="modal-btn-signup" href="#">
-                        <div {{ action 'modalFlip' 'passwordRequest' }} class="tooltip input">{% trans "Lost your password?" %}</div>
+                        <div class="tooltip input">{% trans "Lost your password?" %}</div>
                     </span>
                 </div>
             </div>
@@ -41,7 +41,7 @@
         <div class="modal-fullscreen-footer">
                 <span class="modal-btn-signup" href="#">
                     {% trans "Don’t have an account?" %}
-                    <a {{ action 'modalFlip' 'signup' }} class="flip-back">
+                    <a {{ action 'modalFlip' 'signup' }}>
                         {% trans "Sign up here" %}
                     </a>
                 </span>

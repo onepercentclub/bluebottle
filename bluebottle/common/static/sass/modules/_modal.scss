@@ -190,27 +190,47 @@ $base-line-height                                          : 1.5em !default;
 		width: 100%;
 		height: 100%;
 		@include transform-style(preserve-3d);
-		@include transition(transform 1s);
+		@include transition(transform .3s);
 
 		figure {
 			display: block;
 			position: absolute;
 			width: 100%;
 			height: 100%;
-			-webkit-backface-visibility: hidden;
+			@include backface-visibility(hidden);
 		}
 
 		.front {
 			background: transparent;
+
+			&.slide-in-left {
+				@include animation(slideInLeft .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.slide-out-left {
+				@include animation(slideOutLeft .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
 		}
 
 		.back {
 			background: transparent;
-			-webkit-transform: rotateY(180deg);
+			@include transform(rotateY(180deg));
+
+			&.slide-in-right {
+				@include animation(slideInRight .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.slide-out-right {
+				@include animation(slideOutRight .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
 		}
 
 		&.flipped {
-			-webkit-transform: rotateY(180deg);
+			@include transform(rotateY(180deg));
 
 			.front {
 				z-index: 0;

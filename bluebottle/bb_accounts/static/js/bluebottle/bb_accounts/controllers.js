@@ -6,7 +6,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     createAttempt: false,
     errorDefinitions: [
         {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
-        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 character long')}
+        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 characters long')}
     ],
 
     init: function() {

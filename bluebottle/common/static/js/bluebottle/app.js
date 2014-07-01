@@ -34,6 +34,7 @@ Ember.Application.initializer({
 
         // Inject currentUser into all controllers
         container.typeInjection('controller', 'currentUser', 'controller:currentUser');
+
     }
 });
 

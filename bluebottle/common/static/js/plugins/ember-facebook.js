@@ -57,21 +57,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
             return _this.updateFBUser(response);
         });
 
-        FB.Event.subscribe('auth.login', function(response){
-            console.log("pol", response);
-        });
-
-        FB.Event.subscribe('auth.statusChange', function(response){
-            console.log("polka", response);
-            if (response.status === 'not_authorized' ){
-                console.log("User has not authorized the application")
-            }
-        });
-
         return FB.getLoginStatus(function(response) {
-            console.log("hallo", response);
             if (response.status === 'connected') {
-
                 if (typeof _this.appLogin == 'function') {
                     _this.appLogin(response.authResponse);
                 }
@@ -85,6 +72,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
         var _this = this;
 
         if (response.status === 'connected') {
+            FBApp.set("connectError", false);
             return FB.api('/me', function(user) {
                 var FBUser;
                 FBUser = Ember.Object.create(user);

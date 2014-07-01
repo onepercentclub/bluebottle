@@ -12,6 +12,10 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     init: function() {
         this._super();
 
+        this._clearModel();
+    },
+
+    _clearModel: function () {
         var user = App.UserCreate.createRecord({
             first_name: '',
             last_name: '',
@@ -19,6 +23,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
         this.set('model', user);
     },
+
     actions: {
         createUser: function(user) {
             var _this = this;
@@ -35,10 +40,23 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 };
 
                 return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
+                    // clear the modal fields
+                    _this._clearModel();
+                    
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', App.CurrentUser.find('current'));
                     _this.send('close');
                     
+                    // If this is the users first login then flash a welcome message
+                    // NOTE: we shouldn't need to check firstLogin here...
+                    if (currentUser.get('firstLogin')) {
+                        var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
+                            msg2 = gettext(' Ready to do some good?'),
+                            msg = msg1 + ' ' + msg2;
+
+                        _this.send('setFlash', msg);
+                    }
+
                     // For now we just transition to home page
                     _this.transitionToRoute('/');
                 }, function () {
@@ -156,7 +174,6 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
             return this.authorizeUser(this.get('username'), this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');
-                _this.send('setFlash', 'Testing!')
             }, function (error) {
                 _this.set('error', error);
             });

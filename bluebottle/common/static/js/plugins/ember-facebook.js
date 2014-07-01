@@ -74,6 +74,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
         if (response.status === 'connected') {
             FBApp.set("connectError", false);
             return FB.api('/me', function(user) {
+
                 var FBUser;
                 FBUser = Ember.Object.create(user);
                 FBUser.set('accessToken', response.authResponse.accessToken);
@@ -106,8 +107,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
 Ember.FBView = Ember.View.extend({
    classNames: ['btn', 'btn-facebook', 'btn-iconed', 'fb-login-button'],
-   error: null,
-   attributeBindings: ['data-scope'],
+   attributeBindings: ['data-scope','data-size'],
+
    click: function(e){
        var _this = this;
        FB.getLoginStatus(function(response) {
@@ -117,13 +118,12 @@ Ember.FBView = Ember.View.extend({
                FB.login(function(response){
                   if (response.status === 'connected') {
                     App.appLogin(response.authResponse);
-
                   }
 
                   if (response.authResponse == null && response.status == 'unknown'){
                       FBApp.set('connectError', gettext("There was an error connecting Facebook"));
                   }
-               });
+               }, {scope: 'email,public_profile,user_friends'});
             }
        });
    }

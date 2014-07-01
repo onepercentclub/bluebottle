@@ -107,6 +107,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
 Ember.FBView = Ember.View.extend({
    classNames: ['btn', 'btn-facebook', 'btn-iconed', 'fb-login-button'],
    error: null,
+   attributeBindings: ['data-scope'],
    click: function(e){
        var _this = this;
        FB.getLoginStatus(function(response) {

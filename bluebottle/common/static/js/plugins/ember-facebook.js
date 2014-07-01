@@ -3,6 +3,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
     appId: void 0,
     facebookParams: Ember.Object.create(),
     fetchPicture: true,
+    clicked: false,
 
     init: function() {
         this._super();
@@ -56,8 +57,19 @@ Ember.FacebookMixin = Ember.Mixin.create({
             return _this.updateFBUser(response);
         });
 
-        return FB.getLoginStatus(function(response) {
+        FB.Event.subscribe('auth.login', function(response){
+            console.log("pol", response);
+        });
 
+        FB.Event.subscribe('auth.statusChange', function(response){
+            console.log("polka", response);
+            if (response.status === 'not_authorized' ){
+                console.log("User has not authorized the application")
+            }
+        });
+
+        return FB.getLoginStatus(function(response) {
+            console.log("hallo", response);
             if (response.status === 'connected') {
 
                 if (typeof _this.appLogin == 'function') {
@@ -71,6 +83,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
     updateFBUser: function(response) {
         var _this = this;
+
         if (response.status === 'connected') {
             return FB.api('/me', function(user) {
                 var FBUser;
@@ -101,10 +114,21 @@ Ember.FacebookMixin = Ember.Mixin.create({
     }
 });
 
+Ember.FBView = Ember.View.extend({
+   classNames: ['btn', 'btn-facebook', 'btn-iconed', 'fb-login-button'],
+   click: function(e){
+       FB.login(function(response){
+          console.log("KUKOO!", response);
+          if (response.authResponse == null && response.status == 'unknown'){
+              console.log("There was an error logging in the user or authorizing the app");
+          }
+       });
+   }
+});
 Ember.FacebookView = Ember.View.extend({
     classNameBindings: ['className'],
     attributeBindings: [],
-
+    //templateName: "facebook_signin",
     init: function() {
         var attr;
         this._super();
@@ -127,11 +151,12 @@ Ember.FacebookView = Ember.View.extend({
 
     parse: function() {
         if (typeof FB !== "undefined" && FB !== null) {
-          return FB.XFBML.parse(this.$().parent()[0].context);
+          return FB.XFBML.parse();
         }
     },
 
     didInsertElement: function() {
         return this.parse();
+
     }
 });

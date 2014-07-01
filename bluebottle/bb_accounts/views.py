@@ -235,13 +235,11 @@ class PasswordSet(views.APIView):
         uidb36 = self.kwargs.get('uidb36')
         token = self.kwargs.get('token')
         user_model = get_user_model()
-        user = None
-
         try:
             uid_int = base36_to_int(uidb36)
             user = user_model._default_manager.get(pk=uid_int)
         except (ValueError, OverflowError, user.DoesNotExist):
-            pass
+            user = None
 
         if user is not None and default_token_generator.check_token(user, token):
             password_set_form = SetPasswordForm(user)

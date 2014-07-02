@@ -38,6 +38,22 @@ BB.ModalMixin = Em.Mixin.create({
                 controller: this.controllerFor(name)
             });
         },
+
+        addRemoveClass: function(type, element, className) {
+            var i, amountElm = element.length;
+
+            for (var i = amountElm - 1; i >= 0; i--) {
+
+                switch(type) {
+                    case'add':
+                        $(element[i]).addClass(className[i]);
+                    break;
+                    case'remove':
+                        $(element[i]).removeClass(className[i]);
+                    break;
+                }
+            };
+        },
         
         closeModal: function() {
             var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
@@ -111,10 +127,8 @@ BB.ModalMixin = Em.Mixin.create({
                 outlet: 'modalBack',
                 controller: this.controllerFor(name)
             });
-            $('.front').removeClass('slide-in-left');
-            $('.back').removeClass('slide-out-right');
-            $('.front').addClass('slide-out-left');
-            $('.back').addClass('slide-in-right');
+            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+            this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
         },
 
         modalSlideBack: function(name) {
@@ -123,22 +137,28 @@ BB.ModalMixin = Em.Mixin.create({
                 outlet: 'modalFront',
                 controller: this.controllerFor(name)
             });
-            $('.front').removeClass('slide-out-left');
-            $('.back').removeClass('slide-in-right');
-            $('.front').addClass('slide-in-left');
-            $('.back').addClass('slide-out-right');
+            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
+            this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
         },
 
-        modalScaleBack: function(name) {
+        modalScale: function(name) {
             this.render(name, {
                 into: 'modalContainer',
                 outlet: 'modalBack',
                 controller: this.controllerFor(name)
             });
-            $('.front').removeClass('slide-in-left');
-            $('.back').removeClass('slide-out-right');
-            $('.front').addClass('scale-back');
-            $('.back').addClass('scale-down');
+            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-down', 'scale-up']);
+            this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-back', 'scale-down']);
+        },
+
+        modalScaleBack: function(name) {
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: this.controllerFor(name)
+            });
+            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-back', 'scale-down']);
+            this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-down', 'scale-up']);
         }
     },
 });

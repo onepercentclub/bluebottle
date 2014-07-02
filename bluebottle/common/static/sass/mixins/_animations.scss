@@ -233,14 +233,14 @@
     @include opacity(1);
   }
   100% {
-    @include transform(scale(2));
+    @include transform(scale(4));
     @include opacity(0); 
   }
 }
 
 @include keyframes(scaleDown) {
   0% {
-    @include transform(scale(2));
+    @include transform(scale(4));
     @include opacity(0);
   }
   100% {

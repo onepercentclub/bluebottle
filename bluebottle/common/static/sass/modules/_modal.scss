@@ -214,17 +214,17 @@ $base-line-height                                          : 1.5em !default;
 			}
 
 			&.scale-back {
-				@include animation(scaleBack .3s ease-out);
+				@include animation(scaleBack .2s ease-in);
 				@include animation-fill-mode(forwards);
 			}
 
 			&.scale-up {
-				@include animation(scaleUp .3s ease-out);
+				@include animation(scaleUp .3s ease-in);
 				@include animation-fill-mode(forwards);
 			}
 
-			&.scale-Down {
-				@include animation(scaleDown .3s ease-out);
+			&.scale-down {
+				@include animation(scaleDown .3s ease-out .1s);
 				@include animation-fill-mode(forwards);
 			}
 		}
@@ -240,6 +240,16 @@ $base-line-height                                          : 1.5em !default;
 
 			&.slide-out-right {
 				@include animation(slideOutRight .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-up {
+				@include animation(scaleUp .2s ease-in);
+				//@include animation-fill-mode(forwards);
+			}
+
+			&.scale-down {
+				@include animation(scaleDown .3s ease-out .1s);
 				@include animation-fill-mode(forwards);
 			}
 		}

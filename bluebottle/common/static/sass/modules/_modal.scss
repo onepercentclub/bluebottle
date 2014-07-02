@@ -291,7 +291,6 @@ $base-line-height                                          : 1.5em !default;
 				font-size: 10px;
 				line-height: 15px;
 				color: white;
-				display: none;
 
 				&.error {
 					display: block;
@@ -301,6 +300,12 @@ $base-line-height                                          : 1.5em !default;
 				&.success {
 					display: block;
 					background: green;
+				}
+
+				&.success {
+					display: block;
+					color: gray;
+					background: lightyellow;
 				}
 			}
 

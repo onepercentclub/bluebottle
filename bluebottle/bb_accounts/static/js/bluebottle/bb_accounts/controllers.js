@@ -9,7 +9,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     // Check if there were previous errors which are now fixed
     checkErrors: function() {
-        this.set('errorsFixed', false)
         if (this.get('validationErrors')){
             this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
             if (!this.get('validationErrors')) {
@@ -41,6 +40,10 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     actions: {
         createUser: function(user) {
             var _this = this;
+
+            // Clear the errors fixed message
+            this.set('errorsFixed', false);
+
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
 

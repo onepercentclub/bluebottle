@@ -27,9 +27,10 @@
             <div class="password">
                 {{input valueBinding='password' type="password" name="password" placeholder="Password"}}
                 <div class="tooltip-holder">
-                    <span {{ action 'modalSlideLeft' 'passwordRequest' }} class="questionmark">?</span>
+                    <span {{ action 'modalFlip' 'passwordRequest' }} class="questionmark">?</span>
                     <span class="modal-btn-signup" href="#">
                         <div class="tooltip input">{% trans "Lost your password?" %}</div>
+
                     </span>
                 </div>
             </div>

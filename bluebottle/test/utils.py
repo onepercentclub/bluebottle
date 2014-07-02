@@ -226,9 +226,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
-            cls.browser = BrowserExt('remote', wait_time=10, url=sauce_url % (USERNAME, ACCESS_KEY),
-                                     browser='chrome', platform="Windows 7", version="35",
-                                     name="Test of Chrome 35 on Windows 7", capabilities=desired_capabilities)
+            cls.browser = BrowserExt('remote', wait_time=10, url=sauce_url % (USERNAME, ACCESS_KEY))
 
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)

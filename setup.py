@@ -61,7 +61,6 @@ install_requires = [
 #    'pytz==2013b',
 #    'raven==3.3.12',
 #    'requests==1.2.3',
-    'sauceclient==0.1.0',
     'sorl-thumbnail==11.12',
     'splinter==0.5.4',
 #    'suds-jurko==0.4.1.jurko.5.-development-',

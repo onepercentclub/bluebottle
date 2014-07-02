@@ -215,8 +215,11 @@ class SeleniumTestCase(LiveServerTestCase):
 
         if settings.SELENIUM_WEBDRIVER == 'remote':
             import os
+            from sauceclient import SauceClient
+
             USERNAME = os.environ.get('SAUCE_USERNAME')
             ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
+            sauce = SauceClient(USERNAME, ACCESS_KEY)
 
             desired_capabilities = {}
             # TODO: See if we want to use this.

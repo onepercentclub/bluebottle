@@ -28,18 +28,26 @@
         <a {{action 'createUser' model}} class="btn">{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
         <small>By signing up, you accept our <a {{action showPage 'terms-and-conditions' true}}>terms of service</a></small>
 
-        {{#if validationErrors}}
-            {{#each validationErrors.email}}
-                <div class="modal-flash-message error">
-                    {{this}}
-                </div>
-            {{/each}}
-            {{#each validationErrors.password}}
-                <div class="modal-flash-message error">
-                    {{this}}
-                </div>
-            {{/each}}
+        {{#if errorsFixed}}
+            <div class="modal-flash-message success">
+                {{fixedFieldsMessage}}
+            </div>
         {{/if}}
+
+        {{#unless errorsFixed}}
+            {{#if validationErrors}}
+                {{#each validationErrors.email}}
+                    <div class="modal-flash-message error">
+                        {{this}}
+                    </div>
+                {{/each}}
+                {{#each validationErrors.password}}
+                    <div class="modal-flash-message error">
+                        {{this}}
+                    </div>
+                {{/each}}
+            {{/if}}
+        {{/unless}}
     </div>
 
     <div class="modal-fullscreen-footer">

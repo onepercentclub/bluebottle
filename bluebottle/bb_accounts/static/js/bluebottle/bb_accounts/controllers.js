@@ -4,13 +4,15 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    errorDefinitions: [
-        {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
-        {'property': 'password', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 characters long')}
-    ],
+
 
     init: function() {
         this._super();
+
+        this.set('errorDefinitions', [
+            {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
+            {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')}
+        ]);
 
         this._clearModel();
     },
@@ -207,9 +209,10 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
                 };
 
                 hash.error = function (response) {
-                    var error = $.parseJSON(response.responseText);
-                    _this.set('error', error);
-                    Ember.run(null, reject, error);
+                    var msg = gettext('There is no account associated with the email.')
+                    _this.set('error', msg);
+
+                    Ember.run(null, reject, msg);
                 };
 
                 Ember.$.ajax(hash);
@@ -229,10 +232,14 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
 
-    errorDefinitions: [
-        {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': gettext('Password needs to be at least 5 charcaters long')},
-        {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
-    ],
+    init: function() {
+        this._super();
+
+        this.set('errorDefinitions', [
+            {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
+            {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
+        ]);
+    },
 
     actions: {
         resetPassword: function (record) {

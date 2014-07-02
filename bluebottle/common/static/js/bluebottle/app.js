@@ -38,6 +38,23 @@ Ember.Application.initializer({
     }
 });
 
+// A static initializer for app settings
+//TODO: we should make it as an ajax request to fetch settings from api
+Ember.Application.initializer({
+    name: 'appSettings',
+    after: 'currentUser',
+
+    initialize: function(container, application) {
+        application.set('settings',
+            Em.Object.create({
+                minPasswordLength: 6,
+                minPasswordError: gettext('Password needs to be at least 6 characters long')
+            })
+        )
+    }
+});
+
+
 App = Em.Application.createWithMixins(Em.FacebookMixin, {
     VERSION: '1.0.0',
 

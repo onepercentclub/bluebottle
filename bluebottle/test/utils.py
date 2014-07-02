@@ -1,5 +1,8 @@
+from selenium import webdriver
 import time
 import urlparse
+import os
+import sys
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -14,7 +17,6 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from splinter.browser import ChromeWebDriver, PhantomJSWebDriver, FirefoxWebDriver
 
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
@@ -42,7 +44,7 @@ def css_dict(style):
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
-def BrowserExt(driver_name='firefox', *args, **kwargs):
+def BrowserExt(driver_name='firefox', url=None, wait_time=5, browser='firefox', desired_capabilities={}, *args, **kwargs):
     """
     Small helper to combine the correct webdriver with some additional methods without cloning the project.
     """
@@ -84,6 +86,9 @@ def BrowserExt(driver_name='firefox', *args, **kwargs):
 
     if driver_name == 'PhantomJS':
         kwargs.update({'load_images': False})
+
+    if driver_name=='remote':
+        return new_class(url=url, browser=browser, wait_time=wait_time, **desired_capabilities)
 
     return new_class(*args, **kwargs)
 
@@ -230,6 +235,18 @@ class InitProjectDataMixin(object):
             LanguageFactory.create(**language)
 
 
+RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
+
+if RUN_LOCAL:
+    # could add Chrome, PhantomJS etc... here
+    browsers = ['Firefox']
+else:
+    from sauceclient import SauceClient
+    USERNAME = os.environ.get('SAUCE_USERNAME')
+    ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
+    sauce = SauceClient(USERNAME, ACCESS_KEY)
+
+
 @override_settings(DEBUG=True)
 class SeleniumTestCase(LiveServerTestCase):
     """
@@ -247,17 +264,36 @@ class SeleniumTestCase(LiveServerTestCase):
         if not hasattr(settings, 'SELENIUM_WEBDRIVER'):
             raise ImproperlyConfigured('Define SELENIUM_WEBDRIVER in your settings.py.')
 
-        cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
+        if settings.SELENIUM_WEBDRIVER == 'remote':
+
+            name = 'Manual test run'
+            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
+
+            if 'TRAVIS_BUILD_NUMBER' in os.environ:
+                name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
+                if 'TRAVIS_PULL_REQUEST' in os.environ:
+                    name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
+                caps['name'] = name
+                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+                caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
+                caps['tags'] = ['Travis', 'CI']
+
+            username = os.environ.get('SAUCE_USERNAME')
+            access_key = os.environ.get('SAUCE_ACCESS_KEY')
+            sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
+            url = sauce_url % (username, access_key)
+
+            cls.browser = BrowserExt(driver_name='remote', url=url, browser='firefox',
+                                     wait_time=10, desired_capabilities=caps)
+            cls.browser.driver.implicitly_wait(5)
+        else:
+            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 
         super(SeleniumTestCase, cls).setUpClass()
 
     @classmethod
     def tearDownClass(cls):
-        """
-        Make sure the browser quits afterwards.
-        """
         cls.browser.quit()
-
         super(SeleniumTestCase, cls).tearDownClass()
 
     def _post_teardown(self):

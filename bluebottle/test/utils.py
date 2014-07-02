@@ -213,7 +213,25 @@ class SeleniumTestCase(LiveServerTestCase):
         if not hasattr(settings, 'SELENIUM_WEBDRIVER'):
             raise ImproperlyConfigured('Define SELENIUM_WEBDRIVER in your settings.py.')
 
-        cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
+        if settings.SELENIUM_WEBDRIVER == 'remote':
+            import os
+            USERNAME = os.environ.get('SAUCE_USERNAME')
+            ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
+
+            desired_capabilities = {}
+            # TODO: See if we want to use this.
+            # desired_capabilities['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+            # desired_capabilities['build'] = os.environ['TRAVIS_BUILD_NUMBER']
+            # desired_capabilities['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+
+            sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
+
+            cls.browser = BrowserExt('remote', wait_time=10, url=sauce_url % (USERNAME, ACCESS_KEY),
+                                     browser='chrome', platform="Windows 7", version="35",
+                                     name="Test of Chrome 35 on Windows 7", capabilities=desired_capabilities)
+
+        else:
+            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 
         super(SeleniumTestCase, cls).setUpClass()
 

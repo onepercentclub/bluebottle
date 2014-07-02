@@ -17,9 +17,12 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+<<<<<<< HEAD
 
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
+=======
+>>>>>>> 5a0d1e1... Add SauceLabs to live server test case
 
 
 def css_dict(style):
@@ -202,6 +205,7 @@ class WebDriverAdditionMixin(object):
         return ElementList(result, find_by='link by itext', query=text)
 
 
+<<<<<<< HEAD
 class InitProjectDataMixin(object):
 
     def init_projects(self):
@@ -235,6 +239,8 @@ class InitProjectDataMixin(object):
             LanguageFactory.create(**language)
 
 
+=======
+>>>>>>> 5a0d1e1... Add SauceLabs to live server test case
 RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
 
 if RUN_LOCAL:
@@ -267,7 +273,11 @@ class SeleniumTestCase(LiveServerTestCase):
         if settings.SELENIUM_WEBDRIVER == 'remote':
 
             name = 'Manual test run'
+<<<<<<< HEAD
             caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
+=======
+            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
+>>>>>>> 5a0d1e1... Add SauceLabs to live server test case
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
@@ -283,7 +293,11 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
+<<<<<<< HEAD
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
+=======
+            cls.browser = BrowserExt(driver_name='remote', url=url, browser='firefox',
+>>>>>>> 5a0d1e1... Add SauceLabs to live server test case
                                      wait_time=10, desired_capabilities=caps)
             cls.browser.driver.implicitly_wait(5)
         else:

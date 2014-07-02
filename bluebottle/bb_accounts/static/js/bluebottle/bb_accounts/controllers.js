@@ -4,14 +4,26 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
+    fixedFieldsMessage: gettext('That\'s better'),
+    errorsFixed: false,
 
+    // Check if there were previous errors which are now fixed
+    checkErrors: function() {
+        this.set('errorsFixed', false)
+        if (this.get('validationErrors')){
+            this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+            if (!this.get('validationErrors')) {
+                this.set('errorsFixed', true)
+            }
+        }
+    }.observes('password.length', 'email', 'emailConfirmation'),
 
     init: function() {
         this._super();
 
         this.set('errorDefinitions', [
             {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
-            {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')}
+            {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
         ]);
 
         this._clearModel();
@@ -30,7 +42,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         createUser: function(user) {
             var _this = this;
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
@@ -63,7 +75,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.transitionToRoute('/');
                 }, function () {
                     // Handle failure to create currentUser
-                    _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
+                    _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 });
 
             }, function (failedUser) {
@@ -76,7 +88,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
                     // Handle error message here!
-                    _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
+                    _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 }
             });
         }

@@ -1,9 +1,10 @@
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.core.urlresolvers import reverse
 
 
 """
-Only do the cookie session stuff for admin urls.
+Only do the session stuff for admin urls.
 The frontend relies on auth tokens.
 """
 class AdminOnlySessionMiddleware(SessionMiddleware):
@@ -18,6 +19,17 @@ class AdminOnlySessionMiddleware(SessionMiddleware):
             return super(AdminOnlySessionMiddleware, self).process_response(request, response)
         else:
             return response
+
+
+"""
+Only do the session authentication stuff for admin urls.
+The frontend relies on auth tokens so we clear the user.
+"""
+class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
+    def process_request(self, request):
+        if request.path.startswith(reverse('admin:index')):
+            super(AdminOnlyAuthenticationMiddleware, self).process_request(request)
+
 
 """
 Disable csrf for non-Admin requests, eg API

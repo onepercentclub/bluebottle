@@ -20,7 +20,7 @@
         <div class="password">
         {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error" placeholder="Password"}}
             <div class="tooltip-holder">
-                <span class="questionmark">?</span>
+                <span {{ action 'modalFlipBack' 'passwordRequest' }} class="questionmark">?</span>
             <div class="tooltip input">Lost your password?</div>
         </div>
         </div>

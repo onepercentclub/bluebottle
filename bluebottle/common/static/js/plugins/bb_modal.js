@@ -39,7 +39,7 @@ BB.ModalMixin = Em.Mixin.create({
             });
         },
 
-        addRemoveClass: function(type, element, className) {
+        addRemoveClass: function(type, element, className, attrName) {
             var i, amountElm = element.length;
 
             for (var i = amountElm - 1; i >= 0; i--) {
@@ -50,6 +50,9 @@ BB.ModalMixin = Em.Mixin.create({
                     break;
                     case'remove':
                         $(element[i]).removeClass(className[i]);
+                    break;
+                    case'attr':
+                        $(element[i]).attr(attrName[i], className[i]);
                     break;
                 }
             };
@@ -106,10 +109,8 @@ BB.ModalMixin = Em.Mixin.create({
                 controller: controller
             });
 
-            $('#card').addClass('flipped');
-            $('#card').attr('class', 'flipped');
-            $('.front').attr('class', 'front');
-            $('.back').attr('class', 'back');
+            // add class flipped and reset default state
+            this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
         },
 
         modalFlipBack: function(name) {
@@ -121,7 +122,7 @@ BB.ModalMixin = Em.Mixin.create({
             $('#card').removeClass('flipped');
         },
 
-        modalSlideLeft: function(name) {
+        modalSlide: function(name) {
             this.render(name, {
                 into: 'modalContainer',
                 outlet: 'modalBack',

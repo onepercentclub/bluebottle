@@ -55,11 +55,6 @@ class UserCreate(generics.CreateAPIView):
     def pre_save(self, obj):
         obj.primary_language = self.request.LANGUAGE_CODE[:2]
 
-    def _login_user(self, request, user):
-        # Auto login the user after activation
-        user.backend = 'django.contrib.auth.backends.ModelBackend'
-        return login(request, user)
-
     # Overriding the default create so that we can return extra info in the response
     # if there is already a user with the same email address
     def create(self, request, *args, **kwargs):

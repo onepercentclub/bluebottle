@@ -174,6 +174,40 @@ $base-line-height                                          : 1.5em !default;
 			color: #fff;
 			cursor: pointer;
 		}
+
+		.password-strength {
+			position: absolute;
+			top: 14px;
+			right: 10px;
+			width: 70px;
+			border-radius: 4px;
+			font-size: 14px;
+			color: #fff;
+
+			&.weak {
+				background: rgb(232, 42, 28);
+				padding: 2px;
+			}
+
+			&.fair {
+				background: rgb(254, 180, 28);
+				padding: 2px;
+			}
+
+			&.strong {
+				background: rgb(24, 184, 64);
+				padding: 2px;
+			}
+
+			&.loader {
+				background-image: image-url("modal-loader.gif");
+				background-color: white;
+				background-repeat: no-repeat;
+				background-position: 7px;
+				width: 30px;
+				height: 30px;
+			}
+		}
 	}
 }
 
@@ -212,6 +246,21 @@ $base-line-height                                          : 1.5em !default;
 				@include animation(slideOutLeft .2s ease-in);
 				@include animation-fill-mode(forwards);
 			}
+
+			&.scale-back {
+				@include animation(scaleBack .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-up {
+				@include animation(scaleUp .3s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-down {
+				@include animation(scaleDown .3s ease-out .1s);
+				@include animation-fill-mode(forwards);
+			}
 		}
 
 		.back {
@@ -225,6 +274,15 @@ $base-line-height                                          : 1.5em !default;
 
 			&.slide-out-right {
 				@include animation(slideOutRight .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-up {
+				@include animation(scaleUp .2s ease-in);
+			}
+
+			&.scale-down {
+				@include animation(scaleDown .3s ease-out .1s);
 				@include animation-fill-mode(forwards);
 			}
 		}
@@ -353,7 +411,25 @@ $base-line-height                                          : 1.5em !default;
 			right: 5px;
 			width: 20px;
 			height: 20px;
-			padding: 2.6px;
+			background: image-url("icons/icon-close-modal.svg") transparent no-repeat;
+			background-position: 7px;
+			cursor: pointer;
+
+			.modal-close-image {
+				pointer-events: none;
+			}
+		}
+	
+		.modal-fullscreen-back {
+			position: absolute;
+			display: block;
+			top: 5px;
+			left: 5px;
+			width: 20px;
+			height: 20px;
+			background: image-url("icons/icon-back-modal.svg") transparent no-repeat;
+			background-position: 7px;
+			background-size: 65%;
 			cursor: pointer;
 
 			.modal-close-image {

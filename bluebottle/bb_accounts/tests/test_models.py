@@ -7,7 +7,6 @@ from mock import patch
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.models import TestBaseUser
 
-
 class BlueBottleUserManagerTestCase(TestCase):
     """
     Test case for the model manager of the abstract user model.
@@ -116,21 +115,26 @@ class BlueBottleUserTestCase(TestCase):
     def test_welcome_mail(self):
         """
         Test that a welcome mail is sent when a user is created when the setting are enabled
-        In settings SEND_WELCOME_MAIL is set to true
+        In settings SEND_WELCOME_MAIL is set to False
         """
+        from django.conf import settings
+        settings.SEND_WELCOME_MAIL = True
 
-        self.assertEqual(len(mail.outbox), 1) #The setup function also creates a user and generates a mail
+        mail.outbox = []
+
+        self.assertEqual(len(mail.outbox), 0) #The setup function also creates a user and generates a mail
         new_user = TestBaseUser.objects.create_user(email='new_user@onepercentclub.com')
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertTrue("Welcome" in mail.outbox[1].subject) #We need a better way of testing this
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("Welcome" in mail.outbox[0].subject) #We need a better way to verify the right mail is loaded
+
+        settings.SEND_WELCOME_MAIL = False
 
     def test_no_welcome_mail(self):
         """
-        Test that a welcome mail is sent when a user is created when the setting are enabled
+        Test that a welcome mail is sent when a user is created when the setting are disabled (= default)
         """
-        from django.conf import settings
-        settings.SEND_WELCOME_MAIL = False
+        mail.outbox = []
 
-        self.assertEqual(len(mail.outbox), 1) #The setup function also creates a user and generates a mail
+        self.assertEqual(len(mail.outbox), 0) #The setup function also creates a user and generates a mail
         new_user = TestBaseUser.objects.create_user(email='new_user@onepercentclub.com')
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 0)

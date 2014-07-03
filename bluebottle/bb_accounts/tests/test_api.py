@@ -170,11 +170,11 @@ class UserApiIntegrationTest(TestCase):
         response = self.client.put(self.user_password_reset_api_url, json.dumps(
             {'email': new_user_email}), 'application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
 
         # Setup: get the password reset token and url.
         c = re.compile('(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})', re.DOTALL)
-        m = c.search(mail.outbox[1].body)
+        m = c.search(mail.outbox[0].body)
         password_set_url = '{0}{1}-{2}'.format(self.user_password_set_api_url, m.group(1), m.group(2))
 
         # Test: check that non-matching passwords produce a validation error.

@@ -219,6 +219,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
             USERNAME = os.environ.get('SAUCE_USERNAME')
             ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
+
             sauce = SauceClient(USERNAME, ACCESS_KEY)
 
             desired_capabilities = {}
@@ -229,8 +230,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
-            cls.browser = BrowserExt('remote', wait_time=10, url=sauce_url % (USERNAME, ACCESS_KEY))
-
+            cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY))
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

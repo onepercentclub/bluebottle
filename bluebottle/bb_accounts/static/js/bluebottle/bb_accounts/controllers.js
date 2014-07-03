@@ -29,6 +29,10 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     willClose: function () {
         this._clearModel();
+
+        // Clear the notifications
+        this.set('errorsFixed', false);
+        this.set('validationErrors', null);
     },
 
     // Check if there were previous errors which are now fixed
@@ -192,7 +196,8 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     },
 
     willClose: function () {
-        this._clearModel();
+        this.set('password', null);
+        this.set('error', null);
     },
 
     actions: {
@@ -286,6 +291,18 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
             {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
         ]);
+    },
+
+    _clearModel: function () {
+        this.set('content', Em.Object.create());
+    },
+
+    willClose: function () {
+        this._clearModel();
+
+        // Clear the notifications
+        this.set('validationErrors', null);
+        this.set('error', null);
     },
 
     actions: {

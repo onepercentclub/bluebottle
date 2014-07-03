@@ -234,6 +234,8 @@ class SeleniumTestCase(LiveServerTestCase):
 
             cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY),
                                      desired_capabilities=desired_capabilities, name=build)
+            cls.browser.driver.implicitly_wait(5)
+
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

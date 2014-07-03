@@ -60,23 +60,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     token: newUser.get('jwt_token')
                 };
 
-                return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
+                return App.AuthJwt.processSuccessResponse(response).then(function (authorizedUser) {
                     // clear the modal fields
                     _this._clearModel();
                     
                     // This is for successfully setting the currentUser.
-                    _this.set('currentUser.model', App.CurrentUser.find('current'));
+                    _this.set('currentUser.model', authorizedUser);
                     _this.send('close');
                     
-                    // If this is the users first login then flash a welcome message
-                    // NOTE: we shouldn't need to check firstLogin here...
-                    if (currentUser.get('firstLogin')) {
-                        var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
-                            msg2 = gettext(' Ready to do some good?'),
-                            msg = msg1 + ' ' + msg2;
-
-                        _this.send('setFlash', msg);
-                    }
+                    // This is the users first login so flash a welcome message
+                    _this.send('setFlash', this.get('currentUser.welcomeMessage'));
 
                     // For now we just transition to home page
                     _this.transitionToRoute('/');

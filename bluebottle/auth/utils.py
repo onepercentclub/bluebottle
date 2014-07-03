@@ -18,9 +18,10 @@ def save_profile_picture(strategy, user, response, details,
         except HTTPError:
             pass
         else:
-            user.picture.save('{0}_fb_social.jpg'.format(user.username),
-                                   ContentFile(response.content))
-            user.save()
+            if not user.picture:
+                user.picture.save('{0}_fb_social.jpg'.format(user.username),
+                                       ContentFile(response.content))
+                user.save()
 
 
 

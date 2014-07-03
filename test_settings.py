@@ -33,5 +33,3 @@ PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
 SOUTH_TESTS_MIGRATE = True
 
 ROOT_URLCONF = 'bluebottle.urls'
-
-SEND_WELCOME_MAIL = True

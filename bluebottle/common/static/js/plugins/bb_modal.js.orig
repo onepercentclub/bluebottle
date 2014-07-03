@@ -15,7 +15,7 @@ BB.ModalControllerMixin = Em.Mixin.create({
 
 BB.ModalMixin = Em.Mixin.create({
     actions: {
-        modalWillTransition: function(name, side) {
+        willTransition: function(newController) {
             // Handle any cleanup for the previously set content for the modal
             var modalContainer = this.controllerFor('modalContainer'),
                 previousController = modalContainer.get('currentController');
@@ -25,17 +25,8 @@ BB.ModalMixin = Em.Mixin.create({
 
             // Set the currentController property on the container to this new controller
             // so we can call willClose on it later
-			
-            if (name) {
-				var newController = this.controllerFor(name);
+            if (newController)
                 modalContainer.set('currentController', newController);
-
-				this.render(name, {
-                	into: 'modalContainer',
-                	outlet: side,
-                    controller: newController
-            	});
-			}
         },
 
         openInFullScreenBox: function(name, context) {
@@ -68,7 +59,13 @@ BB.ModalMixin = Em.Mixin.create({
                 controller.set('model', context);
 
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront');
+            this.send('willTransition', controller);
+
+            return this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: controller
+            });
         },
 
         addRemoveClass: function(type, element, className, attrName) {
@@ -95,7 +92,7 @@ BB.ModalMixin = Em.Mixin.create({
                 _this = this;
 
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition');
+            this.send('willTransition');
 
             $('.modal-fullscreen-background').one(animationEnd, function(){
                 // Finally clear the outlet
@@ -139,43 +136,87 @@ BB.ModalMixin = Em.Mixin.create({
                 controller.set('model', context);
 
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack');
+            this.send('willTransition', controller);
+
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalBack',
+                controller: controller
+            });
 
             // add class flipped and reset default state
             this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
         },
 
-        modalFlipBack: function(name) {            
+        modalFlipBack: function(name) {
+            var controller = this.controllerFor(name);
+            
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront');
+            this.send('willTransition', controller);
+
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: controller
+            });
 
             $('#card').removeClass('flipped');
         },
 
+<<<<<<< HEAD
         modalSlide: function(name) {
-        	// Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack');
-
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalBack',
+                controller: this.controllerFor(name)
+            });
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
         },
 
         modalSlideBack: function(name) {
-        	// Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront');
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: this.controllerFor(name)
+            });
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
         },
 
         modalScale: function(name) {
-        	// Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack');
+=======
+        modalSlideLeft: function(name) {
+            var controller = this.controllerFor(name);
+            
+            // Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', controller);
+
+>>>>>>> develop
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalBack',
+                controller: controller
+            });
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-down', 'scale-up']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-back', 'scale-down']);
         },
 
+<<<<<<< HEAD
         modalScaleBack: function(name) {
-			this.send('modalWillTransition', name, 'modalFront');
+=======
+        modalSlideRight: function(name) {
+            var controller = this.controllerFor(name);
+            
+            // Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', controller);
+
+>>>>>>> develop
+            this.render(name, {
+                into: 'modalContainer',
+                outlet: 'modalFront',
+                controller: controller
+            });
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-back', 'scale-down']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-down', 'scale-up']);
         }

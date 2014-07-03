@@ -17,8 +17,6 @@ from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCu
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from rest_framework.permissions import IsAuthenticated
 
-from .utils import send_welcome_mail
-
 #this belongs now to onepercent should be here in bluebottle
 
 from .serializers import (
@@ -94,7 +92,7 @@ class UserCreate(generics.CreateAPIView):
             #Manually set the is_active flag on a user now that we stopped using the Registration manager
             obj.is_active = True
             obj.save()
-            send_welcome_mail(user=obj)
+            #Sending a welcome mail is now done via a post_save signal on a user model
 
 class UserActivate(generics.RetrieveAPIView):
     serializer_class = CurrentUserSerializer

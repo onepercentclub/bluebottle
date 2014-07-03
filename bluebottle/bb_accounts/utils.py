@@ -28,6 +28,6 @@ def send_welcome_mail(user=None):
     email = loader.render_to_string(email_template_name, c)
 
     user.email_user(subject, email)
-
-def social_signup_send_welcome_mail(strategy, user, response, details, is_new=False,*args,**kwargs):
-    send_welcome_mail(user)
+#
+# def social_signup_send_welcome_mail(strategy, user, response, details, is_new=False,*args,**kwargs):
+#     send_welcome_mail(user)

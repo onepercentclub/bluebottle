@@ -226,10 +226,14 @@ class SeleniumTestCase(LiveServerTestCase):
                 caps = webdriver.DesiredCapabilities.SAFARI
                 caps['platform'] = "OS X 10.9"
                 caps['version'] = "7"
-            else:
+            elif BROWSER == 'ie':
                 caps = webdriver.DesiredCapabilities.INTERNETEXPLORER
                 caps['platform'] = "Windows 8"
                 caps['version'] = "10"
+            else:
+                caps = webdriver.DesiredCapabilities.FIREFOX
+                caps['platform'] = "Windows 7"
+                caps['version'] = "30"
 
             if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
                 caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']

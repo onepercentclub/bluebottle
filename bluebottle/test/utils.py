@@ -216,26 +216,32 @@ class SeleniumTestCase(LiveServerTestCase):
         if settings.SELENIUM_WEBDRIVER == 'remote':
             import os
             from sauceclient import SauceClient
+            from selenium import webdriver
 
             USERNAME = os.environ.get('SAUCE_USERNAME')
             ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
+            BROWSER = os.environ.get('BROWSER')
 
-            # sauce = SauceClient(USERNAME, ACCESS_KEY)
+            if BROWSER == 'safari':
+                caps = webdriver.DesiredCapabilities.SAFARI
+                caps['platform'] = "OS X 10.9"
+                caps['version'] = "7"
+            else:
+                caps = webdriver.DesiredCapabilities.INTERNETEXPLORER
+                caps['platform'] = "Windows 8"
+                caps['version'] = "10"
 
-            desired_capabilities = {}
             if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
-                desired_capabilities['name'] = os.environ['TRAVIS_BUILD_NUMBER']
-                desired_capabilities['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
-                desired_capabilities['build'] = os.environ['TRAVIS_BUILD_NUMBER']
-                desired_capabilities['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
-            build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER'] or '-unknown-'
+                caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
+                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+                caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
+                caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+            build = 'Build ' + getattr(os.environ, 'TRAVIS_BUILD_NUMBER', '-unknown-')
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
             cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY),
-                                     desired_capabilities=desired_capabilities, name=build)
-            cls.browser.driver.implicitly_wait(5)
-
+                                     desired_capabilities=caps, name=build)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

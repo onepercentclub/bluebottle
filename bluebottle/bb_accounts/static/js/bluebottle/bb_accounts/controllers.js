@@ -197,6 +197,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
 
     willClose: function () {
         this.set('password', null);
+        this.set('userMatch', false);
         this.set('error', null);
     },
 

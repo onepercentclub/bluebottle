@@ -110,7 +110,14 @@ App.UserController = Ember.Controller.extend({});
 // This is done by injection in the currentUser intializer.
 // TODO: we should just set the currentUser property on the application controller or route
 //       and inject that so that it is available from all controllers.
-App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{});
+App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{
+    welcomeMessage: function() {
+        var msg1 = gettext('Welcome ') + this.get('first_name') + '.',
+            msg2 = gettext(' Ready to do some good?'),
+            msg = msg1 + ' ' + msg2;
+        return msg
+    }.property()
+});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {

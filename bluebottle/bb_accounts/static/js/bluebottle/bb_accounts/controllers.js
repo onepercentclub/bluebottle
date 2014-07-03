@@ -212,7 +212,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             }, function (error) {
                 _this.set('error', error);
             });
-        }
+        },
 
         signup: function () {
             this.send('modalFlip', 'signup');

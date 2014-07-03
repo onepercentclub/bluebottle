@@ -4,14 +4,15 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-
+    fixedFieldsMessage: gettext('That\'s better'),
+    errorsFixed: false,
 
     init: function() {
         this._super();
 
         this.set('errorDefinitions', [
             {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
-            {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')}
+            {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
         ]);
 
         this._clearModel();
@@ -26,11 +27,29 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('model', user);
     },
 
+    willClose: function () {
+        this._clearModel();
+    },
+
+    // Check if there were previous errors which are now fixed
+    checkErrors: function() {
+        if (this.get('validationErrors')){
+            this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+            if (!this.get('validationErrors')) {
+                this.set('errorsFixed', true)
+            }
+        }
+    }.observes('password.length', 'email', 'emailConfirmation'),
+
     actions: {
         createUser: function(user) {
             var _this = this;
+
+            // Clear the errors fixed message
+            this.set('errorsFixed', false);
+
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
@@ -63,7 +82,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.transitionToRoute('/');
                 }, function () {
                     // Handle failure to create currentUser
-                    _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
+                    _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 });
 
             }, function (failedUser) {
@@ -76,7 +95,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
                     // Handle error message here!
-                    _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model')));
+                    _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 }
             });
         }
@@ -165,7 +184,15 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     init: function () {
         this._super();
 
+        this._clearModel();
+    },
+
+    _clearModel: function () {
         this.set('content', Em.Object.create());
+    },
+
+    willClose: function () {
+        this._clearModel();
     },
 
     actions: {
@@ -181,29 +208,48 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
             });
         },
 
+        signup: function () {
+            this.send('modalFlip', 'signup');
+        },
 
+        passwordRequest: function () {
+            var email = Em.Object.create({email: this.get('username')})
+            this.send('modalFlip', 'passwordRequest', email);
+        }
     }
 });
 
-App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin, {
-    needs: ['login'],
+App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     requestResetPasswordTitle : gettext('Trouble signin in?'),
     contents: null,
+    loading: false,
+
+    init: function () {
+        this._super();
+
+        this._clearContent();
+    },
+
+    _clearContent: function () {
+        this.set('content', Em.Object.create({}));
+    },
 
     actions: {
         requestReset: function() {
             var _this = this;
+            this.set('loading', true);
+
             return Ember.RSVP.Promise(function (resolve, reject) {
-                var email = _this.get('controllers.login.username'),
-                    hash = {
+                var hash = {
                         url: '/api/users/passwordreset',
                         dataType: "json",
                         type: 'put',
-                        data: JSON.stringify({email: email}),
+                        data: JSON.stringify(_this.get('content')),
                         contentType: 'application/json; charset=utf-8'
                     };
 
                 hash.success = function (response) {
+                    _this.set('loading', false);
                     _this.send('modalFlip', 'passwordRequestSuccess');
                     Ember.run(null, resolve, response);
                 };
@@ -211,6 +257,7 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
                 hash.error = function (response) {
                     var msg = gettext('There is no account associated with the email.')
                     _this.set('error', msg);
+                    _this.set('loading', false);
 
                     Ember.run(null, reject, msg);
                 };

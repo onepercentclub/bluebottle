@@ -19,27 +19,31 @@
         {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error" placeholder="Re-enter E-mailaddress"}}
         <div class="password">
         {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error" placeholder="Password"}}
-            <div class="tooltip-holder">
-                <span class="questionmark">?</span>
-            <div class="tooltip input">Lost your password?</div>
-        </div>
         </div>
 
         <a {{action 'createUser' model}} class="btn">{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
         <small>By signing up, you accept our <a {{action showPage 'terms-and-conditions' true}}>terms of service</a></small>
 
-        {{#if validationErrors}}
-            {{#each validationErrors.email}}
-                <div class="modal-flash-message error">
-                    {{this}}
-                </div>
-            {{/each}}
-            {{#each validationErrors.password}}
-                <div class="modal-flash-message error">
-                    {{this}}
-                </div>
-            {{/each}}
+        {{#if errorsFixed}}
+            <div class="modal-flash-message success">
+                {{fixedFieldsMessage}}
+            </div>
         {{/if}}
+
+        {{#unless errorsFixed}}
+            {{#if validationErrors}}
+                {{#each validationErrors.email}}
+                    <div class="modal-flash-message error">
+                        {{this}}
+                    </div>
+                {{/each}}
+                {{#each validationErrors.password}}
+                    <div class="modal-flash-message error">
+                        {{this}}
+                    </div>
+                {{/each}}
+            {{/if}}
+        {{/unless}}
     </div>
 
     <div class="modal-fullscreen-footer">

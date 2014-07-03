@@ -10,13 +10,5 @@ class SubDomainSessionMiddleware(middleware.SessionMiddleware):
         if session_key is None:
             # Look for old cookie in request for auth purposes.
             session_key = request.COOKIES.get('sessionid', None)
+
         request.session = engine.SessionStore(session_key)
-
-class ApiDisableCsrf(object):
-
-    # Disable csrf for API requests
-    def process_request(self, request):
-        url_parts = request.path.split('/')
-
-        if url_parts[1] == 'api':
-            setattr(request, '_dont_enforce_csrf_checks', True)

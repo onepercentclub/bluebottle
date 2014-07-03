@@ -49,8 +49,9 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
         this.set('FBloading', true);
 
-
         FB.Event.subscribe('auth.authResponseChange', function(response) {
+            console.log('[FB] calling auth.authResponseChange');
+
             if (typeof _this.appLogin == 'function') {
                 _this.appLogin(response.authResponse);
             }
@@ -58,6 +59,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
         });
 
         return FB.getLoginStatus(function(response) {
+            console.log('[FB] calling getLoginStatus');
+
             if (response.status === 'connected') {
                 if (typeof _this.appLogin == 'function') {
                     _this.appLogin(response.authResponse);
@@ -77,7 +80,6 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
                 var FBUser;
                 FBUser = Ember.Object.create(user);
-                FBUser.set('accessToken', response.authResponse.accessToken);
                 FBUser.set('accessToken', response.authResponse.accessToken);
                 FBUser.set('expiresIn', response.authResponse.expiresIn);
 

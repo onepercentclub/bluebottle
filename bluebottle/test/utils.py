@@ -224,13 +224,16 @@ class SeleniumTestCase(LiveServerTestCase):
 
             desired_capabilities = {}
             if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
+                desired_capabilities['name'] = os.environ['TRAVIS_BUILD_NUMBER']
                 desired_capabilities['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 desired_capabilities['build'] = os.environ['TRAVIS_BUILD_NUMBER']
                 desired_capabilities['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+            build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER'] or '-unknown-'
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
-            cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY), capabilities=desired_capabilities)
+            cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY),
+                                     desired_capabilities=desired_capabilities, name=build)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

@@ -25,7 +25,6 @@ BB.ModalMixin = Em.Mixin.create({
 
             // Set the currentController property on the container to this new controller
             // so we can call willClose on it later
-			
             if (name) {
 				var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);

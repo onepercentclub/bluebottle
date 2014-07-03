@@ -67,9 +67,9 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', authorizedUser);
                     _this.send('close');
-                    
+
                     // This is the users first login so flash a welcome message
-                    _this.send('setFlash', this.get('currentUser.welcomeMessage'));
+                    _this.send('setFlash', _this.get('currentUser.welcomeMessage'));
 
                     // For now we just transition to home page
                     _this.transitionToRoute('/');

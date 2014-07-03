@@ -223,15 +223,18 @@ class SeleniumTestCase(LiveServerTestCase):
             BROWSER = os.environ.get('BROWSER')
 
             if BROWSER == 'safari':
-                caps = webdriver.DesiredCapabilities.SAFARI
+                caps = {}
+                caps['browser'] = 'safari'
                 caps['platform'] = "OS X 10.9"
                 caps['version'] = "7"
             elif BROWSER == 'ie':
-                caps = webdriver.DesiredCapabilities.INTERNETEXPLORER
+                caps = {}
+                caps['browser'] = 'internetexplorer'
                 caps['platform'] = "Windows 8"
                 caps['version'] = "10"
             else:
-                caps = webdriver.DesiredCapabilities.FIREFOX
+                caps = {}
+                caps['browser'] = 'firefox'
                 caps['platform'] = "Windows 7"
                 caps['version'] = "30"
 
@@ -245,7 +248,7 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
             cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY),
-                                     desired_capabilities=caps, name=build)
+                                     desired_capabilities=caps, name=build, **caps)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

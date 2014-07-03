@@ -7,7 +7,7 @@ from rest_framework import parsers, renderers
 from rest_framework import status
 from social.apps.django_app.utils import strategy
 #from social_auth.decorators import
-
+from datetime import datetime
 
 class GetAuthToken(APIView):
     throttle_classes = ()
@@ -37,5 +37,7 @@ def register_by_access_token(request, backend):
 
     if access_token:
         user = backend.do_auth(access_token)
+        user.last_login = datetime.now()
+        user.save()
         return user.get_jwt_token()
     return None

@@ -223,14 +223,14 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce = SauceClient(USERNAME, ACCESS_KEY)
 
             desired_capabilities = {}
-            # TODO: See if we want to use this.
-            # desired_capabilities['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
-            # desired_capabilities['build'] = os.environ['TRAVIS_BUILD_NUMBER']
-            # desired_capabilities['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+            if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
+                desired_capabilities['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+                desired_capabilities['build'] = os.environ['TRAVIS_BUILD_NUMBER']
+                desired_capabilities['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
-            cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY))
+            cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY), capabilities=desired_capabilities)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

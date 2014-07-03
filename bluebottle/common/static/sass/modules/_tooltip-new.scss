@@ -13,7 +13,7 @@
 		width: 100%;
 		font-size: 11px;
 		line-height: 18px;
-		border-radius: 6px;
+		border-radius: 2px;
 		@include animation(fadeOutDown .25s ease-out);
 
 		&.input {
@@ -50,7 +50,7 @@
 			width: 0;
 		}
 	}
-	
+
 	&:hover {
 		.tooltip {
 			opacity: 1;

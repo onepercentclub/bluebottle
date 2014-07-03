@@ -7,37 +7,37 @@ $gray-middle                                               : #E4EDE9;
 $gray-medium                                               : #F5F4F6; // Todo same as light
 $gray-light                                                : #F8F7F8;
 $gray-border                                               : #D8D8D8;
+$gray-border-hover                                         : #9F9F9F;
 
 
-
-// Colors                                                       
-// --------------------------------                             
+// Colors
+// --------------------------------
 
 $color-primary                                             : #00C051; // green
 $color-secondary                                           : #FF619A; // pink
 $color-primary-shadow									   : #008438; // shadow green
 $color-secondary-shadow									   : #B42A5C; // shadow pink
-                                                                   
+
 $color-error                                               : #b84040 !default;
 $color-success                                             : #5da423 !default;
 $color-deselect                                            : #bfbfbf !default;
-                                                                
-// Social                                                       
-// ----------------------------------                           
-                                                                
+
+// Social
+// ----------------------------------
+
 $facebook-blue                                             : #45619d !default;
 $twitter-blue                                              : #33b9e2 !default;
-                                                       
+
 $font-family                                               : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-heavy                                         : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-bold                                          : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-body										   : 'Neue Helvetica W01';
-                                                                
+
 $base-font-size                                            : 1em !default;
 $base-font-family                                          : $font-family !default;
 $base-line-height                                          : 1.5em !default;
 
-
+$modal-background-color: rgba(#8A9993, .65);
 
 .modal-fullscreen-background {
 	position: fixed;
@@ -45,7 +45,7 @@ $base-line-height                                          : 1.5em !default;
 	right: 0;
 	bottom: 0;
 	left: 0;
-	background: rgba(#f8f7f8, .9);
+	background: $modal-background-color;
 	z-index: 999;
 	visibility: hidden;
 	@include perspective(1000);
@@ -85,31 +85,31 @@ $base-line-height                                          : 1.5em !default;
 		text-transform: inherit;
 		@include single-box-shadow($color-secondary-shadow, 0, -2px, 0, 0, true);
 		@include single-transition(all, .1s ease-in-out);
-		
+
 		&:hover {
 			top: -1px;
 			@include single-box-shadow($color-secondary-shadow, 0, -4px, 0, 0, true);
 			@include single-transition(none);
 		}
-		
+
 		&.btn-sec {
 			color: $color-primary;
 			font-weight: normal;
 			background: none;
 			border: 1px solid $color-primary;
 			@include single-box-shadow(none);
-			
+
 			&:hover {
 				top: 0;
 				background-color: $color-primary;
 				color: $white;
 			}
-			
+
 			&:active, &:focus {
 				border: 1px solid $gray-darker;
 			}
 		}
-		
+
 		&:active, &:focus {
 			top: 1px !important;
 			background: $gray-darker !important;
@@ -123,14 +123,14 @@ $base-line-height                                          : 1.5em !default;
 		}
 
 		&.btn-facebook {
-			background-color: #45619d;
+			background-color: #3368A2;
 			padding-left: 50px;
-			@include single-box-shadow($gray-darker, 0, -2px, 0, 0, true);
+			@include single-box-shadow(#254363, 0, -2px, 0, 0, true);
 
 			span {
-				background-color: #45619d;
+				background-color: #3368A2 !important;
 				color: #fff;
-				@include single-box-shadow($gray-darker, 0, -2px, 0, 0, true);
+				@include single-box-shadow(#254363, 0, -2px, 0, 0, true);
 			}
 		}
 
@@ -143,14 +143,26 @@ $base-line-height                                          : 1.5em !default;
 				}
 			}
 		}
+        &:hover .flaticon {
+            background-color: none !important;
+        }
 	}
 
 	input {
 		border-radius: 4px;
 		margin: 5px 0 5px 0;
-		border-color: #ccc;
+		border-color: $gray-border;
 		height: 45px;
 		box-shadow: none;
+
+        &:hover {
+            border-color: $gray-border-hover;
+        }
+
+        &:focus {
+            border: 1px solid $gray-border-hover;
+            @include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
+        }
 	}
 
 	.password {
@@ -162,7 +174,7 @@ $base-line-height                                          : 1.5em !default;
 
 		.questionmark {
 			position: absolute;
-			vertical-align:middle; 
+			vertical-align:middle;
 			display:inline-block;
 			top: 35%;
 			right: 10px;
@@ -214,7 +226,7 @@ $base-line-height                                          : 1.5em !default;
 .modal-fullscreen-container {
 	position: relative;
 	margin: 10% auto;
-	width: 300px;
+	width: 350px;
 	//height: 100%;
 	@include perspective(800px);
 	@include opacity(0);
@@ -301,10 +313,11 @@ $base-line-height                                          : 1.5em !default;
 	}
 
 	.modal-fullscreen-item {
-		width: 300px;
-		background-color: #f4f4f4;
+		width: 350px;
+		background-color: #F5F4F6;
 		border-radius: 8px;
-		border: solid 1px #ccc;
+		//border: solid 1px #ccc;
+        font-family: $font-family-body;
 		padding: 5px;
 		text-align: center;
 		@include transform-style(preserve-3d);
@@ -321,8 +334,11 @@ $base-line-height                                          : 1.5em !default;
 			background: white;
 
 			h4 {
+                font-size: 22px;
+                font-family: $font-family-body;
 				text-transform: inherit;
 				font-weight: 700;
+                margin-bottom: 15px;
 			}
 		}
 
@@ -333,14 +349,15 @@ $base-line-height                                          : 1.5em !default;
 			background: white;
 			border-radius: 8px;
 			border: solid 1px #ccc;
-			padding: 10px 10px 20px 10px;
+			padding: 20px 20px 20px 20px;
 
 			h4 {
+                font-size: 22px;
+                font-family: $font-family-body;
 				text-transform: inherit;
 				font-weight: 700;
+                margin-bottom: 15px;
 			}
-			
-
 			.modal-flash-message {
 				width: 288px;
 				text-align: center;
@@ -368,7 +385,7 @@ $base-line-height                                          : 1.5em !default;
 			}
 
 			.btn {
-				margin-top: 20px;
+				margin-top: 5px;
 				width: 100%;
 				border-radius: 8px;
 			}
@@ -376,14 +393,14 @@ $base-line-height                                          : 1.5em !default;
 			.or-hr {
 				width: 100%;
 				height: 20px;
-				margin: 10px 0 30px 0;
-				color: #ccc;
+				margin: 10px 0 20px 0;
+				color: $gray-border;
 				font-size: 14px;
 				.first {
 					float: left;
 					width: 45%;
 					height: 100%;
-					border-bottom: solid 2px #ccc;
+					border-bottom: solid 1px $gray-border;
 				}
 				.middle {
 					float: left;
@@ -395,7 +412,7 @@ $base-line-height                                          : 1.5em !default;
 					float: left;
 					width: 45%;
 					height: 100%;
-					border-bottom: solid 2px #ccc;
+					border-bottom: solid 1px $gray-border;
 				}
 			}
 
@@ -419,7 +436,7 @@ $base-line-height                                          : 1.5em !default;
 				pointer-events: none;
 			}
 		}
-	
+
 		.modal-fullscreen-back {
 			position: absolute;
 			display: block;
@@ -467,14 +484,13 @@ $base-line-height                                          : 1.5em !default;
 		}
 
 		.modal-fullscreen-footer {
-			padding: 5px;
-			font-size: 14px;
+			padding: 10px 10px 5px 10px;
+			font-size: 15px;
 
 			a {
 				text-decoration: none;
-				text-transform: 700;
+				font-weight: 700;
 			}
 		}
 	}
 }
-

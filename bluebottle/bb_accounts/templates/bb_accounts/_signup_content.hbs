@@ -3,9 +3,7 @@
 
 {% tplhandlebars "_signup_content" %}
     <div class="modal-fullscreen-content">
-        <span {{action 'close'}} class="modal-fullscreen-close">
-            <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
-        </span>
+        <span {{action 'close'}} class="modal-fullscreen-close"></span>
         <h4>{% trans 'Welcome!' %}</h4>
         {{partial "social_logins"}}
         {{view Em.TextField valueBinding="first_name" placeholder="First name"
@@ -23,6 +21,7 @@
                 <span {{ action 'modalFlipBack' 'passwordRequest' }} class="questionmark">?</span>
             <div class="tooltip input">Lost your password?</div>
         </div>
+        <span class="password-strength">weak</span>
         </div>
 
         <a {{action 'createUser' model}} class="btn">{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>

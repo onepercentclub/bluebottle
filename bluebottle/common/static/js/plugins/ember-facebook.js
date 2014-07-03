@@ -52,8 +52,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
         FB.Event.subscribe('auth.authResponseChange', function(response) {
             console.log('[FB] calling auth.authResponseChange');
 
-            if (typeof _this.appLogin == 'function') {
-                _this.appLogin(response.authResponse);
+            if (typeof _this.fbLogin == 'function') {
+                _this.fbLogin(response.authResponse);
             }
             return _this.updateFBUser(response);
         });
@@ -62,8 +62,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
             console.log('[FB] calling getLoginStatus');
 
             if (response.status === 'connected') {
-                if (typeof _this.appLogin == 'function') {
-                    _this.appLogin(response.authResponse);
+                if (typeof _this.fbLogin == 'function') {
+                    _this.fbLogin(response.authResponse);
                 }
             }
 
@@ -115,11 +115,11 @@ Ember.FBView = Ember.View.extend({
        var _this = this;
        FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
-                App.appLogin(response.authResponse);
+                App.fbLogin(response.authResponse);
             } else {
                FB.login(function(response){
                   if (response.status === 'connected') {
-                    App.appLogin(response.authResponse);
+                    App.fbLogin(response.authResponse);
                   }
 
                   if (response.authResponse == null && response.status == 'unknown'){

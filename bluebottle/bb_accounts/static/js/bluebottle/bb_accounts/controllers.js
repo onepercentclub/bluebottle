@@ -64,23 +64,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     token: newUser.get('jwt_token')
                 };
 
-                return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
+                return App.AuthJwt.processSuccessResponse(response).then(function (authorizedUser) {
                     // clear the modal fields
                     _this._clearModel();
                     
                     // This is for successfully setting the currentUser.
-                    _this.set('currentUser.model', App.CurrentUser.find('current'));
+                    _this.set('currentUser.model', authorizedUser);
                     _this.send('close');
-                    
-                    // If this is the users first login then flash a welcome message
-                    // NOTE: we shouldn't need to check firstLogin here...
-                    if (currentUser.get('firstLogin')) {
-                        var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
-                            msg2 = gettext(' Ready to do some good?'),
-                            msg = msg1 + ' ' + msg2;
 
-                        _this.send('setFlash', msg);
-                    }
+                    // This is the users first login so flash a welcome message
+                    _this.send('setFlash', _this.get('currentUser.welcomeMessage'));
 
                     // For now we just transition to home page
                     _this.transitionToRoute('/');
@@ -114,7 +107,14 @@ App.UserController = Ember.Controller.extend({});
 // This is done by injection in the currentUser intializer.
 // TODO: we should just set the currentUser property on the application controller or route
 //       and inject that so that it is available from all controllers.
-App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{});
+App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{
+    welcomeMessage: function() {
+        var msg1 = gettext('Welcome ') + this.get('first_name') + '.',
+            msg2 = gettext(' Ready to do some good?'),
+            msg = msg1 + ' ' + msg2;
+        return msg
+    }.property()
+});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {

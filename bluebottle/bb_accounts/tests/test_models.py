@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.utils import timezone
+from django.core import mail
 
 from mock import patch
 
@@ -111,3 +112,25 @@ class BlueBottleUserTestCase(TestCase):
         self.user.save()
 
         self.assertEqual(self.user.get_short_name(), 'John')
+
+    def test_welcome_mail(self):
+        """
+        Test that a welcome mail is sent when a user is created when the setting are enabled
+        In settings SEND_WELCOME_MAIL is set to true
+        """
+
+        self.assertEqual(len(mail.outbox), 1) #The setup function also creates a user and generates a mail
+        new_user = TestBaseUser.objects.create_user(email='new_user@onepercentclub.com')
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertTrue("Welcome" in mail.outbox[1].subject) #We need a better way of testing this
+
+    def test_no_welcome_mail(self):
+        """
+        Test that a welcome mail is sent when a user is created when the setting are enabled
+        """
+        from django.conf import settings
+        settings.SEND_WELCOME_MAIL = False
+
+        self.assertEqual(len(mail.outbox), 1) #The setup function also creates a user and generates a mail
+        new_user = TestBaseUser.objects.create_user(email='new_user@onepercentclub.com')
+        self.assertEqual(len(mail.outbox), 1)

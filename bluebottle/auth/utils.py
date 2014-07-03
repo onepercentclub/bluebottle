@@ -23,6 +23,7 @@ def save_profile_picture(strategy, user, response, details,
             user.save()
 
 
+
 def get_extra_facebook_data(strategy, user, response, details, is_new=False, *args, **kwargs):
     """ From Facebook we get the following properties with the 'public_profile' permission:
         id, name, first_name, last_name, link, gender, locale, age_range
@@ -35,18 +36,3 @@ def get_extra_facebook_data(strategy, user, response, details, is_new=False, *ar
     if len(fb_link) < 50:
         user.facebook = fb_link
     user.save()
-
-
-def verify_email(strategy, user, request, **kwargs):
-    """ Raise a custom exception if the email address already exists"""
-    #TODO: Left here because we may need to implement something like this in the near future
-
-
-    if not kwargs['is_new']:
-        return
-
-    try:
-        user = USER_MODEL.objects.get(email=kwargs['details']['email'])
-        raise EmailExists
-    except USER_MODEL.DoesNotExist:
-        pass

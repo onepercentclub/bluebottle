@@ -26,15 +26,15 @@ BB.ModalMixin = Em.Mixin.create({
             // Set the currentController property on the container to this new controller
             // so we can call willClose on it later
             if (name) {
-				var newController = this.controllerFor(name);
+                var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
 
-				this.render(name, {
-                	into: 'modalContainer',
-                	outlet: side,
+                this.render(name, {
+                    into: 'modalContainer',
+                    outlet: side,
                     controller: newController
-            	});
-			}
+                });
+            }
         },
 
         openInFullScreenBox: function(name, context) {
@@ -152,7 +152,7 @@ BB.ModalMixin = Em.Mixin.create({
         },
 
         modalSlide: function(name) {
-        	// Handle any cleanup for the previously set content for the modal
+            // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalBack');
 
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
@@ -160,21 +160,21 @@ BB.ModalMixin = Em.Mixin.create({
         },
 
         modalSlideBack: function(name) {
-        	// Handle any cleanup for the previously set content for the modal
+            // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalFront');
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
         },
 
         modalScale: function(name) {
-        	// Handle any cleanup for the previously set content for the modal
+            // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalBack');
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-down', 'scale-up']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-back', 'scale-down']);
         },
 
         modalScaleBack: function(name) {
-			this.send('modalWillTransition', name, 'modalFront');
+            this.send('modalWillTransition', name, 'modalFront');
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-back', 'scale-down']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-down', 'scale-up']);
         }

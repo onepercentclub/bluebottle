@@ -2,6 +2,17 @@
 *  Views
 */
 
+App.SignupView = Em.View.extend({
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.get('controller').send('signup');
+        }
+    }
+});
+
 App.UserModalView = Em.View.extend({
     templateName: 'user_modal'
 });
@@ -11,11 +22,19 @@ App.LoginView = Em.View.extend({
     
     next: function() {
         return  String(window.location);
-    }.property()
+    }.property(),
+
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.get('controller').send('login');
+        }
+    }
 });
 
 App.PasswordResetView = Em.View.extend({
-
     clearForm: function () {
         var controller = this.get('controller');
 

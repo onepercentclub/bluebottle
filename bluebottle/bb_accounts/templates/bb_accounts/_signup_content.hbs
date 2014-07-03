@@ -20,7 +20,7 @@
             <span class="password-strength"></span>
         </div>
 
-        <a {{action 'createUser' model}} class="btn">{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
+        <a {{action 'signup'}} class="btn">{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
         <small>By signing up, you accept our <a {{action showPage 'terms-and-conditions' true}}>terms of service</a></small>
 
         {{#if errorsFixed}}

@@ -273,3 +273,5 @@ CONTACT_EMAIL = 'contact@my-bluebottle-project.com'
 # Registration
 ACCOUNT_ACTIVATION_DAYS = 7
 HTML_ACTIVATION_EMAIL = True
+
+SEND_WELCOME_MAIL = False

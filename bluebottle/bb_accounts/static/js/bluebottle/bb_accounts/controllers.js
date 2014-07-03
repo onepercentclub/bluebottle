@@ -8,7 +8,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
 
     init: function() {
-
         this._super();
 
         this.set('errorDefinitions', [
@@ -27,6 +26,24 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
         this.set('model', user);
     },
+
+    willClose: function () {
+        this._clearModel();
+
+        // Clear the notifications
+        this.set('errorsFixed', false);
+        this.set('validationErrors', null);
+    },
+
+    // Check if there were previous errors which are now fixed
+    checkErrors: function() {
+        if (this.get('validationErrors')){
+            this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+            if (!this.get('validationErrors')) {
+                this.set('errorsFixed', true)
+            }
+        }
+    }.observes('password.length', 'email', 'emailConfirmation'),
 
     actions: {
         createUser: function(user) {
@@ -47,23 +64,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     token: newUser.get('jwt_token')
                 };
 
-                return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
+                return App.AuthJwt.processSuccessResponse(response).then(function (authorizedUser) {
                     // clear the modal fields
                     _this._clearModel();
                     
                     // This is for successfully setting the currentUser.
-                    _this.set('currentUser.model', App.CurrentUser.find('current'));
+                    _this.set('currentUser.model', authorizedUser);
                     _this.send('close');
-                    
-                    // If this is the users first login then flash a welcome message
-                    // NOTE: we shouldn't need to check firstLogin here...
-                    if (currentUser.get('firstLogin')) {
-                        var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
-                            msg2 = gettext(' Ready to do some good?'),
-                            msg = msg1 + ' ' + msg2;
 
-                        _this.send('setFlash', msg);
-                    }
+                    // This is the users first login so flash a welcome message
+                    _this.send('setFlash', _this.get('currentUser.welcomeMessage'));
 
                     // For now we just transition to home page
                     _this.transitionToRoute('/');
@@ -97,7 +107,14 @@ App.UserController = Ember.Controller.extend({});
 // This is done by injection in the currentUser intializer.
 // TODO: we should just set the currentUser property on the application controller or route
 //       and inject that so that it is available from all controllers.
-App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{});
+App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{
+    welcomeMessage: function() {
+        var msg1 = gettext('Welcome ') + this.get('first_name') + '.',
+            msg2 = gettext(' Ready to do some good?'),
+            msg = msg1 + ' ' + msg2;
+        return msg
+    }.property()
+});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
@@ -171,7 +188,17 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
     init: function () {
         this._super();
+        this._clearModel();
+    },
+
+    _clearModel: function () {
         this.set('content', Em.Object.create());
+    },
+
+    willClose: function () {
+        this.set('password', null);
+        this.set('userMatch', false);
+        this.set('error', null);
     },
 
     actions: {
@@ -187,29 +214,48 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             });
         }
 
+        signup: function () {
+            this.send('modalFlip', 'signup');
+        },
 
+        passwordRequest: function () {
+            var email = Em.Object.create({email: this.get('username')})
+            this.send('modalSlide', 'passwordRequest', email);
+        }
     }
 });
 
-App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin, {
-    needs: ['login'],
+App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     requestResetPasswordTitle : gettext('Trouble signin in?'),
     contents: null,
+    loading: false,
+
+    init: function () {
+        this._super();
+
+        this._clearContent();
+    },
+
+    _clearContent: function () {
+        this.set('content', Em.Object.create({}));
+    },
 
     actions: {
         requestReset: function() {
             var _this = this;
+            this.set('loading', true);
+
             return Ember.RSVP.Promise(function (resolve, reject) {
-                var email = _this.get('controllers.login.username'),
-                    hash = {
+                var hash = {
                         url: '/api/users/passwordreset',
                         dataType: "json",
                         type: 'put',
-                        data: JSON.stringify({email: email}),
+                        data: JSON.stringify(_this.get('content')),
                         contentType: 'application/json; charset=utf-8'
                     };
 
                 hash.success = function (response) {
+                    _this.set('loading', false);
                     _this.send('modalFlip', 'passwordRequestSuccess');
                     Ember.run(null, resolve, response);
                 };
@@ -217,6 +263,7 @@ App.PasswordRequestController = Ember.Controller.extend(BB.ModalControllerMixin,
                 hash.error = function (response) {
                     var msg = gettext('There is no account associated with the email.')
                     _this.set('error', msg);
+                    _this.set('loading', false);
 
                     Ember.run(null, reject, msg);
                 };
@@ -245,6 +292,18 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
             {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
         ]);
+    },
+
+    _clearModel: function () {
+        this.set('content', Em.Object.create());
+    },
+
+    willClose: function () {
+        this._clearModel();
+
+        // Clear the notifications
+        this.set('validationErrors', null);
+        this.set('error', null);
     },
 
     actions: {

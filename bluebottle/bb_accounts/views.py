@@ -55,11 +55,6 @@ class UserCreate(generics.CreateAPIView):
     def pre_save(self, obj):
         obj.primary_language = self.request.LANGUAGE_CODE[:2]
 
-    def _login_user(self, request, user):
-        # Auto login the user after activation
-        user.backend = 'django.contrib.auth.backends.ModelBackend'
-        return login(request, user)
-
     # Overriding the default create so that we can return extra info in the response
     # if there is already a user with the same email address
     def create(self, request, *args, **kwargs):
@@ -88,45 +83,11 @@ class UserCreate(generics.CreateAPIView):
         return response.Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
     def post_save(self, obj, created=False):
-        # Create a RegistrationProfile and email its activation key to the User.
-        registration_profile = RegistrationProfile.objects.create_profile(obj)
-
-        # Activate user
-        activated_user = RegistrationProfile.objects.activate_user(registration_profile.activation_key)
-        if activated_user:
-            # Log the user in when the user has been activated and return the current user object.
-
-            self._login_user(self.request, activated_user)
-            self.object = activated_user
-
-        # TODO: This should be a welcome email and not an activation email
-        #
         if created:
-            current_site = get_current_site(self.request)
-            site_name = current_site.name
-            domain = current_site.domain
-            site = 'https://' + domain
-            c = {
-                'email': obj.email,
-                'site': site,
-                'site_name': site_name,
-                'user': obj,
-                'activation_key': registration_profile.activation_key,
-                'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-            }
-            subject_template_name = 'registration/activation_email_subject.txt'
-        
-            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
-            email_template_name = 'registration/activation_email.' + extension
-        
-            subject = loader.render_to_string(subject_template_name, c)
-            # Email subject *must not* contain newlines
-            subject = ''.join(subject.splitlines())
-            email = loader.render_to_string(email_template_name, c)
-        
-            obj.email_user(subject, email)
-
+            #Manually set the is_active flag on a user now that we stopped using the Registration manager
+            obj.is_active = True
+            obj.save()
+            #Sending a welcome mail is now done via a post_save signal on a user model
 
 class UserActivate(generics.RetrieveAPIView):
     serializer_class = CurrentUserSerializer

@@ -266,3 +266,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def short_name(self):
         return self.get_short_name()
 
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .utils import send_welcome_mail
+from django.conf import settings
+
+@receiver(post_save)
+def send_welcome_mail_callback(sender, instance, created, **kwargs):
+    from django.contrib.auth import get_user_model
+    USER_MODEL = get_user_model()
+    if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance, USER_MODEL) and created:
+        send_welcome_mail(user=instance)

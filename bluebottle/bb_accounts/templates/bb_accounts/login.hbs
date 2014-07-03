@@ -5,9 +5,7 @@
     {% tplhandlebars "login" %}
 
         <div class="modal-fullscreen-content">
-            <span {{action 'close'}} class="modal-fullscreen-close">
-                <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
-            </span>
+            <span {{action 'close'}} class="modal-fullscreen-close"></span>
 
             {{partial "social_errors"}}
 
@@ -27,7 +25,7 @@
             <div class="password">
                 {{input valueBinding="password" type="password" placeholder="Password"}}
                 <div class="tooltip-holder">
-                    <span {{ action 'modalFlip' 'passwordRequest' }} class="questionmark">?</span>
+                    <span {{ action 'passwordRequest' }} class="questionmark">?</span>
                     <span class="modal-btn-signup" href="#">
                         <div class="tooltip input">{% trans "Lost your password?" %}</div>
 
@@ -47,7 +45,7 @@
         <div class="modal-fullscreen-footer">
                 <span class="modal-btn-signup" href="#">
                     {% trans "Don’t have an account?" %}
-                    <a {{ action 'modalFlip' 'signup' }}>
+                    <a {{ action 'signup' }}>
                         {% trans "Sign up here" %}
                     </a>
                 </span>

@@ -17,6 +17,8 @@ from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCu
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from rest_framework.permissions import IsAuthenticated
 
+from .utils import send_welcome_mail
+
 #this belongs now to onepercent should be here in bluebottle
 
 from .serializers import (
@@ -88,45 +90,11 @@ class UserCreate(generics.CreateAPIView):
         return response.Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
     def post_save(self, obj, created=False):
-        # Create a RegistrationProfile and email its activation key to the User.
-        registration_profile = RegistrationProfile.objects.create_profile(obj)
-
-        # Activate user
-        activated_user = RegistrationProfile.objects.activate_user(registration_profile.activation_key)
-        if activated_user:
-            # Log the user in when the user has been activated and return the current user object.
-
-            self._login_user(self.request, activated_user)
-            self.object = activated_user
-
-        # TODO: This should be a welcome email and not an activation email
-        #
         if created:
-            current_site = get_current_site(self.request)
-            site_name = current_site.name
-            domain = current_site.domain
-            site = 'https://' + domain
-            c = {
-                'email': obj.email,
-                'site': site,
-                'site_name': site_name,
-                'user': obj,
-                'activation_key': registration_profile.activation_key,
-                'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-            }
-            subject_template_name = 'registration/activation_email_subject.txt'
-        
-            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
-            email_template_name = 'registration/activation_email.' + extension
-        
-            subject = loader.render_to_string(subject_template_name, c)
-            # Email subject *must not* contain newlines
-            subject = ''.join(subject.splitlines())
-            email = loader.render_to_string(email_template_name, c)
-        
-            obj.email_user(subject, email)
-
+            #Manually set the is_active flag on a user now that we stopped using the Registration manager
+            obj.is_active = True
+            obj.save()
+            send_welcome_mail(user=obj)
 
 class UserActivate(generics.RetrieveAPIView):
     serializer_class = CurrentUserSerializer

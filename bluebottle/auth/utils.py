@@ -23,6 +23,7 @@ def save_profile_picture(strategy, user, response, details,
             user.save()
 
 
+
 def get_extra_facebook_data(strategy, user, response, details, is_new=False, *args, **kwargs):
     """ From Facebook we get the following properties with the 'public_profile' permission:
         id, name, first_name, last_name, link, gender, locale, age_range

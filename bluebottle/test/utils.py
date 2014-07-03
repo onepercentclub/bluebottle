@@ -220,7 +220,7 @@ class SeleniumTestCase(LiveServerTestCase):
             USERNAME = os.environ.get('SAUCE_USERNAME')
             ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
 
-            sauce = SauceClient(USERNAME, ACCESS_KEY)
+            # sauce = SauceClient(USERNAME, ACCESS_KEY)
 
             desired_capabilities = {}
             if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
@@ -243,11 +243,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """
-        Make sure the browser quits afterwards.
-        """
         cls.browser.quit()
-
         super(SeleniumTestCase, cls).tearDownClass()
 
     def _post_teardown(self):

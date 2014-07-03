@@ -52,11 +52,9 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             //validate if the dictionary has the right fields
             if(Em.compare(Object.keys(dict).sort(), _this.errorDictionaryFields.sort()) < 0)
                 throw new Error('Expected a dictionary with correct keys');
-
             if (!model.get(dict.validateProperty)) {
                 if (!resultErrors)
                     resultErrors = Em.Object.create();
-
                 if (resultErrors.get(dict['property']))
                     resultErrors.get(dict['property']).push(dict['message']);
                 else

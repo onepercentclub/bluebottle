@@ -232,7 +232,9 @@ App.CurrentUser = App.UserPreview.extend({
     date_joined: DS.attr('date'),
 
     firstLogin: function () {
-        return Em.compare(this.get('last_login'), this.get('date_joined')) < 0;
+        // if the last_login is equal to the date_joined then this is the users first login
+        // Ember.compare returns 1 if the values are equal, otherwise -1 is returned
+        return Em.compare(this.get('last_login'), this.get('date_joined')) > 0;
     }.property('last_login', 'date_joined'),
 
     getUser: function(){
@@ -262,6 +264,7 @@ App.CurrentUser = App.UserPreview.extend({
  User (POST):   /users/
 
  */
+
 App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     url: 'users',
 
@@ -272,7 +275,9 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     jwt_token: DS.attr('string', {readOnly: true}),
     emailConfirmation: DS.attr('string'),
 
-    validPassword: Em.computed.gte('password.length', 5),
+    validPassword: function () {
+        return this.get('password.length') >= Em.get(App, 'settings.minPasswordLength');
+    }.property('password.length'),
 
     matchingEmail: function () {
         return !Em.compare(this.get('email'), this.get('emailConfirmation'));
@@ -287,11 +292,13 @@ App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
     new_password1: DS.attr('string'),
     new_password2: DS.attr('string'),
 
-    validPassword: Em.computed.gte('new_password1.length', 5),
+    validPassword: function () {
+        return this.get('new_password1.length') >= Em.get(App, 'settings.minPasswordLength');
+    }.property('new_password1.length'),
 
     matchingPassword: function() {
         return !Em.compare(this.get('new_password1'), this.get('new_password2'));
-    }.property('new_password1', 'new_password2')
+    }.property('new_password1', 'new_password2'),
 
 
 });

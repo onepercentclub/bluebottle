@@ -1,6 +1,11 @@
 BB = {};
 
 BB.ModalControllerMixin = Em.Mixin.create({
+    // This can be overridden with code to respond with when the 
+    // modal content is about to be replace with new content.
+    // This will usually involve clearing the model data => form fields
+    willClose: Em.K,
+
     actions: {
         close: function () {
             this.send('closeModal');
@@ -10,6 +15,29 @@ BB.ModalControllerMixin = Em.Mixin.create({
 
 BB.ModalMixin = Em.Mixin.create({
     actions: {
+        willTransition: function(name, side) {
+            // Handle any cleanup for the previously set content for the modal
+            var modalContainer = this.controllerFor('modalContainer'),
+                previousController = modalContainer.get('currentController');
+
+            if (previousController && Em.typeOf(previousController.willClose) == 'function')
+                previousController.willClose();
+
+            // Set the currentController property on the container to this new controller
+            // so we can call willClose on it later
+			
+            if (name) {
+				var newController = this.controllerFor(name);
+                modalContainer.set('currentController', newController);
+
+				this.render(name, {
+                	into: 'modalContainer',
+                	outlet: side,
+                	controller: controller
+            	});
+			}
+        },
+
         openInFullScreenBox: function(name, context) {
             this.send('openInBox', name, context, 'full-screen');
         },
@@ -23,20 +51,24 @@ BB.ModalMixin = Em.Mixin.create({
         },
 
         openInBox: function(name, context, type, callback) {
+            // Setup the modal container
+            var modalContainer = this.controllerFor('modalContainer');
             this.render('modalContainer', {
                 into: 'application',
                 outlet: 'modalContainer',
-                controller: this.controllerFor('modalContainer')
+                controller: modalContainer
             });
 
             this.send('scrollDisableEnable');
             this.send('closeKeyModal', '27');
 
-            return this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalFront',
-                controller: this.controllerFor(name)
-            });
+            // Setup the modal content and set the model if passed
+            var controller = this.controllerFor(name);
+            if (Em.typeOf(context) != 'undefined')
+                controller.set('model', context);
+
+            // Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', name, 'modalFront');
         },
 
         addRemoveClass: function(type, element, className, attrName) {
@@ -61,6 +93,9 @@ BB.ModalMixin = Em.Mixin.create({
         closeModal: function() {
             var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
                 _this = this;
+
+            // Handle any cleanup for the previously set content for the modal
+            this.send('willTransition');
 
             $('.modal-fullscreen-background').one(animationEnd, function(){
                 // Finally clear the outlet
@@ -97,74 +132,61 @@ BB.ModalMixin = Em.Mixin.create({
             }
         },
 
-        modalFlip: function(name, model) {
+        modalFlip: function(name, context) {
             var controller = this.controllerFor(name);
 
-            if (Em.typeOf(model) != 'undefined')
-                controller.set('model', model);
+            if (Em.typeOf(context) != 'undefined')
+                controller.set('model', context);
 
-            this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalBack',
-                controller: controller
-            });
+            // Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', name, 'modalBack');
 
             // add class flipped and reset default state
             this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
         },
 
         modalFlipBack: function(name) {
-            this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalFront',
-                controller: this.controllerFor(name)
-            });
+            var controller = this.controllerFor(name);
+            
+            // Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', name, 'modalFront');
+
             $('#card').removeClass('flipped');
         },
 
         modalSlide: function(name) {
-            this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalBack',
-                controller: this.controllerFor(name)
-            });
+        	// Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', name, 'modalBack');
+
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
         },
 
         modalSlideBack: function(name) {
-            this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalFront',
-                controller: this.controllerFor(name)
-            });
+        	// Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', name, 'modalFront');
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
         },
 
         modalScale: function(name) {
-            this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalBack',
-                controller: this.controllerFor(name)
-            });
+        	// Handle any cleanup for the previously set content for the modal
+            this.send('willTransition', name, 'modalBack');
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-down', 'scale-up']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-back', 'scale-down']);
         },
 
         modalScaleBack: function(name) {
-            this.render(name, {
-                into: 'modalContainer',
-                outlet: 'modalFront',
-                controller: this.controllerFor(name)
-            });
+			this.send('willTransition', name, 'modalFront');
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-back', 'scale-down']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-down', 'scale-up']);
         }
     },
 });
 
-BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {});
+BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {
+    currentController: null
+});
 
 BB.ModalContainerView = Em.View.extend({
     tagName: null,

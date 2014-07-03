@@ -10,4 +10,5 @@ class SubDomainSessionMiddleware(middleware.SessionMiddleware):
         if session_key is None:
             # Look for old cookie in request for auth purposes.
             session_key = request.COOKIES.get('sessionid', None)
+
         request.session = engine.SessionStore(session_key)

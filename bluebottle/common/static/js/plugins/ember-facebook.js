@@ -49,8 +49,9 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
         this.set('FBloading', true);
 
-
         FB.Event.subscribe('auth.authResponseChange', function(response) {
+            console.log('[FB] calling auth.authResponseChange');
+
             if (typeof _this.appLogin == 'function') {
                 _this.appLogin(response.authResponse);
             }
@@ -58,6 +59,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
         });
 
         return FB.getLoginStatus(function(response) {
+            console.log('[FB] calling getLoginStatus');
+
             if (response.status === 'connected') {
                 if (typeof _this.appLogin == 'function') {
                     _this.appLogin(response.authResponse);
@@ -74,9 +77,9 @@ Ember.FacebookMixin = Ember.Mixin.create({
         if (response.status === 'connected') {
             FBApp.set("connectError", false);
             return FB.api('/me', function(user) {
+
                 var FBUser;
                 FBUser = Ember.Object.create(user);
-                FBUser.set('accessToken', response.authResponse.accessToken);
                 FBUser.set('accessToken', response.authResponse.accessToken);
                 FBUser.set('expiresIn', response.authResponse.expiresIn);
 
@@ -106,8 +109,8 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
 Ember.FBView = Ember.View.extend({
    classNames: ['btn', 'btn-facebook', 'btn-iconed', 'fb-login-button'],
-   error: null,
-   attributeBindings: ['data-scope'],
+   attributeBindings: ['data-scope','data-size'],
+
    click: function(e){
        var _this = this;
        FB.getLoginStatus(function(response) {
@@ -117,13 +120,12 @@ Ember.FBView = Ember.View.extend({
                FB.login(function(response){
                   if (response.status === 'connected') {
                     App.appLogin(response.authResponse);
-
                   }
 
                   if (response.authResponse == null && response.status == 'unknown'){
                       FBApp.set('connectError', gettext("There was an error connecting Facebook"));
                   }
-               });
+               }, {scope: 'email,public_profile,user_friends'});
             }
        });
    }

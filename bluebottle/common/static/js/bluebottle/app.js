@@ -1,7 +1,10 @@
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
+
     initialize: function(container, application) {
+        var _this = this;
+
         // delay boot until the current user promise resolves
         App.deferReadiness();
 
@@ -20,23 +23,37 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
+            App.injectUser(container, user);
+
             // boot the app
             App.advanceReadiness();
         }, function() {
+            App.injectUser(container, null);
+
             container.lookup('controller:application').missingCurrentUser();
 
             // boot the app without a currect user
             App.advanceReadiness();
         });
-
-        // Set the currentUser model/content on the currentUser controller
-        container.lookup('controller:currentUser').set('content', currentUser);
-
-        // Inject currentUser into all controllers
-        container.typeInjection('controller', 'currentUser', 'controller:currentUser');
-
     }
 });
+
+// A static initializer for app settings
+//TODO: we should make it as an ajax request to fetch settings from api
+Ember.Application.initializer({
+    name: 'appSettings',
+    after: 'currentUser',
+
+    initialize: function(container, application) {
+        application.set('settings',
+            Em.Object.create({
+                minPasswordLength: 6,
+                minPasswordError: gettext('Password needs to be at least 6 characters long')
+            })
+        )
+    }
+});
+
 
 App = Em.Application.createWithMixins(Em.FacebookMixin, {
     VERSION: '1.0.0',
@@ -88,6 +105,14 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
 
         this.setLocale(locale);
         this.initSelectViews();
+    },
+
+    injectUser: function (container, user) {
+        // Set the currentUser model/content on the currentUser controller
+        container.lookup('controller:currentUser').set('content', user);
+
+        // Inject currentUser into all controllers
+        container.typeInjection('controller', 'currentUser', 'controller:currentUser');
     },
 
     initSelectViews: function() {
@@ -151,6 +176,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
             contentBinding: 'data'
         });
     },
+
     setLocale: function(locale) {
         if (!locale) {
             locale = this.get('locale');

@@ -5,7 +5,7 @@
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
     fixedFieldsMessage: gettext('That\'s better'),
-    errorsFixed: false,
+    fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
 
     init: function() {
         this._super();
@@ -64,23 +64,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     token: newUser.get('jwt_token')
                 };
 
-                return App.AuthJwt.processSuccessResponse(response).then(function (currentUser) {
+                return App.AuthJwt.processSuccessResponse(response).then(function (authorizedUser) {
                     // clear the modal fields
                     _this._clearModel();
                     
                     // This is for successfully setting the currentUser.
-                    _this.set('currentUser.model', App.CurrentUser.find('current'));
+                    _this.set('currentUser.model', authorizedUser);
                     _this.send('close');
-                    
-                    // If this is the users first login then flash a welcome message
-                    // NOTE: we shouldn't need to check firstLogin here...
-                    if (currentUser.get('firstLogin')) {
-                        var msg1 = gettext('Welcome ') + user.get('first_name') + '.';
-                            msg2 = gettext(' Ready to do some good?'),
-                            msg = msg1 + ' ' + msg2;
 
-                        _this.send('setFlash', msg);
-                    }
+                    // This is the users first login so flash a welcome message
+                    _this.send('setFlash', _this.get('currentUser.welcomeMessage'));
 
                     // For now we just transition to home page
                     _this.transitionToRoute('/');
@@ -114,7 +107,14 @@ App.UserController = Ember.Controller.extend({});
 // This is done by injection in the currentUser intializer.
 // TODO: we should just set the currentUser property on the application controller or route
 //       and inject that so that it is available from all controllers.
-App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{});
+App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{
+    welcomeMessage: function() {
+        var msg1 = gettext('Welcome ') + this.get('first_name') + '.',
+            msg2 = gettext(' Ready to do some good?'),
+            msg = msg1 + ' ' + msg2;
+        return msg
+    }.property()
+});
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
@@ -182,12 +182,12 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
+App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
+    requiredFields: ['username', 'password'],
 
     init: function () {
         this._super();
-
         this._clearModel();
     },
 
@@ -204,15 +204,15 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     actions: {
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
-
             var _this = this;
+
             return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');
             }, function (error) {
                 _this.set('error', error);
             });
-        },
+        }
 
         signup: function () {
             this.send('modalFlip', 'signup');

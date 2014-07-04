@@ -46,7 +46,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     }.observes('password.length', 'email', 'emailConfirmation'),
 
     actions: {
-        createUser: function(user) {
+        signup: function() {
             var _this = this;
 
             // Clear the errors fixed message
@@ -212,7 +212,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             }, function (error) {
                 _this.set('error', error);
             });
-        }
+        },
 
         signup: function () {
             this.send('modalFlip', 'signup');

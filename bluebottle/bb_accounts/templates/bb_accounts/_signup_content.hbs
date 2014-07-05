@@ -20,7 +20,7 @@
             <span class="password-strength"></span>
         </div>
 
-        <a {{action 'signup'}} {{bindAttr class=":btn blockingErrors:is-inactive"}>{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
+        <a {{action 'signup'}} {{bindAttr class=":btn blockingErrors:is-inactive"}}>{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
         <small>By signing up, you accept our <a {{action showPage 'terms-and-conditions' true}}>terms of service</a></small>
         {{#if errorsFixed}}
             <div class="modal-flash-message success">

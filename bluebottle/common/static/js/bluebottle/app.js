@@ -382,6 +382,38 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
+        closeModal: function () {
+            this._super();
+
+            // We need to cancel any transitions which might be waiting if the user 
+            // tried to enter a restricted area and was unauthenticated, eg they 
+            // were presented with a sign in / up modal.
+            // NOTE: As we are clearing the transition here we need to ensure that when we 
+            //       call loadNextTransition we do it before closing the modal.
+            this.send('clearNextTransition');
+        },
+        clearNextTransition: function () {
+            this.set('nextTransition', null);
+        },
+        setNextTransition: function (transition) {
+            this.set('nextTransition', transition);
+        },
+        loadNextTransition: function (fallbackRoute) {
+            // If the applicationRoute has a nextTransition value then we run it as 
+            // it is probably the case that the user tried to access a restricted page and 
+            // was prevented from doing it => user was presented with the sign up / in modal.
+            // If there is no nextTransition then load the passed route if defined.
+            var nextTransition = this.get('nextTransition');
+            if (nextTransition) {
+                // retry the transition
+                nextTransition.retry();
+
+                // cancel the transition so that it doesn't run again
+                this.send('clearNextTransition');
+            } else if (Em.typeOf(fallbackRoute) == 'string') {
+                _this.transitionToRoute(fallbackRoute);
+            }
+        },
         setFlash: function (message, type) {
             if (typeof type === 'undefined')
                 type = 'info'

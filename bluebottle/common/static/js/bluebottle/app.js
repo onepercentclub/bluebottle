@@ -337,7 +337,20 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
-//Enable Google Analytics with Ember
+// Handle queued router transition
+App.Router.reopen({
+  didTransition: function(infos) {
+      this._super(infos);
+
+      /*
+       Clear queued (next) transition after any successful transition so the 
+       queued one does not run more than once.
+       */ 
+      this.send('clearNextTransition');
+  }
+});
+
+// Enable Google Analytics with Ember
 App.Router.reopen({
     /**
      * Tracks pageviews if google analytics is used
@@ -347,10 +360,11 @@ App.Router.reopen({
         this._super(infos);
 
         Ember.run.next(function() {
-            // the meta module will now go trough the routes and look for data
+            // the meta module will now go through the routes and look for data
             App.meta.trigger('reloadDataFromRoutes');
         });
 
+        // Track the page / route load
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
                 _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
@@ -382,16 +396,6 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
-        closeModal: function () {
-            this._super();
-
-            // We need to cancel any transitions which might be waiting if the user 
-            // tried to enter a restricted area and was unauthenticated, eg they 
-            // were presented with a sign in / up modal.
-            // NOTE: As we are clearing the transition here we need to ensure that when we 
-            //       call loadNextTransition we do it before closing the modal.
-            this.send('clearNextTransition');
-        },
         clearNextTransition: function () {
             this.set('nextTransition', null);
         },

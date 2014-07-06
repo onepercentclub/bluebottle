@@ -3,22 +3,19 @@
  */
 
 App.AuthenticatedRouteMixin = Ember.Mixin.create({
-    enterState: function(transition) {
-      debugger
-    },
     beforeModel: function(transition) {
-        debugger
         var _this = this,
             applicationController = this.controllerFor('application');
         
         // If not logged in then display the login popup for the user.
         if (!applicationController.get('currentUser.isAuthenticated')) {
-            // Abort the transition as the login controller will handle the redirect after a successful login.
+            // Abort the transition as the application route will handle the redirect 
+            // after a successful sign in / up.
             transition.abort();
 
-            // The popup box method is on the application route
-            // TODO: is there a more elegant way to call the function from here?
-            applicationController.send('setNextTransition', transition);
+            // Set the nextTransition on the application route so that the route transition 
+            // can happen later.
+            _this.send('setNextTransition', transition);
 
             // Open the sign in / up modal
             _this.send('openInBox', 'login');

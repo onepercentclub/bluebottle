@@ -8,6 +8,7 @@ from django.template import loader
 from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
+from django.utils.translation import ugettext_lazy as _
 
 from registration import signals
 from registration.models import RegistrationProfile
@@ -213,3 +214,18 @@ class PasswordSet(views.APIView):
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return response.Response(status=status.HTTP_404_NOT_FOUND)
+
+class DisableAccount(views.APIView):
+
+    def post(self, request, *args, **kwargs):
+        user_id = self.kwargs.get("user_id")
+        token = self.kwargs.get("token")
+
+        user = BB_USER_MODEL.objects.get(id=int(user_id))
+
+        if user.get_disable_token() != token:
+            return response.Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user.is_active = False
+        user.save()
+        return response.Response(status=status.HTTP_200_OK)

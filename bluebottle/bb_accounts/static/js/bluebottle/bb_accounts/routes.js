@@ -221,7 +221,7 @@ App.DisableAccountRoute = Em.Route.extend({
 
     model: function(params){
         var route = this;
-        var user_id = params.user_id;
-        return App.User.find(user_id);
+        var record = Em.Object.create({user_id: params.user_id, token: params.token});
+        return record;
     }
 });

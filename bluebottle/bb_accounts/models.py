@@ -277,6 +277,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.save()
 
     def get_disable_token(self):
+        if not self.disable_token:
+            self.reset_disable_token()
         return self.disable_token
 
 from django.db.models.signals import post_save

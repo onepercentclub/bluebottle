@@ -1,3 +1,5 @@
+import time
+from datetime import datetime
 from requests import request, HTTPError
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -33,10 +35,21 @@ def get_extra_facebook_data(strategy, user, response, details, is_new=False, *ar
 
     user.first_name = response.get('first_name', None)
     user.last_name = response.get('last_name', None)
-    user.gender = response.get('gender', None)
+    if not user.gender:
+        user.gender = response.get('gender', None)
     fb_link = response.get('link', None)
+
+    birthday = response.get('birthday', None)
+    if birthday and not user.birthdate:
+        birthdate = time.strptime(birthday,"%m/%d/%Y")
+        user.birthdate = datetime.fromtimestamp(time.mktime(birthdate))
+
+    if not user.website and response.get("website", None):
+        user.website = response.get("website", None)
+
     if len(fb_link) < 50:
         user.facebook = fb_link
+
     user.save()
 
 
@@ -46,5 +59,6 @@ def send_welcome_mail_pipe(strategy, user, response, details, is_new=False, *arg
     User object passes through the social pipeline it gets saved several time and therefore losing the "new" status to
     trigger sending an email. This pipe in the social pipeline therefore sends an explicit welcome email.
     """
+
     if is_new and valid_email(user.email):
         send_welcome_mail(user)

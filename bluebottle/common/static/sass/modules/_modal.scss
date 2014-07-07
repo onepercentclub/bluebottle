@@ -146,6 +146,13 @@ $modal-background-color: rgba(#8A9993, .65);
         &:hover .flaticon {
             background-color: none !important;
         }
+
+		&.is-loading {
+			@include single-box-shadow(none);
+			background: image-url("img/loaders/loader-button-darkgrey.gif") $gray-darker no-repeat 50% 50% !important;
+			background-size: 32px !important;
+			@include hide-text();
+		}
 	}
 
 	input {
@@ -308,6 +315,25 @@ $modal-background-color: rgba(#8A9993, .65);
 
 			.back {
 				z-index: 4;
+			}
+		}
+	}
+	
+	// only IE10 and up fix
+	@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+		#card {
+			&.flipped {
+				@include transform(rotateY(0deg));
+
+				.front {
+					@include transform(rotateY(180deg));
+					z-index: 0;
+				}
+
+				.back {
+					z-index: 4;
+					@include transform(rotateY(0deg));
+				}
 			}
 		}
 	}

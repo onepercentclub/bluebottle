@@ -15,7 +15,7 @@ BB.ModalControllerMixin = Em.Mixin.create({
 
 BB.ModalMixin = Em.Mixin.create({
     actions: {
-        modalWillTransition: function(name, side) {
+        modalWillTransition: function(name, side, context) {
             // Handle any cleanup for the previously set content for the modal
             var modalContainer = this.controllerFor('modalContainer'),
                 previousController = modalContainer.get('currentController');
@@ -28,6 +28,10 @@ BB.ModalMixin = Em.Mixin.create({
             if (name) {
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
+
+                // Setup the modal content and set the model if passed
+                if (Em.typeOf(context) != 'undefined')
+                    newController.set('model', context);
 
                 this.render(name, {
                     into: 'modalContainer',
@@ -61,13 +65,8 @@ BB.ModalMixin = Em.Mixin.create({
             this.send('scrollDisableEnable');
             this.send('closeKeyModal', '27');
 
-            // Setup the modal content and set the model if passed
-            var controller = this.controllerFor(name);
-            if (Em.typeOf(context) != 'undefined')
-                controller.set('model', context);
-
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront');
+            this.send('modalWillTransition', name, 'modalFront', context);
         },
 
         addRemoveClass: function(type, element, className, attrName) {
@@ -138,43 +137,43 @@ BB.ModalMixin = Em.Mixin.create({
                 controller.set('model', context);
 
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack');
+            this.send('modalWillTransition', name, 'modalBack', context);
 
             // add class flipped and reset default state
             this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
         },
 
-        modalFlipBack: function(name) {            
+        modalFlipBack: function(name, context) {            
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront');
+            this.send('modalWillTransition', name, 'modalFront', context);
 
             $('#card').removeClass('flipped');
         },
 
-        modalSlide: function(name) {
+        modalSlide: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack');
+            this.send('modalWillTransition', name, 'modalBack', context);
 
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
         },
 
-        modalSlideBack: function(name) {
+        modalSlideBack: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront');
+            this.send('modalWillTransition', name, 'modalFront', context);
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
         },
 
-        modalScale: function(name) {
+        modalScale: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack');
+            this.send('modalWillTransition', name, 'modalBack', context);
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-down', 'scale-up']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-back', 'scale-down']);
         },
 
-        modalScaleBack: function(name) {
-            this.send('modalWillTransition', name, 'modalFront');
+        modalScaleBack: function(name, context) {
+            this.send('modalWillTransition', name, 'modalFront', context);
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-back', 'scale-down']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-down', 'scale-up']);
         }

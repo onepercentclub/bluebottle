@@ -146,6 +146,13 @@ $modal-background-color: rgba(#8A9993, .65);
         &:hover .flaticon {
             background-color: none !important;
         }
+
+		&.is-loading {
+			@include single-box-shadow(none);
+			background: image-url("img/loaders/loader-button-darkgrey.gif") $gray-darker no-repeat 50% 50% !important;
+			background-size: 32px !important;
+			@include hide-text();
+		}
 	}
 
 	input {

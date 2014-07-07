@@ -206,46 +206,7 @@ else:
     ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
     sauce = SauceClient(USERNAME, ACCESS_KEY)
 
-    browsers = [
-        {"platform": "Mac OS X 10.9",
-         "browserName": "chrome",
-         "version": "35"},
-        {"platform": "Windows 8.1",
-         "browserName": "internet explorer",
-         "version": "11"},
-        {"platform": "Linux",
-         "browserName": "firefox",
-         "version": "29"}]
 
-
-def on_platforms(platforms, local):
-    if local:
-        def decorator(base_class):
-            module = sys.modules[base_class.__module__].__dict__
-            for i, platform in enumerate(platforms):
-                d = dict(base_class.__dict__)
-                d['browser'] = platform
-                name = "%s_%s" % (base_class.__name__, i + 1)
-                module[name] = type(name, (base_class,), d)
-            pass
-        return decorator
-
-    def decorator(base_class):
-        from sauceclient import SauceClient
-        username = os.environ.get('SAUCE_USERNAME')
-        access_key = os.environ.get('SAUCE_ACCESS_KEY')
-        sauce = SauceClient(username, access_key)
-
-        module = sys.modules[base_class.__module__].__dict__
-        for i, platform in enumerate(platforms):
-            d = dict(base_class.__dict__)
-            d['desired_capabilities'] = platform
-            name = "%s_%s" % (base_class.__name__, i + 1)
-            module[name] = type(name, (base_class,), d)
-    return decorator
-
-
-@on_platforms(browsers, RUN_LOCAL)
 @override_settings(DEBUG=True)
 class SeleniumTestCase(LiveServerTestCase):
     """
@@ -268,7 +229,10 @@ class SeleniumTestCase(LiveServerTestCase):
             access_key = os.environ.get('SAUCE_ACCESS_KEY')
             browser = os.environ.get('BROWSER')
 
-            caps = {}
+            caps = {'platform': 'Linux',
+                    'browserName': 'firefox',
+                    'version': '29'}
+            
             if browser == 'safari':
                 caps['browser'] = 'safari'
                 caps['platform'] = 'OS X 10.9'

@@ -86,9 +86,10 @@ $modal-background-color: rgba(#8A9993, .65);
 		@include single-box-shadow($color-secondary-shadow, 0, -2px, 0, 0, true);
 		@include single-transition(all, .1s ease-in-out);
 
-		/* fix for chrome animation bug */
+		// fix for chrome animation bug
 		-webkit-backface-visibility: hidden;
     	-webkit-transform: scale(1);
+
 
 		&.btn-sec {
 			color: $color-primary;
@@ -107,7 +108,7 @@ $modal-background-color: rgba(#8A9993, .65);
 				border: 1px solid $gray-darker;
 			}
 		}
-		
+
 		&.btn-facebook {
 			background-color: #3368A2;
 			padding-left: 50px;
@@ -221,7 +222,6 @@ $modal-background-color: rgba(#8A9993, .65);
 			background: image-url("img/icons/icon-form-question.svg") transparent no-repeat 0 0;
 			background-size: 20px;
 			@include hide-text();
-			overflow: visible;
 		}
 
 		.password-strength {
@@ -266,7 +266,7 @@ $modal-background-color: rgba(#8A9993, .65);
 
 .modal-fullscreen-container {
 	position: relative;
-	margin: 10% auto;
+	margin: 50px auto;
 	width: 350px;
 	//height: 100%;
 	@include perspective(800px);

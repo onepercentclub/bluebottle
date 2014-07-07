@@ -41,7 +41,7 @@ def css_dict(style):
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
-def BrowserExt(driver_name='firefox', *args, **kwargs):
+def BrowserExt(driver_name='firefox', url=None, desired_abilities={}, *args, **kwargs):
     """
     Small helper to combine the correct webdriver with some additional methods without cloning the project.
     """
@@ -83,6 +83,9 @@ def BrowserExt(driver_name='firefox', *args, **kwargs):
 
     if driver_name == 'PhantomJS':
         kwargs.update({'load_images': False})
+
+    if driver_name == 'remote':
+        return webdriver.Remote(command_executor=url, desired_capabilities=desired_capabilities)
 
     return new_class(*args, **kwargs)
 
@@ -231,26 +234,23 @@ class SeleniumTestCase(LiveServerTestCase):
 
             build = 'Manual build'
 
-            caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
+            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
                 if 'TRAVIS_PULL_REQUEST' in os.environ:
                     build += ' PR #' + os.environ['TRAVIS_PULL_REQUEST']
                 caps['name'] = build
-                caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
-                caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+                caps['tags'] = ['Travis', ]
 
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = webdriver.Remote(command_executor=url, desired_capabilities=caps)
-            # cls.browser = BrowserExt('remote', command_executor=url, url=url,
-            #                           desired_capabilities=caps, name=build, wait_time=10)
-            # cls.browser.driver.implicitly_wait(5)
+            cls.browser = BrowserExt('remote', url=url, desired_capabilities=caps, name=build, wait_time=10)
+            cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

@@ -415,7 +415,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 // cancel the transition so that it doesn't run again
                 this.send('clearNextTransition');
             } else if (Em.typeOf(fallbackRoute) == 'string') {
-                _this.transitionToRoute(fallbackRoute);
+                this.transitionTo(fallbackRoute);
             }
         },
         setFlash: function (message, type) {

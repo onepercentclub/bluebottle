@@ -84,10 +84,13 @@ def BrowserExt(driver_name='firefox', url=None, desired_capabilities={}, *args, 
     if driver_name == 'PhantomJS':
         kwargs.update({'load_images': False})
 
-    if driver_name == 'remote':
-        return webdriver.Remote(command_executor=url, desired_capabilities=desired_capabilities)
 
-    return new_class(*args, **kwargs)
+    browser = new_class(*args, **kwargs)
+
+    if driver_name == 'remote':
+        browser.driver = webdriver.Remote(command_executor=url, desired_capabilities=desired_capabilities)
+
+    return browser
 
 
 class WebDriverAdditionMixin(object):

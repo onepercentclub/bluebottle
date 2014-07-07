@@ -234,18 +234,20 @@ class SeleniumTestCase(LiveServerTestCase):
             caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
-                caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
+                build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
+                if 'TRAVIS_PULL_REQUEST' in os.environ:
+                    build += ' PR #' + os.environ['TRAVIS_PULL_REQUEST']
+                caps['name'] = build
                 caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER'] + ".1"
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
 
-                build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = webdriver.Remote(url=url, desired_capabilities=caps, name=build)
+            cls.browser = webdriver.Remote(command_executor=url, desired_capabilities=caps)
             # cls.browser = BrowserExt('remote', url=url,
             #                          desired_capabilities=caps, name=build, wait_time=10)
             cls.browser.driver.implicitly_wait(5)

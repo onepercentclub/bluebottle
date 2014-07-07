@@ -239,7 +239,7 @@ class SeleniumTestCase(LiveServerTestCase):
                     build += ' PR #' + os.environ['TRAVIS_PULL_REQUEST']
                 caps['name'] = build
                 caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
-                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER'] + ".1"
+                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
 

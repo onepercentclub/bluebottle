@@ -41,7 +41,7 @@ def css_dict(style):
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
-def BrowserExt(driver_name='firefox', url=None, desired_abilities={}, *args, **kwargs):
+def BrowserExt(driver_name='firefox', url=None, desired_capabilities={}, *args, **kwargs):
     """
     Small helper to combine the correct webdriver with some additional methods without cloning the project.
     """

@@ -4,7 +4,7 @@
 
 {% tplhandlebars "components/bb-flash" %}
     {{#if data.text}}
-        <div {{action 'removeFlash'}} {{bindAttr class=":flash data.type:"}}>
+        <div {{bindAttr class=":flash data.type data.activeNameClass"}}>
             <span {{bindAttr class=":flash-icon data.type"}}></span>
             <span class="flash-heading">
                 {{data.text}}

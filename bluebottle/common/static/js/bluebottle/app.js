@@ -384,6 +384,8 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
     actions: {
         setFlash: function (message, type) {
             var flash = {};
+            flash.activeNameClass = 'is-active';
+
             if (typeof message === 'object') {
                 flash = message;
 
@@ -397,6 +399,9 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
             }
             this.controllerFor('application').set('flash', flash);
+                setTimeout(function() {
+                    $('.flash').removeClass('is-active');
+                }, 3000);
         },
         logout: function () {
             // Do some logout stuff here!

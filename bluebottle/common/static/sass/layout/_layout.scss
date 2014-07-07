@@ -24,8 +24,12 @@ body {
     z-index: 1000;
     color: white;
     text-align: center;
-    opacity: 0;
-    @include transition(all .3s ease-in-out);
+    @include animation(fadeOut .3s ease-out);
+    @include animation-fill-mode(forwards);
+
+    &.is-active{
+        @include animation(fadeIn .3s ease-out);
+    }
 
     .flash-icon {
         width: 75px;
@@ -50,9 +54,6 @@ body {
         background-color: red;
     }
 
-    &.is-active {
-        opacity: 1;
-    }
   }
 }
 

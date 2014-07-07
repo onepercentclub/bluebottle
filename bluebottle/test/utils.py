@@ -1,3 +1,4 @@
+from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 import time
 import urlparse
 import os
@@ -235,18 +236,19 @@ class SeleniumTestCase(LiveServerTestCase):
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
-                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER'] + ".1"
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
 
                 build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
 
-
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = BrowserExt('remote', url=url,
-                                     desired_capabilities=caps, name=build, wait_time=10)
+
+            cls.browser = RemoteWebDriver(url=url, desired_capabilities=caps, name=build, wait_time=10)
+            # cls.browser = BrowserExt('remote', url=url,
+            #                          desired_capabilities=caps, name=build, wait_time=10)
             cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)

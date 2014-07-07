@@ -77,7 +77,6 @@ Ember.FacebookMixin = Ember.Mixin.create({
         if (response.status === 'connected') {
             FBApp.set("connectError", false);
             return FB.api('/me', function(user) {
-
                 var FBUser;
                 FBUser = Ember.Object.create(user);
                 FBUser.set('accessToken', response.authResponse.accessToken);
@@ -125,8 +124,8 @@ Ember.FBView = Ember.View.extend({
                   if (response.authResponse == null && response.status == 'unknown'){
                       FBApp.set('connectError', gettext("There was an error connecting Facebook"));
                   }
-               }, {scope: 'email,public_profile,user_friends'});
-            }
+               }, {scope: 'email,public_profile,user_friends,user_birthday'});
+            } // The above call to Login defines the sets the permissions that go with the access token, even before python-social-auth.
        });
    }
 });

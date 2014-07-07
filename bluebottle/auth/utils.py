@@ -34,9 +34,7 @@ def get_extra_facebook_data(strategy, user, response, details, is_new=False, *ar
 
 #    url = "https://graph.facebook.com/10152102266140933"
 #    result = request('GET', url, params={'access_token': response.get('access_token', None)})
-    print "Extra", user.social_auth.get(provider='facebook').extra_data
-    print kwargs
-    print response
+
     user.first_name = response.get('first_name', None)
     user.last_name = response.get('last_name', None)
     if not user.gender:
@@ -45,14 +43,8 @@ def get_extra_facebook_data(strategy, user, response, details, is_new=False, *ar
 
     birthday = response.get('birthday', None)
     if birthday and not user.birthdate:
-        birthdate = time.strptime(birthday,"%m%d%Y")
+        birthdate = time.strptime(birthday,"%m/%d/%Y")
         user.birthdate = datetime.fromtimestamp(time.mktime(birthdate))
-
-    if user.about and response.get("about", None):
-        user.about = response.get("about", None)
-
-    if not user.location and response.get("location", None):
-        user.location = response.get("location", None)
 
     if not user.website and response.get("website", None):
         user.website = response.get("website", None)

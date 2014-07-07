@@ -15,6 +15,7 @@ from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from rest_framework_jwt import utils
+from bluebottle.bb_accounts.utils import valid_email
 
 from taggit.managers import TaggableManager
 
@@ -277,4 +278,6 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
     USER_MODEL = get_user_model()
     if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance, USER_MODEL) and created:
-        send_welcome_mail(user=instance)
+        if valid_email(instance.email):
+            send_welcome_mail(user=instance)
+

@@ -81,8 +81,20 @@ App.PageView = Ember.View.extend(App.GoTo, {
         });
     },
 
-    didInsertElement: function(e){
-		this.$().find('.carousel').unslider({
+    didInsertElement: function(evt) {
+        // Check if the content has any ember link attributes
+        // This allows custom page content to specify linkTo targets
+        var _this = this;
+        this.$('[data-ember-link-to]').on('click', function (linkEvt) {
+            var target = $(linkEvt.target),
+                newRoute = target.data('emberLinkTo'),
+                newRouteAttr = target.data('emberLinkToArg'),
+                router = _this.get('controller.target.router');
+
+            router.transitionTo(newRoute, newRouteAttr);
+        });
+
+        this.$().find('.carousel').unslider({
             dots: true,
             fluid: true,
             delay: 10000

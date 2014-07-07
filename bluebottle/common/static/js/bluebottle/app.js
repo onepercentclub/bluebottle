@@ -337,7 +337,20 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
-//Enable Google Analytics with Ember
+// Handle queued router transition
+App.Router.reopen({
+  didTransition: function(infos) {
+      this._super(infos);
+
+      /*
+       Clear queued (next) transition after any successful transition so the 
+       queued one does not run more than once.
+       */ 
+      this.send('clearNextTransition');
+  }
+});
+
+// Enable Google Analytics with Ember
 App.Router.reopen({
     /**
      * Tracks pageviews if google analytics is used
@@ -347,10 +360,11 @@ App.Router.reopen({
         this._super(infos);
 
         Ember.run.next(function() {
-            // the meta module will now go trough the routes and look for data
+            // the meta module will now go through the routes and look for data
             App.meta.trigger('reloadDataFromRoutes');
         });
 
+        // Track the page / route load
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
                 _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
@@ -382,6 +396,28 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
+        clearNextTransition: function () {
+            this.set('nextTransition', null);
+        },
+        setNextTransition: function (transition) {
+            this.set('nextTransition', transition);
+        },
+        loadNextTransition: function (fallbackRoute) {
+            // If the applicationRoute has a nextTransition value then we run it as 
+            // it is probably the case that the user tried to access a restricted page and 
+            // was prevented from doing it => user was presented with the sign up / in modal.
+            // If there is no nextTransition then load the passed route if defined.
+            var nextTransition = this.get('nextTransition');
+            if (nextTransition) {
+                // retry the transition
+                nextTransition.retry();
+
+                // cancel the transition so that it doesn't run again
+                this.send('clearNextTransition');
+            } else if (Em.typeOf(fallbackRoute) == 'string') {
+                _this.transitionToRoute(fallbackRoute);
+            }
+        },
         setFlash: function (message, type) {
             if (typeof type === 'undefined')
                 type = 'info'

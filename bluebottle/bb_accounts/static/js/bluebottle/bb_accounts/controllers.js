@@ -35,16 +35,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('validationErrors', null);
     },
 
-    // Check if there were previous errors which are now fixed
-    checkErrors: function() {
-        if (this.get('validationErrors')){
-            this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
-            if (!this.get('validationErrors')) {
-                this.set('errorsFixed', true)
-            }
-        }
-    }.observes('password.length', 'email', 'emailConfirmation'),
-
     actions: {
         signup: function() {
             var _this = this,

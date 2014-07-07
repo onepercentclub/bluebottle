@@ -311,6 +311,25 @@ $modal-background-color: rgba(#8A9993, .65);
 			}
 		}
 	}
+	
+	// only IE10 and up fix
+	@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+		#card {
+			&.flipped {
+				@include transform(rotateY(0deg));
+
+				.front {
+					@include transform(rotateY(180deg));
+					z-index: 0;
+				}
+
+				.back {
+					z-index: 4;
+					@include transform(rotateY(0deg));
+				}
+			}
+		}
+	}
 
 	.modal-fullscreen-item {
 		width: 350px;

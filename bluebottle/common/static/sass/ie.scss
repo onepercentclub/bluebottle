@@ -31,3 +31,21 @@ select {
 		background-image: none\9\0; // only IE9
 	}
 }
+
+
+#card {
+	&.flipped {
+		@include transform(rotateY(0deg));
+
+		.front {
+			@include transform(rotateY(180deg));
+			z-index: 0;
+		}
+
+		.back {
+			z-index: 4;
+			@include transform(rotateY(0deg));
+		}
+	}
+}
+

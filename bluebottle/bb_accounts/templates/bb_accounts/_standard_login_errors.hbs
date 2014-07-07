@@ -1,0 +1,12 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_standard_login_errors" %}
+    {{#if error.non_field_errors.length}}
+        <div class="modal-flash-message error">
+            {{#each error.non_field_errors}}
+                {{this}}
+            {{/each}}
+        </div>
+    {{/if}}
+{% endtplhandlebars %}

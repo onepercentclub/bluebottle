@@ -79,9 +79,14 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             }, function (failedUser) {
                 // If the user create failed due to a conflict then transition to the 
                 // login modal so the user can sign in.
-                // We set userMatch = true so the login controller can notify the user.
+                // We set matchType = true so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
-                    var loginObject = Em.Object.create({userMatch: true, username: failedUser.get('email')});
+                    var conflict = failedUser.errors.conflict,
+                        loginObject = Em.Object.create({
+                            matchId: conflict.id,
+                            matchType: conflict.type,
+                            username: failedUser.get('email')
+                        });
 
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
@@ -182,6 +187,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
     init: function () {
         this._super();
+
         this._clearModel();
     },
 
@@ -191,9 +197,21 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
     willClose: function () {
         this.set('password', null);
-        this.set('userMatch', false);
+        this.set('matchType', null);
+        this.set('matchId', null);
         this.set('error', null);
     },
+
+    socialMatch: Em.computed.equal('model.matchType', 'social'),
+    emailMatch: Em.computed.equal('model.matchType', 'email'),
+    userMatch: Em.computed.or('socialMatch', 'emailMatch'),
+
+    matchedUser: function () {
+        if (this.get('matchId'))
+            return App.UserPreview.find(this.get('matchId'));
+        else
+          return null;
+    }.property('userMatch'),
 
     actions: {
         login: function () {
@@ -227,7 +245,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
 App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     requestResetPasswordTitle : gettext('Trouble signin in?'),
-    contents: null,
+    content: null,
     loading: false,
 
     init: function () {

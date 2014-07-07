@@ -24,20 +24,24 @@
 @include keyframes(fadeIn) {
   0% {
     @include opacity(0);
+    visibility: hidden;
   }
 
   100% {
     @include opacity(1);
+    visibility: visible;
   }
 }
 
 @include keyframes(fadeOut) {
   0% {
     @include opacity(1);
+    visibility: visible;
   }
 
   100% {
     @include opacity(0);
+    visibility: hidden;
   }
 }
 

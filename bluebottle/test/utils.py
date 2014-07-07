@@ -1,4 +1,4 @@
-from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
+from selenium import webdriver
 import time
 import urlparse
 import os
@@ -245,7 +245,7 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = RemoteWebDriver(url=url, desired_capabilities=caps, name=build)
+            cls.browser = webdriver.Remote(url=url, desired_capabilities=caps, name=build)
             # cls.browser = BrowserExt('remote', url=url,
             #                          desired_capabilities=caps, name=build, wait_time=10)
             cls.browser.driver.implicitly_wait(5)

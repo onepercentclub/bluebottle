@@ -1,0 +1,25 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_signup_errors" %}
+    {{#if errorsFixed}}
+        <div class="modal-flash-message success">
+            {{fixedFieldsMessage}}
+        </div>
+    {{/if}}
+
+    {{#unless errorsFixed}}
+        {{#if validationErrors}}
+            {{#each validationErrors.email}}
+                <div class="modal-flash-message error">
+                    {{this}}
+                </div>
+            {{/each}}
+            {{#each validationErrors.password}}
+                <div class="modal-flash-message error">
+                    {{this}}
+                </div>
+            {{/each}}
+        {{/if}}
+    {{/unless}}
+{% endtplhandlebars %}

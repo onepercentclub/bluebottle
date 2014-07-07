@@ -88,7 +88,7 @@ App.PageView = Ember.View.extend(App.GoTo, {
         this.$('[data-ember-link-to]').on('click', function (linkEvt) {
             var target = $(linkEvt.target),
                 newRoute = target.data('emberLinkTo'),
-                newRouteAttr = target.data('emberLinkToAttr'),
+                newRouteAttr = target.data('emberLinkToArg'),
                 router = _this.get('controller.target.router');
 
             router.transitionTo(newRoute, newRouteAttr);

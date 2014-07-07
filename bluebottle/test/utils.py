@@ -227,31 +227,16 @@ class SeleniumTestCase(LiveServerTestCase):
         if settings.SELENIUM_WEBDRIVER == 'remote':
             username = os.environ.get('SAUCE_USERNAME')
             access_key = os.environ.get('SAUCE_ACCESS_KEY')
-            browser = os.environ.get('BROWSER')
 
-            caps = {'platform': 'Linux',
-                    'browserName': 'firefox',
-                    'version': '29'}
-            
-            if browser == 'safari':
-                caps['browser'] = 'safari'
-                caps['platform'] = 'OS X 10.9'
-                caps['version'] = '7'
-            elif browser == 'ie':
-                caps['browser'] = 'internetexplorer'
-                caps['platform'] = 'Windows 7'
-                caps['version'] = '10'
-            else:
-                caps['browser'] = 'firefox'
-                caps['platform'] = 'Windows 7'
-                caps['version'] = '30'
+            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '29'}
 
             caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
             caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
             caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
             caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
 
-            build = 'Build ' + getattr(os.environ, 'TRAVIS_BUILD_NUMBER', '-unknown-')
+            build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
+
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 

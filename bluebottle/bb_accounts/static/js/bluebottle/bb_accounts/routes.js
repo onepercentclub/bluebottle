@@ -15,6 +15,8 @@ App.Router.map(function(){
 
 //    this.route('userActivate', {path: '/activate/:activation_key'});
     this.resource('passwordReset', {path: '/passwordreset/:reset_token'});
+
+    this.resource('disableAccount', {path: '/disable/:user_id/:token'});
 });
 
 /*
@@ -204,5 +206,22 @@ App.PasswordResetRoute = Em.Route.extend({
         record.transitionTo('loaded.saved');
 
         return record;
+    }
+});
+
+App.DisableAccountRoute = Em.Route.extend({
+    init: function(){
+        this._super();
+    },
+
+   renderTemplate: function() {
+       this.render('home');
+       this.send('openInBox', 'disableAccount');
+   },
+
+    model: function(params){
+        var route = this;
+        var user_id = params.user_id;
+        return App.User.find(user_id);
     }
 });

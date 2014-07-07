@@ -55,3 +55,8 @@ App.ItemSelectView = Em.Select.extend({
     prompt: "Pick an item"
 });
 
+App.DisableAccountView = Em.View.extend({
+     templateName: 'disable'
+
+});
+

@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -65,6 +66,7 @@ class BlueBottleUserManager(BaseUserManager):
                           last_login=now, date_joined=now, **extra_fields)
         user.set_password(password)
         user.generate_username()
+        user.reset_disable_token()
         user.save(using=self._db)
         return user
 
@@ -163,6 +165,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(_('phone number'), max_length=50, blank=True)
     gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
     birthdate = models.DateField(_('birthdate'), null=True, blank=True)
+
+    disable_token = models.CharField(max_length=32, blank=True, null=True)
 
     tags = TaggableManager(verbose_name=_("tags"), blank=True)
 
@@ -267,6 +271,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def short_name(self):
         return self.get_short_name()
 
+    def reset_disable_token(self):
+        token = uuid.uuid4().hex #Generates a random UUID and converts it to a 32-character hexidecimal string
+        self.disable_token = token
+        self.save()
+
+    def get_disable_token(self):
+        return self.disable_token
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver

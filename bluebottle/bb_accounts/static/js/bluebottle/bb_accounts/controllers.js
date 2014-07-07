@@ -383,3 +383,21 @@ App.ProfileController = Ember.ObjectController.extend({
     }
 });
 
+
+App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
+    disableAccountTitle: gettext('If you leave me now...'),
+
+    init: function() {
+        this._super();
+
+
+    },
+
+    email: function(){
+        var model = this.get('model');
+        console.log("Mo!", model);
+        debugger
+        return model.get('email');
+    }.property()
+
+});

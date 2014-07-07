@@ -23,7 +23,7 @@
             {{input valueBinding='username' type="text" name="username" maxlength="254" placeholder="E-mailaddress"}}
 
             <div class="password">
-                {{input valueBinding='password' type="password" name="password" placeholder="Password"}}
+                {{input valueBinding="password" type="password" placeholder="Password"}}
                 <div class="tooltip-holder">
                     <span {{ action 'passwordRequest' }} class="questionmark">?</span>
                     <span class="modal-btn-signup" href="#">
@@ -32,7 +32,8 @@
                     </span>
                 </div>
             </div>
-            <a {{ action 'login' }} class="btn is-inactive" name="login">{% trans "Sign in" %}</a>
+            <a {{ action 'login' }} {{bindAttr class=":btn blockingErrors:is-inactive"}} name="login">{% trans "Sign in" %}</a>
+
             {{#if error.non_field_errors.length}}
                 <div class="modal-flash-message error">
                     {{#each error.non_field_errors}}

@@ -215,28 +215,24 @@ class SeleniumTestCase(LiveServerTestCase):
 
         if settings.SELENIUM_WEBDRIVER == 'remote':
             import os
-            from sauceclient import SauceClient
-            from selenium import webdriver
 
-            USERNAME = os.environ.get('SAUCE_USERNAME')
-            ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
-            BROWSER = os.environ.get('BROWSER')
+            username = os.environ.get('SAUCE_USERNAME')
+            access_key = os.environ.get('SAUCE_ACCESS_KEY')
+            browser = os.environ.get('BROWSER')
 
-            if BROWSER == 'safari':
-                caps = {}
+            caps = {}
+            if browser == 'safari':
                 caps['browser'] = 'safari'
-                caps['platform'] = "OS X 10.9"
-                caps['version'] = "7"
-            elif BROWSER == 'ie':
-                caps = {}
+                caps['platform'] = 'OS X 10.9'
+                caps['version'] = '7'
+            elif browser == 'ie':
                 caps['browser'] = 'internetexplorer'
-                caps['platform'] = "Windows 8"
-                caps['version'] = "10"
+                caps['platform'] = 'Windows 7'
+                caps['version'] = '10'
             else:
-                caps = {}
                 caps['browser'] = 'firefox'
-                caps['platform'] = "Windows 7"
-                caps['version'] = "30"
+                caps['platform'] = 'Windows 7'
+                caps['version'] = '30'
 
             if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
                 caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
@@ -247,8 +243,9 @@ class SeleniumTestCase(LiveServerTestCase):
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
-            cls.browser = BrowserExt('remote', url=sauce_url % (USERNAME, ACCESS_KEY),
+            cls.browser = BrowserExt('remote', url=sauce_url % (username, access_key),
                                      desired_capabilities=caps, name=build, **caps)
+            cls.brower.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

@@ -215,10 +215,12 @@ class SeleniumTestCase(LiveServerTestCase):
 
         if settings.SELENIUM_WEBDRIVER == 'remote':
             import os
+            from sauceclient import SauceClient
 
             username = os.environ.get('SAUCE_USERNAME')
             access_key = os.environ.get('SAUCE_ACCESS_KEY')
             browser = os.environ.get('BROWSER')
+            sauce = SauceClient(username, access_key)
 
             caps = {}
             if browser == 'safari':

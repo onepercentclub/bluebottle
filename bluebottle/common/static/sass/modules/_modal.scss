@@ -424,11 +424,11 @@ $modal-background-color: rgba(#8A9993, .65);
 		.modal-fullscreen-close {
 			position: absolute;
 			display: block;
-			top: 5px;
-			right: 5px;
+			top: 10px;
+			right: 10px;
 			width: 20px;
 			height: 20px;
-			background: image-url("icons/icon-close-modal.svg") transparent no-repeat;
+			background: image-url("img/icons/icon-close-modal.svg") transparent no-repeat;
 			background-position: 7px;
 			cursor: pointer;
 
@@ -440,11 +440,11 @@ $modal-background-color: rgba(#8A9993, .65);
 		.modal-fullscreen-back {
 			position: absolute;
 			display: block;
-			top: 5px;
-			left: 5px;
+			top: 10px;
+			left: 10px;
 			width: 20px;
 			height: 20px;
-			background: image-url("icons/icon-back-modal.svg") transparent no-repeat;
+			background: image-url("img/icons/icon-back-modal.svg") transparent no-repeat;
 			background-position: 7px;
 			background-size: 65%;
 			cursor: pointer;

@@ -316,7 +316,6 @@ $modal-background-color: rgba(#8A9993, .65);
 		width: 350px;
 		background-color: #F5F4F6;
 		border-radius: 8px;
-		//border: solid 1px #ccc;
         font-family: $font-family-body;
 		padding: 5px;
 		text-align: center;
@@ -359,28 +358,22 @@ $modal-background-color: rgba(#8A9993, .65);
                 margin-bottom: 15px;
 			}
 			.modal-flash-message {
-				width: 288px;
+				box-model: content-box;
 				text-align: center;
-				margin: 15px 0 15px -11px;
-				padding: 10px;
-				font-size: 10px;
-				line-height: 15px;
-				color: white;
-
+				margin: 15px -21px 0 -21px;
+				padding: 10px 20px;
+				font-size: 13px;
+				line-height: 17px;
+				color: #fff;
+				display: block;
+				
 				&.error {
-					display: block;
-					background: red;
+					background: #B51D1E;
 				}
 
 				&.success {
-					display: block;
-					background: green;
-				}
-
-				&.success {
-					display: block;
-					color: gray;
-					background: lightyellow;
+					
+					background: $color-primary;
 				}
 			}
 

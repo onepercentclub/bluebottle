@@ -1,5 +1,7 @@
 import time
 import urlparse
+import os
+import sys
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -14,9 +16,6 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from splinter.browser import ChromeWebDriver, PhantomJSWebDriver, FirefoxWebDriver
-
-# from apps.projects.models import Project
 
 
 def css_dict(style):
@@ -196,6 +195,57 @@ class WebDriverAdditionMixin(object):
         return ElementList(result, find_by='link by itext', query=text)
 
 
+RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
+
+if RUN_LOCAL:
+    # could add Chrome, PhantomJS etc... here
+    browsers = ['Firefox']
+else:
+    from sauceclient import SauceClient
+    USERNAME = os.environ.get('SAUCE_USERNAME')
+    ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
+    sauce = SauceClient(USERNAME, ACCESS_KEY)
+
+    browsers = [
+        {"platform": "Mac OS X 10.9",
+         "browserName": "chrome",
+         "version": "35"},
+        {"platform": "Windows 8.1",
+         "browserName": "internet explorer",
+         "version": "11"},
+        {"platform": "Linux",
+         "browserName": "firefox",
+         "version": "29"}]
+
+
+def on_platforms(platforms, local):
+    if local:
+        def decorator(base_class):
+            module = sys.modules[base_class.__module__].__dict__
+            for i, platform in enumerate(platforms):
+                d = dict(base_class.__dict__)
+                d['browser'] = platform
+                name = "%s_%s" % (base_class.__name__, i + 1)
+                module[name] = type(name, (base_class,), d)
+            pass
+        return decorator
+
+    def decorator(base_class):
+        from sauceclient import SauceClient
+        username = os.environ.get('SAUCE_USERNAME')
+        access_key = os.environ.get('SAUCE_ACCESS_KEY')
+        sauce = SauceClient(username, access_key)
+
+        module = sys.modules[base_class.__module__].__dict__
+        for i, platform in enumerate(platforms):
+            d = dict(base_class.__dict__)
+            d['desired_capabilities'] = platform
+            name = "%s_%s" % (base_class.__name__, i + 1)
+            module[name] = type(name, (base_class,), d)
+    return decorator
+
+
+@on_platforms(browsers, RUN_LOCAL)
 @override_settings(DEBUG=True)
 class SeleniumTestCase(LiveServerTestCase):
     """
@@ -214,13 +264,9 @@ class SeleniumTestCase(LiveServerTestCase):
             raise ImproperlyConfigured('Define SELENIUM_WEBDRIVER in your settings.py.')
 
         if settings.SELENIUM_WEBDRIVER == 'remote':
-            import os
-            from sauceclient import SauceClient
-
             username = os.environ.get('SAUCE_USERNAME')
             access_key = os.environ.get('SAUCE_ACCESS_KEY')
             browser = os.environ.get('BROWSER')
-            sauce = SauceClient(username, access_key)
 
             caps = {}
             if browser == 'safari':
@@ -236,11 +282,11 @@ class SeleniumTestCase(LiveServerTestCase):
                 caps['platform'] = 'Windows 7'
                 caps['version'] = '30'
 
-            if hasattr(os.environ, 'TRAVIS_JOB_NUMBER'):
-                caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
-                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
-                caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
-                caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+            caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
+            caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+            caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
+            caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+
             build = 'Build ' + getattr(os.environ, 'TRAVIS_BUILD_NUMBER', '-unknown-')
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"

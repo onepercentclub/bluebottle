@@ -256,7 +256,7 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
 
             cls.browser = BrowserExt('remote', url=sauce_url % (username, access_key),
-                                     desired_capabilities=caps, name=build, **caps)
+                                     desired_capabilities=caps, name=build)
             cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)

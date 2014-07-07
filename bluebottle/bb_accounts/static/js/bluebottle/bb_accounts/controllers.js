@@ -74,10 +74,11 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     // This is the users first login so flash a welcome message
                     _this.send('setFlash', _this.get('currentUser.welcomeMessage'));
 
-                    // Ensure we call this before the modal close as the modal close action
-                    // has code to ensure the transition is cleared if set.
+                    // Call the loadNextTransition in case the user was unauthenticated and was
+                    // shown the sign in / up modal then they should transition to the requests route
                     _this.send('loadNextTransition', '/');
 
+                    // Close the modal
                     _this.send('close');
                 }, function () {
                     // Handle failure to create currentUser
@@ -211,9 +212,11 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
 
-                // The call the transition must come before the call to close the modal
-                // See the ApplicationRoute for an explanation
+                // Call the loadNextTransition in case the user was unauthenticated and was
+                // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');
+                
+                // Close the modal
                 _this.send('close');
             }, function (error) {
                 _this.set('error', error);

@@ -48,32 +48,10 @@ Ember.FacebookMixin = Ember.Mixin.create({
         FB.init(facebookParams);
 
         this.set('FBloading', true);
-
-        FB.Event.subscribe('auth.authResponseChange', function(response) {
-            console.log('[FB] calling auth.authResponseChange');
-
-            if (typeof _this.fbLogin == 'function') {
-                _this.fbLogin(response.authResponse);
-            }
-            return _this.updateFBUser(response);
-        });
-
-        return FB.getLoginStatus(function(response) {
-            console.log('[FB] calling getLoginStatus');
-
-            if (response.status === 'connected') {
-                if (typeof _this.fbLogin == 'function') {
-                    _this.fbLogin(response.authResponse);
-                }
-            }
-
-            return _this.updateFBUser(response);
-        });
     },
 
     updateFBUser: function(response) {
         var _this = this;
-
         if (response.status === 'connected') {
             FBApp.set("connectError", false);
             return FB.api('/me', function(user) {

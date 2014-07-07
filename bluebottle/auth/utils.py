@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
 from bluebottle.auth.exceptions import EmailExists
+from bluebottle.bb_accounts.utils import valid_email, send_welcome_mail
 
 USER_MODEL = get_user_model()
 
@@ -37,3 +38,15 @@ def get_extra_facebook_data(strategy, user, response, details, is_new=False, *ar
     if len(fb_link) < 50:
         user.facebook = fb_link
     user.save()
+
+
+def send_welcome_mail_pipe(strategy, user, response, details, is_new=False, *args, **kwargs):
+    """
+    The post_save signal handler in bb_accounts.models deals with sending a welcome mail. However, because the
+    User object passes through the social pipeline it gets saved several time and therefore losing the "new" status to
+    trigger sending an email. This pipe in the social pipeline therefore sends an explicit welcome email.
+    """
+    print "is new", is_new
+    print "email pipe", user.email
+    if is_new and valid_email(user.email):
+        send_welcome_mail(user)

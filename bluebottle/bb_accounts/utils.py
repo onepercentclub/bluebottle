@@ -1,6 +1,8 @@
+import re
 from django.conf import settings
 from django.template import loader
 from django.contrib.sites.models import Site
+
 
 
 def send_welcome_mail(user=None):
@@ -28,3 +30,13 @@ def send_welcome_mail(user=None):
     email = loader.render_to_string(email_template_name, c)
 
     user.email_user(subject, email)
+
+def valid_email(email=None):
+    """Returns True if argument is a string with valid email adddress"""
+    if not email:
+        return False
+    pattern = r"[^@]+@[^@]+\.[^@]+"
+    p = re.compile(pattern)
+    if p.match(email):
+        return True
+    return False

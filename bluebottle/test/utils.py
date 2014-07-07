@@ -234,13 +234,15 @@ class SeleniumTestCase(LiveServerTestCase):
             caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
-                build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
+                name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
                 if 'TRAVIS_PULL_REQUEST' in os.environ:
-                    build += ' PR #' + os.environ['TRAVIS_PULL_REQUEST']
-                caps['name'] = build
+                    name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
+                if 'TRAVIS_BRANCH' in os.environ:
+                    name = ' <- ' + os.environ['TRAVIS_BRANCH']
+                caps['name'] = name
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
-                caps['tags'] = ['Travis', ]
+                caps['tags'] = ['Travis', 'CI']
 
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"

@@ -32,8 +32,15 @@ App.IsAuthorMixin = Em.Mixin.create({
 
 
 App.ControllerValidationMixin = Ember.Mixin.create({
+    // In your controller define fieldsToWatch (a list of fields you want to watch)
+    // you will be able to use then: errorsFixed and blockSubmit
+    // errorsFixed: true if there were errors which are now fixed
+    errorsFixed: false,
+    // blockSubmit: true if there are still blocking errors which prevent to submit
+    blockingErrors: true,
 
     errorDictionaryFields: ['property', 'validateProperty', 'message'],
+
     //array of dictionaries
     //[ ...,
     // {'property': propertyValue,
@@ -62,8 +69,84 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             }
         })
         return resultErrors
-    }
+    },
 
+    checkErrors: function() {
+        // Check if there were previous errors which are now fixed\
+        if (this.get('validationErrors')) {
+            if (this.validateAndCheck()) {
+                this.set('errorsFixed', true)
+                this.set('blockingErrors', false)
+            }else {
+                this.set('errorsFixed', false)
+                this.set('blockingErrors', true)
+            }
+        // If there were no errors before and there are no errors now enable canSubmit
+        } else {
+            if (this.validateAndCheck()){
+                this.set('blockingErrors', false)
+            } else {
+                this.set('blockingErrors', true)
+            }
+        }
+    },
+
+    // return true if there are no errors
+    validateAndCheck: function() {
+        this.validate()
+        return !this.get('validationErrors')
+    },
+    // run the validateErrors and set the errors in validationErrors
+    validate: function() {
+        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+    },
+
+    // set blockingErrors to true if there are fields which aren't fulfilled
+    requiredFieldsChecker: function() {
+        var _this = this
+        _this.set('blockingErrors', false)
+        _this.get('requiredFields').forEach(function(field){
+            if (!_this.get(field)){
+                _this.set('blockingErrors', true)
+            }
+        })
+    },
+
+    // Dynamically assign observerFields to a function f
+    // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
+    dynamicObserverCreator: function (observerFields, f) {
+        if (this.get(observerFields)) {
+            // dynamically assign observer fields to checkErrors function
+            // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
+            this.get(observerFields).forEach(function(field) {
+                Ember.addObserver(this, field, this, f)
+            }, this);
+        }
+    },
+    // Remove the observers when the object is destroyed
+    dynamicObserverRemover: function(observerFields, f) {
+        if (this.get(observerFields)){
+            this.get(observerFields).forEach(function(field) {
+                Ember.removeObserver(this, field, this, f);
+            }, this);
+        }
+    },
+
+    init: function () {
+        this._super();
+        // Dynamically assign observerFields to a function f
+        this.dynamicObserverCreator('fieldsToWatch', 'checkErrors');
+        this.dynamicObserverCreator('requiredFields', 'requiredFieldsChecker');
+
+    },
+
+    willDestroy: function() {
+        this._super();
+
+        // Remove the observers when the object is destroyed
+        this.dynamicObserverRemover('fieldsToWatch', 'checkErrors')
+        this.dynamicObserverRemover('requiredFields', 'requiredFieldsChecker')
+    }
 });
 
 /*

@@ -5,7 +5,7 @@
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
     fixedFieldsMessage: gettext('That\'s better'),
-    errorsFixed: false,
+    fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
 
     init: function() {
         this._super();
@@ -46,7 +46,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     }.observes('password.length', 'email', 'emailConfirmation'),
 
     actions: {
-        createUser: function(user) {
+        signup: function() {
             var _this = this;
 
             // Clear the errors fixed message
@@ -182,12 +182,12 @@ App.UserModalController = Ember.ObjectController.extend({
     }.observes('model')
 });
 
-App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
+App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
+    requiredFields: ['username', 'password'],
 
     init: function () {
         this._super();
-
         this._clearModel();
     },
 
@@ -204,8 +204,8 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     actions: {
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
-
             var _this = this;
+
             return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
                 _this.send('closeModal');

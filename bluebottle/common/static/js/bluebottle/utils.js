@@ -32,15 +32,34 @@ App.IsAuthorMixin = Em.Mixin.create({
 
 
 App.ControllerValidationMixin = Ember.Mixin.create({
+
     // In your controller define fieldsToWatch (a list of fields you want to watch)
     // you will be able to use then: errorsFixed and blockSubmit
     // errorsFixed: true if there were errors which are now fixed
     errorsFixed: false,
+
     // blockSubmit: true if there are still blocking errors which prevent to submit
     blockingErrors: true,
 
-    errorDictionaryFields: ['property', 'validateProperty', 'message'],
+    // set the strength of the password
+    passwordStrength: function() {
+        var pass = this.get('password.length')
 
+        // at least 6 char
+        if (pass < 6) {
+            return "weak"
+        }
+        else if (pass){
+            pass = this.get('password')
+            // at least a number and a special character
+            if (pass.search(/(?=.*[0-9])(?=.*[!@#$%^&*])/) == 0) {
+                return "strong"
+            }
+            return "fair"
+        }
+    }.property('password.length'),
+
+    errorDictionaryFields: ['property', 'validateProperty', 'message'],
     //array of dictionaries
     //[ ...,
     // {'property': propertyValue,

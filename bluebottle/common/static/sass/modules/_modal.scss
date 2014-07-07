@@ -193,6 +193,11 @@ $modal-background-color: rgba(#8A9993, .65);
 	.password {
 		position: relative;
 		text-align: center;
+		
+		input {
+			padding-right: 36px;
+		}
+
 		&.is-incorrect {
 			@include animation(shake .8s ease-in-out)
 		}
@@ -245,6 +250,10 @@ $modal-background-color: rgba(#8A9993, .65);
 				height: 30px;
 			}
 		}
+	}
+
+	small, small a {
+		color: $gray-border-hover;
 	}
 }
 
@@ -345,6 +354,7 @@ $modal-background-color: rgba(#8A9993, .65);
 		padding: 5px;
 		text-align: center;
 		@include transform-style(preserve-3d);
+		@include single-box-shadow(rgba(138,153,147,0.60), 0, 0, 15px, 10px, false);
 
 		&.is-shake {
 			@include animation(shakeModal .4s ease-in-out);
@@ -352,7 +362,7 @@ $modal-background-color: rgba(#8A9993, .65);
 
 		.modal-fullscreen-header {
 			position: relative;
-			border-radius: 8px 8px 0 0;
+			border-radius: 4px 4px 0 0;
 			border: solid 1px #ccc;
 			padding: 10px;
 			background: white;
@@ -371,7 +381,7 @@ $modal-background-color: rgba(#8A9993, .65);
 			width: 100%;
 			height: 100%;
 			background: white;
-			border-radius: 8px;
+			border-radius: 4px;
 			border: solid 1px #ccc;
 			padding: 20px 20px 20px 20px;
 

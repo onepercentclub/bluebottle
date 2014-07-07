@@ -41,7 +41,7 @@ def css_dict(style):
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
-def BrowserExt(driver_name='firefox', url=None, desired_capabilities={}, *args, **kwargs):
+def BrowserExt(driver_name='firefox', url=None, *args, **kwargs):
     """
     Small helper to combine the correct webdriver with some additional methods without cloning the project.
     """
@@ -84,13 +84,7 @@ def BrowserExt(driver_name='firefox', url=None, desired_capabilities={}, *args, 
     if driver_name == 'PhantomJS':
         kwargs.update({'load_images': False})
 
-
-    browser = new_class(*args, **kwargs)
-
-    if driver_name == 'remote':
-        browser.driver = webdriver.Remote(command_executor=url, desired_capabilities=desired_capabilities)
-
-    return browser
+    return new_class(*args, **kwargs)
 
 
 class WebDriverAdditionMixin(object):
@@ -252,7 +246,7 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = BrowserExt('remote', url=url, desired_capabilities=caps, name=build, wait_time=10)
+            cls.browser = BrowserExt('remote', url=url, wait_time=10, **caps)
             cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)

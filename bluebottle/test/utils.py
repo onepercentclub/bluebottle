@@ -228,20 +228,25 @@ class SeleniumTestCase(LiveServerTestCase):
             username = os.environ.get('SAUCE_USERNAME')
             access_key = os.environ.get('SAUCE_ACCESS_KEY')
 
-            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '29'}
+            build = 'Manual build'
 
-            caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
-            caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
-            caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
-            caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+            caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
 
-            build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
+            if 'TRAVIS_BUILD_NUMBER' in os.environ:
+                caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
+                caps['name'] = os.environ['TRAVIS_BUILD_NUMBER']
+                caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
+                caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
+                caps['tags'] = [os.environ['TRAVIS_PYTHON_VERSION'], 'CI']
+
+                build = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
 
 
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
+            url = sauce_url % (username, access_key)
 
-            cls.browser = BrowserExt('remote', url=sauce_url % (username, access_key),
-                                     desired_capabilities=caps, name=build)
+            cls.browser = BrowserExt('remote', url=url,
+                                     desired_capabilities=caps, name=build, wait_time=10)
             cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)

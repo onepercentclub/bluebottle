@@ -415,6 +415,7 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
                     _this.send('close');
 
                     Ember.run(null, resolve, gettext("Succes"));
+                    _this.send('loadNextTransition', '/');
                 };
 
                 hash.error = function (response) {
@@ -427,7 +428,11 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
 
                 Ember.$.ajax(hash);
             });
+        },
 
+        cancelDisable: function(){
+            this.send('close');
+            this.send('loadNextTransition', '/');
         }
     }
 

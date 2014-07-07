@@ -62,7 +62,5 @@ def send_welcome_mail_pipe(strategy, user, response, details, is_new=False, *arg
     User object passes through the social pipeline it gets saved several time and therefore losing the "new" status to
     trigger sending an email. This pipe in the social pipeline therefore sends an explicit welcome email.
     """
-    print "is new", is_new
-    print "email pipe", user.email
     if is_new and valid_email(user.email):
         send_welcome_mail(user)

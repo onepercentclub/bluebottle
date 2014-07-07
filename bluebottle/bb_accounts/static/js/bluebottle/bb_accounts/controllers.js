@@ -47,7 +47,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     actions: {
         signup: function() {
-            var _this = this;
+            var _this = this,
+                user = this.get('model');
 
             // Clear the errors fixed message
             this.set('errorsFixed', false);

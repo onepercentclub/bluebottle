@@ -415,17 +415,29 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 // cancel the transition so that it doesn't run again
                 this.send('clearNextTransition');
             } else if (Em.typeOf(fallbackRoute) == 'string') {
-                _this.transitionToRoute(fallbackRoute);
+                this.transitionTo(fallbackRoute);
             }
         },
         setFlash: function (message, type) {
-            if (typeof type === 'undefined')
-                type = 'info'
-              
-            this.controllerFor('application').set('flash', {
-              text: message,
-              type: type
-            });
+            var flash = {};
+            flash.activeNameClass = 'is-active';
+
+            if (typeof message === 'object') {
+                flash = message;
+
+            } else {
+                flash.text = message;
+                if (typeof type === 'undefined') {
+                    flash.type = 'welcome'
+                } else {
+                    flash.type = type;
+                }
+
+            }
+            this.controllerFor('application').set('flash', flash);
+                setTimeout(function() {
+                    $('.flash').removeClass('is-active');
+                }, 3000);
         },
         logout: function () {
             // Do some logout stuff here!

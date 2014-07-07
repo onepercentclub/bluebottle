@@ -4,7 +4,12 @@
 
 {% tplhandlebars "components/bb-flash" %}
     {{#if data.text}}
-        <div class="flash {{unbound data.type}}">{{data.text}}</div>
+        <div {{bindAttr class=":flash data.type data.activeNameClass"}}>
+            <span {{bindAttr class=":flash-icon data.type"}}></span>
+            <span class="flash-heading">
+                {{data.text}}
+            </span>
+        </div>
     {{/if}}
 {% endtplhandlebars %}
 

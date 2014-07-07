@@ -146,6 +146,13 @@ $modal-background-color: rgba(#8A9993, .65);
         &:hover .flaticon {
             background-color: none !important;
         }
+
+		&.is-loading {
+			@include single-box-shadow(none);
+			background: image-url("img/loaders/loader-button-darkgrey.gif") $gray-darker no-repeat 50% 50% !important;
+			background-size: 32px !important;
+			@include hide-text();
+		}
 	}
 
 	input {
@@ -311,6 +318,25 @@ $modal-background-color: rgba(#8A9993, .65);
 			}
 		}
 	}
+	
+	// only IE10 and up fix
+	@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+		#card {
+			&.flipped {
+				@include transform(rotateY(0deg));
+
+				.front {
+					@include transform(rotateY(180deg));
+					z-index: 0;
+				}
+
+				.back {
+					z-index: 4;
+					@include transform(rotateY(0deg));
+				}
+			}
+		}
+	}
 
 	.modal-fullscreen-item {
 		width: 350px;
@@ -424,11 +450,11 @@ $modal-background-color: rgba(#8A9993, .65);
 		.modal-fullscreen-close {
 			position: absolute;
 			display: block;
-			top: 5px;
-			right: 5px;
+			top: 10px;
+			right: 10px;
 			width: 20px;
 			height: 20px;
-			background: image-url("icons/icon-close-modal.svg") transparent no-repeat;
+			background: image-url("img/icons/icon-close-modal.svg") transparent no-repeat;
 			background-position: 7px;
 			cursor: pointer;
 
@@ -440,11 +466,11 @@ $modal-background-color: rgba(#8A9993, .65);
 		.modal-fullscreen-back {
 			position: absolute;
 			display: block;
-			top: 5px;
-			left: 5px;
+			top: 10px;
+			left: 10px;
 			width: 20px;
 			height: 20px;
-			background: image-url("icons/icon-back-modal.svg") transparent no-repeat;
+			background: image-url("img/icons/icon-back-modal.svg") transparent no-repeat;
 			background-position: 7px;
 			background-size: 65%;
 			cursor: pointer;

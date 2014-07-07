@@ -13,5 +13,5 @@
             </span>
         </div>
     </div>
-    <a {{ action 'login' }} {{bindAttr class=":btn blockingErrors:is-inactive"}} name="login">{% trans "Sign in" %}</a>
+    <a {{ action 'login' }} {{bindAttr class=":btn isBusy:is-loading blockingErrors:is-inactive"}} name="login">{% trans "Sign in" %}</a>
 {% endtplhandlebars %}

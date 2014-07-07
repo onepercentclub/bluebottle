@@ -1,0 +1,20 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_standard_signup_form" %}
+    {{view Em.TextField valueBinding="first_name" placeholder="First name"
+        classBinding="validationErrors.first_name.length:error"}}
+
+    {{view Em.TextField valueBinding="last_name" placeholder="Surname"
+        classBinding="validationErrors.last_name.length:error"}}
+    
+    {{view Em.TextField valueBinding="email" type="email" classBinding="validationErrors.email.length:error" placeholder="E-mailaddress"}}
+
+    {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error" placeholder="Re-enter E-mailaddress"}}
+    <div class="password">
+        {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error" placeholder="Password"}}
+        <span {{bindAttr class=":password-strength passwordStrength"}}>{{passwordStrength}}</span>
+    </div>
+
+    <a {{action 'signup'}} {{bindAttr class=":btn isBusy:is-loading blockingErrors:is-inactive"}}>{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
+{% endtplhandlebars %}

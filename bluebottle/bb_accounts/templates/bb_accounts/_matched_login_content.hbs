@@ -9,12 +9,18 @@
         <h4>{%trans "Is it me your looking for?"%}</h4>
     </div>
     <div class="modal-fullscreen-profile">
-        <span class="photo">
-            <img {{bindAttr src="matchedUser.getAvatar"}}>
-        </span>
-        <span class="already-registerd">
-            <strong>{{username}}</strong> {%trans "has already been registered with 1%Club. Is this you? Please sign in below" %}
-        </span>
+        {{#if socialMatch}}
+            <span class="photo">
+                <img {{bindAttr src="matchedUser.getAvatar"}}>
+            </span>
+            <span class="already-registerd">
+                <strong>{{username}}</strong> {%trans "has already been registered via Facebook. Is this you? Please sign in below." %}
+            </span> 
+        {{else}}
+            <span class="already-registerd">
+                <strong>{{username}}</strong> {%trans "has already been registered with Bluebottle Project. Is this you? Please sign in below." %}
+            </span>
+        {{/if}}
     </div>
 
     <div class="modal-fullscreen-content got-header">

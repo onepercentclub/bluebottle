@@ -456,7 +456,7 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
 
         cancelDisable: function(){
             this.send('close');
-            this.send('loadNextTransition', '/');
+            this.transitionToRoute('/');
         }
     }
 

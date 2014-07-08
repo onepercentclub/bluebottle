@@ -49,6 +49,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
             // Check client side errors
             if (_this.get('validationErrors')) {
+                this.send('modalError');
+
                 return false
             }
 
@@ -61,9 +63,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 };
 
                 return App.AuthJwt.processSuccessResponse(response).then(function (authorizedUser) {
-                    // clear the modal fields
-                    _this._clearModel();
-                    
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', authorizedUser);
 
@@ -99,6 +98,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
+                    _this.send('modalError');
                     // Handle error message here!
                     _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 }
@@ -220,10 +220,23 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         if (this.get('matchId'))
             return App.UserPreview.find(this.get('matchId'));
         else
-          return null;
+            return null;
     }.property('userMatch'),
 
     actions: {
+        setError: function (error) {
+            // if we set an error then also set isBusy to false as we are 
+            // returning from an action when we call setError, eg an attempted
+            // to sign in the user.
+            this.set('isBusy', false);
+
+            // Display the error
+            this.set('error', error);
+
+            // Call error action on the modal
+            this.send('modalError');
+        },
+
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
@@ -241,8 +254,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Close the modal
                 _this.send('close');
             }, function (error) {
-                _this.set('isBusy', false);
-                _this.set('error', error);
+                _this.send('setError', error);
             });
         },
 

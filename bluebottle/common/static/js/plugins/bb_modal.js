@@ -112,11 +112,12 @@ BB.ModalMixin = Em.Mixin.create({
             var $body = $('#site');
             var oldWidth = $body.innerWidth();
             $body.width(oldWidth);
+            $('body').addClass('is-stopped-scrolling');
         },
 
         scrollEnable: function() {
             $('body').removeClass('is-stopped-scrolling');
-            $('#header .l-wrapper').width("auto");
+            $('#site').width("auto");
         },
 
         closeKeyModal: function(key) {

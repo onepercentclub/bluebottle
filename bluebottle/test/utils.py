@@ -267,7 +267,7 @@ class SeleniumTestCase(LiveServerTestCase):
         if settings.SELENIUM_WEBDRIVER == 'remote':
 
             name = 'Manual test run'
-            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
+            caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
@@ -283,7 +283,7 @@ class SeleniumTestCase(LiveServerTestCase):
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = BrowserExt(driver_name='remote', url=url, browser='firefox',
+            cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
                                      wait_time=10, desired_capabilities=caps)
             cls.browser.driver.implicitly_wait(5)
         else:

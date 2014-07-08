@@ -28,6 +28,11 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('model', user);
     },
 
+    // pass the to the fieldStrength function the field we want to evaluate
+    passwordStrength: function(){
+        return this.fieldStrength(this.get('password'))
+    }.property('password.length'),
+
     willClose: function () {
         this._clearModel();
 
@@ -267,7 +272,6 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
 
     init: function () {
         this._super();
-
         this._clearContent();
     },
 
@@ -343,6 +347,11 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         this.set('validationErrors', null);
         this.set('error', null);
     },
+
+    // pass the to the fieldStrength function the field we want to evaluate
+    passwordStrength: function(){
+        return this.fieldStrength(this.get('new_password1'))
+    }.property('new_password1.length'),
 
     actions: {
         resetPassword: function (record) {

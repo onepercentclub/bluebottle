@@ -55,23 +55,21 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         this.set('validationEnabled', true)
     },
 
-    // set the strength of the password
-    passwordStrength: function() {
-        var pass = this.get('password.length')
+    // set the strength of the field, use this in the template
+    fieldStrength: function(field) {
 
-        // at least 6 char
-        if (pass < 6) {
-            return "weak"
-        }
-        else if (pass){
-            pass = this.get('password')
-            // at least a number and a special character
-            if (pass.search(/(?=.*[0-9])(?=.*[!@#$%^&*])/) == 0) {
-                return "strong"
-            }
-            return "fair"
-        }
-    }.property('password.length'),
+        // field not fulfilled
+        if (!field){ return "" }
+
+        // less than 6 char long
+        else if (field.length < 6) { return "weak" }
+
+        // at least a number and a special character
+        else if (field.search(/(?=.*[0-9])(?=.*[!@#$%^&*])/) == 0){ return "strong" }
+
+        // at least 6 char long
+        return "fair"
+    },
 
     //array of dictionaries
     //[ ...,
@@ -128,6 +126,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         this._validate()
         return !this.get('validationErrors')
     },
+
     // run the validateErrors and set the errors in validationErrors
     _validate: function() {
         this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
@@ -167,10 +166,10 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
     init: function () {
         this._super();
+
         // Dynamically assign observerFields to a function f
         this._dynamicObserverCreator('fieldsToWatch', '_checkErrors');
         this._dynamicObserverCreator('requiredFields', '_requiredFieldsChecker');
-
     },
 
     willDestroy: function() {

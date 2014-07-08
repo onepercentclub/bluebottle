@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from ..views import (
     UserProfileDetail, CurrentUser, UserSettingsDetail, UserCreate,
-    UserActivate, PasswordReset, PasswordSet, TimeAvailableViewSet)
+    UserActivate, PasswordReset, PasswordSet, TimeAvailableViewSet, DisableAccount)
 
 # Public User API:
 #
@@ -26,7 +26,7 @@ urlpatterns = patterns(
     url(r'^time_available', include(router.urls)),
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     # url(r'^activate/(?P<activation_key>[a-f0-9]{40})$', UserActivate.as_view()),
-
+    url(r'^disable-account/(?P<user_id>\d+)/(?P<token>[0-9A-Za-z]+)/$', DisableAccount.as_view(), name='disable-account'),
     url(r'^current$', CurrentUser.as_view(), name='user-current'),
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
     url(r'^passwordset/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})$',

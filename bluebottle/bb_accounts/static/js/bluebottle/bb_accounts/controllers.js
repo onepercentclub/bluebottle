@@ -407,3 +407,57 @@ App.ProfileController = Ember.ObjectController.extend({
     }
 });
 
+
+App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
+    disableAccountTitle: gettext('If you leave me now...'),
+    successMessage: gettext('The account was disabled'),
+
+    init: function() {
+        this._super();
+
+    },
+
+    userPreview: function(){
+        return App.User.find(this.get('model.user_id'));
+    }.property('model.user_id'),
+
+    actions: {
+        disableAccount: function(record){
+            var _this = this,
+                model = this.get('model');
+
+            return Ember.RSVP.Promise(function (resolve, reject) {
+                var user_id = _this.get('model.user_id'),
+                    token = _this.get('model.token'),
+                    hash = {
+                        url: '/api/users/disable-account/' + user_id + '/' + token + '/',
+                        type: 'post'
+                    };
+
+                hash.success = function (response) {
+                    _this.send('setFlash', _this.get('successMessage'));
+                    _this.send('close');
+
+                    Ember.run(null, resolve, gettext("Succes"));
+                    _this.transitionToRoute('/');
+                };
+
+                hash.error = function (response) {
+                    var msg = gettext('Error, invalid token');
+                    _this.set('error', msg);
+
+                    // Reject the promise
+                    Ember.run(null, reject, msg);
+                };
+
+                Ember.$.ajax(hash);
+            });
+        },
+
+        cancelDisable: function(){
+            this.send('close');
+            this.transitionToRoute('/');
+        }
+    }
+
+});

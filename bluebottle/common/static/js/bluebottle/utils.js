@@ -30,7 +30,9 @@ App.IsAuthorMixin = Em.Mixin.create({
     }.property('author.username', 'currentUser.username')
 });
 
-
+// It Provides different validations
+// standart empty fields validation (_requiredFieldsChecker and blockingErrors)
+// validation based on fields errors (validateErrors, enabled by calling enableValidation)
 App.ControllerValidationMixin = Ember.Mixin.create({
 
     // In your controller define fieldsToWatch (a list of fields you want to watch)
@@ -38,8 +40,20 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // errorsFixed: true if there were errors which are now fixed
     errorsFixed: false,
 
-    // blockSubmit: true if there are still blocking errors which prevent to submit
+    // blockErrors: true if there are still blocking errors which prevent to submit
     blockingErrors: true,
+
+    // to prevent the error validation we set validationEnabled to false
+    // set to true to enable it
+    validationEnabled: false,
+
+    // used in validateErrors function
+    errorDictionaryFields: ['property', 'validateProperty', 'message'],
+
+    // set validationEnable to true
+    enableValidation: function() {
+        this.set('validationEnabled', true)
+    },
 
     // set the strength of the password
     passwordStrength: function() {
@@ -59,7 +73,6 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         }
     }.property('password.length'),
 
-    errorDictionaryFields: ['property', 'validateProperty', 'message'],
     //array of dictionaries
     //[ ...,
     // {'property': propertyValue,
@@ -67,6 +80,12 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     //  'message': message},
     // ...,]
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
+
+        // if validationEnabled is not true we are not validating the fields
+        if (!this.get('validationEnabled')) {
+            return null
+        }
+
         if (!Em.isArray(arrayOfDict))
             throw new Error('Expected an array of fields to validate');
         var _this = this,
@@ -90,38 +109,33 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         return resultErrors
     },
 
-    checkErrors: function() {
-        // Check if there were previous errors which are now fixed\
+    // At runtime observers are attached to this function
+    // it calls the validateAndCheck function
+    _checkErrors: function() {
+        // Check if there were previous errors which are now fixed
         if (this.get('validationErrors')) {
-            if (this.validateAndCheck()) {
+            if (this._validateAndCheck()) {
                 this.set('errorsFixed', true)
-                this.set('blockingErrors', false)
             }else {
                 this.set('errorsFixed', false)
-                this.set('blockingErrors', true)
-            }
-        // If there were no errors before and there are no errors now enable canSubmit
-        } else {
-            if (this.validateAndCheck()){
-                this.set('blockingErrors', false)
-            } else {
-                this.set('blockingErrors', true)
             }
         }
     },
 
     // return true if there are no errors
-    validateAndCheck: function() {
-        this.validate()
+    _validateAndCheck: function() {
+        // run the validateErrors and set the errors in validationErrors
+        this._validate()
         return !this.get('validationErrors')
     },
     // run the validateErrors and set the errors in validationErrors
-    validate: function() {
+    _validate: function() {
         this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
     },
 
     // set blockingErrors to true if there are fields which aren't fulfilled
-    requiredFieldsChecker: function() {
+    // at runtime observers are attached to this function
+    _requiredFieldsChecker: function() {
         var _this = this
         _this.set('blockingErrors', false)
         _this.get('requiredFields').forEach(function(field){
@@ -133,9 +147,9 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
     // Dynamically assign observerFields to a function f
     // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
-    dynamicObserverCreator: function (observerFields, f) {
+    _dynamicObserverCreator: function (observerFields, f) {
         if (this.get(observerFields)) {
-            // dynamically assign observer fields to checkErrors function
+            // dynamically assign observer fields to _checkErrors function
             // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
             this.get(observerFields).forEach(function(field) {
                 Ember.addObserver(this, field, this, f)
@@ -143,7 +157,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         }
     },
     // Remove the observers when the object is destroyed
-    dynamicObserverRemover: function(observerFields, f) {
+    _dynamicObserverRemover: function(observerFields, f) {
         if (this.get(observerFields)){
             this.get(observerFields).forEach(function(field) {
                 Ember.removeObserver(this, field, this, f);
@@ -154,8 +168,8 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     init: function () {
         this._super();
         // Dynamically assign observerFields to a function f
-        this.dynamicObserverCreator('fieldsToWatch', 'checkErrors');
-        this.dynamicObserverCreator('requiredFields', 'requiredFieldsChecker');
+        this._dynamicObserverCreator('fieldsToWatch', '_checkErrors');
+        this._dynamicObserverCreator('requiredFields', '_requiredFieldsChecker');
 
     },
 
@@ -163,8 +177,8 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         this._super();
 
         // Remove the observers when the object is destroyed
-        this.dynamicObserverRemover('fieldsToWatch', 'checkErrors')
-        this.dynamicObserverRemover('requiredFields', 'requiredFieldsChecker')
+        this._dynamicObserverRemover('fieldsToWatch', '_checkErrors')
+        this._dynamicObserverRemover('requiredFields', '_requiredFieldsChecker')
     }
 });
 

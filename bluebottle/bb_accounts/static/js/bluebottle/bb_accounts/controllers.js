@@ -6,12 +6,14 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     createAttempt: false,
     fixedFieldsMessage: gettext('That\'s better'),
     fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
-    requiredFields: ['password.length', 'email', 'emailConfirmation'],
+    requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
     init: function() {
         this._super();
 
         this.set('errorDefinitions', [
+            {'property': 'first_name', 'validateProperty': 'validFirstName', 'message': gettext('First Name can\'t be left empty')},
+            {'property': 'last_name', 'validateProperty': 'validLastName', 'message': gettext('Surname can\'t be left empty')},
             {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
             {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
         ]);

@@ -76,14 +76,14 @@ $modal-background-color: rgba(#8A9993, .65);
 		height: 45px;
 		box-shadow: none;
 
-        &:hover {
-            border-color: $gray-border-hover;
-        }
+				&:hover {
+						border-color: $gray-border-hover;
+				}
 
-        &:focus {
-            border: 1px solid $gray-border-hover;
-            @include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
-        }
+				&:focus {
+						border: 1px solid $gray-border-hover;
+						@include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
+				}
 	}
 
 	.password {
@@ -155,10 +155,35 @@ $modal-background-color: rgba(#8A9993, .65);
 .modal-fullscreen-container {
 	position: relative;
 	margin: 50px auto;
-	width: 350px;
 	//height: 100%;
 	@include perspective(800px);
 	@include opacity(0);
+
+	&.normal {
+		width: 350px;
+
+		.modal-fullscreen-item {
+			width: 350px;
+		}
+	}
+
+	&.large {
+		width: 550px;
+
+		.modal-fullscreen-item {
+			width: 550px;
+		}
+	}
+
+	&.fullscreen {
+		width: 100%;
+		margin: 0px;
+
+		.modal-fullscreen-item {
+			width: 100%;
+			border-radius: 0px;
+		}
+	}
 
 	#card {
 		position: absolute;
@@ -261,10 +286,9 @@ $modal-background-color: rgba(#8A9993, .65);
 	}
 
 	.modal-fullscreen-item {
-		width: 350px;
 		background-color: #F5F4F6;
 		border-radius: 8px;
-        font-family: $font-family-body;
+		font-family: $font-family-body;
 		padding: 5px;
 		text-align: center;
 		@include transform-style(preserve-3d);
@@ -282,11 +306,11 @@ $modal-background-color: rgba(#8A9993, .65);
 			background: white;
 
 			h4 {
-                font-size: 22px;
-                font-family: $font-family-body;
+				font-size: 22px;
+				font-family: $font-family-body;
 				text-transform: inherit;
 				font-weight: 700;
-                margin-bottom: 15px;
+				margin-bottom: 15px;
 			}
 		}
 
@@ -300,11 +324,11 @@ $modal-background-color: rgba(#8A9993, .65);
 			padding: 20px 20px 20px 20px;
 
 			h4 {
-                font-size: 22px;
-                font-family: $font-family-body;
+				font-size: 22px;
+				font-family: $font-family-body;
 				text-transform: inherit;
 				font-weight: 700;
-                margin-bottom: 15px;
+				margin-bottom: 15px;
 			}
 			.modal-flash-message {
 				box-model: content-box;
@@ -321,7 +345,6 @@ $modal-background-color: rgba(#8A9993, .65);
 				}
 
 				&.success {
-					
 					background: $color-primary;
 				}
 			}

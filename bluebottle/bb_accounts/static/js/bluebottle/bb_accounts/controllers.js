@@ -180,7 +180,7 @@ App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
 });
 
 
-App.UserModalController = Ember.ObjectController.extend({
+App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     loadProfile: function() {
         var model = this.get('model');
         var id = model.get('id');

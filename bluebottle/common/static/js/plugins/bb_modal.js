@@ -57,6 +57,12 @@ BB.ModalMixin = Em.Mixin.create({
         openInBox: function(name, context, type, callback) {
             // Setup the modal container
             var modalContainer = this.controllerFor('modalContainer');
+
+            if (Em.isEmpty(type))
+                modalContainer.set('type', 'normal');
+            else
+                modalContainer.set('type', type);
+
             this.render('modalContainer', {
                 into: 'application',
                 outlet: 'modalContainer',
@@ -200,14 +206,15 @@ BB.ModalMixin = Em.Mixin.create({
 });
 
 BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {
-    currentController: null
+    currentController: null,
+    type: null
 });
 
 BB.ModalContainerView = Em.View.extend({
     tagName: null,
     template: Ember.Handlebars.compile([
         '<div class="modal-fullscreen-background is-active" {{action "closeClickModal"}}>',
-            '<div class="modal-fullscreen-container">',
+            '<div {{bindAttr class="type: :modal-fullscreen-container"}}>',
                 '<div id="card">',
                     '<figure class="front">',
                         '<div class="modal-fullscreen-item">{{outlet "modalFront"}}</div>',

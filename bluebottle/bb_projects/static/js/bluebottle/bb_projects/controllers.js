@@ -126,7 +126,7 @@ App.ProjectController = Em.ObjectController.extend({
 
 });
 
-App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
+App.ProjectPlanController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.StaticMapMixin, {
     counter: 0,
     hasPdfDownload: true,
 

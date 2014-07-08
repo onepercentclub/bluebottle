@@ -6,6 +6,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     createAttempt: false,
     fixedFieldsMessage: gettext('That\'s better'),
     fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
+    requiredFields: ['password.length', 'email', 'emailConfirmation'],
 
     init: function() {
         this._super();
@@ -41,8 +42,11 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             var _this = this,
                 user = this.get('model');
 
+            // Enable the validation of errors on fields only after pressing the signuo button
+            _this.enableValidation()
+
             // Clear the errors fixed message
-            this.set('errorsFixed', false);
+            _this.set('errorsFixed', false);
 
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
@@ -53,7 +57,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             }
 
             // Set is loading property until success or error response
-            this.set('isBusy', true);
+            _this.set('isBusy', true);
 
             user.save().then(function(newUser) {
                 var response = {

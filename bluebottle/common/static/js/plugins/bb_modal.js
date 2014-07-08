@@ -63,7 +63,7 @@ BB.ModalMixin = Em.Mixin.create({
                 controller: modalContainer
             });
 
-            this.send('scrollDisableEnable');
+            this.send('scrollDisable');
             this.send('closeKeyModal', '27');
 
             // Handle any cleanup for the previously set content for the modal
@@ -104,13 +104,21 @@ BB.ModalMixin = Em.Mixin.create({
                 });
             });
 
-            this.send('scrollDisableEnable');
+            this.send('scrollEnable');
 
             $('.modal-fullscreen-background').addClass('is-inactive');
         },
 
-        scrollDisableEnable: function() {
-            $('body').toggleClass('is-stopped-scrolling');
+        scrollDisable: function() {
+            var $body = $('#site');
+            var oldWidth = $body.innerWidth();
+            $body.width(oldWidth);
+            $('body').addClass('is-stopped-scrolling');
+        },
+
+        scrollEnable: function() {
+            $('body').removeClass('is-stopped-scrolling');
+            $('#site').width("auto");
         },
 
         closeKeyModal: function(key) {

@@ -1,43 +1,9 @@
 
-$black                                                     : #3C3C3C;
-$gray-darkest											   : #3C3C3C;
-$gray-darker											   : #676767;
-$gray-dark                                                 : #8A9993;
-$gray-middle                                               : #E4EDE9;
-$gray-medium                                               : #F5F4F6; // Todo same as light
-$gray-light                                                : #F8F7F8;
+$font-family-body					   					   : 'Neue Helvetica W01';
 $gray-border                                               : #D8D8D8;
 $gray-border-hover                                         : #9F9F9F;
+$modal-background-color									   : rgba(#8A9993, .65);
 
-
-// Colors
-// --------------------------------
-
-$color-primary                                             : #00C051; // green
-$color-secondary                                           : #FF619A; // pink
-$color-primary-shadow									   : #008438; // shadow green
-$color-secondary-shadow									   : #B42A5C; // shadow pink
-
-$color-error                                               : #b84040 !default;
-$color-success                                             : #5da423 !default;
-$color-deselect                                            : #bfbfbf !default;
-
-// Social
-// ----------------------------------
-
-$facebook-blue                                             : #45619d !default;
-$twitter-blue                                              : #33b9e2 !default;
-
-$font-family                                               : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
-$font-family-heavy                                         : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
-$font-family-bold                                          : 'L Futura W01', 'Trebuchet MS', Helvetica, Arial, sans-serif;
-$font-family-body										   : 'Neue Helvetica W01';
-
-$base-font-size                                            : 1em !default;
-$base-font-family                                          : $font-family !default;
-$base-line-height                                          : 1.5em !default;
-
-$modal-background-color: rgba(#8A9993, .65);
 
 .modal-fullscreen-background {
 	position: fixed;
@@ -49,6 +15,7 @@ $modal-background-color: rgba(#8A9993, .65);
 	z-index: 999;
 	visibility: hidden;
 	@include perspective(1000);
+	overflow: auto;
 
 	&.is-active {
 		visibility: visible;
@@ -91,7 +58,7 @@ $modal-background-color: rgba(#8A9993, .65);
 		text-align: center;
 		
 		input {
-			padding-right: 36px;
+			padding-right: 63px;
 		}
 
 		&.is-incorrect {
@@ -114,26 +81,24 @@ $modal-background-color: rgba(#8A9993, .65);
 
 		.password-strength {
 			position: absolute;
-			top: 14px;
+			top: 16px;
 			right: 10px;
-			width: 70px;
-			border-radius: 4px;
-			font-size: 14px;
+			width: 50px;
+			border-radius: 2px;
+			font-size: 12px;
 			color: #fff;
+			padding: 0 2px;
 
 			&.weak {
 				background: rgb(232, 42, 28);
-				padding: 2px;
 			}
 
 			&.fair {
 				background: rgb(254, 180, 28);
-				padding: 2px;
 			}
 
 			&.strong {
 				background: rgb(24, 184, 64);
-				padding: 2px;
 			}
 
 			&.loader {
@@ -156,6 +121,7 @@ $modal-background-color: rgba(#8A9993, .65);
 	position: relative;
 	margin: 50px auto;
 	width: 350px;
+	padding-bottom: 100px;
 	//height: 100%;
 	@include perspective(800px);
 	@include opacity(0);
@@ -321,8 +287,7 @@ $modal-background-color: rgba(#8A9993, .65);
 				}
 
 				&.success {
-					
-					background: $color-primary;
+					background: $color-secondary;
 				}
 			}
 

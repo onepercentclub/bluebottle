@@ -380,7 +380,9 @@ class SeleniumTestCase(LiveServerTestCase):
         element = self.wait_for_element_css(selector)
 
         if element:
-            self.browser.execute_script("window.scrollTo(0,%s)" % element.location['y']);
+            y = int(element.location['y']) - 100
+            x = int(element.location['x'])
+            self.browser.execute_script("window.scrollTo(%s,%s)" % (x, y))
 
         return element
 

@@ -250,12 +250,6 @@ App.CurrentUser = App.UserPreview.extend({
     }.property('username')
 });
 
-
-//App.UserActivation = App.CurrentUser.extend({
-//    url: 'users/activate'
-//});
-
-
 /*
  A model for creating users.
 

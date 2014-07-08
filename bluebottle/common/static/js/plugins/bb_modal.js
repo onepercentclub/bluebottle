@@ -20,6 +20,7 @@ BB.ModalMixin = Em.Mixin.create({
             var modalContainer = this.controllerFor('modalContainer'),
                 previousController = modalContainer.get('currentController');
 
+            // Call willClose on the previous modal - if defined
             if (previousController && Em.typeOf(previousController.willClose) == 'function')
                 previousController.willClose();
 
@@ -176,6 +177,24 @@ BB.ModalMixin = Em.Mixin.create({
             this.send('modalWillTransition', name, 'modalFront', context);
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['scale-back', 'scale-down']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['scale-down', 'scale-up']);
+        },
+
+        modalError: function() {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                cardSide = $('#card.flipped'),
+                container;
+
+            if (Ember.isEmpty(cardSide)) {
+                // Front side is showing 
+                container = $('#card .front .modal-fullscreen-item');
+            } else {
+                // If cardSide is defined then it is the flipped/back side
+                container = cardSide.find('.modal-fullscreen-item');
+            }
+
+            container.addClass('is-shake').one(animationEnd, function(){
+                container.removeClass('is-shake');
+            });
         }
     },
 });

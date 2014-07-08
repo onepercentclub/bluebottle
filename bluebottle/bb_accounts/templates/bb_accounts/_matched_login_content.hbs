@@ -3,16 +3,14 @@
 
 {% tplhandlebars "_matched_login_content" %}
     <div class="modal-fullscreen-header">
-        <span class="modal-fullscreen-close" {{action "close"}}>
-            <object type="image/svg+xml" data="/static/assets/images/icons/icon-close-modal.svg" class="modal-close-image"></object>
-        </span>
+        <span class="modal-fullscreen-close" {{action "close"}}></span>
         <h4>{%trans "Is it me your looking for?"%}</h4>
     </div>
     <div class="modal-fullscreen-profile">
-        {{#if socialMatch}}
             <span class="photo">
                 <img {{bindAttr src="matchedUser.getAvatar"}}>
             </span>
+        {{#if socialMatch}}
             <span class="already-registerd">
                 <strong>{{username}}</strong> {%trans "has already been registered via Facebook. Is this you? Please sign in below." %}
             </span> 

@@ -10,16 +10,19 @@
 
     {{#unless errorsFixed}}
         {{#if validationErrors}}
-            {{#each validationErrors.email}}
-                <div class="modal-flash-message error">
-                    {{this}}
-                </div>
-            {{/each}}
-            {{#each validationErrors.password}}
-                <div class="modal-flash-message error">
-                    {{this}}
-                </div>
-            {{/each}}
+            {{#if validationErrors.email}}
+                {{#each validationErrors.email}}
+                    <div class="modal-flash-message error">
+                        {{this}}
+                    </div>
+                {{/each}}
+            {{else}}
+                {{#each validationErrors.password}}
+                    <div class="modal-flash-message error">
+                        {{this}}
+                    </div>
+                {{/each}}
+            {{/if}}
         {{/if}}
     {{/unless}}
 {% endtplhandlebars %}

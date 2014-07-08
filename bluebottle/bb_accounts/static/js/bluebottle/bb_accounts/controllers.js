@@ -274,7 +274,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 });
 
 App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
-    requestResetPasswordTitle : gettext('Trouble signin in?'),
+    requestResetPasswordTitle : gettext('Trouble signing in?'),
     content: null,
 
     init: function () {

@@ -439,7 +439,7 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
                     _this.send('close');
 
                     Ember.run(null, resolve, gettext("Succes"));
-                    _this.send('loadNextTransition', '/');
+                    _this.transitionToRoute('/');
                 };
 
                 hash.error = function (response) {

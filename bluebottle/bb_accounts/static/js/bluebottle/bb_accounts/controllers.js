@@ -89,7 +89,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             }, function (failedUser) {
                 // If the user create failed due to a conflict then transition to the 
                 // login modal so the user can sign in.
-                // We set matchType = true so the login controller can notify the user.
+                // We set matchType = social / email so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
                     var conflict = failedUser.errors.conflict,
                         loginObject = Em.Object.create({

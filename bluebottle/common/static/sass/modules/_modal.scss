@@ -397,10 +397,12 @@ $modal-background-color: rgba(#8A9993, .65);
 		}
 
 		.modal-fullscreen-profile {
-			width: 288px;
-			height: 70px;
 			background: #f4f4f4;
 			text-align: left;
+			overflow: auto;
+			font-size: 13px;
+			line-height: 18px;
+			padding: 15px 20px;
 
 			.photo {
 				float: left;
@@ -409,19 +411,16 @@ $modal-background-color: rgba(#8A9993, .65);
 				border-radius: 50%;
 				display: inline-block;
 				overflow: hidden;
-				margin: 10px;
-				border: solid 2px white;
+				margin-right: 15px;
+				border: solid 2px #fff;
+				vertical-align: middle;
 			}
 
 			.already-registerd {
 				float: right;
-				display: block;
-				width: 70%;
-				height: 50px;
-				margin: 7px 15px 0 0;
-				padding: 9px;
-				font-size: 10px;
-				line-height: 15px;
+				width: 74%;
+				display: inline-block;
+				margin-right: 10px;
 			}
 		}
 

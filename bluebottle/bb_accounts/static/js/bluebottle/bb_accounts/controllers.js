@@ -33,17 +33,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         // Clear the notifications
         this.set('errorsFixed', false);
         this.set('validationErrors', null);
+        this.set('isBusy', false);
     },
-
-    // Check if there were previous errors which are now fixed
-    checkErrors: function() {
-        if (this.get('validationErrors')){
-            this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
-            if (!this.get('validationErrors')) {
-                this.set('errorsFixed', true)
-            }
-        }
-    }.observes('password.length', 'email', 'emailConfirmation'),
 
     actions: {
         signup: function() {
@@ -60,6 +51,10 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             if (_this.get('validationErrors')) {
                 return false
             }
+
+            // Set is loading property until success or error response
+            this.set('isBusy', true);
+
             user.save().then(function(newUser) {
                 var response = {
                     token: newUser.get('jwt_token')
@@ -82,16 +77,25 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     // Close the modal
                     _this.send('close');
                 }, function () {
+                    _this.set('isBusy', false);
+
                     // Handle failure to create currentUser
                     _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 });
 
             }, function (failedUser) {
+                _this.set('isBusy', false);
+
                 // If the user create failed due to a conflict then transition to the 
                 // login modal so the user can sign in.
-                // We set userMatch = true so the login controller can notify the user.
+                // We set matchType = true so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
-                    var loginObject = Em.Object.create({userMatch: true, username: failedUser.get('email')});
+                    var conflict = failedUser.errors.conflict,
+                        loginObject = Em.Object.create({
+                            matchId: conflict.id,
+                            matchType: conflict.type,
+                            username: failedUser.get('email')
+                        });
 
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
@@ -192,6 +196,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
     init: function () {
         this._super();
+
         this._clearModel();
     },
 
@@ -201,14 +206,30 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
     willClose: function () {
         this.set('password', null);
-        this.set('userMatch', false);
+        this.set('matchType', null);
+        this.set('matchId', null);
         this.set('error', null);
+        this.set('isBusy', false);
     },
+
+    socialMatch: Em.computed.equal('model.matchType', 'social'),
+    emailMatch: Em.computed.equal('model.matchType', 'email'),
+    userMatch: Em.computed.or('socialMatch', 'emailMatch'),
+
+    matchedUser: function () {
+        if (this.get('matchId'))
+            return App.UserPreview.find(this.get('matchId'));
+        else
+          return null;
+    }.property('userMatch'),
 
     actions: {
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
+
+            // Set is loading property until success or error response
+            this.set('isBusy', true);
 
             return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
@@ -220,6 +241,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Close the modal
                 _this.send('close');
             }, function (error) {
+                _this.set('isBusy', false);
                 _this.set('error', error);
             });
         },
@@ -237,8 +259,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
 App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     requestResetPasswordTitle : gettext('Trouble signin in?'),
-    contents: null,
-    loading: false,
+    content: null,
 
     init: function () {
         this._super();
@@ -250,10 +271,14 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
         this.set('content', Em.Object.create({}));
     },
 
+    willClose: function () {
+        this.set('isBusy', false);
+    },
+
     actions: {
         requestReset: function() {
             var _this = this;
-            this.set('loading', true);
+            this.set('isBusy', true);
 
             return Ember.RSVP.Promise(function (resolve, reject) {
                 var hash = {
@@ -265,7 +290,6 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
                     };
 
                 hash.success = function (response) {
-                    _this.set('loading', false);
                     _this.send('modalFlip', 'passwordRequestSuccess');
                     Ember.run(null, resolve, response);
                 };
@@ -273,7 +297,7 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
                 hash.error = function (response) {
                     var msg = gettext('There is no account associated with the email.')
                     _this.set('error', msg);
-                    _this.set('loading', false);
+                    _this.set('isBusy', false);
 
                     Ember.run(null, reject, msg);
                 };

@@ -6,42 +6,10 @@
         <span {{action 'close'}} class="modal-fullscreen-close"></span>
         <h4>{% trans 'Welcome!' %}</h4>
         {{partial "social_logins"}}
-        {{view Em.TextField valueBinding="first_name" placeholder="First name"
-            classBinding="validationErrors.first_name.length:error"}}
+        {{partial "standard_signup_form"}}
 
-        {{view Em.TextField valueBinding="last_name" placeholder="Surname"
-            classBinding="validationErrors.last_name.length:error"}}
-        
-        {{view Em.TextField valueBinding="email" type="email" classBinding="validationErrors.email.length:error" placeholder="E-mailaddress"}}
-
-        {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error" placeholder="Re-enter E-mailaddress"}}
-        <div class="password">
-            {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error" placeholder="Password"}}
-            <span {{bindAttr class=":password-strength passwordStrength"}}>{{passwordStrength}}</span>
-        </div>
-
-        <a {{action 'signup'}} {{bindAttr class=":btn blockingErrors:is-inactive"}}>{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
         <small>By signing up, you accept our <a {{action showPage 'terms-and-conditions' true}}>terms of service</a></small>
-        {{#if errorsFixed}}
-            <div class="modal-flash-message success">
-                {{fixedFieldsMessage}}
-            </div>
-        {{/if}}
-
-        {{#unless errorsFixed}}
-            {{#if validationErrors}}
-                {{#each validationErrors.email}}
-                    <div class="modal-flash-message error">
-                        {{this}}
-                    </div>
-                {{/each}}
-                {{#each validationErrors.password}}
-                    <div class="modal-flash-message error">
-                        {{this}}
-                    </div>
-                {{/each}}
-            {{/if}}
-        {{/unless}}
+        {{partial "signup_errors"}}
     </div>
 
     <div class="modal-fullscreen-footer">

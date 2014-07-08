@@ -1,9 +1,9 @@
 .tooltip-holder {
 
 	.tooltip {
-		background: rgb(65,65,65);
+		background: rgb(60,60,60);
 		bottom: 100%;
-		color: #fff;
+		color: #D8D8D8;
 		display: block;
 		margin-bottom: 15px;
 		opacity: 0;
@@ -11,10 +11,10 @@
 		pointer-events: none;
 		position: absolute;
 		width: 100%;
-		font-size: 11px;
+		font-size: 12px;
 		line-height: 18px;
 		border-radius: 2px;
-		@include animation(fadeOutDown .25s ease-out);
+		@include animation(fadeOutDown .2s ease-out);
 
 		&.input {
 			right: -5px;
@@ -40,7 +40,7 @@
 		&:after {
 			border-left: solid transparent 7px;
 			border-right: solid transparent 7px;
-			border-top: solid rgb(65,65,65) 7px;
+			border-top: solid rgb(60,60,60) 7px;
 			bottom: -6px;
 			content: " ";
 			height: 0;

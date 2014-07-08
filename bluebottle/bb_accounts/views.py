@@ -74,8 +74,23 @@ class UserCreate(generics.CreateAPIView):
         errors = serializer.errors
         try: 
             if request.DATA.has_key('email'):
-                BB_USER_MODEL.objects.get(email=request.DATA['email'])
-                errors['conflict'] = True
+                user = BB_USER_MODEL.objects.get(email=request.DATA['email'])
+
+                # Return whether the conflict was with a user created via
+                # email or social auth
+                errors['conflict'] = {
+                    'email': user.email,
+                    'id': user.id
+                }
+
+                # We assume if they have a social auth associated then they use it
+                if user.social_auth.count() > 0:
+                    social_auth = user.social_auth.all()[0]
+                    errors['conflict']['provider'] = social_auth.provider,
+                    errors['conflict']['type'] = 'social',
+                else:
+                    errors['conflict']['type'] = 'email'
+
         except BB_USER_MODEL.DoesNotExist:
             pass
             

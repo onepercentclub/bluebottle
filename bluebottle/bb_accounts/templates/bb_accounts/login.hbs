@@ -3,53 +3,13 @@
 {% block login_wrapper %}
 
     {% tplhandlebars "login" %}
+        {{#if userMatch}}
+            {{partial "matched_login_content"}}
+        {{else}}
+            {{partial "standard_login_content"}}
+        {{/if}}
 
-        <div class="modal-fullscreen-content">
-            <span {{action 'close'}} class="modal-fullscreen-close"></span>
-
-            {{partial "social_errors"}}
-
-            {{#if userMatch}}
-                <h4>{% trans "Hello? Is it me you’re looking for?" %}</h4>
-                <div class="modal-flash-message info">
-                    {{username}} {% trans "has already been registered with Bluebottle Project. Is this you? Please sign in below." %}
-                </div>
-            {{else}}
-                <h4>{{loginTitle}}</h4>
-            {{/if}}
-
-            {{partial "social_logins"}}
-
-            {{input valueBinding='username' type="text" name="username" maxlength="254" placeholder="E-mailaddress"}}
-
-            <div class="password">
-                {{input valueBinding="password" type="password" placeholder="Password"}}
-                <div class="tooltip-holder">
-                    <span {{ action 'passwordRequest' }} class="questionmark">?</span>
-                    <span class="modal-btn-signup" href="#">
-                        <div class="tooltip input">{% trans "Lost your password?" %}</div>
-
-                    </span>
-                </div>
-            </div>
-            <a {{ action 'login' }} {{bindAttr class=":btn blockingErrors:is-inactive"}} name="login">{% trans "Sign in" %}</a>
-
-            {{#if error.non_field_errors.length}}
-                <div class="modal-flash-message error">
-                    {{#each error.non_field_errors}}
-                        {{this}}
-                    {{/each}}
-                </div>
-            {{/if}}
-        </div>
-        <div class="modal-fullscreen-footer">
-                <span class="modal-btn-signup" href="#">
-                    {% trans "Don’t have an account?" %}
-                    <a {{ action 'signup' }}>
-                        {% trans "Sign up here" %}
-                    </a>
-                </span>
-        </div>
+        {{partial "login_footer"}}
 
     {% endtplhandlebars %}
 

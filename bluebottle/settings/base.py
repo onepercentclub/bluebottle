@@ -104,15 +104,14 @@ TEMPLATE_DIRS = (
 
 
 MIDDLEWARE_CLASSES = (
+    'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
+    'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'bluebottle.bb_accounts.middleware.LocaleMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 # REST_FRAMEWORK = {

@@ -112,6 +112,7 @@ BB.ModalMixin = Em.Mixin.create({
 
             this.send('scrollEnable');
 
+            $('.modal-fullscreen-background').removeClass('is-active');
             $('.modal-fullscreen-background').addClass('is-inactive');
         },
 

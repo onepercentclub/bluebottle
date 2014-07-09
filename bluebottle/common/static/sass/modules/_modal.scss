@@ -29,7 +29,6 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 	&.is-inactive {
 		@include animation(fadeOut .3s ease-in);
-
 		.modal-fullscreen-container {
 			@include opacity(0);
 			@include animation(fadeOutUpBig .3s ease-in);

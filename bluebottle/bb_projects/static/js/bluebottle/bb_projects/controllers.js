@@ -404,6 +404,7 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             // organization has been saved => not isNew
             // We have been storing the organization in the route
             // TODO: should we move this to the controller??
+
             var organization = this.get('controllers.myProjectOrganisation.model');
 
             // There won't be an organization associated with the myProjectOrganisation

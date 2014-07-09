@@ -81,6 +81,8 @@
         <script type="text/javascript" src="{% static 'js/plugins/ember-facebook.js' %}"></script>
     {% endcompress %}
 
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
+
     {% compress js %}
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-drf2-adapter.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-meta.js' %}"></script>
@@ -161,7 +163,6 @@
         {% include "bluebottle/templates.hbs" %}
     {% endblock handlebars_templates %}
 
-    <script src="//maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
     <script src="//google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/src/infobox.js"></script>
 
     {% block htmlheader %}{% endblock %}
@@ -174,8 +175,6 @@
 <body id="body">
     <!-- Scripts -->
     <div id="fb-root"></div>
-
-
 
   {% block google_analytics %}
         <script type="text/javascript">
@@ -223,5 +222,7 @@
 
     {% block content %}
     {% endblock %}
+
+
 </body>
 </html>

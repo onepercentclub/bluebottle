@@ -78,7 +78,14 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
             this.set('csrfToken', metaCsrf.attr('content'));
 
         // Read language string from url.
-        var language = this.get('language');
+        var language = window.location.pathname.split('/')[1];
+        App.CurrentUser.find('current').then(function(user){
+            var primaryLanguage = user.get('primary_language');
+            if (primaryLanguage && primaryLanguage != language) {
+                document.location = '/' + primaryLanguage + document.location.hash;
+            }
+        });
+        this.set('language', language);
 
         // Now that we know the language we can load the handlebars templates.
         //this.loadTemplates(this.templates);
@@ -337,41 +344,38 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
-// Handle queued router transition
-App.Router.reopen({
-  didTransition: function(infos) {
-      this._super(infos);
-
-      /*
-       Clear queued (next) transition after any successful transition so the 
-       queued one does not run more than once.
-       */ 
-      this.send('clearNextTransition');
-  }
-});
-
-// Enable Google Analytics with Ember
+//Enable Google Analytics with Ember
 App.Router.reopen({
     /**
      * Tracks pageviews if google analytics is used
      * Source: http://www.randomshouting.com/2013/05/04/Ember-and-Google-Analytics.html
+     *
+     * TODO: With new Ember we can switch to a nicer pattern:
+     * http://emberjs.com/guides/cookbook/helpers_and_components/adding_google_analytics_tracking/
      */
-    didTransition: function(infos) {
+     didTransition: function(infos) {
         this._super(infos);
 
+        /* 
+        Clear queued (next) transition after any successful transition so the 
+        queued one does not run more than once.
+        */ 
+        this.send('clearNextTransition');        
+
         Ember.run.next(function() {
-            // the meta module will now go through the routes and look for data
+            // the meta module will now go trough the routes and look for data
             App.meta.trigger('reloadDataFromRoutes');
         });
 
-        // Track the page / route load
+        var url = this.get('url');
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
-                _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
+                _gaq.push(['_trackPageview', url]);
             });
         }
     }
 });
+
 
 App.Router.map(function() {
 

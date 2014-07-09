@@ -15,7 +15,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	z-index: 999;
 	visibility: hidden;
 	@include perspective(1000);
-	overflow: auto;
+	overflow-y: scroll;
 
 	&.is-active {
 		visibility: visible;
@@ -29,6 +29,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 	&.is-inactive {
 		@include animation(fadeOut .3s ease-in);
+		overflow-y: hidden;
 		.modal-fullscreen-container {
 			@include opacity(0);
 			@include animation(fadeOutUpBig .3s ease-in);

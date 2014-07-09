@@ -144,7 +144,6 @@ App.MyProjectSubRoute = Em.Route.extend(App.SaveOnTransitionRouteMixin, App.Scro
 
 App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
     skipExitSignal: true,
-
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -156,7 +155,6 @@ App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
                 break;
         }
     },
-
     model: function(params) {
         return this.modelFor('myProject');
     }

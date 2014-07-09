@@ -273,6 +273,14 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
         return this.get('password.length') >= Em.get(App, 'settings.minPasswordLength');
     }.property('password.length'),
 
+    validFirstName: function() {
+        return this.get('first_name.length')
+    }.property('first_name.length'),
+
+    validLastName: function() {
+        return this.get('last_name.length')
+    }.property('last_name.length'),
+
     matchingEmail: function () {
         return !Em.compare(this.get('email'), this.get('emailConfirmation'));
     }.property('email', 'emailConfirmation')

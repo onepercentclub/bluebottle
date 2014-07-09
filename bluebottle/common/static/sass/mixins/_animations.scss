@@ -23,25 +23,26 @@
 ////// Fade //////
 @include keyframes(fadeIn) {
   0% {
-    @include opacity(0);
     visibility: hidden;
+    @include opacity(0);
   }
 
   100% {
-    @include opacity(1);
     visibility: visible;
+    @include opacity(1);
   }
 }
 
 @include keyframes(fadeOut) {
   0% {
-    @include opacity(1);
     visibility: visible;
+    @include opacity(1);
   }
 
   100% {
-    @include opacity(0);
     visibility: hidden;
+    @include opacity(0);
+    
   }
 }
 

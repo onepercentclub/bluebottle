@@ -6,6 +6,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     createAttempt: false,
     fixedFieldsMessage: gettext('That\'s better'),
     fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
+    requiredFields: ['password.length', 'email', 'emailConfirmation'],
 
     init: function() {
         this._super();
@@ -27,6 +28,11 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('model', user);
     },
 
+    // pass the to the fieldStrength function the field we want to evaluate
+    passwordStrength: function(){
+        return this.fieldStrength(this.get('password'))
+    }.property('password.length'),
+
     willClose: function () {
         this._clearModel();
 
@@ -41,19 +47,24 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             var _this = this,
                 user = this.get('model');
 
+            // Enable the validation of errors on fields only after pressing the signuo button
+            _this.enableValidation()
+
             // Clear the errors fixed message
-            this.set('errorsFixed', false);
+            _this.set('errorsFixed', false);
 
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
+                this.send('modalError');
+
                 return false
             }
 
             // Set is loading property until success or error response
-            this.set('isBusy', true);
+            _this.set('isBusy', true);
 
             user.save().then(function(newUser) {
                 var response = {
@@ -61,9 +72,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 };
 
                 return App.AuthJwt.processSuccessResponse(response).then(function (authorizedUser) {
-                    // clear the modal fields
-                    _this._clearModel();
-                    
                     // This is for successfully setting the currentUser.
                     _this.set('currentUser.model', authorizedUser);
 
@@ -88,7 +96,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
                 // If the user create failed due to a conflict then transition to the 
                 // login modal so the user can sign in.
-                // We set matchType = true so the login controller can notify the user.
+                // We set matchType = social / email so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
                     var conflict = failedUser.errors.conflict,
                         loginObject = Em.Object.create({
@@ -99,6 +107,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
                     _this.send('modalFlip', 'login', loginObject);
                 } else {
+                    _this.send('modalError');
                     // Handle error message here!
                     _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
                 }
@@ -128,7 +137,7 @@ App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixi
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     availableTimes: function() {
         return App.TimeAvailable.find();
-    }.property()
+    }.property(),
 });
 
 
@@ -220,10 +229,23 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         if (this.get('matchId'))
             return App.UserPreview.find(this.get('matchId'));
         else
-          return null;
+            return null;
     }.property('userMatch'),
 
     actions: {
+        setError: function (error) {
+            // if we set an error then also set isBusy to false as we are 
+            // returning from an action when we call setError, eg an attempted
+            // to sign in the user.
+            this.set('isBusy', false);
+
+            // Display the error
+            this.set('error', error);
+
+            // Call error action on the modal
+            this.send('modalError');
+        },
+
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
@@ -241,8 +263,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Close the modal
                 _this.send('close');
             }, function (error) {
-                _this.set('isBusy', false);
-                _this.set('error', error);
+                _this.send('setError', error);
             });
         },
 
@@ -258,12 +279,11 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 });
 
 App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
-    requestResetPasswordTitle : gettext('Trouble signin in?'),
+    requestResetPasswordTitle : gettext('Trouble signing in?'),
     content: null,
 
     init: function () {
         this._super();
-
         this._clearContent();
     },
 
@@ -339,6 +359,11 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         this.set('validationErrors', null);
         this.set('error', null);
     },
+
+    // pass the to the fieldStrength function the field we want to evaluate
+    passwordStrength: function(){
+        return this.fieldStrength(this.get('new_password1'))
+    }.property('new_password1.length'),
 
     actions: {
         resetPassword: function (record) {
@@ -439,7 +464,7 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
                     _this.send('close');
 
                     Ember.run(null, resolve, gettext("Succes"));
-                    _this.send('loadNextTransition', '/');
+                    _this.transitionToRoute('/');
                 };
 
                 hash.error = function (response) {
@@ -456,7 +481,7 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
 
         cancelDisable: function(){
             this.send('close');
-            this.send('loadNextTransition', '/');
+            this.transitionToRoute('/');
         }
     }
 

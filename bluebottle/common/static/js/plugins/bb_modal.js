@@ -117,15 +117,17 @@ BB.ModalMixin = Em.Mixin.create({
         },
 
         scrollDisable: function() {
-            var $body = $('#site');
+            var $body = $('body');
             var oldWidth = $body.innerWidth();
             $body.width(oldWidth);
-            $('body').addClass('is-stopped-scrolling');
+            $('#header').width(oldWidth);
+            $body.addClass('is-stopped-scrolling');
         },
 
         scrollEnable: function() {
             $('body').removeClass('is-stopped-scrolling');
-            $('#site').width("auto");
+            $('#header').width('');
+            $('body').width('');
         },
 
         closeKeyModal: function(key) {

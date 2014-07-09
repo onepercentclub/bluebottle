@@ -1,9 +1,5 @@
 /* =========== Global Layout */
 
-body { 
-    overflow-y: scroll;
-}
-
 // Global Layout Elements
 // -------------------------
 
@@ -24,7 +20,7 @@ body {
     z-index: 1000;
     color: white;
     text-align: center;
-    //@include animation(fadeOut .3s ease-out);
+    @include animation(fadeOut .3s ease-out);
     @include animation-fill-mode(forwards);
 
     &.is-active{

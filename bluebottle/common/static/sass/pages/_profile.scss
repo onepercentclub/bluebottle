@@ -6,12 +6,14 @@
     
     .modal-header {
         @include clear;
-        background-color: $gray-lighter;
+        background-color: transparent;
         
         .profile-avatar {
             @include grid(12,0,2);
             margin-top: $base-margin;
             margin-bottom: $base-margin;
+            border: 1px solid red;
+            display: block;
         }
         
         .profile-header {

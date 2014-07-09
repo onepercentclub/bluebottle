@@ -211,8 +211,6 @@ class LocaleMiddlewareTest(TestCase):
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
     def test_early_redirect_to_user_language(self):
-        self.skipTest("Re-enable this test once we have worked out JWT Auth and redirects based on authenticated users language.")
-
         response = self.client.get('/nl/', follow=False, HTTP_AUTHORIZATION=self.user_1_token)
         self.assertRedirects(response, '/en/')
 

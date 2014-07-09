@@ -168,6 +168,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 		.front {
 			background: transparent;
+			@include transform(rotateY(0deg));
 
 			&.slide-in-left {
 				@include animation(slideInLeft .3s ease-out);

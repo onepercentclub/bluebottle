@@ -145,18 +145,12 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         });
 
         App.ProjectPhase.find().then(function(data){
-
-        App.ProjectPhaseSelectView.reopen({
-            contentBinding: 'data',
-
-            phases: function () {
-                return App.ProjectPhase.find()
-            }.property(),
-
-            data: function () {
-                return App.ProjectPhase.filter(function(item){
-                    return item.get('viewable')})
-                }.property('phases.length')
+            App.ProjectPhaseSelectView.reopen({
+                content: function () {
+                    return data.filter(function(item){
+                        return item.get('viewable')
+                    })
+                },
             });
         });
 

@@ -3,8 +3,7 @@ from datetime import datetime
 from requests import request, HTTPError
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-
-from bluebottle.auth.exceptions import EmailExists
+from social.exceptions import AuthException
 from bluebottle.bb_accounts.utils import valid_email, send_welcome_mail
 
 USER_MODEL = get_user_model()

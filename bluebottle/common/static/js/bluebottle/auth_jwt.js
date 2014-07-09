@@ -23,6 +23,8 @@ App.AuthJwt = {
             localStorage['jwtToken'] = response.token;
             App.set('jwtToken', response.token);
 
+
+
             // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
             // state so we need to force a transition here before trying to fetch the
             // user again.
@@ -31,11 +33,15 @@ App.AuthJwt = {
                 currentUser.transitionTo('deleted.saved');
                 return App.CurrentUser.find('current').then( function (user) {
                     Ember.run(null, resolve, user);
-                }, function () {
-                    Ember.run(null, reject, 'Failed to create currentUser');
+                }, function (user) {
+                    if (response.error != undefined) {
+                        Ember.run(null, reject, response.error);
+                    } else {
+                        Ember.run(null, reject, 'Failed to create currentUser');
+                    }
                 });
             } else {
-                Ember.run(null, resolve, currentUser);
+                    Ember.run(null, resolve, currentUser);
             }
         });
     }

@@ -51,6 +51,12 @@
         position: relative;
         height: 100%;
         overflow: hidden;
+        
+        #project-plan {
+            overflow-y: auto;
+            position: relative;
+            height: 100%;
+        }
 
         // this is needed because of nesting
         .ember-view {

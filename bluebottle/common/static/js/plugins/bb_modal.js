@@ -112,6 +112,7 @@ BB.ModalMixin = Em.Mixin.create({
 
             this.send('scrollEnable');
 
+            $('.modal-fullscreen-background').removeClass('is-active');
             $('.modal-fullscreen-background').addClass('is-inactive');
         },
 
@@ -224,12 +225,12 @@ BB.ModalContainerView = Em.View.extend({
         '<div class="modal-fullscreen-background is-active" {{action "closeClickModal"}}>',
             '<div {{bindAttr class="type: :modal-fullscreen-container"}}>',
                 '<div id="card">',
-                    '<figure class="front">',
+                    '<div class="front">',
                         '<div class="modal-fullscreen-item">{{outlet "modalFront"}}</div>',
-                    '</figure>',
-                    '<figure class="back">',
+                    '</div>',
+                    '<div class="back">',
                         '<div class="modal-fullscreen-item">{{outlet "modalBack"}}</div>',
-                    '</figure>',
+                    '</div>',
                 '</div>',
             '</div>',
         '</div>'].join("\n"))

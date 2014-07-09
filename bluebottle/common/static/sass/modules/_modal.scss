@@ -29,7 +29,6 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 	&.is-inactive {
 		@include animation(fadeOut .3s ease-in);
-
 		.modal-fullscreen-container {
 			@include opacity(0);
 			@include animation(fadeOutUpBig .3s ease-in);
@@ -43,14 +42,14 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		height: 45px;
 		box-shadow: none;
 
-				&:hover {
-						border-color: $gray-border-hover;
-				}
+		&:hover {
+				border-color: $gray-border-hover;
+		}
 
-				&:focus {
-						border: 1px solid $gray-border-hover;
-						@include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
-				}
+		&:focus {
+				border: 1px solid $gray-border-hover;
+				@include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
+		}
 	}
 
 	.password {
@@ -124,134 +123,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	//height: 100%;
 	@include perspective(800px);
 	@include opacity(0);
-
-	&.normal {
-		width: 350px;
-
-		.modal-fullscreen-item {
-			width: 350px;
-		}
-	}
-
-	&.large {
-		width: 550px;
-
-		.modal-fullscreen-item {
-			width: 550px;
-		}
-	}
-
-	&.fullscreen {
-		width: 100%;
-		margin: 0px;
-
-		.modal-fullscreen-item {
-			width: 100%;
-			border-radius: 0px;
-		}
-	}
-
-	#card {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		@include transform-style(preserve-3d);
-		@include transition(transform .3s);
-
-		figure {
-			display: block;
-			position: absolute;
-			width: 100%;
-			height: 100%;
-			@include backface-visibility(hidden);
-		}
-
-		.front {
-			background: transparent;
-			@include transform(rotateY(0deg));
-
-			&.slide-in-left {
-				@include animation(slideInLeft .3s ease-out);
-				@include animation-fill-mode(forwards);
-			}
-
-			&.slide-out-left {
-				@include animation(slideOutLeft .2s ease-in);
-				@include animation-fill-mode(forwards);
-			}
-
-			&.scale-back {
-				@include animation(scaleBack .2s ease-in);
-				@include animation-fill-mode(forwards);
-			}
-
-			&.scale-up {
-				@include animation(scaleUp .3s ease-in);
-				@include animation-fill-mode(forwards);
-			}
-
-			&.scale-down {
-				@include animation(scaleDown .3s ease-out .1s);
-				@include animation-fill-mode(forwards);
-			}
-		}
-
-		.back {
-			background: transparent;
-			@include transform(rotateY(180deg));
-
-			&.slide-in-right {
-				@include animation(slideInRight .3s ease-out);
-				@include animation-fill-mode(forwards);
-			}
-
-			&.slide-out-right {
-				@include animation(slideOutRight .2s ease-in);
-				@include animation-fill-mode(forwards);
-			}
-
-			&.scale-up {
-				@include animation(scaleUp .2s ease-in);
-			}
-
-			&.scale-down {
-				@include animation(scaleDown .3s ease-out .1s);
-				@include animation-fill-mode(forwards);
-			}
-		}
-
-		&.flipped {
-			@include transform(rotateY(180deg));
-
-			.front {
-				z-index: 0;
-			}
-
-			.back {
-				z-index: 4;
-			}
-		}
-	}
 	
-	// only IE10 and up fix
-	@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-		#card {
-			&.flipped {
-				@include transform(rotateY(0deg));
-
-				.front {
-					@include transform(rotateY(180deg));
-					z-index: 0;
-				}
-
-				.back {
-					z-index: 4;
-					@include transform(rotateY(0deg));
-				}
-			}
-		}
-	}
-
 	.modal-fullscreen-item {
 		background-color: #F5F4F6;
 		border-radius: 8px;
@@ -421,6 +293,143 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			a {
 				text-decoration: none;
 				font-weight: 700;
+			}
+		}
+	}
+
+	#card {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		@include transform-style(preserve-3d);
+		@include transition(transform .3s);
+
+		.front, .back {
+			display: block;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			@include backface-visibility(hidden);
+		}
+
+		.front {
+			background: transparent;
+			@include transform(rotateY(0deg));
+
+			&.slide-in-left {
+				@include animation(slideInLeft .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.slide-out-left {
+				@include animation(slideOutLeft .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-back {
+				@include animation(scaleBack .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-up {
+				@include animation(scaleUp .3s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-down {
+				@include animation(scaleDown .3s ease-out .1s);
+				@include animation-fill-mode(forwards);
+			}
+		}
+
+		.back {
+			background: transparent;
+			@include transform(rotateY(180deg));
+
+			&.slide-in-right {
+				@include animation(slideInRight .3s ease-out);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.slide-out-right {
+				@include animation(slideOutRight .2s ease-in);
+				@include animation-fill-mode(forwards);
+			}
+
+			&.scale-up {
+				@include animation(scaleUp .2s ease-in);
+			}
+
+			&.scale-down {
+				@include animation(scaleDown .3s ease-out .1s);
+				@include animation-fill-mode(forwards);
+			}
+		}
+
+		&.flipped {
+			@include transform(rotateY(180deg));
+
+			.front {
+				z-index: 0;
+			}
+
+			.back {
+				z-index: 4;
+			}
+		}
+	}
+
+	&.normal {
+		width: 350px;
+
+		.modal-fullscreen-item {
+			width: 350px;
+		}
+	}
+
+	&.large {
+		width: 550px;
+
+		.modal-fullscreen-item {
+			width: 550px;
+			text-align: left;
+		}
+	}
+
+	&.full-screen {
+		width: 100%;
+		margin: 0;
+		background: #e9e9e9;
+
+		.modal-fullscreen-item {
+			width: 100%;
+			border-radius: 0;
+			overflow: auto;
+			background: #e9e9e9;
+			text-align: left;
+		}
+	}
+	
+	// TODO: Remove old modal padding
+	.modal-header, .modal-body, .modal-footer {
+		padding: 0;
+	}
+
+	// only IE10 and up fix
+	@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+		#card {
+			&.flipped {
+				@include transform(rotateY(0deg));
+
+				.front {
+					@include transform(rotateY(180deg));
+					z-index: 0;
+				}
+
+				.back {
+					z-index: 4;
+					@include transform(rotateY(0deg));
+				}
 			}
 		}
 	}

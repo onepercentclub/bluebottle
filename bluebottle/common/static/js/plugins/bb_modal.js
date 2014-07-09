@@ -226,7 +226,7 @@ BB.ModalContainerView = Em.View.extend({
                 '<div id="card">',
                     '<div class="front">',
                         '<div class="modal-fullscreen-item">{{outlet "modalFront"}}</div>',
-                    '</figure>',
+                    '</div>',
                     '<div class="back">',
                         '<div class="modal-fullscreen-item">{{outlet "modalBack"}}</div>',
                     '</div>',

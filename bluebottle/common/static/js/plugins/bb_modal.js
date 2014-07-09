@@ -41,16 +41,54 @@ BB.ModalMixin = Em.Mixin.create({
             }
         },
 
+
         openInFullScreenBox: function(name, context) {
-            this.send('openInBox', name, context, 'full-screen');
+            this.send('openInOldBox', name, context, 'full-screen');
         },
 
         openInScalableBox: function(name, context) {
-            this.send('openInBox', name, context, 'scalable');
+            this.send('openInOldBox', name, context, 'scalable');
         },
 
         openInBigBox: function(name, context) {
-            this.send('openInBox', name, context, 'large');
+            this.send('openInOldBox', name, context, 'large');
+        },
+
+        
+        // Add openInBox as function on ApplicationRoute so that it can be used
+        // outside the usual template/action context
+        openInOldBox: function(name, context, type, callback) {
+            // Close all other modals.
+            $('.close-modal').click();
+
+            // Get the controller or create one
+            var controller = this.controllerFor(name);
+            if (context) {
+                controller.set('model', context);
+            }
+
+            if (typeof type === 'undefined')
+              type = 'normal'
+
+            var classNames = [type];
+
+            // Get the view. This should be defined.
+            var view = App[name.classify() + 'View'].create();
+            view.set('controller', controller);
+
+            var modalPaneTemplate = ['<div class="modal-wrapper"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
+
+            var options = {
+                classNames: classNames,
+                defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
+                bodyViewClass: view
+            }
+
+            if (callback) {
+                options.callback = callback;
+            }
+
+            Bootstrap.ModalPane.popup(options);
         },
 
         openInBox: function(name, context, type, callback) {

@@ -28,7 +28,7 @@ class GetAuthToken(APIView):
         # If user is active we get or create the REST token and send it back with user data
         if token_result.get('token', None):
             return Response({'token': token_result.get('token')})
-        return Response(token_result)
+        return Response({'error': 'No result for token'})
 
 @strategy()
 def register_by_access_token(request, backend):

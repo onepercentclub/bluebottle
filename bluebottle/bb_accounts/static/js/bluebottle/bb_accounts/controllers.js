@@ -12,10 +12,30 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this._super();
 
         this.set('errorDefinitions', [
-            {'property': 'first_name', 'validateProperty': 'validFirstName', 'message': gettext('First Name can\'t be left empty')},
-            {'property': 'last_name', 'validateProperty': 'validLastName', 'message': gettext('Surname can\'t be left empty')},
-            {'property': 'email', 'validateProperty': 'matchingEmail', 'message': gettext('Emails don\'t match')},
-            {'property': 'password', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
+            {
+                'property': 'first_name',
+                'validateProperty': 'validFirstName',
+                'message': gettext('First Name can\'t be left empty'),
+                'priority': 3
+            },
+            {
+                'property': 'last_name',
+                'validateProperty': 'validLastName',
+                'message': gettext('Surname can\'t be left empty'),
+                'priority': 4
+            },
+            {
+                'property': 'email',
+                'validateProperty': 'matchingEmail',
+                'message': gettext('Emails don\'t match'),
+                'priority': 1
+            },
+            {
+                'property': 'password',
+                'validateProperty': 'validPassword',
+                'message': Em.get(App, 'settings.minPasswordError'),
+                'priority': 2
+            },
         ]);
 
         this._clearModel();
@@ -49,9 +69,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             var _this = this,
                 user = this.get('model');
 
-            // Enable the validation of errors on fields only after pressing the signuo button
+            // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation()
-
             // Clear the errors fixed message
             _this.set('errorsFixed', false);
 
@@ -61,7 +80,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-
                 return false
             }
 
@@ -345,8 +363,18 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         this._super();
 
         this.set('errorDefinitions', [
-            {'property': 'new_password1', 'validateProperty': 'validPassword', 'message': Em.get(App, 'settings.minPasswordError')},
-            {'property': 'new_password2', 'validateProperty': 'matchingPassword', 'message': gettext('Passwords don\'t match')}
+            {
+                'property': 'new_password1',
+                'validateProperty': 'validPassword',
+                'message': Em.get(App, 'settings.minPasswordError'),
+                'priority': 1
+            },
+            {
+                'property': 'new_password2',
+                'validateProperty': 'matchingPassword',
+                'message': gettext('Passwords don\'t match'),
+                'priority': 2
+            }
         ]);
     },
 

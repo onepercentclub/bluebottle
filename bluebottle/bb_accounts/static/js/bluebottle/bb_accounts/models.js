@@ -283,7 +283,22 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
 
     matchingEmail: function () {
         return !Em.compare(this.get('email'), this.get('emailConfirmation'));
-    }.property('email', 'emailConfirmation')
+    }.property('email', 'emailConfirmation'),
+
+    save: function () {
+        this.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        return this._super();
+    }
 
 });
 

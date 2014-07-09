@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext_lazy as _
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -22,12 +23,12 @@ class GetAuthToken(APIView):
         serializer = self.serializer_class(data=request.DATA)
 
         # Here we call PSA to authenticate like we would if we used PSA on server side.
-        jwt_token = register_by_access_token(request, backend)
+        token_result = register_by_access_token(request, backend)
 
         # If user is active we get or create the REST token and send it back with user data
-        if jwt_token:
-            return Response({'token': jwt_token})
-        return Response({'error': "Ai caramba!"})
+        if token_result.get('token', None):
+            return Response({'token': token_result.get('token')})
+        return Response({'error': _('No result for token')})
 
 @strategy()
 def register_by_access_token(request, backend):
@@ -37,7 +38,12 @@ def register_by_access_token(request, backend):
 
     if access_token:
         user = backend.do_auth(access_token)
-        user.last_login = datetime.now()
-        user.save()
-        return user.get_jwt_token()
+        if user and user.is_active:
+            user.last_login = datetime.now()
+            user.save()
+            return {'token': user.get_jwt_token()}
+        elif user and not user.is_active:
+            return {'error': _("User account is disabled")}
+        else:
+            return None
     return None

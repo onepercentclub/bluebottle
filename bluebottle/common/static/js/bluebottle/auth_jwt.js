@@ -31,8 +31,12 @@ App.AuthJwt = {
                 currentUser.transitionTo('deleted.saved');
                 return App.CurrentUser.find('current').then( function (user) {
                     Ember.run(null, resolve, user);
-                }, function () {
-                    Ember.run(null, reject, 'Failed to create currentUser');
+                }, function (user) {
+                    if (response.error != undefined) {
+                        Ember.run(null, reject, response.error);
+                    } else {
+                        Ember.run(null, reject, 'Failed to create currentUser');
+                    }
                 });
             } else {
                 Ember.run(null, resolve, currentUser);

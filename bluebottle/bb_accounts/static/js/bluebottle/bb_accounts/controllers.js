@@ -312,7 +312,8 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
                     };
 
                 hash.success = function (response) {
-                    _this.send('modalFlip', 'passwordRequestSuccess');
+                    _this.send('close');
+                    _this.send('setFlash', gettext("We\'ve sent a password reset link to your inbox"));
                     Ember.run(null, resolve, response);
                 };
 
@@ -465,7 +466,7 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
                     _this.send('setFlash', _this.get('successMessage'));
                     _this.send('close');
 
-                    Ember.run(null, resolve, gettext("Succes"));
+                    Ember.run(null, resolve, gettext("Success"));
                     _this.transitionToRoute('/');
                 };
 

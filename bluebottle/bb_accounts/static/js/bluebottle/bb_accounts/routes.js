@@ -13,7 +13,6 @@ App.Router.map(function(){
     });
     this.resource('viewProfile', {path: '/member/profile/:user_id'});
 
-//    this.route('userActivate', {path: '/activate/:activation_key'});
     this.resource('passwordReset', {path: '/passwordreset/:reset_token'});
 
     this.resource('disableAccount', {path: '/disable/:user_id/:token'});
@@ -22,24 +21,6 @@ App.Router.map(function(){
 /*
  *  Routes
  */
-App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
-    redirect: function() {
-        var applicationController = this.controllerFor('application');
-
-        if (applicationController.get('currentUser.isAuthenticated')) {
-            this.transitionTo('home');
-        }
-    },
-
-    model: function() {
-        // FIXME We need to set the first and last name to an empty string or we'll get a 500 error.
-        // FIXME This is a workaround for a bug in DRF2.
-        return App.UserCreate.createRecord({
-            first_name: '',
-            last_name: '',
-        });
-    }
-});
 
 
 App.UserIndexRoute = Em.Route.extend({

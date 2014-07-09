@@ -94,6 +94,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
             // Ember-data currently has no clear way of dealing with the state
             // loaded.created.invalid on server side validation, so we transition
             // to the uncommitted state to allow resubmission
+            //TODO: review this after upgrading EMBERDATA
             if (record.get('isNew')) {
                 record.transitionTo('loaded.created.uncommitted');
             } else {
@@ -101,7 +102,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
             }
         });
 
-        this._super();
+        return this._super();
     },
 
     name: DS.attr('string'),

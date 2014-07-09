@@ -9,37 +9,9 @@
     {{/if}}
     {{#unless errorsFixed}}
         {{#if validationErrors}}
-            {{#if validationErrors.email}}
-                {{#each validationErrors.email}}
-                    <div class="modal-flash-message error">
-                        {{this}}
-                    </div>
-                {{/each}}
-            {{else}}
-                {{#if validationErrors.password}}
-                    {{#each validationErrors.password}}
-                        <div class="modal-flash-message error">
-                            {{this}}
-                        </div>
-                    {{/each}}
-                {{else}}
-                    {{#if validationErrors.first_name}}
-                        {{#each validationErrors.first_name}}
-                            <div class="modal-flash-message error">
-                                {{this}}
-                            </div>
-                        {{/each}}
-                    {{else}}
-                        {{#if validationErrors.last_name}}
-                            {{#each validationErrors.last_name}}
-                                <div class="modal-flash-message error">
-                                    {{this}}
-                                </div>
-                            {{/each}}
-                        {{/if}}
-                    {{/if}}
-                {{/if}}
-            {{/if}}
+            <div class="modal-flash-message error">
+                {{validationErrors.error}}
+            </div>
         {{/if}}
     {{/unless}}
 {% endtplhandlebars %}

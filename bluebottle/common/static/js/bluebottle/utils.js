@@ -48,7 +48,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     validationEnabled: false,
 
     // used in validateErrors function
-    errorDictionaryFields: ['property', 'validateProperty', 'message'],
+    errorDictionaryFields: ['property', 'validateProperty', 'message', 'priority'],
 
     // set validationEnable to true
     enableValidation: function() {
@@ -81,40 +81,70 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         return "fair"
     },
 
-    //array of dictionaries
-    //[ ...,
-    // {'property': propertyValue,
-    //  'validateProperty': validateProperty,
-    //  'message': message},
-    // ...,]
-    validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
-
-        // if validationEnabled is not true we are not validating the fields
-        if (!this.get('validationEnabled')) {
-            return null
+    _apiErrors: function(errors) {
+        // we just show one error at the time
+        var firstError = Em.Object.create();
+        var resultErrors = Em.Object.create(errors);
+        for (var key in resultErrors){
+            // capitalize the first letter of the key add the related error and set it to the first error
+            // TODO: I add the key to the message since when a field is required the error message doesn't say which one.
+            firstError.set('error', (key.charAt(0).toUpperCase() + key.slice(1)) + ": " +resultErrors[key])
+            return firstError
         }
+    },
 
+    //[{
+    // 'property': propertyValue,
+    // 'validateProperty': validateProperty,
+    // 'message': message,
+    // 'priority': priorityNumber
+    // },
+    // ...,]
+    _clientSideErrors: function(arrayOfDict, model) {
+        // array check otherwise throw error
         if (!Em.isArray(arrayOfDict))
             throw new Error('Expected an array of fields to validate');
-        var _this = this,
-            resultErrors = null;
-        if (!ignoreApiErrors && model.get('errors'))
-            resultErrors = Em.Object.create(model.get('errors'));
 
+        var _this = this,
+            currentValidationError = null,
+            currentErrorPriority = null;
+
+        // for each element of the array
         arrayOfDict.forEach(function (dict) {
             //validate if the dictionary has the right fields
             if(Em.compare(Object.keys(dict).sort(), _this.errorDictionaryFields.sort()) < 0)
                 throw new Error('Expected a dictionary with correct keys');
+
+            // evaluate the property, if it's not valid
             if (!model.get(dict.validateProperty)) {
-                if (!resultErrors)
-                    resultErrors = Em.Object.create();
-                if (resultErrors.get(dict['property']))
-                    resultErrors.get(dict['property']).push(dict['message']);
-                else
-                    resultErrors.set(dict['property'], [dict['message']])
+
+                // set the error only if the priority is higher than the current one
+                // maybe check also for the same property name
+                if (!currentErrorPriority || currentErrorPriority > dict.priority ) {
+                    currentErrorPriority = dict.priority
+
+                    // if there were no currentErrors
+                    if (!currentValidationError)
+                        currentValidationError = Em.Object.create();
+
+                    currentValidationError.set('error', dict['message'])
+                }
             }
+
         })
-        return resultErrors
+        return currentValidationError
+    },
+
+    validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
+        if (!this.get('validationEnabled'))
+            return null
+
+        // API errors
+        if (!ignoreApiErrors && model.get('errors')){
+            return this._apiErrors(model.get('errors'))
+        }
+        // client side validation
+        return this._clientSideErrors(arrayOfDict, model)
     },
 
     // At runtime observers are attached to this function

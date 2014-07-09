@@ -23,8 +23,6 @@ App.AuthJwt = {
             localStorage['jwtToken'] = response.token;
             App.set('jwtToken', response.token);
 
-
-
             // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
             // state so we need to force a transition here before trying to fetch the
             // user again.
@@ -41,7 +39,7 @@ App.AuthJwt = {
                     }
                 });
             } else {
-                    Ember.run(null, resolve, currentUser);
+                Ember.run(null, resolve, currentUser);
             }
         });
     }

@@ -30,40 +30,6 @@ App.IsAuthorMixin = Em.Mixin.create({
     }.property('author.username', 'currentUser.username')
 });
 
-//App.DinamicObjectController = Ember.Mixin.create({
-//    dynamicFunctionObserverDict =
-//
-//    assignDynamicObserver: function(fields, f) {
-//        this.dynamicFunctionObserverDict.set(f, fields)
-//    },
-//
-//
-//    // Dynamically assign observerFields to a function f
-//    // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
-//    _dynamicObserverCreator: function (observerFields, f) {
-//        if (this.get(observerFields)) {
-//            // dynamically assign observer fields to _checkErrors function
-//            // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
-//            this.get(observerFields).forEach(function(field) {
-//                Ember.addObserver(this, field, this, f)
-//            }, this);
-//        }
-//    },
-//    // Remove the observers when the object is destroyed
-//    _dynamicObserverRemover: function(observerFields, f) {
-//        if (this.get(observerFields)){
-//            this.get(observerFields).forEach(function(field) {
-//                Ember.removeObserver(this, field, this, f);
-//            }, this);
-//        }
-//    }
-//
-//    init: function() {
-//        var dynamicFunctionObserverDict = Em.Object.create;
-//    }
-//
-//});
-
 // It Provides different validations
 // standart empty fields validation (_requiredFieldsChecker and blockingErrors)
 // validation based on fields errors (validateErrors, enabled by calling enableValidation)
@@ -231,7 +197,6 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     init: function () {
         this._super();
 
-//        this.assignDynamicObserver()
         // Dynamically assign observerFields to a function f
         this._dynamicObserverCreator('fieldsToWatch', '_checkErrors');
         this._dynamicObserverCreator('requiredFields', '_requiredFieldsChecker');
@@ -240,7 +205,6 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     willDestroy: function() {
         this._super();
 
-//        this.removeAllDynamicObservers()
         // Remove the observers when the object is destroyed
         this._dynamicObserverRemover('fieldsToWatch', '_checkErrors')
         this._dynamicObserverRemover('requiredFields', '_requiredFieldsChecker')

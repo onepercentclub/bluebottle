@@ -43,14 +43,14 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		height: 45px;
 		box-shadow: none;
 
-				&:hover {
-						border-color: $gray-border-hover;
-				}
+		&:hover {
+				border-color: $gray-border-hover;
+		}
 
-				&:focus {
-						border: 1px solid $gray-border-hover;
-						@include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
-				}
+		&:focus {
+				border: 1px solid $gray-border-hover;
+				@include single-box-shadow($gray-border, 0, 0, 0, 2px, false);
+		}
 	}
 
 	.password {

@@ -4,7 +4,6 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    fixedFieldsMessage: gettext('That\'s better'),
     fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
@@ -71,6 +70,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation()
+
             // Clear the errors fixed message
             _this.set('errorsFixed', false);
 
@@ -401,6 +401,9 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             var _this = this,
                 model = this.get('model');
 
+            // Enable the validation of errors on fields only after pressing the signup button
+            _this.enableValidation()
+
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
@@ -435,8 +438,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                         // Resolve the promise
                         Ember.run(null, resolve, user);
                     }, function (error) {
-                        var msg = gettext('Huston, there was a problem!')
-                        _this.set('error', msg);
+                        // Handle failure to create currentUser
+                        _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
 
                         // Reject the promise
                         Ember.run(null, reject, error);

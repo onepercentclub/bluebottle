@@ -199,14 +199,16 @@ BB.ModalMixin = Em.Mixin.create({
         modalError: function() {
             var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
                 cardSide = $('#card.flipped'),
+                cardSlide = $('.slide-in-right'),
                 container;
 
-            if (Ember.isEmpty(cardSide)) {
+            // Either cardSlide or cardSide will be defined if the back side is visible
+            // otherwise it must be on the front side.
+            if (Ember.isEmpty(cardSide) && Ember.isEmpty(cardSlide)) {
                 // Front side is showing 
                 container = $('#card .front .modal-fullscreen-item');
             } else {
-                // If cardSide is defined then it is the flipped/back side
-                container = cardSide.find('.modal-fullscreen-item');
+                container = $('#card .back .modal-fullscreen-item');
             }
 
             container.addClass('is-shake').one(animationEnd, function(){

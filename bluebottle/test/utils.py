@@ -257,6 +257,8 @@ class SeleniumTestCase(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.browser.driver.quit()
+        cls.browser.quit()
         super(SeleniumTestCase, cls).tearDownClass()
 
     def _post_teardown(self):

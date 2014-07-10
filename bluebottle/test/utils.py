@@ -230,6 +230,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
         if settings.SELENIUM_WEBDRIVER == 'remote':
 
+            test_name = cls.__name__
             name = 'Manual test run'
             caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
 
@@ -237,6 +238,7 @@ class SeleniumTestCase(LiveServerTestCase):
                 name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
                 if 'TRAVIS_PULL_REQUEST' in os.environ:
                     name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
+                name += ': ' + test_name
                 caps['name'] = name
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']

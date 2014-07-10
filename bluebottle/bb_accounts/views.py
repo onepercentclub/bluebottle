@@ -18,8 +18,8 @@ from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCu
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from rest_framework.permissions import IsAuthenticated
 
-#this belongs now to onepercent should be here in bluebottle
 
+#this belongs now to onepercent should be here in bluebottle
 from .serializers import (
     CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
     PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL, TimeAvailableSerializer)
@@ -104,6 +104,7 @@ class UserCreate(generics.CreateAPIView):
             obj.is_active = True
             obj.save()
             #Sending a welcome mail is now done via a post_save signal on a user model
+
 
 class UserActivate(generics.RetrieveAPIView):
     serializer_class = CurrentUserSerializer
@@ -242,7 +243,6 @@ class PasswordSet(views.APIView):
         if user is not None and default_token_generator.check_token(user, token):
             return response.Response(status=status.HTTP_200_OK)
         return response.Response({'message': 'Token expired', 'email': user.email}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class DisableAccount(views.APIView):

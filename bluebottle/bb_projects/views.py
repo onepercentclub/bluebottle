@@ -130,6 +130,34 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
 
         return object
 
+    """
+    Don't let the owner set a status with a sequence number higher than 2 
+    They can set 1: plan-new or 2: plan-submitted
+
+    TODO: This needs work. Maybe we could use a FSM for the project status
+          transitions, e.g.: 
+              https://pypi.python.org/pypi/django-fsm/1.2.0
+    """
+    def pre_save(self, obj):
+        submit_status = ProjectPhase.objects.get(slug='plan-needs-work')
+        status_id = self.request.DATA.get('status')
+
+        """
+        TODO: what to do if the expected status (plan-submitted) is
+              no found?! Hard fail?
+        """
+        if submit_status and status_id:
+            max_sequence = submit_status.sequence
+            new_status = ProjectPhase.objects.get(id=status_id)
+
+            """
+            Reset the status if the owner is trying to set the status
+            higher than the max permitted, or the user is trying to
+            set the status back to a lower state
+            """
+            if new_status and (new_status.sequence > max_sequence or max_sequence < self.current_status.sequence):
+                obj.status = self.current_status
+
 
 class ProjectThemeList(generics.ListAPIView):
     model = ProjectTheme

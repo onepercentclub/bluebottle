@@ -252,20 +252,18 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             return null;
     }.property('userMatch'),
 
+    // TODO: Refactor the error handlers into an ember mixin.
+    //       Setting/clearing errors should be done in the same
+    //       way for all forms.
+    didError: function (error) {
+        // Error set so not busy anymore
+        this.set('isBusy', false);
+
+        // Call error action on the modal
+        this.send('modalError');
+    }.observes('error'),
+
     actions: {
-        setError: function (error) {
-            // if we set an error then also set isBusy to false as we are 
-            // returning from an action when we call setError, eg an attempted
-            // to sign in the user.
-            this.set('isBusy', false);
-
-            // Display the error
-            this.set('error', error);
-
-            // Call error action on the modal
-            this.send('modalError');
-        },
-
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
@@ -298,12 +296,24 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
     }
 });
 
-App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
+App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerValidationMixin, BB.ModalControllerMixin, {
     requestResetPasswordTitle : gettext('Trouble signing in?'),
+    fieldsToWatch: ['email.length'],
+    requiredFields: ['email.length'],
     content: null,
 
     init: function () {
         this._super();
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'email',
+                'validateProperty': 'email.length',
+                'message': gettext('Email required'),
+                'priority': 1
+            }
+        ]);
+
         this._clearContent();
     },
 
@@ -315,10 +325,28 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
         this.set('isBusy', false);
     },
 
+    didError: function () {
+        if (this.get('error')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
+
+            // Call error action on the modal
+            this.send('modalError');
+        }
+    }.observes('error'),
+
     actions: {
         requestReset: function() {
             var _this = this;
+
+            // Early out if the input is empty
+            if (Em.isEmpty(this.get('email'))) {
+                this.send('modalError');
+                return
+            }
+
             this.set('isBusy', true);
+            this.set('error', null);
 
             return Ember.RSVP.Promise(function (resolve, reject) {
                 var hash = {
@@ -338,7 +366,6 @@ App.PasswordRequestController = Ember.ObjectController.extend(BB.ModalController
                 hash.error = function (response) {
                     var msg = gettext('There is no account associated with the email.')
                     _this.set('error', msg);
-                    _this.set('isBusy', false);
 
                     Ember.run(null, reject, msg);
                 };
@@ -359,6 +386,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     needs: ['login'],
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
+    fieldsToWatch: ['new_password1.length, new_password2.length'],
+    requiredFields: ['new_password1','new_password2'],
 
     init: function() {
         this._super();
@@ -379,6 +408,10 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         ]);
     },
 
+    matchingPassword: function () {
+        return !Em.compare(this.get('new_password1'), this.get('new_password2'));
+    }.property('new_password1.length', 'new_password2.length'),
+
     _clearModel: function () {
         this.set('content', Em.Object.create());
     },
@@ -390,6 +423,16 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         this.set('validationErrors', null);
         this.set('error', null);
     },
+
+    didError: function () {
+        if (this.get('error')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
+
+            // Call error action on the modal
+            this.send('modalError');
+        }
+    }.observes('error'),
 
     // pass the to the fieldStrength function the field we want to evaluate
     passwordStrength: function(){
@@ -411,6 +454,9 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             if (_this.get('validationErrors')) {
                 return false
             }
+
+            this.set('isBusy', true);
+            this.set('error', null);
 
             return Ember.RSVP.Promise(function (resolve, reject) {
                 var token = _this.get('model.id'),
@@ -473,7 +519,6 @@ App.DisableAccountController = Ember.ObjectController.extend(BB.ModalControllerM
 
     init: function() {
         this._super();
-
     },
 
     userPreview: function(){

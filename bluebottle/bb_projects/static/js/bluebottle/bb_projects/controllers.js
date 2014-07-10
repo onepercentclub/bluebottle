@@ -404,6 +404,7 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             // organization has been saved => not isNew
             // We have been storing the organization in the route
             // TODO: should we move this to the controller??
+
             var organization = this.get('controllers.myProjectOrganisation.model');
 
             // There won't be an organization associated with the myProjectOrganisation
@@ -411,9 +412,7 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             // So we only set the organization if there is one associated with the controller
             // and it isn't new. 
             if (organization) {
-                if (organization.get('isNew')) {
-                    throw new Ember.Error('It shouldn\'t be possible to submit a project with an unsaved organization!');
-                } else {
+                if (!organization.get('isNew')) {
                     model.set('organization', organization);
                 }
             }
@@ -437,3 +436,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
     }
 });
 
+
+
+App.ProjectDonationListController = Em.ObjectController.extend({});

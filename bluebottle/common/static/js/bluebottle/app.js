@@ -78,7 +78,14 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
             this.set('csrfToken', metaCsrf.attr('content'));
 
         // Read language string from url.
-        var language = this.get('language');
+        var language = window.location.pathname.split('/')[1];
+        App.CurrentUser.find('current').then(function(user){
+            var primaryLanguage = user.get('primary_language');
+            if (primaryLanguage && primaryLanguage != language) {
+                document.location = '/' + primaryLanguage + document.location.hash;
+            }
+        });
+        this.set('language', language);
 
         // Now that we know the language we can load the handlebars templates.
         //this.loadTemplates(this.templates);
@@ -145,18 +152,12 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         });
 
         App.ProjectPhase.find().then(function(data){
-
-        App.ProjectPhaseSelectView.reopen({
-            contentBinding: 'data',
-
-            phases: function () {
-                return App.ProjectPhase.find()
-            }.property(),
-
-            data: function () {
-                return App.ProjectPhase.filter(function(item){
-                    return item.get('viewable')})
-                }.property('phases.length')
+            App.ProjectPhaseSelectView.reopen({
+                content: function () {
+                    return data.filter(function(item){
+                        return item.get('viewable')
+                    })
+                },
             });
         });
 
@@ -352,9 +353,13 @@ App.Router.reopen({
 
 // Enable Google Analytics with Ember
 App.Router.reopen({
+
     /**
      * Tracks pageviews if google analytics is used
      * Source: http://www.randomshouting.com/2013/05/04/Ember-and-Google-Analytics.html
+     *
+     * TODO: With new Ember we can switch to a nicer pattern:
+     * http://emberjs.com/guides/cookbook/helpers_and_components/adding_google_analytics_tracking/
      */
     didTransition: function(infos) {
         this._super(infos);
@@ -364,14 +369,16 @@ App.Router.reopen({
             App.meta.trigger('reloadDataFromRoutes');
         });
 
-        // Track the page / route load
+		// Track the page / route load
+        var url = this.get('url');
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
-                _gaq.push(['_trackPageview', window.location.hash.substr(2)]);
+                _gaq.push(['_trackPageview', url]);
             });
         }
     }
 });
+
 
 App.Router.map(function() {
 

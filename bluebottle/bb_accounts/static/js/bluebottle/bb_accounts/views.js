@@ -2,7 +2,7 @@
 *  Views
 */
 
-App.SignupView = Em.View.extend({
+App.SignupView = App.FormView.extend({
     keyPress: function (evt) {
         var code = evt.which;
         // If enter key pressed
@@ -13,11 +13,11 @@ App.SignupView = Em.View.extend({
     }
 });
 
-App.UserModalView = Em.View.extend({
+App.UserModalView = App.FormView.extend({
     templateName: 'user_modal'
 });
 
-App.LoginView = Em.View.extend({
+App.LoginView = App.FormView.extend({
     templateName: 'login',
     
     next: function() {
@@ -34,7 +34,7 @@ App.LoginView = Em.View.extend({
     }
 });
 
-App.PasswordResetView = Em.View.extend({
+App.PasswordResetView = App.FormView.extend({
     clearForm: function () {
         var controller = this.get('controller');
 
@@ -49,13 +49,16 @@ App.PasswordResetView = Em.View.extend({
 
 });
 
+App.PasswordRequestView = App.FormView.extend({});
+
+
 App.ItemSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
     prompt: "Pick an item"
 });
 
-App.DisableAccountView = Em.View.extend({
+App.DisableAccountView = App.FormView.extend({
      templateName: 'disable'
 
 });

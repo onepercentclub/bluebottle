@@ -444,7 +444,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             var _this = this,
                 model = this.get('model');
 
-            // Enable the validation of errors on fields only after pressing the signup button
+            // Enable the validation of errors on fields only after pressing the reset button
             _this.enableValidation()
 
             // Ignoring API errors here, we are passing ignoreApiErrors=true

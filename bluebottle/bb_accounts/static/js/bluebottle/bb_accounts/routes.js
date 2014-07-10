@@ -2,7 +2,7 @@
  * Router mapping
  */
 App.Router.map(function(){
-	this.resource('signup');
+    this.resource('signup');
 
     this.resource('user', {path: '/member'}, function() {
         this.resource('userProfile', {path: '/profile/'});
@@ -58,7 +58,6 @@ App.ViewProfileRoute = Em.Route.extend({
 });
 
 App.UserSettingsRoute = Em.Route.extend({
-
     model: function() {
         var route = this;
 
@@ -122,7 +121,6 @@ App.UserOrdersRoute = Em.Route.extend({
 });
 
 App.PasswordRequestRoute = Em.Route.extend({
-
     renderTemplate: function() {
         this.render('home');
         this.send('openInBox', 'passwordRequest');
@@ -131,12 +129,9 @@ App.PasswordRequestRoute = Em.Route.extend({
     model: function(params) {
         return Em.Object.create({email: params.email, failedToken: true})
     }
-
-
 });
 
 App.PasswordResetRoute = Em.Route.extend({
-
     renderTemplate: function() {
         this.render('home');
         this.send('openInBox', 'passwordReset');

@@ -33,18 +33,20 @@
                         </p>
                     </header>
 
-                    {{#if projectDonations.length}}
+                    {{#if projectDonations.isLoaded}}
+                        {{#if projectDonations.length}}
+                            <table class="fund-history">
+                                {{#each donation in projectDonations}}
+                                    {{view "App.ProjectDonationView" }}
+                                {{/each}}
+                            </table>
 
-	                    <table class="fund-history">
-			                {{#each donation in projectDonations}}
-			                	{{view "App.ProjectDonationView" }}
-                            {{/each}}
-			            </table>
-
+                        {{else}}
+                            <p>{% trans "Awww. No donations yet!" %}</p>
+                        {{/if}}
                     {{else}}
-                        <p>{% trans "Awww. No donations yet!" %}</p>
+                        <p>{% trans "- loading -" %}</p>
                     {{/if}}
-
                 {{else}}
                     <header class="l-page-header">
                         <h1>{% trans "Donation overview" %}</h1>

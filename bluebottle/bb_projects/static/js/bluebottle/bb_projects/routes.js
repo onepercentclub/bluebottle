@@ -29,6 +29,7 @@ App.Router.map(function(){
     });
 
     this.resource('myProjectReview', {path: '/my/projects/:id/review'});
+    this.resource('projectDonationList', {path: '/projects/:project_id/donations'});
 
 });
 
@@ -229,5 +230,19 @@ App.ProjectPlanRoute = Em.Route.extend({
     model: function(){
         var project = this.modelFor("project");
         return project;
+    }
+});
+
+
+App.ProjectDonationListRoute = Em.Route.extend({
+    model: function(params) {
+        var project_id = params.project_id.split('?')[0];
+        return App.Project.find(project_id);
+    },
+
+    setupController: function(controller, project) {
+        this._super(controller, project);
+        controller.set('projectDonations', App.ProjectDonation.find({project: project.id}));
+
     }
 });

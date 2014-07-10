@@ -198,3 +198,9 @@ App.MyProjectSubmitView = Em.View.extend({
     templateName: 'my_project_submit'
 });
 
+
+App.ProjectDonationListView = Em.View.extend({
+    templateName: 'project_donation_list'
+});
+
+

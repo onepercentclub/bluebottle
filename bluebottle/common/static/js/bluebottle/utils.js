@@ -62,28 +62,25 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
     // set the strength of the field, use this in the template
     fieldStrength: function(field) {
-        var specialChar = (/(?=.*[!@#$%^&*])/)
-        var upperAndLowerChar = (/(^[A-Za-z.\s_-]+)/)
-        var numberChar = (/(?=.*[0-9])/)
+
+        var specialChar = /(?=.*[!@#$%^&*])/
+        var upperAndLowerChar = /(?=.*[A-Z])(?=.*[a-z])/
+        var numberChar = /(?=.*[0-9])/
 
         // field not fulfilled
         if (!field){
             return ""
         }
 
-        // less than 6 char long
-        else if (field.length < 6) {
-            return "weak"
-        }
-
-        // at least lower and upper case to be fair
-        else if (field.search(upperAndLowerChar) == 0) {
+        // less than 6 char long and at least lower and upper case to be fair
+        if (field.length > 6 && field.search(upperAndLowerChar) == 0) {
             // at least a specialChar or a numberChar to be strong
             if ((field.search(specialChar) == 0) || (field.search(numberChar) == 0)) {
                 return "strong"
             }
+            return "fair"
         }
-        return "fair"
+        return "weak"
     },
 
     _apiErrors: function(errors) {

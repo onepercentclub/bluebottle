@@ -27,7 +27,7 @@
                         <h1>{% trans "Donation overview" %}</h1>
                         <p>
                             {% blocktrans %}
-                            The people below supported your fundraiser
+                            The people below supported your campaign
                             {% endblocktrans %}
                              "<strong>{{title}}</strong>".
                         </p>
@@ -62,8 +62,7 @@
             </div>
 
             <sidebar class="l-sidebar">
-                <h2>{% trans "Campaign" %}</h2>
-                {{render "projectPreview" id}}
+                {{render "projectPreview" this}}
 
             </sidebar>
         </div>

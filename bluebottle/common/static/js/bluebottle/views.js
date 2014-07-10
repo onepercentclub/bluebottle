@@ -30,3 +30,14 @@ App.LanguageSelectView = Em.Select.extend({
 App.ApplicationView = Em.View.extend({
     elementId: 'site'
 });
+
+App.FormView = Em.View.extend({
+    setFocus: function() {
+        var inputs = this.$().find('input');
+        if ( inputs.length > 0 ) {
+           Ember.run.later(this, function() {
+            inputs.first().focus();
+           }, 100)
+        }
+    }.on('didInsertElement')
+});

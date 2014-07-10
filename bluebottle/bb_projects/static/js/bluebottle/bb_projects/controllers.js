@@ -436,3 +436,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
     }
 });
 
+
+
+App.ProjectDonationListController = Em.ObjectController.extend({});

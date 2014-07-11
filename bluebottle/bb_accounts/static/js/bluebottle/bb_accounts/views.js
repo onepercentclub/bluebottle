@@ -59,7 +59,9 @@ App.PasswordResetView = App.FormView.extend({
 
 });
 
-App.PasswordRequestView = App.FormView.extend({});
+App.PasswordRequestView = App.FormView.extend({
+    placeholderText: gettext("Email address"),
+});
 
 
 App.ItemSelectView = Em.Select.extend({

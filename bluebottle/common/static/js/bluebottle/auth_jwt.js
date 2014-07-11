@@ -95,7 +95,10 @@ App.AuthJwtMixin = Em.Mixin.create({
             };
            
             hash.error = function (response) {
-                var error = JSON.parse(response.responseText);
+                var error;
+                if (!Em.isEmpty(response.responseText))
+                    error = JSON.parse(response.responseText);
+
                 Ember.run(null, reject, error);
             };
            

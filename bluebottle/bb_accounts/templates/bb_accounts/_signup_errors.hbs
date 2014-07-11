@@ -8,12 +8,11 @@
         </div>
     {{else}}
         {{#if validationErrors}}
-            {{#if allError}}
-            {{else}}
+            {{#unless allError}}
             <div class="modal-flash-message error">
                 {{validationErrors.error}}
             </div>
-            {{/if}}
+            {{/unless}}
 
         {{/if}}
     {{/if}}

@@ -2,7 +2,7 @@
  * Router mapping
  */
 App.Router.map(function(){
-	this.resource('signup');
+    this.resource('signup');
 
     this.resource('user', {path: '/member'}, function() {
         this.resource('userProfile', {path: '/profile/'});
@@ -16,6 +16,8 @@ App.Router.map(function(){
     this.resource('passwordReset', {path: '/passwordreset/:reset_token'});
 
     this.resource('disableAccount', {path: '/disable/:user_id/:token'});
+
+    this.resource('passwordRequest', {path: '/passwordrequest/:email'});
 });
 
 /*
@@ -56,7 +58,6 @@ App.ViewProfileRoute = Em.Route.extend({
 });
 
 App.UserSettingsRoute = Em.Route.extend({
-
     model: function() {
         var route = this;
 
@@ -119,6 +120,17 @@ App.UserOrdersRoute = Em.Route.extend({
     }
 });
 
+App.PasswordRequestRoute = Em.Route.extend({
+    renderTemplate: function() {
+        this.render('home');
+        this.send('openInBox', 'passwordRequest');
+    },
+
+    model: function(params) {
+        return Em.Object.create({email: params.email, failedToken: true})
+    }
+});
+
 App.PasswordResetRoute = Em.Route.extend({
     renderTemplate: function() {
         this.render('home');
@@ -126,16 +138,37 @@ App.PasswordResetRoute = Em.Route.extend({
     },
 
     model: function(params) {
-        var route = this;
-
         var record = App.PasswordReset.createRecord({
             id: params.reset_token
         });
-
         // Need this so that the adapter makes a PUT instead of POST
         record.transitionTo('loaded.saved');
+        return record
+    },
 
-        return record;
+    beforeModel: function(transition) {
+
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            var hash = {
+                url: '/api/users/passwordset/' + transition.params.reset_token,
+                type: 'get',
+                contentType: 'application/json; charset=utf-8'
+                };
+            hash.success = function(response) {
+                Ember.run(null, resolve, null)
+            };
+            hash.error = function(response) {
+                Ember.run(null, reject, JSON.parse(response.responseText));
+            };
+            Ember.$.ajax(hash);
+
+        })
+    },
+    actions: {
+        error: function(error, transition) {
+            transition.abort()
+            this.transitionTo('passwordRequest', error.email)
+        }
     }
 });
 
@@ -150,8 +183,6 @@ App.DisableAccountRoute = Em.Route.extend({
    },
 
     model: function(params){
-        var route = this;
-        var record = Em.Object.create({user_id: params.user_id, token: params.token});
-        return record;
+        return Em.Object.create({user_id: params.user_id, token: params.token});
     }
 });

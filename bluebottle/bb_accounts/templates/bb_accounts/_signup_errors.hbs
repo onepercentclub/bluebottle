@@ -6,12 +6,11 @@
         <div class="modal-flash-message success">
             {{fixedFieldsMessage}}
         </div>
-    {{/if}}
-    {{#unless errorsFixed}}
+    {{else}}
         {{#if validationErrors}}
             <div class="modal-flash-message error">
                 {{validationErrors.error}}
             </div>
         {{/if}}
-    {{/unless}}
+    {{/if}}
 {% endtplhandlebars %}

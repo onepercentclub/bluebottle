@@ -293,7 +293,7 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
 
     matchingEmail: function () {
 
-        if (this.get('email') == undefined || this.get('emailConfirmation') == undefined){
+        if (Em.isEmpty(this.get('email')) || Em.isEmpty(this.get('emailConfirmation'))){
             return false;
         }
         return !Em.compare(this.get('email'), this.get('emailConfirmation'));

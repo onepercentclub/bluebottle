@@ -259,9 +259,18 @@ class SeleniumTestCase(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        if settings.SELENIUM_WEBDRIVER == 'remote':
+            try:
+                if sys.exc_info() == (None, None, None):
+                    sauce.jobs.update_job(cls.browser.driver.session_id, passed=True)
+                else:
+                    sauce.jobs.update_job(cls.browser.driver.session_id, passed=False)
+            finally:
+                cls.browser.driver.quit()
+                cls.browser.quit()
+        else:
+            cls.browser.quit()
         super(SeleniumTestCase, cls).tearDownClass()
-        cls.browser.driver.quit()
-        cls.browser.quit()
 
     def _post_teardown(self):
         """

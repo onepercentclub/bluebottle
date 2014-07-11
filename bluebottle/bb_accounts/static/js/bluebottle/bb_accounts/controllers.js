@@ -281,7 +281,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Close the modal
                 _this.send('close');
             }, function (error) {
-                _this.send('setError', error);
+                _this.set('error', error);
             });
         },
 

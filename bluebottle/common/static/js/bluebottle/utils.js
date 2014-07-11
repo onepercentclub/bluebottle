@@ -138,6 +138,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
         this.set("errorList", errorList);
         this._allErrors(errorList);
+        
         return currentValidationError
     },
 

@@ -109,7 +109,8 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
         var _this = this,
             currentValidationError = null,
-            currentErrorPriority = null;
+            currentErrorPriority = null,
+            errorList = {};
 
         // for each element of the array
         arrayOfDict.forEach(function (dict) {
@@ -119,7 +120,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
             // evaluate the property, if it's not valid
             if (!model.get(dict.validateProperty)) {
-
+                errorList[dict.property] = dict['message']
                 // set the error only if the priority is higher than the current one
                 // maybe check also for the same property name
                 if (!currentErrorPriority || currentErrorPriority > dict.priority ) {
@@ -133,8 +134,25 @@ App.ControllerValidationMixin = Ember.Mixin.create({
                 }
             }
 
-        })
+        });
+
+        this.set("errorList", errorList);
+        this._allErrors(errorList);
+        
         return currentValidationError
+    },
+
+    _allErrors: function(errorList) {
+        var _this = this;
+        var errors = Ember.makeArray(this.get('errorDefinitions'));
+
+        var allFieldErrors = true;
+        for (var i=0; i < errors.length;i++){
+            if (!(errors[i].property in errorList)){
+                allFieldErrors = false;
+            }
+        }
+        this.set('allError', allFieldErrors);
     },
 
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {

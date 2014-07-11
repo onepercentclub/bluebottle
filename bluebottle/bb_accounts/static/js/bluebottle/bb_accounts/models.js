@@ -292,6 +292,10 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     }.property('last_name.length'),
 
     matchingEmail: function () {
+
+        if (Em.isEmpty(this.get('email')) || Em.isEmpty(this.get('emailConfirmation'))){
+            return false;
+        }
         return !Em.compare(this.get('email'), this.get('emailConfirmation'));
     }.property('email', 'emailConfirmation'),
 

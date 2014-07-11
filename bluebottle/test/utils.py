@@ -236,8 +236,8 @@ class SeleniumTestCase(LiveServerTestCase):
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
-                if 'TRAVIS_PULL_REQUEST' in os.environ:
-                    name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
+                if 'TRAVIS_PULL_REQUEST' in os.environ and os.environ['TRAVIS_PULL_REQUEST']:
+                        name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
                 name += ': ' + test_name
                 caps['name'] = name
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']

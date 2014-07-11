@@ -18,8 +18,8 @@ from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCu
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from rest_framework.permissions import IsAuthenticated
 
-#this belongs now to onepercent should be here in bluebottle
 
+#this belongs now to onepercent should be here in bluebottle
 from .serializers import (
     CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
     PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL, TimeAvailableSerializer)
@@ -104,6 +104,7 @@ class UserCreate(generics.CreateAPIView):
             obj.is_active = True
             obj.save()
             #Sending a welcome mail is now done via a post_save signal on a user model
+
 
 class UserActivate(generics.RetrieveAPIView):
     serializer_class = CurrentUserSerializer
@@ -207,16 +208,21 @@ class PasswordSet(views.APIView):
     """
     serializer_class = PasswordSetSerializer
 
-    def put(self, request, *args, **kwargs):
-        # The uidb36 and the token are checked by the URLconf.
-        uidb36 = self.kwargs.get('uidb36')
-        token = self.kwargs.get('token')
+    def _get_user(self, uidb36):
         user_model = get_user_model()
         try:
             uid_int = base36_to_int(uidb36)
             user = user_model._default_manager.get(pk=uid_int)
         except (ValueError, OverflowError, user.DoesNotExist):
             user = None
+
+        return user
+
+    def put(self, request, *args, **kwargs):
+        # The uidb36 and the token are checked by the URLconf.
+
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
 
         if user is not None and default_token_generator.check_token(user, token):
             password_set_form = SetPasswordForm(user)
@@ -229,6 +235,15 @@ class PasswordSet(views.APIView):
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return response.Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, *args, **kwargs):
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
+
+        if user is not None and default_token_generator.check_token(user, token):
+            return response.Response(status=status.HTTP_200_OK)
+        return response.Response({'message': 'Token expired', 'email': user.email}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DisableAccount(views.APIView):
 

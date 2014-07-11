@@ -4,7 +4,6 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    fixedFieldsMessage: gettext('That\'s better'),
     fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
@@ -35,7 +34,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 'validateProperty': 'validPassword',
                 'message': Em.get(App, 'settings.minPasswordError'),
                 'priority': 2
-            },
+            }
         ]);
 
         this._clearModel();
@@ -71,6 +70,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation()
+
             // Clear the errors fixed message
             _this.set('errorsFixed', false);
 
@@ -277,11 +277,10 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');
-                
                 // Close the modal
                 _this.send('close');
             }, function (error) {
-                _this.send('setError', error);
+                _this.set('error', error);
             });
         },
 
@@ -439,6 +438,9 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             var _this = this,
                 model = this.get('model');
 
+            // Enable the validation of errors on fields only after pressing the reset button
+            _this.enableValidation()
+
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
@@ -476,8 +478,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                         // Resolve the promise
                         Ember.run(null, resolve, user);
                     }, function (error) {
-                        var msg = gettext('Huston, there was a problem!')
-                        _this.set('error', msg);
+                        // Handle failure to create currentUser
+                        _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
 
                         // Reject the promise
                         Ember.run(null, reject, error);

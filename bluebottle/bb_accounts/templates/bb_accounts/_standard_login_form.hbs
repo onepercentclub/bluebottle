@@ -2,10 +2,10 @@
 
 
 {% tplhandlebars "_standard_login_form" %}
-    {{input valueBinding='email' type="text" name="email" maxlength="254" placeholder="E-mailaddress"}}
+    {{input valueBinding='email' type="text" name="email" maxlength="254" placeholder=view.placeholderText}}
 
     <div class="password">
-        {{input valueBinding="password" name="email" type="password" placeholder="Password"}}
+        {{input valueBinding="password" name="password" type="password" placeholder=view.passwordText}}
         <div class="tooltip-holder">
             <span {{ action 'passwordRequest' }} class="questionmark">?</span>
             <span class="modal-btn-signup" href="#">

@@ -2,17 +2,17 @@
 
 
 {% tplhandlebars "_standard_signup_form" %}
-    {{view Em.TextField valueBinding="first_name" placeholder="First name"
-        classBinding="validationErrors.first_name.length:error"}}
+    {{input valueBinding="first_name" placeholder=view.firstName
+        classBinding="errorList.first_name.length:error"}}
 
-    {{view Em.TextField valueBinding="last_name" placeholder="Surname"
-        classBinding="validationErrors.last_name.length:error"}}
+    {{input valueBinding="last_name" placeholder=view.surname
+        classBinding="errorList.last_name.length:error"}}
     
-    {{view Em.TextField valueBinding="email" type="email" classBinding="validationErrors.email.length:error" placeholder="E-mailaddress"}}
+    {{input valueBinding="email" type="email" classBinding="errorList.email.length:error" placeholder=view.emailText}}
 
-    {{view Em.TextField valueBinding="emailConfirmation" type="email" classBinding="validationErrors.email.length:error" placeholder="Re-enter E-mailaddress"}}
+    {{input valueBinding="emailConfirmation" type="email" classBinding="errorList.email.length:error" placeholder=view.reenterEmail}}
     <div class="password">
-        {{view Em.TextField valueBinding="password" type="password" classBinding="validationErrors.password.length:error" placeholder="Password"}}
+        {{input valueBinding="password" type="password" classBinding="errorList.password.length:error" placeholder=view.passwordText}}
         <span {{bindAttr class=":password-strength passwordStrength"}}>{{passwordStrength}}</span>
     </div>
 

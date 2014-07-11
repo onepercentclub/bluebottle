@@ -99,8 +99,12 @@ Ember.FBView = Ember.View.extend({
                     App.fbLogin(response.authResponse);
                   }
 
-                  if (response.authResponse == null && response.status == 'unknown'){
+                  if (response.authResponse == null && (response.status == 'unknown') ){
                       FBApp.set('connectError', gettext("There was an error connecting Facebook"));
+                  }
+
+                  if (response.authResponse == null && (response.status == 'not_authorized') ){
+                      FBApp.set('connectError', gettext("Unauthorized to connect to Facebook "));
                   }
                }, {scope: 'email,public_profile,user_friends,user_birthday'});
             } // The above call to Login defines the sets the permissions that go with the access token, even before python-social-auth.

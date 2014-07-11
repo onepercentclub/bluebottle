@@ -97,8 +97,11 @@ App.User = DS.Model.extend({
         if (this.get('first_name')) {
             return this.get('first_name')
         }
+        if (this.get('full_name')) {
+            return this.get('full_name')
+        }
         return this.get('username')
-    }.property('first_name'),
+    }.property('first_name', 'full_name'),
 
     get_website: function() {
         if (this.get('website').substr(0,7) == 'http://') {
@@ -200,6 +203,13 @@ App.UserPreview = DS.Model.extend({
     name: DS.attr('string'),
     avatar: DS.attr('string'),
 
+    getFullName: function() {
+        if (this.get('full_name')) {
+            return this.get('full_name')
+        }
+        return this.get('username')
+    }.property('username', 'full_name'),
+
     getAvatar: function() {
         if (this.get('avatar')) {
             return this.get('avatar')
@@ -282,6 +292,10 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     }.property('last_name.length'),
 
     matchingEmail: function () {
+
+        if (Em.isEmpty(this.get('email')) || Em.isEmpty(this.get('emailConfirmation'))){
+            return false;
+        }
         return !Em.compare(this.get('email'), this.get('emailConfirmation'));
     }.property('email', 'emailConfirmation'),
 

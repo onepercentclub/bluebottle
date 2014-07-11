@@ -76,11 +76,11 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         if (field.length > 6 && field.search(upperAndLowerChar) == 0) {
             // at least a specialChar or a numberChar to be strong
             if ((field.search(specialChar) == 0) || (field.search(numberChar) == 0)) {
-                return "strong"
+                return gettext("strong")
             }
-            return "fair"
+            return gettext("fair")
         }
-        return "weak"
+        return gettext("weak")
     },
 
     _apiErrors: function(errors) {

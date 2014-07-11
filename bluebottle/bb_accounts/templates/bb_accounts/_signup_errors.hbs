@@ -8,9 +8,13 @@
         </div>
     {{else}}
         {{#if validationErrors}}
+            {{#if allError}}
+            {{else}}
             <div class="modal-flash-message error">
                 {{validationErrors.error}}
             </div>
+            {{/if}}
+
         {{/if}}
     {{/if}}
 {% endtplhandlebars %}

@@ -34,7 +34,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 'validateProperty': 'validPassword',
                 'message': Em.get(App, 'settings.minPasswordError'),
                 'priority': 2
-            },
+            }
         ]);
 
         this._clearModel();

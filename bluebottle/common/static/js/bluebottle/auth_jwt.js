@@ -1,12 +1,43 @@
 /*
  Include the JWT token in the header of all api requests.
  */
+
+jwtTokenJustRenewed = false;
+
 $.ajaxSetup({
     beforeSend: function(xhr, settings) {
         if (sameOrigin(settings.url) && App.get('jwtToken')) {
             // Send the token to same-origin, relative URLs only. 
             // Fetching JWT Token occurs during login.
             xhr.setRequestHeader("Authorization", "JWT " + App.get('jwtToken'));
+        }
+    },
+    complete: function(xhr, settings) {
+        // Check if the response has a refreshed jwt token
+        var refreshToken = xhr.getResponseHeader('Refresh-Token');
+
+        // Value will be formatted as: 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6I...'
+        if (!jwtTokenJustRenewed && refreshToken && (match = refreshToken.match(/JWT\s(.*)/))) {
+                Em.Logger.debug('Successfully refreshed JWT token.');
+                var newToken = match[1];
+
+                localStorage['jwtToken'] = newToken;
+                App.set('jwtToken', newToken);
+                
+                // Set a timer so that responses which returned within the next 1sec also containing 
+                // a renewed token won't cause multiple changes to the localStorage['jwtToken'] and 
+                // the App jwtToken property.
+                jwtTokenJustRenewed = true;
+                Ember.run.later(this, function() {
+                    jwtTokenJustRenewed = false;
+                }, 1000);
+
+        } else if (xhr.status == 401) {
+            Em.Logger.debug('Failed JWT authorization. Logging user out.');
+
+            // If the request returns with a 401 - Unauthorized then we logout the user.
+            // TODO: this needs some UX work to handle this situation in a more userfriendly way.
+            App.__container__.lookup('route:application').send('logout', '/');
         }
     }
 });
@@ -64,12 +95,12 @@ Ember.Application.initializer({
 
 /* 
  A mixin for JWT authentication - this will be called from the BB LoginController
- when the user submits the login (username/password) form. 
+ when the user submits the login (email/password) form. 
  */
 App.AuthJwtMixin = Em.Mixin.create({
-    authorizeUser: function (username, password) {
+    authorizeUser: function (email, password) {
         var _this = this,
-            username = _this.get('username'),
+            email = _this.get('email'),
             password = _this.get('password');
         
         // Clear any existing tokens which might be present but expired
@@ -81,7 +112,7 @@ App.AuthJwtMixin = Em.Mixin.create({
               dataType: "json",
               type: 'post',
               data: {
-                  username: username,
+                  email: email,
                   password: password
               }
             };
@@ -108,6 +139,42 @@ App.AuthJwtMixin = Em.Mixin.create({
  Custom logout action for JWT
  */
 App.LogoutJwtMixin = Em.Mixin.create({
+    refreshToken: function () {
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            if (localStorage.jwtToken) {
+                // Check if user has authentication token and if they do then request 
+                // a token refresh from the server
+                hash = {
+                    url: '/api/token-auth-refresh/',
+                    type: 'post',
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    data: {
+                      'token': localStorage.jwtToken
+                    }
+                }
+
+                hash.success = function (response) {
+                    Em.Logger.debug('Successfully refreshed JWT token.');
+
+                    localStorage['jwtToken'] = response.token;
+                    App.set('jwtToken', response.token);
+
+                    Ember.run(null, resolve, response.token);
+                };
+
+                hash.failure = function (response) {
+                    Em.Logger.debug('Failed to refresh JWT token.');
+
+                    var error = JSON.parse(response.responseText);
+
+                    Ember.run(null, reject, error);
+                };
+
+                Ember.$.ajax(hash);
+            }
+        });
+    },
     actions: {
         clearJwtToken: function () {
             App.set('jwtToken', null);

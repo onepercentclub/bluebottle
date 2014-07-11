@@ -122,7 +122,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                         loginObject = Em.Object.create({
                             matchId: conflict.id,
                             matchType: conflict.type,
-                            username: failedUser.get('email')
+                            email: failedUser.get('email')
                         });
 
                     _this.send('modalFlip', 'login', loginObject);
@@ -221,7 +221,7 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
-    requiredFields: ['username', 'password'],
+    requiredFields: ['email', 'password'],
 
     init: function () {
         this._super();
@@ -271,7 +271,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             // Set is loading property until success or error response
             this.set('isBusy', true);
 
-            return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
+            return _this.authorizeUser(_this.get('email'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
 
                 // Call the loadNextTransition in case the user was unauthenticated and was
@@ -290,7 +290,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         },
 
         passwordRequest: function () {
-            var email = Em.Object.create({email: this.get('username')})
+            var email = Em.Object.create({email: this.get('email')})
             this.send('modalSlide', 'passwordRequest', email);
         }
     }
@@ -376,11 +376,6 @@ App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerVali
     }
 });
 
-App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
-    needs: ['login'],
-    successRequestPasswordTitle : gettext("Help is on its way"),
-    successMessage: gettext("We\'ve sent a password reset link to")
-});
 
 App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     needs: ['login'],

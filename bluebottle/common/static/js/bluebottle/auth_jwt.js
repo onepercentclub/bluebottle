@@ -35,7 +35,7 @@ App.AuthJwt = {
                     if (response.error != undefined) {
                         Ember.run(null, reject, response.error);
                     } else {
-                        Ember.run(null, reject, 'Failed to create currentUser');
+                        Ember.run(null, reject, gettext('Failed to create currentUser'));
                     }
                 });
             } else {
@@ -123,6 +123,8 @@ App.LogoutJwtMixin = Em.Mixin.create({
 
             // Clear the current user details
             applicationController.set('currentUser.model', null);
+            var currentUser = App.CurrentUser.find('current');
+            currentUser.transitionTo('deleted.saved');
 
             // Redirect to?? If the user is in a restricted route then 
             // they should be redirected to the home route. For now we 

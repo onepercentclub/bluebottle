@@ -277,10 +277,11 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');
-                
+                debugger
                 // Close the modal
                 _this.send('close');
             }, function (error) {
+                debugger
                 _this.set('error', error);
             });
         },

@@ -28,6 +28,8 @@ class GetAuthToken(APIView):
         # If user is active we get or create the REST token and send it back with user data
         if token_result.get('token', None):
             return Response({'token': token_result.get('token')})
+        elif token_result.get('error', None):
+            return Response({'error': token_result.get('error')})
         return Response({'error': _('No result for token')})
 
 @strategy()
@@ -43,7 +45,7 @@ def register_by_access_token(request, backend):
             user.save()
             return {'token': user.get_jwt_token()}
         elif user and not user.is_active:
-            return {'error': _("User account is disabled")}
+            return {'error': _("This user account is disabled, please contact us if you want to re-activate.")}
         else:
             return None
     return None

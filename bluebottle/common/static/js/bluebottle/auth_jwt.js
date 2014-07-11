@@ -32,10 +32,11 @@ App.AuthJwt = {
                 return App.CurrentUser.find('current').then( function (user) {
                     Ember.run(null, resolve, user);
                 }, function (user) {
+                    debugger
                     if (response.error != undefined) {
                         Ember.run(null, reject, response.error);
                     } else {
-                        Ember.run(null, reject, 'Failed to create currentUser');
+                        Ember.run(null, reject, gettext('Failed to create currentUser'));
                     }
                 });
             } else {

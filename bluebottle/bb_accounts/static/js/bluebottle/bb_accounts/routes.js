@@ -32,7 +32,7 @@ App.UserIndexRoute = Em.Route.extend({
 });
 
 
-App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, {
+App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, App.AuthenticatedRouteMixin, {
     model: function() {
         var route = this;
         return App.CurrentUser.find('current').then(function(user) {
@@ -57,7 +57,7 @@ App.ViewProfileRoute = Em.Route.extend({
     }
 });
 
-App.UserSettingsRoute = Em.Route.extend({
+App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, {
     model: function() {
         var route = this;
 

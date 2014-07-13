@@ -2,11 +2,11 @@
 
 
 {% tplhandlebars "_standard_login_errors" %}
-    {{#if error.non_field_errors.length}}
-        <div class="modal-flash-message error">
-            {{#each error.non_field_errors}}
-                {{this}}
-            {{/each}}
-        </div>
+    {{#if validationErrors}}
+        {{#unless allError}}
+            <div class="modal-flash-message error">
+                {{validationErrors.error}}
+            </div>
+        {{/unless}}
     {{/if}}
 {% endtplhandlebars %}

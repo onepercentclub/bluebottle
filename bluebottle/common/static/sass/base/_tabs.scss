@@ -31,7 +31,7 @@
             display: inline-block;
             text-decoration: none;
             //padding: $base-padding $base-padding $base-padding/2 $base-padding;
-			//padding: $base-padding ($base-padding*2);
+			padding: $base-padding ($base-padding*2);
 			margin-right: $base-margin/2;
 			margin-bottom: 0;
             color: $gray-light;
@@ -147,7 +147,6 @@ $step-validated-icon-color: $white;
 			color: $gray;
 			display: block;
 			white-space: nowrap;
-            line-height: 3.3em;
 			
 			.flaticon {
 				color: $gray-lighter;

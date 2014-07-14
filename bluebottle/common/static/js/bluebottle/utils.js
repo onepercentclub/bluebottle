@@ -72,14 +72,32 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             return ""
         }
 
-        // less than 6 char long and at least lower and upper case to be fair
-        if (field.length > 6 && field.search(upperAndLowerChar) == 0) {
-            // at least a specialChar or a numberChar to be strong
-            if ((field.search(specialChar) == 0) || (field.search(numberChar) == 0)) {
-                return gettext("strong")
-            }
-            return gettext("fair")
+        if (field.length < 6 ){
+            return gettext("weak");
         }
+
+        var strength = 0;
+
+        if (field.search(upperAndLowerChar) == 0) {
+            strength += 1;
+        }
+
+        if (field.search(numberChar) == 0) {
+            strength += 1;
+        }
+
+        if (field.search(specialChar) == 0) {
+            strength += 1;
+        }
+
+        if (strength == 1) {
+            return gettext("fair");
+        }
+
+        if (strength == 2) {
+            return gettext("strong");
+        }
+
         return gettext("weak")
     },
 

@@ -266,7 +266,6 @@ class SeleniumTestCase(LiveServerTestCase):
                 else:
                     sauce.jobs.update_job(cls.browser.driver.session_id, passed=False)
             finally:
-                cls.browser.driver.quit()
                 cls.browser.quit()
         else:
             cls.browser.quit()

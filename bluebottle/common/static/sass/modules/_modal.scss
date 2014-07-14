@@ -53,6 +53,20 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		}
 	}
 
+.questionmark {
+	position: absolute;
+	vertical-align: middle;
+	display: inline-block;
+	top: 30%;
+	right: 10px;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	background: image-url("img/icons/icon-form-question.svg") transparent no-repeat 0 0;
+	background-size: 20px;
+	@include hide-text();
+}
+
 	.password {
 		position: relative;
 		text-align: center;
@@ -63,20 +77,6 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 		&.is-incorrect {
 			@include animation(shake .8s ease-in-out)
-		}
-
-		.questionmark {
-			position: absolute;
-			vertical-align: middle;
-			display: inline-block;
-			top: 30%;
-			right: 10px;
-			width: 20px;
-			height: 20px;
-			cursor: pointer;
-			background: image-url("img/icons/icon-form-question.svg") transparent no-repeat 0 0;
-			background-size: 20px;
-			@include hide-text();
 		}
 
 		.password-strength {

@@ -139,15 +139,6 @@ BB.ModalMixin = Em.Mixin.create({
             });
         },
 
-        closeClickModal: function() {
-            var string = event.target.className.substring();
-            var className = string.indexOf("is-active");
-
-            if (className > 0) {
-                this.send('closeModal');
-            }
-        },
-
         modalFlip: function(name, context) {
             var controller = this.controllerFor(name);
 
@@ -223,10 +214,21 @@ BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin
     type: null
 });
 
-BB.ModalContainerView = Em.View.extend({
+BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
     tagName: null,
+
+    click: function(e) {
+        var _this = this,
+            string = e.target.className.substring()
+            className = string.indexOf("is-active");
+
+        if (className > 0) {
+            _this.get('controller').send('closeModal');
+        }
+    },
+    
     template: Ember.Handlebars.compile([
-        '<div class="modal-fullscreen-background is-active" {{action "closeClickModal"}}>',
+        '<div class="modal-fullscreen-background is-active">',
             '<div {{bindAttr class="type: :modal-fullscreen-container"}}>',
                 '<div id="card">',
                     '<div class="front">',

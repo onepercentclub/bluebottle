@@ -50,7 +50,7 @@ install_requires = [
     'transifex-client==0.9',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
-    'pygraphviz',
+    'pygraphviz==1.0',
     'beautifulsoup4==4.3.2',
     # JSON Web Token based authentication for Django REST framework
     'djangorestframework-jwt==0.1.5'

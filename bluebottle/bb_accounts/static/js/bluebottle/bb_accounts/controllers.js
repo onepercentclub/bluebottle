@@ -4,7 +4,7 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    fieldsToWatch: ['password.length', 'email', 'emailConfirmation'],
+    fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
     init: function() {

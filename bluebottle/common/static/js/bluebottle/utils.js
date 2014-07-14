@@ -36,6 +36,9 @@ App.IsAuthorMixin = Em.Mixin.create({
 // for examples (go to bb_accounts/controllers.js
 App.ControllerValidationMixin = Ember.Mixin.create({
 
+    // Tells if the input fields are not all empty
+    notEmpty: false,
+
     fixedFieldsMessage: gettext('That\'s better'),
 
     // In your controller define fieldsToWatch (a list of fields you want to watch)

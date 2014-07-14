@@ -90,7 +90,7 @@ App.PageView = Ember.View.extend(App.GoTo, {
                 newRoute = target.data('emberLinkTo'),
                 newRouteAttr = target.data('emberLinkToArg'),
                 router = _this.get('controller.target.router');
-
+            _this.get('controller').send('setNextTransition', newRoute); //In case is a signin before the new route
             router.transitionTo(newRoute, newRouteAttr);
         });
 

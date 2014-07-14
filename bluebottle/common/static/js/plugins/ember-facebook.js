@@ -93,24 +93,21 @@ Ember.FBView = Ember.View.extend({
         _this.set('isBusy', true);
         FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
-                _this.set('isBusy', false);
                 App.fbLogin(response.authResponse);
             } else {
                FB.login(function(response){
                     if (response.status === 'connected') {
-                        _this.set('isBusy', false);
                         App.fbLogin(response.authResponse);
                     }
 
                     if (response.authResponse == null && (response.status == 'unknown') ){
-                        _this.set('isBusy', false);
                         FBApp.set('connectError', gettext("There was an error connecting Facebook"));
                     }
 
                     if (response.authResponse == null && (response.status == 'not_authorized') ){
-                        _this.set('isBusy', false);
                         FBApp.set('connectError', gettext("Unauthorized to connect to Facebook "));
                     }
+                    _this.set('isBusy', false);
                }, {scope: 'email,public_profile,user_friends,user_birthday'});
             } // The above call to Login defines the sets the permissions that go with the access token, even before python-social-auth.
         });

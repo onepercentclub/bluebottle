@@ -63,6 +63,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('isBusy', false);
     },
 
+    didError: function () {
+        if (this.get('error')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
+
+            // Call error action on the modal
+            this.send('modalError');
+        }
+    }.observes('error'),
+
     actions: {
         signup: function() {
             var _this = this,
@@ -221,10 +231,26 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
+    fieldsToWatch: ['email.length', 'password.length'],
     requiredFields: ['email', 'password'],
 
     init: function () {
         this._super();
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'email',
+                'validateProperty': 'email.length',
+                'message': gettext('Email required'),
+                'priority': 1
+            },
+            {
+                'property': 'password',
+                'validateProperty': 'password.length',
+                'message': gettext('Password required'),
+                'priority': 2
+            }
+        ]);
 
         this._clearModel();
     },
@@ -256,17 +282,31 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
     //       Setting/clearing errors should be done in the same
     //       way for all forms.
     didError: function (error) {
-        // Error set so not busy anymore
-        this.set('isBusy', false);
+        if (this.get('error')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
 
-        // Call error action on the modal
-        this.send('modalError');
+            // Call error action on the modal
+            this.send('modalError');
+        }
     }.observes('error'),
 
     actions: {
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
+
+            // Enable the validation of errors on fields only after pressing the signup button
+            _this.enableValidation()
+
+            // Ignoring API errors here, we are passing ignoreApiErrors=true
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
+
+            // Check client side errors
+            if (_this.get('validationErrors')) {
+                this.send('modalError');
+                return false
+            }
 
             // Set is loading property until success or error response
             this.set('isBusy', true);

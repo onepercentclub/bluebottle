@@ -5,6 +5,7 @@
     <div class="modal-fullscreen-content">
         <span {{action 'close'}} class="modal-fullscreen-close"></span>
         <h4>{% trans 'Welcome!' %}</h4>
+        {{partial "social_login_errors"}}
         {{partial "social_logins"}}
         {{partial "standard_signup_form"}}
 

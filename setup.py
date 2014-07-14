@@ -53,7 +53,8 @@ install_requires = [
     'pygraphviz==1.0',
     'beautifulsoup4==4.3.2',
     # JSON Web Token based authentication for Django REST framework
-    'djangorestframework-jwt==0.1.5'
+    'djangorestframework-jwt==0.1.5',
+    'psycopg2==2.2.1'
 ]
 
 

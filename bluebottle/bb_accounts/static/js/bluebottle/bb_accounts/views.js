@@ -53,14 +53,31 @@ App.PasswordResetView = App.FormView.extend({
         controller.set('error', null);
     }.on('willInsertElement'),
 
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.get('controller').send('resetPassword');
+        }
+    },
+
     next: function() {
         return  String(window.location);
     }.property()
-
 });
 
 App.PasswordRequestView = App.FormView.extend({
     placeholderText: gettext("Email address"),
+
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.get('controller').send('requestReset');
+        }
+    }
 });
 
 

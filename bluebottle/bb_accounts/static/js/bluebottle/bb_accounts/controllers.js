@@ -528,6 +528,11 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
+            if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
+                this.set('notEmpty', false);
+            }
+
+            //
             if (!Em.isEmpty(this.get('new_password1')) || !Em.isEmpty(this.get('new_password2'))){
                 this.set('notEmpty', true);
             }

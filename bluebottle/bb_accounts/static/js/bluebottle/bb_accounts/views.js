@@ -3,9 +3,8 @@
 */
 
 App.SignupView = App.FormView.extend({
-    submitAction: function(){
-        this.get('controller').send('signup');
-    },
+
+    submitAction: 'signup',
 
     firstName: gettext("First name"),
     surname: gettext("Surname"),
@@ -29,9 +28,7 @@ App.LoginView = App.FormView.extend({
         return  String(window.location);
     }.property(),
 
-    submitAction: function(){
-        this.get('controller').send('login');
-    },
+    submitAction: 'login'
 });
 
 App.PasswordResetView = App.FormView.extend({
@@ -43,9 +40,7 @@ App.PasswordResetView = App.FormView.extend({
         controller.set('error', null);
     }.on('willInsertElement'),
 
-    submitAction: function(){
-        this.get('controller').send('resetPassword');
-    },
+    submitAction: 'resetPassword',
 
     next: function() {
         return  String(window.location);
@@ -54,10 +49,7 @@ App.PasswordResetView = App.FormView.extend({
 
 App.PasswordRequestView = App.FormView.extend({
     placeholderText: gettext("Email address"),
-
-    submitAction: function(){
-        this.get('controller').send('requestReset');
-    }
+    submitAction: 'requestReset'
 });
 
 

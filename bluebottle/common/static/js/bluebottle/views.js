@@ -39,5 +39,18 @@ App.FormView = Em.View.extend({
             inputs.first().focus();
            }, 100)
         }
-    }.on('didInsertElement')
+    }.on('didInsertElement'),
+
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            
+            var action = this.get('submitAction');
+            if (Em.typeOf(action) == 'string' && action.length) {
+                this.get('controller').send(action);
+            }
+        }
+    }
 });

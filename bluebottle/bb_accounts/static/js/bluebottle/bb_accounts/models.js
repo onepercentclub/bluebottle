@@ -193,6 +193,8 @@ App.UserPreview = DS.Model.extend({
 
     username: DS.attr('string'),
 
+    email: DS.attr('string'),
+
     // TODO: loose these in favour of short/full name
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
@@ -353,5 +355,8 @@ App.TimeAvailable = DS.Model.extend({
 
 
 App.UserLogin = Em.Object.extend({
+    matchId: null,
+    matchType: null,
+    email: null,
     validEmail: Em.computed.match('email', /.+\@.+\..+/i )
 });

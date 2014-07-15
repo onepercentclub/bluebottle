@@ -358,5 +358,6 @@ App.UserLogin = Em.Object.extend({
     matchId: null,
     matchType: null,
     email: null,
+    password: null,
     validEmail: Em.computed.match('email', /.+\@.+\..+/i )
 });

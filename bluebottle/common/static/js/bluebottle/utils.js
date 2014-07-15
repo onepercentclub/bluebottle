@@ -36,6 +36,9 @@ App.IsAuthorMixin = Em.Mixin.create({
 // for examples (go to bb_accounts/controllers.js
 App.ControllerValidationMixin = Ember.Mixin.create({
 
+    // Tells if the input fields are not all empty
+    notEmpty: false,
+
     fixedFieldsMessage: gettext('That\'s better'),
 
     // In your controller define fieldsToWatch (a list of fields you want to watch)
@@ -110,6 +113,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         // we just show one error at the time
         var firstError = Em.Object.create();
         var resultErrors = Em.Object.create(errors);
+
         for (var key in resultErrors){
             // capitalize the first letter of the key add the related error and set it to the first error
             // TODO: I add the key to the message since when a field is required the error message doesn't say which one.
@@ -182,6 +186,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         if (!this.get('validationEnabled'))
             return null
 
+
         // API errors
         if (!ignoreApiErrors && model.get('errors')){
             return this._apiErrors(model.get('errors'))
@@ -206,7 +211,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // return true if there are no errors
     _validateAndCheck: function() {
         // run the validateErrors and set the errors in validationErrors
-        this._validate()
+        this._validate();
         return !this.get('validationErrors')
     },
 

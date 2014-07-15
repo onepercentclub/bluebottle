@@ -79,7 +79,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 user = this.get('model');
 
             // Enable the validation of errors on fields only after pressing the signup button
-            _this.enableValidation()
+            _this.enableValidation();
 
             // Clear the errors fixed message
             _this.set('errorsFixed', false);
@@ -297,10 +297,10 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             var _this = this;
 
             // Enable the validation of errors on fields only after pressing the signup button
-            _this.enableValidation()
+            _this.enableValidation();
 
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), false));
 
             // Check client side errors
             if (_this.get('validationErrors')) {
@@ -310,6 +310,10 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
             // Set is loading property until success or error response
             this.set('isBusy', true);
+
+            if (!Em.isEmpty(this.get('email')) || !Em.isEmpty(this.get('password'))){
+                this.set('notEmpty', true);
+            }
 
             return _this.authorizeUser(_this.get('email'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
@@ -378,6 +382,24 @@ App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerVali
         requestReset: function() {
             var _this = this;
 
+            _this.enableValidation();
+
+            // Clear the errors fixed message
+            _this.set('errorsFixed', false);
+
+            // Ignoring API errors here, we are passing ignoreApiErrors=true
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
+
+            // Check client side errors
+            if (_this.get('validationErrors')) {
+                this.send('modalError');
+                return false
+            }
+
+            // Set is loading property until success or error response
+            _this.set('isBusy', true);
+
+
             // Early out if the input is empty
             if (Em.isEmpty(this.get('email'))) {
                 this.send('modalError');
@@ -403,9 +425,8 @@ App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerVali
                 };
 
                 hash.error = function (response) {
-                    var msg = gettext('There is no account associated with the email.')
+                    var msg = JSON.parse(response.responseText).email;
                     _this.set('error', msg);
-
                     Ember.run(null, reject, msg);
                 };
 
@@ -442,10 +463,6 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
         ]);
     },
 
-    matchingPassword: function () {
-        return !Em.compare(this.get('new_password1'), this.get('new_password2'));
-    }.property('new_password1.length', 'new_password2.length'),
-
     _clearModel: function () {
         this.set('content', Em.Object.create());
     },
@@ -479,10 +496,17 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                 model = this.get('model');
 
             // Enable the validation of errors on fields only after pressing the reset button
-            _this.enableValidation()
+            _this.enableValidation();
+
+            // Clear the errors fixed message
+            _this.set('errorsFixed', false);
 
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
+
+            if (!Em.isEmpty(this.get('new_password1')) || !Em.isEmpty(this.get('new_password2'))){
+                this.set('notEmpty', true);
+            }
 
             // Check client side errors
             if (_this.get('validationErrors')) {

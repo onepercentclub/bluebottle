@@ -328,6 +328,9 @@ App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
     }.property('new_password1.length'),
 
     matchingPassword: function() {
+        if (Em.isEmpty(this.get('new_password1')) || Em.isEmpty(this.get('new_password2'))){
+            return false;
+        }
         return !Em.compare(this.get('new_password1'), this.get('new_password2'));
     }.property('new_password1', 'new_password2'),
 

@@ -9,10 +9,14 @@
         <br />
         <p>{% blocktrans %}That’s weird, apparently someone registered an account with your email. Click "delete" below to have it removed.{% endblocktrans %}</p>
 
-        <a {{ action 'disableAccount' }} class="btn">{% trans "Delete" %}</a>
-
-        <a {{ action 'cancelDisable' }} class="btn">{% trans "Just kidding!" %}</a>
-
+        <div class="row">
+            <div class="col5">
+                <a {{ action 'disableAccount' }} class="btn">{% trans "Delete" %}</a>
+            </div>
+            <div class="col7">
+                <a {{ action 'cancelDisable' }} class="btn">{% trans "Just kidding!" %}</a>
+            </div>
+        </div>
 
     </div>
     <div class="modal-fullscreen-footer">

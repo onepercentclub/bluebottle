@@ -36,7 +36,8 @@ App.IsAuthorMixin = Em.Mixin.create({
 // for examples (go to bb_accounts/controllers.js
 App.ControllerValidationMixin = Ember.Mixin.create({
     
-    // Define the property fieldsToWatch in the controller to enable realtime client-side validation for the specified fields
+    // Define the property fieldsToWatch in the controller to enable realtime client-side validation 
+    // for the specified fields
     fieldsToWatch: null,
     
     // Tells if the input fields are not all empty

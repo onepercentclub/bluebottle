@@ -530,7 +530,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
 
             if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
                 this.set('notEmpty', false);
-            } else 
+            } else {
                 this.set('notEmpty', true);
             }
 

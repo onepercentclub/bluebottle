@@ -98,9 +98,10 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             return gettext("fair");
         }
 
-        if (strength == 2) {
+        if (strength >= 2) {
             return gettext("strong");
         }
+
 
         return gettext("weak")
     },

@@ -180,6 +180,10 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				color: #fff;
 				display: block;
 
+				&:first-of-type {
+					margin-bottom: 10px;
+				}
+
 				&.error {
 					background: #B51D1E;
 				}

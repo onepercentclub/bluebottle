@@ -3,14 +3,8 @@
 */
 
 App.SignupView = App.FormView.extend({
-    keyPress: function (evt) {
-        var code = evt.which;
-        // If enter key pressed
-        if (code == 13) {
-            evt.preventDefault();
-            this.get('controller').send('signup');
-        }
-    },
+
+    submitAction: 'signup',
 
     firstName: gettext("First name"),
     surname: gettext("Surname"),
@@ -34,14 +28,7 @@ App.LoginView = App.FormView.extend({
         return  String(window.location);
     }.property(),
 
-    keyPress: function (evt) {
-        var code = evt.which;
-        // If enter key pressed
-        if (code == 13) {
-            evt.preventDefault();
-            this.get('controller').send('login');
-        }
-    }
+    submitAction: 'login'
 });
 
 App.PasswordResetView = App.FormView.extend({
@@ -53,14 +40,16 @@ App.PasswordResetView = App.FormView.extend({
         controller.set('error', null);
     }.on('willInsertElement'),
 
+    submitAction: 'resetPassword',
+
     next: function() {
         return  String(window.location);
     }.property()
-
 });
 
 App.PasswordRequestView = App.FormView.extend({
     placeholderText: gettext("Email address"),
+    submitAction: 'requestReset'
 });
 
 

@@ -89,3 +89,14 @@ def facebook_auth_settings(request):
     context['FACEBOOK_AUTH_ID'] = getattr(settings, 'SOCIAL_AUTH_FACEBOOK_KEY', '')
 
     return context
+
+
+def mixpanel_settings(request):
+    """
+    Add Mixpanel API key from settings file to general request context.
+    """
+    try:
+        context = {'MIXPANEL': settings.MIXPANEL}
+    except AttributeError:
+        context = {}
+    return context

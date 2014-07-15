@@ -125,7 +125,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
                     // Handle failure to create currentUser
                     _this.processValidationErrors(_this.get('errorDefinitions'), _this.get('model'));
-                    //_this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
 
                 });
 

@@ -184,6 +184,10 @@ $modal-background-color									   : rgba(#8A9993, .65);
 					margin-bottom: 10px;
 				}
 
+				&.single-item {
+					margin-bottom: 0;
+				}
+
 				&.error {
 					background: #B51D1E;
 				}

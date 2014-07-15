@@ -46,8 +46,10 @@ App.FormView = Em.View.extend({
         // If enter key pressed
         if (code == 13) {
             evt.preventDefault();
-            if (!Em.isEmpty(this.submitAction) && Em.typeOf(this.submitAction) == 'string') {
-                this.get('controller').send(this.submitAction);
+            
+            var action = this.get('submitAction');
+            if (Em.typeOf(action) == 'string' && action.length) {
+                this.get('controller').send(action);
             }
         }
     }

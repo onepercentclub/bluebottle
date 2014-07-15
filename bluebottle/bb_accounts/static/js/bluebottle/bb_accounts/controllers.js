@@ -469,8 +469,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     requiredFields: ['new_password1','new_password2'],
     
     passwordNotEmpty: Ember.computed.and('new_password1.length', 'new_password2.length'),
-    passwordEmpty: Ember.computed.not('passwordNotEmpty'),
-    
+
     init: function() {
         this._super();
 

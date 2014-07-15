@@ -4,7 +4,7 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
+    //fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
     init: function() {
@@ -15,25 +15,32 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 'property': 'first_name',
                 'validateProperty': 'validFirstName',
                 'message': gettext('First Name can\'t be left empty'),
-                'priority': 3
+                'priority': 1
             },
             {
                 'property': 'last_name',
                 'validateProperty': 'validLastName',
                 'message': gettext('Surname can\'t be left empty'),
-                'priority': 4
+                'priority': 2
             },
             {
                 'property': 'email',
+                'validateProperty': 'validEmail',
+                'message': gettext('Invalid email address'),
+                'priority': 3
+            },
+
+            {
+                'property': 'emailConfirmation',
                 'validateProperty': 'matchingEmail',
                 'message': gettext('Emails don\'t match'),
-                'priority': 1
+                'priority': 4
             },
             {
                 'property': 'password',
                 'validateProperty': 'validPassword',
                 'message': Em.get(App, 'settings.minPasswordError'),
-                'priority': 2
+                'priority': 5
             }
         ]);
 
@@ -43,7 +50,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
     _clearModel: function () {
         var user = App.UserCreate.createRecord({
             first_name: '',
-            last_name: '',
+            last_name: ''
         });
 
         this.set('model', user);
@@ -118,7 +125,9 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.set('isBusy', false);
 
                     // Handle failure to create currentUser
-                    _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
+                    _this.processValidationErrors(_this.get('errorDefinitions'), _this.get('model'));
+                    //_this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
+
                 });
 
             }, function (failedUser) {
@@ -167,7 +176,7 @@ App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixi
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
     availableTimes: function() {
         return App.TimeAvailable.find();
-    }.property(),
+    }.property()
 });
 
 
@@ -181,7 +190,7 @@ App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
         list.addObject({ name: gettext('School'), value: 'school'});
         list.addObject({ name: gettext('Club / Association'), value: 'group'});
         return list;
-    }).property(),
+    }).property()
 });
 
 
@@ -231,7 +240,7 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
-    fieldsToWatch: ['email.length', 'password.length'],
+    //fieldsToWatch: ['email.length', 'password.length'],
     requiredFields: ['email', 'password'],
 
     init: function () {
@@ -244,11 +253,19 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 'message': gettext('Email required'),
                 'priority': 1
             },
+
+            {
+                'property': 'email',
+                'validateProperty': 'validEmail',
+                'message': gettext('Invalid email address'),
+                'priority': 2
+            },
+
             {
                 'property': 'password',
                 'validateProperty': 'password.length',
                 'message': gettext('Password required'),
-                'priority': 2
+                'priority': 3
             }
         ]);
 
@@ -256,7 +273,8 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
     },
 
     _clearModel: function () {
-        this.set('content', Em.Object.create());
+        var user = App.UserLogin.create();
+        this.set('content', user);
     },
 
     willClose: function () {
@@ -296,6 +314,14 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
 
+            if (Em.isEmpty(this.get('email')) && Em.isEmpty(this.get('password'))){
+                this.set('notEmpty', false);
+            }
+
+            if (!Em.isEmpty(this.get('email')) || !Em.isEmpty(this.get('password'))){
+                this.set('notEmpty', true);
+            }
+
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation();
 
@@ -311,10 +337,6 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             // Set is loading property until success or error response
             this.set('isBusy', true);
 
-            if (!Em.isEmpty(this.get('email')) || !Em.isEmpty(this.get('password'))){
-                this.set('notEmpty', true);
-            }
-
             return _this.authorizeUser(_this.get('email'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
 
@@ -323,8 +345,14 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 _this.send('loadNextTransition');
                 // Close the modal
                 _this.send('close');
+
             }, function (error) {
-                _this.set('error', error);
+                _this.set('isBusy', false);
+
+                if (error.non_field_errors) {
+                    _this.set('validationErrors', {'error':error.non_field_errors[0]});
+                    _this.send('modalError');
+                }
             });
         },
 
@@ -333,7 +361,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         },
 
         passwordRequest: function () {
-            var email = Em.Object.create({email: this.get('email')})
+            var email = Em.Object.create({email: this.get('email')});
             this.send('modalSlide', 'passwordRequest', email);
         }
     }
@@ -441,7 +469,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     needs: ['login'],
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
-    fieldsToWatch: ['new_password1.length, new_password2.length'],
+    //fieldsToWatch: ['new_password1.length, new_password2.length'],
     requiredFields: ['new_password1','new_password2'],
 
     init: function() {
@@ -542,7 +570,6 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                         // Resolve the promise
                         Ember.run(null, resolve, user);
                     }, function (error) {
-                        // Handle failure to create currentUser
                         _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
 
                         // Reject the promise
@@ -551,7 +578,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                 };
 
                 hash.error = function (response) {
-                    var msg = gettext('Invalid token, try request a new password again')
+                    var msg = gettext('Invalid token, try request a new password again');
                     _this.set('error', msg);
 
                     // Reject the promise

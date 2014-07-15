@@ -215,7 +215,9 @@ App.UserPreview = DS.Model.extend({
             return this.get('avatar')
         }
         return STATIC_URL + 'images/default-avatar.png'
-    }.property('avatar')
+    }.property('avatar'),
+
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i )
 
 });
 
@@ -240,6 +242,8 @@ App.CurrentUser = App.UserPreview.extend({
     id_for_ember: DS.attr('number'),
     last_login: DS.attr('date'),
     date_joined: DS.attr('date'),
+
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
 
     firstLogin: function () {
         //There is a small lag (ms) between creating the user and getting your token.
@@ -291,6 +295,8 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
         return this.get('last_name.length')
     }.property('last_name.length'),
 
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
+
     matchingEmail: function () {
 
         if (Em.isEmpty(this.get('email')) || Em.isEmpty(this.get('emailConfirmation'))){
@@ -335,6 +341,7 @@ App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
     }.property('new_password1', 'new_password2'),
 
 
+
 });
 
 
@@ -342,4 +349,9 @@ App.TimeAvailable = DS.Model.extend({
     url: 'users/time_available',
 	type: DS.attr('string'),
 	description : DS.attr('string')
+});
+
+
+App.UserLogin = Em.Object.extend({
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i )
 });

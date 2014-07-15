@@ -186,7 +186,6 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         if (!this.get('validationEnabled'))
             return null
 
-
         // API errors
         if (!ignoreApiErrors && model.get('errors')){
             return this._apiErrors(model.get('errors'))
@@ -195,10 +194,19 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         return this._clientSideErrors(arrayOfDict, model)
     },
 
+    // If you are not doing live validation with "fieldsToWatch" then this function can be called
+    // manually to set both client and server side validation errors. This would be done automatically
+    // using an observer on fieldsToWatch.
+    processValidationErrors: function(arrayOfDict, model){
+        this._checkErrors();
+        this.set('validationErrors', this.validateErrors(arrayOfDict, model));
+    },
+
     // At runtime observers are attached to this function
     // it calls the validateAndCheck function
     _checkErrors: function() {
         // Check if there were previous errors which are now fixed
+
         if (this.get('validationErrors')) {
             if (this._validateAndCheck()) {
                 this.set('errorsFixed', true)

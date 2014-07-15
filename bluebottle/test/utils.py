@@ -251,7 +251,6 @@ class SeleniumTestCase(LiveServerTestCase):
 
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='firefox',
                                      wait_time=10, desired_capabilities=caps)
-            cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 

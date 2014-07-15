@@ -6,12 +6,11 @@
         <span {{action 'close'}} class="modal-fullscreen-close"></span>
 
         <h4>{{disableAccountTitle}}</h4>
-        <br />
         <p>{% blocktrans %}That’s weird, apparently someone registered an account with your email. Click "delete" below to have it removed.{% endblocktrans %}</p>
 
         <div class="row">
             <div class="col5">
-                <a {{ action 'disableAccount' }} class="btn">{% trans "Delete" %}</a>
+                <a {{ action 'disableAccount' }} class="btn is-inactive">{% trans "Delete" %}</a>
             </div>
             <div class="col7">
                 <a {{ action 'cancelDisable' }} class="btn">{% trans "Just kidding!" %}</a>
@@ -19,7 +18,7 @@
         </div>
 
     </div>
-    <div class="modal-fullscreen-footer">
+    <div class="modal-fullscreen-footer no-content">
     </div>
 
 {% endtplhandlebars %}

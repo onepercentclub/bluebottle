@@ -295,6 +295,10 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				text-decoration: none;
 				font-weight: 700;
 			}
+
+			&.no-content {
+				padding: 0;
+			}
 		}
 	}
 

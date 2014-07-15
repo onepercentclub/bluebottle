@@ -2,16 +2,20 @@ BB = {};
 
 BB.ModalControllerMixin = Em.Mixin.create({
     // This can be overridden with code to respond with when the 
-    // modal content is about to be replace with new content.
+    // modal content is about to be replaced with new content.
     // This will usually involve clearing the model data => form fields
     willClose: Em.K,
+
+    // This can be overridden with code to respond with when the 
+    // modal content is about to be displayed.
+    willOpen: Em.K,
 
     actions: {
         close: function () {
             this.send('closeModal');
         }
     }
-})
+});
 
 BB.ModalMixin = Em.Mixin.create({
     actions: {
@@ -24,11 +28,16 @@ BB.ModalMixin = Em.Mixin.create({
             if (previousController && Em.typeOf(previousController.willClose) == 'function')
                 previousController.willClose();
 
+
             // Set the currentController property on the container to this new controller
             // so we can call willClose on it later
             if (name) {
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
+
+                // Call willOpen on the new modal - if defined
+                if (newController && Em.typeOf(newController.willOpen) == 'function')
+                    newController.willOpen();
 
                 // Setup the modal content and set the model if passed
                 if (Em.typeOf(context) != 'undefined')

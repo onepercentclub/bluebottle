@@ -467,7 +467,10 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
     requiredFields: ['new_password1','new_password2'],
-
+    
+    passwordNotEmpty: Ember.computed.and('new_password1.length', 'new_password2.length'),
+    passwordEmpty: Ember.computed.not('passwordNotEmpty'),
+    
     init: function() {
         this._super();
 
@@ -528,12 +531,12 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
-            if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
+            if (!passwordNotEmpty){
                 this.set('notEmpty', false);
             }
 
             //
-            if (!Em.isEmpty(this.get('new_password1')) || !Em.isEmpty(this.get('new_password2'))){
+            if (passwordNotEmpty){
                 this.set('notEmpty', true);
             }
 

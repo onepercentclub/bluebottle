@@ -4,7 +4,6 @@
 
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
-    //fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
     init: function() {
@@ -240,7 +239,6 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
-    //fieldsToWatch: ['email.length', 'password.length'],
     requiredFields: ['email', 'password'],
 
     init: function () {
@@ -469,7 +467,6 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     needs: ['login'],
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
-    //fieldsToWatch: ['new_password1.length, new_password2.length'],
     requiredFields: ['new_password1','new_password2'],
 
     init: function() {

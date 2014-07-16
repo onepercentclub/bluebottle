@@ -13,7 +13,7 @@
     {{input valueBinding="emailConfirmation" type="email" classBinding="errorList.email.length:error" placeholder=view.reenterEmail}}
     <div class="password">
         {{input valueBinding="password" type="password" classBinding="errorList.password.length:error" placeholder=view.passwordText}}
-        <span {{bindAttr class=":password-strength passwordStrength"}}>{{passwordStrength}}</span>
+        <span {{bindAttr class=":password-strength passwordStrength"}}>{{passwordStrengthText}}</span>
     </div>
 
     <a {{action 'signup'}} {{bindAttr class=":btn isBusy:is-loading blockingErrors:is-inactive"}}>{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>

@@ -80,7 +80,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         }
 
         if (field.length < 6 ){
-            return gettext("weak");
+            return "weak";
         }
 
         var strength = 0;
@@ -98,19 +98,19 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         }
 
         if (strength == 0) {
-            return gettext("fair");
+            return "fair";
         }
 
         if (strength == 1) {
-            return gettext("fair");
+            return "fair";
         }
 
         if (strength >= 2) {
-            return gettext("strong");
+            return "strong";
         }
 
 
-        return gettext("weak")
+        return "weak"
     },
 
     _apiErrors: function(errors) {

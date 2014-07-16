@@ -55,6 +55,21 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('model', user);
     },
 
+    passwordStrengthText: function(){
+        if (this.get('passwordStrength') == 'weak') {
+            return gettext('weak');
+        }
+
+        if (this.get('passwordStrength') == 'fair') {
+            return gettext('fair');
+        }
+
+        if (this.get('passwordStrength') == 'strong') {
+            return gettext('strong');
+        }
+        return gettext('weak');
+    }.property('password.length'),
+
     // pass the to the fieldStrength function the field we want to evaluate
     passwordStrength: function(){
         return this.fieldStrength(this.get('password'))
@@ -508,6 +523,22 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             this.send('modalError');
         }
     }.observes('error'),
+
+    passwordStrengthText: function(){
+        if (this.get('passwordStrength') == 'weak') {
+            return gettext('weak');
+        }
+
+        if (this.get('passwordStrength') == 'fair') {
+            return gettext('fair');
+        }
+
+        if (this.get('passwordStrength') == 'strong') {
+            return gettext('strong');
+        }
+        return gettext('weak')
+
+    }.property('password.length'),
 
     // pass the to the fieldStrength function the field we want to evaluate
     passwordStrength: function(){

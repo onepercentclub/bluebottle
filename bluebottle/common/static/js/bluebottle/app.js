@@ -425,8 +425,11 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 this.transitionTo(fallbackRoute);
             }
         },
-        setFlash: function (message, type) {
-            var flash = {};
+        setFlash: function (message, type, timeout) {
+            var flash = {},
+                _this = this,
+                 time = timeout || 3000;
+
             flash.activeNameClass = 'is-active';
 
             if (typeof message === 'object') {
@@ -442,10 +445,26 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
             }
             this.controllerFor('application').set('flash', flash);
+
+            if (timeout === false) {
+                return true;
+            } else {
                 setTimeout(function() {
-                    $('.flash').removeClass('is-active');
-                }, 3000);
+                    _this.send('addRemoveClass', 'remove', ['.flash', '.flash-container'], ['is-active', 'is-active']);
+                }, time);
+            }
         },
+
+        clearFlash: function() {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                _this = this,
+                callback = function flashClearCallback() {
+                    _this.controllerFor('application').set('flash', null);
+                }
+
+            _this.send('addRemoveClass', 'remove', ['.flash', '.flash-container'], ['is-active', 'is-active'], callback, animationEnd);
+        },
+
         logout: function () {
             // Do some logout stuff here!
         },

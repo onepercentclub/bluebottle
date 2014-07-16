@@ -35,6 +35,13 @@ App.IsAuthorMixin = Em.Mixin.create({
 // validation based on fields errors (validateErrors, enabled by calling enableValidation)
 // for examples (go to bb_accounts/controllers.js
 App.ControllerValidationMixin = Ember.Mixin.create({
+    
+    // Define the property fieldsToWatch in the controller to enable realtime client-side validation 
+    // for the specified fields
+    fieldsToWatch: null,
+    
+    // Tells if the input fields are not all empty
+    notEmpty: false,
 
     fixedFieldsMessage: gettext('That\'s better'),
 
@@ -63,9 +70,9 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // set the strength of the field, use this in the template
     fieldStrength: function(field) {
 
-        var specialChar = (/(?=.*[!@#$%^&*])/)
-        var upperAndLowerChar = (/(?=.*[A-Z])(?=.*[a-z])/)
-        var numberChar = (/(?=.*[0-9])/)
+        var specialChar = (/(?=.*[!@#$%^&*])/);
+        var upperAndLowerChar = (/(?=.*[A-Z])(?=.*[a-z])/);
+        var numberChar = (/(?=.*[0-9])/);
 
         // field not fulfilled
         if (!field){
@@ -90,7 +97,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             strength += 1;
         }
 
-        if (strength = 0) {
+        if (strength == 0) {
             return gettext("fair");
         }
 
@@ -98,9 +105,10 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             return gettext("fair");
         }
 
-        if (strength == 2) {
+        if (strength >= 2) {
             return gettext("strong");
         }
+
 
         return gettext("weak")
     },
@@ -109,6 +117,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         // we just show one error at the time
         var firstError = Em.Object.create();
         var resultErrors = Em.Object.create(errors);
+
         for (var key in resultErrors){
             // capitalize the first letter of the key add the related error and set it to the first error
             // TODO: I add the key to the message since when a field is required the error message doesn't say which one.
@@ -189,10 +198,19 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         return this._clientSideErrors(arrayOfDict, model)
     },
 
+    // If you are not doing live validation with "fieldsToWatch" then this function can be called
+    // manually to set both client and server side validation errors. This would be done automatically
+    // using an observer on fieldsToWatch.
+    processValidationErrors: function(arrayOfDict, model){
+        this._checkErrors();
+        this.set('validationErrors', this.validateErrors(arrayOfDict, model));
+    },
+
     // At runtime observers are attached to this function
     // it calls the validateAndCheck function
     _checkErrors: function() {
         // Check if there were previous errors which are now fixed
+
         if (this.get('validationErrors')) {
             if (this._validateAndCheck()) {
                 this.set('errorsFixed', true)
@@ -205,7 +223,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // return true if there are no errors
     _validateAndCheck: function() {
         // run the validateErrors and set the errors in validationErrors
-        this._validate()
+        this._validate();
         return !this.get('validationErrors')
     },
 

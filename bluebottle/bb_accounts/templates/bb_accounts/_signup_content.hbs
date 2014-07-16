@@ -9,7 +9,7 @@
         {{partial "social_logins"}}
         {{partial "standard_signup_form"}}
 
-        <small>{% blocktrans %}By signing up, you accept our <a {{action showPage 'terms-and-conditions' true}}>terms of service{% endblocktrans %}</a></small>
+        <small>{% blocktrans with "{{action showPage 'terms-and-conditions' true}}" as link %}By signing up, you accept our <a {{link}}>terms of service</a>{% endblocktrans %}</small>
         {{partial "signup_errors"}}
     </div>
 

@@ -6,7 +6,7 @@ App.ProjectSupporterView = Em.View.extend({
     templateName: 'project_supporter',
     tagName: 'li',
     didInsertElement: function(){
-        this.$('a').popover({trigger: 'hover', placement: 'top'})
+        this.$('a').popover({trigger: 'hover', placement: 'top'});
     }
 });
 

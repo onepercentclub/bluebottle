@@ -14,16 +14,18 @@
     margin-right: auto;
     min-height: 209px;
     width: 251px;
-    padding: 5px;
+    padding: 15px;
     background-color: rgb(60, 60, 60);
     border-radius: 8px;
     z-index: 1000;
     color: white;
     text-align: center;
+    @include opacity(.9);
     @include animation(fadeOut .3s ease-out);
     @include animation-fill-mode(forwards);
 
     &.is-active{
+        @include opacity(.9);
         @include animation(fadeIn .3s ease-out);
     }
 

@@ -384,7 +384,6 @@ App.MapPicker = Em.View.extend({
             }
         };
         view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
-        view.placeMarker(point);
         google.maps.event.addListener(view.map, 'click', function(e) {
             var loc = {};
             view.set('latitude', e.latLng.lat().toString());

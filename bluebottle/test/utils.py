@@ -243,6 +243,8 @@ class SeleniumTestCase(LiveServerTestCase):
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tags'] = ['Travis', 'CI']
+                caps['selenium-version'] = ['2.41.0']
+                caps['max-duration'] = [600]
 
             username = os.environ.get('SAUCE_USERNAME')
             access_key = os.environ.get('SAUCE_ACCESS_KEY')

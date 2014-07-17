@@ -163,7 +163,7 @@ App.UserController = Ember.Controller.extend({});
 //       and inject that so that it is available from all controllers.
 App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixin,{
     welcomeMessage: function() {
-        var msg1 = gettext('Welcome ') + this.get('first_name') + '.',
+        var msg1 = gettext('Welcome ') + ' ' + this.get('first_name') + '.',
             msg2 = gettext(' Ready to do some good?'),
             msg = msg1 + ' ' + msg2;
         return msg

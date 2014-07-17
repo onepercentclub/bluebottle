@@ -50,7 +50,7 @@ Ember.Application.initializer({
                 minPasswordLength: 6,
                 minPasswordError: gettext('Password needs to be at least 6 characters long')
             })
-        )
+        );
     }
 });
 
@@ -73,7 +73,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
     ready: function() {
 
         // only needed when submitting a form if the user isn't authenticated
-        var metaCsrf = $('meta[name=csrf-token]')
+        var metaCsrf = $('meta[name=csrf-token]');
         if (metaCsrf)
             this.set('csrfToken', metaCsrf.attr('content'));
 
@@ -155,8 +155,8 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
             App.ProjectPhaseSelectView.reopen({
                 content: function () {
                     return data.filter(function(item){
-                        return item.get('viewable')
-                    })
+                        return item.get('viewable');
+                    });
                 },
             });
         });
@@ -287,7 +287,7 @@ App.ApplicationController = Ember.Controller.extend({
 
     display_message: false,
     displayMessage: (function() {
-        if (this.get('display_message') == true) {
+        if (this.get('display_message')) {
             Ember.run.later(this, function() {
                 this.hideMessage();
             }, 10000);
@@ -425,8 +425,11 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 this.transitionTo(fallbackRoute);
             }
         },
-        setFlash: function (message, type) {
-            var flash = {};
+        setFlash: function (message, type, timeout) {
+            var flash = {},
+                _this = this,
+                 time = timeout || 3000;
+
             flash.activeNameClass = 'is-active';
 
             if (typeof message === 'object') {
@@ -435,17 +438,33 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             } else {
                 flash.text = message;
                 if (typeof type === 'undefined') {
-                    flash.type = 'welcome'
+                    flash.type = 'welcome';
                 } else {
                     flash.type = type;
                 }
 
             }
             this.controllerFor('application').set('flash', flash);
+
+            if (timeout === false) {
+                return true;
+            } else {
                 setTimeout(function() {
-                    $('.flash').removeClass('is-active');
-                }, 3000);
+                    _this.send('addRemoveClass', 'remove', ['.flash', '.flash-container'], ['is-active', 'is-active']);
+                }, time);
+            }
         },
+
+        clearFlash: function() {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                _this = this,
+                callback = function flashClearCallback() {
+                    _this.controllerFor('application').set('flash', null);
+                };
+
+            _this.send('addRemoveClass', 'remove', ['.flash', '.flash-container'], ['is-active', 'is-active'], callback, animationEnd);
+        },
+
         logout: function () {
             // Do some logout stuff here!
         },
@@ -468,16 +487,18 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 if (settings.get('id')) {
                     settings.save();
                 }
-                var languages = App.get('interfaceLanguages');
-                for (i in languages) {
+                var languages = App.get('interfaceLanguages'),
+                    setLanguage = function setLanguage(lang) {
+                      document.location = '/' + lang + document.location.hash;
+                    };
+
+                for (var i in languages) {
                     // Check if the selected language is available.
                     if (languages[i].code == language) {
                         if (settings.get('id')) {
                             settings.set('primary_language', language);
                         }
-                        settings.on('didUpdate', function(){
-                            document.location = '/' + language + document.location.hash;
-                        });
+                        settings.on('didUpdate', setLanguage(language));
                         settings.save();
                         return true;
                     }
@@ -523,7 +544,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
     },
 
     urlForEvent: function(actionName, context) {
-        return "/nice/stuff"
+        return "/nice/stuff";
     }
 });
 

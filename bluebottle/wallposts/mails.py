@@ -79,7 +79,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
         receiver = task.author
         author = post.author
 
-        link = '/en/#!/projects/{0}/tasks/{1}'.format(task.project.slug, task.id)
+        link = '/en/#!/tasks/{0}'.format(task.id)
 
         # Compose the mail
         translation.activate(receiver.primary_language)
@@ -184,7 +184,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
                     subject=_('%(author)s commented on your post.') % {'author': reaction_author.full_name},
                     to=post_author,
                     project=task,
-                    link='/en/#!/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
+                    link='/en/#!/tasks/{0}'.format(task.id),
                     author=reaction_author
                 )
                 mailed_users.add(post_author)
@@ -197,5 +197,5 @@ def new_reaction_notification(sender, instance, created, **kwargs):
                     subject=_('%(author)s commented on your task page.') % {'author': reaction_author.full_name},
                     to=task_author,
                     author=reaction_author,
-                    link='/en/#!/projects/{0}/tasks/{1}'.format(task.project.slug, task.id)
+                    link='/en/#!/tasks/{1}'.format(task.id)
                 )

@@ -102,7 +102,7 @@ class BlueBottleUserAdmin(UserAdmin):
     form = BlueBottleUserChangeForm
     add_form = BlueBottleUserCreationForm
 
-    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser')
+    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter')
 
     list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)

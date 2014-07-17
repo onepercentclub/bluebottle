@@ -380,7 +380,7 @@ class SeleniumTestCase(LiveServerTestCase):
         else:
             return False
             
-    def wait_for_element_css(self, selector, timeout=10):
+    def wait_for_element_css(self, selector, timeout=30):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
@@ -389,7 +389,7 @@ class SeleniumTestCase(LiveServerTestCase):
         except TimeoutException:
             return None
 
-    def is_visible(self, selector, timeout=10):
+    def is_visible(self, selector, timeout=30):
         return not self.wait_for_element_css(selector, timeout) is None
 
     def assert_css(self, selector, wait_time=10):

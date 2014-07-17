@@ -35,4 +35,5 @@
         e = f.getElementsByTagName("script")[0];
         e.parentNode.insertBefore(a, e)
     }
-})(document, window.mixpanel || []);
+
+})(document, window.mixpanel || []); mixpanel.init(MIXPANEL_KEY);

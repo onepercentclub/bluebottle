@@ -54,10 +54,11 @@ App.AuthJwt = {
             localStorage['jwtToken'] = response.token;
             App.set('jwtToken', response.token);
 
-
-            if (this.get('tracker')) {
+            // Technicaly, any controller will do to call the tracker code
+            var currentUsercontroller = App.__container__.lookup('controller:currentUser');
+            if (currentUsercontroller.get('tracker')) {
                 // Register the successful login with Mixpanel
-                this.get('tracker').trackEvent("Login", {loginType: "regular"});
+                currentUsercontroller.get('tracker').trackEvent("Login", {"loginType": "regular"});
             }
 
 

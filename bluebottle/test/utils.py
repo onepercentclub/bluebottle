@@ -232,7 +232,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
             test_name = cls.__name__
             name = 'Manual test run'
-            caps = {'platform': 'Linux', 'browserName': 'firefox', 'version': '30'}
+            caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']

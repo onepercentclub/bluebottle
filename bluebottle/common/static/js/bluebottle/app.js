@@ -483,31 +483,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                     // Language already set. Don't do anything;
                     return true;
                 }
-
-                if (settings.get('id')) {
-                    settings.save();
-                }
-                var languages = App.get('interfaceLanguages'),
-                    setLanguage = function setLanguage(lang) {
-                      document.location = '/' + lang + document.location.hash;
-                    };
-
-                for (var i in languages) {
-                    // Check if the selected language is available.
-                    if (languages[i].code == language) {
-                        if (settings.get('id')) {
-                            settings.set('primary_language', language);
-                        }
-                        settings.on('didUpdate', setLanguage(language));
-                        settings.save();
-                        return true;
-                    }
-                }
-                language = 'en';
-                if (settings.get('id')) {
-                    settings.set('primary_language', language);
-                }
-
+                settings.set('primary_language', language);
                 settings.on('didUpdate', function(){
                     document.location = '/' + language + document.location.hash;
                 });

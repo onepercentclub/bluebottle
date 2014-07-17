@@ -319,12 +319,12 @@ class SeleniumTestCase(LiveServerTestCase):
         if path and not path.startswith('#!'):
             path = '#!%s' % path
 
-        # Open the homepage (always the starting point), in English.
-        return self.browser.visit('%(url)s/%(lang_code)s/%(path)s' % {
+        self.browser.visit('%(url)s/%(lang_code)s/%(path)s' % {
             'url': self.live_server_url,
             'lang_code': lang_code,
             'path': path
-        })        
+        })
+        self.assert_css('#site')
 
     def visit_homepage(self, lang_code=None):
         """

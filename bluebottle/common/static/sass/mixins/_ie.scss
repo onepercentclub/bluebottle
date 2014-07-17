@@ -34,17 +34,42 @@ select {
 
 
 #card {
+	.front {
+		z-index: 3000;
+		position: relative;
+		visibility: visible;
+
+		&.slide-in-left {
+				z-index: 1000;
+			position: absolute;
+			visibility: hidden;
+			}
+
+			&.slide-out-left {
+				z-index: 3000;
+			position: relative;
+			visibility: visible;
+			}
+	}
+
+	.back {
+		z-index: 1000;
+		position: absolute;
+		visibility: hidden;
+	}
+
 	&.flipped {
-		@include transform(rotateY(0deg));
 
 		.front {
-			@include transform(rotateY(180deg));
-			z-index: 0;
+			z-index: 1000;
+			position: absolute;
+			visibility: hidden;
 		}
 
 		.back {
-			z-index: 4;
-			@include transform(rotateY(0deg));
+			z-index: 3000;
+			position: relative;
+			visibility: visible;
 		}
 	}
 }

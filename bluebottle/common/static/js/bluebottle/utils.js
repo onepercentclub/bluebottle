@@ -70,47 +70,49 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // set the strength of the field, use this in the template
     fieldStrength: function(field) {
 
-        var specialChar = (/(?=.*[!@#$%^&*])/);
-        var upperAndLowerChar = (/(?=.*[A-Z])(?=.*[a-z])/);
-        var numberChar = (/(?=.*[0-9])/);
+        var specialChar = (/(?=.*[!@#$%^&*])/),
+            upperAndLowerChar = (/(?=.*[A-Z])(?=.*[a-z])/),
+            numberChar = (/(?=.*[0-9])/);
 
         // field not fulfilled
         if (!field){
-            return ""
+            return {};
         }
 
         if (field.length < 6 ){
-            return gettext("weak");
+            return {
+              label: gettext("weak"),
+              value: "weak"
+            };
         }
 
         var strength = 0;
 
-        if (field.search(upperAndLowerChar) == 0) {
+        if (field.search(upperAndLowerChar) === 0) {
             strength += 1;
         }
 
-        if (field.search(numberChar) == 0) {
+        if (field.search(numberChar) === 0) {
             strength += 1;
         }
 
-        if (field.search(specialChar) == 0) {
+        if (field.search(specialChar) === 0) {
             strength += 1;
         }
 
-        if (strength == 0) {
-            return gettext("fair");
-        }
-
-        if (strength == 1) {
-            return gettext("fair");
+        if (strength < 2) {
+            return {
+              label: gettext("fair"),
+              value: "fair"
+            };
         }
 
         if (strength >= 2) {
-            return gettext("strong");
+            return {
+              label: gettext("strong"),
+              value: "strong"
+            };
         }
-
-
-        return gettext("weak")
     },
 
     _apiErrors: function(errors) {

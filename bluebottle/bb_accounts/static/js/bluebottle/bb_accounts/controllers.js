@@ -57,7 +57,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     // pass the to the fieldStrength function the field we want to evaluate
     passwordStrength: function(){
-        return this.fieldStrength(this.get('password'))
+        return this.fieldStrength(this.get('password'));
     }.property('password.length'),
 
     willClose: function () {
@@ -359,6 +359,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
         passwordRequest: function () {
             var email = Em.Object.create({email: this.get('email')});
+            this.send('modalIEreset', 'normal', 'modalFlip', 'passwordRequest', email);
             this.send('modalSlide', 'passwordRequest', email);
         }
     }

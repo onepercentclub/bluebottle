@@ -57,7 +57,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     // pass the to the fieldStrength function the field we want to evaluate
     passwordStrength: function(){
-        return this.fieldStrength(this.get('password'))
+        return this.fieldStrength(this.get('password'));
     }.property('password.length'),
 
     willClose: function () {

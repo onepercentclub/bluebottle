@@ -368,12 +368,6 @@ App.MapPicker = Em.View.extend({
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
-        var point = new google.maps.LatLng(52.3747157,4.8986167);
-        var latitude = view.get('latitude');
-        var longitude = view.get('longitude');
-        if (latitude && longitude){
-            point = new google.maps.LatLng(latitude, longitude);
-        }
         var mapOptions = {
             zoom: 2,
             center: point,
@@ -384,6 +378,15 @@ App.MapPicker = Em.View.extend({
             }
         };
         view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
+
+        // Drop a pin if lat long are already set.
+        var latitude = view.get('latitude');
+        var longitude = view.get('longitude');
+        if (latitude && longitude){
+            var point = new google.maps.LatLng(latitude, longitude);
+            view.placeMarker(point);
+        }
+
         google.maps.event.addListener(view.map, 'click', function(e) {
             var loc = {};
             view.set('latitude', e.latLng.lat().toString());

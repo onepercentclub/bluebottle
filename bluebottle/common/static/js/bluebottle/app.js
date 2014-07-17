@@ -479,7 +479,6 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             }
 
             App.UserSettings.find(App.CurrentUser.find('current').get('id_for_ember')).then(function(settings){
-                debugger
                 if (language == App.get('language')) {
                     // Language already set. Don't do anything;
                     return true;

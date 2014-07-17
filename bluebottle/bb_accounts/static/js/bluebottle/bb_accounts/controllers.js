@@ -359,6 +359,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
         passwordRequest: function () {
             var email = Em.Object.create({email: this.get('email')});
+            this.send('modalIEreset', 'normal', 'modalFlip', 'passwordRequest', email);
             this.send('modalSlide', 'passwordRequest', email);
         }
     }

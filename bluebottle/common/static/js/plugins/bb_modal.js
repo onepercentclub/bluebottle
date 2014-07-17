@@ -118,18 +118,26 @@ BB.ModalMixin = Em.Mixin.create({
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition');
 
+            if ($.browser.msie && parseInt($.browser.version) < 10){
+                this.send('disconnectContainerOutlet');
+            }
+
             $('.modal-fullscreen-background').one(animationEnd, function(){
                 // Finally clear the outlet
-                _this.disconnectOutlet({
-                    outlet: 'modalContainer',
-                    parentView: 'application'
-                });
+                _this.send('disconnectContainerOutlet');
             });
 
             this.send('scrollEnable');
 
             $('.modal-fullscreen-background').removeClass('is-active');
             $('.modal-fullscreen-background').addClass('is-inactive');
+        },
+
+        disconnectContainerOutlet: function() {
+            this.disconnectOutlet({
+                outlet: 'modalContainer',
+                parentView: 'application'
+            });
         },
 
         scrollDisable: function() {
@@ -185,6 +193,11 @@ BB.ModalMixin = Em.Mixin.create({
 
         modalSlideBack: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
+            if ($.browser.msie && parseInt($.browser.version) < 10){
+                this.send('modalWillTransition', 'modalFlip', 'modalFront', context);
+                $('#card').removeClass('flipped');
+                return;
+            }
             this.send('modalWillTransition', name, 'modalFront', context);
             this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
@@ -221,6 +234,17 @@ BB.ModalMixin = Em.Mixin.create({
             container.addClass('is-shake').one(animationEnd, function(){
                 container.removeClass('is-shake');
             });
+        },
+
+        modalIEreset: function(type, name, context, opt) {
+            if ($.browser.msie && parseInt($.browser.version) < 10){
+                switch(type) {
+                    case 'normal':
+                        this.send(name, context, opt);
+                        console.log(type);
+                    break;
+                }
+            }
         }
     },
 });

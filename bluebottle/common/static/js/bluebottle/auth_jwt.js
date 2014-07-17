@@ -54,6 +54,10 @@ App.AuthJwt = {
             localStorage['jwtToken'] = response.token;
             App.set('jwtToken', response.token);
 
+
+            // Register the successful login with Mixpanel
+            this.get('tracker').trackEvent("Login", {loginType: "regular"});
+
             // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
             // state so we need to force a transition here before trying to fetch the
             // user again.

@@ -122,6 +122,13 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         container.typeInjection('controller', 'currentUser', 'controller:currentUser');
     },
 
+    injectTracker: function (container, tracker){
+        container.lookup('route:application').set('tracker', tracker);
+
+        container.typeInjection('controller', 'tracker', 'controller:tracker');
+        container.typeInjection('route', 'tracker', 'route:tracker');
+    },
+
     initSelectViews: function() {
         // Pre-load these lists so we avoid race conditions when displaying forms
         App.Country.find().then(function(list) {

@@ -285,6 +285,8 @@ App.Adapter.configure("plurals", {
 
 App.ApplicationController = Ember.Controller.extend({
 
+    sub_menu: false,
+
     display_message: false,
     displayMessage: (function() {
         if (this.get('display_message')) {

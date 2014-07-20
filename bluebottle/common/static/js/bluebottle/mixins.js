@@ -267,4 +267,20 @@ App.StaticMapMixin = Em.Mixin.create({
 
         return imageUrl;
     }.property('latitude', 'longitude')
-})
+});
+
+// A mixin for Routes to add a sub-menu to a route.
+App.SubMenuMixin = Em.Mixin.create({
+
+    // This should be set in the route and takes the form of 'cheetahMenu'.
+    subMenu: Em.K(),
+
+    afterModel: function () {
+        var subMenu = this.get('subMenu');
+        this.controllerFor('application').set('sub_menu', subMenu);
+    },
+    deactivate: function () {
+        this.controllerFor('application').set('sub_menu', false);
+
+    }
+});

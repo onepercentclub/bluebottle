@@ -29,15 +29,5 @@ class Order(models.Model):
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
 
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+    total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
-
-class OrderItem(models.Model):
-    """
-    An OrderItem connects an item, like Donation to an Order
-    """
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
-    order = models.ForeignKey('orders.Order', verbose_name=_("Order"), null=True, blank=True)
-
-    # Replace this with Generic Foreign Key.
-    donation = models.ForeignKey('donations.Donation', verbose_name=_("Donation"), null=True, blank=True)

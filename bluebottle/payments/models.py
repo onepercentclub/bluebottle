@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.db import models
+from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 
 from django.contrib.auth import get_user_model
+from polymorphic.polymorphic_model import PolymorphicModel
 
 USER_MODEL = get_user_model()
 
@@ -41,18 +43,52 @@ class Payment(models.Model):
     payment_submethod_id = models.CharField(max_length=20, default='', blank=True)
 
 
-class PaymentMetaData(models.Model):
+class PaymentMetaData(PolymorphicModel):
 
     payment = models.ForeignKey('payments.Payment')
 
+
+class PaymentMethod(PolymorphicModel):
+
+    profile = models.CharField(_("profile"), max_length=20)
+    created = CreationDateTimeField(_("Created"))
+    updated = ModificationDateTimeField(_("Updated"))
+
+
+class Transaction(PolymorphicModel):
+
+    payment = models.ForeignKey('payments.Payment')
+    created = CreationDateTimeField(_("Created"))
+    updated = ModificationDateTimeField(_("Updated"))
+
+
+class TransactionStatusChange(PolymorphicModel):
+
+    payment = models.ForeignKey('payments.Payment')
+    created = CreationDateTimeField(_("Created"))
+
+
+class PaymentLogLevels(DjangoChoices):
+    info = ChoiceItem('info', label=_("INFO"))
+    warn = ChoiceItem('warn', label=_("WARN"))
+    error = ChoiceItem('error', label=_("ERROR"))
+
+
+# TODO: Add fields for: source file, source line number, source version, IP
+class PaymentLogEntry(models.Model):
+    message = models.CharField(max_length=400)
+    level = models.CharField(max_length=15, choices=PaymentLogLevels.choices)
+    timestamp = CreationDateTimeField()
+    payment = models.ForeignKey(Payment, related_name='log_entries')
+
     class Meta:
-        abstract = True
+        ordering = ('-timestamp',)
+        verbose_name = _("Payment Log")
+        verbose_name_plural = verbose_name
 
+    def __unicode__(self):
+        return '{0} {1}'.format(self.get_level_display(), Truncator(self.message).words(6))
 
-class PaymentMethod(models.Model):
-
-    name = models.CharField(_("name"), max_length=20)
-
-    class Meta:
-        abstract = True
-
+    def log_entry(self):
+        return '[{0}]  {1: <5}  {2 <5}  {3}'.format(self.timestamp.strftime("%d/%b/%Y %H:%M:%S"),
+                                                    self.get_type_display(), self.get_level_display(), self.message)

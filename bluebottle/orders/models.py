@@ -21,9 +21,9 @@ class Order(models.Model):
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
-    status = models.CharField(_("Status"), max_length=20, choices=OrderStatuses.choices, default=OrderStatuses.current, db_index=True)
+    status = models.CharField(_("Status"), max_length=20, choices=OrderStatuses.choices, default=OrderStatuses.cart, db_index=True)
 
-    uuid = UUIDField(_("Order number"), auto=True)
+    uuid = UUIDField(verbose_name=("Order number"), auto=True)
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))

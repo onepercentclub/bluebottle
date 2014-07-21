@@ -49,6 +49,7 @@ install_requires = [
     'django-taggit-autocomplete-modified==0.1.0b4',
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
+    'django-uuidfield==0.5.0',
     'django-wysiwyg==0.5.1',
     'djangorestframework==2.3.12',
     'dkimpy==0.5.4',

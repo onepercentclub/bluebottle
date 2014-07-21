@@ -245,7 +245,13 @@ App.MoveOnMixin = Ember.Mixin.create({
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
             var controller = this;
-            if (step) controller.transitionToRoute(step);
+            if (step) {
+                controller.transitionToRoute(step);
+                console.log("Project create", step);
+                if (this.get('tracker')) {
+                    //this.get('tracker').trackEvent("Create campaign", {"state": step});
+                }
+            }
         },
 
         goToPreviousStep: function(){
@@ -328,7 +334,7 @@ App.MyProjectController = Em.ObjectController.extend({
 });
 
 App.MyProjectStartController = App.StandardTabController.extend({
-    nextStep: 'myProject.pitch'
+    nextStep: 'myProject.pitch',
 });
 
 App.MyProjectPitchController = App.StandardTabController.extend({
@@ -370,10 +376,11 @@ App.MyProjectStoryController = App.StandardTabController.extend({
 
     canSave: function () {
         return !!this.get('model.title');
-    }.property('model.title')
+    }.property('model.title'),
 });
 
 App.MyProjectSubmitController = App.StandardTabController.extend({
+
     needs: ['myProjectOrganisation', 'myProject', 'myProjectBank'],
     previousStep: 'myProject.organisation',
 
@@ -419,6 +426,11 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
 
             model.on('didUpdate', function() {
                 controller.transitionToRoute('myProjectReview');
+
+                // User successfully submitted a project
+                if (this.get('tracker')) {
+                    this.get('tracker').trackEvent("Create campaign", {"state": "submitted"});
+                }
             });
             
             model.save();

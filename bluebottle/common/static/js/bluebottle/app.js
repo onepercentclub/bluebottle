@@ -23,8 +23,8 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
-            App.injectUser(container, user);
-
+            App.injectUser(container, user, application);
+            debugger
             // boot the app
             App.advanceReadiness();
         }, function() {
@@ -114,12 +114,13 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         this.initSelectViews();
     },
 
-    injectUser: function (container, user) {
+    injectUser: function (container, user, application) {
         // Set the currentUser model/content on the currentUser controller
         container.lookup('controller:currentUser').set('content', user);
 
         // Inject currentUser into all controllers
-        container.typeInjection('controller', 'currentUser', 'controller:currentUser');
+        application.inject('controller', 'currentUser', 'controller:currentUser');
+
     },
 
     initSelectViews: function() {

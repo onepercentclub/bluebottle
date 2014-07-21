@@ -1,14 +1,6 @@
 App.MyProjectOrganisationController = App.StandardTabController.extend({
     needs: ['myProject'],
 
-    init: function() {
-        this._super();
-        console.log("Project create organisation");
-        if (this.get('tracker')) {
-            this.get('tracker').trackEvent("Create campaign", {"state": "organisation"});
-        }
-    },
-
     tempDocuments: Em.A(),
     organizations: Em.A(),
     selectedOrganization: null,

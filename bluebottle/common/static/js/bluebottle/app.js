@@ -24,7 +24,7 @@ Ember.Application.initializer({
             application.set('language', language);
 
             App.injectUser(container, user, application);
-            debugger
+
             // boot the app
             App.advanceReadiness();
         }, function() {
@@ -376,6 +376,11 @@ App.Router.reopen({
             Ember.run.next(function() {
                 _gaq.push(['_trackPageview', url]);
             });
+        }
+
+        var route = this.container.lookup("route:" + infos[1].handler.routeName)
+        if (route && route.get('tracked')) {
+            route.get('tracker').trackEvent("Page visit", {"url": url});
         }
     }
 });

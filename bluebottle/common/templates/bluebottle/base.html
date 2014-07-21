@@ -92,11 +92,6 @@
             <script type="text/javascript" src="{% static i18n_static %}"></script>
         {% endwith %}
 
-        {% if DEBUG %}
-            {# Ember profiling #}
-            <script type="text/javascript" src="{% static 'js/vendor/ember-renderspeed.js' %}"></script>
-        {% endif %}
-
         <script type="text/javascript" src="{% static 'js/vendor/jquery-validation/jquery.validate.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/redactor.min.js' %}"></script>
 

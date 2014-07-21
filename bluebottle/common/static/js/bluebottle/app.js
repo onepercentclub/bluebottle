@@ -231,25 +231,6 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
     }
 });
 
-// Mixin to scroll view top top of the screen
-App.ScrollInView = Em.Mixin.create({
-    didInsertElement: function(a, b){
-        var offset = this.$().offset().top - 120;
-        var windowOffset = $(window).scrollTop();
-        // Only scroll if the focus is more then 50px off.
-        if (Math.abs(windowOffset - offset) > 50) {
-            $("html, body").animate({ scrollTop: offset }, 600);
-        }
-    }
-});
-
-App.ScrollToTop = Em.Mixin.create({
-    afterModel: function(){
-        this._super();
-        $("html, body").animate({ scrollTop: 0 }, 600);
-    }
-});
-
 
 /**
  * The Ember Data Adapter and Store configuration.
@@ -285,6 +266,8 @@ App.Adapter.configure("plurals", {
 });
 
 App.ApplicationController = Ember.Controller.extend({
+
+    sub_menu: false,
 
     display_message: false,
     displayMessage: (function() {

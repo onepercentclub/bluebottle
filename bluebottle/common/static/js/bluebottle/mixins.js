@@ -284,3 +284,56 @@ App.SubMenuMixin = Em.Mixin.create({
 
     }
 });
+
+// Mixin to scroll view top top of the screen
+App.ScrollInView = Em.Mixin.create({
+    didInsertElement: function(a, b){
+        var offset = this.$().offset().top - 120;
+        var windowOffset = $(window).scrollTop();
+        // Only scroll if the focus is more then 50px off.
+        if (Math.abs(windowOffset - offset) > 50) {
+            $("html, body").animate({ scrollTop: offset }, 600);
+        }
+    }
+});
+
+App.ScrollToTop = Em.Mixin.create({
+    afterModel: function(){
+        this._super();
+        $("html, body").animate({ scrollTop: 0 }, 600);
+    }
+});
+
+/*
+   Mixin to enable scrolling from one anchor point to another
+   within a same page.
+
+   Mix the mixin into View classes like:
+   e.g. App.YourView = Ember.View.extend(App.GoTo, {});
+
+   And, In your template,
+
+   <a class="goto" href="#Destination" data-target="#Destination">Source</a>
+
+   Or,
+
+   <a {{action 'goTo' '#Destination' target="view" bubbles=false}}>Source</a>
+ */
+App.GoTo = Ember.Mixin.create({
+
+    click: function(e) {
+        var $target = $(e.target);
+        if ($target.hasClass('goto')) {
+            var anchor = $target.data('target') || $target.attr('rel');
+            if (anchor) {
+                this.goTo(anchor);
+                e.preventDefault();
+            }
+        }
+    },
+    goTo: function(target) {
+        $('html, body').stop().animate({
+            scrollTop: $(target).offset().top - $('#header').height()
+        }, 500);
+    }
+});

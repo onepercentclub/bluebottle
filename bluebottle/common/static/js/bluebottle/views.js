@@ -28,7 +28,25 @@ App.LanguageSelectView = Em.Select.extend({
 });
 
 App.ApplicationView = Em.View.extend({
-    elementId: 'site'
+    elementId: 'site',
+    click: function(e) {
+        var $target = $(e.target);
+        if ($target.hasClass('goto')) {
+            var anchor = $target.data('target') || $target.attr('rel');
+            if (anchor) {
+                this.goTo(anchor);
+                e.preventDefault();
+            }
+        }
+    },
+    goTo: function(target) {
+        if ($(target)) {
+            $('html, body').stop().animate({
+                scrollTop: $(target).offset().top - $('#header').height()
+            }, 500);
+        }
+    }
+
 });
 
 App.FormView = Em.View.extend({

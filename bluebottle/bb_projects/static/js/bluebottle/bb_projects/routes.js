@@ -242,7 +242,6 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
       controller.set('selectedOrganization', null);
     },
 
-
     activate: function() {
         if (this.get('tracker')) {
             this.get('tracker').trackEvent("Create Campaign - Organisation", {});

@@ -54,14 +54,6 @@ App.AuthJwt = {
             localStorage['jwtToken'] = response.token;
             App.set('jwtToken', response.token);
 
-            // Technicaly, any controller will do to call the tracker code
-            var currentUsercontroller = App.__container__.lookup('controller:currentUser');
-            if (currentUsercontroller.get('tracker')) {
-                // Register the successful login with Mixpanel
-                currentUsercontroller.get('tracker').trackEvent("Login", {"loginType": "regular"});
-            }
-
-
             // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
             // state so we need to force a transition here before trying to fetch the
             // user again.

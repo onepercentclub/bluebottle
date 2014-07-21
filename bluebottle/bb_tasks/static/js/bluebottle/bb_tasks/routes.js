@@ -64,6 +64,11 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 							taskMember.set('task', task);
 							taskMember.set('created', new Date());
 							taskMember.save();
+
+                            if (this.get('tracker')) {
+                                this.get('tracker').trackEvent("Apply for task", {task: task});
+                            }
+
 						}
 						if (opts.secondary) {
 							taskMember.deleteRecord();

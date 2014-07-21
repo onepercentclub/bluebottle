@@ -320,6 +320,10 @@ App.TaskNewController = Em.ObjectController.extend({
         var task = this.get('content');
         task.on('didCreate', function(record) {
             controller.transitionToRoute('task', task);
+            if (controller.get('tracker')) {
+                controller.get('tracker').trackEvent("New task", {});
+            }
+
         });
         task.on('becameInvalid', function(record) {
             // controller.set('errors', record.get('errors'));
@@ -343,6 +347,10 @@ App.TaskEditController = App.TaskNewController.extend({
         }
         task.on('didUpdate', function(record) {
             controller.transitionToRoute('task', task);
+            if (controller.get('tracker')) {
+                controller.get('tracker').trackEvent("Successful task edit", {});
+            }
+
         });
         task.on('becameInvalid', function(record) {
             controller.set('errors', record.get('errors'));

@@ -54,6 +54,12 @@ App.ViewProfileRoute = Em.Route.extend({
             route.transitionTo('error.notFound');
         });
         return model;
+    },
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("View profile", {});
+        }
     }
 });
 
@@ -68,6 +74,12 @@ App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, {
 
     deactivate: function() {
         this.controllerFor('userSettings').stopEditing();
+    },
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("View settings", {});
+        }
     }
 });
 

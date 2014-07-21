@@ -106,6 +106,8 @@ App.SaveOnExitMixin = Ember.Mixin.create({
 
     actions: {
         goToNextStep: function(){
+
+
             if (this.get('nextStep')){
                 this.transitionToRoute(this.get('nextStep'));
             }

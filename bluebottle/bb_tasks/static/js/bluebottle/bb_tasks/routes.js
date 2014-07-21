@@ -66,7 +66,7 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 							taskMember.save();
 
                             if (this.get('tracker')) {
-                                this.get('tracker').trackEvent("Apply for task", {task: task});
+                                this.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
                             }
 
 						}

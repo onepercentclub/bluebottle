@@ -28,7 +28,8 @@ Ember.Application.initializer({
             // boot the app
             App.advanceReadiness();
         }, function() {
-            App.injectUser(container, null);
+
+            App.injectUser(container, null, application);
 
             container.lookup('controller:application').missingCurrentUser();
 
@@ -361,10 +362,11 @@ App.Router.reopen({
             });
         }
 
-        var route = this.container.lookup("route:" + infos[1].handler.routeName)
-        if (route && route.get('tracked')) {
-            route.get('tracker').trackEvent("Page visit", {"url": url});
-        }
+
+//        var route = this.container.lookup("route:" + infos[1].handler.routeName)
+//        if (route && route.get('tracked')) {
+//            route.get('tracker').trackEvent("Page visit", {"url": url});
+//        }
     }
 });
 

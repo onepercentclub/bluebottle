@@ -97,6 +97,12 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, {
     },
     setupController: function(controller, model) {
         this._super(controller, model);
+    },
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("My Campaigns", {});
+        }
     }
 
 });
@@ -159,11 +165,26 @@ App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
     model: function(params) {
         return this.modelFor('myProject');
     }
+
 });
 
-App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Pitch", {});
+        }
+    }
+});
+App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Story", {});
+        }
+    }
+});
+App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({
+
+});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
@@ -172,7 +193,14 @@ App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
         controller.set('fields', App.ProjectDetailField.find());
     }
 });
-App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({skipExitSignal: true});
+App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({
+    skipExitSignal: true,
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Submit", {});
+        }
+    }
+});
 
 App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
     setupController: function(controller, model){
@@ -186,6 +214,12 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
         } else {
             // there are budget lines, and it's not the initial click -> show errors
             controller.set('showBudgetError', true);
+        }
+    },
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Budget", {});
         }
     }
 });
@@ -206,6 +240,13 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
       controller.set('organizations', App.MyOrganization.find());
       controller.set('selectedOrganization', null);
+    },
+
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Organisation", {});
+        }
     }
 });
 
@@ -221,10 +262,22 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
         } else {
             return App.MyOrganization.createRecord();
         }
+    },
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Bank", {});
+        }
     }
 });
 
-App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
+App.MyProjectReviewRoute = App.MyProjectRoute.extend({
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Create Campaign - Review", {});
+        }
+    }
+});
 
 App.ProjectPlanRoute = Em.Route.extend({
     model: function(){

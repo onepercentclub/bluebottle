@@ -34,7 +34,7 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
                 }
             });
         });
-    }
+    },
 });
 
 
@@ -144,6 +144,12 @@ App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
                 content: skill_list
             });
         });
+    },
+
+    activate: function() {
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Browse tasks", {});
+        }
     }
 });
 
@@ -169,7 +175,7 @@ App.TaskNewRoute = Em.Route.extend({
 App.TaskEditRoute = Em.Route.extend({
     model: function(params) {
         return App.Task.find(params.task_id);
-    }
+    },
 });
 
 /**

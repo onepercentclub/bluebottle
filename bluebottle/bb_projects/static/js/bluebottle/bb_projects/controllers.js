@@ -245,12 +245,9 @@ App.MoveOnMixin = Ember.Mixin.create({
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
             var controller = this;
+
             if (step) {
                 controller.transitionToRoute(step);
-                console.log("Project create", step);
-                if (this.get('tracker')) {
-                    //this.get('tracker').trackEvent("Create campaign", {"state": step});
-                }
             }
         },
 
@@ -426,11 +423,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
 
             model.on('didUpdate', function() {
                 controller.transitionToRoute('myProjectReview');
-
-                // User successfully submitted a project
-                if (this.get('tracker')) {
-                    this.get('tracker').trackEvent("Create campaign", {"state": "submitted"});
-                }
             });
             
             model.save();

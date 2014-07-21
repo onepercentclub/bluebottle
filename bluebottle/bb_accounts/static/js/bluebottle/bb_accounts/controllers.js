@@ -113,7 +113,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
                     // Register the successful regular signup with Mixpanel
                     if (_this.get('tracker')) {
-                        _this.get('tracker').trackEvent("Signup", {"loginType": "regular"});
+                        _this.get('tracker').trackEvent("Signup", {"type": "regular"});
                     }
 
                     // This is the users first login so flash a welcome message
@@ -341,6 +341,10 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
             return _this.authorizeUser(_this.get('email'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
+
+                if (_this.get('tracker')) {
+                    _this.get('tracker').trackEvent("Login", {"type": "regular"});
+                }
 
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route

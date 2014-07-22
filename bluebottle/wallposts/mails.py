@@ -79,7 +79,7 @@ def new_wallpost_notification(sender, instance, created, **kwargs):
         receiver = task.author
         author = post.author
 
-        link = '/go/tasks/{1}'.format(task.id)
+        link = '/go/tasks/{0}'.format(task.id)
 
         # Compose the mail
         translation.activate(receiver.primary_language)

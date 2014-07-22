@@ -70,7 +70,7 @@ class AbstractPaymentAdapter(object):
 
     def _change_status(self, payment, new_status):
         """
-        Changes the Cowry Payment status to new_status and sends a single about the change.
+        Changes the Payment status to new_status and sends a signal about the change.
         Subclasses must use this method to change statuses.
         """
         old_status = payment.status

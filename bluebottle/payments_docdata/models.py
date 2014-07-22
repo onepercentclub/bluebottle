@@ -67,11 +67,6 @@ class DocdataPayment(PaymentMetaData):
         else:
             return 'NEW'
 
-    class Meta:
-        ordering = ('-created', '-updated')
-        verbose_name = _("DocData Payment")
-        verbose_name_plural = _("DocData Payments")
-
 
 class DocdataTransaction(Transaction):
     """
@@ -80,22 +75,17 @@ class DocdataTransaction(Transaction):
     """
     # Note: We're not using DjangoChoices here so that we can write unknown statuses if they are presented by DocData.
     status = models.CharField(_("status"), max_length=30, default='NEW')
-    docdata_payment_order = models.ForeignKey(DocdataPayment, related_name='docdata_payments')
     payment_id = models.CharField(_("payment id"), max_length=100, default='', blank=True)
+
     # This is the payment method id from DocData (e.g. IDEAL, MASTERCARD, etc)
     payment_method = models.CharField(max_length=60, default='', blank=True)
-    created = CreationDateTimeField(_("created"))
-    updated = ModificationDateTimeField(_("updated"))
 
     def __unicode__(self):
         return self.payment_id
-
-    class Meta:
-        ordering = ('-created', '-updated')
 
 
 class DocDataDirectDebitTransaction(Transaction):
     account_name = models.CharField(max_length=35)  # max_length from DocData
     account_city = models.CharField(max_length=35)  # max_length from DocData
-    iban = IBANField()
-    bic = SWIFTBICField()
+    iban = models.CharField(max_length=35)  # max_length from DocData
+    bic = models.CharField(max_length=35)  # max_length from DocData

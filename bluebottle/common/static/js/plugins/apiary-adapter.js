@@ -1,0 +1,1 @@
+apiary-adapter.js

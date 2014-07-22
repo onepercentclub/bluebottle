@@ -29,6 +29,7 @@ App.Router.map(function(){
     });
 
     this.resource('myProjectReview', {path: '/my/projects/:id/review'});
+    this.resource('projectDonationList', {path: '/projects/:project_id/donations'});
 
 });
 
@@ -69,7 +70,19 @@ App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
     parentId: function(){
         return this.modelFor('project').get('id');
     }.property(),
-    parentType: 'project'
+    parentType: 'project',
+
+    setupController: function(controller, model) {
+        this._super(controller, model);
+
+        var parentType = this.get('parentType');
+        var parent = this.modelFor(parentType);
+        var parentId = parent.id;
+
+        controller.set('tasks',App.Task.find({project: parentId}));
+    }
+
+
 });
 
 
@@ -192,6 +205,7 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
       this._super(controller, model);
 
       controller.set('organizations', App.MyOrganization.find());
+      controller.set('selectedOrganization', null);
     }
 });
 
@@ -216,5 +230,19 @@ App.ProjectPlanRoute = Em.Route.extend({
     model: function(){
         var project = this.modelFor("project");
         return project;
+    }
+});
+
+
+App.ProjectDonationListRoute = Em.Route.extend({
+    model: function(params) {
+        var project_id = params.project_id.split('?')[0];
+        return App.Project.find(project_id);
+    },
+
+    setupController: function(controller, project) {
+        this._super(controller, project);
+        controller.set('projectDonations', App.ProjectDonation.find({project: project.id}));
+
     }
 });

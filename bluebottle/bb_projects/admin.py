@@ -1,3 +1,4 @@
+from django import forms
 from bluebottle.common.admin_utils import ImprovedModelForm
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -7,12 +8,12 @@ from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
 from .models import ProjectPhase, ProjectTheme
 
 
 PROJECT_MODEL = get_project_model()
-
+PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
@@ -21,7 +22,15 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
+class ProjectPhaseLogInline(admin.TabularInline):
+    model = PROJECT_PHASELOG_MODEL
+    ordering = ('-start',)
+    readonly_fields = ('status', 'start',)
+    extra = 0
+
+
 class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
+    inlines = [ProjectPhaseLogInline, ]
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
@@ -77,9 +86,9 @@ admin.site.register(PROJECT_MODEL, BaseProjectAdmin)
 class ProjectPhaseAdmin(admin.ModelAdmin):
     model = ProjectPhase
     ordering = ['sequence']
-    list_editable = ['active', 'editable', 'viewable']
+    list_editable = ['active', 'editable', 'viewable', 'owner_editable']
     list_filter = ['active', ]
     list_display_links = ['name']
-    list_display = ['sequence', 'name', 'active', 'editable', 'viewable']
+    list_display = ['sequence', 'name', 'active', 'editable', 'viewable', 'owner_editable']
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)

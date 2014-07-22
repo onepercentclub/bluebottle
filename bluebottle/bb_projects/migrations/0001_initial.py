@@ -49,6 +49,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
             'sequence': ('django.db.models.fields.IntegerField', [], {'unique': 'True'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '200'}),
             'viewable': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
         },
         u'bb_projects.projecttheme': {

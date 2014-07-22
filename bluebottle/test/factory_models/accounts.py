@@ -11,4 +11,6 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     username = factory.Sequence(lambda n: u'user_{0}'.format(n))
     email = factory.Sequence(lambda o: u'user_{0}@onepercentclub.com'.format(o))
     password = factory.PostGenerationMethodCall('set_password', 'testing')
+    first_name = factory.Sequence(lambda f: u'user_{0}'.format(f))
+    last_name = factory.Sequence(lambda l: u'user_{0}'.format(l))
     is_active = True

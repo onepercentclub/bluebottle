@@ -5,17 +5,10 @@
 {% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title %}
 Hi {{ receiver_name }},<br/>
 <br/>
-Woohoo, you’re the one! The project owner, {{ sender_name }}, assigned the 1%Task <a href="{{ site }}{{ link }}">{{ task_title }}</a> to you!
-<br/>
-Good luck and please keep us updated about the progress!
+Congratulations! The project owner, {{ sender_name }}, assigned the task <a href="{{ site }}{{ link }}">{{ task_title }}</a> to you!
 <br/><br/>
-Start right away? Leave a short first reaction!
+Good luck with the task and feel free to keep your colleagues updated on the progress.
 <br/><br/>
-<a href="{{ site }}{{ link }}">Go to task</a>.
-<br/>
-<br/>
-Good luck!<br/>
-<br/>
 {{ site_name }}
 {% endblocktrans %}
 {% endblock %}

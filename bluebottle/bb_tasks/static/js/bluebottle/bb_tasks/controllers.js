@@ -89,35 +89,33 @@ App.TaskSearchFormController = Em.ObjectController.extend({
 
 App.IsProjectOwnerMixin = Em.Mixin.create({
     isProjectOwner: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username')
+    }.property('controllers.project.model.owner', 'currentUser.username')
 });
 
 
 App.CanEditTaskMixin = Em.Mixin.create({
     canEdit: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var author_name = this.get('author.username');
         if (username) {
             return (username == author_name);
         }
         return false;
-    }.property('author', 'controllers.currentUser.username')
+    }.property('author', 'currentUser.username')
 });
 
 App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMixin, {
-    needs: ['currentUser', 'project']
+    needs: ['project']
 });
 
 
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, {
-    needs: ['currentUser'],
-
 	// you can apply to a task only if:
 	// the task is not closed, realized or completed
 	// (strange behaviour since completed is not a status but just a label)
@@ -125,7 +123,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 	// you are not a already a member or if you already applied
 	isApplicable: function(){
 		var model = this.get('model');
-        if (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted')){
+        if (model.get('isStatusClosed') || model.get('isStatusRealized') || model.get('isStatusCompleted') || model.get('isStatusInProgress')){
             return false;
         }
         if (this.get('isMember')) {
@@ -144,7 +142,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
     }.property('model.members.@each.status'),
 
     isMember: function() {
-        var user = this.get('controllers.currentUser.username');
+        var user = this.get('currentUser.username');
         var isMember = false;
         this.get('model.members').forEach(function(member) {
             var mem = member.get('member.username');
@@ -153,7 +151,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
             }
         });
         return isMember;
-    }.property('members.@each.member.username', 'controllers.currentUser.username'),
+    }.property('members.@each.member.username', 'currentUser.username'),
 
     canUpload: function(){
         return (this.get('isMember') || this.get('isAuthor'));
@@ -171,21 +169,21 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
 
 App.TaskActivityController = App.TaskController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task', 'taskMember'],
 
     canEditTask: function() {
-        var user = this.get('controllers.currentUser.username');
+        var user = this.get('currentUser.username');
         var author_name = this.get('controllers.task.author.username');
         if (username) {
             return (username == author_name);
         }
         return false;
-    }.property('controllers.task.author', 'controllers.currentUser.username')
+    }.property('controllers.task.author', 'currentUser.username'),
 
 });
 
 App.TaskIndexController = Em.ArrayController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task'],
     perPage: 5,
     page: 1,
     remainingItemCount: function(){
@@ -212,20 +210,26 @@ App.TaskIndexController = Em.ArrayController.extend({
     },
 
     canAddMediaWallPost: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.task.model.author.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.task.model.author', 'controllers.currentUser.username')
+    }.property('controllers.task.model.author', 'currentUser.username')
 
 });
 
 
 App.TaskMemberController = Em.ObjectController.extend({
+    needs: ['task'],
+
     isStatusApplied: function(){
         return this.get('status') == 'applied';
+    }.property('status'),
+
+    isStatusAccepted: function(){
+        return this.get('status') == 'accepted';
     }.property('status'),
 
     isStatusInProgress: function(){
@@ -238,14 +242,71 @@ App.TaskMemberController = Em.ObjectController.extend({
 
     isStatusRealized: function(){
         return this.get('status') == 'realized';
-    }.property('status')
+    }.property('status'),
+
+    isCurrentUser: function(){
+        var currentUser = this.get('currentUser.username');
+        var member = this.get('member.username');
+        if (member == currentUser){
+            return true;
+        }
+        return false;
+    }.property(),
+
+    currentUserIsAuthor: function () {
+        // TODO: move this into a function which can be accessed app-wide => pass a user instance and
+        //       the result will be true if the user is the current user.
+        // TODO: we should be injecting the currentUser into all controllers so we can do this.get('currentUser')
+        //       in the controller and {{ currentUser }} in the templates.
+        return (this.get('currentUser.id_for_ember').toString() == this.get('task.author.id'));
+    }.property('task.author.id'),
+
+    canEditStatus: function(){
+        if (this.get('currentUserIsAuthor') && this.get('task') && this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
+            return true;
+        }
+        return false;
+    }.property('task.status'),
+
+    canWithdraw: function(){
+        if (this.get('isCurrentUser') && (this.get('isStatusAccepted') || this.get('isStatusApplied')) ){
+            return true;
+        }
+        return false;
+    }.property('status'),
+
+
+    confirmation: function(){
+        var task = this.get('task');
+        if (task.get('author.id') == this.get('currentUser.id_for_ember') &&
+            task.get('isStatusRealized') && this.get('isStatusAccepted')) {
+            return true;
+        }
+
+        return false;
+    }.property('status'),
+
+    actions: {
+        confirmMember: function( member){
+            member.set('status', 'realized');
+            member.save()
+        },
+
+        didNotComplete: function( member){
+            member.set('status', 'stopped');
+            member.save()
+        },
+        withdrawTaskMember: function(member){
+           member.deleteRecord();
+           member.save();
+        }
+    }
 });
 
 App.MyTaskMemberController = Em.ObjectController.extend({
     actions: {
         editTimeSpent: function() {
             this.set('isEditing', true);
-            console.log(this.get('itemController'));
         }
     },
 
@@ -253,7 +314,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['currentUser', 'taskIndex'],
+    needs: ['taskIndex', 'projectIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
@@ -284,25 +345,24 @@ App.TaskEditController = App.TaskNewController.extend({
             controller.transitionToRoute('task', task);
         });
         task.on('becameInvalid', function(record) {
-            //controller.set('errors', record.get('errors'));
+            controller.set('errors', record.get('errors'));
         });
         task.save();
     },
     cancelChangesToTask: function(event){
         var task = this.get('content');
-        task.rollback();
+        //Don't do a rollback on the object directly, but, via the transaction
+        task.get('transaction').rollback();
         this.transitionToRoute('task', task);
     }
 
 });
 
 
-App.TaskPreviewController = Em.ObjectController.extend({
-});
+App.TaskPreviewController = Em.ObjectController.extend({});
 
 
-App.TaskMemberEditController = Em.ObjectController.extend({
-});
+App.TaskMemberEditController = Em.ObjectController.extend({});
 
 
 App.TaskFileNewController = Em.ObjectController.extend({

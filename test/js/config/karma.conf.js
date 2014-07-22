@@ -38,11 +38,12 @@ module.exports = function(config) {
       { pattern: '/static/assets/js/vendor/globalize-cultures/globalize.culture.*.js', included: false, served: false },
 
       // Bluebottle / 1%Club Site Static
-      '../../bluebottle/common/static/js/bluebottle/app.js',
       '../../bluebottle/common/static/js/bluebottle/presets.js', 
+      '../../bluebottle/common/static/js/bluebottle/app.js',
       '../../bluebottle/common/static/js/bluebottle/utils.js', 
       '../../bluebottle/common/static/js/bluebottle/mixins.js', 
-      '../../bluebottle/common/static/js/bluebottle/controllers.js', 
+      '../../bluebottle/common/static/js/bluebottle/controllers.js',
+      '../../bluebottle/common/static/js/bluebottle/overrides.js',
 
       // Stubs for Bluebottle API
       'config/test_stubs.js',

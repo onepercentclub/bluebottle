@@ -9,7 +9,7 @@
             <section class="l-wrapper">
 
                 <div class="task-badge">
-                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{status}} </div>
+                    <div class="task-status"> <strong>{% trans "Task" %}</strong> {{statusLabel}} </div>
                     {{#if project.image.small}}
                         <img {{bindAttr src="project.image.small" alt="project.title"}} />
                     {{/if}}
@@ -132,7 +132,7 @@
 
                         {{#if acceptedMembers}}
                             <li class="member-assigned">
-                                <h4>{% trans "Assigned" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
+                                <h4>{% trans "Accepted" %} {{!--}}<span class="flaticon solid question-2"></span>{{--}}</h4>
                                 {{#if hasMoreThanOneMember}}
                                     <ul>
                                         {{#each acceptedMembers}}
@@ -173,10 +173,13 @@
                         {{/link-to}}
                     {{else}}
                         {{#if isApplicable}}
+                          {{#ifExpired deadline }}
+                          {{ else }}
                             <a {{action applyForTask this }} class="btn btn-primary btn-iconed">
                                 <span class="flaticon stroke work-1"></span>
                                 {% trans "Apply for task" %}
                             </a>
+                           {{/ifExpired}}
                         {{/if}}
                     {{/if}}
                 </div>

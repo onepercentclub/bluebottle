@@ -1,0 +1,12 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_standard_login_errors" %}
+    {{#if validationErrors}}
+        {{#if notEmpty}}
+            <div class="modal-flash-message error">
+                {{validationErrors.error}}
+            </div>
+        {{/if}}
+    {{/if}}
+{% endtplhandlebars %}

@@ -6,11 +6,11 @@
 
 	<tr>
         {{#if donation.member}}
-        	<td class="fund-history-type"><a class="member" {{action 'openInBigBox' 'userModal' donation.member }} {{bindAttr data-title="donation.member.full_name" data-content="donation.time_since"}}>{{donation.member.full_name}}</a></td>
+        	<td class="fund-history-type"><a class="member" {{action 'openInBigBox' 'userModal' donation.member }} {{bindAttr data-title="donation.member.getFullName" data-content="donation.time_since"}}>{{donation.member.getFullName}}</a></td>
         {{else}}
         	<td class="fund-history-type">{% trans 'Guest' %}</td>
         {{/if}}
-        <td class="fund-history-total">&euro;{{donation.amount}},-</td>
+        <td class="fund-history-total">&euro;{{donation.amount}}</td>
         <td class="fund-history-date">{{donation.time_since}}</td>
     </tr>
 

@@ -1,8 +1,14 @@
-from bluebottle.bb_projects.models import BaseProject
+from bluebottle.bb_projects.models import BaseProject, BaseProjectPhaseLog
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
 from bluebottle.bb_tasks.models import BaseTask, BaseSkill, BaseTaskFile, BaseTaskMember
 
+
+class TestBaseProjectPhaseLog(BaseProjectPhaseLog):
+    """
+    Instantiate default BaseProjectPhaseLog abstract class
+    """
+    pass
 
 class TestBaseProject(BaseProject):
     """

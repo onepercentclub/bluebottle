@@ -21,15 +21,267 @@ App.TimeNeededSelectView = Em.Select.extend({
 
 App.IsAuthorMixin = Em.Mixin.create({
     isAuthor: function () {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var authorname = this.get('author.username');
         if (username) {
             return (username == authorname);
         }
         return false;
-    }.property('author.username', 'controllers.currentUser.username')
+    }.property('author.username', 'currentUser.username')
 });
 
+// It Provides different validations
+// standart empty fields validation (_requiredFieldsChecker and blockingErrors)
+// validation based on fields errors (validateErrors, enabled by calling enableValidation)
+// for examples (go to bb_accounts/controllers.js
+App.ControllerValidationMixin = Ember.Mixin.create({
+    
+    // Define the property fieldsToWatch in the controller to enable realtime client-side validation 
+    // for the specified fields
+    fieldsToWatch: null,
+    
+    // Tells if the input fields are not all empty
+    notEmpty: false,
+
+    fixedFieldsMessage: gettext('That\'s better'),
+
+    // In your controller define fieldsToWatch (a list of fields you want to watch)
+    // you will be able to use then: errorsFixed and blockSubmit
+    // errorsFixed: true if there were errors which are now fixed
+    errorsFixed: false,
+
+    // blockErrors: true if there are still blocking errors which prevent to submit
+    blockingErrors: true,
+
+    // to prevent the error validation we set validationEnabled to false
+    // set to true to enable it
+    validationEnabled: false,
+
+    // used in validateErrors function
+    errorDictionaryFields: ['property', 'validateProperty', 'message', 'priority'],
+
+    // set validationEnable to true, this has to be called from the controller to enable the validation
+    // I use it since we want to be in control when to start the validation, for example just after
+    // pressing a submit button
+    enableValidation: function() {
+        this.set('validationEnabled', true)
+    },
+
+    // set the strength of the field, use this in the template
+    fieldStrength: function(field) {
+
+        var specialChar = (/(?=.*[!@#$%^&*])/),
+            upperAndLowerChar = (/(?=.*[A-Z])(?=.*[a-z])/),
+            numberChar = (/(?=.*[0-9])/);
+
+        // field not fulfilled
+        if (!field){
+            return {};
+        }
+
+        if (field.length < 6 ){
+            return {
+              label: gettext("weak"),
+              value: "weak"
+            };
+        }
+
+        var strength = 0;
+
+        if (field.search(upperAndLowerChar) === 0) {
+            strength += 1;
+        }
+
+        if (field.search(numberChar) === 0) {
+            strength += 1;
+        }
+
+        if (field.search(specialChar) === 0) {
+            strength += 1;
+        }
+
+        if (strength < 2) {
+            return {
+              label: gettext("fair"),
+              value: "fair"
+            };
+        }
+
+        if (strength >= 2) {
+            return {
+              label: gettext("strong"),
+              value: "strong"
+            };
+        }
+    },
+
+    _apiErrors: function(errors) {
+        // we just show one error at the time
+        var firstError = Em.Object.create();
+        var resultErrors = Em.Object.create(errors);
+
+        for (var key in resultErrors){
+            // capitalize the first letter of the key add the related error and set it to the first error
+            // TODO: I add the key to the message since when a field is required the error message doesn't say which one.
+            firstError.set('error', (key.charAt(0).toUpperCase() + key.slice(1)) + ": " +resultErrors[key])
+            return firstError
+        }
+    },
+
+    //[{
+    // 'property': propertyValue,
+    // 'validateProperty': validateProperty,
+    // 'message': message,
+    // 'priority': priorityNumber
+    // },
+    // ...,]
+    _clientSideErrors: function(arrayOfDict, model) {
+        // array check otherwise throw error
+        if (!Em.isArray(arrayOfDict))
+            throw new Error('Expected an array of fields to validate');
+
+        var _this = this,
+            currentValidationError = null,
+            currentErrorPriority = null,
+            errorList = {};
+
+        // for each element of the array
+        arrayOfDict.forEach(function (dict) {
+            //validate if the dictionary has the right fields
+            if(Em.compare(Object.keys(dict).sort(), _this.errorDictionaryFields.sort()) < 0)
+                throw new Error('Expected a dictionary with correct keys');
+
+            // evaluate the property, if it's not valid
+            if (!model.get(dict.validateProperty)) {
+                errorList[dict.property] = dict['message']
+                // set the error only if the priority is higher than the current one
+                // maybe check also for the same property name
+                if (!currentErrorPriority || currentErrorPriority > dict.priority ) {
+                    currentErrorPriority = dict.priority
+
+                    // if there were no currentErrors
+                    if (!currentValidationError)
+                        currentValidationError = Em.Object.create();
+
+                    currentValidationError.set('error', dict['message'])
+                }
+            }
+
+        });
+
+        this.set("errorList", errorList);
+        this._allErrors(errorList);
+        
+        return currentValidationError
+    },
+
+    _allErrors: function(errorList) {
+        var _this = this;
+        var errors = Ember.makeArray(this.get('errorDefinitions'));
+
+        var allFieldErrors = true;
+        for (var i=0; i < errors.length;i++){
+            if (!(errors[i].property in errorList)){
+                allFieldErrors = false;
+            }
+        }
+        this.set('allError', allFieldErrors);
+    },
+
+    validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
+        if (!this.get('validationEnabled'))
+            return null
+
+        // API errors
+        if (!ignoreApiErrors && model.get('errors')){
+            return this._apiErrors(model.get('errors'))
+        }
+        // client side validation
+        return this._clientSideErrors(arrayOfDict, model)
+    },
+
+    // If you are not doing live validation with "fieldsToWatch" then this function can be called
+    // manually to set both client and server side validation errors. This would be done automatically
+    // using an observer on fieldsToWatch.
+    processValidationErrors: function(arrayOfDict, model){
+        this._checkErrors();
+        this.set('validationErrors', this.validateErrors(arrayOfDict, model));
+    },
+
+    // At runtime observers are attached to this function
+    // it calls the validateAndCheck function
+    _checkErrors: function() {
+        // Check if there were previous errors which are now fixed
+
+        if (this.get('validationErrors')) {
+            if (this._validateAndCheck()) {
+                this.set('errorsFixed', true)
+            }else {
+                this.set('errorsFixed', false)
+            }
+        }
+    },
+
+    // return true if there are no errors
+    _validateAndCheck: function() {
+        // run the validateErrors and set the errors in validationErrors
+        this._validate();
+        return !this.get('validationErrors')
+    },
+
+    // run the validateErrors and set the errors in validationErrors
+    _validate: function() {
+        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+    },
+
+    // set blockingErrors to true if there are fields which aren't fulfilled
+    // at runtime observers are attached to this function
+    _requiredFieldsChecker: function() {
+        var _this = this
+        _this.set('blockingErrors', false)
+        _this.get('requiredFields').forEach(function(field){
+            if (!_this.get(field)){
+                _this.set('blockingErrors', true)
+            }
+        })
+    },
+
+    // Dynamically assign observerFields to a function f
+    // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
+    _dynamicObserverCreator: function (observerFields, f) {
+        if (this.get(observerFields)) {
+            // dynamically assign observer fields to _checkErrors function
+            // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
+            this.get(observerFields).forEach(function(field) {
+                Ember.addObserver(this, field, this, f)
+            }, this);
+        }
+    },
+    // Remove the observers when the object is destroyed
+    _dynamicObserverRemover: function(observerFields, f) {
+        if (this.get(observerFields)){
+            this.get(observerFields).forEach(function(field) {
+                Ember.removeObserver(this, field, this, f);
+            }, this);
+        }
+    },
+
+    init: function () {
+        this._super();
+
+        // Dynamically assign observerFields to a function f
+        this._dynamicObserverCreator('fieldsToWatch', '_checkErrors');
+        this._dynamicObserverCreator('requiredFields', '_requiredFieldsChecker');
+    },
+
+    willDestroy: function() {
+        this._super();
+
+        // Remove the observers when the object is destroyed
+        this._dynamicObserverRemover('fieldsToWatch', '_checkErrors')
+        this._dynamicObserverRemover('requiredFields', '_requiredFieldsChecker')
+    }
+});
 
 /*
   Mixin for validating multiple properties in a model instance at runtime
@@ -40,7 +292,6 @@ App.ModelValidationMixin = Ember.Mixin.create({
     // fields: an array of properties which will be checked
     //
     validatedFieldsProperty: function(name, fields) {
-
         if (!fields || typeof fields['forEach'] !== 'function') throw new Error('Expected an array of fields to validate');
 
         var self = this;
@@ -279,19 +530,19 @@ App.UploadedImageView = App.UploadFile.extend({
     type: 'file',
 
     change: function (evt) {
-        var files = evt.target.files;
-        var reader = new FileReader();
-        var file = files[0];
-        var view = this;
+        var files = evt.target.files;
+        var reader = new FileReader();
+        var file = files[0];
+        var view = this;
 
-        reader.onload = function(e) {
-            var preview = "<img src='" + e.target.result + "' />";
-			view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
-        };
+        reader.onload = function(e) {
+            var preview = "<img src='" + e.target.result + "' />";
+            view.$().parents('.l-wrapper').find('.previewUpload').after('<div class="test">' + preview + '</div>');
+        };
         reader.readAsDataURL(file);
         var model = this.get('parentView.controller.model');
-        this.set('file', file);
-    }
+        this.set('file', file);
+   }
 });
 
 
@@ -304,97 +555,94 @@ App.PopOverMixin = Em.Mixin.create({
 
 
 App.MapPicker = Em.View.extend({
+    templateName: 'map_picker',
+    marker: null,
 
-	templateName: 'map_picker',
-	marker: null,
+    keyPress: function (evt) {
+        var code = evt.which;
+        // If enter key pressed
+        if (code == 13) {
+            evt.preventDefault();
+            this.send('lookUpLocation');
+        }
+    },
+    actions: {
+        lookUpLocation: function() {
+            var address = this.get('lookup');
+            var view = this;
 
-	submit: function(e){
-		e.preventDefault();
-		this.lookUpLocation();
-	},
-	actions: {
-		lookUpLocation: function() {
-			var address = this.get('lookup');
-			var view = this;
+            view.geocoder.geocode( {'address': address}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    view.placeMarker(results[0].geometry.location);
+                    view.set('latitude',  '' + results[0].geometry.location.lat().toString());
+                    view.set('longitude', '' + results[0].geometry.location.lng().toString());
 
-			view.geocoder.geocode( {'address': address}, function(results, status) {
-				if (status == google.maps.GeocoderStatus.OK) {
-					view.placeMarker(results[0].geometry.location);
-					view.set('latitude',  '' + results[0].geometry.location.lat().toString());
-					view.set('longitude', '' + results[0].geometry.location.lng().toString());
+                    var latlng = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
+                    view.geocoder.geocode({'latLng': latlng}, function(results, status) {
+                        if (status == google.maps.GeocoderStatus.OK) {
+                            for (var i = 0; i < results[0].address_components.length; i++) {
+                                if (results[0].address_components[i].types[0] == "country") {
+                                    var code = results[0].address_components[i].short_name,
+                                        country = App.Country.find().filterProperty('code', code)[0];
 
-					var latlng = new google.maps.LatLng(view.get('latitude'), view.get('longitude'));
-					view.geocoder.geocode({'latLng': latlng}, function(results, status) {
-						if (status == google.maps.GeocoderStatus.OK) {
-							for (var i = 0; i < results[0].address_components.length; i++) {
-								if (results[0].address_components[i].types[0] == "country") {
-									var code = results[0].address_components[i].short_name,
-									    country = App.Country.find().filterProperty('code', code)[0];
+                                    if (country)
+                                        view.get('model').set('country', country);
+                                }
+                            }
+                        }
 
-									if (country)
-										view.get('model').set('country', country);
-								}
-							}
-						}
-
-					});
-				} else {
-					alert('Geocode was not successful for the following reason: ' + status);
-				}
-			});
-		}
-	},
-     placeMarker: function (position) {
-         var view = this;
-         if (view.marker) {
-             view.marker.setMap(null)
-         }
-
-         view.marker = new google.maps.Marker({
-             draggable: true,
-             position: position,
-             map: view.map
-         });
-         google.maps.event.addListener(view.marker, 'dragend', function(){
-              var pos = view.marker.getPosition();
-              view.set('latitude', pos.lat().toString());
-              view.set('longitude', pos.lng().toString());
-         });
-
-         view.map.panTo(position);
-     },
-
-     didInsertElement: function(){
-         var view = this;
-         this.geocoder = new google.maps.Geocoder();
-         var view = this;
-         var point = new google.maps.LatLng(52.3747157,4.8986167);
-         var latitude = view.get('latitude');
-         var longitude = view.get('longitude');
-         if (latitude && longitude){
-             point = new google.maps.LatLng(latitude, longitude);
-         }
-         var mapOptions = {
-             zoom: 2,
-             center: point,
-             mapTypeId: google.maps.MapTypeId.ROADMAP,
-             mapTypeControlOptions: {
-                 style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-                 position: google.maps.ControlPosition.BOTTOM_RIGHT
-             }
-         };
-         view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
-
-         view.placeMarker(point);
-
-         google.maps.event.addListener(view.map, 'click', function(e) {
-             var loc = {};
-             view.set('latitude', e.latLng.lat().toString());
-             view.set('longitude', e.latLng.lng().toString());
-             view.placeMarker(e.latLng);
-         });
-     }
-
+                    });
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+    },
+    placeMarker: function (position) {
+        var view = this;
+        if (view.marker) {
+            view.marker.setMap(null)
+        }
+        view.marker = new google.maps.Marker({
+            draggable: true,
+            position: position,
+            map: view.map
+        });
+        google.maps.event.addListener(view.marker, 'dragend', function(){
+             var pos = view.marker.getPosition();
+             view.set('latitude', pos.lat().toString());
+             view.set('longitude', pos.lng().toString());
+        });
+        view.map.panTo(position);
+    },
+    didInsertElement: function(){
+        var view = this;
+        this.geocoder = new google.maps.Geocoder();
+        var view = this;
+        var point = new google.maps.LatLng(52.3747157,4.8986167);
+        var latitude = view.get('latitude');
+        var longitude = view.get('longitude');
+        if (latitude && longitude){
+            point = new google.maps.LatLng(latitude, longitude);
+        }
+        var mapOptions = {
+            zoom: 2,
+            center: point,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                position: google.maps.ControlPosition.BOTTOM_RIGHT
+            }
+        };
+        view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
+        view.placeMarker(point);
+        google.maps.event.addListener(view.map, 'click', function(e) {
+            var loc = {};
+            view.set('latitude', e.latLng.lat().toString());
+            view.set('longitude', e.latLng.lng().toString());
+            view.placeMarker(e.latLng);
+        });
+    }
 });
 
 App.FlashView = Em.View.extend();

@@ -110,7 +110,7 @@
                     </ul>
                 </div>
 
-                {{#unless controllers.currentUser.isAuthenticated}}
+                {{#unless currentUser.isAuthenticated}}
                     {% block_verbatim  'footer_join' %}
                         <div class="footer-join-us">
                             <h3>{% blocktrans %}Join Bluebottle{% endblocktrans %}</h3>

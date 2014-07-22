@@ -16,7 +16,7 @@ class OrderStatuses(DjangoChoices):
     closed = ChoiceItem('closed', label=_("Closed"))
 
 
-class Order(models.Model):
+class BaseOrder(models.Model):
     """
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
@@ -31,3 +31,5 @@ class Order(models.Model):
 
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
+    class Meta:
+        abstract = True

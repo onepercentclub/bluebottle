@@ -59,7 +59,7 @@ class AdyenPaymentMetaData(models.Model):
     language = models.CharField(max_length=2, default='en')
 
 
-class AdyenCreditCard():
+class AdyenCreditCardTransaction():
     """
     • expiryMonth
     The expiration date's month written as a 2-digit string, padded with 0 if required. For example, 03 or 12.
@@ -72,12 +72,6 @@ class AdyenCreditCard():
     • cvc
     The card validation code. This is the the CVC2 code (for MasterCard), CVV2 (for Visa) or CID (for
     American Express).
-    • issueNumber (Maestro UK / Solo only)
-    This feld is no longer in use.
-    • startMonth (Maestro UK / Solo only)
-    This feld is no longer in use.
-    • startYear (Maestro UK / Solo only)
-    This feld is no longer in use.
     """
     expiry_month = models.CharField(max_length=200, default='')
 

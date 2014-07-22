@@ -94,7 +94,7 @@ class DocdataTransaction(Transaction):
         ordering = ('-created', '-updated')
 
 
-class DocDataWebDirectDirectDebit(DocDataPayment):
+class DocDataDirectDebitTransaction(Transaction):
     account_name = models.CharField(max_length=35)  # max_length from DocData
     account_city = models.CharField(max_length=35)  # max_length from DocData
     iban = IBANField()

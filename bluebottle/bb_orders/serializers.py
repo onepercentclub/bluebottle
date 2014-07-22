@@ -1,6 +1,6 @@
 # coding=utf-8
 from bluebottle.bluebottle_drf2.serializers import EuroField
-from bluebottle.donations.serializers import DonationSerializer
+from bluebottle.bb_donations.serializers import DonationSerializer
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from .models import Order, OrderStatuses

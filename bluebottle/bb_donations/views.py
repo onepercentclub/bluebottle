@@ -1,6 +1,6 @@
 import logging
-from bluebottle.donations.models import Donation
-from bluebottle.donations.serializers import DonationSerializer
+from .models import Donation
+from .serializers import DonationSerializer
 from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
 from django.utils.translation import ugettext as _

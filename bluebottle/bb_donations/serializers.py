@@ -1,9 +1,6 @@
 # coding=utf-8
-from bluebottle.bluebottle_drf2.serializers import EuroField
-from bluebottle.bb_projects.models import ProjectPhase
-from django.utils.translation import ugettext as _
 from rest_framework import serializers
-from .models import Donation, DonationStatuses
+from .models import Donation
 
 class DonationSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(source='project', slug_field='slug')

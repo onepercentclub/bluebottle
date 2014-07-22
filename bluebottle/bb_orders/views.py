@@ -1,6 +1,6 @@
 import logging
-from bluebottle.orders.models import OrderStatuses
-from bluebottle.orders.permissions import IsOrderCreator
+from bluebottle.bb_orders.models import OrderStatuses
+from bluebottle.bb_orders.permissions import IsOrderCreator
 from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
 from django.utils.translation import ugettext as _

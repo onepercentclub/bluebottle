@@ -122,6 +122,9 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
                   not found?! Hard fail?
             """
             submit_status = ProjectPhase.objects.get(slug='plan-submitted')
+            new_status = ProjectPhase.objects.get(slug='plan-new')
+            needs_work_status = ProjectPhase.objects.get(slug='plan-needs-work')
+
             proposed_status = value
             current_status = None
 
@@ -131,16 +134,14 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
             except KeyError:
                 current_status = ProjectPhase.objects.order_by('sequence').all()[0]
 
-            if current_status and submit_status and proposed_status:
-                max_sequence = submit_status.sequence
-
+            if current_status and proposed_status:
                 """
-                Reset the status if the owner is trying to set the status
-                higher than the max permitted, or the user is trying to
-                set the status back to a lower state
+                These are possible combinations of current v. proposed status which are permitted:
+                1) the current status is the same as the proposed status
+                2) the current is new or needs work and the proposed is submitted
                 """
-                if (proposed_status and (proposed_status.sequence > max_sequence 
-                                            or proposed_status.sequence < current_status.sequence)):
+                if ( not (proposed_status == current_status) and 
+                     not (proposed_status and (current_status == new_status or current_status == needs_work_status) and proposed_status == submit_status)):
                     raise serializers.ValidationError(_("You can not change the project state."))
 
         attrs[source] = value

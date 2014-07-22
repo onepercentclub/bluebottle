@@ -321,7 +321,7 @@ App.TaskNewController = Em.ObjectController.extend({
         task.on('didCreate', function(record) {
             controller.transitionToRoute('task', task);
             if (controller.get('tracker')) {
-                controller.get('tracker').trackEvent("New task", {});
+                controller.get('tracker').trackEvent("New task", {title: task.get('title')});
             }
 
         });
@@ -348,7 +348,7 @@ App.TaskEditController = App.TaskNewController.extend({
         task.on('didUpdate', function(record) {
             controller.transitionToRoute('task', task);
             if (controller.get('tracker')) {
-                controller.get('tracker').trackEvent("Successful task edit", {});
+                controller.get('tracker').trackEvent("Successful task edit", {title: task.get("title")});
             }
 
         });

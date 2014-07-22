@@ -19,6 +19,10 @@ urlpatterns = patterns('',
     url(r'^api/utils/', include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/', include('bluebottle.wallposts.urls.api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls.api')),
+
+    url(r'^api/orders/', include('bluebottle.bb_orders.urls.api')),
+    url(r'^api/donations/', include('bluebottle.bb_donations.urls.api')),
+
     url(r'^documents/', include('bluebottle.utils.urls.main')),
 )
 

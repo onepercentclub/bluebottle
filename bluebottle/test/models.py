@@ -6,7 +6,7 @@ from bluebottle.bb_tasks.models import BaseTask, BaseSkill, BaseTaskFile, BaseTa
 
 class TestBaseProject(BaseProject):
     """
-    Instantiate the abstract base model for a user with no additional attributes. Used only for testing.
+    Instantiate the abstract base model for a project. Used only for testing.
     """
     pass
 
@@ -66,3 +66,12 @@ class TestOrganizationDocument(BaseOrganizationDocument):
     Implementation for testing of BaseOrganizationDocument
     """
     pass
+
+
+class TestBaseOrder(BaseOrder):
+    """
+    Instantiate the abstract base model for an order. Used only for testing.
+    """
+    pass
+
+

@@ -6,21 +6,8 @@
 
     <li class="project-item">
 
-        {{#link-to 'project' getProject }}
-            <span class="project-header">
-                <figure class="project-image">
-                    {{#if image.small.length}}
-                        <img {{bindAttr src="image.small" }} />
-                    {{else}}
-                        <img {{bindAttr src="image" }} />
-                    {{/if}}
-                </figure>
-
-                <span class="project-title">
-                    <h3>{{title}}</h3>
-                    <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
-                </span>
-            </span>
+        {{#linkTo 'project' id }}
+            {{ partial "_project_preview_header" }}
 
             <span {{bindAttr class=":project-status phase"}}>
                 {{#if isPhasePlan}}
@@ -60,7 +47,7 @@
                 <span class="project-view">{% trans "View project" %}</span>
             </span>
 
-        {{/link-to}}
+        {{/linkTo}}
 
         {{#if taskCount}}
             <a class="project-tasks"><span class="flaticon solid wrench-1"></span> <strong>{{taskCount}}</strong> <em>{% trans "task(s) available" %}</em></a>

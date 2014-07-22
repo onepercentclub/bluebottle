@@ -29,7 +29,7 @@
             </div>
 
             <sidebar class="l-sidebar">
-                {{#if controllers.currentUser.isAuthenticated }}
+                {{#if currentUser.isAuthenticated }}
                     {{#if isProjectOwner}}
                         <h3>{% trans "Write an update" %}</h3>
                         <p>{% trans "Write an update of your project to inform your crowd." %}</p>

@@ -40,7 +40,7 @@
             <link rel="stylesheet" href="{% static 'css/screen.css' %}" media="screen" />
             <link rel="stylesheet" href="{% static 'css/vendor/redactor.css' %}" media="screen" />
             <!--[if IE]>
-            <link rel="stylesheet" href="{% static 'css/ie.css" media="screen" />
+            <link rel="stylesheet" href="{% static 'css/ie.css' %}" media="screen" />
             <![endif]-->
         {% endblock screen_css %}
     {% endcompress %}
@@ -55,6 +55,7 @@
         var LANGUAGE_CODE = '{{ LANGUAGE_CODE }}';
         var DEBUG = {{ DEBUG|yesno:"true,false" }};
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
+        var FACEBOOK_AUTH_ID = '{{ FACEBOOK_AUTH_ID }}';
     </script>
 
     {% if RAVEN_DSN %}
@@ -77,9 +78,8 @@
         <script type="text/javascript" src="{% static 'js/vendor/handlebars-1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-v1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-v0.14.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/plugins/ember-facebook.js' %}"></script>
     {% endcompress %}
-
-    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
 
     {% compress js %}
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-drf2-adapter.js' %}"></script>
@@ -91,18 +91,6 @@
             <script type="text/javascript" src="{% static i18n_static %}"></script>
         {% endwith %}
 
-        {% if DEBUG %}
-            {# Ember profiling #}
-            <script type="text/javascript" src="{% static 'js/vendor/ember-renderspeed.js' %}"></script>
-        {% endif %}
-
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-transition.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-modal.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-tooltip.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-popover.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-typeahead.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/vendor/ember-bootstrap-df3e710.js' %}"></script>
-
         <script type="text/javascript" src="{% static 'js/vendor/jquery-validation/jquery.validate.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/redactor.min.js' %}"></script>
 
@@ -113,8 +101,17 @@
         <script type="text/javascript" src="{% static 'js/plugins/unslider.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/plugins/ember.hashbang.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/jquery.scrollTo.min.js' %}" charset="utf-8"></script>
-        <script type="text/javascript" src="{% static 'js/infobox.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/marker_clusterer.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'js/plugins/bb_modal.js' %}"></script>
+
+        {# Bootstrap #}
+        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-transition.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-modal.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-tooltip.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-popover.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/vendor/bootstrap/bootstrap-typeahead.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/vendor/ember-bootstrap-df3e710.js' %}"></script>
 
         {# JS slider #}
         <script src="{% static 'js/vendor/jslider/draggable-0.1.js' %}"></script>
@@ -126,14 +123,13 @@
 
         {# BlueBottle Application #}
         {% block ember_scripts %}
-            {{ block.super }}
-
             <script type="text/javascript" src="{% static 'js/bluebottle/presets.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/app.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/auth_jwt.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/utils.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/overrides.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/views.js' %}"></script>
 
             {% for app in bb_apps %}
                 {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}
@@ -160,16 +156,26 @@
         {% include "bluebottle/templates.hbs" %}
     {% endblock handlebars_templates %}
 
+    <script src="//maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script>
+    <script src="//google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/src/infobox.js"></script>
+
     {% block htmlheader %}{% endblock %}
 
     {% tplhandlebars "language" %}
         <a {{action "selectLanguage" view.content.code}}{{bindAttr title=view.content.name}}>{{ view.content.code }}</a>
     {% endtplhandlebars %}
 
+    {% if MIXPANEL %}
+<!-- start Mixpanel --><script type="text/javascript">(function(f,b){if(!b.__SV){var a,e,i,g;window.mixpanel=b;b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");
+for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElement("script");a.type="text/javascript";a.async=!0;a.src="//cdn.mxpnl.com/libs/mixpanel-2.2.min.js";e=f.getElementsByTagName("script")[0];e.parentNode.insertBefore(a,e)}})(document,window.mixpanel||[]);
+mixpanel.init("{{ MIXPANEL }}");</script><!-- end Mixpanel -->
+    {%  endif %}
 </head>
 <body id="body">
     <!-- Scripts -->
     <div id="fb-root"></div>
+
+
 
   {% block google_analytics %}
         <script type="text/javascript">
@@ -217,7 +223,5 @@
 
     {% block content %}
     {% endblock %}
-
-
 </body>
 </html>

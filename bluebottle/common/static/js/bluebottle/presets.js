@@ -36,18 +36,6 @@ function sameOrigin(url) {
     // or any other URL that isn't scheme relative or absolute i.e relative. !(/^(\/\/|http:|https:).*/.test(url));
 }
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
-            // Send the token to same-origin, relative URLs only.
-            // Send the token only if the method warrants CSRF protection
-            // Using the CSRFToken value acquired earlier
-            xhr.setRequestHeader("X-CSRFToken", App.get('csrfToken'));
-        }
-    }
-});
-
-
 // Create a mock 'File' class so things won't break to awfully in IE8&9
 // FIXME: Use a polyfill for this!!
 // https://github.com/francois2metz/html5-formdata

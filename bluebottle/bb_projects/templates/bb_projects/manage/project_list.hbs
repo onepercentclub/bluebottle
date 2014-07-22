@@ -57,6 +57,12 @@
 	                                {% trans "Campaign is in review" %}
 	                        {{/if}}
 	                        {{#if project.viewable}}
+                                {{#if project.isFundable}}
+                                    {{#link-to "projectDonationList" project.id class="btn-link right"}}
+                                        <span class="flaticon solid wallet-1"></span>
+                                        {% trans "Donations" %}
+                                    {{/link-to}}
+                                {{/if}}
 	                            {{#link-to "project" project.id class="btn-link right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Post update" %}
@@ -72,14 +78,10 @@
 					{{/each}}
 	            </ul>
 			</div>
+
+			{{ partial "_project_list_create_btn" }}
 			
-			
-            <div class="l-sidebar">
-		    	{{#link-to "myProject.start" 'new' elementId="create_project" tagName="button" class="btn btn-primary btn-iconed"}}
-		            <span class="flaticon solid lightbulb-3"></span>
-		            {% trans "Create new campaign" %}
-		        {{/link-to}}
-            </div>
+
         </div>
     </div>
 

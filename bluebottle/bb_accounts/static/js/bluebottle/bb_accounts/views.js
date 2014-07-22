@@ -2,32 +2,65 @@
 *  Views
 */
 
-App.UserModalView = Em.View.extend({
+App.SignupView = App.FormView.extend({
+
+    submitAction: 'signup',
+
+    firstName: gettext("First name"),
+    surname: gettext("Surname"),
+    emailText: gettext("Email address"),
+    reenterEmail: gettext("Re-enter email address"),
+    passwordText: gettext("Password")
+
+});
+
+App.UserModalView = App.FormView.extend({
     templateName: 'user_modal'
 });
 
-
-App.LoginView = Em.View.extend({
+App.LoginView = App.FormView.extend({
     templateName: 'login',
-    didInsertElement: function() {
-        $("#login-form").validate({
-            messages: {
-                username: {
-                    email: gettext("Please use your email address to log in.")
-                }
-            },
-            onfocusout: true
 
-        });
-    },
+    placeholderText: gettext("Email address"),
+    passwordText: gettext("Password"),
+
+    next: function() {
+        return  String(window.location);
+    }.property(),
+
+    submitAction: 'login'
+});
+
+App.PasswordResetView = App.FormView.extend({
+    clearForm: function () {
+        var controller = this.get('controller');
+
+        controller.set('new_password1', null);
+        controller.set('new_password2', null);
+        controller.set('error', null);
+    }.on('willInsertElement'),
+
+    submitAction: 'resetPassword',
+
     next: function() {
         return  String(window.location);
     }.property()
 });
 
+App.PasswordRequestView = App.FormView.extend({
+    placeholderText: gettext("Email address"),
+    submitAction: 'requestReset'
+});
+
+
 App.ItemSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: "Pick an item"
+    prompt: gettext("Pick an item")
+});
+
+App.DisableAccountView = App.FormView.extend({
+     templateName: 'disable'
+
 });
 

@@ -8,7 +8,7 @@ def installed_apps_context_processor(request):
     for app in settings.INSTALLED_APPS:
         if app[:11] == 'bluebottle.':
             # Ignore some standard apps
-            if app[11:] not in ['common', 'admin_dashboard', 'contentplugins']:
+            if app[11:] not in ['common', 'admin_dashboard', 'contentplugins', 'auth']:
                 bb_apps.append(app[11:])
     context = {
         'installed_apps': settings.INSTALLED_APPS,
@@ -78,4 +78,25 @@ def conf_settings(request):
     context['DEBUG'] = getattr(settings, 'DEBUG', False)
     context['COMPRESS_TEMPLATES'] = getattr(settings, 'COMPRESS_TEMPLATES', False)
 
+    return context
+
+
+def facebook_auth_settings(request):
+    """
+    Facebook Auth client side ID.
+    """
+    context = {}
+    context['FACEBOOK_AUTH_ID'] = getattr(settings, 'SOCIAL_AUTH_FACEBOOK_KEY', '')
+
+    return context
+
+
+def mixpanel_settings(request):
+    """
+    Add Mixpanel API key from settings file to general request context.
+    """
+    try:
+        context = {'MIXPANEL': settings.MIXPANEL}
+    except AttributeError:
+        context = {}
     return context

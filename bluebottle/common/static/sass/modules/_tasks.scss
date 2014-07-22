@@ -295,6 +295,7 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 		
 		&.task-list-open {
 			background-color: $task-list-open-background;
+			z-index: 1;
 		}
 		
 		&.task-list-closed {

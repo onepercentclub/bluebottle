@@ -33,7 +33,18 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	            { color: "#FFFFFF" },
 	        ]
 	    }
-	],
+    ],
+
+    clusterOptions: {
+        gridSize: 10,
+        styles: [{
+            url: "/static/assets/images/icons/marker_cluster.png",
+            height: 23,
+            width: 22,
+            textColor: '#003580',
+            anchorText: [-20, 0]
+        }]
+    },
 
     center: [52.3722499, 4.907800400000042],
     getCenter: function(){
@@ -44,7 +55,9 @@ App.BbProjectMapComponent = Ember.Component.extend({
 	markers: [],
     info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-title">{{#link-to "project" this}}{{title}}{{/link-to}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
-	icon: '/static/assets/images/icons/marker.png',
+
+	icon1: '/static/assets/images/icons/marker.png',
+	icon2: '/static/assets/images/icons/marker_ok.png',
 
     initMap: function(){
         var view = this;
@@ -76,7 +89,6 @@ App.BbProjectMapComponent = Ember.Component.extend({
             }
         });
     },
-
     placeMarkers: function() {
         var comp = this;
         var bounds = new google.maps.LatLngBounds();
@@ -88,29 +100,9 @@ App.BbProjectMapComponent = Ember.Component.extend({
                 bounds.extend(marker.position);
                 comp.get("map").fitBounds(bounds);
             });
+            var markerCluster = new MarkerClusterer(comp.get("map"), markers, comp.get('clusterOptions'));
         });
-        // var clusterStyles = [
-        //   {
-        //     textColor: 'white',
-        //     url: "/static/assets/images/icons/clusterer-small.png",
-        //     height: 20,
-        //     width: 20
-        //   },
-        //  {
-        //     textColor: 'white',
-        //     url: "/static/assets/images/icons/clusterer-medium.png",
-        //     height: 30,
-        //     width: 30
-        //   },
-        //  {
-        //     textColor: 'white',
-        //     url: "/static/assets/images/icons/clusterer-large.png",
-        //     height: 40,
-        //     width: 40
-        //   }
-        // ];
-        // var markerCluster = new MarkerClusterer(this.get("map"), markers, {maxZoom: 10, styles: clusterStyles});
-        this.set("markers", markers);
+
     },
 
     placeMarker: function(project){
@@ -155,11 +147,13 @@ App.BbProjectMapComponent = Ember.Component.extend({
 			position: latLng
 		});
 
+
+
         var marker = new google.maps.Marker({
 		    position: latLng,
 		    map: view.map,
 		    title: project.get('title'),
-		    icon: this.get('icon')
+		    icon: project.get('status.id') == 4 ?  this.get('icon1'): this.get('icon2')
 	    });
         		
 	    google.maps.event.addListener(marker, 'click', function() {

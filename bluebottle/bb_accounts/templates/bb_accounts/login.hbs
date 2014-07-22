@@ -1,67 +1,15 @@
 {% load bb_ember i18n %}
 
 {% block login_wrapper %}
-    
+
     {% tplhandlebars "login" %}
+        {{#if userMatch}}
+            {{partial "matched_login_content"}}
+        {{else}}
+            {{partial "standard_login_content"}}
+        {{/if}}
 
-        {% block_verbatim signup_content %}
-            
-            {% comment %}
-            Commented out until we have time to fully implement this.
-            <a href="/social/login/facebook" class="fb-login">
-                <img src="/static/assets/images/sprites/facebook/facebook-login.png" />
-            </a>
-            {% endcomment %}
-
-            <form id="login-form" action="{% url 'accounts:login' %}" method="post">
-
-                <div class="modal-header">
-                    {% block login_header %}
-                        <h3>{% trans "Log in to &lt;BlueBottle-project-name&gt;" %}</h3>
-                    {% endblock login_header %}
-                </div>
-
-                <div class="modal-body">
-                
-                    {{#if post_password_reset }}
-                        {% block password_reset_success %}
-                            <p class="succes">{%  trans "Override block password_reset_success to display your own password reset success message." %}</p>
-                        {% endblock password_reset_success %}
-                    {{/if}}
-                    
-                    <input type='hidden' name='csrfmiddlewaretoken' {{bindAttr value='App.csrfToken'}} />
-                    <div class="control-group">
-                        <label class="control-label" for="id_email">{% trans "Email" %}:</label>
-
-                        <div class="controls">
-                            {# The key for the login needs to be 'username' for logins to work. #}
-                            <input id="id_email" type="email" name="username" maxlength="254" />
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label class="control-label" for="id_password">{% trans "Password" %}:</label>
-
-                        <div class="controls">
-                            <input id="id_password" type="password" name="password" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    {% block_verbatim login_footer %}
-                        
-                        <a {{ action 'requestPasswordReset' }} class="login-forgot">
-                            {% trans "Password forgotten" %}
-                        </a>
-                        <input class="btn btn-submit" type="submit" value="{% trans 'Login' %}">
-                        <input type="hidden" name="next" {{bindAttr value="view.next"}}>
-                    
-                    {% endblock_verbatim login_footer %}
-                </div>
-            </form>
-
-        {% endblock_verbatim signup_content %}
+        {{partial "login_footer"}}
 
     {% endtplhandlebars %}
 

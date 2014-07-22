@@ -32,9 +32,13 @@ class LocaleMiddleware(object):
 
         This middleware is only relevant with i18n_patterns.
         """
-
         if self.enable_middleware():
-            if request.user.is_authenticated():
+            try:
+                authenticated = request.user.is_authenticated()
+            except AttributeError:
+                authenticated = False
+
+            if authenticated:
                 lang_code = request.user.primary_language
 
                 if lang_code:
@@ -43,22 +47,27 @@ class LocaleMiddleware(object):
                     # in the wrong language.
                     expected_url_lang_prefix = '/{0}/'.format(lang_code)
                     url_parts = request.path.split('/')
-                    if len(url_parts) >= 2:
-                        current_url_lang_prefix = url_parts[1]
-                        if current_url_lang_prefix in dict(settings.LANGUAGES).keys() and not request.path.startswith(
-                                expected_url_lang_prefix):
-                            new_location = request.get_full_path().replace(
-                                '/{0}/'.format(current_url_lang_prefix), expected_url_lang_prefix)
 
-                            return http.HttpResponseRedirect(new_location)
-                    # End early redirect.
-                
+                    # Don't redirect on API requests
+                    if url_parts[1] != 'api':
+                        if len(url_parts) >= 2:
+                            current_url_lang_prefix = url_parts[1]
+                            if current_url_lang_prefix in dict(settings.LANGUAGES).keys() and not request.path.startswith(
+                                    expected_url_lang_prefix):
+                                new_location = request.get_full_path().replace(
+                                    '/{0}/'.format(current_url_lang_prefix), expected_url_lang_prefix)
+
+                                return http.HttpResponseRedirect(new_location)
+                        # End early redirect.
+                    
                     if translation.check_for_language(lang_code):
                         # activate the language
                         translation.activate(lang_code)
                         request.LANGUAGE_CODE = translation.get_language()
+
             else:
-                pass #TODO
+                if not request.LANGUAGE_CODE:
+                    request.LANGUAGE_CODE = settings.LANGUAGE_CODE
 
     def process_response(self, request, response):
         """ Store the language """

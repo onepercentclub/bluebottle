@@ -6,7 +6,7 @@ App.ProjectSupporterView = Em.View.extend({
     templateName: 'project_supporter',
     tagName: 'li',
     didInsertElement: function(){
-        this.$('a').popover({trigger: 'hover', placement: 'top'})
+        this.$('a').popover({trigger: 'hover', placement: 'top'});
     }
 });
 
@@ -26,6 +26,9 @@ App.ProjectPreviewView = Em.View.extend({
     templateName: 'project_preview'
 });
 
+App.ProjectSearchInput = Em.TextField.extend({
+    placeholder: gettext('Search')
+});
 
 App.ProjectSearchFormView = Em.View.extend({
     templateName: 'project_search_form'
@@ -77,6 +80,13 @@ App.ProjectIndexView = Em.View.extend({
 /* Form Elements */
 
 App.ProjectPhaseSelectView = Em.Select.extend({
+    optionValuePath: "content.id",
+    optionLabelPath: "content.name",
+    prompt: gettext("Pick a phase")
+
+});
+
+App.ProjectPhaseChoiceView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
     prompt: gettext("Pick a phase")
@@ -187,4 +197,10 @@ App.MyProjectCampaignView = Em.View.extend({
 App.MyProjectSubmitView = Em.View.extend({
     templateName: 'my_project_submit'
 });
+
+
+App.ProjectDonationListView = Em.View.extend({
+    templateName: 'project_donation_list'
+});
+
 

@@ -17,14 +17,6 @@ App.Adapter.map('App.MyProject', {
     tags: {embedded: 'always'}
 });
 
-App.Adapter.map('App.PartnerOrganization', {
-    projects: {embedded: 'load'}
-});
-
-App.Adapter.map('App.ProjectDonation', {
-    member: {embedded: 'both'}
-});
-
 /* Models */
 
 App.ProjectCountry = DS.Model.extend({
@@ -138,7 +130,8 @@ App.ProjectPhase = DS.Model.extend({
     sequence: DS.attr('number'),
     active: DS.attr('boolean'),
     editable: DS.attr('boolean'),
-    viewable: DS.attr('boolean')
+    viewable: DS.attr('boolean'),
+    ownerEditable: DS.attr('boolean')
 });
 
 App.ProjectPreview = App.Project.extend({

@@ -3,7 +3,8 @@
 {% load static %}
 
 {% tplhandlebars "application" %}
-
+    {{bb-flash data=flash}}
+    
     <!-- global site -->
     <div id="main">
 
@@ -24,13 +25,16 @@
                 <!-- main navigation -->
                 <nav id="nav">
                     {{partial "main_nav"}}
-                    {% include "bb_accounts/nav.hbs" %}
+                    {{partial "account_nav"}}
                 </nav>
                 <!-- end: main navigation -->
 
                 
             </header>
-            
+            {{#if sub_menu}}
+                {{renderFromVariable sub_menu}}
+            {{/if}}
+
             {{#if display_message}}
 
                 <div {{bindAttr class=":message l-full isError"}}>
@@ -59,4 +63,5 @@
     </div>
     {{partial "footer"}}
 
+    {{outlet "modalContainer"}}
 {% endtplhandlebars %}

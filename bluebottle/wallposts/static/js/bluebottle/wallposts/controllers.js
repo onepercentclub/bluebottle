@@ -1,7 +1,5 @@
 
 App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
-    needs: ['currentUser'],
-
     // Don't show Fundraiser (title/link) on FundRaiser page.
     showFundRaiser: function(){
         if (this.get('parent_type') == 'fundraiser') {
@@ -17,20 +15,18 @@ App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
     }.property('model'),
 
     actions: {
-		editWallPost: function() {
-			console.log("edit");
-		}
+        editWallPost: function() {
+            console.log("edit");
+        }
     }
 });
 
 App.TaskWallPostListController = Em.ArrayController.extend({
-    needs: ['currentUser'],
-	
-	actions: {
-		editWallPost: function() {
-			console.log("edit");
-		}
-	}
+    actions: {
+        editWallPost: function() {
+            console.log("edit");
+        }
+    }
 });
 
 
@@ -46,8 +42,6 @@ App.TextWallPostNewController = Em.ObjectController.extend({
      *
      * Look at App.ProjectTextWallPostNewController for example
      */
-
-    needs: ['currentUser'],
 
     wallPostList: function(){
         return Em.K();
@@ -78,22 +72,22 @@ App.TextWallPostNewController = Em.ObjectController.extend({
             });
             wallPost.save();
         },
-		
-		showImages: function(event) {
-			$(".photos-tab").addClass("active");
-			$(".video-tab").removeClass("active");
+        
+        showImages: function(event) {
+            $(".photos-tab").addClass("active");
+            $(".video-tab").removeClass("active");
 
-			$(".video-container").hide();
-			$(".photos-container").show();
-		},
-		
-		showVideo: function() {
-			$(".photos-tab").removeClass("active");
-			$(".video-tab").addClass("active");
+            $(".video-container").hide();
+            $(".photos-container").show();
+        },
+        
+        showVideo: function() {
+            $(".photos-tab").removeClass("active");
+            $(".video-tab").addClass("active");
 
-			$(".video-container").show();
-			$(".photos-container").hide();			
-		}
+            $(".video-container").show();
+            $(".photos-container").hide();          
+        }
     },
 
     createNewWallPost: function() {
@@ -157,7 +151,7 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
             });
             wallPost.save();
         }
-		
+        
     },
 
     addFile: function(file) {
@@ -186,8 +180,7 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
 /* Task WallPosts */
 
 App.TaskWallPostMixin = Em.Mixin.create({
-
-    needs: ['currentUser', 'task', 'taskIndex'],
+    needs: ['task', 'taskIndex'],
     type: 'task',
 
     parentId: function(){
@@ -208,7 +201,7 @@ App.TaskMediaWallPostNewController = App.MediaWallPostNewController.extend(App.T
 
 App.ProjectWallPostMixin = Em.Mixin.create({
 
-    needs: ['currentUser', 'project', 'projectIndex'],
+    needs: ['project', 'projectIndex'],
     type: 'project',
 
     parentId: function(){
@@ -228,7 +221,7 @@ App.ProjectMediaWallPostNewController = App.MediaWallPostNewController.extend(Ap
 
 App.FundRaiserWallPostMixin = Em.Mixin.create({
 
-    needs: ['currentUser', 'fundRaiser', 'fundRaiserIndex'],
+    needs: ['fundRaiser', 'fundRaiserIndex'],
     type: 'fundraiser',
     parentType: 'fundraiser',
 
@@ -247,14 +240,10 @@ App.FundRaiserMediaWallPostNewController = App.MediaWallPostNewController.extend
 
 /* Reactions */
 
-App.WallPostReactionController = Em.ObjectController.extend(App.IsAuthorMixin, {
-    needs: ['currentUser']
-});
+App.WallPostReactionController = Em.ObjectController.extend(App.IsAuthorMixin, {});
 
 
 App.WallPostReactionListController = Em.ArrayController.extend({
-    needs: ['currentUser'],
-
     init: function() {
         this._super();
         this.createNewReaction();
@@ -263,7 +252,7 @@ App.WallPostReactionListController = Em.ArrayController.extend({
     createNewReaction: function() {
         var store = this.get('store');
         var reaction =  store.createRecord(App.WallPostReaction);
-        var name = this.get('controllers.currentUser.full_name');
+        var name = this.get('currentUser.full_name');
         var placeholder = "Hey " + name + ", you can leave a comment";
         reaction.set('placeholder', placeholder);
         this.set('newReaction', reaction);

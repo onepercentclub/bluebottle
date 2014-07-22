@@ -1,5 +1,5 @@
 App.BbFlashComponent = Em.Component.extend({
-
+    tagName: ''
 });
 
 App.BbFormFieldComponent = Em.Component.extend({

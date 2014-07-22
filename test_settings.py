@@ -28,6 +28,7 @@ TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
 TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
 ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
 ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
+PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
 
 SOUTH_TESTS_MIGRATE = True
 

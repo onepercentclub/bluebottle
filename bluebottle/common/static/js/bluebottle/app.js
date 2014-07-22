@@ -1,12 +1,15 @@
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
+
     initialize: function(container, application) {
+        var _this = this;
+
         // delay boot until the current user promise resolves
         App.deferReadiness();
 
         // Try to fetch the current user
-        App.CurrentUser.find('current').then(function(user) {
+        var currentUser = App.CurrentUser.find('current').then(function(user) {
             // Read language string from url.
             var language = window.location.pathname.split('/')[1];
 
@@ -20,16 +23,39 @@ Ember.Application.initializer({
             // We don't have to check if it's one of the languages available. Django will have thrown an error before this.
             application.set('language', language);
 
+            App.injectUser(container, user);
+
             // boot the app
             App.advanceReadiness();
-        }, function(error) {
+        }, function() {
+            App.injectUser(container, null);
+
+            container.lookup('controller:application').missingCurrentUser();
+
             // boot the app without a currect user
             App.advanceReadiness();
         });
     }
 });
 
-App = Em.Application.create({
+// A static initializer for app settings
+//TODO: we should make it as an ajax request to fetch settings from api
+Ember.Application.initializer({
+    name: 'appSettings',
+    after: 'currentUser',
+
+    initialize: function(container, application) {
+        application.set('settings',
+            Em.Object.create({
+                minPasswordLength: 6,
+                minPasswordError: gettext('Password needs to be at least 6 characters long')
+            })
+        );
+    }
+});
+
+
+App = Em.Application.createWithMixins(Em.FacebookMixin, {
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -45,7 +71,11 @@ App = Em.Application.create({
     ],
 
     ready: function() {
-        this.set('csrfToken', getCookie('csrftoken'));
+
+        // only needed when submitting a form if the user isn't authenticated
+        var metaCsrf = $('meta[name=csrf-token]');
+        if (metaCsrf)
+            this.set('csrfToken', metaCsrf.attr('content'));
 
         // Read language string from url.
         var language = window.location.pathname.split('/')[1];
@@ -79,8 +109,17 @@ App = Em.Application.create({
         App.Page.reopen({
             url: 'pages/' + language + '/pages'
         });
+
         this.setLocale(locale);
         this.initSelectViews();
+    },
+
+    injectUser: function (container, user) {
+        // Set the currentUser model/content on the currentUser controller
+        container.lookup('controller:currentUser').set('content', user);
+
+        // Inject currentUser into all controllers
+        container.typeInjection('controller', 'currentUser', 'controller:currentUser');
     },
 
     initSelectViews: function() {
@@ -113,15 +152,29 @@ App = Em.Application.create({
         });
 
         App.ProjectPhase.find().then(function(data){
-            var list = [
-                {id: 5, name: gettext("Running campaigns")},
-                {id: 7, name: gettext("Finished campaigns")}
-            ];
-            // FIXME: Find out why this doesn't work and get rid of the hardcoded bit above.
-            // var list = App.ProjectPhase.filter(function(item){return item.get('viewable');});
             App.ProjectPhaseSelectView.reopen({
-                content: list
+                content: function () {
+                    return data.filter(function(item){
+                        return item.get('viewable');
+                    });
+                },
             });
+        });
+
+        App.ProjectPhaseChoiceView.reopen({
+            sortProperties: ['sequence'],
+
+            phases: function () {
+                return App.ProjectPhase.find();
+            }.property(),
+
+            data: function () {
+                return App.ProjectPhase.filter(function(item) {
+                    return item.get('ownerEditable');
+                });
+            }.property('phases.length'),
+
+            contentBinding: 'data'
         });
     },
 
@@ -177,25 +230,6 @@ App = Em.Application.create({
     }
 });
 
-// Mixin to scroll view top top of the screen
-App.ScrollInView = Em.Mixin.create({
-    didInsertElement: function(a, b){
-        var offset = this.$().offset().top - 120;
-        var windowOffset = $(window).scrollTop();
-        // Only scroll if the focus is more then 50px off.
-        if (Math.abs(windowOffset - offset) > 50) {
-            $("html, body").animate({ scrollTop: offset }, 600);
-        }
-    }
-});
-
-App.ScrollToTop = Em.Mixin.create({
-    afterModel: function(){
-        this._super();
-        $("html, body").animate({ scrollTop: 0 }, 600);
-    }
-});
-
 
 /**
  * The Ember Data Adapter and Store configuration.
@@ -231,10 +265,12 @@ App.Adapter.configure("plurals", {
 });
 
 App.ApplicationController = Ember.Controller.extend({
-    needs: ['currentUser'],
+
+    sub_menu: false,
+
     display_message: false,
     displayMessage: (function() {
-        if (this.get('display_message') == true) {
+        if (this.get('display_message')) {
             Ember.run.later(this, function() {
                 this.hideMessage();
             }, 10000);
@@ -243,7 +279,10 @@ App.ApplicationController = Ember.Controller.extend({
 
     hideMessage: function() {
         this.set('display_message', false);
-    }
+    },
+
+    // Override this to do something when the currentUser call in the initializer doesn't succeed
+    missingCurrentUser: Em.K
 });
 
 // Embedded Model Mapping
@@ -282,6 +321,19 @@ App.Router.reopen({
     location: 'hashbang'
 });
 
+// Handle queued router transition
+App.Router.reopen({
+  didTransition: function(infos) {
+      this._super(infos);
+
+      /*
+       Clear queued (next) transition after any successful transition so the 
+       queued one does not run more than once.
+       */ 
+      this.send('clearNextTransition');
+  }
+});
+
 // Enable Google Analytics with Ember
 App.Router.reopen({
 
@@ -296,10 +348,11 @@ App.Router.reopen({
         this._super(infos);
 
         Ember.run.next(function() {
-            // the meta module will now go trough the routes and look for data
+            // the meta module will now go through the routes and look for data
             App.meta.trigger('reloadDataFromRoutes');
         });
 
+		// Track the page / route load
         var url = this.get('url');
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
@@ -330,9 +383,74 @@ App.Router.map(function() {
 });
 
 
-App.ApplicationRoute = Em.Route.extend({
+App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     actions: {
+        clearNextTransition: function () {
+            this.set('nextTransition', null);
+        },
+        setNextTransition: function (transition) {
+            this.set('nextTransition', transition);
+        },
+        loadNextTransition: function (fallbackRoute) {
+            // If the applicationRoute has a nextTransition value then we run it as 
+            // it is probably the case that the user tried to access a restricted page and 
+            // was prevented from doing it => user was presented with the sign up / in modal.
+            // If there is no nextTransition then load the passed route if defined.
+            var nextTransition = this.get('nextTransition');
+            if (nextTransition) {
+                // retry the transition
+                nextTransition.retry();
+
+                // cancel the transition so that it doesn't run again
+                this.send('clearNextTransition');
+            } else if (Em.typeOf(fallbackRoute) == 'string') {
+                this.transitionTo(fallbackRoute);
+            }
+        },
+        setFlash: function (message, type, timeout) {
+            var flash = {},
+                _this = this,
+                 time = timeout || 3000;
+
+            flash.activeNameClass = 'is-active';
+
+            if (typeof message === 'object') {
+                flash = message;
+
+            } else {
+                flash.text = message;
+                if (typeof type === 'undefined') {
+                    flash.type = 'welcome';
+                } else {
+                    flash.type = type;
+                }
+
+            }
+            this.controllerFor('application').set('flash', flash);
+
+            if (timeout === false) {
+                return true;
+            } else {
+                setTimeout(function() {
+                    _this.send('addRemoveClass', 'remove', ['.flash', '.flash-container'], ['is-active', 'is-active']);
+                }, time);
+            }
+        },
+
+        clearFlash: function() {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                _this = this,
+                callback = function flashClearCallback() {
+                    _this.controllerFor('application').set('flash', null);
+                };
+
+            _this.send('addRemoveClass', 'remove', ['.flash', '.flash-container'], ['is-active', 'is-active'], callback, animationEnd);
+        },
+
+        logout: function () {
+            // Do some logout stuff here!
+        },
         selectLanguage: function(language) {
             var user = App.CurrentUser.find('current');
             if (!user.get('id_for_ember')) {
@@ -348,29 +466,7 @@ App.ApplicationRoute = Em.Route.extend({
                     // Language already set. Don't do anything;
                     return true;
                 }
-
-                if (settings.get('id')) {
-                    settings.save();
-                }
-                var languages = App.get('interfaceLanguages');
-                for (i in languages) {
-                    // Check if the selected language is available.
-                    if (languages[i].code == language) {
-                        if (settings.get('id')) {
-                            settings.set('primary_language', language);
-                        }
-                        settings.on('didUpdate', function(){
-                            document.location = '/' + language + document.location.hash;
-                        });
-                        settings.save();
-                        return true;
-                    }
-                }
-                language = 'en';
-                if (settings.get('id')) {
-                    settings.set('primary_language', language);
-                }
-
+                settings.set('primary_language', language);
                 settings.on('didUpdate', function(){
                     document.location = '/' + language + document.location.hash;
                 });
@@ -381,26 +477,6 @@ App.ApplicationRoute = Em.Route.extend({
             return true;
         },
 
-        openInFullScreenBox: function(name, context) {
-            this.send('openInBox', name, context, 'full-screen');
-        },
-
-        openInScalableBox: function(name, context) {
-            this.send('openInBox', name, context, 'scalable');
-        },
-
-        openInBigBox: function(name, context) {
-            this.send('openInBox', name, context, 'large');
-        },
-
-        openInBox: function(name, context, type, callback) {
-            this.openInBox(name, context, type, callback);
-        },
-        
-        closeAllModals: function(){
-            $('[rel=close]').click();
-        },
-
         showProjectTaskList: function(project_id) {
             var route = this;
             App.Project.find(project_id).then(function(project) {
@@ -409,53 +485,25 @@ App.ApplicationRoute = Em.Route.extend({
             });
         },
 
-        showPage: function(page_id) {
+        showPage: function(pageId, newWindow) {
+            if (Ember.typeOf(newWindow) == 'undefined')
+                newWindow = false;
+
             var route = this;
-            App.Page.find(page_id).then(function(page) {
-                route.transitionTo('page', page);
-                window.scrollTo(0, 0);
+            App.Page.find(pageId).then(function(page) {
+                if (newWindow) {
+                    var url = route.router.generate('page', page);
+                    window.open(url, "_blank");
+                } else {
+                    route.transitionTo('page', page);
+                    window.scrollTo(0, 0);
+                }
             });
         }
     },
 
-    // Add openInBox as function on ApplicationRoute so that it can be used
-    // outside the usual template/action context
-    openInBox: function(name, context, type, callback) {
-        // Close all other modals.
-        $('.close-modal').click();
-
-        // Get the controller or create one
-        var controller = this.controllerFor(name);
-        if (context) {
-            controller.set('model', context);
-        }
-
-        if (typeof type === 'undefined')
-          type = 'normal'
-
-        var classNames = [type];
-
-        // Get the view. This should be defined.
-        var view = App[name.classify() + 'View'].create();
-        view.set('controller', controller);
-
-        var modalPaneTemplate = ['<div class="modal-wrapper"><a class="close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
-
-        var options = {
-            classNames: classNames,
-            defaultTemplate: Em.Handlebars.compile(modalPaneTemplate),
-            bodyViewClass: view
-        }
-
-        if (callback) {
-            options.callback = callback;
-        }
-
-        Bootstrap.ModalPane.popup(options);
-    },
-
     urlForEvent: function(actionName, context) {
-        return "/nice/stuff"
+        return "/nice/stuff";
     }
 });
 
@@ -476,36 +524,4 @@ App.UserIndexRoute = Em.Route.extend({
     beforeModel: function() {
         this.transitionTo('userProfile');
     }
-});
-
-
-/* Views */
-
-App.LanguageView = Em.View.extend({
-    templateName: 'language',
-    classNameBindings: ['isSelected:active'],
-    isSelected: function(){
-        if (this.get('content.code') == App.language) {
-            return true;
-        }
-        return false;
-    }.property('content.code')
-
-});
-
-App.LanguageSwitchView = Em.CollectionView.extend({
-    classNames: ['nav-language'],
-    content: App.interfaceLanguages,
-    itemViewClass: App.LanguageView
-});
-
-App.LanguageSelectView = Em.Select.extend({
-    classNames: ['language'],
-    optionValuePath: 'content.id',
-    optionLabelPath: 'content.native_name',
-    prompt: gettext('Pick a language')
-});
-
-App.ApplicationView = Em.View.extend({
-    elementId: 'site'
 });

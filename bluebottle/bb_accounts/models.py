@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -14,6 +15,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
+from rest_framework_jwt import utils
+from bluebottle.bb_accounts.utils import valid_email
 
 from taggit.managers import TaggableManager
 
@@ -63,6 +66,7 @@ class BlueBottleUserManager(BaseUserManager):
                           last_login=now, date_joined=now, **extra_fields)
         user.set_password(password)
         user.generate_username()
+        user.reset_disable_token()
         user.save(using=self._db)
         return user
 
@@ -162,6 +166,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
     birthdate = models.DateField(_('birthdate'), null=True, blank=True)
 
+    disable_token = models.CharField(max_length=32, blank=True, null=True)
+
     tags = TaggableManager(verbose_name=_("tags"), blank=True)
 
     objects = BlueBottleUserManager()
@@ -194,7 +200,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             username = 'x'
             if self.first_name or self.last_name:
                 # The ideal condition.
-                username = slugify((self.first_name + self.last_name).replace(' ', ''))
+                username = slugify(unicode((self.first_name + self.last_name).replace(' ', '')))
             elif self.email and '@' in self.email:
                 # The best we can do if there's no first or last name.
                 email_name, domain_part = self.email.strip().rsplit('@', 1)
@@ -253,6 +259,42 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
+    def full_name(self):
+        return self.get_full_name()
+
+    def get_jwt_token(self):
+        payload = utils.jwt_payload_handler(self)
+        token = utils.jwt_encode_handler(payload)
+        return token
+
     @property
     def short_name(self):
         return self.get_short_name()
+
+    @property
+    def email_confirmation(self):
+        return self.email
+
+    def reset_disable_token(self):
+        token = uuid.uuid4().hex #Generates a random UUID and converts it to a 32-character hexidecimal string
+        self.disable_token = token
+        self.save()
+
+    def get_disable_token(self):
+        if not self.disable_token:
+            self.reset_disable_token()
+        return self.disable_token
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .utils import send_welcome_mail
+from django.conf import settings
+
+@receiver(post_save)
+def send_welcome_mail_callback(sender, instance, created, **kwargs):
+    from django.contrib.auth import get_user_model
+    USER_MODEL = get_user_model()
+    if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance, USER_MODEL) and created:
+        if valid_email(instance.email):
+            send_welcome_mail(user=instance)
+

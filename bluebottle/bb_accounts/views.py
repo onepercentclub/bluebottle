@@ -8,6 +8,7 @@ from django.template import loader
 from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
+from django.utils.translation import ugettext_lazy as _
 
 from registration import signals
 from registration.models import RegistrationProfile
@@ -17,6 +18,8 @@ from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCu
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from rest_framework.permissions import IsAuthenticated
 
+
+#this belongs now to onepercent should be here in bluebottle
 from .serializers import (
     CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
     PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL, TimeAvailableSerializer)
@@ -53,35 +56,54 @@ class UserCreate(generics.CreateAPIView):
     def pre_save(self, obj):
         obj.primary_language = self.request.LANGUAGE_CODE[:2]
 
+    # Overriding the default create so that we can return extra info in the response
+    # if there is already a user with the same email address
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.DATA, files=request.FILES)
+
+        if serializer.is_valid():
+            self.pre_save(serializer.object)
+            self.object = serializer.save(force_insert=True)
+            self.post_save(self.object, created=True)
+            headers = self.get_success_headers(serializer.data)
+            return response.Response(serializer.data, status=status.HTTP_201_CREATED,
+                            headers=headers)
+
+        # If the error is due to a conflict with an existing user then the API
+        # reponse should include these details
+        errors = serializer.errors
+        try: 
+            if request.DATA.has_key('email'):
+                user = BB_USER_MODEL.objects.get(email=request.DATA['email'])
+
+                # Return whether the conflict was with a user created via
+                # email or social auth
+                errors['conflict'] = {
+                    'email': user.email,
+                    'id': user.id
+                }
+
+                # We assume if they have a social auth associated then they use it
+                if user.social_auth.count() > 0:
+                    social_auth = user.social_auth.all()[0]
+                    errors['conflict']['provider'] = social_auth.provider
+                    errors['conflict']['type'] = 'social'
+                else:
+                    errors['conflict']['type'] = 'email'
+
+        except BB_USER_MODEL.DoesNotExist:
+            pass
+            
+        # TODO: should we be returing something like a 409_CONFLICT if there is already
+        #       an existing user with the same emails address?
+        return response.Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
     def post_save(self, obj, created=False):
-        # Create a RegistrationProfile and email its activation key to the User.
-        registration_profile = RegistrationProfile.objects.create_profile(obj)
-
         if created:
-            current_site = get_current_site(self.request)
-            site_name = current_site.name
-            domain = current_site.domain
-            site = 'https://' + domain
-            c = {
-                'email': obj.email,
-                'site': site,
-                'site_name': site_name,
-                'user': obj,
-                'activation_key': registration_profile.activation_key,
-                'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-            }
-            subject_template_name = 'registration/activation_email_subject.txt'
-
-            extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
-            email_template_name = 'registration/activation_email.' + extension
-
-            subject = loader.render_to_string(subject_template_name, c)
-            # Email subject *must not* contain newlines
-            subject = ''.join(subject.splitlines())
-            email = loader.render_to_string(email_template_name, c)
-
-            obj.email_user(subject, email)
+            #Manually set the is_active flag on a user now that we stopped using the Registration manager
+            obj.is_active = True
+            obj.save()
+            #Sending a welcome mail is now done via a post_save signal on a user model
 
 
 class UserActivate(generics.RetrieveAPIView):
@@ -186,24 +208,54 @@ class PasswordSet(views.APIView):
     """
     serializer_class = PasswordSetSerializer
 
-    def put(self, request, *args, **kwargs):
-        # The uidb36 and the token are checked by the URLconf.
-        uidb36 = self.kwargs.get('uidb36')
-        token = self.kwargs.get('token')
-        user = get_user_model()
-
+    def _get_user(self, uidb36):
+        user_model = get_user_model()
         try:
             uid_int = base36_to_int(uidb36)
-            user = user._default_manager.get(pk=uid_int)
+            user = user_model._default_manager.get(pk=uid_int)
         except (ValueError, OverflowError, user.DoesNotExist):
             user = None
+
+        return user
+
+    def put(self, request, *args, **kwargs):
+        # The uidb36 and the token are checked by the URLconf.
+
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
 
         if user is not None and default_token_generator.check_token(user, token):
             password_set_form = SetPasswordForm(user)
             serializer = PasswordSetSerializer(password_set_form=password_set_form, data=request.DATA)
             if serializer.is_valid():
                 password_set_form.save()  # Sets the password
-                return response.Response(status=status.HTTP_200_OK)
+
+                # return a jwt token so the user can be logged in immediately
+                return response.Response({'token': user.get_jwt_token()}, status=status.HTTP_200_OK)
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return response.Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, *args, **kwargs):
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
+
+        if user is not None and default_token_generator.check_token(user, token):
+            return response.Response(status=status.HTTP_200_OK)
+        return response.Response({'message': 'Token expired', 'email': user.email}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DisableAccount(views.APIView):
+
+    def post(self, request, *args, **kwargs):
+        user_id = self.kwargs.get("user_id")
+        token = self.kwargs.get("token")
+
+        user = BB_USER_MODEL.objects.get(id=int(user_id))
+
+        if user.get_disable_token() != token:
+            return response.Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user.is_active = False
+        user.save()
+        return response.Response(status=status.HTTP_200_OK)

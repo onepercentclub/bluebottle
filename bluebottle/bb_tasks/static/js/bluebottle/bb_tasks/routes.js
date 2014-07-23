@@ -142,6 +142,7 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 
 
 App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.TrackRouteActivateMixin, {
+    trackEventName: 'Browse tasks',
     setupController: function(controller, model) {
         this._super(controller, model);
         App.UsedSkill.find().then(function(skill_list){
@@ -151,7 +152,7 @@ App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.Tra
         });
     },
 
-    trackEventName: 'Browse tasks'
+
 
 });
 

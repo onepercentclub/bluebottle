@@ -92,6 +92,7 @@ App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
  */
 
 App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivateMixin, {
+    trackEventName: "My Campaigns",
     model: function(params) {
         return App.MyProject.find();
     },
@@ -99,7 +100,7 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivate
         this._super(controller, model);
     },
 
-    trackEventName: "My Campaigns"
+
 
 });
  
@@ -187,6 +188,7 @@ App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMi
 });
 
 App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Budget",
     setupController: function(controller, model){
         this._super(controller, model);
 
@@ -201,10 +203,11 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMi
         }
     },
 
-    trackEventName: "Create Campaign - Budget"
+
 });
 
 App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Organisation",
     model: function(params) {
         var project = this.modelFor('myProject');
 
@@ -222,10 +225,11 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend(App.TrackRouteActi
       controller.set('selectedOrganization', null);
     },
 
-    trackEventName: "Create Campaign - Organisation"
+
 });
 
 App.MyProjectBankRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Bank",
     model: function(params) {
         var project = this.modelFor('myProject'),
         organization = this.modelFor('myProjectOrganization');
@@ -239,7 +243,7 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixi
         }
     },
 
-    trackEventName: "Create Campaign - Bank"
+
 });
 
 App.MyProjectReviewRoute = App.MyProjectRoute.extend(App.TrackRouteActivateMixin, {

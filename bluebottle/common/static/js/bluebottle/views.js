@@ -34,19 +34,11 @@ App.ApplicationView = Em.View.extend({
         if ($target.hasClass('goto')) {
             var anchor = $target.data('target') || $target.attr('rel');
             if (anchor) {
-                this.goTo(anchor);
+                this.send('goTo', anchor);
                 e.preventDefault();
             }
         }
-    },
-    goTo: function(target) {
-        if ($(target)) {
-            $('html, body').stop().animate({
-                scrollTop: $(target).offset().top - $('#header').height()
-            }, 500);
-        }
     }
-
 });
 
 App.FormView = Em.View.extend({

@@ -499,6 +499,12 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                     window.scrollTo(0, 0);
                 }
             });
+        },
+
+        goTo: function(target) {
+            $('html, body').stop().animate({
+                scrollTop: $(target).offset().top - $('#header').height()
+            }, 500);
         }
     },
 

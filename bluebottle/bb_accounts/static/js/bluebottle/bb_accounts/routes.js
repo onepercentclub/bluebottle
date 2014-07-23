@@ -46,7 +46,7 @@ App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, App.AuthenticatedRouteMi
 
 });
 
-App.ViewProfileRoute = Em.Route.extend({
+App.ViewProfileRoute = Em.Route.extend(App.TrackRouteActivateMixin, {
     model: function(params) {
         var model = App.User.find(params.user_id);
         var route = this;
@@ -56,14 +56,10 @@ App.ViewProfileRoute = Em.Route.extend({
         return model;
     },
 
-    activate: function() {
-        if (this.get('tracker')) {
-            this.get('tracker').trackEvent("View profile", {});
-        }
-    }
+    trackEventName: "View profile"
 });
 
-App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, {
+App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, App.TrackRouteActivateMixin, {
     model: function() {
         var route = this;
 
@@ -76,11 +72,7 @@ App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, {
         this.controllerFor('userSettings').stopEditing();
     },
 
-    activate: function() {
-        if (this.get('tracker')) {
-            this.get('tracker').trackEvent("View settings", {});
-        }
-    }
+    trackEventName: "View settings"
 });
 
 // TODO: separate this

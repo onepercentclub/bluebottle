@@ -136,6 +136,7 @@
             <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/views.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/initializers.js' %}"></script>
 
             {% for app in bb_apps %}
                 {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}

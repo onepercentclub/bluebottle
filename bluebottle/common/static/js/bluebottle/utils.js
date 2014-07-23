@@ -646,3 +646,54 @@ App.MapPicker = Em.View.extend({
 });
 
 App.FlashView = Em.View.extend();
+
+
+/*
+    Specialized controller for tracking (still coupled to Mixpanel at the moment)
+ */
+App.TrackerController = Em.ObjectController.extend({
+   needs: "currentUser",
+
+   init: function(){
+       this._super();
+       if (MIXPANEL_KEY && mixpanel) {
+           this.set('_tracker', mixpanel);
+       }
+
+
+   }.observes('window'),
+
+   trackEvent: function(name, properties) {
+        if (Em.typeOf(properties) == 'undefined') properties = {};
+
+        if (Em.typeOf(name) == 'string' && Em.typeOf(properties) == 'object') {
+            this.get('_tracker').track(name, properties);
+        }
+    },
+
+    setUserDetails: function(){
+        if (this.get('controllers.currentUser.isAuthenticated')) {
+            var user = this.get('controllers.currentUser');
+            this.get('_tracker').register({
+                "email": user.get('email'),
+                "name": user.get('full_name')
+            });
+        }
+    }.observes('controllers.currentUser.isAuthenticated')
+
+});
+
+/*
+  Add mixin to routes which require authentication
+ */
+
+App.TrackRouteActivateMixin = Ember.Mixin.create({
+    activate: function() {
+        this._super();
+
+        Em.assert(this.toString() + ' must define tracker property', !Em.isEmpty(this.get('tracker')));
+        Em.assert(this.toString() + ' must define trackEventName property', !Em.isEmpty(this.get('trackEventName')));
+
+        this.get('tracker').trackEvent(this.get('trackEventName'));
+    }
+});

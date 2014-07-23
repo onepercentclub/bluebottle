@@ -65,8 +65,8 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 							taskMember.set('created', new Date());
 							taskMember.save();
 
-                            if (this.get('tracker')) {
-                                this.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
+                            if (route.get('tracker')) {
+                                route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
                             }
 
 						}

@@ -12,35 +12,39 @@ PROJECT_MODEL = get_project_model()
 
 logger = logging.getLogger(__name__)
 
+anonymous_order_id_session_key = 'cart_order_id'
 
-#
-# Mixins.
-#
-
-anon_order_id_session_key = 'cart_order_id'
-
-no_active_order_error_msg = _(u"No active order")
-
-
-#
-# REST views.
-#
 
 class OrderList(generics.ListCreateAPIView):
     model = Order
     serializer_class = OrderSerializer
     filter_fields = ('status',)
     paginate_by = 10
+    permission_classes = (IsOrderCreator, )
     # FIXME Add permissions
 
     def get_queryset(self):
-        user = self.request.user
-        return self.model.objects.filter(user=user)
+        queryset = super(OrderList, self).get_queryset()
+        if self.request.user.is_authenticated():
+            return queryset.filter(user=self.request.user)
+        else:
+            order_id = getattr(self.request.session, anonymous_order_id_session_key, 0)
+            import ipdb; ipdb.set_trace()
+            return queryset.filter(id=order_id)
 
+    def pre_save(self, obj):
+        # If the user is authenticated then set that user to this order.
+        if self.request.user.is_authenticated():
+            obj.user = self.request.user
+
+    def post_save(self, obj, created=False):
+        # If the user isn't authenticated then save the order id in session/
+        if created:
+            self.request.session[anonymous_order_id_session_key] = obj.id
+            self.request.session.save()
 
 class OrderDetail(generics.RetrieveUpdateAPIView):
     model = Order
     serializer_class = OrderSerializer
     permission_classes = (IsOrderCreator,)
-
 

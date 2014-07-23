@@ -163,6 +163,11 @@ INSTALLED_APPS = (
     'bluebottle.pages',
     'bluebottle.quotes',
     'bluebottle.slides',
+
+    'bluebottle.bb_orders',
+    'bluebottle.bb_donations',
+    'bluebottle.payments',
+
     #miss test
     'bluebottle.utils',
     'bluebottle.wallposts',

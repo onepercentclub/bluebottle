@@ -67,11 +67,3 @@ class TestOrganizationDocument(BaseOrganizationDocument):
     """
     pass
 
-
-class TestBaseOrder(BaseOrder):
-    """
-    Instantiate the abstract base model for an order. Used only for testing.
-    """
-    pass
-
-

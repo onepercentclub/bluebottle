@@ -197,5 +197,5 @@ def new_reaction_notification(sender, instance, created, **kwargs):
                     subject=_('%(author)s commented on your task page.') % {'author': reaction_author.full_name},
                     to=task_author,
                     author=reaction_author,
-                    link='/en/#!/tasks/{1}'.format(task.id)
+                    link='/en/#!/tasks/{0}'.format(task.id)
                 )

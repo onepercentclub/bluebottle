@@ -119,9 +119,9 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         // Set the currentUser model/content on the currentUser controller
         container.lookup('controller:currentUser').set('content', user);
 
-        // Inject currentUser into all controllers
+        // Inject currentUser into all controllers and routes
         application.inject('controller', 'currentUser', 'controller:currentUser');
-
+        application.inject('route', 'currentUser', 'controller:currentUser');
     },
 
     initSelectViews: function() {

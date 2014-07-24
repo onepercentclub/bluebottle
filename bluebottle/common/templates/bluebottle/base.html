@@ -127,10 +127,6 @@
         <script src="{% static 'js/vendor/jslider/jquery.numberformatter-1.2.3.js' %}"></script>
         <script src="{% static 'js/vendor/jslider/jquery.slider.js' %}"></script>
 
-        {#  Tracking modules #}
-        {% if MIXPANEL %}
-          <script src="{% static 'js/vendor/mixpanel.js' %}"></script>
-        {%  endif  %}
 
         {# BlueBottle Application #}
         {% block ember_scripts %}
@@ -141,7 +137,13 @@
             <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/views.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/initializers.js' %}"></script>
+
+            {#  Tracking modules #}
+            {% if MIXPANEL %}
+              <script src="{% static 'js/vendor/mixpanel.js' %}"></script>
+              <script type="text/javascript" src="{% static 'js/bluebottle/bb_mixpanel.js' %}"></script>
+            {%  endif  %}
+
 
             {% for app in bb_apps %}
                 {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}

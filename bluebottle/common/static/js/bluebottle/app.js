@@ -378,6 +378,7 @@ App.Router.reopen({
                 _gaq.push(['_trackPageview', url]);
             });
         }
+
     }
 });
 

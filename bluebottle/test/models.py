@@ -1,3 +1,4 @@
+from bluebottle.bb_fundraisers.models import BaseFundRaiser
 from bluebottle.bb_projects.models import BaseProject, BaseProjectPhaseLog
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
@@ -72,3 +73,12 @@ class TestOrganizationDocument(BaseOrganizationDocument):
     Implementation for testing of BaseOrganizationDocument
     """
     pass
+
+
+class TestFundRaiser(BaseFundRaiser):
+    """
+    Implementation for testing of BaseFundRaiser
+    """
+    pass
+
+

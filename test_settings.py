@@ -22,6 +22,7 @@ INCLUDE_TEST_MODELS = True
 AUTH_USER_MODEL = 'test.TestBaseUser'
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
 ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
+FUNDRAISERS_FUNDRAISER_MODEL = 'test.TestFundRaiser'
 TASKS_TASK_MODEL = 'test.TestTask'
 TASKS_SKILL_MODEL = 'test.TestSkill'
 TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'

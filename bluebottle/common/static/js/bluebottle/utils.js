@@ -658,6 +658,7 @@ App.TrackRouteActivateMixin = Ember.Mixin.create({
 
         if (this.get('tracker')){
             Em.assert(this.toString() + ' must define trackEventName property', !Em.isEmpty(this.get('trackEventName')));
+            
             this.get('tracker').trackEvent(this.get('trackEventName'));
         }
     }

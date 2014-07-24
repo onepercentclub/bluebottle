@@ -326,14 +326,9 @@ App.GoTo = Ember.Mixin.create({
         if ($target.hasClass('goto')) {
             var anchor = $target.data('target') || $target.attr('rel');
             if (anchor) {
-                this.goTo(anchor);
+                this.get('controller').send('goTo', anchor)
                 e.preventDefault();
             }
         }
-    },
-    goTo: function(target) {
-        $('html, body').stop().animate({
-            scrollTop: $(target).offset().top - $('#header').height()
-        }, 500);
     }
 });

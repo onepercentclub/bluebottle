@@ -72,4 +72,26 @@
 			@include hide-text();
 		}
 	}
+
+	&.is-active {
+		.tooltip {
+			opacity: 1;
+			pointer-events: auto;
+			@include animation(fadeInUp .25s ease-out);
+		}
+
+		.questionmark {
+			position: absolute;
+			vertical-align: middle;
+			display: inline-block;
+			top: 30%;
+			right: 10px;
+			width: 21px;
+			height: 20px;
+			cursor: pointer;
+			background: image-url("img/icons/icon-form-question_hover.svg") transparent no-repeat 0 0!important;
+			background-size: 20px;
+			@include hide-text();
+		}
+	}
 }

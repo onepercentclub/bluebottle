@@ -27,6 +27,8 @@ App.LanguageSelectView = Em.Select.extend({
     prompt: gettext('Pick a language')
 });
 
+// TODO: do we need this goTo code in the ApplicationView
+//       we have it in App.GoTo
 App.ApplicationView = Em.View.extend({
     elementId: 'site',
     click: function(e) {
@@ -34,19 +36,11 @@ App.ApplicationView = Em.View.extend({
         if ($target.hasClass('goto')) {
             var anchor = $target.data('target') || $target.attr('rel');
             if (anchor) {
-                this.goTo(anchor);
+                this.send('goTo', anchor);
                 e.preventDefault();
             }
         }
-    },
-    goTo: function(target) {
-        if ($(target)) {
-            $('html, body').stop().animate({
-                scrollTop: $(target).offset().top - $('#header').height()
-            }, 500);
-        }
     }
-
 });
 
 App.FormView = Em.View.extend({

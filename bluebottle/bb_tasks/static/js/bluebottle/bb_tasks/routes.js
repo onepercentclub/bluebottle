@@ -150,10 +150,7 @@ App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.Tra
                 content: skill_list
             });
         });
-    },
-
-
-
+    }
 });
 
 
@@ -178,7 +175,7 @@ App.TaskNewRoute = Em.Route.extend({
 App.TaskEditRoute = Em.Route.extend({
     model: function(params) {
         return App.Task.find(params.task_id);
-    },
+    }
 });
 
 /**

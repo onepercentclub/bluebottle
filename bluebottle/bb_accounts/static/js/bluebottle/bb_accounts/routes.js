@@ -43,10 +43,7 @@ App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, App.AuthenticatedRouteMi
 
     deactivate: function() {
         this.controllerFor('userProfile').stopEditing();
-    },
-
-
-
+    }
 });
 
 App.ViewProfileRoute = Em.Route.extend({

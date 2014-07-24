@@ -76,6 +76,13 @@ App.SocialShareView = Em.View.extend({
                 console.log('meta data not found');
                 var currentLink = encodeURIComponent(location.href);
             }
+
+            var controller = this.get('controller');
+
+            if (controller.get('tracker')) {
+                controller.get('tracker').trackEvent("Share on Facebook", {project: controller.get('model.title')});
+            }
+
             this.showDialog('https://www.facebook.com/sharer/sharer.php?u=', currentLink, 'facebook');
         },
 
@@ -90,6 +97,12 @@ App.SocialShareView = Em.View.extend({
 
             // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
             var status = meta_data.tweet.replace('{URL}', currentLink);
+
+            var controller = this.get('controller');
+
+            if (controller.get('tracker')) {
+                controller.get('tracker').trackEvent("Share on Twitter", {project: controller.get('model.title')});
+            }
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
         }

@@ -27,6 +27,8 @@ App.LanguageSelectView = Em.Select.extend({
     prompt: gettext('Pick a language')
 });
 
+// TODO: do we need this goTo code in the ApplicationView
+//       we have it in App.GoTo
 App.ApplicationView = Em.View.extend({
     elementId: 'site',
     click: function(e) {

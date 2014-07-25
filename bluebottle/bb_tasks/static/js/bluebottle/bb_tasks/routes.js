@@ -34,7 +34,7 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
                 }
             });
         });
-    }
+    },
 });
 
 
@@ -64,6 +64,11 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 							taskMember.set('task', task);
 							taskMember.set('created', new Date());
 							taskMember.save();
+
+			                                if (route.get('tracker')) {
+			                                    route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
+			                                }
+
 						}
 						if (opts.secondary) {
 							taskMember.deleteRecord();
@@ -136,7 +141,8 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 });
 
 
-App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
+App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.TrackRouteActivateMixin, {
+    trackEventName: 'Browse tasks',
     setupController: function(controller, model) {
         this._super(controller, model);
         App.UsedSkill.find().then(function(skill_list){

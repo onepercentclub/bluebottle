@@ -262,8 +262,8 @@ App.CurrentUser = App.UserPreview.extend({
     }.property('id_for_ember'),
 
     isAuthenticated: function(){
-        return (this.get('username')) ? true : false;
-    }.property('username')
+        return (this.get('isLoaded') && this.get('username'));
+    }.property('username', 'isLoaded')
 });
 
 /*

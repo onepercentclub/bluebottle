@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from ..views import DonationList, DonationDetail, MyDonationDetail, MyDonationList
+from ..views import DonationList, DonationDetail, ManageDonationDetail, ManageDonationList
 
 urlpatterns = patterns('',
     url(r'^$', DonationList.as_view(), name='donation-list'),
@@ -7,7 +7,7 @@ urlpatterns = patterns('',
 
 
     # Private donation resources
-    url(r'^my/$', MyDonationList.as_view(), name='my-donation-list'),
-    url(r'^my/(?P<pk>\d+)$', MyDonationDetail.as_view(), name='my-donation-detail'),
+    url(r'^my/$', ManageDonationList.as_view(), name='manage-donation-list'),
+    url(r'^my/(?P<pk>\d+)$', ManageDonationDetail.as_view(), name='manage-donation-detail'),
 
 )

@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
 
-class MyDonationSerializer(serializers.ModelSerializer):
+
+class ManageDonationSerializer(serializers.ModelSerializer):
     # project = get_serializer_model('PROJECTS_PROJECT_MODEL', 'preview')
 
     status = serializers.ChoiceField(read_only=True)

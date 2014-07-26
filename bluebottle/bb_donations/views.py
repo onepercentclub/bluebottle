@@ -1,32 +1,30 @@
 import logging
 from bluebottle.bb_donations.serializers import MyDonationSerializer
-from .models import Donation
 from .serializers import DonationSerializer
 from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
-from django.utils.translation import ugettext as _
-
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.utils import get_project_model, get_model_class
 
 PROJECT_MODEL = get_project_model()
+DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
 
 logger = logging.getLogger(__name__)
 
 
 class DonationList(generics.ListAPIView):
-    model = Donation
+    model = DONATION_MODEL
     serializer_class = DonationSerializer
     # FIXME: Filter on donations that are viewable (pending & paid)
 
 
 class DonationDetail(generics.RetrieveAPIView):
-    model = Donation
+    model = DONATION_MODEL
     serializer_class = DonationSerializer
     # FIXME: Filter on donations that are viewable (pending & paid)
 
 
 class MyDonationList(generics.ListCreateAPIView):
-    model = Donation
+    model = DONATION_MODEL
     serializer_class = MyDonationSerializer
     # FIXME: Add permission for OrderOwner
 
@@ -36,7 +34,7 @@ class MyDonationList(generics.ListCreateAPIView):
 
 
 class MyDonationDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = Donation
+    model = DONATION_MODEL
     serializer_class = MyDonationSerializer
     # FIXME: Add permission for OrderOwner
 

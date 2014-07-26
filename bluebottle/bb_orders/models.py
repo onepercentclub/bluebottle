@@ -6,6 +6,9 @@ from djchoices import DjangoChoices, ChoiceItem
 from uuidfield import UUIDField
 
 from django.contrib.auth import get_user_model
+from django.db.models import options
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 USER_MODEL = get_user_model()
 
@@ -16,7 +19,7 @@ class OrderStatuses(DjangoChoices):
     closed = ChoiceItem('closed', label=_("Closed"))
 
 
-class Order(models.Model):
+class BaseOrder(models.Model):
     """
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
@@ -31,3 +34,8 @@ class Order(models.Model):
 
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
+    class Meta:
+        abstract = True
+        default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
+        preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
+        manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'

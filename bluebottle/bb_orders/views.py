@@ -1,13 +1,12 @@
 import logging
-from bluebottle.bb_orders.models import OrderStatuses
 from bluebottle.bb_orders.permissions import IsOrderCreator
 from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
-from django.utils.translation import ugettext as _
-from .models import Order
 from .serializers import OrderSerializer
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.utils import get_project_model, get_model_class
 
+
+ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
 PROJECT_MODEL = get_project_model()
 
 logger = logging.getLogger(__name__)
@@ -16,7 +15,7 @@ anonymous_order_id_session_key = 'cart_order_id'
 
 
 class OrderList(generics.ListCreateAPIView):
-    model = Order
+    model = ORDER_MODEL
     serializer_class = OrderSerializer
     filter_fields = ('status',)
     paginate_by = 10
@@ -44,7 +43,7 @@ class OrderList(generics.ListCreateAPIView):
             self.request.session.save()
 
 class OrderDetail(generics.RetrieveUpdateAPIView):
-    model = Order
+    model = ORDER_MODEL
     serializer_class = OrderSerializer
     permission_classes = (IsOrderCreator,)
 

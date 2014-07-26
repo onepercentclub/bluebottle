@@ -1,18 +1,17 @@
 # coding=utf-8
-from bluebottle.bluebottle_drf2.serializers import EuroField
-from bluebottle.bb_donations.serializers import DonationSerializer, MyDonationSerializer
-from django.utils.translation import ugettext as _
+from bluebottle.utils.utils import get_serializer_class, get_model_class
 from rest_framework import serializers
-from .models import Order, OrderStatuses
+
+ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
 
 
 class OrderSerializer(serializers.ModelSerializer):
     total = serializers.DecimalField(read_only=True)
     status = serializers.ChoiceField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
-    donations = MyDonationSerializer(source='donations', many=True, read_only=True)
+    donations = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')(many=True, read_only=True)
 
     class Meta:
-        model = Order
+        model = ORDER_MODEL
         fields = ('id', 'user', 'total', 'status', 'donations', 'created')
 

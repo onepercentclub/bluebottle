@@ -56,11 +56,10 @@ class TestOrderCreate(OrderApiTestCase):
         self.assertEquals(response.data['status'], 'cart')
         self.assertEquals(response.data['user'], None)
 
-        # ORder list should now have 1 item
+        # Order list should now have 1 item
         response = self.client.get(order_url)
         self.assertEqual(response.status_code, 200)
         self.assertEquals(response.data['count'], 1)
-
 
 
 

@@ -254,7 +254,7 @@ def get_model_class(model_name=None, a=None):
     return model
 
 
-def get_serializer_model(model_name=None, serializer_type=None, **kwargs):
+def get_serializer_class(model_name=None, serializer_type=None):
     """
     Returns a serializer
     model_name: The model eg 'User' or 'Project'
@@ -270,12 +270,12 @@ def get_serializer_model(model_name=None, serializer_type=None, **kwargs):
     else:
         serializer_name = model.Meta.default_serializer
 
-    serializer_model = import_class(serializer_name)
+    serializer_class = import_class(serializer_name)
 
-    if serializer_model is None:
+    if serializer_class is None:
         raise ImproperlyConfigured(
             "serializer_name refers to model '{0}' that has not been "
-            "installed".format(settings.ORGANIZATIONS_DOCUMENT_MODEL))
+            "installed".format(model_name))
 
-    return serializer_model(**kwargs)
+    return serializer_class
 

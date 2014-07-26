@@ -28,7 +28,7 @@ class Payment(models.Model):
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
-    order = models.ForeignKey('bb_orders.Order', related_name='payments')
+    order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
 
     status = models.CharField(_("Status"), max_length=20, choices=PaymentStatuses.choices, default=PaymentStatuses.new, db_index=True)
 

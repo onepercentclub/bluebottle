@@ -19,7 +19,7 @@ urlpatterns = patterns('',
     url(r'^api/utils/', include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/', include('bluebottle.wallposts.urls.api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls.api')),
-    url(r'^documents/', include('bluebottle.utils.urls.main')),
+    url(r'^admin/documents/', include('bluebottle.utils.urls.main')),
 
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),

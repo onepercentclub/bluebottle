@@ -38,7 +38,8 @@ App.Router.map(function(){
  * Project Routes
  */
 
-App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
+App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.TrackRouteActivateMixin, {
+    trackEventName: "Browse projects",
     setupController: function(controller, model) {
         this._super(controller, model);
         App.UsedTheme.find().then(function(theme_list){
@@ -47,6 +48,8 @@ App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
             });
         });
     }
+
+
 });
 
 
@@ -60,6 +63,13 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         page.on('becameError', function() {
             route.transitionTo('projectList');
         });
+
+        page.on('didLoad', function() {
+            if (route.get('tracker')) {
+                route.get('tracker').trackEvent("Project detail", {"project id": page.get('id')});
+            }
+        });
+
         return page;
     }
 });

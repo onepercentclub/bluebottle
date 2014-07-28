@@ -58,19 +58,19 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.
         var project_id = params.project_id.split('?')[0];
-        var page =  App.Project.find(project_id);
-        var route = this;
-        page.on('becameError', function() {
-            route.transitionTo('projectList');
-        });
 
-        page.on('didLoad', function() {
-            if (route.get('tracker')) {
-                route.get('tracker').trackEvent("Project detail", {"project id": page.get('id')});
+        var _this = this;
+        var promise = App.Project.find(project_id);
+
+        promise.then(function(model) {
+            if (_this.get('tracker')) {
+                _this.get('tracker').trackEvent("Project detail", {"title": model.get('title')});
             }
+        }, function() {
+            _this.transitionTo('projectList');
         });
 
-        return page;
+        return promise;
     }
 });
 

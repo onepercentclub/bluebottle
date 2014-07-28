@@ -81,7 +81,7 @@ App.SocialShareView = Em.View.extend({
 
             if (controller.get('tracker')) {
                 var tracker = controller.get('tracker');
-                tracker.trackEvent("Share on Facebook", {project: controller.get('model.title')});
+                tracker.trackEvent("Share", {project: controller.get('model.title'), network: "Facebook"});
                 tracker.peopleIncrement('facebook_shares');
             }
 
@@ -104,7 +104,7 @@ App.SocialShareView = Em.View.extend({
 
             if (controller.get('tracker')) {
                 var tracker = controller.get('tracker');
-                tracker.get('tracker').trackEvent("Share on Twitter", {project: controller.get('model.title')});
+                tracker.get('tracker').trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });
                 tracker.peopleIncrement('twitter_shares');
             }
 

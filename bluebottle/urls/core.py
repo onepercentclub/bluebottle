@@ -9,6 +9,7 @@ urlpatterns = patterns('',
     url(r'^api/users/', include('bluebottle.bb_accounts.urls.api')),
     url(r'^api/bb_organizations/', include('bluebottle.bb_organizations.urls.api')),
     url(r'^api/bb_projects/', include('bluebottle.bb_projects.urls.api')),
+    url(r'^api/fundraisers/', include('bluebottle.bb_fundraisers.urls.api')),
     url(r'^api/bb_tasks/', include('bluebottle.bb_tasks.urls.api')),
     url(r'^api/geo/', include('bluebottle.geo.urls.api')),
     url(r'^api/contact/', include('bluebottle.contact.urls.api')),
@@ -24,6 +25,10 @@ urlpatterns = patterns('',
     url(r'^api/donations/', include('bluebottle.bb_donations.urls.api')),
 
     url(r'^documents/', include('bluebottle.utils.urls.main')),
+
+    # JSON Web Token based authentication for Django REST framework
+    url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
+
 )
 
 

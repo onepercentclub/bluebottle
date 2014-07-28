@@ -6,7 +6,7 @@ App.ProjectSupporterView = Em.View.extend({
     templateName: 'project_supporter',
     tagName: 'li',
     didInsertElement: function(){
-        this.$('a').popover({trigger: 'hover', placement: 'top'})
+        this.$('a').popover({trigger: 'hover', placement: 'top'});
     }
 });
 
@@ -129,7 +129,7 @@ App.MyProjectListView = Em.View.extend({
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: "Pick a theme"
+    prompt: gettext("Pick a theme")
 });
 
 App.UsedThemeSelectView = App.ThemeSelectView.extend();
@@ -197,4 +197,10 @@ App.MyProjectCampaignView = Em.View.extend({
 App.MyProjectSubmitView = Em.View.extend({
     templateName: 'my_project_submit'
 });
+
+
+App.ProjectDonationListView = Em.View.extend({
+    templateName: 'project_donation_list'
+});
+
 

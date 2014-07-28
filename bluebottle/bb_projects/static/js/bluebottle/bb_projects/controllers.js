@@ -101,7 +101,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 
 
 App.ProjectController = Em.ObjectController.extend({
-    needs: ['projectIndex', 'currentUser'],
+    needs: ['projectIndex'],
 
     isFundable: function(){
        return (this.get('status') == '5' && this.get('campaign.money_asked'));
@@ -116,17 +116,17 @@ App.ProjectController = Em.ObjectController.extend({
     }.property('tags.@each'),
 
     isProjectOwner: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('model.owner', 'controllers.currentUser.username')
+    }.property('model.owner', 'currentUser.username')
 
 });
 
-App.ProjectPlanController = Ember.ObjectController.extend(App.StaticMapMixin, {
+App.ProjectPlanController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.StaticMapMixin, {
     counter: 0,
     hasPdfDownload: true,
 
@@ -166,7 +166,7 @@ App.ProjectSupporterListController = Em.ArrayController.extend({
 });
 
 App.ProjectIndexController = Em.ArrayController.extend({
-    needs: ['project', 'currentUser'],
+    needs: ['project'],
     perPage: 5,
     page: 1,
     parentId: null,
@@ -174,8 +174,8 @@ App.ProjectIndexController = Em.ArrayController.extend({
     showingAll: null,
 
     isProjectOwner: function(){
-        return this.get('controllers.project.owner.username') == this.get('controllers.currentUser.username');
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+        return this.get('controllers.project.owner.username') == this.get('currentUser.username');
+    }.property('controllers.project.model.owner', 'currentUser.username'),
 
     remainingItemCount: function(){
         if (this.get('meta.total')) {
@@ -190,13 +190,13 @@ App.ProjectIndexController = Em.ArrayController.extend({
     }.property('perPage', 'page', 'meta.total'),
 
     canAddMediaWallPost: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username'),
+    }.property('controllers.project.model.owner', 'currentUser.username'),
 
     availableTasks: function () {
         return this.get('tasks').filter(function(task) {
@@ -263,7 +263,6 @@ App.MoveOnMixin = Ember.Mixin.create({
 });
 
 App.MyProjectListController = Em.ArrayController.extend({
-    needs: ['currentUser'],
     canPitchNew: function(){
         var can = true;
         this.get('model').forEach(function(project){
@@ -277,7 +276,7 @@ App.MyProjectListController = Em.ArrayController.extend({
 });
 
 App.MyProjectController = Em.ObjectController.extend({
-    needs: ['currentUser', 'myProjectOrganisation'],
+    needs: ['myProjectOrganisation'],
 
     // A way to automate things in the frontend, not yet used
 //	tabs: ['MyProjectStart', 'MyProjectPitch', 'MyProjectStory',
@@ -329,8 +328,6 @@ App.MyProjectController = Em.ObjectController.extend({
 });
 
 App.MyProjectStartController = App.StandardTabController.extend({
-    needs: ['currentUser'],
-
     nextStep: 'myProject.pitch'
 });
 
@@ -380,6 +377,11 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
     needs: ['myProjectOrganisation', 'myProject', 'myProjectBank'],
     previousStep: 'myProject.organisation',
 
+    // data has loaded when the project isLoaded and the organization (if set) isLoaded
+    hasLoaded: function () {
+        return !!this.get('model.isLoaded') && (!this.get('model.organization') || this.get('model.organization.isLoaded'));
+    }.property('model.isLoaded', 'model.organization.isLoaded'),
+
     validSubmit: function () {
         return !this.get('model.isNew') && !this.get('controllers.myProjectOrganisation.model.isNew');
     }.property('controllers.myProjectOrganisation.model.isNew', 'model.isNew'),
@@ -402,6 +404,7 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             // organization has been saved => not isNew
             // We have been storing the organization in the route
             // TODO: should we move this to the controller??
+
             var organization = this.get('controllers.myProjectOrganisation.model');
 
             // There won't be an organization associated with the myProjectOrganisation
@@ -409,9 +412,7 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             // So we only set the organization if there is one associated with the controller
             // and it isn't new. 
             if (organization) {
-                if (organization.get('isNew')) {
-                    throw new Ember.Error('It shouldn\'t be possible to submit a project with an unsaved organization!');
-                } else {
+                if (!organization.get('isNew')) {
                     model.set('organization', organization);
                 }
             }
@@ -435,3 +436,6 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
     }
 });
 
+
+
+App.ProjectDonationListController = Em.ObjectController.extend({});

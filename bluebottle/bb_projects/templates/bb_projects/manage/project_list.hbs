@@ -57,6 +57,12 @@
 	                                {% trans "Campaign is in review" %}
 	                        {{/if}}
 	                        {{#if project.viewable}}
+                                {{#if project.isFundable}}
+                                    {{#link-to "projectDonationList" project.id class="btn-link right"}}
+                                        <span class="flaticon solid wallet-1"></span>
+                                        {% trans "Donations" %}
+                                    {{/link-to}}
+                                {{/if}}
 	                            {{#link-to "project" project.id class="btn-link right"}}
 	                                <span class="flaticon solid pencil-3"></span>
 	                                {% trans "Post update" %}

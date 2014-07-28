@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime
+from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
@@ -8,19 +8,28 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ProjectPhaseLog'
-        db.create_table(u'bb_projects_projectphaselog', (
+        # Adding model 'FundRaiser'
+        db.create_table(u'fundraisers_fundraiser', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.BookingProject'])),
-            ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['bb_projects.ProjectPhase'])),
-            ('start', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['members.Member'])),
+            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.Project'])),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255, null=True, blank=True)),
+            ('video_url', self.gf('django.db.models.fields.URLField')(default='', max_length=100, blank=True)),
+            ('amount', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('currency', self.gf('django.db.models.fields.CharField')(default='EUR', max_length='10')),
+            ('deadline', self.gf('django.db.models.fields.DateTimeField')(null=True)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
         ))
-        db.send_create_signal(u'bb_projects', ['ProjectPhaseLog'])
+        db.send_create_signal(u'fundraisers', ['FundRaiser'])
 
 
     def backwards(self, orm):
-        # Deleting model 'ProjectPhaseLog'
-        db.delete_table(u'bb_projects_projectphaselog')
+        # Deleting model 'FundRaiser'
+        db.delete_table(u'fundraisers_fundraiser')
 
 
     models = {
@@ -37,12 +46,6 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
-        u'bb_accounts.timeavailable': {
-            'Meta': {'ordering': "['type']", 'object_name': 'TimeAvailable'},
-            'description': ('django.db.models.fields.TextField', [], {}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'type': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
-        },
         u'bb_projects.projectphase': {
             'Meta': {'ordering': "['sequence']", 'object_name': 'ProjectPhase'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
@@ -50,17 +53,8 @@ class Migration(SchemaMigration):
             'editable': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
-            'owner_editable': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'sequence': ('django.db.models.fields.IntegerField', [], {'unique': 'True'}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '200'}),
             'viewable': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
-        },
-        u'bb_projects.projectphaselog': {
-            'Meta': {'object_name': 'ProjectPhaseLog'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.BookingProject']"}),
-            'start': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_projects.ProjectPhase']"})
         },
         u'bb_projects.projecttheme': {
             'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
@@ -76,6 +70,22 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
+        u'fundraisers.fundraiser': {
+            'Meta': {'object_name': 'FundRaiser'},
+            'amount': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'currency': ('django.db.models.fields.CharField', [], {'default': "'EUR'", 'max_length': "'10'"}),
+            'deadline': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
+            'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
+            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['members.Member']"}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'blank': 'True'})
         },
         u'geo.country': {
             'Meta': {'ordering': "['name']", 'object_name': 'Country'},
@@ -100,18 +110,16 @@ class Migration(SchemaMigration):
             'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
-        u'members.bookinguser': {
-            'Meta': {'object_name': 'BookingUser'},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
+            'availability': ('django.db.models.fields.CharField', [], {'max_length': '25', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
             'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'favourite_countries': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
-            'favourite_themes': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['bb_projects.ProjectTheme']", 'null': 'True', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'full_name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -121,18 +129,14 @@ class Migration(SchemaMigration):
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'location': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'my_destinations': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'my_destination_set'", 'null': 'True', 'symmetrical': 'False', 'to': u"orm['offices.Office']"}),
             'newsletter': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'office': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['offices.Office']", 'null': 'True', 'blank': 'True'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
             'picture': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '100', 'blank': 'True'}),
             'primary_language': ('django.db.models.fields.CharField', [], {'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'skills': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['tasks.Skill']", 'null': 'True', 'blank': 'True'}),
             'skypename': ('django.db.models.fields.CharField', [], {'max_length': '32', 'blank': 'True'}),
-            'time_available': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_accounts.TimeAvailable']", 'null': 'True', 'blank': 'True'}),
             'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -141,75 +145,36 @@ class Migration(SchemaMigration):
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
             'why': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'})
         },
-        u'offices.office': {
-            'Meta': {'object_name': 'Office'},
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']"}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+        u'projects.partnerorganization': {
+            'Meta': {'object_name': 'PartnerOrganization'},
+            'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "'Active'", 'max_length': "'30'"})
+            'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'})
         },
-        u'organizations.organization': {
-            'Meta': {'ordering': "['name']", 'object_name': 'Organization'},
-            'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bank_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_bank_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bank_postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [], {'max_length': '11', 'blank': 'True'}),
-            'account_holder_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_holder_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_holder_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_holder_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_holder_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_holder_postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'account_iban': ('django_iban.fields.IBANField', [], {'max_length': '34', 'blank': 'True'}),
-            'account_number': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_other': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'address_line1': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'address_line2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'contact_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'facebook': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'partner_organizations': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'skype': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
-            'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'twitter': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
-        },
-        u'projects.bookingproject': {
-            'Meta': {'ordering': "['title']", 'object_name': 'BookingProject'},
+        u'projects.project': {
+            'Meta': {'ordering': "['title']", 'object_name': 'Project'},
+            'coach': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'team_member'", 'null': 'True', 'to': u"orm['members.Member']"}),
             'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deadline': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'destination': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'destination'", 'null': 'True', 'to': u"orm['offices.Office']"}),
-            'destination_impact': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'favorite': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'goal': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'blank': 'True'}),
-            'language': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['utils.Language']", 'null': 'True', 'blank': 'True'}),
+            'is_campaign': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
             'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
-            'organization': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'organization'", 'null': 'True', 'to': u"orm['organizations.Organization']"}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['members.BookingUser']"}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['members.Member']"}),
+            'partner_organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.PartnerOrganization']", 'null': 'True', 'blank': 'True'}),
+            'phase': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'popularity': ('django.db.models.fields.FloatField', [], {'default': '0'}),
             'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_projects.ProjectPhase']"}),
-            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_projects.ProjectTheme']", 'null': 'True', 'blank': 'True'}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_projects.ProjectTheme']", 'null': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'null': 'True', 'blank': 'True'})
@@ -226,21 +191,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'tag': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'taggit_taggeditem_items'", 'to': u"orm['taggit.Tag']"})
-        },
-        u'tasks.skill': {
-            'Meta': {'ordering': "('id',)", 'object_name': 'Skill'},
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
-            'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
-        },
-        u'utils.language': {
-            'Meta': {'ordering': "['language_name']", 'object_name': 'Language'},
-            'code': ('django.db.models.fields.CharField', [], {'max_length': '2'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'language_name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'native_name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         }
     }
 
-    complete_apps = ['bb_projects']
+    complete_apps = ['fundraisers']

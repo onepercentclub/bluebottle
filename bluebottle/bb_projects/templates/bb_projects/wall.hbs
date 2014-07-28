@@ -9,7 +9,7 @@
 
             <div class="wallposts-list">
 
-                {{#if controllers.currentUser.isAuthenticated }}
+                {{#if currentUser.isAuthenticated }}
                     {{#if canAddMediaWallPost}}
                         {{ render "mediaWallPostNew" parentId=parentId}}
                     {{else}}

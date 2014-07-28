@@ -22,6 +22,9 @@ INCLUDE_TEST_MODELS = True
 AUTH_USER_MODEL = 'test.TestBaseUser'
 
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
+PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
+
+FUNDRAISERS_FUNDRAISER_MODEL = 'test.TestFundRaiser'
 
 TASKS_TASK_MODEL = 'test.TestTask'
 TASKS_SKILL_MODEL = 'test.TestSkill'

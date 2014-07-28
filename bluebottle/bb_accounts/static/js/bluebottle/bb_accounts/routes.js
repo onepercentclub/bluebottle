@@ -2,7 +2,7 @@
  * Router mapping
  */
 App.Router.map(function(){
-	this.resource('signup');
+    this.resource('signup');
 
     this.resource('user', {path: '/member'}, function() {
         this.resource('userProfile', {path: '/profile/'});
@@ -13,27 +13,16 @@ App.Router.map(function(){
     });
     this.resource('viewProfile', {path: '/member/profile/:user_id'});
 
-    this.route('userActivate', {path: '/activate/:activation_key'});
     this.resource('passwordReset', {path: '/passwordreset/:reset_token'});
+
+    this.resource('disableAccount', {path: '/disable/:user_id/:token'});
+
+    this.resource('passwordRequest', {path: '/passwordrequest/:email'});
 });
 
 /*
  *  Routes
  */
-App.SignupRoute = Em.Route.extend(App.ScrollToTop, {
-    redirect: function() {
-        if (this.controllerFor('currentUser').get('isAuthenticated')) {
-            this.transitionTo('home');
-        }
-    },
-
-    model: function() {
-        var transaction = this.get('store').transaction();
-        // FIXME We need to set the first and last name to an empty string or we'll get a 500 error.
-        // FIXME This is a workaround for a bug in DRF2.
-        return transaction.createRecord(App.UserCreate, {first_name: '', last_name: ''});
-    }
-});
 
 
 App.UserIndexRoute = Em.Route.extend({
@@ -43,7 +32,7 @@ App.UserIndexRoute = Em.Route.extend({
 });
 
 
-App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, {
+App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, App.AuthenticatedRouteMixin, {
     model: function() {
         var route = this;
         return App.CurrentUser.find('current').then(function(user) {
@@ -68,8 +57,7 @@ App.ViewProfileRoute = Em.Route.extend({
     }
 });
 
-App.UserSettingsRoute = Em.Route.extend({
-
+App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, {
     model: function() {
         var route = this;
 
@@ -123,7 +111,7 @@ App.UserOrdersRoute = Em.Route.extend({
         this.controllerFor('userOrders').stopEditing();
     },
 
-    events: {
+    actions: {
         viewRecurringOrder: function() {
             var controller = this.controllerFor('currentOrder');
             controller.set('donationType', 'monthly');
@@ -132,78 +120,69 @@ App.UserOrdersRoute = Em.Route.extend({
     }
 });
 
-
-App.UserActivateRoute = Em.Route.extend({
+App.PasswordRequestRoute = Em.Route.extend({
+    renderTemplate: function() {
+        this.render('home');
+        this.send('openInBox', 'passwordRequest');
+    },
 
     model: function(params) {
-        var currentUser = App.CurrentUser.find('current');
-        return App.UserActivation.find(params.activation_key);
+        return Em.Object.create({email: params.email, failedToken: true})
+    }
+});
+
+App.PasswordResetRoute = Em.Route.extend({
+    renderTemplate: function() {
+        this.render('home');
+        this.send('openInBox', 'passwordReset');
     },
 
-    // FIXME: Find a better solution than the run.later construction.
-    setupController: function(controller, activation) {
-
-        var currentUser = App.CurrentUser.find('current');
-
-        var route = this;
-        currentUser.one('didReload', function() {
-            // User profile needs to load it's own currentUser apparently so unload this here.
-            currentUser.unloadRecord();
-            route.transitionTo('userProfile');
+    model: function(params) {
+        var record = App.PasswordReset.createRecord({
+            id: params.reset_token
         });
-
-        // This seems the only way to (more or less) always load the logged in user,
-        Em.run.later(function() {
-            currentUser.transitionTo('loaded.saved');
-            window.csrf_token = getCookie('csrftoken');
-            currentUser.reload();
-        }, 3000);
-
-        var messageTitle   = "Welcome";
-        var messageContent = "Hurray! We're very happy that you joined 1%CLUB, welcome on board! You can start by filling in your profile.";
-
-        this.controllerFor('application').setProperties({
-            display_message: true,
-            message_title: messageTitle,
-            message_content: messageContent
-        });
+        // Need this so that the adapter makes a PUT instead of POST
+        record.transitionTo('loaded.saved');
+        return record
     },
 
-    events: {
-        error: function (reason, transition) {
-            this.controllerFor('application').setProperties({
-                display_message: true,
-                isError: true,
-                message_title: '',
-                message_content: 'There was a problem activating your account. Please contact us for assistance.'
-            });
-            this.transitionTo('home');
+    beforeModel: function(transition) {
+
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            var hash = {
+                url: '/api/users/passwordset/' + transition.params.reset_token,
+                type: 'get',
+                contentType: 'application/json; charset=utf-8'
+                };
+            hash.success = function(response) {
+                Ember.run(null, resolve, null)
+            };
+            hash.error = function(response) {
+                Ember.run(null, reject, JSON.parse(response.responseText));
+            };
+            Ember.$.ajax(hash);
+
+        })
+    },
+    actions: {
+        error: function(error, transition) {
+            transition.abort()
+            this.transitionTo('passwordRequest', error.email)
         }
     }
 });
 
+App.DisableAccountRoute = Em.Route.extend({
+    init: function(){
+        this._super();
+    },
 
-App.PasswordResetRoute = Em.Route.extend({
-    model: function(params) {
-        var route = this;
+   renderTemplate: function() {
+       this.render('home');
+       this.send('openInBox', 'disableAccount');
+   },
 
-        var record = App.PasswordReset.createRecord({
-            id: params.reset_token
-        });
-
-        // Need this so that the adapter makes a PUT instead of POST
-        record.transitionTo('loaded.saved');
-
-        record.on('becameError', function() {
-            route.controllerFor('application').setProperties({
-                display_message: true,
-                isError: true,
-                message_title: '',
-                message_content: gettext('The token you provided is expired. Please reset your password again.')
-            });
-
-            route.replaceWith('home');
-        });
-        return record;
+    model: function(params){
+        return Em.Object.create({user_id: params.user_id, token: params.token});
     }
 });

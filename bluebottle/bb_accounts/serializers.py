@@ -51,7 +51,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name',
-                                                      'time_available')
+                                                      'time_available', 'last_login', 'date_joined')
 
 
 class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -122,12 +122,14 @@ class UserCreateSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     email = serializers.EmailField(required=True, max_length=254)
+    email_confirmation = serializers.EmailField(required=False, max_length=254)
     password = PasswordField(required=True, max_length=128)
     username = serializers.CharField(read_only=True)
+    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'jwt_token', 'email_confirmation')
 
 
 class PasswordResetSerializer(serializers.Serializer):
@@ -168,6 +170,7 @@ class PasswordSetSerializer(serializers.Serializer):
         super(PasswordSetSerializer, self).__init__(*args, **kwargs)
 
     def validate_new_password2(self, attrs, source):
+
         if attrs is not None:  # Don't need this check in newer versions of DRF2.
             value = attrs[source]
             self.password_set_form.cleaned_data = {"new_password1": attrs['new_password1'], "new_password2": value}

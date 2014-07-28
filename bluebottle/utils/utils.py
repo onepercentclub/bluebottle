@@ -199,34 +199,26 @@ def get_organizationdocument_model():
     return org_document_model
 
 
-def import_class(cl):
-    d = cl.rfind(".")
-    classname = cl[d+1:len(cl)]
-    m = __import__(cl[0:d], globals(), locals(), [classname])
-    return getattr(m, classname)
-
-
-def get_project_serializer(type=None):
+def get_project_phaselog_model():
     """
-    Returns a Project serializer
+    Returns the Project model that is active in this BlueBottle project.
+
+    (Based on ``django.contrib.auth.get_user_model``)
     """
-    project_model = get_project_model()
 
-    if type == 'manage':
-        serializer_name = project_model.Meta.manage_serializer
-    if type == 'preview':
-        serializer_name = project_model.Meta.preview_serializer
-    else:
-        serializer_name = project_model.Meta.default_serializer
-
-    serializer_model = import_class(serializer_name)
-
-    if serializer_model is None:
+    try:
+        app_label, model_name = settings.PROJECTS_PHASELOG_MODEL.split('.')
+    except ValueError:
         raise ImproperlyConfigured(
-            "serializer_name refers to model '{0}' that has not been "
-            "installed".format(settings.ORGANIZATIONS_DOCUMENT_MODEL))
+            "PROJECTS_PHASELOG_MODEL must be of the form 'app_label.model_name'")
 
-    return serializer_model
+    project_phaselog_model = get_model(app_label, model_name)
+    if project_phaselog_model is None:
+        raise ImproperlyConfigured(
+            "PROJECTS_PHASELOG_MODEL refers to model '{0}' that has not been "
+            "installed".format(settings.PROJECTS_PHASELOG_MODEL))
+
+    return project_phaselog_model
 
 
 def get_model_class(model_name=None, a=None):
@@ -254,6 +246,13 @@ def get_model_class(model_name=None, a=None):
     return model
 
 
+def import_class(cl):
+    d = cl.rfind(".")
+    class_name = cl[d+1:len(cl)]
+    m = __import__(cl[0:d], globals(), locals(), [class_name])
+    return getattr(m, class_name)
+
+
 def get_serializer_class(model_name=None, serializer_type=None):
     """
     Returns a serializer
@@ -263,19 +262,19 @@ def get_serializer_class(model_name=None, serializer_type=None):
 
     model = get_model_class(model_name)
 
-    if type == 'manage':
+    if serializer_type == 'manage':
         serializer_name = model.Meta.manage_serializer
-    if type == 'preview':
+    if serializer_type == 'preview':
         serializer_name = model.Meta.preview_serializer
     else:
         serializer_name = model.Meta.default_serializer
 
-    serializer_class = import_class(serializer_name)
+    serializer_model = import_class(serializer_name)
 
-    if serializer_class is None:
+    if serializer_model is None:
         raise ImproperlyConfigured(
             "serializer_name refers to model '{0}' that has not been "
             "installed".format(model_name))
 
-    return serializer_class
+    return serializer_model
 

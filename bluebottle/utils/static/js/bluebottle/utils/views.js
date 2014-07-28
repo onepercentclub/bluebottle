@@ -80,7 +80,9 @@ App.SocialShareView = Em.View.extend({
             var controller = this.get('controller');
 
             if (controller.get('tracker')) {
-                controller.get('tracker').trackEvent("Share on Facebook", {project: controller.get('model.title')});
+                var tracker = controller.get('tracker');
+                tracker.trackEvent("Share on Facebook", {project: controller.get('model.title')});
+                tracker.peopleIncrement('facebook_shares');
             }
 
             this.showDialog('https://www.facebook.com/sharer/sharer.php?u=', currentLink, 'facebook');
@@ -101,7 +103,9 @@ App.SocialShareView = Em.View.extend({
             var controller = this.get('controller');
 
             if (controller.get('tracker')) {
-                controller.get('tracker').trackEvent("Share on Twitter", {project: controller.get('model.title')});
+                var tracker = controller.get('tracker');
+                tracker.get('tracker').trackEvent("Share on Twitter", {project: controller.get('model.title')});
+                tracker.peopleIncrement('twitter_shares');
             }
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');

@@ -3,10 +3,6 @@ from django.utils.translation import ugettext as _
 from django.db import models
 from django_countries.fields import CountryField
 
-from django.contrib.auth import get_user_model
-
-USER_MODEL = get_user_model()
-
 
 class AdyenPaymentMetaData(models.Model):
 

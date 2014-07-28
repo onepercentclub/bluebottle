@@ -14,7 +14,7 @@ You now have two options:
 
 You can edit your task at {{ site }}{{ edit_link }}
 
-Thanks again and we hope to see you back on Booking Cares soon!
+Thanks again and we hope to see you back on <Bluebottle Project> soon!
 
 Warm regards,
 

@@ -21,7 +21,6 @@ class OrderList(generics.ListCreateAPIView):
     filter_fields = ('status',)
     paginate_by = 10
     permission_classes = (IsOrderCreator, )
-    # FIXME Add permissions
 
     def get_queryset(self):
         queryset = super(OrderList, self).get_queryset()

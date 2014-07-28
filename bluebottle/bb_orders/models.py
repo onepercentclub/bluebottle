@@ -4,13 +4,9 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from uuidfield import UUIDField
-
-from django.contrib.auth import get_user_model
 from django.db.models import options
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
-
-USER_MODEL = get_user_model()
 
 
 class OrderStatuses(DjangoChoices):

@@ -28,13 +28,13 @@ class ManageDonationList(generics.ListCreateAPIView):
     # FIXME: Add permission for OrderOwner
 
     def get_queryset(self):
-        qs = super(MyDonationList, self).get_queryset()
+        qs = super(ManageDonationList, self).get_queryset()
         return qs.filter(user=self.request.user)
 
 
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
+    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
     # FIXME: Add permission for OrderOwner
 
 

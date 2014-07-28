@@ -1,3 +1,5 @@
+from bluebottle.bb_donations.models import BaseDonation
+from bluebottle.bb_orders.models import BaseOrder
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
@@ -64,6 +66,20 @@ class TestOrganizationMember(BaseOrganizationMember):
 class TestOrganizationDocument(BaseOrganizationDocument):
     """
     Implementation for testing of BaseOrganizationDocument
+    """
+    pass
+
+
+class TestOrder(BaseOrder):
+    """
+    Implementation for testing of BaseOrder
+    """
+    pass
+
+
+class TestDonation(BaseDonation):
+    """
+    Implementation for testing of BaseDonation
     """
     pass
 

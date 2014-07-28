@@ -129,8 +129,10 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
     The frontend relies on auth tokens so we clear the user.
     """
     def process_request(self, request):
-        if request.path.startswith(reverse('admin:index')):
+        if request.path.startswith(reverse('admin:index')) or request.path.startswith("/admin/documents"):
             super(AdminOnlyAuthenticationMiddleware, self).process_request(request)
+
+
 
 
 class AdminOnlyCsrf(object):

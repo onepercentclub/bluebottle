@@ -12,13 +12,13 @@
 			<div class="account-edit">
 
             {% block_verbatim profile_nav %}
-                <figure class="account-avatar"><img {{bindAttr src="controllers.currentUser.getAvatar"}} /></figure>
+                <figure class="account-avatar"><img {{bindAttr src="currentUser.getAvatar"}} /></figure>
 
                 <header class="account-title">
                     <h2>{% trans "My" %}  <em class="account-subtitle">{% trans "Profile" %}</em></h2>
                 </header>
 
-                <a {{action openInBigBox "userModal" controllers.currentUser.content}} class="account-preview btn-link">
+                <a {{action openInBigBox "userModal" currentUser.content}} class="account-preview btn-link">
                     <span class="flaticon solid eye-1"></span>
                     {% trans "Preview my profile" %}
                 </a>

@@ -60,7 +60,11 @@
     </script>
 
     {% if RAVEN_DSN %}
-        <script src="//cdn.ravenjs.com/1.1.15/ember,jquery,native/raven.min.js"></script>
+        {% if DEBUG %}
+            <script src="//cdn.ravenjs.com/1.1.16/ember,jquery,native/raven.js"></script>
+        {% else %}
+            <script src="//cdn.ravenjs.com/1.1.16/ember,jquery,native/raven.min.js"></script>
+        {% endif %}
     {% endif %}
 
     {# The Ember stack. jQuery, jQuery-ui, Ember, Ember-data, Ember-drf2-adapter, Ember meta #}

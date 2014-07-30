@@ -6,7 +6,7 @@ DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
 
 
 class ManageDonationSerializer(serializers.ModelSerializer):
-    # project = get_serializer_model('PROJECTS_PROJECT_MODEL', 'preview')
+    project = get_serializer_class('PROJECTS_PROJECT_MODEL', 'preview')
 
     status = serializers.ChoiceField(read_only=True)
     order = serializers.PrimaryKeyRelatedField()

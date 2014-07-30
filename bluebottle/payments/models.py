@@ -4,11 +4,7 @@ from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
-
-from django.contrib.auth import get_user_model
 from polymorphic.polymorphic_model import PolymorphicModel
-
-USER_MODEL = get_user_model()
 
 
 class PaymentStatuses(DjangoChoices):

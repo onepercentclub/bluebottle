@@ -1,9 +1,7 @@
 import logging
 from bluebottle.bb_orders.permissions import IsOrderCreator
-from bluebottle.bb_orders.serializers import ManageOrderSerializer
 from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
-from .serializers import OrderSerializer
 from bluebottle.utils.utils import get_project_model, get_model_class, get_serializer_class
 
 
@@ -21,6 +19,7 @@ class OrderList(generics.ListCreateAPIView):
     filter_fields = ('status',)
     paginate_by = 10
     permission_classes = (IsOrderCreator, )
+    # FIXME Add permissions
 
     def get_queryset(self):
         queryset = super(OrderList, self).get_queryset()

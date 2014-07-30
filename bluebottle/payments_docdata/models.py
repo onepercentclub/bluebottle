@@ -4,9 +4,6 @@ from django.utils.translation import ugettext as _
 from django.db import models
 from django_countries.fields import CountryField
 
-from django.contrib.auth import get_user_model
-
-USER_MODEL = get_user_model()
 
 # Maps a payment method to a consistent, human readable name.
 payment_method_mapping = {

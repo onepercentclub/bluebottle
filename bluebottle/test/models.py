@@ -1,5 +1,6 @@
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.bb_orders.models import BaseOrder
+from bluebottle.bb_fundraisers.models import BaseFundRaiser
 from bluebottle.bb_projects.models import BaseProject, BaseProjectPhaseLog
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
@@ -88,4 +89,14 @@ class TestDonation(BaseDonation):
     Implementation for testing of BaseDonation
     """
     pass
+
+    pass
+
+
+class TestFundRaiser(BaseFundRaiser):
+    """
+    Implementation for testing of BaseFundRaiser
+    """
+    pass
+
 

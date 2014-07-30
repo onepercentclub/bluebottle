@@ -331,7 +331,7 @@ App.MyProjectController = Em.ObjectController.extend({
 });
 
 App.MyProjectStartController = App.StandardTabController.extend({
-    nextStep: 'myProject.pitch',
+    nextStep: 'myProject.pitch'
 });
 
 App.MyProjectPitchController = App.StandardTabController.extend({

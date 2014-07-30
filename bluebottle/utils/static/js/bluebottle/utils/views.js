@@ -69,7 +69,9 @@ App.SocialShareView = Em.View.extend({
     actions: {
         shareOnFacebook: function() {
             // context is the model object defined in the associated controller/route
-            var meta_data = this.get('context.meta_data');
+            var meta_data = this.get('context.meta_data'),
+                tracker = this.get('controller.tracker');
+            
             if(meta_data && meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
             } else {
@@ -77,9 +79,6 @@ App.SocialShareView = Em.View.extend({
                 var currentLink = encodeURIComponent(location.href);
             }
 
-            var controller = this.get('controller'),
-                tracker = controller.get('tracker');
-            
             if (tracker) {
                 tracker.trackEvent("Share", {project: controller.get('model.title'), network: "Facebook"});
                 tracker.peopleIncrement('facebook_shares');
@@ -89,19 +88,16 @@ App.SocialShareView = Em.View.extend({
         },
 
         shareOnTwitter: function() {
-            var meta_data = this.get('context.meta_data');
-
+            var meta_data = this.get('context.meta_data'),
+                // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
+                status = meta_data.tweet.replace('{URL}', currentLink),
+                tracker = this.get('controller.tracker');
+                
             if(meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
             } else {
                 var currentLink = encodeURIComponent(location.href);
             }
-
-            // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
-            var status = meta_data.tweet.replace('{URL}', currentLink);
-
-            var controller = this.get('controller'),
-                tracker = controller.get('tracker');
 
             if (tracker) {
                 tracker.trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });

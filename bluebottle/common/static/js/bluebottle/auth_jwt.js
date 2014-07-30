@@ -204,3 +204,23 @@ App.LogoutJwtMixin = Em.Mixin.create({
         }
     },
 });
+
+/*
+ Login With route to login using JWT
+ */
+
+App.Router.map(function() {
+    this.resource('loginWith', {path: '/login-with/:token'});
+});
+
+App.LoginWithRoute = Em.Route.extend({
+    beforeModel: function(transition) {
+        var _this = this;
+        transition.abort();
+
+        App.AuthJwt.processSuccessResponse(transition.params).then(function (user) {
+            _this.set('currentUser.model', user);
+            _this.transitionTo('/');
+        });
+    }
+});

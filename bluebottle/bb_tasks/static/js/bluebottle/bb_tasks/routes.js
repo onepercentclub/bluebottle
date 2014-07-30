@@ -45,9 +45,9 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
     },
 
     afterModel: function(model){
-       if (this.get('tracker')) {
-        this.get('tracker').trackEvent("Task detail", {title: model.get('title')});
-       }
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Task detail", {title: model.get('title')});
+        }
     },
 
     actions: {

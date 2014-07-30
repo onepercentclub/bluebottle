@@ -112,8 +112,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     _this.set('currentUser.model', authorizedUser);
 
                     // Register the successful regular signup with Mixpanel
-                    if (_this.get('tracker')) {
-                        var tracker = _this.get('tracker');
+                    var tracker = _this.get('tracker');
+                    if (tracker) {
                         tracker.trackEvent("Signup", {"type": "regular"});
                         tracker.identify(authorizedUser.get('id_for_ember'));
                         tracker.peopleSet({

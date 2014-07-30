@@ -112,10 +112,7 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivate
     },
     setupController: function(controller, model) {
         this._super(controller, model);
-    },
-
-
-
+    }
 });
  
 

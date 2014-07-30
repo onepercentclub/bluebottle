@@ -121,8 +121,6 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                                 "$last_name": authorizedUser.get('last_name'),
                                 "$email": authorizedUser.get('email'),
                                 last_login_type: "regular",
-                                number_of_donations: 0,
-                                total_donations_amount: 0,
                                 facebook_shares: 0,
                                 twitter_shares: 0
                          });

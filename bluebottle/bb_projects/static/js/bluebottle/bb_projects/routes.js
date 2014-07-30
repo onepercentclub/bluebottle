@@ -29,6 +29,7 @@ App.Router.map(function(){
     });
 
     this.resource('myProjectReview', {path: '/my/projects/:id/review'});
+    this.resource('projectDonationList', {path: '/projects/:project_id/donations'});
 
 });
 
@@ -90,13 +91,16 @@ App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
  * - Manage your project(s)
  */
 
-App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, {
+App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivateMixin, {
+    trackEventName: "My Campaigns",
     model: function(params) {
         return App.MyProject.find();
     },
     setupController: function(controller, model) {
         this._super(controller, model);
-    }
+    },
+
+
 
 });
  
@@ -144,7 +148,6 @@ App.MyProjectSubRoute = Em.Route.extend(App.SaveOnTransitionRouteMixin, App.Scro
 
 App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
     skipExitSignal: true,
-
     redirect: function() {
         var phase = this.modelFor('myProject').get('phase');
         switch(phase) {
@@ -156,15 +159,21 @@ App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
                 break;
         }
     },
-
     model: function(params) {
         return this.modelFor('myProject');
     }
+
 });
 
-App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({});
-App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({});
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Pitch"
+});
+App.MyProjectStoryRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Story"
+});
+App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({
+
+});
 App.MyProjectMediaRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectCampaignRoute = App.MyProjectSubRoute.extend({});
 App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
@@ -173,9 +182,13 @@ App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
         controller.set('fields', App.ProjectDetailField.find());
     }
 });
-App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({skipExitSignal: true});
+App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    skipExitSignal: true,
+    trackEventName: "Create Campaign - Submit"
+});
 
-App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
+App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Budget",
     setupController: function(controller, model){
         this._super(controller, model);
 
@@ -188,10 +201,13 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
             // there are budget lines, and it's not the initial click -> show errors
             controller.set('showBudgetError', true);
         }
-    }
+    },
+
+
 });
 
-App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Organisation",
     model: function(params) {
         var project = this.modelFor('myProject');
 
@@ -207,10 +223,13 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
       controller.set('organizations', App.MyOrganization.find());
       controller.set('selectedOrganization', null);
-    }
+    },
+
+
 });
 
-App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
+App.MyProjectBankRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Bank",
     model: function(params) {
         var project = this.modelFor('myProject'),
         organization = this.modelFor('myProjectOrganization');
@@ -222,14 +241,32 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
         } else {
             return App.MyOrganization.createRecord();
         }
-    }
+    },
+
+
 });
 
-App.MyProjectReviewRoute = App.MyProjectRoute.extend({});
+App.MyProjectReviewRoute = App.MyProjectRoute.extend(App.TrackRouteActivateMixin, {
+    trackEventName: "Create Campaign - Review"
+});
 
 App.ProjectPlanRoute = Em.Route.extend({
     model: function(){
         var project = this.modelFor("project");
         return project;
+    }
+});
+
+
+App.ProjectDonationListRoute = Em.Route.extend({
+    model: function(params) {
+        var project_id = params.project_id.split('?')[0];
+        return App.Project.find(project_id);
+    },
+
+    setupController: function(controller, project) {
+        this._super(controller, project);
+        controller.set('projectDonations', App.ProjectDonation.find({project: project.id}));
+
     }
 });

@@ -89,35 +89,33 @@ App.TaskSearchFormController = Em.ObjectController.extend({
 
 App.IsProjectOwnerMixin = Em.Mixin.create({
     isProjectOwner: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.project.model.owner.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.project.model.owner', 'controllers.currentUser.username')
+    }.property('controllers.project.model.owner', 'currentUser.username')
 });
 
 
 App.CanEditTaskMixin = Em.Mixin.create({
     canEdit: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var author_name = this.get('author.username');
         if (username) {
             return (username == author_name);
         }
         return false;
-    }.property('author', 'controllers.currentUser.username')
+    }.property('author', 'currentUser.username')
 });
 
 App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMixin, {
-    needs: ['currentUser', 'project']
+    needs: ['project']
 });
 
 
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, {
-    needs: ['currentUser'],
-
 	// you can apply to a task only if:
 	// the task is not closed, realized or completed
 	// (strange behaviour since completed is not a status but just a label)
@@ -144,7 +142,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
     }.property('model.members.@each.status'),
 
     isMember: function() {
-        var user = this.get('controllers.currentUser.username');
+        var user = this.get('currentUser.username');
         var isMember = false;
         this.get('model.members').forEach(function(member) {
             var mem = member.get('member.username');
@@ -153,7 +151,7 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
             }
         });
         return isMember;
-    }.property('members.@each.member.username', 'controllers.currentUser.username'),
+    }.property('members.@each.member.username', 'currentUser.username'),
 
     canUpload: function(){
         return (this.get('isMember') || this.get('isAuthor'));
@@ -171,21 +169,21 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
 
 App.TaskActivityController = App.TaskController.extend({
-    needs: ['task', 'currentUser', 'taskMember'],
+    needs: ['task', 'taskMember'],
 
     canEditTask: function() {
-        var user = this.get('controllers.currentUser.username');
+        var user = this.get('currentUser.username');
         var author_name = this.get('controllers.task.author.username');
         if (username) {
             return (username == author_name);
         }
         return false;
-    }.property('controllers.task.author', 'controllers.currentUser.username'),
+    }.property('controllers.task.author', 'currentUser.username'),
 
 });
 
 App.TaskIndexController = Em.ArrayController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task'],
     perPage: 5,
     page: 1,
     remainingItemCount: function(){
@@ -212,19 +210,19 @@ App.TaskIndexController = Em.ArrayController.extend({
     },
 
     canAddMediaWallPost: function() {
-        var username = this.get('controllers.currentUser.username');
+        var username = this.get('currentUser.username');
         var ownername = this.get('controllers.task.model.author.username');
         if (username) {
             return (username == ownername);
         }
         return false;
-    }.property('controllers.task.model.author', 'controllers.currentUser.username')
+    }.property('controllers.task.model.author', 'currentUser.username')
 
 });
 
 
 App.TaskMemberController = Em.ObjectController.extend({
-    needs: ['task', 'currentUser'],
+    needs: ['task'],
 
     isStatusApplied: function(){
         return this.get('status') == 'applied';
@@ -247,7 +245,7 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property('status'),
 
     isCurrentUser: function(){
-        var currentUser = this.get('controllers.currentUser.username');
+        var currentUser = this.get('currentUser.username');
         var member = this.get('member.username');
         if (member == currentUser){
             return true;
@@ -260,7 +258,7 @@ App.TaskMemberController = Em.ObjectController.extend({
         //       the result will be true if the user is the current user.
         // TODO: we should be injecting the currentUser into all controllers so we can do this.get('currentUser')
         //       in the controller and {{ currentUser }} in the templates.
-        return (this.get('controllers.currentUser.id_for_ember').toString() == this.get('task.author.id'));
+        return (this.get('currentUser.id_for_ember').toString() == this.get('task.author.id'));
     }.property('task.author.id'),
 
     canEditStatus: function(){
@@ -280,8 +278,7 @@ App.TaskMemberController = Em.ObjectController.extend({
 
     confirmation: function(){
         var task = this.get('task');
-        var currentUser = this.get('controllers.currentUser');
-        if (task.get('author.id') == currentUser.get('id_for_ember') &&
+        if (task.get('author.id') == this.get('currentUser.id_for_ember') &&
             task.get('isStatusRealized') && this.get('isStatusAccepted')) {
             return true;
         }
@@ -317,12 +314,16 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['currentUser', 'taskIndex', 'projectIndex'],
+    needs: ['taskIndex', 'projectIndex'],
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
         task.on('didCreate', function(record) {
             controller.transitionToRoute('task', task);
+            if (controller.get('tracker')) {
+                controller.get('tracker').trackEvent("New task", {title: task.get('title')});
+            }
+
         });
         task.on('becameInvalid', function(record) {
             // controller.set('errors', record.get('errors'));
@@ -346,6 +347,10 @@ App.TaskEditController = App.TaskNewController.extend({
         }
         task.on('didUpdate', function(record) {
             controller.transitionToRoute('task', task);
+            if (controller.get('tracker')) {
+                controller.get('tracker').trackEvent("Successful task edit", {title: task.get("title")});
+            }
+
         });
         task.on('becameInvalid', function(record) {
             controller.set('errors', record.get('errors'));
@@ -362,12 +367,10 @@ App.TaskEditController = App.TaskNewController.extend({
 });
 
 
-App.TaskPreviewController = Em.ObjectController.extend({
-});
+App.TaskPreviewController = Em.ObjectController.extend({});
 
 
-App.TaskMemberEditController = Em.ObjectController.extend({
-});
+App.TaskMemberEditController = Em.ObjectController.extend({});
 
 
 App.TaskFileNewController = Em.ObjectController.extend({

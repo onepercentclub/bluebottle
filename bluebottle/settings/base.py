@@ -1,7 +1,6 @@
 # Django settings for BlueBottle project.
 
-import os
-
+import os, datetime
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -105,16 +104,14 @@ TEMPLATE_DIRS = (
 
 
 MIDDLEWARE_CLASSES = (
+    'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
+    'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'bluebottle.bb_accounts.middleware.LocaleMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 # REST_FRAMEWORK = {
@@ -125,8 +122,12 @@ REST_FRAMEWORK = {
     # Don't do basic authentication.
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
+}
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=12)
 }
 
 
@@ -272,3 +273,5 @@ CONTACT_EMAIL = 'contact@my-bluebottle-project.com'
 # Registration
 ACCOUNT_ACTIVATION_DAYS = 7
 HTML_ACTIVATION_EMAIL = True
+
+SEND_WELCOME_MAIL = False

@@ -17,10 +17,6 @@ App.Adapter.map('App.MyProject', {
     tags: {embedded: 'always'}
 });
 
-App.Adapter.map('App.PartnerOrganization', {
-    projects: {embedded: 'load'}
-});
-
 /* Models */
 
 App.ProjectCountry = DS.Model.extend({
@@ -221,7 +217,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     },
 
     valid: function(){
-        return (this.get('') && this.get('validPitch'));
+        return (this.get('validStory') && this.get('validPitch'));
     }.property('validStory', 'validPitch'),
 
     organization: DS.belongsTo('App.MyOrganization'),

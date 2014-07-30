@@ -20,7 +20,10 @@ class TaskApiIntegrationTests(TestCase):
 
     def setUp(self):
         self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
         self.another_user = BlueBottleUserFactory.create()
+        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
 
         self.some_project = ProjectFactory.create(owner=self.some_user)
         self.another_project = ProjectFactory.create(owner=self.another_user)
@@ -34,10 +37,9 @@ class TaskApiIntegrationTests(TestCase):
         self.task_members_url = '/api/bb_tasks/members/'
 
     def test_create_task(self):
-        self.client.login(username=self.some_user.email, password='testing')
-
         # Get the list of tasks for some project should return none (count = 0)
-        response = self.client.get(self.task_url, {'project': self.some_project.slug})
+        response = self.client.get(self.task_url, {'project': self.some_project.slug},
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEquals(response.data['count'], 0)
 
@@ -54,7 +56,7 @@ class TaskApiIntegrationTests(TestCase):
             'deadline': future_date,
             'end_goal': 'World peace'
         }
-        response = self.client.post(self.task_url, some_task_data)
+        response = self.client.post(self.task_url, some_task_data, HTTP_AUTHORIZATION=self.some_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
@@ -73,16 +75,13 @@ class TaskApiIntegrationTests(TestCase):
             'deadline': future_date,
             'end_goal': 'World peace'
         }
-        response = self.client.post(self.task_url, another_task_data)
+        response = self.client.post(self.task_url, another_task_data, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # By now the list for this project should contain one task
-        response = self.client.get(self.task_url, {'project': self.some_project.slug})
+        response = self.client.get(self.task_url, {'project': self.some_project.slug}, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEquals(response.data['count'], 1)
-
-        self.client.logout()
-        self.client.login(username=self.another_user.email, password='testing')
 
         # Another user that owns another project can create a task for that.
         another_task_data = {
@@ -95,7 +94,7 @@ class TaskApiIntegrationTests(TestCase):
             'deadline': future_date,
             'end_goal': 'World peace'
         }
-        response = self.client.post(self.task_url, another_task_data)
+        response = self.client.post(self.task_url, another_task_data, HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], another_task_data['title'])
 
@@ -111,23 +110,21 @@ class TaskApiIntegrationTests(TestCase):
             'deadline': str(future_date),
             'end_goal': 'World peace'
         }
-        response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json')
+        response = self.client.post(self.task_url, json.dumps(third_task_data), 'application/json', HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], third_task_data['title'])
 
         # By now the list for the second project should contain two tasks
-        response = self.client.get(self.task_url, {'project': self.another_project.slug})
+        response = self.client.get(self.task_url, {'project': self.another_project.slug}, HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEquals(response.data['count'], 2)
 
         # Viewing task detail for the first task (other owner) should work
-        response = self.client.get(some_task_url)
+        response = self.client.get(some_task_url, HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
 
     def test_apply_for_task(self):
-        self.client.login(username=self.some_user.email, password='testing')
-
         future_date = timezone.now() + timezone.timedelta(days=60)
 
         # let's create a task.
@@ -141,13 +138,10 @@ class TaskApiIntegrationTests(TestCase):
             'deadline': future_date,
             'end_goal': 'World peace'
         }
-        response = self.client.post(self.task_url, some_task_data)
+        response = self.client.post(self.task_url, some_task_data, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
-        self.client.logout()
-        self.client.login(username=self.another_user.email, password='testing')
-
-        response = self.client.post(self.task_members_url, {'task': 1})
+        response = self.client.post(self.task_members_url, {'task': 1}, HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['status'], 'applied')
 
@@ -168,19 +162,16 @@ class TaskApiIntegrationTests(TestCase):
 
         self.assertEqual(2, BB_TASK_MODEL.objects.count())
 
-        self.client.login(username=self.some_user.email, password='testing')
-
-        response = self.client.get(self.task_url, {'status': 'open'})
+        # Test as a different user
+        response = self.client.get(self.task_url, {'status': 'open'}, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
 
-        response = self.client.get(self.task_url, {'status': 'in progress'})
+        response = self.client.get(self.task_url, {'status': 'in progress'}, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
 
     def test_task_preview_search(self):
-        self.client.login(username=self.some_user.email, password='testing')
-
         # create project phases
         phase1 = ProjectPhaseFactory.create(viewable=True)
         phase2 = ProjectPhaseFactory.create(viewable=False)
@@ -208,20 +199,20 @@ class TaskApiIntegrationTests(TestCase):
         api_url = self.task_url + 'previews/'
 
         # test that only one task preview is returned
-        response = self.client.get(api_url)
+        response = self.client.get(api_url, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
 
-        response = self.client.get(api_url, {'status': 'in progress'})
+        response = self.client.get(api_url, {'status': 'in progress'}, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
 
-        response = self.client.get(api_url, {'status': 'open'})
+        response = self.client.get(api_url, {'status': 'open'}, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 0)
 
         skill = self.task1.skill
-        response = self.client.get(api_url, {'skill': skill.id})
+        response = self.client.get(api_url, {'skill': skill.id}, HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], self.task1.id)
@@ -233,9 +224,8 @@ class TaskApiIntegrationTests(TestCase):
 
         self.assertEquals(task.members.count(), 1)
 
-        self.client.login(username=self.some_user.email, password='testing')
-
-        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 'application/json')
+        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 
+                        'application/json', HTTP_AUTHORIZATION=self.some_token)
 
         self.assertEquals(task.members.count(),0)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
@@ -246,9 +236,8 @@ class TaskApiIntegrationTests(TestCase):
 
         self.assertEquals(task.members.count(), 1)
 
-        self.client.login(username=self.some_user.email, password='testing')
-
-        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 'application/json')
+        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 
+                                        'application/json', HTTP_AUTHORIZATION=self.some_token)
 
         self.assertEquals(task.members.count(),1)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)

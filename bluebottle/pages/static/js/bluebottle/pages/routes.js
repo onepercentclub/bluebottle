@@ -11,6 +11,9 @@ App.Router.map(function() {
 
 App.PageRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
+        if (params.page_id == "start-campaign" && this.get('tracker')) {
+            this.get('tracker').trackEvent("Start campaign", {});
+        }
         return App.Page.find(params.page_id);
     },
     actions: {

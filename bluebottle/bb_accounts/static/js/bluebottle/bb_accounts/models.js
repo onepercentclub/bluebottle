@@ -97,8 +97,11 @@ App.User = DS.Model.extend({
         if (this.get('first_name')) {
             return this.get('first_name')
         }
+        if (this.get('full_name')) {
+            return this.get('full_name')
+        }
         return this.get('username')
-    }.property('first_name'),
+    }.property('first_name', 'full_name'),
 
     get_website: function() {
         if (this.get('website').substr(0,7) == 'http://') {
@@ -190,6 +193,8 @@ App.UserPreview = DS.Model.extend({
 
     username: DS.attr('string'),
 
+    email: DS.attr('string'),
+
     // TODO: loose these in favour of short/full name
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
@@ -200,12 +205,21 @@ App.UserPreview = DS.Model.extend({
     name: DS.attr('string'),
     avatar: DS.attr('string'),
 
+    getFullName: function() {
+        if (this.get('full_name')) {
+            return this.get('full_name')
+        }
+        return this.get('username')
+    }.property('username', 'full_name'),
+
     getAvatar: function() {
         if (this.get('avatar')) {
             return this.get('avatar')
         }
         return STATIC_URL + 'images/default-avatar.png'
-    }.property('avatar')
+    }.property('avatar'),
+
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i )
 
 });
 
@@ -228,23 +242,29 @@ App.CurrentUser = App.UserPreview.extend({
     // This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
     // App.UserSettingsModel.find(App.CurrentUser.find('current').get('id_for_ember'));
     id_for_ember: DS.attr('number'),
+    last_login: DS.attr('date'),
+    date_joined: DS.attr('date'),
+
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
+
+    firstLogin: function () {
+        //There is a small lag (ms) between creating the user and getting your token.
+        // Therefore we cannot do a direct compare. We allow a 5000ms (5 sec) delay.
+        return this.get('last_login') -  this.get('date_joined') < 5000;
+    }.property('last_login', 'date_joined'),
 
     getUser: function(){
         return App.User.find(this.get('id_for_ember'));
     }.property('id_for_ember'),
+
     getUserPreview: function(){
         return App.UserPreview.find(this.get('id_for_ember'));
     }.property('id_for_ember'),
+
     isAuthenticated: function(){
-        return (this.get('username')) ? true : false;
-    }.property('username')
+        return (this.get('isLoaded') && this.get('username'));
+    }.property('username', 'isLoaded')
 });
-
-
-App.UserActivation = App.CurrentUser.extend({
-    url: 'users/activate'
-});
-
 
 /*
  A model for creating users.
@@ -254,21 +274,76 @@ App.UserActivation = App.CurrentUser.extend({
  User (POST):   /users/
 
  */
-App.UserCreate = DS.Model.extend({
+
+App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     url: 'users',
 
     first_name: DS.attr('string'),
     last_name: DS.attr('string'),
     email: DS.attr('string'),
-    password: DS.attr('string')
+    password: DS.attr('string'),
+    jwt_token: DS.attr('string', {readOnly: true}),
+    emailConfirmation: DS.attr('string'),
+
+    validPassword: function () {
+        return this.get('password.length') >= Em.get(App, 'settings.minPasswordLength');
+    }.property('password.length'),
+
+    validFirstName: function() {
+        return this.get('first_name.length')
+    }.property('first_name.length'),
+
+    validLastName: function() {
+        return this.get('last_name.length')
+    }.property('last_name.length'),
+
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
+
+    matchingEmail: function () {
+
+        if (Em.isEmpty(this.get('email')) || Em.isEmpty(this.get('emailConfirmation'))){
+            return false;
+        }
+        return !Em.compare(this.get('email'), this.get('emailConfirmation'));
+    }.property('email', 'emailConfirmation'),
+
+    save: function () {
+        this.one('becameInvalid', function(record) {
+            // Ember-data currently has no clear way of dealing with the state
+            // loaded.created.invalid on server side validation, so we transition
+            // to the uncommitted state to allow resubmission
+            if (record.get('isNew')) {
+                record.transitionTo('loaded.created.uncommitted');
+            } else {
+                record.transitionTo('loaded.updated.uncommitted');
+            }
+        });
+
+        return this._super();
+    }
+
 });
 
 
-App.PasswordReset = DS.Model.extend({
+App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
     url: 'users/passwordset',
 
     new_password1: DS.attr('string'),
-    new_password2: DS.attr('string')
+    new_password2: DS.attr('string'),
+
+    validPassword: function () {
+        return this.get('new_password1.length') >= Em.get(App, 'settings.minPasswordLength');
+    }.property('new_password1.length'),
+
+    matchingPassword: function() {
+        if (Em.isEmpty(this.get('new_password1')) || Em.isEmpty(this.get('new_password2'))){
+            return false;
+        }
+        return !Em.compare(this.get('new_password1'), this.get('new_password2'));
+    }.property('new_password1', 'new_password2'),
+
+
+
 });
 
 
@@ -276,4 +351,13 @@ App.TimeAvailable = DS.Model.extend({
     url: 'users/time_available',
 	type: DS.attr('string'),
 	description : DS.attr('string')
+});
+
+
+App.UserLogin = Em.Object.extend({
+    matchId: null,
+    matchType: null,
+    email: null,
+    password: null,
+    validEmail: Em.computed.match('email', /.+\@.+\..+/i )
 });

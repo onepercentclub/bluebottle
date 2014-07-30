@@ -1,14 +1,79 @@
 /* =========== Global Layout */
 
-body { 
-    overflow-y: scroll;
-}
-
 // Global Layout Elements
 // -------------------------
 
+#site {
+    .flash-container {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(138, 153, 147, .65);
+        z-index: 9999;
+        @include animation(fadeOut .3s ease-out);
+        @include animation-fill-mode(forwards);
+
+        &.is-active{
+            @include animation(fadeIn .3s ease-out);
+        }
+
+        & > .flash {
+            position: fixed;
+            text-align: center;
+            left: 0;
+            right: 0;
+            margin-top: 112px;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 209px;
+            width: 251px;
+            padding: 15px;
+            background-color: rgb(60, 60, 60);
+            border-radius: 8px;
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            @include opacity(.9);
+            @include animation(fadeOut .3s ease-out);
+            @include animation-fill-mode(forwards);
+
+            &.is-active {
+                @include opacity(.9);
+                @include animation(fadeIn .3s ease-out);
+            }
+
+            .flash-icon {
+                width: 75px;
+                height: 75px;
+                display: inline-block;
+                margin-top: 36px;
+
+                &.welcome {
+                    background: image-url("icons/icon-toast-correct.svg") transparent no-repeat;
+                }
+
+                &.reset {
+                    background: image-url("icons/icon-toast-password-reset.svg") transparent no-repeat;
+                }
+
+                &.is-loading {
+                    background: image-url("loaders/loader-toast-darkgrey.gif") transparent no-repeat;
+                }
+            }
+
+            .flash-heading {
+                display: block;
+                margin-top: 10px;
+            }
+
+        }
+    }
+}
+
 #main {
-	
+
 }
 
 .l-section {

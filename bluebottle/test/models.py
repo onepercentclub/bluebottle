@@ -1,6 +1,5 @@
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.bb_orders.models import BaseOrder
-from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_fundraisers.models import BaseFundRaiser
 from bluebottle.bb_projects.models import BaseProject, BaseProjectPhaseLog
 from bluebottle.bb_accounts.models import BlueBottleBaseUser

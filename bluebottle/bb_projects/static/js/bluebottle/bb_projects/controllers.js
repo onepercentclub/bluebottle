@@ -245,7 +245,10 @@ App.MoveOnMixin = Ember.Mixin.create({
         goToStep: function(step){
             $("body").animate({ scrollTop: 0 }, 600);
             var controller = this;
-            if (step) controller.transitionToRoute(step);
+
+            if (step) {
+                controller.transitionToRoute(step);
+            }
         },
 
         goToPreviousStep: function(){
@@ -370,10 +373,11 @@ App.MyProjectStoryController = App.StandardTabController.extend({
 
     canSave: function () {
         return !!this.get('model.title');
-    }.property('model.title')
+    }.property('model.title'),
 });
 
 App.MyProjectSubmitController = App.StandardTabController.extend({
+
     needs: ['myProjectOrganisation', 'myProject', 'myProjectBank'],
     previousStep: 'myProject.organisation',
 

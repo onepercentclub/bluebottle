@@ -1,4 +1,4 @@
-App.Store.registerAdapter("App.Donation", App.MockAdapter); 
+if (DEBUG) App.Store.registerAdapter("App.Donation", App.MockAdapter);
 
 App.Donation = DS.Model.extend({
     amount: DS.attr('number'),

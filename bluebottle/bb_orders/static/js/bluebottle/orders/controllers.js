@@ -1,1 +1,0 @@
-App.CurrentOrder = Em.ObjectController({});

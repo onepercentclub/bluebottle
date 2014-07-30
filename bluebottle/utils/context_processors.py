@@ -68,17 +68,36 @@ def sentry_dsn(request):
         public_key = match.group(1)
         project_id = match.group(3)
 
-        return {'RAVEN_DSN': "https://{}@app.getsentry.com/{}".format(public_key, project_id)}
+        return {'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key, project_id)}
 
 
 def conf_settings(request):
     """
     Some settings we want to make available in templates.
     """
+    context = {}
+    context['DEBUG'] = getattr(settings, 'DEBUG', False)
+    context['COMPRESS_TEMPLATES'] = getattr(settings, 'COMPRESS_TEMPLATES', False)
+
+    return context
+
+
+def facebook_auth_settings(request):
+    """
+    Facebook Auth client side ID.
+    """
+    context = {}
+    context['FACEBOOK_AUTH_ID'] = getattr(settings, 'SOCIAL_AUTH_FACEBOOK_KEY', '')
+
+    return context
+
+
+def mixpanel_settings(request):
+    """
+    Add Mixpanel API key from settings file to general request context.
+    """
     try:
-        context = {'settings': {
-            'DEBUG': settings.DEBUG,
-        }}
+        context = {'MIXPANEL': settings.MIXPANEL}
     except AttributeError:
         context = {}
     return context

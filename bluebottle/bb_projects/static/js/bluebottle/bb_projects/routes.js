@@ -60,6 +60,10 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         var project_id = params.project_id.split('?')[0];
 
         var _this = this;
+
+        // FIXME: This isn't the way we should this. In the ProjectIndexRoute we use a App.WallRouteMixin, that
+        // uses parent stuff that refers to this controller. However, it calls the parent directly and doesn't
+        // handle the promise before the model is loaded. We should refactor the App.WallRouteMixin at some point.
         var promise = App.Project.find(project_id);
 
         promise.then(function(model) {

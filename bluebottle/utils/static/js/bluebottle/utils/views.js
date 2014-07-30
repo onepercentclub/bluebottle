@@ -77,9 +77,9 @@ App.SocialShareView = Em.View.extend({
                 var currentLink = encodeURIComponent(location.href);
             }
 
-            var controller = this.get('controller');
-
-            var tracker = controller.get('tracker');
+            var controller = this.get('controller'),
+                tracker = controller.get('tracker');
+            
             if (tracker) {
                 tracker.trackEvent("Share", {project: controller.get('model.title'), network: "Facebook"});
                 tracker.peopleIncrement('facebook_shares');
@@ -100,11 +100,11 @@ App.SocialShareView = Em.View.extend({
             // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
             var status = meta_data.tweet.replace('{URL}', currentLink);
 
-            var controller = this.get('controller');
+            var controller = this.get('controller'),
+                tracker = controller.get('tracker');
 
-            var tracker = controller.get('tracker');
             if (tracker) {
-                tracker.get('tracker').trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });
+                tracker.trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });
                 tracker.peopleIncrement('twitter_shares');
             }
 

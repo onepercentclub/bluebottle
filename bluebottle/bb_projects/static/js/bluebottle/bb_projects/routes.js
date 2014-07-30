@@ -38,7 +38,8 @@ App.Router.map(function(){
  * Project Routes
  */
 
-App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
+App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.TrackRouteActivateMixin, {
+    trackEventName: "Browse projects",
     setupController: function(controller, model) {
         this._super(controller, model);
         App.UsedTheme.find().then(function(theme_list){
@@ -47,6 +48,8 @@ App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
             });
         });
     }
+
+
 });
 
 
@@ -55,12 +58,23 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.
         var project_id = params.project_id.split('?')[0];
-        var page =  App.Project.find(project_id);
-        var route = this;
-        page.on('becameError', function() {
-            route.transitionTo('projectList');
+
+        var _this = this;
+
+        // FIXME: This isn't the way we should this. In the ProjectIndexRoute we use a App.WallRouteMixin, that
+        // uses parent stuff that refers to this controller. However, it calls the parent directly and doesn't
+        // handle the promise before the model is loaded. We should refactor the App.WallRouteMixin at some point.
+        var promise = App.Project.find(project_id);
+
+        promise.then(function(model) {
+            if (_this.get('tracker')) {
+                _this.get('tracker').trackEvent("Project detail", {"title": model.get('title')});
+            }
+        }, function() {
+            _this.transitionTo('projectList');
         });
-        return page;
+
+        return promise;
     }
 });
 

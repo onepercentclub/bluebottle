@@ -113,7 +113,19 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
                     // Register the successful regular signup with Mixpanel
                     if (_this.get('tracker')) {
-                        _this.get('tracker').trackEvent("Signup", {"type": "regular"});
+                        var tracker = _this.get('tracker');
+                        tracker.trackEvent("Signup", {"type": "regular"});
+                        tracker.identify(authorizedUser.get('id_for_ember'));
+                        tracker.peopleSet({
+                                "$first_name": authorizedUser.get('first_name'),
+                                "$last_name": authorizedUser.get('last_name'),
+                                "$email": authorizedUser.get('email'),
+                                last_login_type: "regular",
+                                number_of_donations: 0,
+                                total_donations_amount: 0,
+                                facebook_shares: 0,
+                                twitter_shares: 0
+                         });
                     }
 
                     // This is the users first login so flash a welcome message
@@ -343,7 +355,9 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 _this.set('currentUser.model', user);
 
                 if (_this.get('tracker')) {
-                    _this.get('tracker').trackEvent("Login", {"type": "regular"});
+                    var tracker = _this.get('tracker');
+                    tracker.trackEvent("Login", {"type": "regular"});
+                    tracker.identify(user.get('id_for_ember'));
                 }
 
                 // Call the loadNextTransition in case the user was unauthenticated and was

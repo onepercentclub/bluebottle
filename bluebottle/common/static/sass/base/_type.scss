@@ -138,6 +138,15 @@ ul, ul.bullets {
 		padding-left: $base-padding*2;
 		margin: $base-margin 0;
 		background: image-url("list-item.png") transparent no-repeat 0 0;
+
+		&.alternative {
+			background: image-url("img/icons/icon-close-modal.svg") transparent no-repeat;
+			background-position-y: 6px;
+
+			a {
+				text-decoration: none;
+			}
+		}
 	}
 }
 

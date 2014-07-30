@@ -1,6 +1,6 @@
-App.Store.registerAdapter("App.Order", App.MockAdapter); 
+if (DEBUG) App.Store.registerAdapter("App.Payment", App.MockAdapter); 
 
-App.Order = DS.Model.extend({
+App.Payment = DS.Model.extend({
     totalAmount: DS.attr('number'),
     // userId: DS.belongsTo('App.UserPreview'),
     donations: DS.hasMany('App.Donation')

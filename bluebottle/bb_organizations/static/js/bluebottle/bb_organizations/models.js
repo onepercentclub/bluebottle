@@ -148,14 +148,6 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
         return this.get('documents.length') > 0;
     }.property('documents.length'),
 
-//    validLegalStatus: function(){
-//        var result = false
-//        if (this.get('documents.length') > 0){
-//            result = true;
-//        }
-//        return result
-//    }.property('documents.length'),
-
     //Account holder
     account_holder_name: DS.attr('string', {defaultValue: ""}),
     account_holder_address: DS.attr('string', {defaultValue: ""}),

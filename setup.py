@@ -93,7 +93,7 @@ tests_require = [
     'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
-    'nose==1.3.1',
+    'nose==1.3.3',
     'pylint==0.28.0',
     'sauceclient==0.1.0',
     'selenium==2.42.1',

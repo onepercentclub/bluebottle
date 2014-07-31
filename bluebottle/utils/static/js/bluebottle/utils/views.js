@@ -69,7 +69,9 @@ App.SocialShareView = Em.View.extend({
     actions: {
         shareOnFacebook: function() {
             // context is the model object defined in the associated controller/route
-            var meta_data = this.get('context.meta_data');
+            var meta_data = this.get('context.meta_data'),
+                tracker = this.get('controller.tracker');
+            
             if(meta_data && meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
             } else {
@@ -77,31 +79,29 @@ App.SocialShareView = Em.View.extend({
                 var currentLink = encodeURIComponent(location.href);
             }
 
-            var controller = this.get('controller');
-
-            if (controller.get('tracker')) {
-                controller.get('tracker').trackEvent("Share on Facebook", {project: controller.get('model.title')});
+            if (tracker) {
+                tracker.trackEvent("Share", {project: controller.get('model.title'), network: "Facebook"});
+                tracker.peopleIncrement('facebook_shares');
             }
 
             this.showDialog('https://www.facebook.com/sharer/sharer.php?u=', currentLink, 'facebook');
         },
 
         shareOnTwitter: function() {
-            var meta_data = this.get('context.meta_data');
-
+            var meta_data = this.get('context.meta_data'),
+                // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
+                status = meta_data.tweet.replace('{URL}', currentLink),
+                tracker = this.get('controller.tracker');
+                
             if(meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
             } else {
                 var currentLink = encodeURIComponent(location.href);
             }
 
-            // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
-            var status = meta_data.tweet.replace('{URL}', currentLink);
-
-            var controller = this.get('controller');
-
-            if (controller.get('tracker')) {
-                controller.get('tracker').trackEvent("Share on Twitter", {project: controller.get('model.title')});
+            if (tracker) {
+                tracker.trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });
+                tracker.peopleIncrement('twitter_shares');
             }
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');

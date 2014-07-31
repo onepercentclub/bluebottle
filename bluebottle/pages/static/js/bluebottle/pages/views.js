@@ -1,39 +1,3 @@
-/*
-   Mixin to enable scrolling from one anchor point to another
-   within a same page.
-
-   Mix the mixin into View classes like:
-   e.g. App.YourView = Ember.View.extend(App.GoTo, {});
-
-   And, In your template,
-
-   <a class="goto" href="#Destination" data-target="#Destination">Source</a>
-
-   Or,
-
-   <a {{action 'goTo' '#Destination' target="view" bubbles=false}}>Source</a>
- */
-App.GoTo = Ember.Mixin.create({
-
-    click: function(e) {
-        var $target = $(e.target);
-        if ($target.hasClass('goto')) {
-            var anchor = $target.data('target') || $target.attr('rel');
-            if (anchor) {
-                this.goTo(anchor);
-                e.preventDefault();
-            }
-        }
-    },
-
-    goTo: function(target) {
-        $('html, body').stop().animate({
-            scrollTop: $(target).offset().top - $('#header').height()
-        }, 500);
-    }
-});
-
-
 App.PageView = Ember.View.extend(App.GoTo, {
     templateName: 'page',
 

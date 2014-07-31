@@ -34,13 +34,20 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
                 }
             });
         });
-    },
+    }
 });
 
 
 App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
+
     model: function(params) {
         return App.Task.find(params.task_id);
+    },
+
+    afterModel: function(model){
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Task detail", {title: model.get('title')});
+        }
     },
 
     actions: {
@@ -65,10 +72,9 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 							taskMember.set('created', new Date());
 							taskMember.save();
 
-			                                if (route.get('tracker')) {
-			                                    route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
-			                                }
-
+							if (route.get('tracker')) {
+							    route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
+							}
 						}
 						if (opts.secondary) {
 							taskMember.deleteRecord();

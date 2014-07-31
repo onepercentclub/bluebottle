@@ -17,10 +17,6 @@ App.Adapter.map('App.MyProject', {
     tags: {embedded: 'always'}
 });
 
-App.Adapter.map('App.PartnerOrganization', {
-    projects: {embedded: 'load'}
-});
-
 /* Models */
 
 App.ProjectCountry = DS.Model.extend({

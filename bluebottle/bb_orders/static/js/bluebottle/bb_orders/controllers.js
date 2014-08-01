@@ -1,0 +1,1 @@
+App.CurrentOrderController = Em.ObjectController.extend({});

@@ -11,7 +11,6 @@ App.TaskMember.FIXTURES = [];
 App.TaskSearch.FIXTURES = [];
 App.Task.FIXTURES = [];
 App.Page.FIXTURES = [];
-App.PartnerOrganization.FIXTURES = [];
 App.Quote.FIXTURES = [];
 App.Project.FIXTURES = [];
 App.WallPost.FIXTURES = [];

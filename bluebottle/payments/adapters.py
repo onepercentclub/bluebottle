@@ -2,6 +2,17 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.conf import settings
 from .models import Payment, PaymentStatuses, PaymentLogLevels
 from .signals import payment_status_changed
+from django.conf import settings
+
+
+def get_payment_methods(country=None, amount=None):
+    methods = {}
+    for provider in getattr(settings, 'PAYMENT_METHODS', {}):
+        methods = dict(methods.items() + getattr(provider, 'methods', {}).items())
+        import ipdb; ipdb.set_trace()
+    return methods
+
+
 
 
 class AbstractPaymentAdapter(object):

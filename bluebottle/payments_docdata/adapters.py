@@ -38,52 +38,6 @@ cowry_docdata_logger = logging.getLogger('cowry.docdata')
 #     ssl.wrap_socket = wrap_socket
 
 
-# These defaults can be overridden with the COWRY_PAYMENT_METHODS setting.
-default_payment_methods = {
-    'dd-ideal': {
-        'id': 'IDEAL',
-        'profile': 'ideal',
-        'name': 'iDeal',
-        'submethods': {
-            '0081': 'Fortis',
-            '0021': 'Rabobank',
-            '0721': 'ING Bank',
-            '0751': 'SNS Bank',
-            '0031': 'ABN Amro Bank',
-            '0761': 'ASN Bank',
-            '0771': 'SNS Regio Bank',
-            '0511': 'Triodos Bank',
-            '0091': 'Friesland Bank',
-            '0161': 'van Lanschot Bankiers'
-        },
-        'restricted_countries': ('NL',),
-        'supports_recurring': False,
-    },
-
-    'dd-direct-debit': {
-        'id': 'SEPA_DIRECT_DEBIT',
-        'profile': 'directdebit',
-        'name': 'Direct Debit',
-        'max_amount': 10000,  # €100
-        'restricted_countries': ('NL',),
-        'supports_recurring': True,
-        'supports_single': False,
-    },
-
-    'dd-creditcard': {
-        'profile': 'creditcard',
-        'name': 'Credit Cards',
-        'supports_recurring': False,
-    },
-
-    'dd-webmenu': {
-        'profile': 'webmenu',
-        'name': 'Web Menu',
-        'supports_recurring': True,
-    }
-}
-
-
 def docdata_payment_logger(payment, level, message):
     if level == PaymentLogLevels.error:
         cowry_docdata_logger.error("{0} - {1}".format(payment, message))

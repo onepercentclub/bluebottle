@@ -49,13 +49,6 @@ class PaymentMetaData(PolymorphicModel):
         ordering = ('-created', '-updated')
 
 
-class PaymentMethod(PolymorphicModel):
-
-    profile = models.CharField(_("profile"), max_length=20)
-    created = CreationDateTimeField(_("Created"))
-    updated = ModificationDateTimeField(_("Updated"))
-
-
 class Transaction(PolymorphicModel):
 
     payment = models.ForeignKey('payments.Payment')

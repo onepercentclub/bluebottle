@@ -37,7 +37,7 @@
 
 
 			<div class="wallposts-important">
-				<section id="task-list">
+				<section id="task-list" {{bindAttr class="controllers.project.amount_asked::integrated"}}>
 	                {{#if availableTasks}}
 						<div class="task-list-wrapper task-list-open">
 							<h3>{% trans "Open tasks" %}</h3>

@@ -91,6 +91,10 @@
         <script type="text/javascript" src="{% static 'js/vendor/ember-meta.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/globalize.js' %}"></script>
 
+        {% if DEBUG %}
+            <script type="text/javascript" src="{% static 'js/plugins/apiary-adapter.js' %}"></script>
+        {% endif %}
+
         {# Other libs #}
         {% with 'jsi18n/'|add:LANGUAGE_CODE|add:'/djangojs.js' as i18n_static %}
             <script type="text/javascript" src="{% static i18n_static %}"></script>

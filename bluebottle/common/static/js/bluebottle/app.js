@@ -279,7 +279,7 @@ App.Adapter.configure("plurals", {
     "favourite_country" : "favourite_countries"
 });
 
-if (DEBUG) {
+if (DEBUG && typeof Apiary == 'object') {
     // If DEBUG then include the Apiary mock adapter
     App.MockAdapter = Apiary.MockAdapter.reopen({
         namespace: "api",

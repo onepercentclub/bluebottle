@@ -1,0 +1,1 @@
+App.DonationModalController = Em.ObjectController.extend();

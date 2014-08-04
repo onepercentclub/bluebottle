@@ -6,14 +6,12 @@ ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    total = serializers.DecimalField(read_only=True)
     status = serializers.ChoiceField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
-    donations = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')(many=True, read_only=True)
 
     class Meta:
         model = ORDER_MODEL
-        fields = ('id', 'user', 'total', 'status', 'donations', 'created')
+        fields = ('id', 'user', 'created')
 
 
 class ManageOrderSerializer(serializers.ModelSerializer):

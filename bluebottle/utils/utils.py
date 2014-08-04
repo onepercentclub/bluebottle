@@ -253,7 +253,7 @@ def import_class(cl):
     return getattr(m, class_name)
 
 
-def get_serializer_class(model_name=None, serializer_type=None):
+def get_serializer_class(model_name=None, serializer_type='default'):
     """
     Returns a serializer
     model_name: The model eg 'User' or 'Project'
@@ -264,10 +264,13 @@ def get_serializer_class(model_name=None, serializer_type=None):
 
     if serializer_type == 'manage':
         serializer_name = model.Meta.manage_serializer
-    if serializer_type == 'preview':
+    elif serializer_type == 'preview':
         serializer_name = model.Meta.preview_serializer
-    else:
+    elif serializer_type == 'default':
         serializer_name = model.Meta.default_serializer
+    else:
+        raise ImproperlyConfigured(
+            "Unknown serializer type '{0}'".format(serializer_type))
 
     serializer_model = import_class(serializer_name)
 
@@ -277,27 +280,6 @@ def get_serializer_class(model_name=None, serializer_type=None):
             "installed".format(model_name))
 
     return serializer_model
-
-def get_project_phaselog_model():
-    """
-    Returns the Project model that is active in this BlueBottle project.
-
-    (Based on ``django.contrib.auth.get_user_model``)
-    """
-
-    try:
-        app_label, model_name = settings.PROJECTS_PHASELOG_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "PROJECTS_PHASELOG_MODEL must be of the form 'app_label.model_name'")
-
-    project_phaselog_model = get_model(app_label, model_name)
-    if project_phaselog_model is None:
-        raise ImproperlyConfigured(
-            "PROJECTS_PHASELOG_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.PROJECTS_PHASELOG_MODEL))
-
-    return project_phaselog_model
 
 
 

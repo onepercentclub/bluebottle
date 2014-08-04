@@ -6,8 +6,7 @@ DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
 
 
 class ManageDonationSerializer(serializers.ModelSerializer):
-    project = get_serializer_class('PROJECTS_PROJECT_MODEL', 'preview')
-
+    project = serializers.SlugRelatedField(source='project', slug_field='slug')
     status = serializers.ChoiceField(read_only=True)
     order = serializers.PrimaryKeyRelatedField()
     amount = serializers.DecimalField()

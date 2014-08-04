@@ -171,6 +171,21 @@
 	.member-initiator {		
 	    @include grid(24,0,0);		
 	}
+
+	.task-action {
+	    @include grid(16,1,1);
+	    float: right;
+		margin-top: $base-margin;
+
+	    .btn {
+	        font-family: $font-family-bold;
+	        white-space: nowrap;
+	        font-size: 1.5em;
+	        display: block;
+
+	    }
+	}
+
 }
 
 #project-actions {

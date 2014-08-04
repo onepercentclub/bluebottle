@@ -65,6 +65,17 @@
 					</span>
 				</div>
 			{{/if}}
+
+            {{#unless controllers.projectIndex.tasks.length}}
+                {{#if isProjectOwner}}
+                    <div class="task-action">
+                        {{#link-to 'taskNew' id class="btn btn-primary btn-iconed"}}
+                            <span class="flaticon stroke work-1"></span>
+                            {% trans 'Create task' %}
+                        {{/link-to}}
+                    </div>
+                {{/if}}
+            {{/unless}}
 		</section>
     </div>
 

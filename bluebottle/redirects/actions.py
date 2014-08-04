@@ -1,38 +1,26 @@
-from django.contrib import admin
-from .models import Language
 import csv
 from django.http import HttpResponse
 
-
-class LanguageAdmin(admin.ModelAdmin):
-    model = Language
-    list_display = ('code', 'language_name', 'native_name')
-
-admin.site.register(Language, LanguageAdmin)
-
-
-
+# Admin action for a generic "CSV Export"
+# Django snippets: http://djangosnippets.org/snippets/2369/
 
 def export_as_csv_action(description="Export selected objects as CSV file",
                          fields=None, exclude=None, header=True):
     """
-    Taken from https://djangosnippets.org/snippets/2369/
-
-    Example:
-    class YourModelAdmin(admin.ModelAdmin):
-        list_display = (...)
-        list_filter = [...]
-        actions = [export_as_csv_action("CSV Export", fields=[...])]
+    This function returns an export csv action
+    'fields' and 'exclude' work like in django ModelForm
+    'header' is whether or not to output the column names as the first row
     """
     def export_as_csv(modeladmin, request, queryset):
         """
         Generic csv export admin action.
+        based on http://djangosnippets.org/snippets/1697/
         """
         opts = modeladmin.model._meta
         field_names = set([field.name for field in opts.fields])
         if fields:
             fieldset = set(fields)
-            field_names = field_names & fieldset
+            field_names = fields
         elif exclude:
             excludeset = set(exclude)
             field_names = field_names - excludeset

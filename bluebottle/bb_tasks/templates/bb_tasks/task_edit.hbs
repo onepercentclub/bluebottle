@@ -23,21 +23,25 @@
 
                             <div class="controls">
                                 {{#view Em.RadioButtonGroup class="radio-select four" name="status" selectedValueBinding="status"}}
-                                    <label for="status_open" class="radio">
+                                    <label for="status_open" class="radio tooltip-holder">
                                         {{view view.RadioButton value="open" id="status_open"}}
                                         <span>{% trans "Open" %}</span>
+                                        <div class="tooltip">{% trans "Select this option when your task is still open. For the task to be open, also make sure the deadline of the task lies in the future!" %}</div>
                                     </label>
-                                    <label for="status_in_progress" class="radio">
+                                    <label for="status_in_progress" class="radio tooltip-holder">
                                         {{view view.RadioButton value="in progress" id="status_in_progress"}}
                                         <span>{% trans "Running" %}</span>
+                                        <div class="tooltip">{% trans "Select this status when your task is running. This means that you are preparing for the task and you found all the participants that you need. Make sure the deadline of your task lies in the future so your project stays open" %}</div>
                                     </label>
-                                    <label for="status_realised" class="radio">
+                                    <label for="status_realised" class="radio tooltip-holder">
                                         {{view view.RadioButton value="realized" id="status_realised"}}
                                         <span>{% trans "Realised" %}</span>
+                                        <div class="tooltip">{% trans "Great! Select this status if you’ve successfully realised the task." %}</div>
                                     </label>
-                                    <label for="status_closed" class="radio">
+                                    <label for="status_closed" class="radio tooltip-holder">
                                         {{view view.RadioButton value="closed" id="status_closed"}}
                                         <span>{% trans "Closed" %}</span>
+                                        <div class="tooltip">{% trans "Select 'closed' when you haven’t realised this task and have not plans of doing so in the future." %}</div>
                                     </label>
                                 {{/view}}
                             </div>

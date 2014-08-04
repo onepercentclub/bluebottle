@@ -54,8 +54,8 @@ App.Project = DS.Model.extend({
 
     // Location
     country: DS.belongsTo('App.Country'),
-    latitude: DS.attr('string', {defaultValue: 54}),
-    longitude: DS.attr('string', {defaultValue: 4}),
+    latitude: DS.attr('string'),
+    longitude: DS.attr('string'),
 
     // Media
     image: DS.attr('image'),
@@ -188,7 +188,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
     
     requiredStoryFields: ['description', 'reach'],
-    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude'],
     friendlyFieldNames: null,
 
     init: function () {

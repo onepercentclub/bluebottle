@@ -53,15 +53,6 @@
 								{{view App.TaskSummaryView contentBinding='this'}}
 							{{/each}}
 						</div>
-                    {{else}}
-                            {{#if isProjectOwner }}
-						        <div class="task-list-wrapper task-list-open">
-                                    {{#link-to "taskNew" controllers.project.id class="btn btn-modest right task-create"}}
-                                        <span class="flaticon solid pencil-3"></span>
-                                        {% trans "Create task" %}
-                                    {{/link-to}}
-						        </div>
-                            {{/if}}
                     {{/if}}
 					
                     {{#if unavailableTasks}}

@@ -57,7 +57,7 @@ App.AuthJwt = {
             // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
             // state so we need to force a transition here before trying to fetch the
             // user again.
-            currentUser = App.CurrentUser.find('current');
+            var currentUser = App.CurrentUser.find('current');
             if (currentUser.get('currentState.error.stateName') == 'root.error') {
                 currentUser.transitionTo('deleted.saved');
                 return App.CurrentUser.find('current').then( function (user) {
@@ -202,7 +202,7 @@ App.LogoutJwtMixin = Em.Mixin.create({
             if (redirect)
                 this.transitionTo('home');
         }
-    },
+    }
 });
 
 /*

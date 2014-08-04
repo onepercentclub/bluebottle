@@ -56,7 +56,7 @@ Ember.Application.initializer({
 });
 
 
-App = Em.Application.createWithMixins(Em.FacebookMixin, {
+App = Ember.Application.createWithMixins(Em.FacebookMixin, {
     VERSION: '1.0.0',
 
     // TODO: Remove this in production builds.
@@ -159,7 +159,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
                     return data.filter(function(item){
                         return item.get('viewable');
                     });
-                },
+                }.property()
             });
         });
 

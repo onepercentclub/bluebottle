@@ -508,6 +508,11 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             $('html, body').stop().animate({
                 scrollTop: $(target).offset().top - $('#header').height()
             }, 500);
+        },
+
+        addDonation: function (project, fundraiser) {
+            var donation = App.Donation.createRecord();
+            this.get('controller').send('openInBox', 'donationModal', donation, 'modalFront');
         }
     },
 

@@ -516,7 +516,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             App.Order.createRecord().save().then(
                 // Success
                 function(order){
-                    var donation = App.Donation.createRecord({order: order});
+                    var donation = App.Donation.createRecord({order: order, project: project});
                     controller.send('openInBox', 'donationModal', donation, 'modalFront');
                 },
                 // Failure

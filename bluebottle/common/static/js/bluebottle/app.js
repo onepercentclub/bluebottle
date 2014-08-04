@@ -236,28 +236,41 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
 /**
  * The Ember Data Adapter and Store configuration.
  */
+
+App.AdapterPlurals = {
+    "homepage": "homepage",
+
+    // My Orders
+    "orders/my": "orders/my",
+
+    // My Projects
+    "bb_projects/manage": "bb_projects/manage",
+    "bb_projects/plans/manage": "bb_projects/plans/manage",
+    "bb_projects/budgetlines/manage": "bb_projects/budgetlines/manage",
+
+    // Organizations
+    "bb_organizations/manage": "bb_organizations/manage",
+    "bb_organizations/documents/manage": "bb_organizations/documents/manage",
+
+    // User Settings / Options
+    "users/activate": "users/activate",
+    "users/passwordset": "users/passwordset",
+    "users/time_available": "users/time_available",
+    "contact/contact": "contact/contact",
+
+    // TODO: Are the plurals below still needed?
+    "bb_projects/wallposts/media": "bb_projects/wallposts/media",
+    "bb_projects/wallposts/text": "bb_projects/wallposts/text",
+    "bb_projects/campaigns/manage": "bb_projects/campaigns/manage",
+    "bb_projects/pitches/manage": "bb_projects/pitches/manage",
+    "bb_organizations/addresses/manage": "bb_organizations/addresses/manage",
+    "bb_projects/ambassadors/manage": "bb_projects/ambassadors/manage",
+};
+
 App.Adapter = DS.DRF2Adapter.extend({
     namespace: "api",
 
-    plurals: {
-        "bb_projects/manage": "bb_projects/manage",
-        "bb_projects/plans/manage": "bb_projects/plans/manage",
-        "bb_organizations/manage": "bb_organizations/manage",
-        "bb_organizations/documents/manage": "bb_organizations/documents/manage",
-        "bb_projects/budgetlines/manage": "bb_projects/budgetlines/manage",
-        "users/activate": "users/activate",
-        "users/passwordset": "users/passwordset",
-        "users/time_available": "users/time_available",
-        "homepage": "homepage",
-        "contact/contact": "contact/contact",
-        // TODO: Are the plurals below still needed?
-        "bb_projects/wallposts/media": "bb_projects/wallposts/media",
-        "bb_projects/wallposts/text": "bb_projects/wallposts/text",
-        "bb_projects/campaigns/manage": "bb_projects/campaigns/manage",
-        "bb_projects/pitches/manage": "bb_projects/pitches/manage",
-        "bb_organizations/addresses/manage": "bb_organizations/addresses/manage",
-        "bb_projects/ambassadors/manage": "bb_projects/ambassadors/manage",
-    }
+    plurals: App.AdapterPlurals
 });
 
 // Assigning plurals for model properties doesn't seem to work with extend, it does this way:
@@ -265,6 +278,37 @@ App.Adapter.configure("plurals", {
     "address": "addresses",
     "favourite_country" : "favourite_countries"
 });
+
+if (DEBUG) {
+    // If DEBUG then include the Apiary mock adapter
+    App.MockAdapter = Apiary.MockAdapter.reopen({
+        namespace: "api",
+        url: 'https://bluebottle.apiary-mock.com',
+        
+        plurals: App.AdapterPlurals
+    });
+}
+
+// Embedded Model Mapping
+//
+// http://stackoverflow.com/questions/14320925/how-to-make-embedded-hasmany-relationships-work-with-ember-data/14324532#14324532
+// The two possible values of embedded are:
+//   load: The child records are embedded when loading, but should be saved as standalone records. In order
+//         for this to work, the child records must have an ID.
+//   always: The child records are embedded when loading, and are saved embedded in the same record. This,
+//           of course, affects the dirtiness of the records (if the child record changes, the adapter will
+//           mark the parent record as dirty).
+
+App.Store = DS.Store.extend({
+    adapter: 'App.Adapter'
+});
+
+
+DS.Model.reopen({
+    meta_data: DS.attr('object')
+});
+
+/* Application Controller */
 
 App.ApplicationController = Ember.Controller.extend({
 
@@ -285,25 +329,6 @@ App.ApplicationController = Ember.Controller.extend({
 
     // Override this to do something when the currentUser call in the initializer doesn't succeed
     missingCurrentUser: Em.K
-});
-
-// Embedded Model Mapping
-//
-// http://stackoverflow.com/questions/14320925/how-to-make-embedded-hasmany-relationships-work-with-ember-data/14324532#14324532
-// The two possible values of embedded are:
-//   load: The child records are embedded when loading, but should be saved as standalone records. In order
-//         for this to work, the child records must have an ID.
-//   always: The child records are embedded when loading, and are saved embedded in the same record. This,
-//           of course, affects the dirtiness of the records (if the child record changes, the adapter will
-//           mark the parent record as dirty).
-
-App.Store = DS.Store.extend({
-    adapter: 'App.Adapter'
-});
-
-
-DS.Model.reopen({
-    meta_data: DS.attr('object')
 });
 
 /* Routing */
@@ -354,7 +379,7 @@ App.Router.reopen({
             App.meta.trigger('reloadDataFromRoutes');
         });
 
-		// Track the page / route load
+        // Track the page / route load
         var url = this.get('url');
         if (window._gaq !== undefined) {
             Ember.run.next(function() {

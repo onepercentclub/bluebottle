@@ -510,9 +510,19 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             }, 500);
         },
         addDonation: function (project, fundraiser) {
-            var route = this;
+            var _this = this,
+                controller = this.get('controller');
 
-            alert("Nice donation popup here!! \n\nDonating to:\n " + project.get('title'));
+            App.Order.createRecord().save().then(
+                // Success
+                function(order){
+                    var donation = App.Donation.createRecord({order: order});
+                    controller.send('openInBox', 'donationModal', donation, 'modalFront');
+                },
+                // Failure
+                function(order){
+                }
+            );
 
 // THIS OLD STUFF... We'll be doing this in another way, but maybe we can take some inspiration...;
 

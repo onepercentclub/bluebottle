@@ -159,7 +159,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
                     return data.filter(function(item){
                         return item.get('viewable');
                     });
-                },
+                }.property()
             });
         });
 

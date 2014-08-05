@@ -550,7 +550,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 function(order) {
                     var donation = App.MyDonation.createRecord({order: order, project: project});
 
-                    controller.send('openInBox', 'donation', donation, 'modalFront');
+                    controller.send('openInDynamic', 'donation', donation, 'modalFront');
                 },
                 // Failure
                 function(order) {

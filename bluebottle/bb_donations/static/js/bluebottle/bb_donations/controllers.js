@@ -14,7 +14,7 @@ App.DonationController = Em.ObjectController.extend({
                 function() {
                     var payment = App.MyPayment.createRecord({order: order});
 
-                    _this.send('modalSlide', 'payment', payment, 'modalBack');
+                    _this.send('modalSlide', 'payment', payment);
                 },
                 // Failure
                 function() {

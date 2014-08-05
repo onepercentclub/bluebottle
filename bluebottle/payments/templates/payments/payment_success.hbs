@@ -1,0 +1,10 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "payment_success" %}
+    <div class="modal-fullscreen-content">
+        <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+        <h4>Payment Success Modal</h4>
+    </div>
+    <div class="modal-fullscreen-footer">
+    </div>
+{% endtplhandlebars %}

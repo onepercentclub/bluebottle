@@ -7,7 +7,5 @@ class PaymentMock(APIView):
     def get(self, request, *args, **kwargs):
         callback = request.GET.get('callback')
 
-        import ipdb; ipdb.set_trace()
-
         result = {'callback': callback}
         return render_to_response('templates/payments_mock/payment.html', result, context_instance=RequestContext(request))

@@ -28,6 +28,7 @@ class BaseOrder(models.Model):
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
 
+    country = models.ForeignKey('geo.Country', blank=True, null=True)
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
     class Meta:

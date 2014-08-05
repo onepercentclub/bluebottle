@@ -1,7 +1,7 @@
-App.PaymentMethodModalController = Em.ArrayController.extend({
-    needs: ['donationModal'],
-    order: function(){
-        return this.get('controllers.donationModal.order');
-    }.property('controllers.donationModal.model')
+App.PaymentMethodModalController = Em.ObjectController.extend({
+    methods: function(){
+        var country = this.get('country');
+        return App.PaymentMethod.find({country: country});
+    }.property('country')
 
 });

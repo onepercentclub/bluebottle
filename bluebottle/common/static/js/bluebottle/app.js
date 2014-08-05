@@ -550,15 +550,14 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 }
             );
         },
-        selectPaymentMethod: function(order) {
+        selectPaymentMethod: function(order, country) {
             var _this = this,
                 controller = this.get('controller');
-//            order.set('status', 'closed');
-//            order.save();
+            order.reload();
             App.PaymentMethod.find().then(
                 // Success
                 function(methods){
-                    controller.send('openInBox', 'paymentMethodModal', methods, 'modalFront');
+                    controller.send('openInBox', 'paymentMethodModal', order, 'modalFront');
                 },
                 // Failure
                 function(methods){

@@ -4,10 +4,12 @@
 
 <p><h1>Select Payment Method</h1></p>
 
-    &euro;{{order.total}}
+
+    Selected country: {{selectedCountry}}<br/>
+    Total amount: &euro; {{total}}<br/>
 
     <ul>
-        {{#each method in controller}}
+        {{#each method in methods}}
             <li>{{method.provider}} - {{method.name}}</li>
         {{/each}}
     </ul>

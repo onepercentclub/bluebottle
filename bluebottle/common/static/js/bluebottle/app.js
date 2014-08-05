@@ -1,3 +1,10 @@
+if (DEBUG) {
+    Ember.RSVP.configure('onerror', function(e) {
+      console.log(e.message); 
+      console.log(e.stack);
+    });  
+}
+
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
@@ -270,7 +277,6 @@ App.AdapterPlurals = {
 
 App.Adapter = DS.DRF2Adapter.extend({
     namespace: "api",
-
     plurals: App.AdapterPlurals
 });
 
@@ -285,7 +291,6 @@ if (DEBUG && typeof Apiary == 'object') {
     App.MockAdapter = Apiary.MockAdapter.reopen({
         namespace: "api",
         url: 'https://bluebottle.apiary-mock.com',
-
         plurals: App.AdapterPlurals
     });
 }
@@ -535,33 +540,24 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 scrollTop: $(target).offset().top - $('#header').height()
             }, 500);
         },
+
         addDonation: function (project, fundraiser) {
             var _this = this,
                 controller = this.get('controller');
 
             App.MyOrder.createRecord().save().then(
                 // Success
-                function(order){
+                function(order) {
                     var donation = App.MyDonation.createRecord({order: order, project: project});
-                    controller.send('openInBox', 'donationModal', donation, 'modalFront');
+
+                    controller.send('openInDynamic', 'donation', donation, 'modalFront');
                 },
                 // Failure
-                function(order){
+                function(order) {
+                    throw new Em.error('Saving MyOrder failed!');
                 }
             );
-        },
-        
-        choosePaymentMethod: function(order) {
-            var _this = this;
-            order.set('status', 'closed');
-            order.save();
-        },
-
-        addDonation: function (project, fundraiser) {
-            var donation = App.Donation.createRecord();
-            this.get('controller').send('openInDynamic', 'donationModal', donation, 'modalFront');
         }
-
     },
 
     urlForEvent: function(actionName, context) {

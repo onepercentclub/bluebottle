@@ -1,0 +1,16 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "payment" %}
+
+    <p><h1>Select Payment Method</h1></p>
+    Total amount: &euro; {{total}}<br/>
+
+    <ul>
+        {{#each method in methods}}
+            <li>{{method.provider}} - {{method.name}}</li>
+        {{/each}}
+    </ul>
+
+    <button {{action 'nextStep'}}>Next</button>
+
+{% endtplhandlebars %}

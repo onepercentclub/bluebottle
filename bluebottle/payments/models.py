@@ -49,11 +49,13 @@ class PaymentMetaData(PolymorphicModel):
         ordering = ('-created', '-updated')
 
 
-class PaymentMethod(PolymorphicModel):
+class PaymentMethod(models.Model):
 
+    name = models.CharField(_("name"), max_length=200)
     profile = models.CharField(_("profile"), max_length=20)
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
+    support_recurring = models.BooleanField(default=False)
 
 
 class Transaction(PolymorphicModel):

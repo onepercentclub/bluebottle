@@ -24,3 +24,21 @@ App.DonationController = Em.ObjectController.extend({
         }
     }
 });
+
+
+App.ProjectSupporterListController = Em.ArrayController.extend({
+    needs: ['project'],
+
+    supporters: function () {
+        return App.ProjectDonation.find({project: this.get('controllers.project.id')});
+    }.property('controllers.project.id'),
+
+	supportersLoaded: function(sender, key) {
+		if (this.get(key)) {
+			this.set('model', this.get('supporters').toArray());
+		} else {
+			this.set('model', null);
+		}
+	}.observes('supporters.isLoaded')
+
+});

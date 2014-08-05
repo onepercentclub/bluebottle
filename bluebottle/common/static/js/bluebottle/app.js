@@ -250,6 +250,7 @@ App.AdapterPlurals = {
     // My Orders
     "orders/my": "orders/my",
     "donations/my": "donations/my",
+    "donations/project": "donations/project",
 
     // My Projects
     "bb_projects/manage": "bb_projects/manage",

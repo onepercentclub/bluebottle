@@ -1,2 +1,10 @@
-{% include 'bb_donations/donation_modal.hbs' %}
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% include "bb_donations/donation.hbs" %}
+{% include "bb_donations/_donation_amount.hbs"%}
+{% include 'bb_donations/project_supporter.hbs' %}
+{% include 'bb_donations/project_supporter_list.hbs' %}
 {% include "bb_donations/_donation_errors.hbs" %}

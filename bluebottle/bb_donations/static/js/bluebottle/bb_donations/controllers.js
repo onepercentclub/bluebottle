@@ -1,4 +1,4 @@
-App.DonationModalController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
+App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
 
     requiredFields: ['amount' ],
     fieldsToWatch: ['amount' ],
@@ -10,7 +10,7 @@ App.DonationModalController = Ember.ObjectController.extend(BB.ModalControllerMi
              {
                 'property': 'amount',
                 'validateProperty': 'validAmount',
-                'message': gettext('The amount you donate has to be a number higher than 20'),
+                'message': gettext('C\'mon, don\'t be silly! Give them at least 5 euro'),
                 'priority': 1
             },
         ]);
@@ -19,16 +19,17 @@ App.DonationModalController = Ember.ObjectController.extend(BB.ModalControllerMi
 
     actions: {
         changeAmount: function(amount){
-            debugger
             if (amount != "") {
                 this.set('amount', amount);
             } else {
                 this.set('amount', null);
             }
         },
-        nextStep: function(){
 
-            var _this = this
+        nextStep: function(){
+            var _this = this,
+                donation = this.get('model'),
+                order = donation.get('order')
 
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation();
@@ -48,35 +49,21 @@ App.DonationModalController = Ember.ObjectController.extend(BB.ModalControllerMi
             // Set is loading property until success or error response
             _this.set('isBusy', true);
 
-            var donation = _this.get('model');
-            debugger
             donation.save().then(
                 // Success
-                function(){
-                    // Register the successful regular signup with Mixpanel
-                    if (_this.get('tracker')) {
-                        _this.get('tracker').trackEvent("Donation", {"type": "regular"});
-                    }
-
-                    // Call the loadNextTransition in case the user was unauthenticated and was
-                    // shown the sign in / up modal then they should transition to the requests route
-                    _this.send('loadNextTransition', null);
-
-                    // Close the modal
-                    _this.send('close');
-                    debugger
-                    alert('Saved!');
+                function() {
+                    var payment = App.MyPayment.createRecord({order: order});
+                    _this.send('modalSlide', 'payment', payment, 'modalBack');
                 },
                 // Failure
                 function(){
                      _this.send('modalError');
                     // Handle error message here!
                     _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
-
+					 throw new Em.error('Saving Donation failed!');
 
                 }
-            )
+            );
         }
     }
-
 });

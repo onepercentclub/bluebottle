@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="17px" height="16px" viewBox="0 0 17 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.0.4 (8053) - http://www.bohemiancoding.com/sketch -->
+    <title>Check Background + Imported Layers</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="15.648" height="16" rx="2"></rect>
+    </defs>
+    <g id="Campaign-Detail-Copy" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Desktop" sketch:type="MSArtboardGroup" transform="translate(-494.000000, -406.000000)">
+            <g id="Lightbox---Support" sketch:type="MSLayerGroup" transform="translate(-9.000000, -29.000000)">
+                <g id="1" transform="translate(367.000000, 91.000000)">
+                    <g id="Back-2">
+                        <g id="Rectangle-39" transform="translate(136.000000, 344.000000)">
+                            <g id="Checkbox-/-Unchecked" transform="translate(0.052000, 0.000000)">
+                                <g id="Check-Background-+-Imported-Layers">
+                                    <g id="Check-Background">
+                                        <use stroke="#D8D8D8" stroke-width="1" fill="#FFFFFF" fill-rule="evenodd" sketch:type="MSShapeGroup" xlink:href="#path-1"></use>
+                                        <use stroke="none" fill="none" xlink:href="#path-1"></use>
+                                    </g>
+                                    <path d="M6.31568182,11.8755313 L3.13295455,8.88565625 C2.95568182,8.72115625 2.95568182,8.45340625 3.13295455,8.28803125 L3.77568182,7.68953125 C3.95386364,7.52590625 4.24113636,7.52590625 4.41931818,7.68953125 L6.63659091,9.78340625 L11.5811364,5.12403125 C11.7593182,4.95865625 12.0465909,4.95865625 12.2247727,5.12403125 L12.8675,5.72165625 C13.0447727,5.88703125 13.0447727,6.15478125 12.8675,6.31928125 L6.95840909,11.8755313 C6.78022727,12.0409063 6.49295455,12.0409063 6.31568182,11.8755313" id="Imported-Layers" fill="#5DC0ED" sketch:type="MSShapeGroup"></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

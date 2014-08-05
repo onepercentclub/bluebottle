@@ -1,3 +1,8 @@
+if (DEBUG) {
+    App.Store.registerAdapter("App.Order", App.MockAdapter);
+    App.Store.registerAdapter("App.MyOrder", App.MockAdapter);
+}
+
 App.Order = DS.Model.extend({
     status: DS.attr('string'),
     user: DS.belongsTo('App.UserPreview'),

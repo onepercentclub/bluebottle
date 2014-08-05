@@ -498,22 +498,3 @@ DS.DRF2Adapter.registerTransform("image", {
         }
     }
 });
-
-DS.DRF2Adapter.registerTransform("integrationObject", {
-    deserialize: function(serialized) {
-        if(serialized === undefined) {
-            return null;
-        }
-
-        return {
-            url: serialized.integration_url,
-            method: serialized.integration_method,
-            payload: serialized.integration_payload,
-            type: serialized.integration_type
-        };
-    },
-
-    serialize: function(deserialized) {
-        return null;
-    }
-});

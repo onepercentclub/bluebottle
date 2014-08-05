@@ -27,5 +27,5 @@ App.MyPayment = App.Payment.extend({
     
     payment_method: DS.belongsTo('App.PaymentMethod'),
     // Hosted payment page details
-    integrationDetails: DS.attr('integrationObject')
+    integrationDetails: DS.attr('object')
 });

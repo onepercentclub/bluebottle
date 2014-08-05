@@ -19,11 +19,7 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
 
     actions: {
         changeAmount: function(amount){
-            if (amount != "") {
-                this.set('amount', amount);
-            } else {
-                this.set('amount', null);
-            }
+            this.set('amount', amount);
         },
 
         nextStep: function(){

@@ -14,5 +14,7 @@ App.Donation = DS.Model.extend({
 
 App.MyDonation = App.Donation.extend({
     url: 'donations/my',
-    order: DS.belongsTo('App.MyOrder')
+    order: DS.belongsTo('App.MyOrder'),
+
+    validAmount: Em.computed.gte('amount', 5)
 });

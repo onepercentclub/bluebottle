@@ -180,7 +180,7 @@ BB.ModalMixin = Em.Mixin.create({
             this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
         },
 
-        modalFlipBack: function(name, context) {            
+        modalFlipBack: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalFront', context);
 

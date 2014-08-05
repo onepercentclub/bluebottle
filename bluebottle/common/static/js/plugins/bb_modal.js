@@ -259,7 +259,7 @@ BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
 
     click: function(e) {
         var _this = this,
-            string = e.target.className.substring()
+            string = e.target.className.substring(),
             className = string.indexOf("is-active");
 
         if (className > 0) {

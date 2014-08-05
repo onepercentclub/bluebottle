@@ -148,7 +148,6 @@
               <script type="text/javascript" src="{% static 'js/bluebottle/bb_mixpanel.js' %}"></script>
             {%  endif  %}
 
-
             {% for app in bb_apps %}
                 {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}
                     <script type="text/javascript" src="{% static js_static %}"></script>
@@ -187,21 +186,18 @@
 <body id="body">
     <!-- Scripts -->
     <div id="fb-root"></div>
-
-
-
-  {% block google_analytics %}
-        <script type="text/javascript">
-          var _gaq = _gaq || [];
-            {% if ANALYTICS_CODE %}
-                _gaq.push(['_setAccount', '{{  ANALYTICS_CODE }}']);
-                _gaq.push(['_trackPageview']);
-                (function()
-                { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
-                )();
-            {%  endif %}
-        </script>
-  {% endblock %}
+    {% block google_analytics %}
+          <script type="text/javascript">
+            var _gaq = _gaq || [];
+              {% if ANALYTICS_CODE %}
+                  _gaq.push(['_setAccount', '{{  ANALYTICS_CODE }}']);
+                  _gaq.push(['_trackPageview']);
+                  (function()
+                  { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
+                  )();
+              {%  endif %}
+          </script>
+    {% endblock %}
   
     <!--[if lte IE 9]>
         <script type="text/javascript" src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>

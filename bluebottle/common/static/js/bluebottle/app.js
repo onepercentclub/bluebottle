@@ -1,3 +1,10 @@
+if (DEBUG) {
+    Ember.RSVP.configure('onerror', function(e) {
+      console.log(e.message); 
+      console.log(e.stack);
+    });  
+}
+
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
@@ -533,38 +540,24 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 scrollTop: $(target).offset().top - $('#header').height()
             }, 500);
         },
+
         addDonation: function (project, fundraiser) {
             var _this = this,
                 controller = this.get('controller');
 
             App.MyOrder.createRecord().save().then(
                 // Success
-                function(order){
+                function(order) {
                     var donation = App.MyDonation.createRecord({order: order, project: project});
-                    controller.send('openInBox', 'donationModal', donation, 'modalFront');
+
+                    controller.send('openInBox', 'donation', donation, 'modalFront');
                 },
                 // Failure
-                function(order){
+                function(order) {
+                    throw new Em.error('Saving MyOrder failed!');
                 }
             );
-        },
-        selectPaymentMethod: function(order, country) {
-            var _this = this,
-                controller = this.get('controller');
-            order.reload();
-            App.PaymentMethod.find().then(
-                // Success
-                function(methods){
-                    controller.send('openInBox', 'paymentMethodModal', order, 'modalFront');
-                },
-                // Failure
-                function(methods){
-
-                }
-            );
-
         }
-
     },
 
     urlForEvent: function(actionName, context) {

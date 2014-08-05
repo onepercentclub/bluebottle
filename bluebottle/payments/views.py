@@ -7,9 +7,14 @@ from .serializers import PaymentMethodSerializer
 
 
 class PaymentMethodList(APIView):
-    serializer_class = PaymentMethodSerializer
+    #serializer_class = PaymentMethodSerializer
 
     def get(self, request, *args, **kw):
-        result = get_payment_methods('NL', 500)
+        # TODO: Determine country based on GET param, user settings or IP.
+        country = 'NL'
+        # TODO: Determine available methods based on country and GET params (amount).
+        methods = get_payment_methods('NL', 500)
+
+        result = {'country': country, 'results': methods}
         response = Response(result, status=status.HTTP_200_OK)
         return response

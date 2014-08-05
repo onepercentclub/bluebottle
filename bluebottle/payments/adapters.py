@@ -6,10 +6,7 @@ from django.conf import settings
 
 
 def get_payment_methods(country=None, amount=None):
-    methods = {}
-    for provider in getattr(settings, 'PAYMENT_METHODS', {}):
-        methods = dict(methods.items() + getattr(provider, 'methods', {}).items())
-        import ipdb; ipdb.set_trace()
+    methods = getattr(settings, 'PAYMENT_METHODS', ())
     return methods
 
 

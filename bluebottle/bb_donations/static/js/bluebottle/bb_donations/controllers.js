@@ -4,11 +4,13 @@ App.DonationModalController = Em.ObjectController.extend({
             this.set('amount', amount);
         },
         nextStep: function(){
-            var donation = this.get('model');
+            var _this = this,
+                donation = this.get('model'),
+                order = donation.get('order');
             donation.save().then(
                 // Success
                 function(){
-                    alert('Saved!');
+                    _this.send('selectPaymentMethod', order);
                 },
                 // Failure
                 function(){

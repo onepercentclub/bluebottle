@@ -51,6 +51,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
 from ..models import Reaction
 
+
 class WallPostReactionApiIntegrationTest(TestCase):
     """
     Integration tests for the Project Media WallPost API.

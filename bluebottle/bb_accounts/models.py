@@ -20,7 +20,7 @@ from bluebottle.bb_accounts.utils import valid_email
 
 from taggit.managers import TaggableManager
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
 
 # TODO: Make this generic for all user file uploads.
@@ -185,6 +185,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # specifying the serializer here allows us to leave the urls/views untouched while
         # modifying the serializer for the user model
         default_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
+        preview_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
+        manage_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""

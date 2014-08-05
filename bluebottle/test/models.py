@@ -1,3 +1,6 @@
+from bluebottle.bb_donations.models import BaseDonation
+from bluebottle.bb_orders.models import BaseOrder
+from bluebottle.bb_fundraisers.models import BaseFundRaiser
 from bluebottle.bb_projects.models import BaseProject, BaseProjectPhaseLog
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
@@ -12,7 +15,7 @@ class TestBaseProjectPhaseLog(BaseProjectPhaseLog):
 
 class TestBaseProject(BaseProject):
     """
-    Instantiate the abstract base model for a user with no additional attributes. Used only for testing.
+    Instantiate the abstract base model for a project. Used only for testing.
     """
     pass
 
@@ -72,3 +75,28 @@ class TestOrganizationDocument(BaseOrganizationDocument):
     Implementation for testing of BaseOrganizationDocument
     """
     pass
+
+
+class TestOrder(BaseOrder):
+    """
+    Implementation for testing of BaseOrder
+    """
+    pass
+
+
+class TestDonation(BaseDonation):
+    """
+    Implementation for testing of BaseDonation
+    """
+    pass
+
+    pass
+
+
+class TestFundRaiser(BaseFundRaiser):
+    """
+    Implementation for testing of BaseFundRaiser
+    """
+    pass
+
+

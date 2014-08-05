@@ -1,0 +1,36 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "_donation_amount" %}
+	<div class="modal-fullscreen-content">
+		<span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+		<h4>{% blocktrans %}Thanks for supporting this cause!{% endblocktrans %}</h4>
+		<big>{% blocktrans %}Select or type the amount you would like to give.{% endblocktrans %}</big>
+		<div class="row donation-amount">
+			<div class="col4">
+				{{view Em.TextField valueBinding='amount' class="donation-input" placeholder="&euro; 25,-" autofocus=autofocus }}
+			</div>
+			<div class="col8">
+				<div class="row donation-buttons">
+					<div class="col4"><a {{action 'changeAmount' 50}} class="btn btn-donate">&euro; 50,-</a></div>
+					<div class="col4"><a {{action 'changeAmount' 75}}  class="btn btn-donate">&euro; 75,-</a></div>
+					<div class="col4"><a {{action 'changeAmount' 100}}  class="btn btn-donate">&euro; 100,-</a></div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col12">
+				<a {{action 'nextStep'}} class="btn btn-sec donate-btn">{% trans "Donate now"%}</a>
+			</div>
+		</div>
+	</div>
+	<div class="modal-fullscreen-footer">
+		<div class="modal-hide-name">
+			<label for="hideMyName" class="modal-checkbox">
+				<input type="checkbox" id="hideMyName">
+				<span></span>
+				{% trans "I'd like to support anonymous."%}
+			</label>
+		</div>
+	</div>
+{% endtplhandlebars %}

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import get_model
 
@@ -218,6 +219,67 @@ def get_project_phaselog_model():
             "installed".format(settings.PROJECTS_PHASELOG_MODEL))
 
     return project_phaselog_model
+
+
+def get_model_class(model_name=None, a=None):
+    """
+    Returns a model class
+    model_name: The model eg 'User' or 'Project'
+    """
+
+    if model_name == 'AUTH_USER_MODEL':
+        model = get_user_model()
+    else:
+        model_path = getattr(settings, model_name)
+        try:
+            app_label, model_class_name = model_path.split('.')
+        except ValueError:
+            raise ImproperlyConfigured(
+                "{0} must be of the form 'app_label.model_name'").format(model_name)
+
+        model = get_model(app_label, model_class_name)
+        if model is None:
+            raise ImproperlyConfigured(
+                "{0} refers to model '{0}' that has not been "
+                "installed".format(model_name))
+
+    return model
+
+
+def import_class(cl):
+    d = cl.rfind(".")
+    class_name = cl[d+1:len(cl)]
+    m = __import__(cl[0:d], globals(), locals(), [class_name])
+    return getattr(m, class_name)
+
+
+def get_serializer_class(model_name=None, serializer_type='default'):
+    """
+    Returns a serializer
+    model_name: The model eg 'User' or 'Project'
+    serializer_type: The serializer eg 'preview' or 'manage'
+    """
+
+    model = get_model_class(model_name)
+
+    if serializer_type == 'manage':
+        serializer_name = model.Meta.manage_serializer
+    elif serializer_type == 'preview':
+        serializer_name = model.Meta.preview_serializer
+    elif serializer_type == 'default':
+        serializer_name = model.Meta.default_serializer
+    else:
+        raise ImproperlyConfigured(
+            "Unknown serializer type '{0}'".format(serializer_type))
+
+    serializer_model = import_class(serializer_name)
+
+    if serializer_model is None:
+        raise ImproperlyConfigured(
+            "serializer_name refers to model '{0}' that has not been "
+            "installed".format(model_name))
+
+    return serializer_model
 
 
 

@@ -170,7 +170,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     didInsertElement: function() {
         var view = this;
 	    this.initMap();
-        // To make sure 
+        // To make sure
         this.get('markers').forEach(function(marker){
             marker.setMap(null);
             view.get('markers').removeObject(marker);

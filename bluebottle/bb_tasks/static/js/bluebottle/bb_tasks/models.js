@@ -52,7 +52,31 @@ App.TaskMember = DS.Model.extend({
     }.property('status'),
     isAccepted: function(){
         return (this.get('isStatusAccepted') || this.get('isStatusRealized'));
+    }.property('status'),
+
+    // Return individual labels here so they're added to translations.
+    statusLabel: function(){
+        var status = this.get('status');
+        switch (status) {
+            case 'applied':
+                return gettext('applied');
+                break;
+            case 'rejected':
+                return gettext('rejected');
+                break;
+            case 'realized':
+                return gettext('realised');
+                break;
+            case 'stopped':
+                return gettext('stopped');
+                break;
+            default:
+                Em.Logger.error('Task status not found: ' + status);
+                return status;
+        }
+
     }.property('status')
+
 
 });
 

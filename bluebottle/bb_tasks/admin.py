@@ -45,7 +45,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('author', 'project')
     list_filter = ('status', )
-    list_display = ('title', 'project', 'status', 'date_status_change')
+    list_display = ('title', 'project', 'status', 'deadline')
 
     readonly_fields = ('date_status_change',)
 
@@ -70,15 +70,14 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('member', 'task')
     list_filter = ('status', )
-    list_display = ('member', 'task', 'status', 'updated')
+    list_display = ('get_member_email', 'task', 'status', 'updated')
 
     readonly_fields = ('updated',)
 
     search_fields = (
-        'task', 'motivation',
-        'member__first_name', 'member__last_name'
+        'member__email',
     )
-    # ordering
+
     fields = (
         'member', 'motivation',
         'status', 'updated',
@@ -88,15 +87,5 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
 
 admin.site.register(BB_TASK_MODEL, TaskAdmin)
-
-
-class TaskMemberAdmin(admin.ModelAdmin):
-    model = BB_TASKMEMBER_MODEL
-
-    list_display = ('member', 'task', 'created', 'status', 'time_spent')
-    list_filter = ('status', )
-    raw_id_fields = ('member', )
-    readonly_fields = ('created', )
-    fields =  readonly_fields + ('member', 'task', 'status', 'motivation', 'time_spent')
 
 admin.site.register(BB_TASKMEMBER_MODEL, TaskMemberAdmin)

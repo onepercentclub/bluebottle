@@ -35,13 +35,13 @@ BB.ModalMixin = Em.Mixin.create({
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
 
-                // Call willOpen on the new modal - if defined
-                if (newController && Em.typeOf(newController.willOpen) == 'function')
-                    newController.willOpen();
-
                 // Setup the modal content and set the model if passed
                 if (Em.typeOf(context) != 'undefined')
                     newController.set('model', context);
+
+                // Call willOpen on the new modal - if defined
+                if (newController && Em.typeOf(newController.willOpen) == 'function')
+                    newController.willOpen();
 
                 this.render(name, {
                     into: 'modalContainer',
@@ -61,6 +61,10 @@ BB.ModalMixin = Em.Mixin.create({
 
         openInBigBox: function(name, context) {
             this.send('openInBox', name, context, 'large');
+        },
+
+        openInDynamic: function(name, context) {
+            this.send('openInBox', name, context, 'donation');
         },
 
         openInBox: function(name, context, type, callback) {
@@ -259,7 +263,7 @@ BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
 
     click: function(e) {
         var _this = this,
-            string = e.target.className.substring()
+            string = e.target.className.substring(),
             className = string.indexOf("is-active");
 
         if (className > 0) {

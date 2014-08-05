@@ -63,6 +63,10 @@ BB.ModalMixin = Em.Mixin.create({
             this.send('openInBox', name, context, 'large');
         },
 
+        openInDynamic: function(name, context) {
+            this.send('openInBox', name, context, 'donation');
+        },
+
         openInBox: function(name, context, type, callback) {
             // Setup the modal container
             var modalContainer = this.controllerFor('modalContainer');

@@ -53,6 +53,46 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		}
 	}
 
+	label {
+		
+		&.modal-checkbox {
+			cursor: pointer;
+			display: block;
+			font-size: 13px;
+			color: #9F9F9F;
+			    
+			span {
+				display: inline-block;
+				width: 17px;
+				height: 16px;
+				line-height: 2em;
+				cursor: pointer;
+				margin: 0 0 -3px 0;
+			}
+
+			input[type="checkbox"],
+			input[type="radio"] {
+			    display: none;
+			}
+
+			input[type="checkbox"] + span {
+				background: image-url("icons/icon-checkbox.svg") transparent no-repeat;
+			}
+
+			input[type="radio"] + span {
+
+			}
+
+			input[type="checkbox"]:checked + span {
+				background: image-url("icons/icon-checkbox-checked.svg") transparent no-repeat;
+				
+			}
+
+			input[type="radio"]:checked + span {
+			}
+		}
+	}
+
 .questionmark {
 	position: absolute;
 	vertical-align: middle;
@@ -62,7 +102,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	width: 21px;
 	height: 20px;
 	cursor: pointer;
-	background: image-url("img/icons/icon-form-question.svg") transparent no-repeat 0 0;
+	background: image-url("icons/icon-form-question.svg") transparent no-repeat 0 0;
 	background-size: 20px;
 	@include hide-text();
 }
@@ -112,7 +152,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		}
 	}
 
-	small, small a {
+	small, small a, big {
 		color: $gray-border-hover;
 	}
 }
@@ -170,6 +210,12 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				font-weight: 700;
 				margin-bottom: 15px;
 			}
+
+			big {
+				margin: -11px 0 21px 0;
+				display: block
+			}
+
 			.modal-flash-message {
 				box-model: content-box;
 				text-align: center;
@@ -232,6 +278,12 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			&.got-header {
 				border-radius: 0 0 8px 8px;
 			}
+
+			.donate-btn {
+				font-size: 18px;
+				width: 193px;
+				margin: 30px auto;
+			}
 		}
 
 		.modal-fullscreen-close {
@@ -241,7 +293,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			right: 10px;
 			width: 20px;
 			height: 20px;
-			background: image-url("img/icons/icon-close-modal.svg") transparent no-repeat;
+			background: image-url("icons/icon-close-modal.svg") transparent no-repeat;
 			background-position: 7px;
 			cursor: pointer;
 
@@ -257,7 +309,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			left: 10px;
 			width: 20px;
 			height: 20px;
-			background: image-url("img/icons/icon-back-modal.svg") transparent no-repeat;
+			background: image-url("icons/icon-back-modal.svg") transparent no-repeat;
 			background-position: 7px;
 			background-size: 65%;
 			cursor: pointer;
@@ -421,6 +473,10 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			background: #e9e9e9;
 			text-align: left;
 		}
+	}
+
+	&.donation {
+		width: 500px;
 	}
 	
 	// TODO: Remove old modal padding

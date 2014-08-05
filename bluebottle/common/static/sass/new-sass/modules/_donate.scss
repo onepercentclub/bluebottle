@@ -1,0 +1,18 @@
+.donation-amount {
+	background: #F5F4F6;
+	padding: 15px;
+	border-radius: 8px;
+	@include placeholder-color(#5DC0ED);
+
+	.donation-input {
+		height: 57px;
+		font-size: 28px;
+		font-weight: bold;
+		line-height: 34px;
+		color: #5DC0ED!important;
+	}
+
+	.donation-buttons {
+		margin-top: 6px;
+	}
+}

@@ -512,7 +512,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
         addDonation: function (project, fundraiser) {
             var donation = App.Donation.createRecord();
-            this.get('controller').send('openInBox', 'donationModal', donation, 'modalFront');
+            this.get('controller').send('openInDynamic', 'donationModal', donation, 'modalFront');
         }
     },
 

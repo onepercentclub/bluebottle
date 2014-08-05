@@ -270,7 +270,6 @@ App.AdapterPlurals = {
 
 App.Adapter = DS.DRF2Adapter.extend({
     namespace: "api",
-
     plurals: App.AdapterPlurals
 });
 
@@ -285,7 +284,6 @@ if (DEBUG && typeof Apiary == 'object') {
     App.MockAdapter = Apiary.MockAdapter.reopen({
         namespace: "api",
         url: 'https://bluebottle.apiary-mock.com',
-
         plurals: App.AdapterPlurals
     });
 }

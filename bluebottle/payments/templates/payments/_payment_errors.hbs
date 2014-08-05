@@ -1,0 +1,16 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_payment_errors" %}
+    {{#if errorsFixed}}
+        <div class="modal-flash-message success">
+            {{fixedFieldsMessage}}
+        </div>
+    {{else}}
+        {{#if validationErrors}}
+            <div class="modal-flash-message error">
+                {{validationErrors.error}}
+            </div>
+        {{/if}}
+    {{/if}}
+{% endtplhandlebars %}

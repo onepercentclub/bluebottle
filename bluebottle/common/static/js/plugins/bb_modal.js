@@ -35,13 +35,13 @@ BB.ModalMixin = Em.Mixin.create({
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
 
-                // Call willOpen on the new modal - if defined
-                if (newController && Em.typeOf(newController.willOpen) == 'function')
-                    newController.willOpen();
-
                 // Setup the modal content and set the model if passed
                 if (Em.typeOf(context) != 'undefined')
                     newController.set('model', context);
+
+                // Call willOpen on the new modal - if defined
+                if (newController && Em.typeOf(newController.willOpen) == 'function')
+                    newController.willOpen();
 
                 this.render(name, {
                     into: 'modalContainer',

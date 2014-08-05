@@ -8,21 +8,19 @@
 		<big>{% blocktrans %}Select or type the amount you would like to give.{% endblocktrans %}</big>
 		<div class="row donation-amount">
 			<div class="col4">
-				<form>
-					<input type="text" class="donation-input" placeholder="&euro; 25,-" autofocus>
-				</form>
+				{{view Em.TextField valueBinding='amount' class="donation-input" placeholder="&euro; 25,-" autofocus=autofocus }}
 			</div>
 			<div class="col8">
 				<div class="row donation-buttons">
-					<div class="col4"><a href="" class="btn btn-donate">&euro; 50,-</a></div>
-					<div class="col4"><a href="" class="btn btn-donate">&euro; 75,-</a></div>
-					<div class="col4"><a href="" class="btn btn-donate">&euro; 100,-</a></div>
+					<div class="col4"><a {{action 'changeAmount' 50}} class="btn btn-donate">&euro; 50,-</a></div>
+					<div class="col4"><a {{action 'changeAmount' 75}}  class="btn btn-donate">&euro; 75,-</a></div>
+					<div class="col4"><a {{action 'changeAmount' 100}}  class="btn btn-donate">&euro; 100,-</a></div>
 				</div>
 			</div>
 		</div>
 		<div class="row">
 			<div class="col12">
-				<a href="" class="btn btn-sec donate-btn">{% trans "Donate now"%}</a>
+				<a {{action 'nextStep'}} class="btn btn-sec donate-btn">{% trans "Donate now"%}</a>
 			</div>
 		</div>
 	</div>

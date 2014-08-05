@@ -550,10 +550,12 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 }
             );
         },
+        
         choosePaymentMethod: function(order) {
             var _this = this;
             order.set('status', 'closed');
             order.save();
+        },
 
         addDonation: function (project, fundraiser) {
             var donation = App.Donation.createRecord();

@@ -28,7 +28,7 @@ class TestOrderCreate(OrderApiTestCase):
         endpoint.
         """
         self.client.login(username=self.user.email, password='testing')
-        order_url = reverse('order-list')
+        order_url = reverse('manage-order-list')
 
         response = self.client.get(order_url)
         self.assertEqual(response.status_code, 200)

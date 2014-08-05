@@ -1,3 +1,4 @@
+from bluebottle.bb_projects.fields import MoneyField
 from django.db.models.query_utils import Q
 from taggit.managers import TaggableManager
 from django.conf import settings
@@ -147,6 +148,11 @@ class BaseProject(models.Model):
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
+
+    # For convenience and performance we also store money donated and needed here.
+    amount_asked = MoneyField(default=0, null=True, blank=True)
+    amount_donated = MoneyField(default=0)
+    amount_needed = MoneyField(default=0)
 
     _initial_status = None
 

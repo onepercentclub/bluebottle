@@ -1,7 +1,10 @@
-if (DEBUG) App.Store.registerAdapter("App.Order", App.MockAdapter); 
-
 App.Order = DS.Model.extend({
+    status: DS.attr('string'),
+    user: DS.belongsTo('App.UserPreview'),
     totalAmount: DS.attr('number'),
-    // userId: DS.belongsTo('App.UserPreview'),
     donations: DS.hasMany('App.Donation')
+});
+
+App.MyOrder = App.Order.extend({
+    url: 'orders/my'
 });

@@ -170,6 +170,9 @@ INSTALLED_APPS = (
     'bluebottle.bb_donations',
     'bluebottle.payments',
 
+    #mock
+    'bluebottle.payments_mock',
+
     #miss test
     'bluebottle.utils',
     'bluebottle.wallposts',

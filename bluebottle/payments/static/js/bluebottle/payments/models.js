@@ -14,7 +14,7 @@ App.PaymentMethod = DS.Model.extend({
 
 App.Payment = DS.Model.extend({
     user: DS.belongsTo('App.UserPreview'),
-    order: DS.belongsTo('App.Order'),
+    order: DS.belongsTo('App.MyOrder'),
     status: DS.attr('string'),
     created: DS.attr('date'),
     updated: DS.attr('date'),
@@ -25,5 +25,7 @@ App.Payment = DS.Model.extend({
 App.MyPayment = App.Payment.extend({
     url: 'payments/my',
     
-    payment_method: DS.belongsTo('App.PaymentMethod')
+    payment_method: DS.belongsTo('App.PaymentMethod'),
+    // Hosted payment page details
+    integrationDetails: DS.attr('integrationObject')
 });

@@ -49,7 +49,7 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
                 // Success
                 function() {
                     var payment = App.MyPayment.createRecord({order: order});
-                    _this.send('modalSlide', 'payment', payment, 'modalBack');
+                    _this.send('modalSlide', 'payment', payment);
                 },
                 // Failure
                 function(){

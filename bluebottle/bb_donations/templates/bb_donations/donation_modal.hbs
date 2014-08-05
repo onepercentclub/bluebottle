@@ -4,5 +4,14 @@
 
 <p><h1>Donation Modal</h1></p>
 
+    &euro;{{amount}}
+
+    {{view Em.TextField valueBinding='amount'}}
+
+    <button {{action 'changeAmount' 50}}> &euro;50</button>
+    <button {{action 'changeAmount' 75}}> &euro;75</button>
+    <button {{action 'changeAmount' 100}}>&euro;100</button>
+    <br/>
+    <button {{action 'nextStep'}}>Donate</button>
 
 {% endtplhandlebars %}

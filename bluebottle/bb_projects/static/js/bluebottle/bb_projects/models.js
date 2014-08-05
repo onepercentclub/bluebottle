@@ -62,6 +62,11 @@ App.Project = DS.Model.extend({
     video_url: DS.attr('string'),
     video_html: DS.attr('string'),
 
+    // Money
+    amount_asked: DS.attr('number'),
+    amount_donated: DS.attr('number'),
+    amount_needed: DS.attr('number'),
+
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
 
@@ -78,19 +83,19 @@ App.Project = DS.Model.extend({
         return this.get('status').get('sequence');
     }.property('phaseNum'),
 
-    isPhasePlan: Em.computed.lte('phaseNum', 5),
+    isStatusPlan: Em.computed.lt('phaseNum', 5),
 
-    isPhaseAct: Em.computed.equal('phaseNum', 9),
+    isStatusCampaign: Em.computed.equal('phaseNum', 5),
 
-    isPhaseResults: Em.computed.equal('phaseNum', 8),
+    isStatusCompleted: Em.computed.equal('phaseNum', 7),
 
-    isPhaseCampaign: Em.computed.equal('phaseNum', 6),
+    isStatusStopped: Em.computed.gt('phaseNum', 9),
 
-    isPhaseNeedsWork: Em.computed.equal('phaseNum', 3),
-
-    isPhasePlanNew: Em.computed.equal('phaseNum', 1),
-
-    isPhaseSubmitted: Em.computed.equal('phaseNum', 2),
+    isSupportable: function () {
+        var now = new Date();
+        // Look if Project is in Capaign phase, asked for money and is bfeore deadline.
+        return this.get('isStatusCampaign') && this.get('amount_asked') && this.get('deadline') > now;
+    }.property('isStatusCampaign', 'deadline', 'amount_asked'),
 
     getProject: function(){
         return App.Project.find(this.get('id'));

@@ -242,6 +242,7 @@ App.AdapterPlurals = {
 
     // My Orders
     "orders/my": "orders/my",
+    "donations/my": "donations/my",
 
     // My Projects
     "bb_projects/manage": "bb_projects/manage",
@@ -284,7 +285,7 @@ if (DEBUG && typeof Apiary == 'object') {
     App.MockAdapter = Apiary.MockAdapter.reopen({
         namespace: "api",
         url: 'https://bluebottle.apiary-mock.com',
-        
+
         plurals: App.AdapterPlurals
     });
 }
@@ -354,9 +355,9 @@ App.Router.reopen({
       this._super(infos);
 
       /*
-       Clear queued (next) transition after any successful transition so the 
+       Clear queued (next) transition after any successful transition so the
        queued one does not run more than once.
-       */ 
+       */
       this.send('clearNextTransition');
   }
 });
@@ -421,8 +422,8 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             this.set('nextTransition', transition);
         },
         loadNextTransition: function (fallbackRoute) {
-            // If the applicationRoute has a nextTransition value then we run it as 
-            // it is probably the case that the user tried to access a restricted page and 
+            // If the applicationRoute has a nextTransition value then we run it as
+            // it is probably the case that the user tried to access a restricted page and
             // was prevented from doing it => user was presented with the sign up / in modal.
             // If there is no nextTransition then load the passed route if defined.
             var nextTransition = this.get('nextTransition');
@@ -501,7 +502,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 settings.save();
                 return true;
             });
-            
+
             return true;
         },
 
@@ -534,11 +535,28 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 scrollTop: $(target).offset().top - $('#header').height()
             }, 500);
         },
-
         addDonation: function (project, fundraiser) {
-            var donation = App.Donation.createRecord();
-            this.get('controller').send('openInBox', 'donationModal', donation, 'modalFront');
+            var _this = this,
+                controller = this.get('controller');
+
+            App.MyOrder.createRecord().save().then(
+                // Success
+                function(order){
+                    var donation = App.MyDonation.createRecord({order: order, project: project});
+                    controller.send('openInBox', 'donationModal', donation, 'modalFront');
+                },
+                // Failure
+                function(order){
+                }
+            );
+        },
+        choosePaymentMethod: function(order) {
+            var _this = this;
+            order.set('status', 'closed');
+            order.save();
+
         }
+
     },
 
     urlForEvent: function(actionName, context) {

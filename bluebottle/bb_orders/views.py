@@ -15,14 +15,23 @@ anonymous_order_id_session_key = 'cart_order_id'
 
 class OrderList(generics.ListCreateAPIView):
     model = ORDER_MODEL
+    serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'preview')
+
+
+class OrderDetail(generics.RetrieveUpdateAPIView):
+    model = ORDER_MODEL
+    serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'preview')
+
+
+class ManageOrderList(generics.ListCreateAPIView):
+    model = ORDER_MODEL
     serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'manage')
     filter_fields = ('status',)
     paginate_by = 10
     permission_classes = (IsOrderCreator, )
-    # FIXME Add permissions
 
     def get_queryset(self):
-        queryset = super(OrderList, self).get_queryset()
+        queryset = super(ManageOrderList, self).get_queryset()
         if self.request.user.is_authenticated():
             return queryset.filter(user=self.request.user)
         else:
@@ -42,7 +51,7 @@ class OrderList(generics.ListCreateAPIView):
             self.request.session.save()
 
 
-class OrderDetail(generics.RetrieveUpdateAPIView):
+class ManageOrderDetail(generics.RetrieveUpdateAPIView):
     model = ORDER_MODEL
     serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'manage')
     permission_classes = (IsOrderCreator,)

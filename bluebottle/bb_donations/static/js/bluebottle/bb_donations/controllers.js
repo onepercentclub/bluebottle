@@ -3,6 +3,7 @@ App.DonationController = Em.ObjectController.extend({
         changeAmount: function(amount){
             this.set('amount', amount);
         },
+
         nextStep: function(){
             var _this = this,
                 donation = this.get('model'),
@@ -11,7 +12,9 @@ App.DonationController = Em.ObjectController.extend({
             donation.save().then(
                 // Success
                 function() {
-                    _this.send('modalSlide', 'payment', order, 'modalBack');
+                    var payment = App.MyPayment.createRecord({order: order});
+
+                    _this.send('modalSlide', 'payment', payment, 'modalBack');
                 },
                 // Failure
                 function() {

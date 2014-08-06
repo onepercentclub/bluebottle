@@ -13,7 +13,19 @@ App.Router.map(function(){
 
 App.PaymentReturnRoute = Em.Route.extend({
     model: function(params){
-        var payment_id = params.payment_id;
-        return App.Payment.find(payment_id);
+        this.set('status', params.status);
+        return App.Payment.find(params.payment_id);
+    },
+    afterModel: function(model){
+        var _this = this;
+        App.MyDonation.find({order: model.get('order.id')}).then(
+            function(donations){
+                var donation = donations.objectAt(0);
+                this.transitionTo('project', donation.get('project.id'));
+            },
+            function(){
+                throw new Em.error('Donation not found!');
+            }
+        );
     }
 });

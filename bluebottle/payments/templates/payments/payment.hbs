@@ -11,16 +11,7 @@
 			<div class="col12">
 			    <ul class="payment-tabs">
 			        {{#each method in methods}}
-			            <li>
-			            	<input type="radio" name="tabs" {{bindAttr id="method.preFixedProfileId" }} />
-        					<label {{bindAttr for="method.preFixedProfileId" }}>{{method.name}}</label>
-        					<div {{bindAttr id="method.preFixedProfileContentId" }} class="payment-tab-content">
-          						<p>
-          							{{method.provider}} - {{method.name}}
-          							"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-      							</p>
-        					</div>
-			            </li>
+                        {{view 'App.PaymentMethodView' contentBinding='method'}}
 			        {{/each}}
 			    </ul>
 			</div>
@@ -36,5 +27,29 @@
 			<span>Payment processing is handled by <a href="#">Docdata</a>.</span>
 		</div>
 	</div>
-
 {% endtplhandlebars %}
+
+{% tplhandlebars "payment_provider_layout" %}
+    <li {{bindAttr class="view.isSelected:is-active"}} {{action 'selectedPaymentMethod' view.content}}>
+        <input type="radio" name="tabs"/>
+        <label >{{view.content.name}}</label>
+        <div class='payment-tab-content'>
+            {{yield}}
+        </div>
+    </li>
+{% endtplhandlebars %}
+
+{% tplhandlebars "paypal" %}
+    <p>
+        {{view.content.provider}} - {{view.content.name}}
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+    </p>
+{% endtplhandlebars %}
+
+{% tplhandlebars "creditcard" %}
+    <p>
+        {{view.content.provider}} - {{view.content.name}}
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+    </p>
+{% endtplhandlebars %}
+

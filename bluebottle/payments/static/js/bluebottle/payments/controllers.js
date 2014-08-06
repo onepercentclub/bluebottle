@@ -24,6 +24,13 @@ App.PaymentController = Em.ObjectController.extend({
         // integration_method (GET/POST/PUT)
         // integration_payload (optional metadata required by PSP)
         // integration_type (redirect/popup)
+        var meta = this.get('model.integrationDetails');
+
+        if (meta.type == 'redirect') {
+            if (meta.method == 'get') {
+              window.location.replace(meta.url);
+            }
+        }
     },
 
     actions: {
@@ -48,10 +55,7 @@ App.PaymentController = Em.ObjectController.extend({
                         // Load the success modal
                         _this.send('modalSlide', 'paymentSuccess', payment);
                     } else {
-
-
-                        // Load the pending modal
-                        // _this.send('modalSlide', 'paymentPending', payment);
+                        _this._processPaymentMetadata();
                     }
                 },
                 // Failure

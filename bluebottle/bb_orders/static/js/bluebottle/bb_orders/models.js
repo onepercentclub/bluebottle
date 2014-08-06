@@ -8,7 +8,8 @@ App.Order = DS.Model.extend({
     user: DS.belongsTo('App.UserPreview'),
     country: DS.belongsTo('App.Country'),
     total: DS.attr('number'),
-    donations: DS.hasMany('App.Donation')
+    donations: DS.hasMany('App.Donation'),
+    created: DS.attr('date')
 });
 
 App.MyOrder = App.Order.extend({

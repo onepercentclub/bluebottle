@@ -1,9 +1,7 @@
-/*
-* Views
-*/
+App.DonationView = App.FormView.extend({
+    amount: gettext('Amount'),
 
-App.DonationView = Em.View.extend({
-    keyDown: function(e){
+	keyDown: function(e){
     	var input = this.$().find('.donation-input'),
     		inputVal = input.val();
     	
@@ -12,5 +10,5 @@ App.DonationView = Em.View.extend({
     	} else if (inputVal.length <= 4) {
     		$(input).removeClass('is-long');
     	}
-    }
-})
+    } 
+});

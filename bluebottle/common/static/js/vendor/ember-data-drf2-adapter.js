@@ -406,14 +406,14 @@ DS.DRF2Adapter = DS.RESTAdapter.extend({
 // Ember wants an js Date()
 DS.DRF2Adapter.registerTransform("date", {
     deserialize: function (serialized) {
-        if (serialized == undefined) {
+        if (serialized === undefined) {
             return null;
         }
         return new Date(serialized);
     },
 
     serialize: function (date) {
-        if (date == null) {
+        if (Em.isEmpty(date)) {
             return null;
         }
         var pad = function (num) {
@@ -439,14 +439,14 @@ DS.DRF2Adapter.registerTransform("date", {
  */
 DS.DRF2Adapter.registerTransform("birthdate", {
     deserialize: function(serialized) {
-        if (serialized == undefined) {
+        if (serialized === undefined) {
             return null;
         }
         return new Date(serialized);
     },
 
     serialize: function(date) {
-        if (date == null) {
+        if (Em.isEmpty(date)) {
             return null;
         }
         var pad = function (num) {
@@ -463,7 +463,7 @@ DS.DRF2Adapter.registerTransform("birthdate", {
 
 DS.DRF2Adapter.registerTransform("object", {
     deserialize: function(serialized) {
-        if(serialized == undefined){
+        if(serialized === undefined){
             return null;
         }
         return serialized;

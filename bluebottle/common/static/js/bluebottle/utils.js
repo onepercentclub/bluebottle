@@ -46,7 +46,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     fixedFieldsMessage: gettext('That\'s better'),
 
     // In your controller define fieldsToWatch (a list of fields you want to watch)
-    // you will be able to use then: errorsFixed and blockSubmit
+    // you will be able to use then: errorsFixed and blockingErrors
     // errorsFixed: true if there were errors which are now fixed
     errorsFixed: false,
 
@@ -177,7 +177,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
 
     _allErrors: function(errorList) {
         var _this = this;
-        var errors = Ember.makeArray(this.get('errorDefinitions'));
+        var errors = Ember.makeArray(_this.get('errorDefinitions'));
 
         var allFieldErrors = true;
         for (var i=0; i < errors.length;i++){
@@ -185,7 +185,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
                 allFieldErrors = false;
             }
         }
-        this.set('allError', allFieldErrors);
+        _this.set('allError', allFieldErrors);
     },
 
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {

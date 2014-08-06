@@ -207,20 +207,35 @@ App.LogoutJwtMixin = Em.Mixin.create({
 
 /*
  Login With route to login using JWT
+
+ To add a next link (for deep linking) add a url encoded path after '?'
+ Eg: /login-with/<token>?%2fprojects will redirect to #!/projects after setting the jwt token.
+
+
+
  */
 
 App.Router.map(function() {
     this.resource('loginWith', {path: '/login-with/:token'});
+
 });
 
 App.LoginWithRoute = Em.Route.extend({
     beforeModel: function(transition) {
-        var _this = this;
-        transition.abort();
+        var _this = this,
+            params = transition.params.token.split('?'),
+            token = {token: params[0]},
+            next = params[1];
 
-        App.AuthJwt.processSuccessResponse(transition.params).then(function (user) {
+        transition.abort();
+        App.AuthJwt.processSuccessResponse(token).then(function (user) {
             _this.set('currentUser.model', user);
-            _this.transitionTo('/');
+            if (next) {
+                _this.transitionTo(decodeURIComponent(next));
+
+            } else {
+                _this.transitionTo('/');
+            }
         });
     }
 });

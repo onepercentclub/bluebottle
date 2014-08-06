@@ -9,7 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django import http
 from django.utils import translation
 
-from apps.redirects.models import Redirect
+from bluebottle.redirects.models import Redirect
 
 
 class RedirectFallbackMiddleware(object):

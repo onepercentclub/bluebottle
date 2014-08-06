@@ -11,7 +11,7 @@ from .models import Redirect
 @override_settings(
     APPEND_SLASH=False,
     MIDDLEWARE_CLASSES=list(settings.MIDDLEWARE_CLASSES) +
-        ['apps.redirects.middleware.RedirectFallbackMiddleware'],
+        ['bluebottle.redirects.middleware.RedirectFallbackMiddleware'],
     SITE_ID=1,
 )
 class RedirectTests(TestCase):

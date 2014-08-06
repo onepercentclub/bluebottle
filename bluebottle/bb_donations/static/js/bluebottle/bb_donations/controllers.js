@@ -81,3 +81,9 @@ App.ProjectSupporterListController = Em.ArrayController.extend({
 	}.observes('supporters.isLoaded')
 
 });
+
+
+App.DonationSuccessController = Em.ObjectController.extend({
+
+});
+

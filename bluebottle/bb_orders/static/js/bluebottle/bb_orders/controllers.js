@@ -1,1 +1,3 @@
-App.OrderController = Em.ObjectController.extend({});
+App.OrderController = Em.ObjectController.extend({
+
+});

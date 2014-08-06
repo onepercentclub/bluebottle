@@ -1,5 +1,40 @@
 {% load bb_ember i18n static %}
 
 {% tplhandlebars "payment" %}
-    {{ partial "_payment_method" }}
+	<div class="modal-fullscreen-content" id="payment">
+		<span {{action 'chooseAmount'}} class="modal-fullscreen-back"></span>
+		<span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+		<h4>{% blocktrans %}Select your method of payment{% endblocktrans %}</h4>
+		<big>{% blocktrans %}You're about to support &euro; {{total}},- to '…'. Good job!{% endblocktrans %}</big>
+		
+		<div class="row">
+			<div class="col12">
+			    <ul class="payment-tabs">
+			        {{#each method in methods}}
+			            <li>
+			            	<input type="radio" name="tabs" {{bindAttr id="method.preFixedProfileId" }} />
+        					<label {{bindAttr for="method.preFixedProfileId" }}>{{method.name}}</label>
+        					<div {{bindAttr id="method.preFixedProfileContentId" }} class="payment-tab-content">
+          						<p>
+          							{{method.provider}} - {{method.name}}
+          							"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+      							</p>
+        					</div>
+			            </li>
+			        {{/each}}
+			    </ul>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col12">
+    			<a class="btn btn-sec payment-btn" {{action 'nextStep'}}>Next</a>
+			</div>
+		</div>
+	</div>
+	<div class="modal-fullscreen-footer">
+		<div class="modal-payment-provider">
+			<span>Payment processing is handled by <a href="#">Docdata</a>.</span>
+		</div>
+	</div>
+
 {% endtplhandlebars %}

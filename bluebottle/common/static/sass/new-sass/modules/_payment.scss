@@ -1,0 +1,61 @@
+#payment {
+
+	// reset ul and li
+	ul {
+		margin: 0;
+		
+		li {
+			padding-left: 0;
+			background: none;
+		}
+	}
+
+	.payment-tabs {
+		float: none;
+		list-style: none;
+		position: relative;
+		text-align: left;
+
+		li {
+			display: block;
+		}
+
+		input[type="radio"] {
+			position: absolute;
+			top: -9999px;
+			left: -9999px;
+		}
+
+		label {
+			display: block;
+			position: relative;
+			cursor: pointer;
+			width: 40%;
+			@include transition(all 0.2s ease-in-out);
+
+			&:hover {
+				background: darken(#f2f2f2, 10);
+			}
+		}
+
+		.payment-tab-content{
+			z-index: 2;
+			display: none; 
+			overflow: hidden;
+			width: 60%;
+			position: absolute;
+			right: 0;
+			top: 0;
+			background: darken(#f2f2f2, 15);
+		}
+
+		[id^="tab"]:checked + label { 
+			top: 0;
+			background: darken(#f2f2f2, 15); 
+		}
+
+		[id^="tab"]:checked ~ [id^="tab-content"] {
+			display: block;
+		}
+	}
+}

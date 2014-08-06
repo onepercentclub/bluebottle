@@ -37,7 +37,6 @@ App.PaymentController = Em.ObjectController.extend({
         nextStep: function () {
             var _this = this,
                 payment = this.get('model');
-
             payment.save().then(
                 // Success
                 function (payment) {
@@ -65,6 +64,7 @@ App.PaymentController = Em.ObjectController.extend({
             );
         }
     }
+
 });
 
 // TODO: Adding controllers here for payment success/pending so that the modal 

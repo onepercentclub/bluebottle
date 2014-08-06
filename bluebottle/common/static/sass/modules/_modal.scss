@@ -279,10 +279,14 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				border-radius: 0 0 8px 8px;
 			}
 
-			.donate-btn {
+			.donate-btn, .payment-btn {
 				font-size: 18px;
 				width: 193px;
 				margin: 30px auto;
+			}
+
+			.payment-btn {
+				width: 245px;
 			}
 		}
 
@@ -358,6 +362,31 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 			&.no-content {
 				padding: 0;
+			}
+
+			.modal-payment-provider {
+				font-size: 13px;
+				color: #9F9F9F;
+
+				span {
+					position: relative;
+					padding-left: 17px;
+
+					&:before {
+						position: absolute;
+						content: '';
+						left: 0;
+						top: 0;
+						width: 10px;
+						height: 13px;
+						background: image-url("icons/icon-lock.svg") transparent no-repeat;
+					}
+				}
+
+				a {
+					color: #9F9F9F;
+					text-decoration: underline;
+				}
 			}
 		}
 	}

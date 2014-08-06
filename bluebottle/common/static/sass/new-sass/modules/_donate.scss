@@ -4,15 +4,36 @@
 	border-radius: 8px;
 	@include placeholder-color(#5DC0ED);
 
+
 	.donation-input {
 		height: 57px;
+		padding: 5px 5px 5px 35px;
 		font-size: 28px;
 		font-weight: bold;
 		line-height: 34px;
 		color: #5DC0ED!important;
+		@include transition(font-size, ease-in-out .2s);
+
+		&.is-long {
+			font-size: 20px;
+		}
 	}
 
 	.donation-buttons {
 		margin-top: 6px;
+	}
+
+	.input {
+		position: relative;
+
+		&:before {
+			position: absolute;
+			content: '\20AC';
+			left: 15px;
+			top: 22px;
+			font-size: 28px;
+			font-weight: bold;
+			color: #5DC0ED;
+		}
 	}
 }

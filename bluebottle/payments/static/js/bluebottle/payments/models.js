@@ -9,7 +9,13 @@ App.PaymentMethod = DS.Model.extend({
 
     provider: DS.attr('string'),
     name: DS.attr('string'),
-    profile: DS.attr('string')
+    profile: DS.attr('string'),
+    preFixedProfileId: function() {
+        return 'tab' + this.get('profile');
+    }.property('profile'),
+    preFixedProfileContentId: function() {
+        return 'tab-content' + this.get('profile');
+    }.property('profile')
 });
 
 App.Payment = DS.Model.extend({

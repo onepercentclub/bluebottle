@@ -153,18 +153,6 @@ App.ProjectPlanController = Ember.ObjectController.extend(BB.ModalControllerMixi
 });
 
 
-App.ProjectSupporterListController = Em.ArrayController.extend({
-    supportersLoaded: function(sender, key) {
-        if (this.get(key)) {
-            this.set('model', this.get('supporters').toArray());
-        } else {
-            // Don't show old content when new content is being retrieved.
-            this.set('model', null);
-        }
-    }.observes('supporters.isLoaded')
-
-});
-
 App.ProjectIndexController = Em.ArrayController.extend({
     needs: ['project'],
     perPage: 5,

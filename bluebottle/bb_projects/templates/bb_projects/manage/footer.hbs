@@ -17,7 +17,7 @@
     <footer class="campaign-footer">
 
         <div class="navigation">
-            {{#if isPhasePlanNew}}
+            {{#if isStatusPlanNew}}
                 <button {{bindAttr class=":btn :btn-secondary :previous"}} {{action goToPreviousStep}}><span class="flaticon solid left-2"></span>{% trans "Previous" %}</button>
                 <button {{bindAttr class=":btn :btn-primary :next"}} {{action goToNextStep}}><span class="flaticon solid right-2"></span>{% trans "Next" %}</button>
             {{ else }}

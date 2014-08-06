@@ -1,7 +1,7 @@
 App.DonationController = Em.ObjectController.extend({
     actions: {
         changeAmount: function(amount){
-            this.set('amount', amount);
+            this.set('amount', amount + ',-');
         },
 
         nextStep: function(){

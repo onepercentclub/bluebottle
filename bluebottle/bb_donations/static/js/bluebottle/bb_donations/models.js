@@ -4,7 +4,7 @@ if (DEBUG) {
 }
 
 App.Donation = DS.Model.extend({
-    amount: DS.attr('number', {defaultValue: 25}),
+    amount: DS.attr('number', {defaultValue: 25 + ',-'}),
     project: DS.belongsTo('App.Project'),
     fundraiser: DS.belongsTo('App.Fundraiser')
 });

@@ -29,6 +29,11 @@ App.PaymentController = Em.ObjectController.extend({
         nextStep: function () {
             // TODO: handle saving the payment here and proceeding to the next
             //       step of the payment process.
+        },
+
+        chooseAmount: function() {
+           this.send('modalSlideBack', 'donation');
         }
     }
+
 });

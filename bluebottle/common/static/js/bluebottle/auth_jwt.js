@@ -215,12 +215,20 @@ App.Router.map(function() {
 
 App.LoginWithRoute = Em.Route.extend({
     beforeModel: function(transition) {
-        var _this = this;
-        transition.abort();
+        var _this = this,
+            params = transition.params.token.split('?'),
+            token = {token: params[0]},
+            next = params[1];
 
-        App.AuthJwt.processSuccessResponse(transition.params).then(function (user) {
+        transition.abort();
+        App.AuthJwt.processSuccessResponse(token).then(function (user) {
             _this.set('currentUser.model', user);
-            _this.transitionTo('/');
+            if (next) {
+                _this.transitionTo(decodeURIComponent(next));
+
+            } else {
+                _this.transitionTo('/');
+            }
         });
     }
 });

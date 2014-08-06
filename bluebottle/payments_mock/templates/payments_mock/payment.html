@@ -7,11 +7,13 @@
     <body>
         test payment
         <br />
-        {{callback}}
+        Return URL: {{return_url}} <br/>
+        Payment ID: {{payment_id}}
         <br />
-        <a href="{{callback}}">Success</a>
-        <a href="{{callback}}">Cancel</a>
-        <a href="{{callback}}">Home</a>
-
+        <ul>
+          <li style="clear: left; float: left;"><a href="{{return_url}}?status=success&payment_id={{payment_id}}">Successful</a></li>
+          <li style="clear: left; float: left;"><a href="{{return_url}}?status=cancelled&payment_id={{payment_id}}">Cancelled</a></li>
+          <li style="clear: left; float: left;"><a href="{{return_url}}?status=pending&payment_id={{payment_id}}">Pending</a></li>
+        </ul>
     </body>
 </html>

@@ -36,9 +36,27 @@ App.PaymentController = Em.ObjectController.extend({
 
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
-              window.location.replace(meta.url);
+              var getUrl = this._buildUrl(meta.url, meta.payload);
+
+              window.location.replace(getUrl);
             }
         }
+    },
+
+    _buildUrl: function (url, parameters){
+        var qs = '';
+
+        for(var key in parameters) {
+            var value = parameters[key];
+            qs += encodeURIComponent(key) + '=' + encodeURIComponent(value) + '&';
+        }
+        
+        if (qs.length > 0) {
+            qs = qs.substring(0, qs.length-1);
+            url = url + '?' + qs;
+        }
+
+        return url;
     },
 
     actions: {

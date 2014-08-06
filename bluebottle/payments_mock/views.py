@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.shortcuts import render_to_response
@@ -25,5 +26,5 @@ class PaymentResponseMockHandler(TemplateView):
         if status in self.payment_responses:
             url = "/en/#!/orders/1/{0}".format(status)
         else:
-            raise BaseException
+            raise Http404
         return HttpResponseRedirect(url)

@@ -12,14 +12,16 @@ class PaymentMock(TemplateView):
     def get(self, request, *args, **kwargs):
         # look for the callback key in the request and pass it back to the template
 
-        callback = request.GET.get('callback')
-        result = {'callback': callback}
+        return_url = request.GET.get('return_url')
+        payment_id = request.GET.get('payment_id')
+
+        result = {'return_url': return_url, 'payment_id': payment_id}
         return render_to_response(self.template_name, result, context_instance=RequestContext(request))
 
 
 class PaymentResponseMockHandler(TemplateView):
 
-    payment_responses = ['success', 'errors', 'pending']
+    payment_responses = ['success', 'cancelled', 'pending']
 
     def get(self, request, *args, **kwargs):
         status = request.GET.get('status')

@@ -10,13 +10,13 @@
             {{ partial "_project_preview_header" }}
 
             <span {{bindAttr class=":project-status phase"}}>
-                {{#if isPhasePlan}}
+                {{#if isStatusPlan}}
                     <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "New" %}</strong> <em>{% trans "Smart Idea" %}</em></span>
                 {{/if}}
 			
 				{% if 'fund' in bb_apps %}
 				{% block_verbatim "project_preview_funding" %}
-                {{#if isPhaseCampaign}}
+                {{#if isStatusCampaign}}
                     {{#if campaign.amount_asked}}
                         <div class="project-fund-amount-slider"><strong style="width: 0%;" class="slider-progress is-in-progress"><em class="slider-percentage">0%</em></strong></div>
                         <span class="project-fund-amount"><strong>&euro;{{localize campaign.amount_needed}}</strong> <em>{% trans "To go" %}</em></span>
@@ -28,15 +28,15 @@
 				{% endblock_verbatim "project_preview_funding" %}				
 				{% endif %}
 
-                {{#if isPhaseAct}}
+                {{#if isStatusAct}}
                     <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "Project funded" %}</strong> <em>{% trans "Being realized" %}</em></span>
                 {{/if}}
 
-                {{#if isPhaseResults}}
+                {{#if isStatusResults}}
                     <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "Project funded" %}</strong> <em>{% trans "Being realized" %}</em></span>
                 {{/if}}
 
-                {{#if isPhaseRealized}}
+                {{#if isStatusRealized}}
                     <span class="project-phase"><span class="flaticon solid lightbulb-3"></span> <strong>{% trans "Project realized" %}</strong> <em>{% trans "See results" %}</em></span>
                 {{/if}}
             </span>

@@ -83,13 +83,17 @@ App.Project = DS.Model.extend({
         return this.get('status').get('sequence');
     }.property('phaseNum'),
 
-    isStatusPlan: Em.computed.lt('phaseNum', 5),
+    isStatusPlan: Em.computed.lt('phaseNum', 4),
 
-    isStatusCampaign: Em.computed.equal('phaseNum', 5),
+    isStatusPlanNew: Em.computed.equal('phaseNum', 1),
 
-    isStatusCompleted: Em.computed.equal('phaseNum', 7),
+    isStatusNeedsWork: Em.computed.equal('phaseNum', 3),
 
-    isStatusStopped: Em.computed.gt('phaseNum', 9),
+    isStatusCampaign: Em.computed.equal('phaseNum', 4),
+
+    isStatusCompleted: Em.computed.equal('phaseNum', 5),
+
+    isStatusStopped: Em.computed.gt('phaseNum', 6),
 
     isSupportable: function () {
         var now = new Date();
@@ -232,10 +236,10 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
         if (!this.get('status')) {
             return true;
         }
-        if (this.get('isPhasePlanNew')) {
+        if (this.get('isStatusPlanNew')) {
             return true;
         }
-        if (this.get('isPhaseNeedsWork')) {
+        if (this.get('isStatusNeedsWork')) {
             return true;
         }
         return false;

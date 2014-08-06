@@ -1,4 +1,12 @@
 App.PaymentController = Em.ObjectController.extend({
+    preFixedProfileId: function() {
+        return 'tab' + this.get('profile');
+    }.property('profile'),
+
+    preFixedProfileContentId: function() {
+        return 'tab-content' + this.get('profile');
+    }.property('profile'),
+
     willOpen: function () {
         var _this = this,
             controller = this.get('controller'),
@@ -62,6 +70,10 @@ App.PaymentController = Em.ObjectController.extend({
 
                 }
             );
+        },
+
+        selectedPaymentMethod: function(paymentMethod) {
+            this.set('currentPaymentMethod', paymentMethod);
         }
     }
 

@@ -70,4 +70,6 @@ App.PaymentController = Em.ObjectController.extend({
 // TODO: Adding controllers here for payment success/pending so that the modal 
 //       will work with the bb_modal code.
 App.PaymentPendingController = Em.Controller.extend();
-App.PaymentSuccessController = Em.Controller.extend();
+
+App.PaymentSuccessController = Em.ObjectController.extend(BB.ModalControllerMixin, {
+});

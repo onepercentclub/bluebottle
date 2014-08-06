@@ -31,9 +31,9 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
         }
     }.property('hasSelectableOrganizations'),
 
-    isPhasePlanNew: function () {
-        return this.get('controllers.myProject.model.isPhasePlanNew');
-    }.property('controllers.myProject.model.isPhasePlanNew'),
+    isStatusPlanNew: function () {
+        return this.get('controllers.myProject.model.isStatusPlanNew');
+    }.property('controllers.myProject.model.isStatusPlanNew'),
 
     canSave: function () {
         var name = this.get('model.name');
@@ -156,9 +156,9 @@ App.MyProjectBankController = App.StandardTabController.extend({
     previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
 
-    isPhasePlanNew: function () {
-        return this.get('controllers.myProject.model.isPhasePlanNew');
-    }.property('controllers.myProject.model.isPhasePlanNew'),
+    isStatusPlanNew: function () {
+        return this.get('controllers.myProject.model.isStatusPlanNew');
+    }.property('controllers.myProject.model.isStatusPlanNew'),
 
 	setInEurope: function () {
 		if (this.get('model.validEuropeanBankOrganization')){

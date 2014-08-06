@@ -29,7 +29,7 @@ App.Adapter.map('App.MyDonation', {
 
 App.Donation = DS.Model.extend({
     amount: DS.attr('number'),
-    project: DS.belongsTo('App.Project'),
+    project: DS.belongsTo('App.ProjectPreview'),
     fundraiser: DS.belongsTo('App.Fundraiser'),
     user: DS.belongsTo('App.UserPreview'),
     created: DS.attr('date')

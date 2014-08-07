@@ -1,39 +1,92 @@
 .donation-amount {
-	background: #F5F4F6;
-	padding: 15px;
-	border-radius: 8px;
-	@include placeholder-color(#5DC0ED);
+    background: #F5F4F6;
+    padding: 15px;
+    border-radius: 8px;
+    @include placeholder-color(#5DC0ED);
 
 
-	.donation-input {
-		height: 57px;
-		padding: 5px 5px 5px 35px;
-		font-size: 28px;
-		font-weight: bold;
-		line-height: 34px;
-		color: #5DC0ED!important;
-		@include transition(font-size, ease-in-out .2s);
+    .donation-input {
+        height: 57px;
+        padding: 5px 5px 5px 35px;
+        font-size: 28px;
+        font-weight: bold;
+        line-height: 34px;
+        color: $color-primary !important;
+        @include transition(font-size, ease-in-out .2s);
 
-		&.is-long {
-			font-size: 20px;
-		}
-	}
+        &.is-long {
+            font-size: 20px;
+        }
+    }
 
-	.donation-buttons {
-		margin-top: 6px;
-	}
+    .donation-buttons {
+        margin-top: 6px;
+    }
 
-	.input {
-		position: relative;
+    .input {
+        position: relative;
 
-		&:before {
-			position: absolute;
-			content: '\20AC';
-			left: 15px;
-			top: 22px;
-			font-size: 28px;
-			font-weight: bold;
-			color: #5DC0ED;
-		}
-	}
+        &:before {
+            position: absolute;
+            content: '\20AC';
+            left: 15px;
+            top: 22px;
+            font-size: 28px;
+            font-weight: bold;
+            color: $color-primary;
+        }
+    }
+}
+
+#donation-success {
+    min-height: 350px;
+    padding-top: 45px;
+
+    .backdrop {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        height: 276px;
+        overflow: hidden;
+        img.backdrop-image {
+            width: 100%;
+        }
+    }
+    .modal-fullscreen-close {
+        font-family: $base-font-family;
+        text-shadow: 1px 1px 0px rgba(80, 80, 80, 0.5);
+        color: white;
+        font-weight: bold;
+        background: none;
+        font-size: $font-size-large;
+    }
+
+    h4, .donor-name {
+        position: relative;
+        font-family: $base-font-family;
+        text-shadow: 1px 1px 0px rgba(80, 80, 80, 0.5);
+        color: white;
+        font-weight: bold;
+    }
+    h4 {
+        font-size: $font-size-larger;
+    }
+    .top-icon {
+        position: absolute;
+        left: 50%;
+        top: -40px;
+        margin: 0px -40px;
+        height: 80px;
+        width: 80px;
+        background-color: $modal-footer-bg-color;
+        border: 1px solid white;
+        border-radius: 50%;
+        padding: 4px;
+        overflow: hidden;
+        img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+    }
 }

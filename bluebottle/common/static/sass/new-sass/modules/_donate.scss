@@ -2,7 +2,7 @@
     background: #F5F4F6;
     padding: 15px;
     border-radius: 8px;
-    @include placeholder-color(#5DC0ED);
+    @include placeholder-color($color-primary);
 
 
     .donation-input {

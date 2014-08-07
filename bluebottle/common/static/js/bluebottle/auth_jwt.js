@@ -217,6 +217,7 @@ App.LogoutJwtMixin = Em.Mixin.create({
 
 App.Router.map(function() {
     this.resource('loginWith', {path: '/login-with/:token'});
+    this.resource('logout', {path: '/logout'});
 
 });
 
@@ -237,5 +238,13 @@ App.LoginWithRoute = Em.Route.extend({
                 _this.transitionTo('/');
             }
         });
+    }
+});
+
+App.LogoutRoute = Em.Route.extend({
+    beforeModel: function(transition) {
+        transition.abort();
+        App.__container__.lookup('route:application').send('logout', '/');
+        this.transitionTo('/');
     }
 });

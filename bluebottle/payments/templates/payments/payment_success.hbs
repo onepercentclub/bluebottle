@@ -3,7 +3,31 @@
 {% tplhandlebars "payment_success" %}
     <div class="modal-fullscreen-content">
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
-        <h4>Payment Success Modal</h4>
+        <h4>Thank you for caring!</h4>
+        <p>Leave a message on the project wall</p>
+        <div class="wallpost-form">
+            <fieldset>
+                <ul>
+                    <li class="control-group">
+
+                        {{view Ember.TextArea valueBinding="text" cols="50" rows="4" name="wallpost-update" classBinding="errors.text.length:error" placeholder="Your comment"}}
+
+                        {{#if errors.text }}
+                            <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
+                        {{/if}}
+                    </li>
+                </ul>
+            </fieldset>
+
+            <div class="row">
+                <div class="col6">
+                    <button class="btn btn-cancel disabled" {{action 'closeModal'}}>{% trans "No Thanks" %}</button>
+                </div>
+                <div class="col6">
+                    <button class="btn btn-primary btn-save" {{action 'saveWallPost'}}>{% trans "Leave Message" %}</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="modal-fullscreen-footer">
     </div>

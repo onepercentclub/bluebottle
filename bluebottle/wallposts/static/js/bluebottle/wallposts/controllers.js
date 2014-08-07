@@ -43,34 +43,54 @@ App.TextWallPostNewController = Em.ObjectController.extend({
      * Look at App.ProjectTextWallPostNewController for example
      */
 
-    wallPostList: function(){
-        return Em.K();
-    }.property(),
-
     init: function() {
         this._super();
         this.createNewWallPost();
     },
+
+    createNewWallPost: function() {
+        // Make sure we keep parent id/type
+        var parentType = this.get('parentType');
+        var parentId = this.get('parentId');
+
+        this.set('model', App.TextWallPost.createRecord());
+
+        this.set('parentType', parentType);
+        this.set('parentId', parentId);
+    },
+
+    wallPostList: function(){
+        return Em.K();
+    }.property(),
+
+    _wallPostSuccess: function (record) {
+        var _this = this,
+            list = _this.get('wallPostList');
+        
+        list.unshiftObject(record);
+        Ember.run.next(function() {
+            _this.createNewWallPost();
+        });
+    },
+    
     actions: {
         saveWallPost: function() {
-            var parent_type = this.get('parentType')
-            var wallPost = this.get('model');
-            wallPost.set('parent_id', this.get('parentId'));
-            wallPost.set('parent_type', parent_type);
+            var controller = this,
+                parent_type = this.get('parentType'),
+                parent_id = this.get('parentId'),
+                wallPost = this.get('model');
+
+            if (parent_type && parent_id) {
+                wallPost.set('parent_id', parent_id);
+                wallPost.set('parent_type', parent_type);
+            }
             wallPost.set('type', 'text');
 
-            var controller = this;
-            wallPost.on('didCreate', function(record) {
-                var list = controller.get('wallPostList');
-                list.unshiftObject(record);
-                Ember.run.next(function() {
-                    controller.createNewWallPost();
-                });
-            });
-            wallPost.on('becameInvalid', function(record) {
+            wallPost.save().then(function (record) {
+                controller._wallPostSuccess(record);
+            }, function (record) {
                 controller.set('errors', record.get('errors'));
             });
-            wallPost.save();
         },
         
         showImages: function(event) {
@@ -86,19 +106,8 @@ App.TextWallPostNewController = Em.ObjectController.extend({
             $(".video-tab").addClass("active");
 
             $(".video-container").show();
-            $(".photos-container").hide();          
+            $(".photos-container").hide();
         }
-    },
-
-    createNewWallPost: function() {
-        // Make sure we keep parent id/type
-        var parentType = this.get('parentType');
-        var parentId = this.get('parentId');
-
-        this.set('model', App.TextWallPost.createRecord());
-
-        this.set('parentType', parentType);
-        this.set('parentId', parentId);
     }
 });
 
@@ -119,39 +128,24 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
         this.set('parentId', parentId);
     },
 
-    actions: {
-        saveWallPost: function() {
-            var store = this.get('store');
-            var wallPost = this.get('model');
-            var controller = this;
-
-            wallPost.set('parent_id', this.get('parentId'));
-            wallPost.set('parent_type', this.get('parentType'));
-            wallPost.set('type', 'media');
-
-            wallPost.on('didCreate', function(record) {
-                Ember.run.next(function() {
-                    if (controller.get('files').length) {
-                        // Connect all photos to this wallpost.
-                        var reload = true;
-                        controller.get('files').forEach(function(photo){
-                            photo.set('mediawallpost', record);
-                            photo.save();
-                        });
-                        // Empty this.files so we can use it again.
-                        controller.set('files', Em.A());
-                    }
-                    var list = controller.get('wallPostList');
-                    list.unshiftObject(record);
-                    controller.createNewWallPost()
-                });
-            });
-            wallPost.on('becameInvalid', function(record) {
-                controller.set('errors', record.get('errors'));
-            });
-            wallPost.save();
-        }
+    _wallPostSuccess: function (record) {
+        var _this = this;
         
+        Ember.run.next(function() {
+            if (_this.get('files').length) {
+                // Connect all photos to this wallpost.
+                var reload = true;
+                _this.get('files').forEach(function(photo){
+                    photo.set('mediawallpost', record);
+                    photo.save();
+                });
+                // Empty this.files so we can use it again.
+                _this.set('files', Em.A());
+            }
+            var list = _this.get('wallPostList');
+            list.unshiftObject(record);
+            _this.createNewWallPost()
+        });
     },
 
     addFile: function(file) {

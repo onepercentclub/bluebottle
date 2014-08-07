@@ -29,16 +29,19 @@ App.OrderRoute = Em.Route.extend({
                 var donation = donations.objectAt(0);
 
                 // FIXME: For testing purposes we need to reload the project here.
+                //        We also need to handle the donation on a fundraiser.
                 donation.get('project').reload().then( function () {
                     _this.transitionTo('project', donation.get('project.id')).promise.then(function () {
                         // FIXME: Temporary for testing purposes
                         switch (status) {
                             case 'success':
-                                _this.send('openInDynamic', 'paymentSuccess', donation, 'modalFront');
+                                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
                                 break;
+
                             case 'pending':
-                                _this.send('openInDynamic', 'paymentPending', donation, 'modalFront');
+                                _this.send('openInDynamic', 'donationPending', donation, 'modalFront');
                                 break;
+
                             case 'cancelled':
                                 // Create a new payment for this order
                                 var payment = App.MyPayment.createRecord({order: model});

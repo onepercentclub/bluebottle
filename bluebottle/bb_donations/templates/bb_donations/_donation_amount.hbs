@@ -9,8 +9,7 @@
 		<div class="row donation-amount">
 			<div class="col4 input">
 				<form>
-                    {{input valueBinding="amount" placeholder="&euro; 25,-"
-                    classBinding="errorList.amount.length:error"}}
+                    {{input valueBinding="amount" classBinding=":donation-input errorList.amount.length:error"}}
 				</form>
 			</div>
 			<div class="col8">

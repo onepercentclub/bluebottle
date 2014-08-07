@@ -49,7 +49,23 @@ App.OrderRoute = Em.Route.extend({
                                 break;
 
                             case 'pending':
-                                _this.send('openInDynamic', 'paymentPending', donation, 'modalFront');
+                                // Display flash message until payment no longer 
+                                // pending
+                                _this.send('setFlash', gettext('Processing payment'), 'welcome', false);
+
+                                // Check the status of the order and then clear 
+                                // the flash message when the check resolves
+
+                                // FIXME: Temporary for testing purposes we add
+                                //        a timeout before checking order as the 
+                                //        mock api will return a 'success' immediately
+                                //        causing the toast to only show briefly.
+                                setTimeout(function () {
+                                    _this._checkOrderStatus(model).then(function () {
+                                        _this.send('clearFlash');
+                                    });
+                                }, 2000);
+
                                 break;
 
                             case 'cancelled':
@@ -66,5 +82,36 @@ App.OrderRoute = Em.Route.extend({
                 throw new Em.error('Donation not found!');
             }
         );
+    },
+
+    _checkOrderStatus: function (order) {
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            // Check the status every 2.5 secs. This check is indefinite unless
+            // the reloaded order changes status from pending.
+            var checkInterval = setInterval(function () {
+                checkStatus();
+            }, 2500);
+
+            var checkStatus = function () {
+                // reload the order to fetch the latest status. If the order 
+                // is no longer pending then resolve the promise. If the 
+                // reload fails then we also resolve the promise.
+                order.reload().then(function(reloadedOrder) {
+                    if (reloadedOrder.get('status') != 'pending') {
+                        // Stop the status check and resolve promise
+                        stopCheckStatus();
+                        Ember.run(null, resolve, reloadedOrder);
+                    }
+                }, function (reloadedOrder) {
+                    // Stop the status check and resolve promise
+                    stopCheckStatus();
+                    Ember.run(null, resolve, reloadedOrder);
+                });
+            };
+
+            var stopCheckStatus = function () {
+                clearInterval(checkInterval);
+            };
+        });
     }
 });

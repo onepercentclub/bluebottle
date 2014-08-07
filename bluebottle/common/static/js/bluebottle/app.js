@@ -71,6 +71,10 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         Em.Object.create({name:'Nederlands', code: 'nl'})
     ],
 
+    isEnglish: Em.computed.equal('language', 'en'),
+    
+    isDutch: Em.computed.equal('language', 'nl'),
+
     ready: function() {
 
         // only needed when submitting a form if the user isn't authenticated

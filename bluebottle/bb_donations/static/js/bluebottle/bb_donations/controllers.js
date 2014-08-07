@@ -83,7 +83,58 @@ App.ProjectSupporterListController = Em.ArrayController.extend({
 });
 
 
-App.DonationSuccessController = Em.ObjectController.extend({
+App.DonationPendingController = Em.ObjectController.extend({});
+App.DonationSuccessController = Em.ObjectController.extend({});
 
+// DonationWallPostController extends the TextWallPostNewController as the main
+// functionality of the controller is to allow the user to post the the
+// project/fundraiser wall.
+App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalControllerMixin, {
+    needs: ['donationSuccess', 'projectIndex', 'fundRaiserIndex'],
+
+    parentType: function(){
+        if (this.get('controllers.donationSuccess.fundRaiser')) return 'fundRaiser';
+        return 'project';
+    }.property('controllers.donationSuccess.fundRaiser'),
+
+    parentId: function(){
+        if (this.get('controllers.donationSuccess.fundRaiser')) {
+            return this.get('controllers.donationSuccess.fundRaiser.id');
+        }
+        return this.get('controllers.donationSuccess.project.id');
+    }.property('controllers.donationSuccess.fundRaiser.id', 'controllers.donationSuccess.project.id'),
+
+    createNewWallPost: function(){
+        var parent_type = this.get('parentType');
+        var parent_id = this.get('parentId');
+        if (parent_type && parent_id){
+            var post = App.TextWallPost.createRecord({
+                parent_type: parent_type,
+                parent_id: parent_id
+            });
+            this.set('model', post);
+        }
+    }.observes('parentType', 'parentId'),
+
+    _wallPostSuccess: function (record) {
+        var _this = this,
+            list = _this.get('wallPostList');
+
+        list.unshiftObject(record);
+        this.send('close');
+    },
+    targetType: function () {
+      var parentType = this.get('parentType');
+      if (!parentType) return null;
+      return parentType.match(/project/) ? 'project' : 'fundraiser';
+    }.property('parentType'),
+
+    wallPostList: function() {
+        var parentType = this.get('parentType');
+        if (!parentType) return null;
+        var indexType = parentType.match(/project/) ? 'controllers.projectIndex.model' : 'controllers.fundRaiserIndex.model';
+        return this.get(indexType);
+    }.property('parentType')
 });
+
 

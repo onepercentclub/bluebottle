@@ -35,20 +35,11 @@ App.OrderRoute = Em.Route.extend({
                         // FIXME: Temporary for testing purposes
                         switch (status) {
                             case 'success':
-                                // The model for the donation success modal is a 
-                                // wallpost with the parent details set based on 
-                                // the type of donation.
-                                var donationType = donation.get('project') ? 'project' : 'fundraiser';
-
-                                var post = App.TextWallPost.createRecord({
-                                    parent_type: donationType,
-                                    parent_id: donation.get(donationType).get('id')
-                                });
-
-                                _this.send('openInDynamic', 'paymentSuccess', post, 'modalFront');
+                                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
                                 break;
 
                             case 'pending':
+                                _this.send('openInDynamic', 'donationPending', donation, 'modalFront');
                                 // Display flash message until payment no longer 
                                 // pending
                                 _this.send('setFlash', gettext('Processing payment'), 'welcome', false);

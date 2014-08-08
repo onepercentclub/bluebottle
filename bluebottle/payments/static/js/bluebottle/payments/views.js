@@ -1,6 +1,9 @@
 App.PaymentMethodView = Em.View.extend({
     layoutName: 'payment_provider_layout',
-    templateNameBinding: 'content.profile',
+    templateName: function(){
+        return this.get('content.provider') + '/' + this.get('content.profile');
+    }.property('content.provider', 'content.profile'),
+
     currentPaymentMethodBinding: 'controller.currentPaymentMethod',
 
     isSelected: function() {

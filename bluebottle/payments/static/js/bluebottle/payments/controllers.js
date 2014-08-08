@@ -1,4 +1,6 @@
-App.PaymentController = Em.ObjectController.extend({
+App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin,{
+    needs: ['application', 'creditcard', 'paypal'],
+
     preFixedProfileId: function() {
         return 'tab' + this.get('profile');
     }.property('profile'),
@@ -6,6 +8,10 @@ App.PaymentController = Em.ObjectController.extend({
     preFixedProfileContentId: function() {
         return 'tab-content' + this.get('profile');
     }.property('profile'),
+
+    validCardName: function() {
+        debugger
+    }.property('model.cardOwner'),
 
     willOpen: function () {
         var _this = this,
@@ -33,7 +39,6 @@ App.PaymentController = Em.ObjectController.extend({
         // integration_payload (optional metadata required by PSP)
         // integration_type (redirect/popup)
         var meta = this.get('model.integrationDetails');
-
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
               var getUrl = this._buildUrl(meta.url, meta.payload);
@@ -96,10 +101,66 @@ App.PaymentController = Em.ObjectController.extend({
 
         selectedPaymentMethod: function(paymentMethod) {
             this.set('currentPaymentMethod', paymentMethod);
+
+            var applicationRoute = App.__container__.lookup('route:application');
+            applicationRoute.render(this.get('currentPaymentMethod.profile'), {
+                into: 'payment',
+                outlet: 'paymentMethod'
+            });
         }
     }
-
 });
+
+App.CreditcardController = Em.ObjectController.extend(App.ControllerValidationMixin, {
+
+    fieldsToWatch: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
+    requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
+
+    creditcardDict: //change
+        [{ 'cardName': 'Visa', 'regex': '^4[0-9]{6,}$', 'image': 'path'},
+        { 'cardName': 'MasterCard', 'regex': '^5[1-5][0-9]{5,}$', 'image': 'path'},
+        { 'cardName': 'AmericanExpress', 'regex': '^3[47][0-9]{5,}$', 'image': 'path'},
+        { 'cardName': 'DinersClub', 'regex': '^3(?:0[0-5]|[68][0-9])[0-9]{4,}$', 'image': 'path'},
+        { 'cardName': 'Discover', 'regex': '^6(?:011|5[0-9]{2})[0-9]{3,}$', 'image': 'path'},
+        { 'cardName': 'JCB', 'regex': '^(?:2131|1800|35[0-9]{3})[0-9]{3,}$', 'image': 'path'}],
+
+
+    // creditCardValidation
+    creditCardDetector: function(){
+
+
+    }.property('cardNumber.length'),
+
+    init: function() {
+        this._super();
+        this.set('errorDefinitions', [
+            {
+                'property': 'cardOwner',
+                'validateProperty': 'validCardOwner',
+                'message': gettext('Card Owner can\'t be left empty'),
+                'priority': 2
+            },
+            {
+                'property': 'cardNumber',
+                'validateProperty': 'validCardNumber',
+                'message': gettext('This card number is not valid'),
+                'priority': 1
+            }
+        ]);
+        debugger
+        this.set('model', App.CreditcardModel.createRecord({}));
+        this.enableValidation();
+        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model')));
+//            cardOwner: '',
+//            cardNumber: '',
+//            expirationMonth: '',
+//            expirationYear: '',
+//            cvcCode: ''
+//
+//        }));
+    }
+
+})
 
 
 

@@ -4,8 +4,5 @@
     <li {{bindAttr class="view.isSelected:is-active"}} {{action 'selectedPaymentMethod' view.content}}>
         <input type="radio" name="tabs"/>
         <label >{{view.content.name}}</label>
-        <div class='payment-tab-content'>
-            {{yield}}
-        </div>
     </li>
 {% endtplhandlebars %}

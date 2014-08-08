@@ -128,6 +128,8 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         }
     },
 
+    // In the init function of your controller define a errorDefinitions array of dict like
+    // following:
     //[{
     // 'property': propertyValue,
     // 'validateProperty': validateProperty,
@@ -135,7 +137,9 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // 'priority': priorityNumber
     // },
     // ...,]
+    // validateProperty has to be in the model
     _clientSideErrors: function(arrayOfDict, model) {
+        debugger
         // array check otherwise throw error
         if (!Em.isArray(arrayOfDict))
             throw new Error('Expected an array of fields to validate');
@@ -188,6 +192,9 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         _this.set('allError', allFieldErrors);
     },
 
+    // if validation is enabled:
+    // validate API errors if ignoreApiErrors != true
+    // otherwise returns the client side validation
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
         if (!this.get('validationEnabled'))
             return null

@@ -12,8 +12,10 @@ App.PaymentMethod = DS.Model.extend({
     profile: DS.attr('string'),
     uniqueId: function () {
         return this.get('provider') + '-' + this.get('profile');
-    }.property()
+    }.property(),
+
 });
+
 
 App.Payment = DS.Model.extend({
     user: DS.belongsTo('App.UserPreview'),
@@ -31,4 +33,23 @@ App.MyPayment = App.Payment.extend({
     payment_method: DS.belongsTo('App.PaymentMethod'),
     // Hosted payment page details
     integrationDetails: DS.attr('object')
+
+});
+
+App.CreditcardModel = DS.Model.extend({
+    cardOwner: '',
+    cardNumber: '',
+    expirationMonth: '',
+    expirationYear: '',
+    cvcCode: '',
+
+    validCardOwner: function() {
+        debugger
+    }.property('cardOwner.length'),
+
+
+    validCardNumber: function() {
+        debugger
+    }.property('cardNumber.length')
+
 });

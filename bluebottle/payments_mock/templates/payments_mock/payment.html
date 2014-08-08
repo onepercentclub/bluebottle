@@ -2,18 +2,27 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Mock Payment</title>
+        <title>Test Payment Service Provider</title>
+        <style type="text/css">
+          ul.actions li {
+              display: inline;
+              list-style-type: none;
+              padding-right: 20px;
+          }
+        </style>
     </head>
     <body>
-        test payment
-        <br />
-        Return URL: {{return_url}} <br/>
-        Payment ID: {{payment_id}}
-        <br />
+        <h1>Test Payment Service Provider</h1>
+        <h3>Request details:</h3>
         <ul>
-          <li style="clear: left; float: left;"><a href="{{return_url}}?status=success&payment_id={{payment_id}}">Successful</a></li>
-          <li style="clear: left; float: left;"><a href="{{return_url}}?status=cancelled&payment_id={{payment_id}}">Cancelled</a></li>
-          <li style="clear: left; float: left;"><a href="{{return_url}}?status=pending&payment_id={{payment_id}}">Pending</a></li>
+          <li>Return URL: {{return_url}}</li>
+          <li>Payment ID: {{payment_id}}</li>
+        </ul>
+        <h3>Select a payment response:</h3>
+        <ul class="actions">
+          <li><a href="{{return_url}}?status=success&payment_id={{payment_id}}">Successful</a></li>
+          <li><a href="{{return_url}}?status=cancelled&payment_id={{payment_id}}">Cancelled</a></li>
+          <li><a href="{{return_url}}?status=pending&payment_id={{payment_id}}">Pending</a></li>
         </ul>
     </body>
 </html>

@@ -39,10 +39,8 @@ App.OrderRoute = Em.Route.extend({
                                 break;
 
                             case 'pending':
-                                _this.send('openInDynamic', 'donationPending', donation, 'modalFront');
-                                // Display flash message until payment no longer 
-                                // pending
-                                _this.send('setFlash', gettext('Processing payment'), 'welcome', false);
+                                // Display flash message until payment no longer pending
+                                _this.send('setFlash', gettext('Processing payment'), 'is-loading', false);
 
                                 // Check the status of the order and then clear 
                                 // the flash message when the check resolves
@@ -54,6 +52,7 @@ App.OrderRoute = Em.Route.extend({
                                 setTimeout(function () {
                                     _this._checkOrderStatus(model).then(function () {
                                         _this.send('clearFlash');
+                                        _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
                                     });
                                 }, 2000);
 

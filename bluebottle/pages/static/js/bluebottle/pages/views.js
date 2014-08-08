@@ -67,6 +67,20 @@ App.PageView = Ember.View.extend(App.GoTo, {
             });
 
         }
+
+        function onFinish(id) {
+            $(".video-item").removeClass("is-active");
+            $(".video-item").addClass("is-inactive");
+
+            $('.video-item').one(animationEnd, function(){
+                $(".video-item").removeClass("is-inactive");
+            });
+        }
+        
+        player.addEvent('ready', function() {
+            player.addEvent('finish', onFinish);
+        });
+        
     }.on('click'),
 
     linkClick: function (linkEvt) {

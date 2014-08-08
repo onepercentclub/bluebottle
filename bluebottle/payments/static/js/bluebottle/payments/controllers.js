@@ -34,10 +34,13 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
     },
 
     _processPaymentMetadata: function () {
-        // integration_url (at PSP)
-        // integration_method (GET/POST/PUT)
-        // integration_payload (optional metadata required by PSP)
-        // integration_type (redirect/popup)
+        // This function will handle where to direct the user after they submit the
+        // payment selection. It handles the step based on these properties returned
+        // by the server when they submitted the purchase:
+        //    integration_url (at PSP)
+        //    integration_method (GET/POST/PUT)
+        //    integration_payload (optional metadata required by PSP)
+        //    integration_type (redirect/popup)
         var meta = this.get('model.integrationDetails');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
@@ -48,7 +51,18 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
         }
     },
 
-    _buildUrl: function (url, parameters){
+    _processPaymentSelection: function () {
+        this.set('payment_method', this.get('currentPaymentMethod'));
+
+        var profile = this.set('payment_method.profile');
+
+        // TODO: How we handle the creditcard details will depend on the PSP.
+        if (profile == 'creditcard') {
+            this.set('integrationData', {encryptedData: '1234abcd'});
+        }
+    },
+
+    _buildUrl: function (url, parameters) {
         var qs = '';
 
         for(var key in parameters) {
@@ -68,6 +82,9 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
         nextStep: function () {
             var _this = this,
                 payment = this.get('model');
+
+            this._processPaymentSelection();
+
             payment.save().then(
                 // Success
                 function (payment) {
@@ -82,7 +99,10 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
 
-                    if (payment.get('success')) {
+                    // FIXME: For testing purposes we will direct the user to the success
+                    //        modal for creditcard payments and to the mock service provider
+                    //        for all others.
+                    if (this.get('currentPaymentMethod.profile') == 'creditcard') {
                         // Load the success modal
                         // Since all models are already loaded in Ember here, we should just be able
                         // to get the first donation of the order here

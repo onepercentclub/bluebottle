@@ -29,8 +29,8 @@ PAYMENT_METHODS = (
     },
     {
         'provider': 'adyen',
-        'profile': 'mastercard',
-        'name': 'MasterCard',
+        'profile': 'creditcard',
+        'name': 'CreditCard',
         'supports_recurring': False,
     }
 )

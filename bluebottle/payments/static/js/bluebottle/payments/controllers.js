@@ -76,9 +76,13 @@ App.PaymentController = Em.ObjectController.extend({
                     // Proceed to the next step based on the status of the payment
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
-                    if (payment.get('success')) {
+
+                    if (true || payment.get('success')) {
                         // Load the success modal
-                        _this.send('modalSlide', 'paymentSuccess', payment);
+                        // Since all models are already loaded in Ember here, we should just be able
+                        // to get the first donation of the order here
+                        var donation = payment.get('order.donations').objectAt(0);
+                        _this.send('modalSlide', 'donationSuccess', donation);
                     } else {
                         _this._processPaymentMetadata();
                     }
@@ -97,3 +101,8 @@ App.PaymentController = Em.ObjectController.extend({
 
 });
 
+
+
+App.PaymentMetaDataController = Em.ObjectController.extend({
+
+});

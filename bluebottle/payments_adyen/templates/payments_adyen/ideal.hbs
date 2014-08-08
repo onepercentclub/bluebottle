@@ -1,0 +1,11 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "adyen/ideal" %}
+    <p>
+        <img src="{% static 'images/adyen/adyen.png' %}" alt="Adyen" height="60px" />
+        <br />
+        <img src="{% static 'images/adyen/ideal.png' %}" alt="iDEAL" height="60px" />
+        <br/>
+        You're about to pay with iDEAL through Adyen.
+    </p>
+{% endtplhandlebars %}

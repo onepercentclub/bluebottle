@@ -10,8 +10,10 @@ App.PaymentMethod = DS.Model.extend({
     provider: DS.attr('string'),
     name: DS.attr('string'),
     profile: DS.attr('string'),
+
     uniqueId: function () {
-        return this.get('provider') + '-' + this.get('profile');
+        var profile = this.get('profile');
+        return this.get('provider') + '' + profile.charAt(0).toUpperCase() + profile.slice(1);
     }.property()
 });
 
@@ -33,4 +35,12 @@ App.MyPayment = App.Payment.extend({
     // Hosted payment page details
     integrationDetails: DS.attr('object'),
     integrationData: DS.attr('object')
+});
+
+App.StandardCreditCardPaymentModel = Em.Object.extend({
+    cardOwner: '',
+    cardNumber: '',
+    expirationMonth: '',
+    expirationYear: '',
+    cvcCode: ''
 });

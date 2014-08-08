@@ -139,7 +139,6 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // ...,]
     // validateProperty has to be in the model
     _clientSideErrors: function(arrayOfDict, model) {
-        debugger
         // array check otherwise throw error
         if (!Em.isArray(arrayOfDict))
             throw new Error('Expected an array of fields to validate');

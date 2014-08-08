@@ -1,5 +1,5 @@
-App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin,{
-    needs: ['application', 'creditcard', 'paypal'],
+App.PaymentController = Em.ObjectController.extend({
+    needs: ['application'],
 
     preFixedProfileId: function() {
         return 'tab' + this.get('profile');
@@ -8,10 +8,6 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
     preFixedProfileContentId: function() {
         return 'tab-content' + this.get('profile');
     }.property('profile'),
-
-    validCardName: function() {
-        debugger
-    }.property('model.cardOwner'),
 
     willOpen: function () {
         var _this = this,
@@ -52,13 +48,14 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
     },
 
     _processPaymentSelection: function () {
+        var paymentMethodController = this.get('currentPaymentMethodController');
+
         this.set('payment_method', this.get('currentPaymentMethod'));
 
-        var profile = this.set('payment_method.profile');
-
         // TODO: How we handle the creditcard details will depend on the PSP.
-        if (profile == 'creditcard') {
-            this.set('integrationData', {encryptedData: '1234abcd'});
+        if (paymentMethodController) {
+            var integrationData = paymentMethodController.getIntegrationData();
+            this.set('integrationData', integrationData);
         }
     },
 
@@ -77,6 +74,13 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
 
         return url;
     },
+
+    _setPaymentMethodController: function () {
+        var method = this.get('currentPaymentMethod');
+        if (!method) return;
+
+        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('payment_method.uniqueId')));
+    }.observes('currentPaymentMethod'),
 
     actions: {
         nextStep: function () {
@@ -131,8 +135,14 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
     }
 });
 
-App.CreditcardController = Em.ObjectController.extend(App.ControllerValidationMixin, {
+App.StandardPaymentMethodController = Em.ObjectController.extend({
+    getIntegrationData: function() {
+        //override me
+        return null;
+    }
+});
 
+App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
     fieldsToWatch: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
 
@@ -167,23 +177,7 @@ App.CreditcardController = Em.ObjectController.extend(App.ControllerValidationMi
                 'priority': 1
             }
         ]);
-        debugger
-        this.set('model', App.CreditcardModel.createRecord({}));
-        this.enableValidation();
-        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model')));
-//            cardOwner: '',
-//            cardNumber: '',
-//            expirationMonth: '',
-//            expirationYear: '',
-//            cvcCode: ''
-//
-//        }));
+//        this.enableValidation();
+//        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model')));
     }
-
-})
-
-
-
-App.PaymentMetaDataController = Em.ObjectController.extend({
-
 });

@@ -18,9 +18,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
-from bluebottle.test.factory_models.utils import LanguageFactory
-
 
 def css_dict(style):
     """
@@ -202,39 +199,6 @@ class WebDriverAdditionMixin(object):
         return ElementList(result, find_by='link by itext', query=text)
 
 
-class InitProjectDataMixin(object):
-
-    def init_projects(self):
-        """
-        Set up some basic models needed for project creation.
-        """
-        phase_data = [{'id': 1, 'name': 'Plan - New', 'viewable': False},
-                      {'id': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                      {'id': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                      {'id': 4, 'name': 'Plan - Rejected', 'viewable': False},
-                      {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
-                      {'id': 5, 'name': 'Campaign', 'viewable': True},
-                      {'id': 7, 'name': 'Stopped', 'viewable': False},
-                      {'id': 8, 'name': 'Done - Complete', 'viewable': True},
-                      {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
-
-        theme_data = [{'id': 1, 'name': 'Education'},
-                      {'id': 2, 'name': 'Environment'},
-                      {'id': 3, 'name': 'Health'}]
-
-        language_data = [{'id': 1, 'code': 'en', 'language_name': 'English', 'native_name': 'English'},
-                         {'id': 2, 'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
-
-        for phase in phase_data:
-            ProjectPhaseFactory.create(**phase)
-
-        for theme in theme_data:
-            ProjectThemeFactory.create(**theme)
-
-        for language in language_data:
-            LanguageFactory.create(**language)
-
-
 RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
 
 if RUN_LOCAL:
@@ -266,26 +230,29 @@ class SeleniumTestCase(LiveServerTestCase):
 
         if settings.SELENIUM_WEBDRIVER == 'remote':
 
+            test_name = cls.__name__
             name = 'Manual test run'
             caps = {'platform': 'Linux', 'browserName': 'chrome', 'version': '35'}
 
             if 'TRAVIS_BUILD_NUMBER' in os.environ:
                 name = 'Build ' + os.environ['TRAVIS_BUILD_NUMBER']
-                if 'TRAVIS_PULL_REQUEST' in os.environ:
-                    name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
+                if 'TRAVIS_PULL_REQUEST' in os.environ and os.environ['TRAVIS_PULL_REQUEST']:
+                        name = 'Pull Request #' + os.environ['TRAVIS_PULL_REQUEST']
+                name += ': ' + test_name
                 caps['name'] = name
                 caps['tunnel-identifier'] = os.environ['TRAVIS_JOB_NUMBER']
                 caps['build'] = os.environ['TRAVIS_BUILD_NUMBER']
                 caps['tags'] = ['Travis', 'CI']
+                caps['selenium-version'] = '2.41.0'
+                caps['max-duration'] = 600
 
             username = os.environ.get('SAUCE_USERNAME')
             access_key = os.environ.get('SAUCE_ACCESS_KEY')
             sauce_url = "http://%s:%s@ondemand.saucelabs.com:80/wd/hub"
             url = sauce_url % (username, access_key)
 
-            cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
+            cls.browser = BrowserExt(driver_name='remote', url=url, browser='firefox',
                                      wait_time=10, desired_capabilities=caps)
-            cls.browser.driver.implicitly_wait(5)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 
@@ -293,7 +260,16 @@ class SeleniumTestCase(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.browser.quit()
+        if settings.SELENIUM_WEBDRIVER == 'remote':
+            try:
+                if sys.exc_info() == (None, None, None):
+                    sauce.jobs.update_job(cls.browser.driver.session_id, passed=True)
+                else:
+                    sauce.jobs.update_job(cls.browser.driver.session_id, passed=False)
+            finally:
+                cls.browser.quit()
+        else:
+            cls.browser.quit()
         super(SeleniumTestCase, cls).tearDownClass()
 
     def _post_teardown(self):
@@ -343,12 +319,12 @@ class SeleniumTestCase(LiveServerTestCase):
         if path and not path.startswith('#!'):
             path = '#!%s' % path
 
-        # Open the homepage (always the starting point), in English.
-        return self.browser.visit('%(url)s/%(lang_code)s/%(path)s' % {
+        self.browser.visit('%(url)s/%(lang_code)s/%(path)s' % {
             'url': self.live_server_url,
             'lang_code': lang_code,
             'path': path
-        })        
+        })
+        self.assert_css('#site')
 
     def visit_homepage(self, lang_code=None):
         """
@@ -404,7 +380,7 @@ class SeleniumTestCase(LiveServerTestCase):
         else:
             return False
             
-    def wait_for_element_css(self, selector, timeout=10):
+    def wait_for_element_css(self, selector, timeout=30):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
@@ -413,7 +389,7 @@ class SeleniumTestCase(LiveServerTestCase):
         except TimeoutException:
             return None
 
-    def is_visible(self, selector, timeout=10):
+    def is_visible(self, selector, timeout=30):
         return not self.wait_for_element_css(selector, timeout) is None
 
     def assert_css(self, selector, wait_time=10):

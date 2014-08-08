@@ -2,8 +2,35 @@
 
 {% tplhandlebars "adyen/creditcard" %}
     <p>
-        <img src="{% static 'images/adyen/adyen.png' %}" alt="Adyen" height="60px" />
-        <br/>
-        You're about to pay with credit card through Adyen.
+        {{view.content.provider}} - {{view.content.name}}
+        <br />
+
+        <label>
+            <span>{% blocktrans %}Full name (as on Card){% endblocktrans %}</span>
+            {{input valueBinding="model.cardOwner" placeholder=view.cardOwner
+                classBinding="errorList.cardOwner.length:error"}}
+        </label>
+
+        <label>
+            <span>{% blocktrans %}Card Number{% endblocktrans %}</span>
+            {{input valueBinding="model.cardNumber" placeholder=view.cardNumber
+                classBinding="errorList.cardNumber.length:error"}}
+            </label>
+
+        <label>
+            <span>{% blocktrans %}Expiration Date {% endblocktrans %}</span>
+            {{input valueBinding="model.expirationMonth" placeholder=view.expirationMonth
+                classBinding="errorList.expirationMonth.length:error"}}
+        </label>
+        <span> / </span>
+        {{input valueBinding="model.expirationYear" placeholder=view.expirationYear
+                classBinding="errorList.expirationYear.length:error"}}
+
+        <label>
+            <span>CVC</span>
+            {{input valueBinding="model.cvc" placeholder=view.cvc
+                classBinding="errorList.cvc.length:error"}}
+        </label>
+
     </p>
 {% endtplhandlebars %}

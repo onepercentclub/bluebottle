@@ -101,9 +101,9 @@ App.PaymentController = Em.ObjectController.extend(App.ControllerValidationMixin
 
         selectedPaymentMethod: function(paymentMethod) {
             this.set('currentPaymentMethod', paymentMethod);
-
+            debugger
             var applicationRoute = App.__container__.lookup('route:application');
-            applicationRoute.render(this.get('currentPaymentMethod.profile'), {
+            applicationRoute.render(this.get('currentPaymentMethod.uniqueId'), {
                 into: 'payment',
                 outlet: 'paymentMethod'
             });

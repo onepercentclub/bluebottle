@@ -1,0 +1,11 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "docdata/paypal" %}
+    <p>
+        <img src="{% static 'images/docdata/docdata.png' %}" alt="Docdata" height="60px" />
+        <br/>
+        <img src="{% static 'images/docdata/paypal.png' %}" alt="Paypal" height="60px" />
+        <br/>
+        You're about to pay with Paypal through Docdata.
+    </p>
+{% endtplhandlebars %}

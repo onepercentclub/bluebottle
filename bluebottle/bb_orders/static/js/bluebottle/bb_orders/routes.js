@@ -60,10 +60,20 @@ App.OrderRoute = Em.Route.extend({
 
                             case 'cancelled':
                                 // Create a new payment for this order
+                                // TODO: set error message
                                 var payment = App.MyPayment.createRecord({order: model});
 
                                 _this.send('openInDynamic', 'payment', payment, 'modalFront');
                                 break;
+
+                            case 'failed':
+                                // Create a new payment for this order
+                                // TODO: set error message
+                                var payment = App.MyPayment.createRecord({order: model});
+                                _this.send('openInDynamic', 'payment', payment, 'modalFront');
+                                break;
+                            default:
+                                throw new Em.error('Incorrect order status: ' + status);
                         }
                     });
                 });
@@ -75,6 +85,8 @@ App.OrderRoute = Em.Route.extend({
     },
 
     _checkOrderStatus: function (order) {
+        // TODO: This is very dependend on payment service and payment types.
+        // Maybe we can move the Order to 'success' earlier when Payment still has status 'pending'?
         return Ember.RSVP.Promise(function (resolve, reject) {
             // Check the status every 2.5 secs. This check is indefinite unless
             // the reloaded order changes status from pending.

@@ -77,7 +77,7 @@ App.PaymentController = Em.ObjectController.extend({
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
 
-                    if (true || payment.get('success')) {
+                    if (payment.get('success')) {
                         // Load the success modal
                         // Since all models are already loaded in Ember here, we should just be able
                         // to get the first donation of the order here

@@ -1,5 +1,4 @@
 if (DEBUG) {
-    App.Store.registerAdapter("App.PaymentMethod", App.MockAdapter);
     App.Store.registerAdapter("App.Payment", App.MockAdapter);
     App.Store.registerAdapter("App.MyPayment", App.MockAdapter);
 }

@@ -1,4 +1,6 @@
+from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView
 from bluebottle.payments.adapters import get_payment_methods
+from bluebottle.payments.models import Payment
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -16,3 +18,8 @@ class PaymentMethodList(APIView):
         result = {'country': country, 'results': methods}
         response = Response(result, status=status.HTTP_200_OK)
         return response
+
+
+class PaymentDetail(RetrieveUpdateDeleteAPIView):
+
+    model = Payment

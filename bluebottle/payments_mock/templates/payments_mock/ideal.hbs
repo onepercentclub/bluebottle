@@ -1,0 +1,11 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "mock/ideal" %}
+    <p>
+        <img src="{% static 'images/mock/mock.png' %}" alt="Mock" height="60px" />
+        <br />
+        <img src="{% static 'images/mock/ideal.png' %}" alt="iDEAL" height="60px" />
+        <br/>
+        You're about to pay with iDEAL through Big Duck Bank.
+    </p>
+{% endtplhandlebars %}

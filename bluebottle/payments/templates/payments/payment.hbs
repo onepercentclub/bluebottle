@@ -8,19 +8,23 @@
         <big>{% blocktrans %}You're about to support &euro; {{total}},- to '…'. Good job!{% endblocktrans %}</big>
         
         <div class="row">
-            <div class="col12">
+            <div class="col4">
                 <ul class="payment-tabs">
                     {{#each method in methods}}
                         {{view 'App.PaymentMethodView' contentBinding='method'}}
                     {{/each}}
                 </ul>
             </div>
+            <div class="col8">
+                {{outlet 'paymentMethod'}}
+            </div>
         </div>
         <div class="row">
             <div class="col12">
-                <a class="btn btn-sec payment-btn" {{action 'nextStep'}}>Next</a>
+                <a {{action 'nextStep'}} {{bindAttr class=":btn-sec :btn isBusy:is-loading blockingErrors:is-inactive"}}>Next</a>
             </div>
         </div>
+        {{partial "payment_errors"}}
     </div>
     <div class="modal-fullscreen-footer">
         <div class="modal-payment-provider">

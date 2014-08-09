@@ -9,4 +9,15 @@ App.PaymentMethodView = Em.View.extend({
     isSelected: function() {
         return (this.get('content.uniqueId') == this.get('currentPaymentMethod.uniqueId'));
     }.property('content.uniqueId', 'currentPaymentMethod.uniqueId')
+
+
+});
+
+App.CreditcardView = Em.View.extend({
+    cardOwner: gettext('Card Holder Name'),
+    cardNumber: 'xxxx xxxx xxxx xxxx',
+    expirationMonth: gettext('Month'),
+    expirationYear: gettext('Year'),
+    cvcCode: gettext('CVC')
+
 });

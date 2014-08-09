@@ -64,7 +64,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // I use it since we want to be in control when to start the validation, for example just after
     // pressing a submit button
     enableValidation: function() {
-        this.set('validationEnabled', true)
+        this.set('validationEnabled', true);
     },
 
     // set the strength of the field, use this in the template
@@ -123,11 +123,13 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         for (var key in resultErrors){
             // capitalize the first letter of the key add the related error and set it to the first error
             // TODO: I add the key to the message since when a field is required the error message doesn't say which one.
-            firstError.set('error', (key.charAt(0).toUpperCase() + key.slice(1)) + ": " +resultErrors[key])
-            return firstError
+            firstError.set('error', (key.charAt(0).toUpperCase() + key.slice(1)) + ": " +resultErrors[key]);
+            return firstError;
         }
     },
 
+    // In the init function of your controller define a errorDefinitions array of dict like
+    // following:
     //[{
     // 'property': propertyValue,
     // 'validateProperty': validateProperty,
@@ -135,6 +137,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // 'priority': priorityNumber
     // },
     // ...,]
+    // validateProperty has to be in the model
     _clientSideErrors: function(arrayOfDict, model) {
         // array check otherwise throw error
         if (!Em.isArray(arrayOfDict))
@@ -151,19 +154,28 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             if(Em.compare(Object.keys(dict).sort(), _this.errorDictionaryFields.sort()) < 0)
                 throw new Error('Expected a dictionary with correct keys');
 
+            var valid;
+            if (typeof dict.validateProperty.test == 'function') {
+                // match property by regex match on model property
+                valid = dict.validateProperty.test(model.get(dict.property));
+            } else {
+                // match property by a validation property on the model
+                valid = !!model.get(dict.validateProperty);
+            }
+
             // evaluate the property, if it's not valid
-            if (!model.get(dict.validateProperty)) {
-                errorList[dict.property] = dict['message']
+            if (!valid) {
+                errorList[dict.property] = dict.message;
                 // set the error only if the priority is higher than the current one
                 // maybe check also for the same property name
                 if (!currentErrorPriority || currentErrorPriority > dict.priority ) {
-                    currentErrorPriority = dict.priority
+                    currentErrorPriority = dict.priority;
 
                     // if there were no currentErrors
                     if (!currentValidationError)
                         currentValidationError = Em.Object.create();
 
-                    currentValidationError.set('error', dict['message'])
+                    currentValidationError.set('error', dict.message);
                 }
             }
 
@@ -172,7 +184,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         this.set("errorList", errorList);
         this._allErrors(errorList);
         
-        return currentValidationError
+        return currentValidationError;
     },
 
     _allErrors: function(errorList) {
@@ -188,6 +200,9 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         _this.set('allError', allFieldErrors);
     },
 
+    // if validation is enabled:
+    // validate API errors if ignoreApiErrors != true
+    // otherwise returns the client side validation
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
         if (!this.get('validationEnabled'))
             return null

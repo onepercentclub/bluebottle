@@ -1,0 +1,1 @@
+App.AdyenCreditcard = App.StandardCreditCardPaymentModel.extend();

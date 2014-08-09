@@ -40,7 +40,7 @@ App.PaymentController = Em.ObjectController.extend({
         //    integration_method (GET/POST/PUT)
         //    integration_payload (optional metadata required by PSP)
         //    integration_type (redirect/popup)
-        var meta = this.get('model.integrationDetails');
+        var meta = this.get('model.authorizationAction');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
               var getUrl = this._buildUrl(meta.url, meta.payload);
@@ -54,10 +54,9 @@ App.PaymentController = Em.ObjectController.extend({
     _setIntegrationData: function () {
 
         var paymentMethodController = this.get('currentPaymentMethodController');
-
         this.set('payment_method', paymentMethodController.get('model'));
 
-        // TODO: How we handle the creditcard details will depend on the PSP.
+        // TODO: How we handle the payment details will depend on the PSP.
         if (paymentMethodController) {
             var integrationData = paymentMethodController.getIntegrationData();
             this.set('integrationData', integrationData);
@@ -83,11 +82,10 @@ App.PaymentController = Em.ObjectController.extend({
     // Set the current payment method controller based on selected method
     _setPaymentMethodController: function () {
         var method = this.get('payment_method');
-        if (!method) return;
-
+        if (!method || !method.get('uniqueId')) return;
         // Render the payment method view
         var applicationRoute = App.__container__.lookup('route:application');
-        applicationRoute.render(this.get('payment_method').get('uniqueId'), {
+        applicationRoute.render(method.get('uniqueId'), {
             into: 'payment',
             outlet: 'paymentMethod'
         });
@@ -109,6 +107,7 @@ App.PaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
+            payment.set('paymentMethod', this.get('payment_method.uniqueId'));
             // check for validation errors generated in the current payment method controller
             var validationErrors = this.get('currentPaymentMethodController').validateFields();
             this.set('validationErrors', validationErrors[0]);
@@ -145,7 +144,7 @@ App.PaymentController = Em.ObjectController.extend({
                     // FIXME: For testing purposes we will direct the user to the success
                     //        modal for creditcard payments and to the mock service provider
                     //        for all others.
-                    if (this.get('payment_method.profile') == 'creditcard') {
+                    if (_this.get('payment_method.profile') == 'creditcard') {
                         // Load the success modal
                         // Since all models are already loaded in Ember here, we should just be able
                         // to get the first donation of the order here
@@ -173,23 +172,22 @@ App.PaymentController = Em.ObjectController.extend({
  * Some standard controllers which can be extended for different payment service providers
  */
 
-App.StandardPaymentMethodController = Em.ObjectController.extend({
+App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerValidationMixin, {
 
-    getIntegrationData: function() {
-        //override me
-        return null;
+    getIntegrationData: function(){
+        return {};
     },
 
-    validateFields: function () {
-        return null;
-    },
+    validateFields: function(){
+        return true;
+    }
 
 //    normalizeData: function () {
 //
 //    }
 });
 
-App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
+App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
 
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
 

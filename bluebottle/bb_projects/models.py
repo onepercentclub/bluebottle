@@ -238,6 +238,11 @@ class BaseProject(models.Model):
     def viewable(self):
         return self.status.viewable
 
+    def set_status(self, phase_slug, save=True):
+        self.status = ProjectPhase.objects.get(slug=phase_slug)
+        if save:
+            self.save()
+
 
 class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)

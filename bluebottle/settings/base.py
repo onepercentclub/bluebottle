@@ -7,6 +7,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+COMPRESS_ENABLED = False
+INCLUDE_TEST_MODELS = True
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -103,17 +105,22 @@ TEMPLATE_DIRS = (
 )
 
 
+
 MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
+    'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'bluebottle.bb_accounts.middleware.LocaleMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.transaction.TransactionMiddleware',
+    'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
+    'bluebottle.auth.middleware.SlidingJwtTokenMiddleware'
 )
-
 # REST_FRAMEWORK = {
 #     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
 # }
@@ -130,6 +137,7 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=12)
 }
 
+JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -156,6 +164,16 @@ INSTALLED_APPS = (
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
+    'bluebottle.bb_fundraisers',
+    'bluebottle.bb_orders',
+    'bluebottle.bb_donations',
+
+    # Basic Bb implementations
+    'bluebottle.fundraisers',
+    'bluebottle.orders',
+    'bluebottle.donations',
+
+    # Other Bb apps
     'bluebottle.common',
     'bluebottle.contact',
     'bluebottle.contentplugins',
@@ -165,20 +183,15 @@ INSTALLED_APPS = (
     'bluebottle.quotes',
     'bluebottle.slides',
     'bluebottle.redirects',
-
-    'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
-    'bluebottle.bb_donations',
-    'bluebottle.payments',
-    'bluebottle.payments_adyen',
-    'bluebottle.payments_docdata',
-
-    #mock
-    'bluebottle.payments_mock',
-
-    #miss test
     'bluebottle.utils',
     'bluebottle.wallposts',
+
+    'bluebottle.payments',
+    'bluebottle.payments_docdata',
+    'bluebottle.payments_mock',
+
+    # Test Bb implementations
+    'bluebottle.test',
 
     # Modules required by BlueBottle
     'fluent_contents',
@@ -189,7 +202,6 @@ INSTALLED_APPS = (
     'django_wysiwyg',
     'templatetag_handlebars',
 )
-
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
@@ -239,13 +251,26 @@ LOGGING = {
 }
 
 
-# BlueBottle generic models. Override this in your settings if you need to
-# extend any of those models when you are extending BlueBottle for your own
-# purposes.
-# AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
-# ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-# PROJECTS_PROJECT_MODEL = 'projects.Project'
-# TASKS_TASK_MODEL = 'tasks.Task'
+# Define the models to use for testing
+AUTH_USER_MODEL = 'test.TestBaseUser'
+
+PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
+PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
+
+FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.FundRaiser'
+
+TASKS_TASK_MODEL = 'test.TestTask'
+TASKS_SKILL_MODEL = 'test.TestSkill'
+TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
+TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
+
+ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
+ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
+ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
+
+DONATIONS_DONATION_MODEL = 'donations.Donation'
+ORDERS_ORDER_MODEL = 'orders.Order'
+
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

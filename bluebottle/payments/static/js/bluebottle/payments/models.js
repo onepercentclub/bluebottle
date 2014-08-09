@@ -1,15 +1,10 @@
-if (DEBUG) {
-    App.Store.registerAdapter("App.PaymentMethod", App.MockAdapter);
-    App.Store.registerAdapter("App.Payment", App.MockAdapter);
-    App.Store.registerAdapter("App.MyPayment", App.MockAdapter);
-}
-
 App.PaymentMethod = DS.Model.extend({
     url: 'payments/payment-methods',
 
     provider: DS.attr('string'),
-    name: DS.attr('string'),
     profile: DS.attr('string'),
+
+    name: DS.attr('string'),
 
     uniqueId: function () {
 
@@ -30,13 +25,16 @@ App.Payment = DS.Model.extend({
     created: DS.attr('date'),
     updated: DS.attr('date'),
     closed: DS.attr('date'),
-    amount: DS.attr('number')
+    amount: DS.attr('number'),
+
+    authorizationAction: DS.attr('object')
 });
 
 App.MyPayment = App.Payment.extend({
     url: 'payments/my',
 
-    payment_method: DS.belongsTo('App.PaymentMethod'),
+    paymentMethod: DS.attr('string'),
+
     // Hosted payment page details
     integrationDetails: DS.attr('object'),
     integrationData: DS.attr('object')

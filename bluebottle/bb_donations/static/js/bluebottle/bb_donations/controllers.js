@@ -43,6 +43,13 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
                 return false;
             }
 
+            // If the donation is unchanged then move on to the payments modal.
+            if (!donation.get('isDirty')) {
+                var payment = App.MyPayment.createRecord({order: order});
+                
+                this.send('modalSlide', 'payment', payment);
+            }
+
             // Set is loading property until success or error response
             _this.set('isBusy', true);
 

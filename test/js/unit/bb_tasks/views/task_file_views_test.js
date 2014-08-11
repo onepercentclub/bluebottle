@@ -13,7 +13,7 @@ pavlov.specify('Task Member Edit View Tests', function() {
 
         var view;
 
-        before(function () {
+        beforeEach(function () {
             Ember.run( function () {
                 view = App.TaskFileNewView.create();
             });

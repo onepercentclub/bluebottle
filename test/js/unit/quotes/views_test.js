@@ -13,7 +13,7 @@ pavlov.specify('Quote List View Unit Tests', function () {
 
   describe('App.QuoteListView Instance', function () {
 
-    before(function (){
+    beforeEach(function (){
 
       Ember.run(function() {
         view = App.QuoteListView.create();

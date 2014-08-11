@@ -87,6 +87,14 @@ App.PaymentController = Em.ObjectController.extend({
     }.observes('currentPaymentMethod'),
 
     actions: {
+        previousStep: function () {
+            // Slide back to the donation modal - keeping the current donation.
+            // Currently the there is only one donation associated with each order
+            // so grab the first donation item.
+            var donation = this.get('model.order.donations').objectAt(0);
+            this.send('modalSlideBack', 'donation', donation);
+        },
+
         nextStep: function () {
             var _this = this,
                 payment = this.get('model');

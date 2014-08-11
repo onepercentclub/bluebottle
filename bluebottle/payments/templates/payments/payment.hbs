@@ -2,7 +2,7 @@
 
 {% tplhandlebars "payment" %}
     <div class="modal-fullscreen-content" id="payment">
-        <span {{action 'chooseAmount'}} class="modal-fullscreen-back"></span>
+        <span {{action 'previousStep'}} class="modal-fullscreen-back"></span>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
         <h4>{% blocktrans %}Select your method of payment{% endblocktrans %}</h4>
         <big>{% blocktrans %}You're about to support &euro; {{total}},- to '…'. Good job!{% endblocktrans %}</big>

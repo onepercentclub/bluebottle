@@ -1,4 +1,4 @@
-from bluebottle.payments.models import Transaction, PaymentMetaData
+from bluebottle.payments.models import Transaction, PaymentMetaData, PaymentMetaDataType, PaymentMetaDataMethod
 from django.db import models
 import Mollie
 
@@ -14,7 +14,12 @@ class MolliePayment(PaymentMetaData):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     meta_data = models.CharField(max_length=2000, default='')
 
+    def full_clean(self, exclude=None):
+        self.proceed_type = PaymentMetaDataType.redirect
+        self.proceed_method = PaymentMetaDataMethod.get
 
+    class Meta:
+        serializer = 'bluebottle.payments_mollie.serializers.MolliePaymentSerializer'
 
 class MollieTransaction(Transaction):
     pass

@@ -1,5 +1,7 @@
+from bluebottle.utils.utils import get_model_class
 from django.conf import settings
 from django.db import models
+from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
@@ -7,6 +9,8 @@ from uuidfield import UUIDField
 from django.db.models import options
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
+
+DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
 
 
 class OrderStatuses(DjangoChoices):
@@ -36,3 +40,10 @@ class BaseOrder(models.Model):
         default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
+
+    def full_clean(self, exclude=None):
+        donations = DONATION_MODEL.objects.filter(order=self)
+        if donations:
+            self.total = donations.aggregate(Sum('amount'))
+        else:
+            self.total = 0

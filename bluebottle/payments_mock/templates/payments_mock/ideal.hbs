@@ -1,11 +1,14 @@
 {% load bb_ember i18n static %}
 
-{% tplhandlebars "mock/ideal" %}
+{% tplhandlebars "mockIdeal" %}
     <p>
-        <img src="{% static 'images/mock/mock.png' %}" alt="Mock" height="60px" />
+        <img src="{% static 'images/mock/mock.png' %}" alt="Mock"  />
         <br />
-        <img src="{% static 'images/mock/ideal.png' %}" alt="iDEAL" height="60px" />
+        <img src="{% static 'images/mock/ideal.png' %}" alt="iDEAL"  />
         <br/>
         You're about to pay with iDEAL through Big Duck Bank.
+
+        {{view App.MockIdealBankSelectView valueBinding='issuerId'}}
+
     </p>
 {% endtplhandlebars %}

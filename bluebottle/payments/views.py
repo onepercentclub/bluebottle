@@ -1,6 +1,7 @@
-from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView
 from bluebottle.payments.adapters import get_payment_methods
-from bluebottle.payments.models import Payment
+from bluebottle.payments.models import Payment, PaymentMethod
+from bluebottle.payments.serializers import ManagePaymentSerializer
+from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -8,6 +9,7 @@ from rest_framework import status
 
 class PaymentMethodList(APIView):
     #serializer_class = PaymentMethodSerializer
+    # FIXME: Permissions
 
     def get(self, request, *args, **kw):
         # TODO: Determine country based on GET param, user settings or IP.
@@ -20,6 +22,26 @@ class PaymentMethodList(APIView):
         return response
 
 
-class PaymentDetail(RetrieveUpdateDeleteAPIView):
+class PaymentMethodDetail(RetrieveAPIView):
 
+    model = PaymentMethod
+
+    # FIXME: Permissions
+
+
+class ManagePaymentDetail(RetrieveUpdateAPIView):
     model = Payment
+    serializer_class = ManagePaymentSerializer
+    # FIXME: Permissions
+
+    def pre_save(self, obj):
+        obj.amount = obj.order.total
+
+
+class ManagePaymentList(ListCreateAPIView):
+    model = Payment
+    serializer_class = ManagePaymentSerializer
+    # FIXME: Permissions
+
+    def pre_save(self, obj):
+        obj.amount = obj.order.total

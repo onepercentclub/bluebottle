@@ -5,6 +5,9 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.polymorphic_model import PolymorphicModel
+from django.db.models import options
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 
 class PaymentStatuses(DjangoChoices):
@@ -35,8 +38,34 @@ class Payment(models.Model):
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
 
     # Payment method used
-    payment_method_id = models.CharField(max_length=20, default='', blank=True)
-    payment_submethod_id = models.CharField(max_length=20, default='', blank=True)
+    payment_method = models.CharField(max_length=20, default='', blank=True)
+
+    @property
+    def meta_data(self):
+        if len(self.paymentmetadata_set.all()):
+            return self.paymentmetadata_set.all()[0]
+        return None
+
+
+class PaymentMetaDataType(DjangoChoices):
+    """
+    These are types of next actions to take.
+    After the payment is sent to the PSP we have a resolution about what
+    to do next.
+    """
+    # TODO: review this list.
+    redirect = ChoiceItem('redirect', label=_("Redircet"))
+    popup = ChoiceItem('popup', label=_("Popup"))
+    done = ChoiceItem('done', label=_("Done"))
+
+
+class PaymentMetaDataMethod(DjangoChoices):
+    """
+    These are methods to use in the next payment step.
+    """
+    # TODO: review this list.
+    get = ChoiceItem('get', label=_("Get"))
+    post = ChoiceItem('post', label=_("Post"))
 
 
 class PaymentMetaData(PolymorphicModel):
@@ -44,8 +73,14 @@ class PaymentMetaData(PolymorphicModel):
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
 
+    proceed_type = models.CharField(_("Proceed type"), max_length=20,
+                                    choices=PaymentStatuses.choices, default=None, null=True)
+    proceed_method = models.CharField(_("Proceed method"), max_length=20,
+                                      choices=PaymentStatuses.choices, default=None, null=True)
+
     class Meta:
         ordering = ('-created', '-updated')
+        serializer = 'bluebottle.payments.serializers.BasePaymentMetaDataSerializer'
 
 
 class PaymentMethod(models.Model):

@@ -1,17 +1,15 @@
-if (DEBUG) {
-    App.Store.registerAdapter("App.Payment", App.MockAdapter);
-    App.Store.registerAdapter("App.MyPayment", App.MockAdapter);
-}
-
 App.PaymentMethod = DS.Model.extend({
     url: 'payments/payment-methods',
 
     provider: DS.attr('string'),
-    name: DS.attr('string'),
     profile: DS.attr('string'),
 
+    name: DS.attr('string'),
+
     uniqueId: function () {
-        return this.get('provider') + this.get('profile').capitalize();
+        if (this.get('provider')) {
+            return this.get('provider') + this.get('profile').capitalize();
+        }
     }.property('provider', 'profile')
 });
 
@@ -30,6 +28,7 @@ App.MyPayment = App.Payment.extend({
     url: 'payments/my',
 
     payment_method: DS.belongsTo('App.PaymentMethod'),
+
     // Hosted payment page details
     integrationDetails: DS.attr('object'),
     integrationData: DS.attr('object')

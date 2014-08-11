@@ -1,0 +1,58 @@
+// Colors
+$activity-title                        : $type-h3-color !default;
+
+$activity-list-item-background-color   : $gray-lighter !default;
+$activity-list-item-link               : $color-text !default;
+
+$activity-list-item-title-color        : $color-primary !default;
+$activity-list-item-bold-color         : $color-secondary !default;
+
+
+#activity {
+    .activity-title {
+        color: $activity-title;
+        .activity-action {
+            float: right;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+    }
+
+
+
+    ul.activity-list {
+        margin: 1em 0;
+        li.activity-list-item {
+            a {
+                color: $activity-list-item-link;
+            }
+
+            background-color: $activity-list-item-background-color;
+            strong {
+                color: $activity-list-item-bold-color;
+            }
+            h3 {
+                color: $activity-list-item-title-color;
+                margin: 0.2em 0;
+            }
+            .picture {
+                @include grid(10,0,0);
+                img {
+                    width: 100%;
+                }
+            }
+            .synopsis {
+                @include grid(38,0,0);
+                padding: 1em;
+            }
+            .progress {
+                .progress-bar {
+                    @include grid(30,0,1);
+                }
+                .amount {
+                    @include grid(18,0,1);
+                }
+            }
+        }
+    }
+}

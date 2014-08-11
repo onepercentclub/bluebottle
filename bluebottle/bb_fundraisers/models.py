@@ -62,8 +62,8 @@ class BaseFundRaiser(models.Model):
 
         return tweet
 
-    class Meta():
+    class Meta:
         abstract = True
-        default_serializer = 'bluebottle.bb_fundraisers.serializers.FundRaiserSerializer'
-        preview_serializer = 'bluebottle.bb_fundraisers.serializers.FundRaiserPreviewSerializer'
-        manage_serializer = 'bluebottle.bb_fundraisers.serializers.ManageFundRaiserSerializer'
+        default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
+        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserPreviewSerializer'
+        manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'

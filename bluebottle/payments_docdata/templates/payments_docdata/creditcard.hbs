@@ -2,7 +2,6 @@
 
 {% tplhandlebars "docdataCreditcard" %}
     <form>
-        {{!-- {{view.content.provider}} - {{view.content.name}} --}}
         <div class="row">
             <div class="col12">
                 <span>{% blocktrans %}Full name (as on Card){% endblocktrans %}</span>
@@ -34,7 +33,7 @@
                 {{input valueBinding="model.expirationYear" placeholder=view.expirationYear classBinding="errorList.expirationYear.length:error"}}
             </div>
             <div class="col4">
-                {{input valueBinding="model.cvc" placeholder=view.cvc classBinding="errorList.cvc.length:error"}}
+                {{input valueBinding="model.cvcCode" placeholder=view.cvc classBinding="errorList.cvcCode.length:error"}}
             </div>
         </div>
     </form>

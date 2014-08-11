@@ -208,7 +208,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
                 'property': 'cardNumber',
                 'validateProperty': 'creditcardLengthVerifier',
                 'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
-                'priority': 1
+                'priority': 2
             },
             {
                 'property': 'expirationMonth',

@@ -1,11 +1,34 @@
 {% load bb_ember i18n static %}
 
-{% tplhandlebars "adyen/paypal" %}
-    <p>
-        <img src="{% static 'images/adyen/adyen.png' %}" alt="Adyen" height="60px" />
-        <br/>
-        <img src="{% static 'images/adyen/paypal.png' %}" alt="Paypal" height="60px" />
-        <br/>
-        You're about to pay with Paypal through Adyen.
-    </p>
+{% tplhandlebars "adyenPaypal" %}
+    <div class="no-form">
+        {% blocktrans %}
+            <h6>The world's most loved way to pay.</h6>
+        {% endblocktrans%}
+        {% blocktrans %}
+            Paypal is the easy way to pay online without sharing 
+            your credit-/debitcard details.
+        {% endblocktrans%}
+
+        <div class="row several-cards">
+            <div class="col2">
+                <i class="icon-card paypal"></i>
+            </div>
+            <div class="col2">
+                <i class="icon-card visa"></i>
+            </div>
+            <div class="col2">
+                <i class="icon-card mastercard"></i>
+            </div>
+            <div class="col2">
+                <i class="icon-card americanexpress"></i>
+            </div>
+            <div class="col2">
+                <i class="icon-card discover"></i>
+            </div>
+            <div class="col2">
+                <i class="icon-card maestro"></i>
+            </div>
+        </div>
+    </div>
 {% endtplhandlebars %}

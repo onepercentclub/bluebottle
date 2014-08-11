@@ -28,7 +28,7 @@ App.Adapter.map('App.MyDonation', {
 /* Models */
 
 App.Donation = DS.Model.extend({
-    amount: DS.attr('number', {defaultValue: 25 + ',-'}),
+    amount: DS.attr('number'),
     project: DS.belongsTo('App.Project'),
     fundraiser: DS.belongsTo('App.Fundraiser'),
     user: DS.belongsTo('App.UserPreview'),
@@ -37,6 +37,9 @@ App.Donation = DS.Model.extend({
 
 App.ProjectDonation = DS.Model.extend({
     url: 'donations/project',
+
+    project: DS.belongsTo('App.Project'),
+    fundraiser: DS.belongsTo('App.Fundraiser'),
 
     amount: DS.attr('number'),
     created: DS.attr('date'),

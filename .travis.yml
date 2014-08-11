@@ -1,10 +1,12 @@
 language: python
 python:
 - '2.7'
+env:
+- DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
-- pip install nose
-- pip install django==1.5.5
+- pip install -q nose
+- pip install -q django==1.5.5
 before_script:
 - npm install
 script:

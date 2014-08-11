@@ -4,6 +4,7 @@ python:
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install nose
+- pip install django==1.5.5
 before_script:
 - npm install
 script:

@@ -50,6 +50,10 @@ App.PaymentController = Em.ObjectController.extend({
     _processPaymentSelection: function () {
         var paymentMethodController = this.get('currentPaymentMethodController');
 
+        //verify the length of the creditCard
+        paymentMethodController.creditcardLengthVerifier();
+        paymentMethodController.enableValidation()
+
         this.set('payment_method', this.get('currentPaymentMethod'));
 
         // TODO: How we handle the creditcard details will depend on the PSP.
@@ -79,7 +83,8 @@ App.PaymentController = Em.ObjectController.extend({
         var method = this.get('currentPaymentMethod');
         if (!method) return;
 
-        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('payment_method.uniqueId')));
+        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('currentPaymentMethod.uniqueId')));
+
     }.observes('currentPaymentMethod'),
 
     actions: {
@@ -91,6 +96,7 @@ App.PaymentController = Em.ObjectController.extend({
 
             payment.save().then(
                 // Success
+
                 function (payment) {
                     // Reload the order to receive any backend updates to the order status
                     // NOTE: when using the mock api we will need to manually set the order
@@ -136,48 +142,68 @@ App.PaymentController = Em.ObjectController.extend({
 });
 
 App.StandardPaymentMethodController = Em.ObjectController.extend({
+
     getIntegrationData: function() {
         //override me
         return null;
     }
 });
 
-App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
-    fieldsToWatch: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
-    requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
+App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
 
-    creditcardDict: //change
-        [{ 'cardName': 'Visa', 'regex': '^4[0-9]{6,}$', 'image': 'path'},
-        { 'cardName': 'MasterCard', 'regex': '^5[1-5][0-9]{5,}$', 'image': 'path'},
-        { 'cardName': 'AmericanExpress', 'regex': '^3[47][0-9]{5,}$', 'image': 'path'},
-        { 'cardName': 'DinersClub', 'regex': '^3(?:0[0-5]|[68][0-9])[0-9]{4,}$', 'image': 'path'},
-        { 'cardName': 'Discover', 'regex': '^6(?:011|5[0-9]{2})[0-9]{3,}$', 'image': 'path'},
-        { 'cardName': 'JCB', 'regex': '^(?:2131|1800|35[0-9]{3})[0-9]{3,}$', 'image': 'path'}],
+    requiredFields: ['cardNumber'],
 
+    creditcardLengthDict: {
+        'Visa': '/^[0-9]{13,16}$/',
+        'MasterCard': '/^[0-9]{16,19}$/',
+        'AmericanExpress': '/^[0-9]{15}$/',
+        'DinersClub': '/^[0-9]({14}|{16}$/',
+        'Discover': '/^[0-9]{16}/',
+        'JCB': '/^[0-9]{16}/'
+    },
+
+    creditcardRegexDict: {
+        "^4[0-9].*": 'Visa',
+        '^5[1-5].*': 'MasterCard',
+        '^3[47].*': 'AmericanExpress',
+        '^3(?:0[0-5]|[68][0-9]).*': 'DinersClub',
+        '^6(?:011|5[0-9]{2}).*': 'Discover',
+        '^(2131|1800|35\d{3}).*': 'JCB'
+    },
 
     // creditCardValidation
-    creditCardDetector: function(){
+    creditcardBrandDetector: function(){
+        var cardNumber = this.get('cardNumber');
 
-
-    }.property('cardNumber.length'),
-
-    init: function() {
-        this._super();
-        this.set('errorDefinitions', [
-            {
-                'property': 'cardOwner',
-                'validateProperty': 'validCardOwner',
-                'message': gettext('Card Owner can\'t be left empty'),
-                'priority': 2
-            },
-            {
-                'property': 'cardNumber',
-                'validateProperty': 'validCardNumber',
-                'message': gettext('This card number is not valid'),
-                'priority': 1
+        for (var key in this.creditcardRegexDict) {
+            if (cardNumber.search(key) == 0){
+                this.set('creditcard', this.creditcardRegexDict[key]);
             }
-        ]);
-//        this.enableValidation();
-//        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model')));
+        }
+    }.observes('cardNumber.length'),
+
+    creditcardLengthVerifier: function(){
+
+        var creditcard = this.get('creditcard');
+        var lengthRegex = this.creditcardLengthDict[creditcard];
+        var cardNumber = this.get('cardNumber');
+
+        if (cardNumber.search(lengthRegex) != 0){
+            throw new Error('Your '+ creditcard +' doesn\'t have the right number of digit.');
+        }
+    },
+
+    init: function () {
+
+        this._super();
+
+        this.set('errorDefinitions', [
+        {
+            'property': 'cardNumber',
+            'validateProperty': 'validFirstName',
+            'message': gettext('First Name can\'t be left empty'),
+            'priority': 1
+        }]);
     }
+
 });

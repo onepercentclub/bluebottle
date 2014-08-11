@@ -196,14 +196,14 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // otherwise returns the client side validation
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
         if (!this.get('validationEnabled'))
-            return null
+            return null;
 
         // API errors
         if (!ignoreApiErrors && model.get('errors')){
-            return this._apiErrors(model.get('errors'))
+            return this._apiErrors(model.get('errors'));
         }
         // client side validation
-        return this._clientSideErrors(arrayOfDict, model)
+        return this._clientSideErrors(arrayOfDict, model);
     },
 
     // If you are not doing live validation with "fieldsToWatch" then this function can be called
@@ -232,7 +232,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     _validateAndCheck: function() {
         // run the validateErrors and set the errors in validationErrors
         this._validate();
-        return !this.get('validationErrors')
+        return !this.get('validationErrors');
     },
 
     // run the validateErrors and set the errors in validationErrors
@@ -243,13 +243,13 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // set blockingErrors to true if there are fields which aren't fulfilled
     // at runtime observers are attached to this function
     _requiredFieldsChecker: function() {
-        var _this = this
-        _this.set('blockingErrors', false)
+        var _this = this;
+        _this.set('blockingErrors', false);
         _this.get('requiredFields').forEach(function(field){
             if (!_this.get(field)){
-                _this.set('blockingErrors', true)
+                _this.set('blockingErrors', true);
             }
-        })
+        });
     },
 
     // Dynamically assign observerFields to a function f
@@ -259,7 +259,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             // dynamically assign observer fields to _checkErrors function
             // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
             this.get(observerFields).forEach(function(field) {
-                Ember.addObserver(this, field, this, f)
+                Ember.addObserver(this, field, this, f);
             }, this);
         }
     },

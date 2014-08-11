@@ -180,7 +180,7 @@ App.StandardPaymentMethodController = Em.ObjectController.extend({
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
 
-    requiredFields: ['cardNumber'],
+    requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
 
     // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
@@ -197,14 +197,38 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
     init: function () {
 
         this._super();
-
         this.set('errorDefinitions', [
-        {
-            'property': 'cardNumber',
-            'validateProperty': 'creditcardLengthVerifier',
-            'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
-            'priority': 1
-        }]);
+            {
+                'property': 'cardOwner',
+                'validateProperty': 'cardOwner.length',
+                'message': gettext('Card Owner can\'t be left empty'),
+                'priority': 1
+            },
+            {
+                'property': 'cardNumber',
+                'validateProperty': 'creditcardLengthVerifier',
+                'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
+                'priority': 1
+            },
+            {
+                'property': 'expirationMonth',
+                'validateProperty': /^1[0-2]$|^0[1-9]$/,
+                'message': gettext('The expiration month is not valid'),
+                'priority': 3
+            },
+            {
+                'property': 'expirationYear',
+                'validateProperty': /^[1-9]\d{1}$/,
+                'message': gettext('The expiration year is not valid'),
+                'priority': 4
+            },
+            {
+                'property': 'cvcCode',
+                'validateProperty': /^\d{3}$/,
+                'message': gettext('The CVC is not valid'),
+                'priority': 5
+            }
+        ]);
     }
 
 });

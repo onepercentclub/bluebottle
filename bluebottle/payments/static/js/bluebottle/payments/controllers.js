@@ -1,14 +1,11 @@
 App.PaymentController = Em.ObjectController.extend({
     needs: ['application'],
 
-    preFixedProfileId: function() {
-        return 'tab' + this.get('profile');
-    }.property('profile'),
+    errorsFixedBinding: 'paymentMethodController.errorsFixed',
+    validationErrorsBinding: 'paymentMethodController.validationErrors',
+    isBusyBinding: 'paymentMethodController.isBusy',
 
-    preFixedProfileContentId: function() {
-        return 'tab-content' + this.get('profile');
-    }.property('profile'),
-
+    // Override modal willOpen handler to fetch the payment methods
     willOpen: function () {
         var _this = this,
             controller = this.get('controller'),
@@ -47,8 +44,9 @@ App.PaymentController = Em.ObjectController.extend({
         }
     },
 
-    _processPaymentSelection: function () {
-        var paymentMethodController = this.get('currentPaymentMethodController');
+    // Process the data associated with the current payment method
+    _setIntegrationData: function () {
+        var paymentMethodController = this.get('paymentMethodController');
 
         //verify the length of the creditCard
         paymentMethodController.creditcardLengthVerifier();
@@ -79,8 +77,9 @@ App.PaymentController = Em.ObjectController.extend({
         return url;
     },
 
+    // Set the current payment method controller based on selected method
     _setPaymentMethodController: function () {
-        var method = this.get('currentPaymentMethod');
+        var method = this.get('payment_method');
         if (!method) return;
 
         this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('currentPaymentMethod.uniqueId')));
@@ -92,7 +91,20 @@ App.PaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
-            this._processPaymentSelection();
+            // check for validation errors generated in the current payment method controller
+            this.get('paymentMethodController').validateFields();
+
+            // Check client side errors
+            if (this.get('validationErrors')) {
+                this.send('modalError');
+                return false;
+            }
+
+            // Set is loading property until success or error response
+            _this.set('isBusy', true);
+            
+            // Set the integration data coming from the current payment method controller
+            this._setIntegrationData();
 
             payment.save().then(
                 // Success
@@ -112,7 +124,7 @@ App.PaymentController = Em.ObjectController.extend({
                     // FIXME: For testing purposes we will direct the user to the success
                     //        modal for creditcard payments and to the mock service provider
                     //        for all others.
-                    if (this.get('currentPaymentMethod.profile') == 'creditcard') {
+                    if (this.get('payment_method.profile') == 'creditcard') {
                         // Load the success modal
                         // Since all models are already loaded in Ember here, we should just be able
                         // to get the first donation of the order here
@@ -130,10 +142,12 @@ App.PaymentController = Em.ObjectController.extend({
         },
 
         selectedPaymentMethod: function(paymentMethod) {
-            this.set('currentPaymentMethod', paymentMethod);
-            debugger
+            // Set the payment method on the payment model
+            this.set('payment_method', paymentMethod);
+
+            // Render the payment method view
             var applicationRoute = App.__container__.lookup('route:application');
-            applicationRoute.render(this.get('currentPaymentMethod.uniqueId'), {
+            applicationRoute.render(this.get('payment_method').get('uniqueId'), {
                 into: 'payment',
                 outlet: 'paymentMethod'
             });
@@ -141,10 +155,18 @@ App.PaymentController = Em.ObjectController.extend({
     }
 });
 
+/*
+ * Some standard controllers which can be extended for different payment service providers
+ */
+
 App.StandardPaymentMethodController = Em.ObjectController.extend({
 
     getIntegrationData: function() {
         //override me
+        return null;
+    },
+
+    validateFields: function () {
         return null;
     }
 });
@@ -183,7 +205,6 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
     }.observes('cardNumber.length'),
 
     creditcardLengthVerifier: function(){
-
         var creditcard = this.get('creditcard');
         var lengthRegex = this.creditcardLengthDict[creditcard];
         var cardNumber = this.get('cardNumber');
@@ -191,6 +212,16 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
         if (cardNumber.search(lengthRegex) != 0){
             throw new Error('Your '+ creditcard +' doesn\'t have the right number of digit.');
         }
+    },
+    validateFields: function () {
+        // Enable the validation of errors on fields only after pressing the signup button
+        this.enableValidation();
+
+        // Clear the errors fixed message
+        this.set('errorsFixed', false);
+
+        // Ignoring API errors here, we are passing ignoreApiErrors=true
+        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
     },
 
     init: function () {

@@ -21,9 +21,10 @@
         </div>
         <div class="row">
             <div class="col12">
-                <a class="btn btn-sec payment-btn" {{action 'nextStep'}}>Next</a>
+                <a {{action 'nextStep'}} {{bindAttr class=":btn-sec :btn isBusy:is-loading blockingErrors:is-inactive"}}>Next</a>
             </div>
         </div>
+        {{partial "payment_errors"}}
     </div>
     <div class="modal-fullscreen-footer">
         <div class="modal-payment-provider">

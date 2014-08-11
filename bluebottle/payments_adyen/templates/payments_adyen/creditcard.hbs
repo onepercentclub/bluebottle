@@ -2,9 +2,6 @@
 
 {% tplhandlebars "adyen/creditcard" %}
     <p>
-        {{view.content.provider}} - {{view.content.name}}
-        <br />
-
         <label>
             <span>{% blocktrans %}Full name (as on Card){% endblocktrans %}</span>
             {{input valueBinding="model.cardOwner" placeholder=view.cardOwner
@@ -28,8 +25,8 @@
 
         <label>
             <span>CVC</span>
-            {{input valueBinding="model.cvc" placeholder=view.cvc
-                classBinding="errorList.cvc.length:error"}}
+            {{input valueBinding="model.cvcCode" placeholder=view.cvc
+                classBinding="errorList.cvcCode.length:error"}}
         </label>
 
     </p>

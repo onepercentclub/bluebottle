@@ -18,38 +18,55 @@
 
 		li {
 			display: block;
-
-			.payment-tab-content{
-				z-index: 2;
-				display: none; 
-				overflow: hidden;
-				width: 60%;
-				position: absolute;
-				right: 0;
-				top: 0;
-				background: darken(#f2f2f2, 15);
-
-			}
+			margin-right: -25px;
+			@include transition(all 0.2s ease-in-out);
 
 			label {
 				display: block;
 				position: relative;
 				cursor: pointer;
-				@include transition(all 0.2s ease-in-out);
+				height: 46px;
+				padding: 10px 10px 10px 70px;
+				font-size: 15px;
+			}
 
-				&:hover {
-					background: darken(#f2f2f2, 10);
-				}
+			&:hover {
+				background: #F5F4F6;
+			}
+
+			&:before {
+				position: absolute;
+				content: '';
+				width: 35px;
+				height: 35px;
+				margin-left: 20px;
 			}
 			
+			&.creditcard {
+				
+				&:before {
+					background: image-url("icons/icon-creditcard-modal.svg") transparent no-repeat 0 14px;
+				}
+			}
+
+			&.paypal {
+				
+				&:before {
+					background: image-url("icons/icon-paypal-modal.svg") transparent no-repeat 0 14px;
+				}
+			}
+
 			&.is-active {
+				background: #F5F4F6;
 
 				.payment-tab-content {
 					display: block;
+					padding: 15px;
 				}
 
 				label {
 					display: block;
+					font-weight: 800;
 				}
 			}
 		}
@@ -59,8 +76,61 @@
 			top: -9999px;
 			left: -9999px;
 		}
+	}
 
+	.payment-tab-content {
+		position: relative;
+		text-align: left;
+		background: #F5F4F6;
+		border-radius: 0 8px 8px 8px;
+		font-size: 13px;
 
+		form, .no-form {
+			padding: 15px;
+		}
 
+		span {
+			font-size: 15px;
+			font-weight: 800;
+		}
+
+		h6 {
+			font-size: 15px;
+		}
+	}
+
+	.several-cards {
+		margin: 20px 0 15px 0;
+	}
+
+	.icon-card {
+		width: 41.6px;
+		height: 26px;
+		display: block;
+
+		&.paypal {
+			background: image-url("icons/icon-paypal-card.svg") transparent no-repeat 0 0;
+		}
+
+		&.visa {
+			background: image-url("icons/icon-visa-card.svg") transparent no-repeat 0 0;
+		}
+
+		&.mastercard {
+			background: image-url("icons/icon-mastercard-card.svg") transparent no-repeat 0 0;
+		}
+
+		&.americanexpress {
+			background: image-url("icons/icon-americanexpress-card.svg") transparent no-repeat 0 0;
+		}
+
+		&.discover {
+			background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
+		}
+
+		&.maestro {
+			background: image-url("icons/icon-maestro-card.svg") transparent no-repeat 0 0;
+		}
 	}
 }
+

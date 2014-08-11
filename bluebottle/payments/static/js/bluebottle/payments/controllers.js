@@ -125,7 +125,6 @@ App.PaymentController = Em.ObjectController.extend({
 
         selectedPaymentMethod: function(paymentMethod) {
             this.set('currentPaymentMethod', paymentMethod);
-            debugger
             var applicationRoute = App.__container__.lookup('route:application');
             applicationRoute.render(this.get('currentPaymentMethod.uniqueId'), {
                 into: 'payment',

@@ -16,11 +16,38 @@
                 </ul>
             </div>
             <div class="col8">
+                <div class="payment-tab-content">
                 {{outlet 'paymentMethod'}}
+                </div>
             </div>
         </div>
         <div class="row">
             <div class="col12">
+                <div class="modal-future-donation">
+                    <label for="futureDonation" class="modal-checkbox">
+                        <input type="checkbox" id="futureDonation">
+                        <span></span>
+                        {% trans "Remember this for faster future payments."%}
+                    </label>
+                    <div class="tooltip-holder">
+                        <span class="questionmark">?</span>
+                        <span class="modal-btn-signup" href="#">
+                            <div class="tooltip input">
+                                {% blocktrans %}
+                                    <h6>
+                                        What's this?
+                                    </h6>
+                                    We'll remember your payment details
+                                    on our secure server so next time you can support
+                                    with just 1-click!
+                                {% endblocktrans%}
+                            </div>
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-facebook-password">
+                    <input type="text" placeholder="Choose a password">
+                </div>
                 <a class="btn btn-sec payment-btn" {{action 'nextStep'}}>Next</a>
             </div>
         </div>

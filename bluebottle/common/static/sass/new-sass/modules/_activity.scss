@@ -23,6 +23,7 @@ $activity-list-item-bold-color         : $color-secondary !default;
     ul.activity-list {
         margin: 1em 0;
         li.activity-list-item {
+            margin-bottom: 1em;
             a {
                 color: $activity-list-item-link;
             }

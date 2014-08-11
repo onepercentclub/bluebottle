@@ -290,11 +290,11 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     }.property('password.length'),
 
     validFirstName: function() {
-        return this.get('first_name.length')
+        return this.get('first_name.length');
     }.property('first_name.length'),
 
     validLastName: function() {
-        return this.get('last_name.length')
+        return this.get('last_name.length');
     }.property('last_name.length'),
 
     validEmail: Em.computed.match('email', /.+\@.+\..+/i ),

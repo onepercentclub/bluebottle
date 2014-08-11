@@ -46,11 +46,8 @@ App.PaymentController = Em.ObjectController.extend({
 
     // Process the data associated with the current payment method
     _setIntegrationData: function () {
-        var paymentMethodController = this.get('paymentMethodController');
 
-        //verify the length of the creditCard
-        paymentMethodController.creditcardLengthVerifier();
-        paymentMethodController.enableValidation()
+        var paymentMethodController = this.get('currentPaymentMethodController');
 
         this.set('payment_method', this.get('currentPaymentMethod'));
 
@@ -82,9 +79,9 @@ App.PaymentController = Em.ObjectController.extend({
         var method = this.get('payment_method');
         if (!method) return;
 
-        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('currentPaymentMethod.uniqueId')));
+        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('payment_method.uniqueId')));
 
-    }.observes('currentPaymentMethod'),
+    }.observes('payment_method'),
 
     actions: {
         previousStep: function () {
@@ -100,7 +97,9 @@ App.PaymentController = Em.ObjectController.extend({
                 payment = this.get('model');
 
             // check for validation errors generated in the current payment method controller
-            this.get('paymentMethodController').validateFields();
+            var validationErrors = this.get('currentPaymentMethodController').validateFields();
+            this.set('validationErrors', validationErrors[0]);
+            this.set('errorsFixed', validationErrors[1]);
 
             // Check client side errors
             if (this.get('validationErrors')) {
@@ -108,11 +107,11 @@ App.PaymentController = Em.ObjectController.extend({
                 return false;
             }
 
-            // Set is loading property until success or error response
-            _this.set('isBusy', true);
-            
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
+
+            // Set is loading property until success or error response
+            _this.set('isBusy', true);
 
             payment.save().then(
                 // Success
@@ -183,44 +182,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
 
     requiredFields: ['cardNumber'],
 
-    creditcardLengthDict: {
-        'Visa': '/^[0-9]{13,16}$/',
-        'MasterCard': '/^[0-9]{16,19}$/',
-        'AmericanExpress': '/^[0-9]{15}$/',
-        'DinersClub': '/^[0-9]({14}|{16}$/',
-        'Discover': '/^[0-9]{16}/',
-        'JCB': '/^[0-9]{16}/'
-    },
-
-    creditcardRegexDict: {
-        "^4[0-9].*": 'Visa',
-        '^5[1-5].*': 'MasterCard',
-        '^3[47].*': 'AmericanExpress',
-        '^3(?:0[0-5]|[68][0-9]).*': 'DinersClub',
-        '^6(?:011|5[0-9]{2}).*': 'Discover',
-        '^(2131|1800|35\d{3}).*': 'JCB'
-    },
-
-    // creditCardValidation
-    creditcardBrandDetector: function(){
-        var cardNumber = this.get('cardNumber');
-
-        for (var key in this.creditcardRegexDict) {
-            if (cardNumber.search(key) == 0){
-                this.set('creditcard', this.creditcardRegexDict[key]);
-            }
-        }
-    }.observes('cardNumber.length'),
-
-    creditcardLengthVerifier: function(){
-        var creditcard = this.get('creditcard');
-        var lengthRegex = this.creditcardLengthDict[creditcard];
-        var cardNumber = this.get('cardNumber');
-
-        if (cardNumber.search(lengthRegex) != 0){
-            throw new Error('Your '+ creditcard +' doesn\'t have the right number of digit.');
-        }
-    },
+    // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
         // Enable the validation of errors on fields only after pressing the signup button
         this.enableValidation();
@@ -229,7 +191,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
         this.set('errorsFixed', false);
 
         // Ignoring API errors here, we are passing ignoreApiErrors=true
-        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+        return [this.validateErrors(this.get('errorDefinitions'), this.get('model'), true), this.get('errorsFixed')];
     },
 
     init: function () {
@@ -239,8 +201,8 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
         this.set('errorDefinitions', [
         {
             'property': 'cardNumber',
-            'validateProperty': 'validFirstName',
-            'message': gettext('First Name can\'t be left empty'),
+            'validateProperty': 'creditcardLengthVerifier',
+            'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
             'priority': 1
         }]);
     }

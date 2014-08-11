@@ -162,7 +162,6 @@ App.ControllerValidationMixin = Ember.Mixin.create({
                 // match property by a validation property on the model
                 valid = !!model.get(dict.validateProperty);
             }
-
             // evaluate the property, if it's not valid
             if (!valid) {
                 errorList[dict.property] = dict.message;

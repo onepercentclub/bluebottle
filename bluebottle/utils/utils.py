@@ -263,11 +263,20 @@ def get_serializer_class(model_name=None, serializer_type='default'):
     model = get_model_class(model_name)
 
     if serializer_type == 'manage':
-        serializer_name = model.Meta.manage_serializer
+        try:
+            serializer_name = model._meta.manage_serializer
+        except AttributeError:
+            serializer_name = model.Meta.manage_serializer
     elif serializer_type == 'preview':
-        serializer_name = model.Meta.preview_serializer
+        try:
+            serializer_name = model._meta.preview_serializer
+        except AttributeError:
+            serializer_name = model.Meta.preview_serializer
     elif serializer_type == 'default':
-        serializer_name = model.Meta.default_serializer
+        try:
+            serializer_name = model._meta.default_serializer
+        except AttributeError:
+            serializer_name = model.Meta.default_serializer
     else:
         raise ImproperlyConfigured(
             "Unknown serializer type '{0}'".format(serializer_type))

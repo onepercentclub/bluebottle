@@ -34,7 +34,7 @@ class ImageSerializerExt(ImageSerializer):
         return super(ImageSerializerExt, self).field_from_native(data, files, field_name, into)
 
 
-class FundRaiserSerializer(serializers.ModelSerializer):
+class BaseFundRaiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
     owner = UserPreviewSerializer(read_only=True)
@@ -54,10 +54,4 @@ class FundRaiserSerializer(serializers.ModelSerializer):
         model = FUNDRAISER_MODEL
         fields = ('id', 'owner', 'project', 'title', 'description', 'image','created',
                   'video_html', 'video_url', 'amount', 'amount_donated', 'deadline', 'meta_data')
-
-
-class FundRaiserPreviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FUNDRAISER_MODEL
-        fields = ('title', 'id')
 

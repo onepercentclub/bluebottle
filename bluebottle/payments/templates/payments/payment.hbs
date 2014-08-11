@@ -5,7 +5,7 @@
         <span {{action 'chooseAmount'}} class="modal-fullscreen-back"></span>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
         <h4>{% blocktrans %}Select your method of payment{% endblocktrans %}</h4>
-        <big>{% blocktrans %}You're about to support &euro; {{total}},- to '…'. Good job!{% endblocktrans %}</big>
+        <big>{% blocktrans %}You're about to support &euro; {{amount}},- to '{{order.projects.firstObject.title}}'. Good job!{% endblocktrans %}</big>
         
         <div class="row">
             <div class="col4">

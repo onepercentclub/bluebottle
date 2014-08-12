@@ -61,24 +61,32 @@ App.StandardCreditCardPaymentModel = Em.Object.extend({
         '^(2131|1800|35\d{3}).*': 'JCB'
     },
 
-    // creditCardValidation
     creditcardBrandDetector: function () {
 
         var cardNumber = this.get('cardNumber');
         for (var key in this.creditcardRegexDict) {
             if (cardNumber.search(key) == 0){
-                this.set('creditcard', this.creditcardRegexDict[key]);
+                return this.creditcardRegexDict[key];
             }
         }
+        return null;
 
-    }.observes('cardNumber.length'),
+    },
 
-    creditcardLengthVerifier: function () {
+    creditcardLengthVerifier: function (brand) {
 
-        var lengthRegex = this.creditcardLengthDict[this.get('creditcard')];
+        var lengthRegex = this.creditcardLengthDict[brand];
         var cardNumber = this.get('cardNumber');
         return (cardNumber.search(lengthRegex) == 0);
 
-    }.property('cardNumber.length')
+    },
+
+    creditcardVerifier: function () {
+
+        this.set('validCreditcard', false);
+        this.set('creditcardBrand', this.creditcardBrandDetector());
+        this.set('validCreditcard', this.creditcardLengthVerifier(this.get('creditcardBrand')));
+
+    }.observes('cardNumber.length')
 
 });

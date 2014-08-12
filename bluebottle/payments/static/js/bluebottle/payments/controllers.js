@@ -202,13 +202,13 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
                 'property': 'cardOwner',
                 'validateProperty': 'cardOwner.length',
                 'message': gettext('Card Owner can\'t be left empty'),
-                'priority': 1
+                'priority': 2
             },
             {
                 'property': 'cardNumber',
-                'validateProperty': 'creditcardLengthVerifier',
+                'validateProperty': 'validCreditcard',
                 'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
-                'priority': 2
+                'priority': 1
             },
             {
                 'property': 'expirationMonth',

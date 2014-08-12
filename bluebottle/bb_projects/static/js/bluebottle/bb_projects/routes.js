@@ -91,7 +91,7 @@ App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
  * - Manage your project(s)
  */
 
-App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, {
+App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivateMixin, {
     trackEventName: "My Campaigns",
     model: function(params) {
         return App.MyProject.find();
@@ -165,10 +165,10 @@ App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
 
 });
 
-App.MyProjectPitchRoute = App.MyProjectSubRoute.extend({
+App.MyProjectPitchRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
     trackEventName: "Create Campaign - Pitch"
 });
-App.MyProjectStoryRoute = App.MyProjectSubRoute.extend({
+App.MyProjectStoryRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
     trackEventName: "Create Campaign - Story"
 });
 App.MyProjectLocationRoute = App.MyProjectSubRoute.extend({
@@ -182,12 +182,12 @@ App.MyProjectDetailsRoute = App.MyProjectSubRoute.extend({
         controller.set('fields', App.ProjectDetailField.find());
     }
 });
-App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend({
+App.MyProjectSubmitRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
     skipExitSignal: true,
     trackEventName: "Create Campaign - Submit"
 });
 
-App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
+App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
     trackEventName: "Create Campaign - Budget",
     setupController: function(controller, model){
         this._super(controller, model);
@@ -206,7 +206,7 @@ App.MyProjectBudgetRoute = App.MyProjectSubRoute.extend({
 
 });
 
-App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
+App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
     trackEventName: "Create Campaign - Organisation",
     model: function(params) {
         var project = this.modelFor('myProject');
@@ -228,7 +228,7 @@ App.MyProjectOrganisationRoute = App.MyProjectSubRoute.extend({
 
 });
 
-App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
+App.MyProjectBankRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {
     trackEventName: "Create Campaign - Bank",
     model: function(params) {
         var project = this.modelFor('myProject'),
@@ -246,7 +246,7 @@ App.MyProjectBankRoute = App.MyProjectSubRoute.extend({
 
 });
 
-App.MyProjectReviewRoute = App.MyProjectRoute.extend({
+App.MyProjectReviewRoute = App.MyProjectRoute.extend(App.TrackRouteActivateMixin, {
     trackEventName: "Create Campaign - Review"
 });
 

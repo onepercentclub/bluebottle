@@ -80,8 +80,8 @@ App.Project = DS.Model.extend({
         if (this.get('status') == null){
             return 1;
         }
-        return this.get('status').get('sequence');
-    }.property('phaseNum'),
+        return this.get('status.sequence');
+    }.property('status.sequence'),
 
     isStatusPlan: Em.computed.lt('phaseNum', 4),
 

@@ -102,3 +102,11 @@
         }
     }
 }
+
+#fundraiser-new, #fundraiser-edit {
+    .member-avatar img {
+        @include grid(10,0,2);
+        float: left;
+        vertical-align: top;
+    }
+}

@@ -42,6 +42,6 @@ App.FundRaiser = DS.Model.extend({
         if (this.get('image')) {
             return this.get('image.square')
         }
-        return STATIC_URL + 'images/default-avatar.png'
+        return STATIC_URL + 'images/fundraisers/default-picture.png'
     }.property('image')
 });

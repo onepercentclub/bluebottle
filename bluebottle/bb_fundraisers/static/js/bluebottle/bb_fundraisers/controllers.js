@@ -104,8 +104,7 @@ App.FundRaiserSupporterListController = Em.ArrayController.extend({
     supporters: function(){
         //var project_id = this.get('controllers.fundRaiser.project.id')
         var fundraiser_id = this.get('controllers.fundRaiser.id')
-        //return App.ProjectSupporter.find({project: project_id});
-        return App.ProjectSupporter.find({fundraiser: fundraiser_id});
+        return App.ProjectDonation.find({fundraiser: fundraiser_id});
     }.property('controllers.fundRaiser.id')
 
 

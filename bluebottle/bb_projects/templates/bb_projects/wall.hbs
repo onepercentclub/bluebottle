@@ -36,8 +36,15 @@
             </div>
 
 
-			<div class="wallposts-important">
-				<section id="task-list" {{bindAttr class="controllers.project.amount_asked::integrated"}}>
+			<div class="wallposts-important" id="activity">
+
+                {{#if controllers.project.amount_asked}}
+                    <section id="fundraiser-list">
+                        {{render 'projectFundRaiserList'}}
+                    </section>
+                {{/if}}
+
+				<section id="task-list">
 	                {{#if availableTasks}}
 						<div class="task-list-wrapper task-list-open">
 							<h3>{% trans "Open tasks" %}</h3>

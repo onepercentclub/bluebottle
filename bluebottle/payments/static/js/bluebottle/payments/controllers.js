@@ -26,6 +26,12 @@ App.PaymentController = Em.ObjectController.extend({
         );
     },
 
+    _setFirstPaymentMethod: function () {
+        if (this.get('methods.length') && !this.get('payment_method')) {
+            this.set('payment_method', this.get('methods').objectAt(0));
+        }
+    }.observes('methods.length'),
+
     _processPaymentMetadata: function () {
         // This function will handle where to direct the user after they submit the
         // payment selection. It handles the step based on these properties returned
@@ -78,6 +84,13 @@ App.PaymentController = Em.ObjectController.extend({
     _setPaymentMethodController: function () {
         var method = this.get('payment_method');
         if (!method) return;
+
+        // Render the payment method view
+        var applicationRoute = App.__container__.lookup('route:application');
+        applicationRoute.render(this.get('payment_method').get('uniqueId'), {
+            into: 'payment',
+            outlet: 'paymentMethod'
+        });
 
         this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('payment_method.uniqueId')));
 
@@ -151,13 +164,6 @@ App.PaymentController = Em.ObjectController.extend({
         selectedPaymentMethod: function(paymentMethod) {
             // Set the payment method on the payment model
             this.set('payment_method', paymentMethod);
-
-            // Render the payment method view
-            var applicationRoute = App.__container__.lookup('route:application');
-            applicationRoute.render(this.get('payment_method').get('uniqueId'), {
-                into: 'payment',
-                outlet: 'paymentMethod'
-            });
         }
     }
 });

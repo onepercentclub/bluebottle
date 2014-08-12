@@ -4,7 +4,7 @@ App.PaymentMethodView = Em.View.extend({
         return this.get('content.provider') + '/' + this.get('content.profile');
     }.property('content.provider', 'content.profile'),
 
-    currentPaymentMethodBinding: 'controller.currentPaymentMethod',
+    currentPaymentMethodBinding: 'controller.payment_method',
 
     isSelected: function() {
         return (this.get('content.uniqueId') == this.get('currentPaymentMethod.uniqueId'));

@@ -6,7 +6,6 @@ pavlov.specify("Task Controller Test", function() {
 
       beforeEach(function () {
         // App.reset();
-        debugger
         var taskMember = create('taskMember');
         var taskController = App.TaskController.create();
         taskController.set('model', taskMember);

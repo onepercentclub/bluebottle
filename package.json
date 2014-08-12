@@ -55,6 +55,6 @@
   "scripts": {
     "build": "grunt build",
     "test": "grunt karma:unit",
-    "postinstall": "bower install"
+    "postinstall": "grunt bower:install"
   }
 }

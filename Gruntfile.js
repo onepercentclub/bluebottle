@@ -74,6 +74,7 @@ module.exports = function (grunt) {
       },
       cleanup: {
         options: {
+          targetDir: 'static/build/js/components',
           cleanTargetDir: true,
           cleanBowerDir: true,
           install: false,

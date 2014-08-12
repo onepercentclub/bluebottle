@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col12">
                 <span>{% blocktrans %}Card Number{% endblocktrans %}</span>
-                <span {{bindAttr class=":icon-card model.creditcardBrand"}}></span>
+                <span {{bindAttr class=":icon-card :creditcard-detector model.creditcardBrand"}}></span>
                 {{input valueBinding="model.cardNumber" placeholder=view.cardNumber classBinding="errorList.cardNumber.length:error"}}
             </div>
         </div>

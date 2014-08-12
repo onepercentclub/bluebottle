@@ -336,7 +336,19 @@ class SeleniumTestCase(LiveServerTestCase):
         self.assertTrue(self.browser.is_element_present_by_css("#ui-datepicker-div"))
 
         # Click Next to get a date in the future
-        self.browser.find_by_css("[title=Next]").first.click()
+        self.wait_for_element_css('[title=Next]')
+        
+        # store the current month
+        thisMonth = int(self.browser.find_by_css('.ui-datepicker-month option[selected]').value)
+        
+        # Click through to the next month
+        self.browser.find_by_css('[title=Next]').first.click()
+
+        # Wait until the new month loads
+        nextMonth = 1 if thisMonth == 12 else thisMonth+1
+        self.wait_for_element_css('.ui-datepicker-month option[value="{0}"][selected]'.format(nextMonth))
+
+        # Select the 10th day
         self.assertTrue(self.browser.is_text_present("10"))
         self.browser.find_link_by_text("10").first.click()
 

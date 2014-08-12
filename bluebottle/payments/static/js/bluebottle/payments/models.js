@@ -44,21 +44,21 @@ App.StandardCreditCardPaymentModel = Em.Object.extend({
     cvcCode: '',
 
     creditcardLengthDict: {
-        'Visa': '^[0-9]{13,16}$',
-        'MasterCard': '^[0-9]{16,19}$',
-        'AmericanExpress': '^[0-9]{15}$',
-        'DinersClub': '^[0-9]({14}|{16}$',
-        'Discover': '^[0-9]{16}',
-        'JCB': '^[0-9]{16}'
+        'visa': '^[0-9]{13,16}$',
+        'mastercard': '^[0-9]{16,19}$',
+        'americanexpress': '^[0-9]{15}$',
+        'dinersclub': '^[0-9]({14}|{16}$',
+        'discover': '^[0-9]{16}',
+        'jcb': '^[0-9]{16}'
     },
 
     creditcardRegexDict: {
-        '^4[0-9].*': 'Visa',
-        '^5[1-5].*': 'MasterCard',
-        '^3[47].*': 'AmericanExpress',
-        '^3(?:0[0-5]|[68][0-9]).*': 'DinersClub',
-        '^6(?:011|5[0-9]{2}).*': 'Discover',
-        '^(2131|1800|35\d{3}).*': 'JCB'
+        '^4[0-9].*': 'visa',
+        '^5[1-5].*': 'mastercard',
+        '^3[47].*': 'americanexpress',
+        '^3(?:0[0-5]|[68][0-9]).*': 'dinersclub',
+        '^6(?:011|5[0-9]{2}).*': 'discover',
+        '^(2131|1800|35\d{3}).*': 'jcb'
     },
 
     creditcardBrandDetector: function () {

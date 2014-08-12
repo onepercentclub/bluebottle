@@ -5,8 +5,7 @@ env:
 - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
-- pip install -q nose django-templatetag-handlebars BeautifulSoup
-- pip install -q django==1.5.5
+- python setup.py install
 before_script:
 - npm install
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py

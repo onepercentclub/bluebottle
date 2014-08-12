@@ -9,7 +9,7 @@ from django.utils.translation import ugettext
 from django.contrib.auth.models import AbstractBaseUser
 import templatetag_handlebars
 
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 import HTMLParser
 
 PROJECT_ROOT = os.path.dirname(os.path.normpath(os.path.join(__file__, '..', '..')))

@@ -12,7 +12,13 @@ App.PaymentMethod = DS.Model.extend({
     profile: DS.attr('string'),
 
     uniqueId: function () {
-        return this.get('provider') + this.get('profile').capitalize();
+
+        var profile = this.get('profile');
+        if (profile) {
+            profile = profile.capitalize();
+        }
+        return this.get('provider') + profile;
+
     }.property('provider', 'profile')
 });
 
@@ -85,8 +91,28 @@ App.StandardCreditCardPaymentModel = Em.Object.extend({
 
         this.set('validCreditcard', false);
         this.set('creditcardBrand', this.creditcardBrandDetector());
-        this.set('validCreditcard', this.creditcardLengthVerifier(this.get('creditcardBrand')));
+        this.set('validCreditcard', this.creditcardLengthVerifier(this.get('cardNumber').replace(/ /g,'')));
 
-    }.observes('cardNumber.length')
+        this.addWhiteSpacesToCardNumber();
+
+
+    }.observes('cardNumber.length'),
+
+    addWhiteSpacesToCardNumber: function () {
+
+        var cardNumber = this.get('cardNumber');
+        var length = cardNumber.length;
+        if (length == 4 || length == 9 || length == 14 || length == 19) {
+            this.set('cardNumber', cardNumber + ' ');
+//            for (var i=1; i<length+1; i++) {
+//                debugger
+//                if (i%4 == 0){
+//                    spacedCardNumber = cardNumber.substr(0, i) + ' ' + cardNumber.substr(i);
+//                }
+//            }
+//            this.set('cardNumber', spacedCardNumber);
+        }
+
+    }
 
 });

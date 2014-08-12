@@ -49,7 +49,7 @@ App.PaymentController = Em.ObjectController.extend({
 
         var paymentMethodController = this.get('currentPaymentMethodController');
 
-        this.set('payment_method', this.get('currentPaymentMethod'));
+        this.set('payment_method', paymentMethodController.get('model'));
 
         // TODO: How we handle the creditcard details will depend on the PSP.
         if (paymentMethodController) {
@@ -107,6 +107,8 @@ App.PaymentController = Em.ObjectController.extend({
                 return false;
             }
 
+//            this.get('currentPaymentMethodController').normalizeData();
+
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
 
@@ -123,7 +125,6 @@ App.PaymentController = Em.ObjectController.extend({
                     payment.get('order').then(function (order) {
                         order.reload();
                     });
-
                     // Proceed to the next step based on the status of the payment
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
@@ -175,12 +176,22 @@ App.StandardPaymentMethodController = Em.ObjectController.extend({
 
     validateFields: function () {
         return null;
-    }
+    },
+
+//    normalizeData: function () {
+//
+//    }
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
 
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
+
+
+//    normalizeData: function () {
+//
+//        this.set('cardNumber', (this.get('cardNumber').replace(/ /g,'')));
+//    },
 
     // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {

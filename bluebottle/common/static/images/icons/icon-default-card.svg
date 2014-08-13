@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="41px" height="26px" viewBox="0 0 41 26" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.0.4 (8053) - http://www.bohemiancoding.com/sketch -->
+    <title>logo</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Campaign-Detail" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Desktop" sketch:type="MSArtboardGroup" transform="translate(-400.000000, -203.000000)">
+            <g id="Lightbox---Support" sketch:type="MSLayerGroup" transform="translate(-9.000000, -29.000000)">
+                <g id="2" transform="translate(367.000000, 91.000000)" sketch:type="MSShapeGroup">
+                    <g id="Menu" transform="translate(26.000000, 122.000000)">
+                        <g id="Creditcard" transform="translate(16.000000, 17.000000)">
+                            <g id="logo" transform="translate(0.000000, 2.000000)">
+                                <rect id="Rectangle-157" fill="#8A9993" x="0" y="0" width="41" height="26" rx="1"></rect>
+                                <rect id="Rectangle-159" fill="#FFFFFF" x="3.72727273" y="16.7142857" width="14.9090909" height="5.57142857"></rect>
+                                <path d="M5.99025974,19.5 L10.7824675,19.5" id="Line" stroke="#979797" stroke-linecap="square"></path>
+                                <path d="M13.9772727,19.5 L16.3733766,19.5" id="Line-9" stroke="#979797" stroke-linecap="square"></path>
+                                <rect id="Rectangle-158" opacity="0.430970149" fill="#3C3C3C" x="0" y="5.57142857" width="41" height="7.42857143"></rect>
+                                <ellipse id="Oval-47" opacity="0.430970149" fill="#3C3C3C" cx="34.4772727" cy="19.5" rx="2.79545455" ry="2.78571429"></ellipse>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

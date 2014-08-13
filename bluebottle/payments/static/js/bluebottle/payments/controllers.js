@@ -26,6 +26,12 @@ App.PaymentController = Em.ObjectController.extend({
         );
     },
 
+    _setFirstPaymentMethod: function () {
+        if (this.get('methods.length') && !this.get('payment_method')) {
+            this.set('payment_method', this.get('methods').objectAt(0));
+        }
+    }.observes('methods.length'),
+
     _processPaymentMetadata: function () {
         // This function will handle where to direct the user after they submit the
         // payment selection. It handles the step based on these properties returned
@@ -46,8 +52,12 @@ App.PaymentController = Em.ObjectController.extend({
 
     // Process the data associated with the current payment method
     _setIntegrationData: function () {
-        var paymentMethodController = this.get('paymentMethodController');
 
+        var paymentMethodController = this.get('currentPaymentMethodController');
+
+        this.set('payment_method', paymentMethodController.get('model'));
+
+        // TODO: How we handle the creditcard details will depend on the PSP.
         if (paymentMethodController) {
             var integrationData = paymentMethodController.getIntegrationData();
             this.set('integrationData', integrationData);
@@ -75,7 +85,15 @@ App.PaymentController = Em.ObjectController.extend({
         var method = this.get('payment_method');
         if (!method) return;
 
-        this.set('paymentMethodController', this.container.lookup('controller:' + this.get('payment_method').get('uniqueId')));
+        // Render the payment method view
+        var applicationRoute = App.__container__.lookup('route:application');
+        applicationRoute.render(this.get('payment_method').get('uniqueId'), {
+            into: 'payment',
+            outlet: 'paymentMethod'
+        });
+
+        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('payment_method.uniqueId')));
+
     }.observes('payment_method'),
 
     actions: {
@@ -92,7 +110,9 @@ App.PaymentController = Em.ObjectController.extend({
                 payment = this.get('model');
 
             // check for validation errors generated in the current payment method controller
-            this.get('paymentMethodController').validateFields();
+            var validationErrors = this.get('currentPaymentMethodController').validateFields();
+            this.set('validationErrors', validationErrors[0]);
+            this.set('errorsFixed', validationErrors[1]);
 
             // Check client side errors
             if (this.get('validationErrors')) {
@@ -100,14 +120,17 @@ App.PaymentController = Em.ObjectController.extend({
                 return false;
             }
 
-            // Set is loading property until success or error response
-            _this.set('isBusy', true);
-            
+//            this.get('currentPaymentMethodController').normalizeData();
+
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
 
+            // Set is loading property until success or error response
+            _this.set('isBusy', true);
+
             payment.save().then(
                 // Success
+
                 function (payment) {
                     // Reload the order to receive any backend updates to the order status
                     // NOTE: when using the mock api we will need to manually set the order
@@ -115,7 +138,6 @@ App.PaymentController = Em.ObjectController.extend({
                     payment.get('order').then(function (order) {
                         order.reload();
                     });
-
                     // Proceed to the next step based on the status of the payment
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
@@ -143,13 +165,6 @@ App.PaymentController = Em.ObjectController.extend({
         selectedPaymentMethod: function(paymentMethod) {
             // Set the payment method on the payment model
             this.set('payment_method', paymentMethod);
-
-            // Render the payment method view
-            var applicationRoute = App.__container__.lookup('route:application');
-            applicationRoute.render(this.get('payment_method').get('uniqueId'), {
-                into: 'payment',
-                outlet: 'paymentMethod'
-            });
         }
     }
 });
@@ -159,6 +174,7 @@ App.PaymentController = Em.ObjectController.extend({
  */
 
 App.StandardPaymentMethodController = Em.ObjectController.extend({
+
     getIntegrationData: function() {
         //override me
         return null;
@@ -166,27 +182,24 @@ App.StandardPaymentMethodController = Em.ObjectController.extend({
 
     validateFields: function () {
         return null;
-    }
+    },
+
+//    normalizeData: function () {
+//
+//    }
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
+
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
 
-    creditcardDict: //change
-        [{ 'cardName': 'Visa', 'regex': '^4[0-9]{6,}$', 'image': 'path'},
-        { 'cardName': 'MasterCard', 'regex': '^5[1-5][0-9]{5,}$', 'image': 'path'},
-        { 'cardName': 'AmericanExpress', 'regex': '^3[47][0-9]{5,}$', 'image': 'path'},
-        { 'cardName': 'DinersClub', 'regex': '^3(?:0[0-5]|[68][0-9])[0-9]{4,}$', 'image': 'path'},
-        { 'cardName': 'Discover', 'regex': '^6(?:011|5[0-9]{2})[0-9]{3,}$', 'image': 'path'},
-        { 'cardName': 'JCB', 'regex': '^(?:2131|1800|35[0-9]{3})[0-9]{3,}$', 'image': 'path'}],
 
+//    normalizeData: function () {
+//
+//        this.set('cardNumber', (this.get('cardNumber').replace(/ /g,'')));
+//    },
 
-    // creditCardValidation
-    creditCardDetector: function(){
-
-
-    }.property('cardNumber.length'),
-
+    // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
         // Enable the validation of errors on fields only after pressing the signup button
         this.enableValidation();
@@ -195,23 +208,24 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
         this.set('errorsFixed', false);
 
         // Ignoring API errors here, we are passing ignoreApiErrors=true
-        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+        return [this.validateErrors(this.get('errorDefinitions'), this.get('model'), true), this.get('errorsFixed')];
     },
 
-    init: function() {
+    init: function () {
+
         this._super();
         this.set('errorDefinitions', [
             {
                 'property': 'cardOwner',
                 'validateProperty': 'cardOwner.length',
                 'message': gettext('Card Owner can\'t be left empty'),
-                'priority': 1
+                'priority': 2
             },
             {
                 'property': 'cardNumber',
-                'validateProperty': /\d{16}/,
-                'message': gettext('This card number is not valid'),
-                'priority': 2
+                'validateProperty': 'validCreditcard',
+                'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
+                'priority': 1
             },
             {
                 'property': 'expirationMonth',
@@ -233,4 +247,5 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
             }
         ]);
     }
+
 });

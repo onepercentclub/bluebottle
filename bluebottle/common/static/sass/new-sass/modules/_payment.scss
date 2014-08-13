@@ -1,141 +1,187 @@
 #payment {
 
-	// reset ul and li
-	ul {
-		margin: 0;
-		
-		li {
-			padding-left: 0;
-			background: none;
-		}
-	}
+    // reset ul and li
+    ul {
+        margin: 0;
+        
+        li {
+            padding-left: 0;
+            background: none;
+        }
+    }
 
-	.payment-tabs {
-		float: none;
-		list-style: none;
-		position: relative;
-		text-align: left;
+    .payment-tabs {
+        float: none;
+        list-style: none;
+        position: relative;
+        text-align: left;
 
-		li {
-			display: block;
-			margin-right: -25px;
-			@include transition(all 0.2s ease-in-out);
+        li {
+            display: block;
+            margin-right: -25px;
+            @include transition(all 0.2s ease-in-out);
 
-			label {
-				display: block;
-				position: relative;
-				cursor: pointer;
-				height: 46px;
-				padding: 10px 10px 10px 70px;
-				font-size: 15px;
-			}
+            label {
+                display: block;
+                position: relative;
+                cursor: pointer;
+                height: 46px;
+                padding: 10px 10px 10px 70px;
+                font-size: 15px;
+            }
 
-			&:hover {
-				background: #F5F4F6;
-			}
+            &:hover {
+                background: #F5F4F6;
+            }
 
-			&:before {
-				position: absolute;
-				content: '';
-				width: 35px;
-				height: 35px;
-				margin-left: 20px;
-			}
-			
-			&.creditcard {
-				
-				&:before {
-					background: image-url("icons/icon-creditcard-modal.svg") transparent no-repeat 0 14px;
-				}
-			}
+            &:before {
+                position: absolute;
+                content: '';
+                width: 35px;
+                height: 35px;
+                margin-left: 20px;
+            }
+            
+            &.creditcard {
+                
+                &:before {
+                    background: image-url("icons/icon-creditcard-modal.svg") transparent no-repeat 0 14px;
+                }
+            }
 
-			&.paypal {
-				
-				&:before {
-					background: image-url("icons/icon-paypal-modal.svg") transparent no-repeat 0 14px;
-				}
-			}
+            &.paypal {
+                
+                &:before {
+                    background: image-url("icons/icon-paypal-modal.svg") transparent no-repeat 0 14px;
+                }
+            }
 
-			// hide other payment providers for now
-			&.ideal, &.directdebit,  {
-				display: none;
-			}
+            // hide other payment providers for now
+            &.ideal, &.directdebit,  {
+                display: none;
+            }
 
-			&.is-active {
-				background: #F5F4F6;
+            &.is-active {
+                background: #F5F4F6;
 
-				.payment-tab-content {
-					display: block;
-					padding: 15px;
-				}
+                .payment-tab-content {
+                    display: block;
+                    padding: 15px;
+                }
 
-				label {
-					display: block;
-					font-weight: 800;
-				}
-			}
-		}
+                label {
+                    display: block;
+                    font-weight: 800;
+                }
+            }
+        }
 
-		input[type="radio"] {
-			position: absolute;
-			top: -9999px;
-			left: -9999px;
-		}
-	}
+        input[type="radio"] {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+    }
 
-	.payment-tab-content {
-		position: relative;
-		text-align: left;
-		background: #F5F4F6;
-		border-radius: 0 8px 8px 8px;
-		font-size: 13px;
+    .payment-tab-content {
+        position: relative;
+        text-align: left;
+        background: #F5F4F6;
+        border-radius: 0 8px 8px 8px;
+        font-size: 13px;
 
-		form, .no-form {
-			padding: 15px;
-		}
+        form, .no-form {
+            padding: 15px;
+        }
 
-		span {
-			font-size: 15px;
-			font-weight: 800;
-		}
+        span {
+            font-size: 15px;
+            font-weight: 800;
+        }
 
-		h6 {
-			font-size: 15px;
-		}
-	}
+        h6 {
+            font-size: 15px;
+        }
+    }
 
-	.several-cards {
-		margin: 20px 0 15px 0;
-	}
+    .several-cards {
+        margin: 20px 0 15px 0;
+    }
 
-	.icon-card {
-		width: 41.6px;
-		height: 26px;
-		display: block;
+    .icon-card {
+        width: 41.6px;
+        height: 26px;
+        display: block;
 
-		&.paypal {
-			background: image-url("icons/icon-paypal-card.svg") transparent no-repeat 0 0;
-		}
+        &.creditcard-detector {
+            position: absolute;
+            right: 10px;
+            bottom: 14px;
+            background: image-url("icons/icon-default-card.svg") transparent no-repeat 0 0;
+            @include opacity(0);
+            @include transform(translateX(25px));
+            @include transition(all .1s ease-in);
 
-		&.visa {
-			background: image-url("icons/icon-visa-card.svg") transparent no-repeat 0 0;
-		}
+            &.visa {
+                background: image-url("icons/icon-visa-card.svg") transparent no-repeat 0 0;
+                @include opacity(1);
+                @include transform(translateY(0));
+            }
 
-		&.mastercard {
-			background: image-url("icons/icon-mastercard-card.svg") transparent no-repeat 0 0;
-		}
+            &.mastercard {
+                background: image-url("icons/icon-mastercard-card.svg") transparent no-repeat 0 0;
+                @include opacity(1);
+                @include transform(translateY(0));
+            }
 
-		&.americanexpress {
-			background: image-url("icons/icon-americanexpress-card.svg") transparent no-repeat 0 0;
-		}
+            &.americanexpress {
+                background: image-url("icons/icon-americanexpress-card.svg") transparent no-repeat 0 0;
+                @include opacity(1);
+                @include transform(translateY(0));
+            }
 
-		&.discover {
-			background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
-		}
+            &.dinersclub {
+                background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
+                @include opacity(1);
+                @include transform(translateY(0));
+            }
 
-		&.maestro {
-			background: image-url("icons/icon-maestro-card.svg") transparent no-repeat 0 0;
-		}
-	}
+            &.discover {
+                background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
+                @include opacity(1);
+                @include transform(translateY(0));
+            }
+
+            &.jcb {
+                background: image-url("icons/icon-maestro-card.svg") transparent no-repeat 0 0;
+                @include opacity(1);
+                @include transform(translateY(0));
+            }
+        }
+
+        &.paypal {
+            background: image-url("icons/icon-paypal-card.svg") transparent no-repeat 0 0;
+        }
+
+        &.visa {
+            background: image-url("icons/icon-visa-card.svg") transparent no-repeat 0 0;
+        }
+
+        &.mastercard {
+            background: image-url("icons/icon-mastercard-card.svg") transparent no-repeat 0 0;
+        }
+
+        &.americanexpress {
+            background: image-url("icons/icon-americanexpress-card.svg") transparent no-repeat 0 0;
+        }
+
+        &.discover {
+            background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
+        }
+
+        &.maestro {
+            background: image-url("icons/icon-maestro-card.svg") transparent no-repeat 0 0;
+        }
+    }
 }
 

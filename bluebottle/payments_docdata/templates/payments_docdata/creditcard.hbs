@@ -12,6 +12,7 @@
         <div class="row">
             <div class="col12">
                 <span>{% blocktrans %}Card Number{% endblocktrans %}</span>
+                <span {{bindAttr class=":icon-card :creditcard-detector model.creditcardBrand"}}></span>
                 {{input valueBinding="model.cardNumber" placeholder=view.cardNumber classBinding="errorList.cardNumber.length:error"}}
             </div>
         </div>
@@ -27,13 +28,13 @@
 
         <div class="row">
             <div class="col4">
-                {{input valueBinding="model.expirationMonth" placeholder=view.expirationMonth classBinding="errorList.expirationMonth.length:error"}}
+                {{input valueBinding="model.expirationMonth" placeholder=view.expirationMonth classBinding="errorList.expirationMonth.length:error" maxlength=2}}
             </div>
             <div class="col4">
-                {{input valueBinding="model.expirationYear" placeholder=view.expirationYear classBinding="errorList.expirationYear.length:error"}}
+                {{input valueBinding="model.expirationYear" placeholder=view.expirationYear classBinding="errorList.expirationYear.length:error" maxlength=2}}
             </div>
             <div class="col4">
-                {{input valueBinding="model.cvcCode" placeholder=view.cvc classBinding="errorList.cvcCode.length:error"}}
+                {{input valueBinding="model.cvcCode" placeholder=view.cvc classBinding="errorList.cvcCode.length:error" maxlength=3}}
             </div>
         </div>
     </form>

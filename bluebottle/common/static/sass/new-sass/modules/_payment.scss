@@ -102,6 +102,29 @@
         h6 {
             font-size: 15px;
         }
+
+        .creditcard-cvc {
+
+            .tooltip-holder {
+
+                .tooltip {
+                    bottom: 24px;
+                    width: 166%;
+                    margin-left: 10px;
+                    background: none;
+
+                    &:after {
+                        border-top: none;
+                    }
+                }
+
+                .exclamationmark {
+                    top: 5px;
+                    right: 0;
+                }
+            }
+
+        }
     }
 
     .several-cards {

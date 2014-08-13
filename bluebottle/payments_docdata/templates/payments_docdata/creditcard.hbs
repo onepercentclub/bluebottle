@@ -21,8 +21,16 @@
             <div class="col8">
                 <span>{% blocktrans %}Expiration Date {% endblocktrans %}</span>
             </div>
-            <div class="col4">
+            <div class="col4 creditcard-cvc">
                 <span>CVC</span>
+                <div class="tooltip-holder">
+                    <span class="exclamationmark">!</span>
+                    <span class="modal-btn-signup" href="#">
+                        <div class="tooltip">
+                            <div class="cvcPreview"></div>
+                        </div>
+                    </span>
+                </div>
             </div>
         </div>
 

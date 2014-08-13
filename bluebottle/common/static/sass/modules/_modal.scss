@@ -93,18 +93,29 @@ $modal-item-background									   : #F5F4F6;
 		}
 	}
 
-.questionmark {
+.questionmark, .exclamationmark {
 	position: absolute;
 	vertical-align: middle;
 	display: inline-block;
+	cursor: pointer;
+	background-size: 20px;
+	@include hide-text();
+}
+
+.questionmark {
 	top: 30%;
 	right: 10px;
 	width: 21px;
 	height: 20px;
-	cursor: pointer;
 	background: image-url("icons/icon-form-question.svg") transparent no-repeat 0 0;
-	background-size: 20px;
-	@include hide-text();
+}
+
+.exclamationmark {
+	top: 21%;
+	right: 10px;
+	width: 16px;
+	height: 16px;
+	background: image-url("icons/icon-form-exclamation.svg") transparent no-repeat 0 0!important;
 }
 
 	.password {

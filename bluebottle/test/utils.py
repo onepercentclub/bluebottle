@@ -382,7 +382,7 @@ class SeleniumTestCase(LiveServerTestCase):
         self.scroll_to_and_click_by_css('[title=Next]')
 
         # Wait until the new month loads - 0 == January
-        nextMonth = 0 if thisMonth == 11 else thisMonth+1
+        nextMonth = (0 if thisMonth == 11 else thisMonth+1)
         self.assert_css('.ui-datepicker-month option[value="{0}"][selected]'.format(nextMonth))
 
         # Select the 10th day

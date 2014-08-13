@@ -100,7 +100,7 @@ tests_require = [
     'selenium==2.42.1',
     'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
-    'splinter==0.5.4', # Functional testing libraries
+    'splinter==0.6.0', # Functional testing libraries
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'tdaemon==0.1.1',

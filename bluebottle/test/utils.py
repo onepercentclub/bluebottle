@@ -17,6 +17,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
@@ -285,11 +286,11 @@ class SeleniumTestCase(LiveServerTestCase):
 
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
                                      wait_time=10, desired_capabilities=caps)
-
-            cls.browser.driver.implicitly_wait(10)
-            cls.browser.driver.set_page_load_timeout(10)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
+
+        cls.browser.driver.implicitly_wait(10)
+        cls.browser.driver.set_page_load_timeout(10)
 
         super(SeleniumTestCase, cls).setUpClass()
 
@@ -366,8 +367,8 @@ class SeleniumTestCase(LiveServerTestCase):
         return self.browser.is_text_present('2013 Bluebottle', wait_time=10)
 
     def assertDatePicked(self):
-        # Pick a deadline next month
-        self.assertTrue(self.scroll_to_and_click_by_css(".hasDatepicker"))
+        # Focus input to make the date picker popup open
+        self.scroll_to_by_css(".hasDatepicker").send_keys(Keys.NULL)
 
         # Wait for date picker popup
         self.assertTrue(self.browser.is_element_present_by_css("#ui-datepicker-div"))

@@ -124,42 +124,36 @@
 
             &.visa {
                 background: image-url("icons/icon-visa-card.svg") transparent no-repeat 0 0;
-                opacity: 1;
                 @include opacity(1);
                 @include transform(translateY(0));
             }
 
             &.mastercard {
                 background: image-url("icons/icon-mastercard-card.svg") transparent no-repeat 0 0;
-                opacity: 1;
                 @include opacity(1);
                 @include transform(translateY(0));
             }
 
             &.americanexpress {
                 background: image-url("icons/icon-americanexpress-card.svg") transparent no-repeat 0 0;
-                opacity: 1;
                 @include opacity(1);
                 @include transform(translateY(0));
             }
 
             &.dinersclub {
                 background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
-                opacity: 1;
                 @include opacity(1);
                 @include transform(translateY(0));
             }
 
             &.discover {
                 background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
-                opacity: 1;
                 @include opacity(1);
                 @include transform(translateY(0));
             }
 
             &.jcb {
                 background: image-url("icons/icon-maestro-card.svg") transparent no-repeat 0 0;
-                opacity: 1;
                 @include opacity(1);
                 @include transform(translateY(0));
             }

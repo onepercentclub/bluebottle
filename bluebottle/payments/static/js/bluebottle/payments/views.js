@@ -13,6 +13,25 @@ App.PaymentMethodView = Em.View.extend({
 
 });
 
+App.PaymentView = Em.View.extend({
+    layoutName: 'payment',
+
+    currentPaymentMethodBinding: 'controller.payment_method',
+
+    currentPaymentMethodName: function() {
+        return this.get('currentPaymentMethod.name');
+    }.property('currentPaymentMethod.name'),
+
+    currentPaymentMethodProvider: function() {
+        return this.get('currentPaymentMethod.provider');
+    }.property('currentPaymentMethod.provider'),
+
+    currentPaymentMethodURL: function() {
+        return 'http://www.' + this.get('currentPaymentMethod.provider') + '.com';
+    }.property('currentPaymentMethod.provider'),
+
+});
+
 App.CreditcardView = Em.View.extend({
     cardOwner: gettext('Card Holder Name'),
     cardNumber: 'xxxx xxxx xxxx xxxx',

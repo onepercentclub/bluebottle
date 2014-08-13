@@ -32,7 +32,7 @@ class TaskModule(DashboardModule):
 
     def init_with_context(self, context):
         try:
-                qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+            qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
         except:
             qs = []
 

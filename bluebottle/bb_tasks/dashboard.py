@@ -22,6 +22,10 @@ class TaskModule(DashboardModule):
         if order_by is None:
             order_by = '-created'
         self.order_by = order_by
+        self.distinct = False
+
+        if kwargs.get('distinct'):
+            self.distinct = True
 
         if filter_kwargs is None:
             filter_kwargs = {}
@@ -32,7 +36,10 @@ class TaskModule(DashboardModule):
 
     def init_with_context(self, context):
         try:
-            qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
+            if self.distinct:
+                qs = TASK_MODEL.objects.filter(**self.filter_kwargs).distinct().order_by(self.order_by)
+            else:
+                qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
         except:
             qs = []
 
@@ -57,3 +64,23 @@ class RecentTasks(TaskModule):
     """
     title = _('Recently Created Tasks')
     template = 'admin_tools/dashboard/recent_tasks.html'
+
+class RealizedTaskModule(TaskModule):
+    """
+    Custom class to display realized tasks that have taskmembers that are not realized. These are the tasks
+    whereby the owner must still confirm that task members completed the tasks.
+    """
+    def init_with_context(self, context):
+        try:
+            qs = TASK_MODEL.objects.filter(status='realized').exclude(members__status__in=['realized']).distinct().order_by(self.order_by)
+        except:
+            qs = []
+
+        self.children = qs[:self.limit]
+        for c in self.children:
+            c.admin_url = reverse('admin:{0}_{1}_change'.format(
+                TASK_MODEL._meta.app_label, TASK_MODEL._meta.module_name), args=(c.pk,))
+
+        if not len(self.children):
+            self.pre_content = _('No tasks found.')
+        self._initialized = True

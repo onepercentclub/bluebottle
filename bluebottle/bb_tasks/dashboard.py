@@ -22,10 +22,6 @@ class TaskModule(DashboardModule):
         if order_by is None:
             order_by = '-created'
         self.order_by = order_by
-        self.distinct = False
-
-        if kwargs.get('distinct'):
-            self.distinct = True
 
         if filter_kwargs is None:
             filter_kwargs = {}
@@ -36,9 +32,6 @@ class TaskModule(DashboardModule):
 
     def init_with_context(self, context):
         try:
-            if self.distinct:
-                qs = TASK_MODEL.objects.filter(**self.filter_kwargs).distinct().order_by(self.order_by)
-            else:
                 qs = TASK_MODEL.objects.filter(**self.filter_kwargs).order_by(self.order_by)
         except:
             qs = []

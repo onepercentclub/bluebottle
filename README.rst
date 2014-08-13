@@ -41,7 +41,7 @@ The BlueBottle test suite can be run completely using::
 From the root of the application (node/npm required):
 
         npm install
-        grunt (or grunt test:chrome)
+        grunt
 
 This will install some npm & bower packages for dev & testing, and run the tests headless with PhantomJS using Karma. Karma is watching the test/ directory for changes.
 

@@ -166,9 +166,12 @@ INSTALLED_APPS = (
     'bluebottle.slides',
     'bluebottle.redirects',
 
+    'bluebottle.bb_fundraisers',
     'bluebottle.bb_orders',
     'bluebottle.bb_donations',
     'bluebottle.payments',
+    'bluebottle.payments_adyen',
+    'bluebottle.payments_docdata',
 
     #mock
     'bluebottle.payments_mock',

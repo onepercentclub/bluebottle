@@ -11,12 +11,12 @@ pavlov.specify('News Route Tests', function() {
 
         var route;
 
-        before(function() {      
+        beforeEach(function() {      
             Ember.run( function () {
                 route = App.NewsRoute.create();
             });
         });
-        after(function () {
+        afterEach(function () {
             route = undefined;
         });
 

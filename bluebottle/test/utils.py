@@ -324,8 +324,7 @@ class SeleniumTestCase(LiveServerTestCase):
         
         self.visit_path('', lang_code)
 
-        # # Check if the homepage opened, and the dynamically loaded content appeared.
-        # # Remember that
+        # Check if the homepage opened, and the dynamically loaded content appeared.
         return self.browser.is_text_present('2013 Bluebottle', wait_time=10)
 
     def assertDatePicked(self):
@@ -336,20 +335,19 @@ class SeleniumTestCase(LiveServerTestCase):
         self.assertTrue(self.browser.is_element_present_by_css("#ui-datepicker-div"))
 
         # Click Next to get a date in the future
-        self.wait_for_element_css('[title=Next]')
+        self.assert_css('[title=Next]')
         
         # store the current month
         thisMonth = int(self.browser.find_by_css('.ui-datepicker-month option[selected]').value)
         
         # Click through to the next month
-        self.browser.find_by_css('[title=Next]').first.click()
+        self.scroll_to_and_click_by_css('[title=Next]')
 
-        # Wait until the new month loads
-        nextMonth = 1 if thisMonth == 12 else thisMonth+1
-        self.wait_for_element_css('.ui-datepicker-month option[value="{0}"][selected]'.format(nextMonth))
+        # Wait until the new month loads - 0 == January
+        nextMonth = 0 if thisMonth == 11 else thisMonth+1
+        self.assert_css('.ui-datepicker-month option[value="{0}"][selected]'.format(nextMonth))
 
         # Select the 10th day
-        self.assertTrue(self.browser.is_text_present("10"))
         self.browser.find_link_by_text("10").first.click()
 
     def scroll_to_by_css(self, selector):
@@ -378,6 +376,9 @@ class SeleniumTestCase(LiveServerTestCase):
         else:
             return False
             
+    # This function isn't very useful when the element is fading in with JS/CSS.
+    # It is probably better to use the assert_css function below which also takes a timeout but 
+    # will not assert true until the element is fully visible, eg opacity is also 1.
     def wait_for_element_css(self, selector, timeout=10):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:

@@ -319,4 +319,6 @@ HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
 
+# Include the tests models
+INCLUDE_TEST_MODELS = True
 

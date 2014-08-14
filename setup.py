@@ -95,7 +95,7 @@ tests_require = [
     'micawber==0.2.6',
     'mock==1.0.1',
     'nose==1.3.3',
-    'pylint==0.28.0',
+    'pylint==1.1.0',
     'sauceclient==0.1.0',
     'selenium==2.42.1',
     'South==0.8.1', # Functional testing libraries

@@ -105,13 +105,18 @@ TEMPLATE_DIRS = (
 
 MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
+    'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'bluebottle.bb_accounts.middleware.LocaleMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.transaction.TransactionMiddleware',
+    'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
+    'bluebottle.auth.middleware.SlidingJwtTokenMiddleware'
 )
 
 # REST_FRAMEWORK = {
@@ -130,6 +135,7 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=12)
 }
 
+JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 INSTALLED_APPS = (
     'django.contrib.auth',

@@ -42,17 +42,17 @@ class ProjectDonationList(generics.ListAPIView):
                 fundraiser = FUNDRAISER_MODEL.objects.get(pk=fundraiser_id)
                 filter_kwargs['fundraiser'] = fundraiser
             except FUNDRAISER_MODEL.DoesNotExist:
-                raise Http404(_(u"No %(verbose_name)s found matching the query") %
+                raise Http404(u"No %(verbose_name)s found matching the query" %
                               {'verbose_name': FUNDRAISER_MODEL._meta.verbose_name})
         elif project_slug:
             try:
                 project = PROJECT_MODEL.objects.get(slug=project_slug)
                 filter_kwargs['project'] = project
             except PROJECT_MODEL.DoesNotExist:
-                raise Http404(_(u"No %(verbose_name)s found matching the query") %
+                raise Http404(u"No %(verbose_name)s found matching the query" %
                               {'verbose_name': queryset.model._meta.verbose_name})
         else:
-            raise Http404(_(u"No %(verbose_name)s found matching the query") %
+            raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
 
@@ -98,6 +98,4 @@ class ManageDonationList(generics.ListCreateAPIView):
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
-    # FIXME: Add permission for OrderOwner
-
 

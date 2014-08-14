@@ -170,12 +170,6 @@ INSTALLED_APPS = (
     'bluebottle.bb_donations',
     'bluebottle.payments',
 
-    # Basic Bb implementations
-    'bluebottle.fundraisers',
-    'bluebottle.donations',
-    'bluebottle.orders',
-    'bluebottle.test',
-
     # mock
     'bluebottle.payments_mock',
 
@@ -290,22 +284,4 @@ HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
 
-AUTH_USER_MODEL = 'test.TestBaseUser'
-
-PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
-PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
-
-FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.FundRaiser'
-
-TASKS_TASK_MODEL = 'test.TestTask'
-TASKS_SKILL_MODEL = 'test.TestSkill'
-TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
-TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
-
-ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
-ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
-ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
-
-DONATIONS_DONATION_MODEL = 'donations.Donation'
-ORDERS_ORDER_MODEL = 'orders.Order'
 

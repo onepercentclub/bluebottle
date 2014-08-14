@@ -43,7 +43,6 @@ class BaseOrder(models.Model):
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
 
-
 @receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
 def update_order_amount(sender, instance, **kwargs):
     order = instance.order

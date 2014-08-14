@@ -1,7 +1,3 @@
-from bluebottle.bb_donations.models import DonationStatuses
-from bluebottle.bb_orders.models import OrderStatuses
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.geo.models import Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -39,7 +35,7 @@ class TestCreateDonation(OrderApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], OrderStatuses.cart)
+        self.assertEqual(response.data['status'], 'cart')
         self.assertEqual(response.data['total'], 0)
         order_id = response.data['id']
 

@@ -157,14 +157,13 @@ INSTALLED_APPS = (
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
 
-    # Basic Bb implementations
+    # Test Bb implementations
     'bluebottle.test',
 
-    'bluebottle.members',
-    'bluebottle.tasks',
+    # Basic Bb implementations
     'bluebottle.fundraisers',
-    'bluebottle.donations',
-    'bluebottle.orders',
+    'bluebottle.bb_orders',
+    'bluebottle.bb_donations',
 
     # Other Bb apps
     'bluebottle.common',
@@ -176,17 +175,13 @@ INSTALLED_APPS = (
     'bluebottle.quotes',
     'bluebottle.slides',
     'bluebottle.redirects',
-
-    'bluebottle.bb_orders',
-    'bluebottle.bb_donations',
     'bluebottle.payments',
 
 
     # Basic Bb implementations
     'bluebottle.fundraisers',
-    'bluebottle.donations',
     'bluebottle.orders',
-
+    'bluebottle.donations',
 
     # mock
     'bluebottle.payments_mock',
@@ -196,7 +191,7 @@ INSTALLED_APPS = (
     'bluebottle.wallposts',
 
 
-    'bluebottle.test'
+    'bluebottle.test',
 
     # Modules required by BlueBottle
     'fluent_contents',

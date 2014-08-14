@@ -73,6 +73,3 @@ class TestOrganizationDocument(BaseOrganizationDocument):
     Implementation for testing of BaseOrganizationDocument
     """
     pass
-
-
-

@@ -83,6 +83,7 @@ App.PaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
+            payment.set('paymentMethod', this.get('payment_method.uniqueId'));
             // check for validation errors generated in the current payment method controller
             this.get('paymentMethodController').validateFields();
 

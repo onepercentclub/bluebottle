@@ -10,6 +10,8 @@ def get_payment_methods(country=None, amount=None):
     return methods
 
 
+def get_adapter(name=''):
+    return name + 'Payment'
 
 
 class AbstractPaymentAdapter(object):

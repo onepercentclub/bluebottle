@@ -7,6 +7,8 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from djchoices import DjangoChoices, ChoiceItem
 from uuidfield import UUIDField
 from django.db.models import options
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
@@ -41,9 +43,11 @@ class BaseOrder(models.Model):
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
 
-    def full_clean(self, exclude=None):
-        donations = DONATION_MODEL.objects.filter(order=self)
-        if donations:
-            self.total = donations.aggregate(Sum('amount'))
-        else:
-            self.total = 0
+
+@receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
+def update_order_amount(sender, instance, **kwargs):
+    order = instance.order
+    donations = DONATION_MODEL.objects.filter(order=order)
+    total = donations.aggregate(Sum('amount'))['amount__sum']
+    order.total = total
+    order.save()

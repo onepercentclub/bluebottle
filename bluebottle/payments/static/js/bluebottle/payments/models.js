@@ -27,7 +27,7 @@ App.Payment = DS.Model.extend({
 App.MyPayment = App.Payment.extend({
     url: 'payments/my',
 
-    paymentMethod: DS.belongsTo('App.PaymentMethod'),
+    paymentMethod: DS.attr('string'),
 
     // Hosted payment page details
     integrationDetails: DS.attr('object'),

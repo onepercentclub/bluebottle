@@ -24,7 +24,6 @@ class PolymorphicPaymentMetaDataSerializer(serializers.ModelSerializer):
         """
         Because PaymentMetaData is Polymorphic
         """
-        import ipdb;ipdb.set_trace()
         if obj:
             return obj.__class__._meta.serializer
         return None

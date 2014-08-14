@@ -49,7 +49,22 @@ App.ProjectDonation = DS.Model.extend({
 App.MyDonation = App.Donation.extend({
     url: 'donations/my',
 
+    defaultAmount: function () {
+        return 25;
+    }.property(),
+
     order: DS.belongsTo('App.MyOrder'),
-    amount: DS.attr('number', {defaultValue: 25}),
-    validAmount: Em.computed.gte('amount', 5)
+    amount: DS.attr('number'),
+
+    validAmount: function () {
+        var amount = this.get('amount');
+        if (!amount) {
+            //if no amount set the default amount
+            this.set('amount', this.get('defaultAmount'));
+        } else if (amount < 5) {
+            return false;
+        }
+        return true;
+
+    }.property('amount')
 });

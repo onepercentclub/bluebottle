@@ -156,6 +156,17 @@ INSTALLED_APPS = (
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
+
+    # Basic Bb implementations
+    'bluebottle.test',
+
+    'bluebottle.members',
+    'bluebottle.tasks',
+    'bluebottle.fundraisers',
+    'bluebottle.donations',
+    'bluebottle.orders',
+
+    # Other Bb apps
     'bluebottle.common',
     'bluebottle.contact',
     'bluebottle.contentplugins',
@@ -170,12 +181,22 @@ INSTALLED_APPS = (
     'bluebottle.bb_donations',
     'bluebottle.payments',
 
+
+    # Basic Bb implementations
+    'bluebottle.fundraisers',
+    'bluebottle.donations',
+    'bluebottle.orders',
+
+
     # mock
     'bluebottle.payments_mock',
 
     # miss test
     'bluebottle.utils',
     'bluebottle.wallposts',
+
+
+    'bluebottle.test'
 
     # Modules required by BlueBottle
     'fluent_contents',
@@ -236,13 +257,26 @@ LOGGING = {
 }
 
 
-# BlueBottle generic models. Override this in your settings if you need to
-# extend any of those models when you are extending BlueBottle for your own
-# purposes.
-# AUTH_USER_MODEL = 'bb_accounts.BlueBottleUser'
-# ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-# PROJECTS_PROJECT_MODEL = 'projects.Project'
-# TASKS_TASK_MODEL = 'tasks.Task'
+# Define the models to use for testing
+AUTH_USER_MODEL = 'test.TestBaseUser'
+
+PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
+PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
+
+FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.FundRaiser'
+
+TASKS_TASK_MODEL = 'test.TestTask'
+TASKS_SKILL_MODEL = 'test.TestSkill'
+TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
+TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
+
+ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
+ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
+ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
+
+DONATIONS_DONATION_MODEL = 'donations.Donation'
+ORDERS_ORDER_MODEL = 'orders.Order'
+
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

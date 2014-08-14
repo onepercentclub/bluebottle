@@ -22,7 +22,7 @@ pylint==0.28.0
 selenium==2.39.0
 South==0.8.1
 sorl-thumbnail==11.12
-splinter==0.5.4
+splinter==0.6.0
 django-tools==0.25.0
 django-loginas==0.1.3
 

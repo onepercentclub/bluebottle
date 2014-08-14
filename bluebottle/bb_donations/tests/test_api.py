@@ -13,7 +13,7 @@ class OrderApiTestCase(InitProjectDataMixin, TestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        CountryFactory.create(alpha2_code='NL')
+        self.country = CountryFactory.create(alpha2_code='NL')
 
         self.init_projects()
         self.project = ProjectFactory.create(amount_asked=5000)

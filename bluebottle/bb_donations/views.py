@@ -74,8 +74,8 @@ class ManageDonationList(generics.ListCreateAPIView):
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
     # FIXME: Add permission for OrderOwner
 
-    def get_queryset(self, queryset=None):
-        queryset = super(ManageDonationList, self).get_queryset(queryset)
+    def get_queryset(self):
+        queryset = super(ManageDonationList, self).get_queryset()
 
         filter_kwargs = {}
 

@@ -91,7 +91,6 @@ App.SocialShareView = Em.View.extend({
         shareOnTwitter: function() {
             var meta_data = this.get('context.meta_data'),
                 // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
-                status = meta_data.tweet.replace('{URL}', currentLink),
                 tracker = this.get('controller.tracker'),
                 controller = this.get('controller');
                 
@@ -100,6 +99,8 @@ App.SocialShareView = Em.View.extend({
             } else {
                 var currentLink = encodeURIComponent(location.href);
             }
+
+            var status = meta_data.tweet.replace('{URL}', currentLink);
 
             if (tracker) {
                 tracker.trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });

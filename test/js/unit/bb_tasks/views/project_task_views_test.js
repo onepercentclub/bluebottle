@@ -11,7 +11,7 @@ pavlov.specify('Project Task Edit View Tests', function() {
 
         var view;
 
-        before(function () {
+        beforeEach(function () {
             Ember.run( function () {
                 view = App.TaskEditView.create();
             });
@@ -49,7 +49,7 @@ pavlov.specify('Project Task New View Tests', function() {
 
         var view;
 
-        before(function () {
+        beforeEach(function () {
             Ember.run( function () {
                 view = App.TaskNewView.create();
             });

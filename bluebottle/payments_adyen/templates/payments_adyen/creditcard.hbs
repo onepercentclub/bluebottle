@@ -1,33 +1,41 @@
 {% load bb_ember i18n static %}
 
 {% tplhandlebars "adyenCreditcard" %}
-    <p>
-        <label>
-            <span>{% blocktrans %}Full name (as on Card){% endblocktrans %}</span>
-            {{input valueBinding="model.cardOwner" placeholder=view.cardOwner
-                classBinding="errorList.cardOwner.length:error"}}
-        </label>
+    <form>
+        {{!-- {{view.content.provider}} - {{view.content.name}} --}}
+        <div class="row">
+            <div class="col12">
+                <span>{% blocktrans %}Full name (as on Card){% endblocktrans %}</span>
+                {{input valueBinding="model.cardOwner" placeholder=view.cardOwner classBinding="errorList.cardOwner.length:error"}}
+            </div>
+        </div>
 
-        <label>
-            <span>{% blocktrans %}Card Number{% endblocktrans %}</span>
-            {{input valueBinding="model.cardNumber" placeholder=view.cardNumber
-                classBinding="errorList.cardNumber.length:error"}}
-            </label>
+        <div class="row">
+            <div class="col12">
+                <span>{% blocktrans %}Card Number{% endblocktrans %}</span>
+                {{input valueBinding="model.cardNumber" placeholder=view.cardNumber classBinding="errorList.cardNumber.length:error"}}
+            </div>
+        </div>
 
-        <label>
-            <span>{% blocktrans %}Expiration Date {% endblocktrans %}</span>
-            {{input valueBinding="model.expirationMonth" placeholder=view.expirationMonth
-                classBinding="errorList.expirationMonth.length:error"}}
-        </label>
-        <span> / </span>
-        {{input valueBinding="model.expirationYear" placeholder=view.expirationYear
-                classBinding="errorList.expirationYear.length:error"}}
+        <div class="row">
+            <div class="col8">
+                <span>{% blocktrans %}Expiration Date {% endblocktrans %}</span>
+            </div>
+            <div class="col4">
+                <span>CVC</span>
+            </div>
+        </div>
 
-        <label>
-            <span>CVC</span>
-            {{input valueBinding="model.cvcCode" placeholder=view.cvc
-                classBinding="errorList.cvcCode.length:error"}}
-        </label>
-
-    </p>
+        <div class="row">
+            <div class="col4">
+                {{input valueBinding="model.expirationMonth" placeholder=view.expirationMonth classBinding="errorList.expirationMonth.length:error"}}
+            </div>
+            <div class="col4">
+                {{input valueBinding="model.expirationYear" placeholder=view.expirationYear classBinding="errorList.expirationYear.length:error"}}
+            </div>
+            <div class="col4">
+                {{input valueBinding="model.cvcCode" placeholder=view.cvc classBinding="errorList.cvcCode.length:error"}}
+            </div>
+        </div>
+    </form>
 {% endtplhandlebars %}

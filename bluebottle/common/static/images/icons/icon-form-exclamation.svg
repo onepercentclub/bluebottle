@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.0.4 (8053) - http://www.bohemiancoding.com/sketch -->
+    <title>Imported Layers</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Campaign-Detail" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Desktop" sketch:type="MSArtboardGroup" transform="translate(-853.000000, -396.000000)" fill="#9F9F9F">
+            <g id="Lightbox---Support" sketch:type="MSLayerGroup" transform="translate(-380.000000, -11.000000)">
+                <g id="2" transform="translate(688.000000, 101.000000)" sketch:type="MSShapeGroup">
+                    <g id="Payment---Creditcard" transform="translate(176.000000, 122.000000)">
+                        <g id="Form">
+                            <g id="Rectangle-68-+-Frans-Twisk-3" transform="translate(20.000000, 182.000000)">
+                                <path d="M357,2 C352.582,2 349,5.582 349,10 C349,14.418 352.582,18 357,18 C361.418,18 365,14.418 365,10 C365,5.582 361.418,2 357,2 L357,2 Z M358,14.5 C358,14.776 357.776,15 357.5,15 L356.5,15 C356.224,15 356,14.776 356,14.5 L356,8.5 C356,8.224 356.224,8 356.5,8 L357.5,8 C357.776,8 358,8.224 358,8.5 L358,14.5 L358,14.5 Z M358,6.5 C358,6.776 357.776,7 357.5,7 L356.5,7 C356.224,7 356,6.776 356,6.5 L356,5.5 C356,5.224 356.224,5 356.5,5 L357.5,5 C357.776,5 358,5.224 358,5.5 L358,6.5 L358,6.5 Z" id="Imported-Layers"></path>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

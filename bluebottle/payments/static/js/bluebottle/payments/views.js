@@ -4,12 +4,31 @@ App.PaymentMethodView = Em.View.extend({
         return this.get('content.provider') + '/' + this.get('content.profile');
     }.property('content.provider', 'content.profile'),
 
-    currentPaymentMethodBinding: 'controller.currentPaymentMethod',
+    currentPaymentMethodBinding: 'controller.payment_method',
 
     isSelected: function() {
         return (this.get('content.uniqueId') == this.get('currentPaymentMethod.uniqueId'));
     }.property('content.uniqueId', 'currentPaymentMethod.uniqueId')
 
+
+});
+
+App.PaymentView = Em.View.extend({
+    layoutName: 'payment',
+
+    currentPaymentMethodBinding: 'controller.payment_method',
+
+    currentPaymentMethodName: function() {
+        return this.get('currentPaymentMethod.name');
+    }.property('currentPaymentMethod.name'),
+
+    currentPaymentMethodProvider: function() {
+        return this.get('currentPaymentMethod.provider');
+    }.property('currentPaymentMethod.provider'),
+
+    currentPaymentMethodURL: function() {
+        return 'http://www.' + this.get('currentPaymentMethod.provider') + '.com';
+    }.property('currentPaymentMethod.provider'),
 
 });
 

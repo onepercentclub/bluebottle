@@ -2,13 +2,13 @@ pavlov.specify("Task Member Controller Test", function() {
 
     describe("Task Member Controller", function () {
 
-        // before(function () {
+        // beforeEach(function () {
         //     Ember.run( function () {
         //         App.advanceReadiness();
         //     });
         // });
 
-        // after(function () {
+        // afterEach(function () {
         //     Ember.run( function () {
         //         App.reset();
         //     });

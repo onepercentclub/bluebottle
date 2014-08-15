@@ -3,7 +3,7 @@ $font-family-body					   					   : 'Neue Helvetica W01';
 $gray-border                                               : #D8D8D8;
 $gray-border-hover                                         : #9F9F9F;
 $modal-background-color									   : rgba(#8A9993, .65);
-
+$modal-item-background									   : #F5F4F6;
 
 .modal-fullscreen-background {
 	position: fixed;
@@ -93,18 +93,29 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		}
 	}
 
-.questionmark {
+.questionmark, .exclamationmark {
 	position: absolute;
 	vertical-align: middle;
 	display: inline-block;
+	cursor: pointer;
+	background-size: 20px;
+	@include hide-text();
+}
+
+.questionmark {
 	top: 30%;
 	right: 10px;
 	width: 21px;
 	height: 20px;
-	cursor: pointer;
 	background: image-url("icons/icon-form-question.svg") transparent no-repeat 0 0;
-	background-size: 20px;
-	@include hide-text();
+}
+
+.exclamationmark {
+	top: 21%;
+	right: 10px;
+	width: 16px;
+	height: 16px;
+	background: image-url("icons/icon-form-exclamation.svg") transparent no-repeat 0 0!important;
 }
 
 	.password {
@@ -166,7 +177,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	@include opacity(0);
 	
 	.modal-fullscreen-item {
-		background-color: #F5F4F6;
+		background-color: $modal-item-background;
 		border-radius: 8px;
 		font-family: $font-family-body;
 		padding: 5px;
@@ -281,12 +292,17 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 			.donate-btn, .payment-btn {
 				font-size: 18px;
-				width: 193px;
+				width: 300px;
+			}
+
+			.donate-btn {
 				margin: 30px auto;
 			}
 
 			.payment-btn {
-				width: 245px;
+				margin: auto;
+				margin-top: 30px;
+				margin-bottom: 30px;
 			}
 		}
 
@@ -388,6 +404,21 @@ $modal-background-color									   : rgba(#8A9993, .65);
 					text-decoration: underline;
 				}
 			}
+		}
+
+		.modal-future-donation {
+			position: relative;
+			margin: auto;
+			padding-top: 30px;
+			width: 83%;
+			display: none;
+		}
+
+		.modal-facebook-password {
+			width: 300px;
+			margin: auto;
+			margin-top: 10px;
+			display: none;
 		}
 	}
 
@@ -505,7 +536,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	}
 
 	&.donation {
-		width: 500px;
+		width: 600px;
 	}
 	
 	// TODO: Remove old modal padding

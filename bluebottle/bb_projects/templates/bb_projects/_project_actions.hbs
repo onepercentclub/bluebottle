@@ -5,27 +5,27 @@
     <div class="l-section detail" id="project-members">
         <section class="l-wrapper">
 
-		    <ul class="member-list">
-		        <li class="member-initiator">
-		            <ul>
-		                <li>
-		                    <a {{action 'openInBigBox' 'userModal' owner }} class="member">
-		                        <figure class="member-avatar"><img {{bindAttr src="owner.getAvatar"}} /></figure>
-		                        <h4>{% trans "Initiator" %}</h4>
-		                        <strong class="member-name">{{owner.full_name}}</strong>
-		                    </a>
-		                </li>
-		            </ul>
-		        </li>
-			</ul>
-			{{#if deadline}}
-				<div class="project-deadline">
-					<span class="flaticon solid stopwatch-1"></span>
-					<span class="text">
-						{{daysToGoText daysToGo}}
-					</span>
-				</div>
-			{{/if}}
+            <ul class="member-list">
+                <li class="member-initiator">
+                    <ul>
+                        <li>
+                            <a {{action 'openInBigBox' 'userModal' owner }} class="member">
+                                <figure class="member-avatar"><img {{bindAttr src="owner.getAvatar"}} /></figure>
+                                <h4>{% trans "Initiator" %}</h4>
+                                <strong class="member-name">{{owner.full_name}}</strong>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            {{#if deadline}}
+                <div class="project-deadline">
+                    <span class="flaticon solid stopwatch-1"></span>
+                    <span class="text">
+                        {{daysToGoText daysToGo}}
+                    </span>
+                </div>
+            {{/if}}
 
 
             {{#unless controllers.projectIndex.tasks.length}}
@@ -38,6 +38,6 @@
                     </div>
                 {{/if}}
             {{/unless}}
-		</section>
+        </section>
     </div>
 {% endtplhandlebars %}

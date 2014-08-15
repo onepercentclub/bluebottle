@@ -9,7 +9,6 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 COMPRESS_ENABLED = False
 
-
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -164,14 +163,17 @@ INSTALLED_APPS = (
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
+    'bluebottle.bb_fundraisers',
+    'bluebottle.bb_orders',
+    'bluebottle.bb_donations',
 
     # Test Bb implementations
     'bluebottle.test',
 
     # Basic Bb implementations
     'bluebottle.fundraisers',
-    'bluebottle.bb_orders',
-    'bluebottle.bb_donations',
+    'bluebottle.orders',
+    'bluebottle.donations',
 
     # Other Bb apps
     'bluebottle.common',
@@ -183,7 +185,10 @@ INSTALLED_APPS = (
     'bluebottle.quotes',
     'bluebottle.slides',
     'bluebottle.redirects',
+
     'bluebottle.payments',
+    'bluebottle.payments_adyen',
+    'bluebottle.payments_docdata',
 
 
     # Basic Bb implementations
@@ -320,7 +325,3 @@ ACCOUNT_ACTIVATION_DAYS = 7
 HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
-
-# Include the tests models
-INCLUDE_TEST_MODELS = True
-

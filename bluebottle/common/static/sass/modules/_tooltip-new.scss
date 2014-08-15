@@ -56,20 +56,42 @@
 			opacity: 1;
 			pointer-events: auto;
 			@include animation(fadeInUp .25s ease-out);
+
+			&:after {
+                border-top: none;
+            }
+
+            .cvcPreview {
+                width: 191px;
+                height: 113px;
+                margin: 0 0 -23px -53px;
+                background: image-url("illustration/illustration-creditcard-cvc.svg") transparent no-repeat 0 0;
+            }
 		}
 
-		.questionmark {
+		.questionmark, .exclamationmark {
 			position: absolute;
 			vertical-align: middle;
 			display: inline-block;
+			cursor: pointer;
+			background-size: 20px;
+			@include hide-text();
+		}
+
+		.questionmark {
 			top: 30%;
 			right: 10px;
 			width: 21px;
 			height: 20px;
-			cursor: pointer;
-			background: image-url("img/icons/icon-form-question_hover.svg") transparent no-repeat 0 0!important;
-			background-size: 20px;
-			@include hide-text();
+			background: image-url("icons/icon-form-question_hover.svg") transparent no-repeat 0 0!important;
+		}
+
+		.exclamationmark {
+			top: 21%;
+			right: 10px;
+			width: 16px;
+			height: 16px;
+			background: image-url("icons/icon-form-exclamation.svg") transparent no-repeat 0 0!important;
 		}
 	}
 
@@ -78,6 +100,17 @@
 			opacity: 1;
 			pointer-events: auto;
 			@include animation(fadeInUp .25s ease-out);
+
+			&:after {
+                border-top: none;
+            }
+
+            .cvcPreview {
+                width: 191px;
+                height: 113px;
+                margin: 0 0 -23px -53px;
+                background: image-url("illustration/illustration-creditcard-cvc.svg") transparent no-repeat 0 0;
+            }
 		}
 
 		.questionmark {
@@ -89,7 +122,7 @@
 			width: 21px;
 			height: 20px;
 			cursor: pointer;
-			background: image-url("img/icons/icon-form-question_hover.svg") transparent no-repeat 0 0!important;
+			background: image-url("icons/icon-form-question_hover.svg") transparent no-repeat 0 0!important;
 			background-size: 20px;
 			@include hide-text();
 		}

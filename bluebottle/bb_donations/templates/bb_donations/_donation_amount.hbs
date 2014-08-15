@@ -9,7 +9,7 @@
 		<div class="row donation-amount">
 			<div class="col4 input">
 				<form>
-                    {{input valueBinding="amount" classBinding=":donation-input errorList.amount.length:error"}}
+                    {{input valueBinding="amount" classBinding=":donation-input errorList.amount.length:error" placeholder=defaultAmount}}
 				</form>
 			</div>
 			<div class="col8">
@@ -22,7 +22,7 @@
 		</div>
 		<div class="row">
 			<div class="col12">
-                <a {{ action 'nextStep' }} {{bindAttr class=":btn btn-sec donate-btn blockingErrors:is-inactive"}} name="login">{% trans "Donate now" %}</a>
+                <a {{ action 'nextStep' }} {{bindAttr class=":btn :btn-sec :donate-btn blockingErrors:is-inactive"}} name="login">{% trans "Donate now" %}</a>
 			</div>
 		</div>
         {{ partial "_donation_errors" }}

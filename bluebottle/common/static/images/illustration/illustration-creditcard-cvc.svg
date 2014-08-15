@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="191px" height="113px" viewBox="0 0 191 113" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.0.4 (8053) - http://www.bohemiancoding.com/sketch -->
+    <title>Credicard</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="filter-1">
+            <feMorphology radius="1" in="SourceAlpha" operator="dilate" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.126692708 0" in="shadowBlurOuter1" type="matrix" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <circle id="path-2" cx="38.5" cy="38.5" r="38.5"></circle>
+    </defs>
+    <g id="Campaign-Detail" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Desktop" sketch:type="MSArtboardGroup" transform="translate(-734.000000, -280.000000)">
+            <g id="Lightbox---Support" sketch:type="MSLayerGroup" transform="translate(-380.000000, -11.000000)">
+                <g id="2" transform="translate(688.000000, 101.000000)">
+                    <g id="Payment---Creditcard" transform="translate(176.000000, 122.000000)">
+                        <g id="Credicard" transform="translate(251.000000, 75.000000)">
+                            <path d="M119.221825,97 L8.00405762,97 C3.58664136,97 0,93.4186157 0,89.0007542 L0,8.9992458 C0,4.5881049 3.58353866,1 8.00405762,1 L159.995942,1 C164.413359,1 168,4.58138434 168,8.9992458 L168,89.0007542 C168,93.4118951 164.416461,97 159.995942,97 L133.778175,97 L126.5,104.278175 L119.221825,97 Z" id="Rectangle-157" stroke="#949494" fill="#D8D8D8" sketch:type="MSShapeGroup"></path>
+                            <rect id="Rectangle-159" fill="#FFFFFF" sketch:type="MSShapeGroup" x="13.7272727" y="52.7142857" width="111.272727" height="19.6000004" rx="2"></rect>
+                            <text id="XXXX-XXXX-XXXX-XXXX-2" sketch:type="MSTextLayer" font-family="Helvetica Neue" font-size="9" font-weight="normal" fill="#9F9F9F">
+                                <tspan x="19" y="65.7142857">XXXX XXXX XXXX XXXX</tspan>
+                            </text>
+                            <rect id="Rectangle-158" opacity="0.430970149" fill="#3C3C3C" sketch:type="MSShapeGroup" x="0" y="11.5714286" width="168" height="27.4285714"></rect>
+                            <ellipse id="Oval-47" opacity="0.430970149" fill="#3C3C3C" sketch:type="MSShapeGroup" cx="144.977273" cy="63" rx="10.2954545" ry="10.2857143"></ellipse>
+                            <g id="Oval-53" transform="translate(106.000000, 0.000000)">
+                                <mask id="mask-3" sketch:name="Oval 53" fill="white">
+                                    <use xlink:href="#path-2"></use>
+                                </mask>
+                                <use stroke="#FFFFFF" stroke-width="4" fill="#D8D8D8" filter="url(#filter-1)" sketch:type="MSShapeGroup" xlink:href="#path-2"></use>
+                                <rect id="Rectangle-159" opacity="0.430970149" fill="#3C3C3C" sketch:type="MSShapeGroup" mask="url(#mask-3)" x="7.7" y="-6.6" width="62.7" height="18.0714286"></rect>
+                            </g>
+                            <rect id="Rectangle-160" fill="#FFFFFF" sketch:type="MSShapeGroup" x="106" y="24.1823289" width="69.3" height="31.9" rx="4"></rect>
+                            <text id="123" sketch:type="MSTextLayer" font-family="Helvetica Neue" font-size="25.6551724" font-weight="normal" fill="#3C3C3C">
+                                <tspan x="122.6" y="49.2">123</tspan>
+                            </text>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

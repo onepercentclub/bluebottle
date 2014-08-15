@@ -68,7 +68,6 @@ App.SocialShareView = Em.View.extend({
 
     actions: {
         shareOnFacebook: function() {
-            debugger
             // context is the model object defined in the associated controller/route
             var meta_data = this.get('context.meta_data'),
                 tracker = this.get('controller.tracker'),

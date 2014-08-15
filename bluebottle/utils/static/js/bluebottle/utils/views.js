@@ -70,7 +70,8 @@ App.SocialShareView = Em.View.extend({
         shareOnFacebook: function() {
             // context is the model object defined in the associated controller/route
             var meta_data = this.get('context.meta_data'),
-                tracker = this.get('controller.tracker');
+                tracker = this.get('controller.tracker'),
+                controller = this.get('controller');
             
             if(meta_data && meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);
@@ -91,7 +92,8 @@ App.SocialShareView = Em.View.extend({
             var meta_data = this.get('context.meta_data'),
                 // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
                 status = meta_data.tweet.replace('{URL}', currentLink),
-                tracker = this.get('controller.tracker');
+                tracker = this.get('controller.tracker'),
+                controller = this.get('controller');
                 
             if(meta_data.url){
                 var currentLink = encodeURIComponent(meta_data.url);

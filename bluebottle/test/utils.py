@@ -286,11 +286,11 @@ class SeleniumTestCase(LiveServerTestCase):
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
                                      wait_time=10, desired_capabilities=caps)
 
-            cls.browser.driver.implicitly_wait(10)
-            cls.browser.driver.set_page_load_timeout(10)
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
 
+        cls.browser.driver.implicitly_wait(10)
+        cls.browser.driver.set_page_load_timeout(10)
         super(SeleniumTestCase, cls).setUpClass()
 
     @classmethod

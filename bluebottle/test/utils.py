@@ -3,6 +3,9 @@ import time
 import urlparse
 import os
 import sys
+import json
+import requests
+import base64
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -437,3 +440,36 @@ class SeleniumTestCase(LiveServerTestCase):
 
     def assert_text(self, text, wait_time=10):
         return self.assertTrue(self.browser.is_text_present(text, wait_time=wait_time) )
+
+    def upload_screenshot(self):
+        client_id = os.environ.get('IMGUR_CLIENT_ID')
+        client_key = os.environ.get('IMGUR_CLIENT_SECRET')
+
+        if client_id and client_key:
+            client_auth = 'Client-ID {0}'.format(client_id)
+            headers = {'Authorization': client_auth}
+            url = 'https://api.imgur.com/3/upload.json'
+            filename = '/tmp/screenshot.png'
+
+            print 'Attempting to save screenshot...'
+            self.browser.driver.save_screenshot(filename)
+
+            response = requests.post(
+                url,
+                headers = headers,
+                data = {
+                    'key': client_key,
+                    'image': base64.b64encode(open(filename, 'rb').read()),
+                    'type': 'base64',
+                    'name': filename,
+                    'title': 'Travis Screenshot'
+                }
+            )
+
+            print 'Uploaded screenshot:'
+            data = json.loads(response.content)
+            print data['data']['link']
+            print response.content
+
+        else:
+            print 'Imgur API keys not found!'

@@ -54,7 +54,8 @@ install_requires = [
     'beautifulsoup4==4.3.2',
     # JSON Web Token based authentication for Django REST framework
     'djangorestframework-jwt==0.1.5',
-    'psycopg2==2.2.1'
+    'psycopg2==2.2.1',
+    'requests==2.3.0'
 ]
 
 

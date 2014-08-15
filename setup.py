@@ -28,7 +28,7 @@ install_requires = [
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
     'django-filter==0.6',
-    'django-fluent-contents==1.0c2',
+    'django-fluent-contents==0.9a1', # Version 1.0b1 and up breaks our code
     'django-iban==0.2.1',
     'django-localflavor==1.0',
     'django-registration==1.0',
@@ -79,7 +79,7 @@ tests_require = [
     'django-admin-tools==0.5.1',
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
-    'django-fluent-contents==0.9a1',
+    'django-fluent-contents==0.9a1', # Version 1.0b1 and up breaks our code
     'django-filetransfers==0.0.0',
     'django-localflavor==1.0',
     'django-registration==1.0',

@@ -8,6 +8,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 COMPRESS_ENABLED = False
+INCLUDE_TEST_MODELS = True
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -104,6 +105,7 @@ TEMPLATE_DIRS = (
 )
 
 
+
 MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
@@ -119,7 +121,6 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware'
 )
-
 # REST_FRAMEWORK = {
 #     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
 # }
@@ -215,7 +216,6 @@ INSTALLED_APPS = (
     'django_wysiwyg',
     'templatetag_handlebars',
 )
-
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',

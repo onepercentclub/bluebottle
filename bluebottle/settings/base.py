@@ -190,15 +190,13 @@ INSTALLED_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_adyen',
     'bluebottle.payments_docdata',
-
+    'bluebottle.payments_mollie',
+    'bluebottle.payments_mock',
 
     # Basic Bb implementations
     'bluebottle.fundraisers',
     'bluebottle.orders',
     'bluebottle.donations',
-
-    # mock
-    'bluebottle.payments_mock',
 
     # miss test
     'bluebottle.utils',

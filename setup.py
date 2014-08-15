@@ -93,6 +93,7 @@ tests_require = [
     'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
+    'mollie-api-python==1.0.0',
     'nose==1.3.3',
     'pylint==1.1.0',
     'sauceclient==0.1.0',

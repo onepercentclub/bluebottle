@@ -29,7 +29,7 @@ install_requires = [
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
     'django-filter==0.6',
-    'django-fluent-contents==0.9a1',
+    'django-fluent-contents==1.0c2',
     'django-iban==0.2.1',
     'django-localflavor==1.0',
     'django-registration==1.0',

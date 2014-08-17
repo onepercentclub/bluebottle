@@ -25,7 +25,9 @@ App.Payment = DS.Model.extend({
     created: DS.attr('date'),
     updated: DS.attr('date'),
     closed: DS.attr('date'),
-    amount: DS.attr('number')
+    amount: DS.attr('number'),
+
+    authorizationAction: DS.attr('object')
 });
 
 App.MyPayment = App.Payment.extend({

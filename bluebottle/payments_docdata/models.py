@@ -1,5 +1,4 @@
-from bluebottle.payments.models import Payment, Transaction, PaymentMetaData
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from bluebottle.payments.models import Payment, Transaction
 from django.utils.translation import ugettext as _
 from django.db import models
 from django_countries.fields import CountryField
@@ -33,11 +32,10 @@ payment_method_mapping = {
 }
 
 
-class DocdataPayment(PaymentMetaData):
+class DocdataPayment(Payment):
     """
     Docdata calls this: PaymentOrder
     """
-    payment_order_id = models.CharField(max_length=200, default='', blank=True)
     merchant_order_reference = models.CharField(max_length=100, default='', blank=True)
 
     # Order profile information.

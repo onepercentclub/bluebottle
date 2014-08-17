@@ -9,7 +9,18 @@ App.DocdataCreditcardController = App.StandardCreditCardPaymentController.extend
     }
 });
 
-App.DocdataPaypalController = Em.Controller.extend();
-App.DocdataIdealController = Em.Controller.extend();
-App.DocdataDirectdebitController = Em.Controller.extend();
-App.DocdataWebmenuController = Em.Controller.extend();
+App.DocdataIdealController = App.StandardPaymentMethodController.extend({
+    requiredFields: ['issuerId'],
+
+    init: function () {
+        this._super();
+        this.set('model', App.DocdataIdeal.create());
+    },
+    getIntegrationData: function() {
+        return this.get('model');
+    }
+
+});
+
+App.DocdataPaypalController = App.StandardPaymentMethodController.extend();
+App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend();

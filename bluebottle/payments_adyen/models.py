@@ -1,10 +1,11 @@
+from bluebottle.payments.models import Payment
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django.utils.translation import ugettext as _
 from django.db import models
 from django_countries.fields import CountryField
 
 
-class AdyenPaymentMetaData(models.Model):
+class AdyenPayment(Payment):
 
     """
     - merchantAccount
@@ -42,8 +43,6 @@ class AdyenPaymentMetaData(models.Model):
     it can be set to maestro (default) to be processed like a Maestro card or bcmc to be processed as a MisterCash
     card.
     """
-    payment = models.ForeignKey('payments.Payment')
-
     customer_id = models.PositiveIntegerField(default=0)  # Defaults to 0 for anonymous.
     email = models.EmailField(max_length=254, default='')
     first_name = models.CharField(max_length=200, default='')
@@ -54,41 +53,3 @@ class AdyenPaymentMetaData(models.Model):
     country = CountryField()
     language = models.CharField(max_length=2, default='en')
 
-
-class AdyenCreditCardTransaction():
-    """
-    - expiryMonth
-    The expiration date's month written as a 2-digit string, padded with 0 if required. For example, 03 or 12.
-    - expiryYear
-    The expiration date's year written as in full. For example, 2016.
-    - holderName
-    The card holder's name, as embossed on the card.
-    - number
-    The card number.
-    - cvc
-    The card validation code. This is the the CVC2 code (for MasterCard), CVV2 (for Visa) or CID (for
-    American Express).
-    """
-    expiry_month = models.CharField(max_length=200, default='')
-
-
-class AdyenPaymentTransaction(models.Model):
-
-    payment = models.ForeignKey('payments.Payment')
-
-    status = models.CharField(_("status"), max_length=30, default='NEW')
-
-    payment_method = models.CharField(max_length=60, default='', blank=True)
-
-    created = CreationDateTimeField(_("created"))
-    updated = ModificationDateTimeField(_("updated"))
-
-
-class AdyenPaymentStatusChange(models.Model):
-
-    payment = models.ForeignKey('AdyenPaymentTransaction')
-
-    old_status = models.CharField(_("status"), max_length=30, default='NEW')
-    new_status = models.CharField(_("status"), max_length=30, default='NEW')
-
-    created = CreationDateTimeField(_("created"))

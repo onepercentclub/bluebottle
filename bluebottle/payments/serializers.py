@@ -1,48 +1,20 @@
-from bluebottle.payments.models import Payment, PaymentMetaData
+from bluebottle.payments.models import OrderPayment, AuthorizationAction
 from rest_framework import serializers
 
 
-class PaymentMethodSerializer(serializers.Serializer):
+class AuthorizationSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'profile', )
-
-
-class BasePaymentMetaDataSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PaymentMetaData
-        fields = ('payment', 'created', 'updated', 'type', 'method')
-
-
-class PolymorphicPaymentMetaDataSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PaymentMetaData
-
-    def to_native(self, obj):
-        """
-        Because PaymentMetaData is Polymorphic
-        """
-        if obj:
-            return obj.__class__._meta.serializer
-        return None
+        model = AuthorizationAction
+        fields = ('type', 'method', 'url', 'payload')
 
 
 class ManagePaymentSerializer(serializers.ModelSerializer):
 
     status = serializers.CharField(read_only=True)
     amount = serializers.DecimalField(read_only=True)
-    integration_data = serializers.SerializerMethodField('get_data_serializer')
-
-    def get_data_serializer(self, obj):
-        meta_data = obj.meta_data
-        serializer_context = {'request': self.context.get('request'),
-                              'payment_id': obj.id}
-        serializer = PolymorphicPaymentMetaDataSerializer(meta_data, context=serializer_context)
-        return serializer.data
+    authorization_action = AuthorizationSerializer()
 
     class Meta:
-        model = Payment
-        fields = ('amount', 'order', 'payment_method', 'integration_data')
-
+        model = OrderPayment
+        fields = ('id', 'order', 'payment_method', 'payment_meta_data', 'amount', 'status', 'authorization_action')

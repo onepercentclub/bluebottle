@@ -4,19 +4,18 @@ import time
 import unicodedata
 from urllib2 import URLError
 from bluebottle.payments.adapters import AbstractPaymentAdapter
-from bluebottle.payments.models import PaymentStatuses, PaymentLogLevels
+from bluebottle.payments.models import OrderPaymentStatuses
 from django.conf import settings
 from django.utils.http import urlencode
 from suds.client import Client
 from suds.plugin import MessagePlugin, DocumentPlugin
-from .exceptions import DocDataPaymentException
-from .models import DocdataPayment, DocDataPayment, DocDataWebDirectDirectDebit, DocDataPaymentLogEntry
+from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
 cowry_docdata_logger = logging.getLogger('cowry.docdata')
 
 
-# Workaround for SSL problem on Debian Wheezy connecting to DocData live payment address.
+# Workaround for SSL problem on Debian Wheezy connecting to Docdata live payment address.
 #
 # if getattr(settings, "COWRY_LIVE_PAYMENTS", False):
 #     import ssl
@@ -38,16 +37,9 @@ cowry_docdata_logger = logging.getLogger('cowry.docdata')
 #     ssl.wrap_socket = wrap_socket
 
 
-def docdata_payment_logger(payment, level, message):
-    if level == PaymentLogLevels.error:
-        cowry_docdata_logger.error("{0} - {1}".format(payment, message))
-    log_entry = DocDataPaymentLogEntry(docdata_payment_order=payment, level=level, message=message)
-    log_entry.save()
-
-
-class DocDataAPIVersionPlugin(MessagePlugin):
+class DocdataAPIVersionPlugin(MessagePlugin):
     """
-    This adds the API version number to the body element. This is required for the DocData soap API.
+    This adds the API version number to the body element. This is required for the Docdata soap API.
     """
 
     def marshalled(self, context):
@@ -56,7 +48,7 @@ class DocDataAPIVersionPlugin(MessagePlugin):
         request.set('version', '1.0')
 
 
-class DocDataBrokenWSDLPlugin(DocumentPlugin):
+class DocdataBrokenWSDLPlugin(DocumentPlugin):
     def parsed(self, context):
         """ Called after parsing a WSDL or XSD document. The context contains the url & document root. """
         # The WSDL for the live payments API incorrectly references the wrong location.
@@ -65,8 +57,8 @@ class DocDataBrokenWSDLPlugin(DocumentPlugin):
             location_attribute.setValue('https://secure.docdatapayments.com:443/ps/services/paymentservice/1_0')
 
 
-class DocDataPaymentAdapter(AbstractPaymentAdapter):
-    # Mapping of DocData statuses to Cowry statuses. Statuses are from:
+class DocdataPaymentAdapter(AbstractPaymentAdapter):
+    # Mapping of Docdata statuses to Cowry statuses. Statuses are from:
     #
     #   Integration Manual Order API 1.0 - Document version 1.0, 08-12-2012 - Page 35
     #
@@ -79,35 +71,30 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
     #   CLOSED_CANCELED     CLOSED_CANCELED (guessed based on old api)
     #
     status_mapping = {
-        'NEW': PaymentStatuses.new,
-        'STARTED': PaymentStatuses.in_progress,
-        'REDIRECTED_FOR_AUTHENTICATION': PaymentStatuses.in_progress,
-        'AUTHORIZED': PaymentStatuses.pending,
-        'AUTHORIZATION_REQUESTED': PaymentStatuses.pending,
-        'PAID': PaymentStatuses.pending,
-        'CANCELED': PaymentStatuses.cancelled,
-        'CHARGED-BACK': PaymentStatuses.chargedback,
-        'CONFIRMED_PAID': PaymentStatuses.paid,
-        'CONFIRMED_CHARGEDBACK': PaymentStatuses.chargedback,
-        'CLOSED_SUCCESS': PaymentStatuses.paid,
-        'CLOSED_CANCELED': PaymentStatuses.cancelled,
-    }
-
-    id_to_model_mapping = {
-        'dd-ideal': DocDataPayment,
-        'dd-webdirect': DocDataWebDirectDirectDebit,
-        'dd-webmenu': DocDataPayment,
+        
+        'NEW': OrderPaymentStatuses.new,
+        'STARTED': OrderPaymentStatuses.in_progress,
+        'REDIRECTED_FOR_AUTHENTICATION': OrderPaymentStatuses.in_progress,
+        'AUTHORIZED': OrderPaymentStatuses.pending,
+        'AUTHORIZATION_REQUESTED': OrderPaymentStatuses.pending,
+        'PAID': OrderPaymentStatuses.pending,
+        'CANCELED': OrderPaymentStatuses.cancelled,
+        'CHARGED-BACK': OrderPaymentStatuses.chargedback,
+        'CONFIRMED_PAID': OrderPaymentStatuses.paid,
+        'CONFIRMED_CHARGEDBACK': OrderPaymentStatuses.chargedback,
+        'CLOSED_SUCCESS': OrderPaymentStatuses.paid,
+        'CLOSED_CANCELED': OrderPaymentStatuses.cancelled,
     }
 
     def _init_docdata(self):
-        """ Creates the DocData test or live Suds client. """
-        error_message = 'Could not create Suds client to connect to DocData.'
+        """ Creates the Docdata test or live Suds client. """
+        error_message = 'Could not create Suds client to connect to Docdata.'
         if self.test:
             # Test API.
             test_url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
-            logger.info('Using the test DocData API: {0}'.format(test_url))
+            logger.info('Using the test Docdata API: {0}'.format(test_url))
             try:
-                self.client = Client(test_url, plugins=[DocDataAPIVersionPlugin()])
+                self.client = Client(test_url, plugins=[DocdataAPIVersionPlugin()])
             except URLError as e:
                 self.client = None
                 logger.error('{0} {1}'.format(error_message, str(e)))
@@ -119,9 +106,9 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
         else:
             # Live API.
             live_url = 'https://secure.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
-            logger.info('Using the live DocData API: {0}'.format(live_url))
+            logger.info('Using the live Docdata API: {0}'.format(live_url))
             try:
-                self.client = Client(live_url, plugins=[DocDataAPIVersionPlugin(), DocDataBrokenWSDLPlugin()])
+                self.client = Client(live_url, plugins=[DocdataAPIVersionPlugin(), DocdataBrokenWSDLPlugin()])
             except URLError as e:
                 self.client = None
                 logger.error('{0} {1}'.format(error_message, str(e)))
@@ -132,7 +119,7 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
                 self.merchant._password = getattr(settings, "COWRY_DOCDATA_LIVE_MERCHANT_PASSWORD", None)
 
     def __init__(self):
-        super(DocDataPaymentAdapter, self).__init__()
+        super(DocdataPaymentAdapter, self).__init__()
         self._init_docdata()
 
     def get_payment_methods(self):
@@ -157,163 +144,19 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
 
         return self._payment_methods
 
-    def create_payment_object(self, order, payment_method_id='', payment_submethod_id='', amount=0, currency=''):
-        payment = DocdataPayment(payment_method_id=payment_method_id,
-                                      payment_submethod_id=payment_submethod_id,
-                                      amount=amount, currency=currency)
-        payment.order = order
+    @staticmethod
+    def create_payment(order_payment, integration_data):
+        payment = DocdataPayment(integration_data)
+        payment.order_payment = order_payment
         payment.save()
         return payment
 
-    def generate_merchant_order_reference(self, payment):
-        other_payments = DocdataPayment.objects.filter(order=payment.order).exclude(id=payment.id).order_by('-merchant_order_reference')
-        dd_prefix = ''
-        if self.test:
-            try:
-                dd_prefix = settings.DOCDATA_PREFIX_NAME
-            except AttributeError:
-                logger.error("DOCDATA_PREFIX_NAME not set. Make sure secrets.py has a DOCDATA_PREFIX_NAME='<developer name>'")
-                return
 
-        if not other_payments:
-            return '{0}{1}-0'.format(dd_prefix, payment.order.order_number)
-        else:
-            latest_mor = other_payments[0].merchant_order_reference
-            order_payment_nums = latest_mor.split('-')
-            payment_num = int(order_payment_nums[1]) + 1
-            return '{0}{1}-{2}'.format(dd_prefix, payment.order.order_number, payment_num)
-
-
-    # TODO Find a way to use UTF-8 / unicode strings with Suds to make this truly international.
-    def convert_to_ascii(self, value):
-        """ Normalize / convert unicode characters to ascii equivalents. """
-        if isinstance(value, unicode):
-            return unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-        else:
-            return value
-
-    def create_remote_payment_order(self, payment):
-        # Some preconditions.
-        if payment.payment_order_id:
-            raise DocDataPaymentException('ERROR', 'Cannot create two remote DocData Payment orders for same payment.')
-        if not payment.payment_method_id:
-            raise DocDataPaymentException('ERROR', 'payment_method_id is not set')
-
-        # We can't do anything if DocData isn't available.
-        if not self.client:
-            self._init_docdata()
-            if not self.client:
-                logger.error("Suds client is not configured. Can't create a remote DocData payment order.")
-                return
-
-        # Preferences for the DocData system.
-        paymentPreferences = self.client.factory.create('ns0:paymentPreferences')
-        paymentPreferences.profile = self.get_payment_methods()[payment.payment_method_id]['profile'],
-        paymentPreferences.numberOfDaysToPay = 5
-        menuPreferences = self.client.factory.create('ns0:menuPreferences')
-
-        # Order Amount.
-        amount = self.client.factory.create('ns0:amount')
-        amount.value = str(payment.amount)
-        amount._currency = payment.currency
-
-        # Customer information.
-        language = self.client.factory.create('ns0:language')
-        language._code = payment.language
-
-        name = self.client.factory.create('ns0:name')
-        name.first = self.convert_to_ascii(payment.first_name)[:35]
-        name.last = self.convert_to_ascii(payment.last_name)[:35]
-
-        shopper = self.client.factory.create('ns0:shopper')
-        shopper.gender = "U"  # Send unknown gender.
-        shopper.language = language
-        shopper.email = payment.email
-        shopper._id = payment.customer_id
-        shopper.name = name
-
-        # Billing information.
-        address = self.client.factory.create('ns0:address')
-        address.street = self.convert_to_ascii(payment.address)[:35]
-        address.houseNumber = 'N/A'
-        address.postalCode = payment.postal_code.replace(' ', '')  # Spaces aren't allowed in the DocData postal code.
-        address.city = payment.city[:35]
-
-        country = self.client.factory.create('ns0:country')
-        country._code = payment.country
-        address.country = country
-
-        billTo = self.client.factory.create('ns0:destination')
-        billTo.address = address
-        billTo.name = name
-
-        # Set the description if there's an order.
-        description = payment.order.__unicode__()[:50]
-        if not description:
-            # TODO Add a setting for default description.
-            description = "1%Club"
-
-        payment.merchant_order_reference = self.generate_merchant_order_reference(payment)
-
-        # Execute create payment order request.
-        reply = self.client.service.create(self.merchant, payment.merchant_order_reference, paymentPreferences,
-                                           menuPreferences, shopper, amount, billTo, description)
-
-        if hasattr(reply, 'createSuccess'):
-            payment.payment_order_id = str(reply['createSuccess']['key'])
-            self._change_status(payment, PaymentStatuses.in_progress)  # Note: _change_status calls payment.save().
-        elif hasattr(reply, 'createError'):
-            payment.save()
-            error = reply['createError']['error']
-            error_message = "{0} {1}".format(error['_code'], error['value'])
-            logger.error(error_message)
-
-            # Log this error to db too.
-            docdata_payment_logger(payment, 'warn', error_message)
-
-            raise DocDataPaymentException(error['_code'], error['value'])
-        else:
-            payment.save()
-            error_message = 'Received unknown reply from DocData. Remote Payment not created.'
-            logger.error(error_message)
-
-            # Log this error to db too.
-            docdata_payment_logger(payment, 'warn', error_message)
-
-            raise DocDataPaymentException('REPLY_ERROR', error_message)
-
-    def cancel_payment(self, payment):
-        # Some preconditions.
-        if not self.client:
-            logger.error("Suds client is not configured. Can't cancel a DocData payment order.")
-            return
-
-        if not payment.payment_order_id:
-            logger.warn('Attempt to cancel payment on Order id {0} which has no payment_order_id.'.format(payment.payment_order_id))
-            return
-
-        # Execute create payment order request.
-        reply = self.client.service.cancel(self.merchant, payment.payment_order_id)
-        if hasattr(reply, 'cancelSuccess'):
-            for docdata_payment in payment.docdata_payments.all():
-                docdata_payment.status = 'CANCELLED'
-                docdata_payment.save()
-            self._change_status(payment, PaymentStatuses.cancelled)  # Note: change_status calls payment.save().
-        elif hasattr(reply, 'cancelError'):
-            error = reply['cancelError']['error']
-            error_message = "{0} {1}".format(error['_code'], error['value'])
-            logger.error(error_message)
-            raise DocDataPaymentException(error['_code'], error['value'])
-        else:
-            error_message = 'Received unknown reply from DocData. Remote Payment not cancelled.'
-            logger.error(error_message)
-            raise DocDataPaymentException('REPLY_ERROR', error_message)
-
-    def get_payment_url(self, payment, return_url_base=None):
-        """ Return the Payment URL """
+    @staticmethod
+    def get_authorization_action(order_payment):
 
         if payment.amount <= 0 or not payment.payment_method_id or \
-                not self.id_to_model_mapping[payment.payment_method_id] == DocDataPayment:
+                not self.id_to_model_mapping[payment.payment_method_id] == DocdataPayment:
             return None
 
         if not payment.payment_order_id:
@@ -350,10 +193,10 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
         else:
             payment_url_base = 'https://secure.docdatapayments.com/ps/menu'
 
-        # Create a DocDataPayment when we need it.
+        # Create a DocdataPayment when we need it.
         docdata_payment = payment.latest_docdata_payment
-        if not docdata_payment or not isinstance(docdata_payment, DocDataPayment):
-            docdata_payment = DocDataPayment()
+        if not docdata_payment or not isinstance(docdata_payment, DocdataPayment):
+            docdata_payment = DocdataPayment()
             docdata_payment.docdata_payment_order = payment
             docdata_payment.save()
 
@@ -375,13 +218,13 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
             docdata_payment_logger(payment, PaymentLogLevels.error, error_message)
             return
         else:
-            error_message = "REPLY_ERROR Received unknown status reply from DocData."
+            error_message = "REPLY_ERROR Received unknown status reply from Docdata."
             logger.error(error_message)
             docdata_payment_logger(payment, PaymentLogLevels.error, error_message)
             return
 
         if not hasattr(report, 'payment'):
-            docdata_payment_logger(payment, PaymentLogLevels.info, "DocData status report has no payment reports.")
+            docdata_payment_logger(payment, PaymentLogLevels.info, "Docdata status report has no payment reports.")
             return
 
         for payment_report in report.payment:
@@ -413,8 +256,8 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
             # Some additional checks.
             if not payment_report.paymentMethod == ddpayment.payment_method:
                 docdata_payment_logger(payment, PaymentLogLevels.warn,
-                                       "Payment method from DocData doesn't match saved payment method. "
-                                       "Storing the payment method received from DocData for payment id {0}: {1}".format(
+                                       "Payment method from Docdata doesn't match saved payment method. "
+                                       "Storing the payment method received from Docdata for payment id {0}: {1}".format(
                                            ddpayment.payment_id, payment_report.paymentMethod))
                 ddpayment.payment_method = str(payment_report.paymentMethod)
                 ddpayment.save()
@@ -422,18 +265,18 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
             if not payment_report.authorization.status in self.status_mapping:
                 # Note: We continue to process the payment status change on this error.
                 docdata_payment_logger(payment, PaymentLogLevels.error,
-                                       "Received unknown payment status from DocData: {0}".format(
+                                       "Received unknown payment status from Docdata: {0}".format(
                                            payment_report.authorization.status))
 
-            # Update the DocDataPayment status.
+            # Update the DocdataPayment status.
             if ddpayment.status != payment_report.authorization.status:
                 docdata_payment_logger(payment, PaymentLogLevels.info,
-                                       "DocData payment status changed for payment id {0}: {1} -> {2}".format(
+                                       "Docdata payment status changed for payment id {0}: {1} -> {2}".format(
                                            payment_report.id, ddpayment.status, payment_report.authorization.status))
                 ddpayment.status = str(payment_report.authorization.status)
                 ddpayment.save()
 
-        # Use the latest DocDataPayment status to set the status on the Payment.
+        # Use the latest DocdataPayment status to set the status on the Payment.
         latest_ddpayment = payment.latest_docdata_payment
         latest_payment_report = None
         for payment_report in report.payment:
@@ -467,8 +310,154 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
             self.update_payment_fee(payment, payment.latest_docdata_payment.payment_method, 'DOCDATA_FEES',
                                     docdata_payment_logger)
 
+
+    def generate_merchant_order_reference(self, payment):
+        other_payments = DocdataPayment.objects.filter(order=payment.order).exclude(id=payment.id).order_by('-merchant_order_reference')
+        dd_prefix = ''
+        if self.test:
+            try:
+                dd_prefix = settings.DOCDATA_PREFIX_NAME
+            except AttributeError:
+                logger.error("DOCDATA_PREFIX_NAME not set. Make sure secrets.py has a DOCDATA_PREFIX_NAME='<developer name>'")
+                return
+
+        if not other_payments:
+            return '{0}{1}-0'.format(dd_prefix, payment.order.order_number)
+        else:
+            latest_mor = other_payments[0].merchant_order_reference
+            order_payment_nums = latest_mor.split('-')
+            payment_num = int(order_payment_nums[1]) + 1
+            return '{0}{1}-{2}'.format(dd_prefix, payment.order.order_number, payment_num)
+
+
+    # TODO Find a way to use UTF-8 / unicode strings with Suds to make this truly international.
+    def convert_to_ascii(self, value):
+        """ Normalize / convert unicode characters to ascii equivalents. """
+        if isinstance(value, unicode):
+            return unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+        else:
+            return value
+
+    def create_remote_payment_order(self, payment):
+        # Some preconditions.
+        if payment.payment_order_id:
+            raise DocdataPaymentException('ERROR', 'Cannot create two remote Docdata Payment orders for same payment.')
+        if not payment.payment_method_id:
+            raise DocdataPaymentException('ERROR', 'payment_method_id is not set')
+
+        # We can't do anything if Docdata isn't available.
+        if not self.client:
+            self._init_docdata()
+            if not self.client:
+                logger.error("Suds client is not configured. Can't create a remote Docdata payment order.")
+                return
+
+        # Preferences for the Docdata system.
+        paymentPreferences = self.client.factory.create('ns0:paymentPreferences')
+        paymentPreferences.profile = self.get_payment_methods()[payment.payment_method_id]['profile'],
+        paymentPreferences.numberOfDaysToPay = 5
+        menuPreferences = self.client.factory.create('ns0:menuPreferences')
+
+        # Order Amount.
+        amount = self.client.factory.create('ns0:amount')
+        amount.value = str(payment.amount)
+        amount._currency = payment.currency
+
+        # Customer information.
+        language = self.client.factory.create('ns0:language')
+        language._code = payment.language
+
+        name = self.client.factory.create('ns0:name')
+        name.first = self.convert_to_ascii(payment.first_name)[:35]
+        name.last = self.convert_to_ascii(payment.last_name)[:35]
+
+        shopper = self.client.factory.create('ns0:shopper')
+        shopper.gender = "U"  # Send unknown gender.
+        shopper.language = language
+        shopper.email = payment.email
+        shopper._id = payment.customer_id
+        shopper.name = name
+
+        # Billing information.
+        address = self.client.factory.create('ns0:address')
+        address.street = self.convert_to_ascii(payment.address)[:35]
+        address.houseNumber = 'N/A'
+        address.postalCode = payment.postal_code.replace(' ', '')  # Spaces aren't allowed in the Docdata postal code.
+        address.city = payment.city[:35]
+
+        country = self.client.factory.create('ns0:country')
+        country._code = payment.country
+        address.country = country
+
+        billTo = self.client.factory.create('ns0:destination')
+        billTo.address = address
+        billTo.name = name
+
+        # Set the description if there's an order.
+        description = payment.order.__unicode__()[:50]
+        if not description:
+            # TODO Add a setting for default description.
+            description = "1%Club"
+
+        payment.merchant_order_reference = self.generate_merchant_order_reference(payment)
+
+        # Execute create payment order request.
+        reply = self.client.service.create(self.merchant, payment.merchant_order_reference, paymentPreferences,
+                                           menuPreferences, shopper, amount, billTo, description)
+
+        if hasattr(reply, 'createSuccess'):
+            payment.payment_order_id = str(reply['createSuccess']['key'])
+            self._change_status(payment, PaymentStatuses.in_progress)  # Note: _change_status calls payment.save().
+        elif hasattr(reply, 'createError'):
+            payment.save()
+            error = reply['createError']['error']
+            error_message = "{0} {1}".format(error['_code'], error['value'])
+            logger.error(error_message)
+
+            # Log this error to db too.
+            docdata_payment_logger(payment, 'warn', error_message)
+
+            raise DocdataPaymentException(error['_code'], error['value'])
+        else:
+            payment.save()
+            error_message = 'Received unknown reply from Docdata. Remote Payment not created.'
+            logger.error(error_message)
+
+            # Log this error to db too.
+            docdata_payment_logger(payment, 'warn', error_message)
+
+            raise DocdataPaymentException('REPLY_ERROR', error_message)
+
+    def cancel_payment(self, payment):
+        # Some preconditions.
+        if not self.client:
+            logger.error("Suds client is not configured. Can't cancel a Docdata payment order.")
+            return
+
+        if not payment.payment_order_id:
+            logger.warn('Attempt to cancel payment on Order id {0} which has no payment_order_id.'.format(payment.payment_order_id))
+            return
+
+        # Execute create payment order request.
+        reply = self.client.service.cancel(self.merchant, payment.payment_order_id)
+        if hasattr(reply, 'cancelSuccess'):
+            for docdata_payment in payment.docdata_payments.all():
+                docdata_payment.status = 'CANCELLED'
+                docdata_payment.save()
+            self._change_status(payment, PaymentStatuses.cancelled)  # Note: change_status calls payment.save().
+        elif hasattr(reply, 'cancelError'):
+            error = reply['cancelError']['error']
+            error_message = "{0} {1}".format(error['_code'], error['value'])
+            logger.error(error_message)
+            raise DocdataPaymentException(error['_code'], error['value'])
+        else:
+            error_message = 'Received unknown reply from Docdata. Remote Payment not cancelled.'
+            logger.error(error_message)
+            raise DocdataPaymentException('REPLY_ERROR', error_message)
+
+
     def _map_status(self, status, payment=None, totals=None, authorization=None):
-        new_status = super(DocDataPaymentAdapter, self)._map_status(status)
+        new_status = super(DocdataPaymentAdapter, self)._map_status(status)
 
         # Some status mapping overrides.
         #
@@ -544,7 +533,7 @@ class DocDataPaymentAdapter(AbstractPaymentAdapter):
         #         new_status = 'cancelled'
 
 
-class WebDirectDocDataDirectDebitPaymentAdapter(DocDataPaymentAdapter):
+class WebDirectDocdataDirectDebitPaymentAdapter(DocdataPaymentAdapter):
     def get_payment_url(self, payment, return_url_base=None):
         raise NotImplementedError
 
@@ -553,15 +542,15 @@ class WebDirectDocDataDirectDebitPaymentAdapter(DocDataPaymentAdapter):
             # For testing we need unique merchant order references that are not based on the order number.
             return str(time.time()).replace('.', '-')
         else:
-            return super(WebDirectDocDataDirectDebitPaymentAdapter, self).generate_merchant_order_reference(payment)
+            return super(WebDirectDocdataDirectDebitPaymentAdapter, self).generate_merchant_order_reference(payment)
 
     def start_payment(self, payment, recurring_payment):
         # Some preconditions.
         if not self.client:
-            raise DocDataPaymentException('ERROR',
-                                          "Suds client is not configured. Can't start a DocData WebDirect payment.")
+            raise DocdataPaymentException('ERROR',
+                                          "Suds client is not configured. Can't start a Docdata WebDirect payment.")
         if not payment.payment_order_id:
-            raise DocDataPaymentException('ERROR',
+            raise DocdataPaymentException('ERROR',
                                           "Attempt to start WebDirect payment on Order id {0} which has no payment_order_id.".format(
                                               payment.payment_order_id))
 
@@ -600,24 +589,24 @@ class WebDirectDocDataDirectDebitPaymentAdapter(DocDataPaymentAdapter):
             error = reply['startError']['error']
             error_message = "{0} {1}".format(error['_code'], error['value'])
             logger.error(error_message)
-            raise DocDataPaymentException(error['_code'], error['value'])
+            raise DocdataPaymentException(error['_code'], error['value'])
 
         else:
-            error_message = 'Received unknown reply from DocData. WebDirect payment not created.'
+            error_message = 'Received unknown reply from Docdata. WebDirect payment not created.'
             logger.error(error_message)
-            raise DocDataPaymentException('REPLY_ERROR', error_message)
+            raise DocdataPaymentException('REPLY_ERROR', error_message)
 
 
 # TODO This method (and delay) should be processed asynchronously by celery.
 def update_docdata_webdirect_direct_debit_payment(payment, payment_id, recurring_payment):
-    # The delay is here to give DocData some time to call our status changed API which creates the
-    # DocDataWebDirectDirectDebit object.
+    # The delay is here to give Docdata some time to call our status changed API which creates the
+    # DocdataWebDirectDirectDebit object.
     time.sleep(2)
     try:
-        ddpayment = DocDataWebDirectDirectDebit.objects.get(payment_id=payment_id)
-    except DocDataWebDirectDirectDebit.DoesNotExist:
-        # Create the DocDataPayment object to save the info and statuses for the WebDirect payment.
-        ddpayment = DocDataWebDirectDirectDebit()
+        ddpayment = DocdataWebDirectDirectDebit.objects.get(payment_id=payment_id)
+    except DocdataWebDirectDirectDebit.DoesNotExist:
+        # Create the DocdataPayment object to save the info and statuses for the WebDirect payment.
+        ddpayment = DocdataWebDirectDirectDebit()
         ddpayment.docdata_payment_order = payment
         ddpayment.payment_method = 'SEPA_DIRECT_DEBIT'
         ddpayment.payment_id = payment_id

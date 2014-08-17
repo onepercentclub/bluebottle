@@ -5,7 +5,7 @@ PAYMENT_METHODS = (
         'provider': 'mollie',
         'id': 'mollie-ideal',
         'profile': 'ideal',
-        'name': 'iDEAL',
+        'name': 'Mollie iDEAL',
         'restricted_countries': ('NL',),
         'supports_recurring': False,
     },
@@ -13,7 +13,7 @@ PAYMENT_METHODS = (
         'provider': 'mollie',
         'id': 'mollie-creditcard',
         'profile': 'creditcard',
-        'name': 'Credit Card',
+        'name': 'Mollie Credit Card',
         'supports_recurring': False,
     }
 )

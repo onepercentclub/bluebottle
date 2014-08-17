@@ -7,5 +7,7 @@
         <img src="{% static 'images/docdata/ideal.png' %}" alt="iDEAL"  />
         <br/>
         You're about to pay with iDEAL through Docdata.
+        {{view App.DocdataIdealBankSelectView valueBinding='issuerId'}}
+
     </p>
 {% endtplhandlebars %}

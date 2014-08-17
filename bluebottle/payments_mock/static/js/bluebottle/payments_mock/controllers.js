@@ -7,3 +7,7 @@ App.MockIdealController = App.StandardPaymentMethodController.extend(App.Control
     }
 
 });
+
+App.MockPaypalController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
+
+});

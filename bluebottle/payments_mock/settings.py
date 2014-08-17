@@ -5,14 +5,14 @@ PAYMENT_METHODS = (
         'provider': 'mock',
         'id': 'mock-paypal',
         'profile': 'paypal',
-        'name': 'PayPal',
+        'name': 'MockPal',
         'supports_recurring': False,
     },
     {
         'provider': 'mock',
         'id': 'mock-ideal',
         'profile': 'ideal',
-        'name': 'iDEAL',
+        'name': 'MockDeal',
         'restricted_countries': ('NL',),
         'supports_recurring': False,
     },
@@ -20,7 +20,7 @@ PAYMENT_METHODS = (
         'provider': 'mock',
         'id': 'mock-creditcard',
         'profile': 'creditcard',
-        'name': 'Credit Card',
+        'name': 'MockCard',
         'supports_recurring': False,
     }
 )

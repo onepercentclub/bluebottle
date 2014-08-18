@@ -11,6 +11,7 @@ from django.db.models import options as options
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.core import serializers
 
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -286,6 +287,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         if not self.disable_token:
             self.reset_disable_token()
         return self.disable_token
+
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver

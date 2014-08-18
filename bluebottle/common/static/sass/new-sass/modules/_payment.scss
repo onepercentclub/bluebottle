@@ -55,6 +55,12 @@
                     background: image-url("icons/icon-paypal-modal.svg") transparent no-repeat 0 14px;
                 }
             }
+            &.ideal {
+                &:before {
+                    background: image-url("icons/ideal.png") transparent no-repeat 0 14px;
+                }
+            }
+
 
             &.is-active {
                 background: #F5F4F6;

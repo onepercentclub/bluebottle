@@ -1,38 +1,33 @@
+class PaymentException(Exception):
+    """ Wrapper around Docdata error messages. """
 
-class OrderKeyMissing(ValueError):
-    """
-    Missing an order key!
-    """
+    def __init__(self, message, error_list):
+        self.message = message
+        self.error_list = error_list
 
-class DocdataException(Exception):
-    """
-    Base class for all exceptions from Docdata
-    """
-    def __init__(self, code, value):
-        super(DocdataException, self).__init__(value)
-        self.code = code
-        self.value = unicode(value)
+    def __str__(self):
+        return '%s, messages: %s' % (self.message, ' '.join(self.error_list))
+
+    def __unicode__(self):
+        return str(self)
 
 
-class DocdataCreateError(DocdataException):
-    """
-    There was an error creating the payment.
-    """
+class PaymentStatusException(Exception):
+    """ Thrown when unknown payment statuses are received. """
+
+    def __init__(self, message, report_type, data=None):
+        self.message = message
+        self.report_type = report_type
+        self.data = data
+
+    def __str__(self):
+        return '%s, report type %s, data %s' % (self.message,
+                                                self.report_type,
+                                                self.data)
+
+    def __unicode__(self):
+        return str(self)
 
 
-class DocdataStartError(DocdataException):
-    """
-    There was an error start the payment..
-    """
-
-
-class DocdataStatusError(DocdataException):
-    """
-    There was an error requesting the status
-    """
-
-
-class DocdataCancelError(DocdataException):
-    """
-    There was an error cancelling the order.
-    """
+class MerchantTransactionIdNotUniqueException(PaymentException):
+    pass

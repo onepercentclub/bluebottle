@@ -32,7 +32,11 @@ class DocdataPayment(Payment):
     )
 
     merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
-    order_key = models.CharField(_("Payment cluster ID"), max_length=200, default='', unique=True)
+
+    order_key = models.CharField(_("Order key"), max_length=200, default='')
+
+    payment_cluster_id = models.CharField(_("Payment cluster id"), max_length=200, default='', unique=True)
+    payment_cluster_key = models.CharField(_("Payment cluster key"), max_length=200, default='', unique=True)
 
     status = models.CharField(_("Status"), max_length=50, choices=STATUS_CHOICES, default=STATUS_NEW)
     language = models.CharField(_("Language"), max_length=5, blank=True, default='en')

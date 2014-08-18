@@ -5,12 +5,10 @@ import unicodedata
 from urllib2 import URLError
 from bluebottle.payments.adapters import AbstractPaymentAdapter
 from bluebottle.payments.models import OrderPaymentStatuses
+from bluebottle.payments_docdata.exceptions import MerchantTransactionIdNotUniqueException
 from interface import DocdataInterface
-import appsettings
 from django.conf import settings
-from django.utils.http import urlencode
 from suds.client import Client
-from suds.plugin import MessagePlugin, DocumentPlugin
 from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
@@ -47,19 +45,66 @@ class DocdataPaymentAdapter(AbstractPaymentAdapter):
 
     @staticmethod
     def create_payment(order_payment, integration_data):
+        payment = DocdataPayment(order_payment=order_payment)
+        payment.total_gross_amount = order_payment.amount
 
-        interface = DocdataInterface()
-        interface.create_payment(order_payment.id, order_payment.amount, order_payment.order.user,
-                                                     language='en', description='One Percent Donation',
-                                                     profile=appsettings.DOCDATA_PROFILE)
+        interface = DocdataInterface(debug=True)
+        user = order_payment.order.user
+
+        merchant_order_id = order_payment.id
+        result = None
+        t = 1
+
+        while not result:
+            merchant_order_id = "{0}-{1}".format(order_payment.id, t)
+            try:
+                result = interface.new_payment_cluster(
+                    merchant_name = settings.DOCDATA_MERCHANT_NAME,
+                    merchant_password = settings.DOCDATA_MERCHANT_PASSWORD,
+                    merchant_transaction_id = merchant_order_id,
+                    profile = 'webmenu',
+                    client_id = user.id,
+                    price = order_payment.amount,
+                    cur_price = 'EUR',
+                    client_email = user.email,
+                    client_firstname = user.full_name,
+                    client_lastname = user.full_name,
+                    client_address = 'Unkown',
+                    client_zip = 'Unkown',
+                    client_city = 'Unkown',
+                    client_country = 'NL',
+                    client_language = 'en',
+                    days_pay_period = 5
+                )
+            except MerchantTransactionIdNotUniqueException:
+                t += 1
+
+        payment.merchant_order_id = merchant_order_id
+        print result
+
+        payment.order_key = result['payment_cluster_id']
+        payment.payment_cluster_key = result['payment_cluster_key']
+        payment.payment_cluster_id = result['payment_cluster_id']
+        payment.save()
+
         return True
 
 
     @staticmethod
     def get_authorization_action(order_payment):
 
+        payment = DocdataPayment.objects.filter(order_payment=order_payment).all()[0]
 
-        return {'type': 'redirect', 'method': 'get', 'url': 'http://docdatapayments.com'}
+        interface = DocdataInterface(debug=True)
+        url = interface.get_payment_url(payment)
+
+        # url = interface.show_payment_cluster_url(
+        #     merchant_name=settings.DOCDATA_MERCHANT_NAME,
+        #     payment_cluster_key=payment.payment_cluster_key,
+        #     #payment_cluster_id=payment.payment_cluster_id,
+        #     #merchant_transaction_id=payment.merchant_order_id,
+        # )
+        return {'type': 'redirect', 'method': 'get', 'url': url, 'payload': {}}
 
         """
         if payment.amount <= 0 or not payment.payment_method_id or \

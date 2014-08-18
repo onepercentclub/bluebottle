@@ -90,9 +90,45 @@
         }
     }
     .wallpost-form {
-        textarea {
-            position: relative;;
-            margin: 100px 0px 20px;
+        font-size: 15px;
+
+        .wallpost-message {
+            position: relative;
+            margin: auto;
+            width: 90%;
+            background: $white;
+            height: 170px;
+            border: solid 1px #D8D8D8;
+            border-radius: 4px;
+            margin-bottom: 20px;
+
+            textarea {
+                height: 65%;
+                border: none;
+                font-size: 18px;
+                color: #9F9F9F;
+            }
+
+            .wallpost-header {
+                padding: 12px;
+                border-bottom: solid 1px #d8d8d8;
+
+                .wallpost-header-title {
+                    text-align: left;
+                }
+
+                .wallpost-header-count {
+                    text-align: right;
+                    color: #d8d8d8;
+                }
+            }
+
         }
+    }
+
+    .wallpost-buttons {
+        width: 80%;
+        margin: auto;
+        padding: 5px 0 10px 0;
     }
 }

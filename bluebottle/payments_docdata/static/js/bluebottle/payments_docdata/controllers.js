@@ -2,15 +2,11 @@ App.DocdataCreditcardController = App.StandardCreditCardPaymentController.extend
     init: function() {
         this._super();
         this.set('model', App.DocdataCreditcard.create());
-    },
-
-    getIntegrationData: function() {
-        return {encryptedData: 'atadcoD123'};
     }
 });
 
 App.DocdataIdealController = App.StandardPaymentMethodController.extend({
-    requiredFields: ['issuerId'],
+    requiredFields: ['ideal_issuer_id'],
 
     init: function () {
         this._super();
@@ -19,7 +15,6 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
     getIntegrationData: function() {
         return this.get('model');
     }
-
 });
 
 App.DocdataPaypalController = App.StandardPaymentMethodController.extend();

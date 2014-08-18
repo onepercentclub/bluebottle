@@ -5,6 +5,8 @@ import unicodedata
 from urllib2 import URLError
 from bluebottle.payments.adapters import AbstractPaymentAdapter
 from bluebottle.payments.models import OrderPaymentStatuses
+from interface import DocdataInterface
+import appsettings
 from django.conf import settings
 from django.utils.http import urlencode
 from suds.client import Client
@@ -12,49 +14,6 @@ from suds.plugin import MessagePlugin, DocumentPlugin
 from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
-cowry_docdata_logger = logging.getLogger('cowry.docdata')
-
-
-# Workaround for SSL problem on Debian Wheezy connecting to Docdata live payment address.
-#
-# if getattr(settings, "COWRY_LIVE_PAYMENTS", False):
-#     import ssl
-#     from ssl import SSLSocket
-#
-#     def wrap_socket(sock, keyfile=None, certfile=None,
-#                     server_side=False, cert_reqs=ssl.CERT_NONE,
-#                     ssl_version=ssl.PROTOCOL_SSLv3, ca_certs=None,
-#                     do_handshake_on_connect=True,
-#                     suppress_ragged_eofs=True, ciphers=None):
-#
-#         return SSLSocket(sock, keyfile=keyfile, certfile=certfile,
-#                          server_side=server_side, cert_reqs=cert_reqs,
-#                          ssl_version=ssl_version, ca_certs=ca_certs,
-#                          do_handshake_on_connect=do_handshake_on_connect,
-#                          suppress_ragged_eofs=suppress_ragged_eofs,
-#                          ciphers=ciphers)
-#
-#     ssl.wrap_socket = wrap_socket
-
-
-class DocdataAPIVersionPlugin(MessagePlugin):
-    """
-    This adds the API version number to the body element. This is required for the Docdata soap API.
-    """
-
-    def marshalled(self, context):
-        body = context.envelope.getChild('Body')
-        request = body[0]
-        request.set('version', '1.0')
-
-
-class DocdataBrokenWSDLPlugin(DocumentPlugin):
-    def parsed(self, context):
-        """ Called after parsing a WSDL or XSD document. The context contains the url & document root. """
-        # The WSDL for the live payments API incorrectly references the wrong location.
-        if len(context.document.children) == 19 and len(context.document.children[18]) > 0:
-            location_attribute = context.document.children[18].children[0].getChild('address').attributes[0]
-            location_attribute.setValue('https://secure.docdatapayments.com:443/ps/services/paymentservice/1_0')
 
 
 class DocdataPaymentAdapter(AbstractPaymentAdapter):
@@ -86,75 +45,23 @@ class DocdataPaymentAdapter(AbstractPaymentAdapter):
         'CLOSED_CANCELED': OrderPaymentStatuses.cancelled,
     }
 
-    def _init_docdata(self):
-        """ Creates the Docdata test or live Suds client. """
-        error_message = 'Could not create Suds client to connect to Docdata.'
-        if self.test:
-            # Test API.
-            test_url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
-            logger.info('Using the test Docdata API: {0}'.format(test_url))
-            try:
-                self.client = Client(test_url, plugins=[DocdataAPIVersionPlugin()])
-            except URLError as e:
-                self.client = None
-                logger.error('{0} {1}'.format(error_message, str(e)))
-            else:
-                # Setup the merchant soap object with the test password for use in all requests.
-                self.merchant = self.client.factory.create('ns0:merchant')
-                self.merchant._name = getattr(settings, "COWRY_DOCDATA_MERCHANT_NAME", None)
-                self.merchant._password = getattr(settings, "COWRY_DOCDATA_TEST_MERCHANT_PASSWORD", None)
-        else:
-            # Live API.
-            live_url = 'https://secure.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
-            logger.info('Using the live Docdata API: {0}'.format(live_url))
-            try:
-                self.client = Client(live_url, plugins=[DocdataAPIVersionPlugin(), DocdataBrokenWSDLPlugin()])
-            except URLError as e:
-                self.client = None
-                logger.error('{0} {1}'.format(error_message, str(e)))
-            else:
-                # Setup the merchant soap object for use in all requests.
-                self.merchant = self.client.factory.create('ns0:merchant')
-                self.merchant._name = getattr(settings, "COWRY_DOCDATA_MERCHANT_NAME", None)
-                self.merchant._password = getattr(settings, "COWRY_DOCDATA_LIVE_MERCHANT_PASSWORD", None)
-
-    def __init__(self):
-        super(DocdataPaymentAdapter, self).__init__()
-        self._init_docdata()
-
-    def get_payment_methods(self):
-        # Override the payment_methods if they're set. This isn't in __init__ because
-        # we want to override the settings in the tests.
-        if not hasattr(self, '_payment_methods'):
-            settings_payment_methods = getattr(settings, 'PAYMENT_METHODS', None)
-            if settings_payment_methods:
-                # Only override the parameters that are set.
-                self._payment_methods = {}
-                for pmi in settings_payment_methods:
-                    settings_pm = settings_payment_methods[pmi]
-                    if pmi in default_payment_methods:
-                        default_pm = default_payment_methods[pmi]
-                        for param in settings_pm:
-                            default_pm[param] = settings_pm[param]
-                        self._payment_methods[pmi] = default_pm
-                    else:
-                        self._payment_methods[pmi] = settings_pm
-            else:
-                self._payment_methods = default_payment_methods
-
-        return self._payment_methods
-
     @staticmethod
     def create_payment(order_payment, integration_data):
-        payment = DocdataPayment(integration_data)
-        payment.order_payment = order_payment
-        payment.save()
-        return payment
+
+        interface = DocdataInterface()
+        interface.create_payment(order_payment.id, order_payment.amount, order_payment.order.user,
+                                                     language='en', description='One Percent Donation',
+                                                     profile=appsettings.DOCDATA_PROFILE)
+        return True
 
 
     @staticmethod
     def get_authorization_action(order_payment):
 
+
+        return {'type': 'redirect', 'method': 'get', 'url': 'http://docdatapayments.com'}
+
+        """
         if payment.amount <= 0 or not payment.payment_method_id or \
                 not self.id_to_model_mapping[payment.payment_method_id] == DocdataPayment:
             return None
@@ -201,6 +108,41 @@ class DocdataPaymentAdapter(AbstractPaymentAdapter):
             docdata_payment.save()
 
         return payment_url_base + '?' + urlencode(params)
+        """
+
+######################### OLD STUFF
+
+    def _init_docdata(self):
+        """ Creates the Docdata test or live Suds client. """
+        error_message = 'Could not create Suds client to connect to Docdata.'
+        if self.test:
+            # Test API.
+            test_url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
+            logger.info('Using the test Docdata API: {0}'.format(test_url))
+            try:
+                self.client = Client(test_url, plugins=[DocdataAPIVersionPlugin()])
+            except URLError as e:
+                self.client = None
+                logger.error('{0} {1}'.format(error_message, str(e)))
+            else:
+                # Setup the merchant soap object with the test password for use in all requests.
+                self.merchant = self.client.factory.create('ns0:merchant')
+                self.merchant._name = getattr(settings, "COWRY_DOCDATA_MERCHANT_NAME", None)
+                self.merchant._password = getattr(settings, "COWRY_DOCDATA_TEST_MERCHANT_PASSWORD", None)
+        else:
+            # Live API.
+            live_url = 'https://secure.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
+            logger.info('Using the live Docdata API: {0}'.format(live_url))
+            try:
+                self.client = Client(live_url, plugins=[DocdataAPIVersionPlugin(), DocdataBrokenWSDLPlugin()])
+            except URLError as e:
+                self.client = None
+                logger.error('{0} {1}'.format(error_message, str(e)))
+            else:
+                # Setup the merchant soap object for use in all requests.
+                self.merchant = self.client.factory.create('ns0:merchant')
+                self.merchant._name = getattr(settings, "COWRY_DOCDATA_MERCHANT_NAME", None)
+                self.merchant._password = getattr(settings, "COWRY_DOCDATA_LIVE_MERCHANT_PASSWORD", None)
 
     def update_payment_status(self, payment, status_changed_notification=False):
         # Don't do anything if there's no payment or payment_order_id.
@@ -338,12 +280,13 @@ class DocdataPaymentAdapter(AbstractPaymentAdapter):
         else:
             return value
 
-    def create_remote_payment_order(self, payment):
+    def _create_remote_payment_order(self, payment):
         # Some preconditions.
+
         if payment.payment_order_id:
-            raise DocdataPaymentException('ERROR', 'Cannot create two remote Docdata Payment orders for same payment.')
+            raise Exception('Cannot create two remote Docdata Payment orders for same payment.')
         if not payment.payment_method_id:
-            raise DocdataPaymentException('ERROR', 'payment_method_id is not set')
+            raise Exception('payment_method_id is not set')
 
         # We can't do anything if Docdata isn't available.
         if not self.client:

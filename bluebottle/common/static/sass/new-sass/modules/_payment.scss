@@ -56,11 +56,6 @@
                 }
             }
 
-            // hide other payment providers for now
-            &.ideal, &.directdebit,  {
-                display: none;
-            }
-
             &.is-active {
                 background: #F5F4F6;
 

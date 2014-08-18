@@ -9,7 +9,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(source='project', slug_field='slug')
     status = serializers.ChoiceField(read_only=True)
     order = serializers.PrimaryKeyRelatedField()
-    amount = serializers.DecimalField()
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         model = DONATION_MODEL

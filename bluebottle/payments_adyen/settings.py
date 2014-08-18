@@ -4,6 +4,7 @@ PAYMENT_METHODS = (
     {
         'provider': 'adyen',
         'profile': 'ideal',
+        'id': 'adyen-ideal',
         'name': 'iDEAL',
         'submethods': {
             '0081': 'Fortis',
@@ -21,6 +22,7 @@ PAYMENT_METHODS = (
         'supports_recurring': False,
     },
     {
+        'id': 'adyen-paypal',
         'provider': 'adyen',
         'profile': 'paypal',
         'name': 'PayPal',
@@ -28,6 +30,7 @@ PAYMENT_METHODS = (
         'supports_single': False,
     },
     {
+        'id': 'adyen-creditcard',
         'provider': 'adyen',
         'profile': 'creditcard',
         'name': 'CreditCard',

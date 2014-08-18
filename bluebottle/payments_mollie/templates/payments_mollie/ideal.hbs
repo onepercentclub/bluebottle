@@ -1,0 +1,13 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "mollieIdeal" %}
+    <p>
+        <img src="{% static 'images/mollie/mollie.jpg' %}" alt="Mollie" />
+        <br/>
+        <img src="{% static 'images/mollie/ideal.png' %}" alt="iDEAL" />
+        <br/>
+        You're about to pay with iDEAL through Mollie.
+
+        {{view App.MollieIdealBankSelectView selectionBinding='issuer'}}
+    </p>
+{% endtplhandlebars %}

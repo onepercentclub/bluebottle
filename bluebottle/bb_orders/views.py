@@ -39,19 +39,10 @@ class ManageOrderList(generics.ListCreateAPIView):
             order_id = getattr(self.request.session, anonymous_order_id_session_key, 0)
             return queryset.filter(id=order_id)
 
-    def find_country(self):
-        # TODO: do something smart in detecting the country here.
-        # For now just return Netherlands.
-        return Country.objects.get(alpha2_code='NL')
-
     def pre_save(self, obj):
         # If the user is authenticated then set that user to this order.
         if self.request.user.is_authenticated():
             obj.user = self.request.user
-        # Set the country on Order.
-        if not obj.country:
-            # TODO: Try to get the country from user.
-            obj.country = self.find_country()
 
     def post_save(self, obj, created=False):
         # If the user isn't authenticated then save the order id in session/

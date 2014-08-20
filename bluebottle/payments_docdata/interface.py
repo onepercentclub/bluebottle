@@ -227,9 +227,6 @@ class DocdataInterface(object):
         params['return_url_error'] = return_url_base + '/error/' + str(payment.id)
 
         payment_url_base = 'https://test.docdatapayments.com/ps/menu'
-
-        print params
-
         return payment_url_base + '?' + urlencode(params)
 
     def get_payment_url2(self, **kwargs):

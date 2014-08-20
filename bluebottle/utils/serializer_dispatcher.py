@@ -1,13 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 from bluebottle.utils.model_dispatcher import get_model_class
-
-
-def import_class(cl):
-    d = cl.rfind(".")
-    class_name = cl[d+1:len(cl)]
-    m = __import__(cl[0:d], globals(), locals(), [class_name])
-    return getattr(m, class_name)
-
+from bluebottle.utils.utils import import_class
 
 def get_serializer_class(model_name=None, serializer_type='default'):
     """

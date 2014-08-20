@@ -4,7 +4,7 @@ from django.http.response import Http404
 import logging
 from rest_framework import generics
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_fundraiser_model
 
 
 PROJECT_MODEL = get_project_model()

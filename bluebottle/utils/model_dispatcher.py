@@ -32,7 +32,7 @@ def get_order_model():
     return get_model_class('ORDERS_ORDER_MODEL')
 
 
-def get_fundraieser_model():
+def get_fundraiser_model():
     return get_model_class('FUNDRAISERS_FUNDRAISER_MODEL')
 
 

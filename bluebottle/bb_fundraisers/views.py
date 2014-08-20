@@ -5,10 +5,10 @@ from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView, ListCr
 from rest_framework import permissions, exceptions
 
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.model_dispatcher import get_project_model, get_fundraieser_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
 
 PROJECT_MODEL = get_project_model()
-FUNDRAISER_MODEL = get_fundraieser_model()
+FUNDRAISER_MODEL = get_fundraiser_model()
 
 FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL', 'default')
 

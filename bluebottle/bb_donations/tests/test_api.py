@@ -3,12 +3,12 @@ from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.utils.utils import get_model_class
+from bluebottle.utils.model_dispatcher import get_order_model
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
-ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
+ORDER_MODEL = get_order_model()
 
 
 class DonationApiTestCase(OrderApiTestCase):

@@ -302,8 +302,8 @@ def get_model_class(model_name=None, a=None):
         model = get_model(app_label, model_class_name)
         if model is None:
             raise ImproperlyConfigured(
-                "{0} refers to model '{0}' that has not been "
-                "installed".format(model_name))
+                "{0} refers to model '{1}' that has not been "
+                "installed".format(model_name, model_class_name))
 
     return model
 

@@ -3,37 +3,24 @@
 PAYMENT_METHODS = (
     {
         'provider': 'docdata',
-        'id': 'ideal',
+        'id': 'docdata-ideal',
         'profile': 'ideal',
         'name': 'iDEAL',
         'restricted_countries': ('NL',),
         'supports_recurring': False,
     },
-
     {
         'provider': 'docdata',
-        'id': 'direct-debit',
-        'profile': 'directdebit',
-        'name': 'Direct Debit',
-        'max_amount': 10000,
-        'restricted_countries': ('NL',),
-        'supports_recurring': True,
-        'supports_single': False,
-    },
-
-    {
-        'provider': 'docdata',
-        'id': 'creditcard',
+        'id': 'docdata-creditcard',
         'profile': 'creditcard',
-        'name': 'Credit Cards',
+        'name': 'CreditCard',
         'supports_recurring': False,
     },
-
     {
         'provider': 'docdata',
-        'id': 'webmenu',
-        'profile': 'webmenu',
-        'name': 'Web Menu',
+        'id': 'docdata-paypal',
+        'profile': 'paypal',
+        'name': 'Paypal',
         'supports_recurring': True,
     }
 )

@@ -1,27 +1,7 @@
-if (DEBUG) {
-    App.Store.registerAdapter("App.Donation", App.MockAdapter);
-    App.Store.registerAdapter("App.ProjectDonation", App.MockAdapter);
-    App.Store.registerAdapter("App.MyDonation", App.MockAdapter);
-
-    App.MockAdapter.map('App.ProjectDonation', {
-        user: {embedded: 'load'}
-    });
-
-    App.MockAdapter.map('App.MyDonation', {
-        project: {embedded: 'load'}
-    });
-
-
-}
-
 /* Embedded objects */
 
 App.Adapter.map('App.ProjectDonation', {
     user: {embedded: 'load'}
-});
-
-App.Adapter.map('App.MyDonation', {
-    project: {embedded: 'load'}
 });
 
 
@@ -55,7 +35,7 @@ App.MyDonation = App.Donation.extend({
     }.property(),
 
     order: DS.belongsTo('App.MyOrder'),
-    amount: DS.attr('number'),
+    amount: DS.attr('number', {defaultValue: 25}),
 
     validAmount: function () {
         var amount = this.get('amount');

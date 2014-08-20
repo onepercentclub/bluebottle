@@ -163,9 +163,19 @@ App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
 
 
 App.TaskNewRoute = Em.Route.extend({
+    beforeModel: function (transition) {
+        var _this = this,
+            projectId = transition.params.project_id;
+
+        return App.Project.find(projectId).then(function (project) {
+            _this.set('project', project);
+        });
+    },
+
     model: function(params){
         var task = this.get('store').createRecord(App.Task);
-        task.set('project', App.Project.find(params.project_id));
+        task.set('project', this.get('project'));
+
         return task;
     }
 });

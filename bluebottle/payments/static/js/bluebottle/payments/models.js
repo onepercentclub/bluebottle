@@ -36,8 +36,7 @@ App.MyPayment = App.Payment.extend({
     paymentMethod: DS.attr('string'),
 
     // Hosted payment page details
-    integrationDetails: DS.attr('object'),
-    integrationData: DS.attr('object')
+    paymentMetaData: DS.attr('object')
 });
 
 App.StandardCreditCardPaymentModel = Em.Object.extend({

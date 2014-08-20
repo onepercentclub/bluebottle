@@ -58,8 +58,8 @@ App.PaymentController = Em.ObjectController.extend({
 
         // TODO: How we handle the payment details will depend on the PSP.
         if (paymentMethodController) {
-            var integrationData = paymentMethodController.getIntegrationData();
-            this.set('integrationData', integrationData);
+            var paymentMetaData = paymentMethodController.getIntegrationData();
+            this.set('paymentMetaData', paymentMetaData);
         }
     },
 

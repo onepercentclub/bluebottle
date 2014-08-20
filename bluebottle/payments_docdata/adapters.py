@@ -11,9 +11,16 @@ logger = logging.getLogger(__name__)
 
 class DocdataPaymentAdapter(AbstractPaymentAdapter):
 
-    @staticmethod
-    def create_payment(order_payment, integration_data):
-        payment = DocdataPayment(order_payment=order_payment)
+    @classmethod
+    def get_or_create_payment(cls, order_payment):
+        payment = DocdataPayment.get_by_order_payment(order_payment)
+        if not payment:
+            payment = cls.create_payment(order_payment)
+        return payment
+
+    @classmethod
+    def create_payment(cls, order_payment):
+        payment = DocdataPayment(order_payment=order_payment, **order_payment.payment_meta_data)
         payment.total_gross_amount = order_payment.amount
 
         interface = DocdataInterface(debug=True)
@@ -56,13 +63,11 @@ class DocdataPaymentAdapter(AbstractPaymentAdapter):
         payment.payment_cluster_id = result['payment_cluster_id']
         payment.save()
 
-        return True
+        return payment
 
 
-    @staticmethod
-    def get_authorization_action(order_payment):
-
-        payment = DocdataPayment.objects.filter(order_payment=order_payment).all()[0]
+    @classmethod
+    def get_authorization_action(cls, payment):
 
         interface = DocdataInterface(debug=True)
         url = interface.get_payment_url(payment)

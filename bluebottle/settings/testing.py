@@ -3,7 +3,6 @@ from .secrets import *
 
 
 INSTALLED_APPS += (
-    'bluebottle.test',
     'django_extensions',
 )
 
@@ -26,9 +25,9 @@ GRAPH_MODELS = {
   'group_models': True,
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': ':memory:',
-#     },
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    },
+}

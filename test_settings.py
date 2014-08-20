@@ -10,10 +10,6 @@ DATABASES = {
     }
 }
 
-INSTALLED_APPS += (
-    'bluebottle.test',
-)
-
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
 

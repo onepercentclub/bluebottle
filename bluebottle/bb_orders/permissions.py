@@ -1,3 +1,4 @@
+from bluebottle.bb_orders.models import OrderStatuses
 from rest_framework import permissions
 
 
@@ -25,8 +26,14 @@ class IsOrderCreator(permissions.BasePermission):
 
         # Case 2: Anonymous user.
         else:
-            # For an anonymous user we grant access if the cart order id is the same as the payment order id.
-            order_id = request.session.get('cart_order_id')
+            # For an anonymous user we grant access if the new order id is the same as the payment order id.
+            order_id = request.session.get('new_order_id')
             if order_id:
                 return order_id == order.id
             return False
+
+
+class OrderIsNew(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return obj.status == OrderStatuses.new

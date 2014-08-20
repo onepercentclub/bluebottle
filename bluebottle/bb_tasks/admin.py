@@ -58,6 +58,7 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'skill', 'time_needed',
         'status', 'date_status_change',
+        'end_goal',
         'people_needed',
         'project', 'author',
         'tags',

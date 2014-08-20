@@ -1,8 +1,8 @@
 # coding=utf-8
-from bluebottle.utils.utils import get_serializer_class, get_model_class
+from bluebottle.utils.utils import get_serializer_class, ModelDispatcher
 from rest_framework import serializers
 
-DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
+DONATION_MODEL = ModelDispatcher().get_model_class('DONATIONS_DONATION_MODEL')
 
 
 class ManageDonationSerializer(serializers.ModelSerializer):
@@ -13,7 +13,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DONATION_MODEL
-        fields = ('id', 'project', 'user', 'amount', 'status', 'order')
+        fields = ('id', 'project', 'user', 'amount', 'status', 'order', 'anonymous')
 
     # FIXME Add validations for amount and project phase
 
@@ -24,4 +24,4 @@ class DonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DONATION_MODEL
-        fields = ('id', 'project', 'user', 'created')
+        fields = ('id', 'project', 'user', 'created', 'anonymous')

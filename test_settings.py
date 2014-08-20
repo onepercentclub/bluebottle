@@ -23,7 +23,6 @@ AUTH_USER_MODEL = 'test.TestBaseUser'
 
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
 PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
-
 FUNDRAISERS_FUNDRAISER_MODEL = 'test.TestFundRaiser'
 
 TASKS_TASK_MODEL = 'test.TestTask'
@@ -34,7 +33,6 @@ TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
 ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
 ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
 ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
-PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
 
 DONATIONS_DONATION_MODEL = 'test.TestDonation'
 ORDERS_ORDER_MODEL = 'test.TestOrder'

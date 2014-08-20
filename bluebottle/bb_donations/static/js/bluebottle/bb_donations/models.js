@@ -32,7 +32,8 @@ App.Donation = DS.Model.extend({
     project: DS.belongsTo('App.Project'),
     fundraiser: DS.belongsTo('App.Fundraiser'),
     user: DS.belongsTo('App.UserPreview'),
-    created: DS.attr('date')
+    created: DS.attr('date'),
+    anonymous: DS.attr('boolean', {defaultValue: false})
 });
 
 App.ProjectDonation = DS.Model.extend({

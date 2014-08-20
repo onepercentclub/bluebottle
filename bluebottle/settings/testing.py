@@ -26,6 +26,8 @@ TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
 ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
 ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
 PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
+ORDERS_ORDER_MODEL = 'test.TestOrder'
+
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization

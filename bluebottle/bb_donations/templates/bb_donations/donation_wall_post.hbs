@@ -4,18 +4,32 @@
 
 {% tplhandlebars "donation_wall_post" %}
     <div class="wallpost-form">
-        {{view Ember.TextArea valueBinding="text" cols="50" rows="4" name="wallpost-update" classBinding="errors.text.length:error" placeholder="Your comment"}}
+        <div class="wallpost-message">
+            <div class="wallpost-header">
+                <div class="row">
+                    <div class="col9 wallpost-header-title"><strong>{% trans 'Leave a message on the project wall'%}</strong></div>
+                    <div class="col3 wallpost-header-count">
+                        <span class="count-words">0</span>
+                         / 
+                        <span class="total-words">140</span>
+                    </div>
+                </div>
+            </div>
+            {{view Ember.TextArea valueBinding="text" cols="50" rows="4" maxlength="140" name="wallpost-update" classBinding="errors.text.length:error :wallpost-textarea" placeholder="Your comment"}}
+        </div>
 
         {{#if errors.text }}
             <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
         {{/if}}
 
-        <div class="row">
-            <div class="col6">
-                <button class="btn btn-cancel disabled" {{action 'closeModal'}}>{% trans "No Thanks" %}</button>
-            </div>
-            <div class="col6">
-                <button class="btn btn-primary btn-save" {{action 'saveWallPost'}}>{% trans "Leave Message" %}</button>
+        <div class="wallpost-buttons">
+            <div class="row">
+                <div class="col5">
+                    <button class="btn is-inactive" {{action 'closeModal'}}>{% trans "No Thanks" %}</button>
+                </div>
+                <div class="col7">
+                    <button class="btn btn-sec" {{action 'saveWallPost'}}>{% trans "Leave Message" %}</button>
+                </div>
             </div>
         </div>
     </div>

@@ -11,7 +11,12 @@
                 <div class="wallpost-title">
                     <h3>{% trans "Project Wall" %}</h3>
                     <small class="latest-update">
-                        {% trans 'Latest update'%}: {{ localize firstObject.created formatting="X"}}
+                        {% trans 'Latest update'%}: 
+                        {{#if firstObject.created}}
+                            {{ localize firstObject.created formatting="X"}}
+                        {{else}}
+                            {% trans 'never, be the first:)'%}
+                        {{/if}}
                     </small>
                 </div>
                 {{#if currentUser.isAuthenticated }}

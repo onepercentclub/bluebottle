@@ -1,4 +1,5 @@
 from bluebottle.bb_donations.models import DonationStatuses
+from bluebottle.bb_orders.permissions import OrderIsNew
 from django.http.response import Http404
 import logging
 from bluebottle.bb_donations.serializers import ManageDonationSerializer
@@ -74,6 +75,8 @@ class ManageDonationList(generics.ListCreateAPIView):
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
     # FIXME: Add permission for OrderOwner
 
+    permission_classes = (OrderIsNew, )
+
     def get_queryset(self):
         queryset = super(ManageDonationList, self).get_queryset()
 
@@ -98,4 +101,6 @@ class ManageDonationList(generics.ListCreateAPIView):
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
+
+    permission_classes = (OrderIsNew, )
 

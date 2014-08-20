@@ -1,4 +1,4 @@
-from bluebottle.utils.utils import get_taskmember_model
+from bluebottle.utils.model_dispatcher import get_taskmember_model
 from django.conf import settings
 from django.db import models
 import django.db.models.options as options
@@ -10,7 +10,9 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
+
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
+
 
 class BaseSkill(models.Model):
 
@@ -60,8 +62,7 @@ class BaseTaskMember(models.Model):
         self.check_number_of_members_needed(self.task)
 
     def check_number_of_members_needed(self, task):
-        BB_TASKMEMBER_MODEL = get_taskmember_model()
-        members_accepted = BB_TASKMEMBER_MODEL.objects.filter(task=task, status='accepted').count()
+        members_accepted = get_taskmember_model().objects.filter(task=task, status='accepted').count()
         if task.status == 'open' and task.people_needed <= members_accepted:
             task.set_in_progress()
 

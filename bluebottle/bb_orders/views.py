@@ -1,12 +1,11 @@
 import logging
 from bluebottle.bb_orders.permissions import IsOrderCreator
 from bluebottle.geo.models import Country
-from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
-from bluebottle.utils.utils import get_project_model, get_model_class, get_serializer_class
+from bluebottle.utils.model_dispatcher import get_order_model, get_project_model
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
-
-ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
+ORDER_MODEL = get_order_model()
 PROJECT_MODEL = get_project_model()
 
 logger = logging.getLogger(__name__)

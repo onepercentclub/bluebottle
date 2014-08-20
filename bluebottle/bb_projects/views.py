@@ -4,7 +4,7 @@ from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
 from .models import ProjectTheme, ProjectPhase
 from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
 from .permissions import IsProjectOwner

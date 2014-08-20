@@ -1,12 +1,13 @@
 from django.http.response import Http404
 import logging
-from bluebottle.bb_donations.serializers import ManageDonationSerializer
-from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
-from bluebottle.utils.utils import get_project_model, get_model_class, get_serializer_class
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model
+
 
 PROJECT_MODEL = get_project_model()
-DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
+
+DONATION_MODEL = get_donation_model()
 
 logger = logging.getLogger(__name__)
 

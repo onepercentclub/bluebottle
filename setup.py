@@ -28,7 +28,7 @@ install_requires = [
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
     'django-filter==0.6',
-    'django-fluent-contents==0.9a1',
+    'django-fluent-contents==0.9a1', # Version 1.0b1 and up breaks our code
     'django-iban==0.2.1',
     'django-localflavor==1.0',
     'django-registration==1.0',
@@ -45,6 +45,7 @@ install_requires = [
     'html5lib==0.95',
     'micawber==0.2.6',
     'mock==1.0.1',
+    'requests==2.3.0',
     'sorl-thumbnail==11.12',
     'splinter==0.6.0',
     'transifex-client==0.9',
@@ -68,8 +69,6 @@ dependency_links = [
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
 
-    'https://github.com/onepercentclub/django-docdata/archive/120ae5b8a1da6152d43d4601edc8832268e05515.zip#egg=django-docdata-0.1',
-
     'https://bitbucket.org/sergei_maertens/django-admin-tools/get/c989fd1.zip#egg=django-admin-tools-0.5.1',
 ]
 
@@ -80,7 +79,7 @@ tests_require = [
     'django-admin-tools==0.5.1',
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
-    'django-fluent-contents==0.9a1',
+    'django-fluent-contents==0.9a1', # Version 1.0b1 and up breaks our code
     'django-filetransfers==0.0.0',
     'django-localflavor==1.0',
     'django-registration==1.0',
@@ -94,8 +93,10 @@ tests_require = [
     'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
+    'mollie-api-python==1.0.0',
     'nose==1.3.3',
-    'pylint==0.28.0',
+    'pylint==1.1.0',
+    'requests==2.3.0',
     'sauceclient==0.1.0',
     'selenium==2.42.1',
     'South==0.8.1', # Functional testing libraries

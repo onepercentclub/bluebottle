@@ -1,12 +1,18 @@
+from bluebottle.utils.utils import get_model_class
 from django.conf import settings
 from django.db import models
+from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from uuidfield import UUIDField
 from django.db.models import options
+from django.db.models.signals import pre_save, post_save, post_delete
+from django.dispatch import receiver
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
+
+DONATION_MODEL = get_model_class('DONATIONS_DONATION_MODEL')
 
 
 class OrderStatuses(DjangoChoices):
@@ -31,8 +37,23 @@ class BaseOrder(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
+    def update_total(self, save=True):
+        donations = DONATION_MODEL.objects.filter(order=self)
+        self.total = donations.aggregate(Sum('amount'))['amount__sum']
+        if save:
+            self.save()
+
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
+
+@receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
+def update_order_amount(sender, instance, **kwargs):
+    instance.order.update_total()
+
+
+@receiver(post_delete, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
+def update_order_amount(sender, instance, **kwargs):
+    instance.order.update_total()

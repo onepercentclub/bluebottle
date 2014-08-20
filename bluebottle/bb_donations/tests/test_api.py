@@ -4,9 +4,12 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import InitProjectDataMixin
+from bluebottle.utils.utils import get_model_class
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from rest_framework import status
+
+ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
 
 
 class DonationApiTestCase(OrderApiTestCase):
@@ -71,7 +74,7 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.data['total'], 97)
 
         # remove the first donation
-        response = self.client.delete(donation_url, 'application/json', HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.delete(donation_url, content_type='application/json', HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # Check that the order total is equal to second donation
@@ -81,5 +84,21 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(len(response.data['donations']), 1)
         self.assertEqual(response.data['total'], 47)
 
+        # Set order to status 'locked'
+        order = ORDER_MODEL.objects.get(id=order_id)
+        order.set_status('locked')
 
+        donation3 = {
+            "project": self.project1.slug,
+            "order": order_id,
+            "amount": 70
+        }
 
+        # Should not be able to add more donations to this order now.
+        response = self.client.post(self.manage_donation_list_url, donation3, HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Check that this user can't change the amount of an donation
+        donation1['amount'] = 5
+        response = self.client.put(donation_url, json.dumps(donation1), content_type='application/json', HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

@@ -16,7 +16,7 @@ $activity-list-item-bold-color         : $color-secondary !default;
         .activity-action {
             float: right;
             font-size: 1rem;
-            text-decoration: none;
+            text-decoration: underline;
         }
     }
 
@@ -54,6 +54,7 @@ $activity-list-item-bold-color         : $color-secondary !default;
                 padding: 1em;
                 color: #7c90a6;
                 @include grid(38,0,0);
+                line-height: 20px;
             }
 
             .progress {
@@ -63,6 +64,10 @@ $activity-list-item-bold-color         : $color-secondary !default;
 
                     .project-fund-amount-slider {
                         background-color: white;
+
+                        .slider-progress {
+                            height: 0.8em;
+                        }
                     }
                 }
 

@@ -1,92 +1,64 @@
-from decimal import Decimal, ROUND_HALF_UP
+from bluebottle.utils.utils import import_class
 from django.conf import settings
-from .models import Payment, PaymentStatuses, PaymentLogLevels
-from .signals import payment_status_changed
-from django.conf import settings
+import re
 
 
 def get_payment_methods(country=None, amount=None):
+    """
+    Get all payment methods from settings.
+    """
+    # TODO: Add logic to filter methods based on amount and country
     methods = getattr(settings, 'PAYMENT_METHODS', ())
     return methods
 
 
+def get_adapter(name=''):
+    """
+    Get de PaymentAdapter class based on PaymentMethod name.
+    """
+    provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1', name)
+    app_name = 'payments_' + provider_name
+    class_name = provider_name.title() + 'PaymentAdapter'
+    class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
+    return import_class(class_path)
 
 
 class AbstractPaymentAdapter(object):
     """
-    This is the abstract base class that should be used by all Payment Adapters.
+    This is the abstract base class that should be used by all PaymentAdapters.
     """
-
-    def __init__(self):
-        self.test = not getattr(settings, "COWRY_LIVE_PAYMENTS", False)
-
-    def get_payment_methods(self):
+    @staticmethod
+    def create_payment_object(order_payment, integration_data=None):
         raise NotImplementedError
 
-    def create_payment_object(self, payment_method_id, payment_submethod_id, amount, currency):
-        raise NotImplementedError
-
-    def create_remote_payment_order(self, payment):
-        raise NotImplementedError
-
-    def get_payment_url(self, payment):
-        raise NotImplementedError
-
-    def update_payment_status(self, payment):
-        raise NotImplementedError
-
-    def cancel_payment(self, payment):
-        raise NotImplementedError
-
-    def update_payment_fee(self, payment, payment_method, payment_fees_setting, payment_logger):
-        payment_fees = getattr(settings, payment_fees_setting, None)
-        if payment_fees:
-            if payment_method in payment_fees:
-                payment_cost_setting = str(payment_fees[payment_method])
-                if '%' in payment_cost_setting:
-                    # Note: This assumes that the amount in the payment method will cover the full cost of the
-                    # payment order. It seems that at least DocData allows multiple payments to make up the full
-                    # order total. The method used here should be ok for 1%Club but it may not be suitable for others.
-                    cost_percent = Decimal(payment_cost_setting.replace('%', '')) / 100
-                    payment_cost = cost_percent * payment.amount
-                else:
-                    payment_cost = Decimal(payment_cost_setting) * 100
-
-                # Set the base transaction fee.
-                transaction_fee = Decimal(str(payment_fees['transaction_fee']))
-                payment.fee = payment_cost.quantize(Decimal('1.'), rounding=ROUND_HALF_UP) + transaction_fee
-                payment.save()
-
-            else:
-                payment_logger(payment, PaymentLogLevels.warn,
-                               "Can't set payment fee for {0} because payment method is not in {1} config.".format(
-                                   payment_method, payment_fees_setting))
-        else:
-            payment_logger(payment, PaymentLogLevels.warn,
-                           "Can't set payment fee for {0} because {1} config is not in set.".format(
-                               payment_method, payment_fees_setting))
-
-    def _map_status(self, status):
+    @staticmethod
+    def get_payment_authorization_action(payment):
         """
-        Maps a PSP status to a Cowry Payment status using the status_mapping dict.
-        Subclasses can safely use and/or override this method.
+        Get an object with payment authorization action.
+        Typical response would be
+        {'type': 'redirect', 'url' '...', 'method': 'get', 'payload': None}
         """
-        if hasattr(self, 'status_mapping'):
-            if status in self.status_mapping:
-                return self.status_mapping.get(status)
-        return status
+        raise NotImplementedError
 
-    def _change_status(self, payment, new_status):
+    @staticmethod
+    def check_payment_status(payment):
         """
-        Changes the Payment status to new_status and sends a signal about the change.
-        Subclasses must use this method to change statuses.
+        Fetch the latest payment status from PSP.
         """
-        old_status = payment.status
-        if old_status != new_status:
-            if new_status not in PaymentStatuses.values:
-                new_status = PaymentStatuses.unknown
+        raise NotImplementedError
 
-            payment.status = new_status
-            payment.save()
+    @staticmethod
+    def cancel_payment(payment):
+        """
+        Try to cancel the payment at PSP
+        """
+        raise NotImplementedError
 
-            payment_status_changed.send(sender=Payment, instance=payment, old_status=old_status, new_status=new_status)
+
+    @staticmethod
+    def refund_payment(payment):
+        """
+        Try to refund the payment at PSP
+        """
+        raise NotImplementedError
+

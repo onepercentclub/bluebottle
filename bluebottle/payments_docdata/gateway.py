@@ -189,7 +189,7 @@ class DocdataClient(object):
         # Create the integration info node which is passed to every request.
         self.integration_info = TechnicalIntegrationInfo()
 
-    def create(self, merchant, order_id, total_gross_amount, shopper, bill_to, description, receiptText=None,
+    def create(self, merchant, payment_id, total_gross_amount, shopper, bill_to, description, receiptText=None,
                includeCosts=False, profile='webmenu', days_to_pay=7):
         """
         Create the payment in docdata.
@@ -244,30 +244,39 @@ class DocdataClient(object):
         # TODO: can also pass shipTo + invoice details to docdata.
         # This displays the results in the docdata web menu.
         #
-        reply = self.client.service.create(
-            merchant=merchant.to_xml(self.client.factory),
-            merchantOrderReference=order_id,
-            paymentPreferences=paymentPreferences,
-            menuPreferences=menuPreferences,
-            shopper=shopper.to_xml(self.client.factory),
-            totalGrossAmount=total_gross_amount.to_xml(self.client.factory),
-            billTo=bill_to.to_xml(self.client.factory),
-            description=description,
-            receiptText=receiptText or None,
-            includeCosts=includeCosts or False,
-            integrationInfo=self.integration_info.to_xml(self.client.factory)
-        )
+        done = False
+        t = 1
 
-        # Parse the reply
-        if hasattr(reply, 'createSuccess'):
-            order_key = str(reply['createSuccess']['key'])
-            return {'order_id': order_id, 'order_key': order_key}
-        elif hasattr(reply, 'createError'):
-            error = reply.createError.error
-            log_docdata_error(error, "DocdataClient: failed to create payment for order {0}".format(order_id))
-            raise Exception(error, error.value)
-        else:
-            raise Exception('Received unknown reply from DocData. Remote Payment not created.')
+        while not done:
+            merchant_order_reference = "{0}-{1}".format(payment_id, t)
+            reply = self.client.service.create(
+                merchant=merchant.to_xml(self.client.factory),
+                merchantOrderReference=merchant_order_reference,
+                paymentPreferences=paymentPreferences,
+                menuPreferences=menuPreferences,
+                shopper=shopper.to_xml(self.client.factory),
+                totalGrossAmount=total_gross_amount.to_xml(self.client.factory),
+                billTo=bill_to.to_xml(self.client.factory),
+                description=description,
+                receiptText=receiptText or None,
+                includeCosts=includeCosts or False,
+                integrationInfo=self.integration_info.to_xml(self.client.factory)
+            )
+            if hasattr(reply, 'createSuccess'):
+                done = True
+                order_key = str(reply['createSuccess']['key'])
+
+            elif hasattr(reply, 'createError'):
+                if reply.createError.error.value == "Merchant order reference is not unique.":
+                    t += 1
+                else:
+                    error = reply.createError.error
+                    log_docdata_error(error, "DocdataClient: failed to create payment for order {0}".format(order_id))
+                    raise Exception(error, error.value)
+            else:
+                raise Exception('Received unknown reply from DocData. Remote Payment not created.')
+
+        return {'order_id': merchant_order_reference, 'order_key': order_key}
 
 
     def start(self, order_key, payment, payment_method=None, amount=None):

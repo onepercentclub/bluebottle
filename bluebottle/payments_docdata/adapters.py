@@ -16,7 +16,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     MODEL_CLASS = DocdataPayment
 
     def create_payment(self):
-        payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.payment_meta_data)
+        payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
         payment.total_gross_amount = self.order_payment.amount
 
         testing_mode = True
@@ -60,7 +60,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         response = client.create(
             merchant=merchant,
-            order_id=merchant_order_id,
+            payment_id=self.order_payment.id,
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,
@@ -87,7 +87,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         return_url = 'http://localhost:8000/payments_docdata/payment/'
         client_language = 'en'
 
-        integration_data = self.order_payment.payment_meta_data
+        integration_data = self.order_payment.integration_data
 
         url = client.get_payment_menu_url(
             order_key=self.payment.payment_cluster_key,

@@ -64,7 +64,7 @@ class OrderPayment(models.Model):
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)
-    payment_meta_data = JSONField(_("Integration data"), max_length=5000, blank=True)
+    integration_data = JSONField(_("Integration data"), max_length=5000, blank=True)
 
     authorization_action = models.OneToOneField(PaymentAction, verbose_name=_("Authorization action"), null=True)
 

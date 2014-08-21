@@ -8,18 +8,18 @@ from django.db.models import options
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 
-class DonationStatuses(DjangoChoices):
-    new = ChoiceItem('new', label=_("New"))
-    in_progress = ChoiceItem('in_progress', label=_("In progress"))
-    pending = ChoiceItem('pending', label=_("Pending"))
-    paid = ChoiceItem('paid', label=_("Paid"))
-    failed = ChoiceItem('failed', label=_("Failed"))
-
-
 class BaseDonation(models.Model):
     """
     Donation of an amount from a user to a project.
     """
+    class DonationStatuses(DjangoChoices):
+        new = ChoiceItem('new', label=_("New"))
+        in_progress = ChoiceItem('in_progress', label=_("In progress"))
+        pending = ChoiceItem('pending', label=_("Pending"))
+        paid = ChoiceItem('paid', label=_("Paid"))
+        failed = ChoiceItem('failed', label=_("Failed"))
+
+
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
 
     # User is just a cache of the order user.

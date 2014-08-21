@@ -62,7 +62,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,
-            description="Bluebottle donation",
+            description=_("Bluebottle donation"),
             receiptText="Bluebottle donation",
             includeCosts=False,
             profile='webmenu',
@@ -82,7 +82,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         client = gateway.DocdataClient(testing_mode)
 
-        return_url = 'http://localhost:8000/payments_docdata/payment/'
+        return_url = 'http://localhost:8000/'
         client_language = 'en'
 
         integration_data = self.order_payment.integration_data

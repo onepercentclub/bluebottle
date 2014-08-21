@@ -1,11 +1,8 @@
-from bluebottle.bb_donations.models import DonationStatuses
 from bluebottle.bb_orders.permissions import OrderIsNew
 from django.http.response import Http404
 import logging
-from bluebottle.bb_donations.serializers import ManageDonationSerializer
-from django.contrib.auth.models import AnonymousUser
 from rest_framework import generics
-from bluebottle.utils.utils import get_project_model, get_model_class, get_serializer_class
+from bluebottle.utils.utils import get_model_class, get_serializer_class
 
 PROJECT_MODEL = get_model_class('PROJECTS_PROJECT_MODEL')
 FUNDRAISER_MODEL = get_model_class('FUNDRAISERS_FUNDRAISER_MODEL')
@@ -59,7 +56,7 @@ class ProjectDonationList(generics.ListAPIView):
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")
-        queryset = queryset.filter(status__in=[DonationStatuses.paid, DonationStatuses.pending])
+        queryset = queryset.filter(status__in=[DONATION_MODEL.DonationStatuses.paid, DONATION_MODEL.DonationStatuses.pending])
 
         return queryset
 

@@ -441,13 +441,6 @@ class DocdataClient(object):
 
         :param extra_args: Additional URL arguments, e.g. default_pm=IDEAL, ideal_issuer_id=0021, default_act='true'
         """
-
-        # Add order_id= parameter to the URL
-        if '?' in return_url:
-            url_format = '{0}&callback={callback}&order_id={order_id}'
-        else:
-            url_format = '{0}?callback={callback}&order_id={order_id}'
-
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,

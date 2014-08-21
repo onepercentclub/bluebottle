@@ -42,6 +42,7 @@ $modal-item-background									   : #F5F4F6;
 		border-color: $gray-border;
 		height: 45px;
 		box-shadow: none;
+		font-size: 18px;
 
 		&:hover {
 				border-color: $gray-border-hover;
@@ -308,15 +309,10 @@ $modal-item-background									   : #F5F4F6;
 				width: auto;
 			}
 
-			.donate-btn {
+			.donate-btn, .payment-btn {
 				margin: 34px 0 15px;
 			}
 
-			.payment-btn {
-				margin: auto;
-				margin-top: 30px;
-				margin-bottom: 30px;
-			}
 		}
 
 		.modal-fullscreen-close {

@@ -5,7 +5,7 @@ App.DocdataPayment = Em.Object.extend({
 });
 
 App.DocdataIdeal = App.DocdataPayment.extend({
-    paymentMethod: 'ideal',
+    default_pm: 'ideal',
     ideal_issuer_id: ''
 });
 

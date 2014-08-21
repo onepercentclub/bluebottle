@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.utils import translation
 
 from babel.numbers import format_currency
-from bluebottle.utils.utils import get_model_class
+from bluebottle.utils.model_dispatcher import get_fundraiser_model
 
-FUNDRAISER_MODEL = get_model_class('FUNDRAISERS_FUNDRAISER_MODEL')
+
+FUNDRAISER_MODEL = get_fundraiser_model()
 
 class FundRaiserAdmin(admin.ModelAdmin):
     list_display = ('title', 'amount_override', 'deadline', 'amount_donated_override')

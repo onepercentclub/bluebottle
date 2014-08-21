@@ -5,7 +5,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, TASK_MODEL
 
-from bluebottle.utils.utils import get_taskmember_model
+from bluebottle.utils.model_dispatcher import get_taskmember_model
+
 TASKS_MEMBER_MODEL = get_taskmember_model()
 
 from bluebottle.bb_tasks import taskmail

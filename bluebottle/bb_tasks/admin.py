@@ -3,13 +3,14 @@ from django.contrib import admin
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
-from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
+from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, \
+    get_taskfile_model, get_task_skill_model
 
 BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
-BB_SKILL_MODEL = get_skill_model
+BB_SKILL_MODEL = get_task_skill_model()
 
 
 class TaskMemberAdminInline(admin.StackedInline):

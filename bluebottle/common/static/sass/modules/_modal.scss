@@ -1,5 +1,5 @@
 
-$font-family-body					   					   : 'Neue Helvetica W01';
+$font-family-body					   					   : 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
 $gray-border                                               : #D8D8D8;
 $gray-border-hover                                         : #9F9F9F;
 $modal-background-color									   : rgba(#8A9993, .65);
@@ -224,7 +224,8 @@ $modal-item-background									   : #F5F4F6;
 
 			big {
 				margin: -11px 0 21px 0;
-				display: block
+				display: block;
+				font-size: 15px;
 			}
 
 			.modal-flash-message {
@@ -255,9 +256,20 @@ $modal-item-background									   : #F5F4F6;
 			}
 
 			.btn {
-				margin-top: 5px;
+				margin-top: 7px;
 				width: 100%;
 				border-radius: 8px;
+			}
+
+			.donation-buttons {
+				margin-top: 4px;
+
+				.btn {
+					width: 80%;
+					height: 45px;
+					font-size: 15px;
+					padding: 12px 0 12px 0;
+				}	
 			}
 
 			.or-hr {
@@ -292,11 +304,12 @@ $modal-item-background									   : #F5F4F6;
 
 			.donate-btn, .payment-btn {
 				font-size: 18px;
-				width: 300px;
+				min-width: 193px;
+				width: auto;
 			}
 
 			.donate-btn {
-				margin: 30px auto;
+				margin: 34px 0 15px;
 			}
 
 			.payment-btn {

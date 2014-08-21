@@ -95,12 +95,15 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             client_language=client_language,
         )
 
-        params = {
-            'default_pm': getattr(integration_data, 'default_pm', None),
-            'ideal_issuer_id': getattr(integration_data, 'ideal_issuer_id', None),
-            'default_act': 'true'
-        }
+        default_act = False
+        if self.payment.ideal_issuer_id:
+            default_act = True
 
+        params = {
+             'default_pm': self.payment.default_pm,
+             'ideal_issuer_id': self.payment.ideal_issuer_id,
+             'default_act': default_act
+        }
         url += '&' + urlencode(params)
         return {'type': 'redirect', 'method': 'get', 'url': url}
 

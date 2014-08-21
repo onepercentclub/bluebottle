@@ -43,8 +43,8 @@ App.PaymentController = Em.ObjectController.extend({
         var meta = this.get('model.authorizationAction');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
-              //var getUrl = this._buildUrl(meta.url, meta.payload);
-               window.location = meta.url;
+                console.log(meta.url)
+                if (confirm("Ready? \n" + meta.url)) window.location = meta.url;
             }
         }
     },
@@ -173,17 +173,12 @@ App.PaymentController = Em.ObjectController.extend({
 
 App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerValidationMixin, {
 
-    getIntegrationData: function(){
-        return {};
+    getIntegrationData: function() {
+        return this.get('model');
     },
-
     validateFields: function(){
         return true;
     }
-
-//    normalizeData: function () {
-//
-//    }
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({

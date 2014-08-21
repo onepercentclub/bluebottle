@@ -1,12 +1,12 @@
 import factory
 
-from bluebottle.utils.utils import ModelDispatcher
+from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
 
-PROJECT_MODEL = ModelDispatcher().get_project_model()
+PROJECT_MODEL = get_project_model()
 
 
 class ProjectThemeFactory(factory.DjangoModelFactory):

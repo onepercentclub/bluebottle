@@ -6,7 +6,7 @@ from rest_framework import permissions
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.model_dispatcher import get_project_model
 
 from .models import TextWallPost, MediaWallPost, MediaWallPostPhoto
 from .permissions import IsConnectedWallPostAuthorOrReadOnly

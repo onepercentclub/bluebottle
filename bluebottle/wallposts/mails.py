@@ -37,14 +37,14 @@ from django.template import Context
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.utils.utils import get_project_model, get_task_model
-from bluebottle.bb_tasks.models import BaseTask
+from bluebottle.utils.model_dispatcher import get_task_model, get_project_model
 from bluebottle.mail import send_mail
 
 from .models import TextWallPost, Reaction
 
 TASK_MODEL = get_task_model()
 PROJECT_MODEL = get_project_model()
+
 logger = logging.getLogger(__name__)
 
 

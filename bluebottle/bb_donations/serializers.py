@@ -1,8 +1,9 @@
 # coding=utf-8
-from bluebottle.utils.utils import get_serializer_class, ModelDispatcher
+from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from rest_framework import serializers
 
-DONATION_MODEL = ModelDispatcher().get_model_class('DONATIONS_DONATION_MODEL')
+DONATION_MODEL = get_donation_model()
 
 
 class ManageDonationSerializer(serializers.ModelSerializer):

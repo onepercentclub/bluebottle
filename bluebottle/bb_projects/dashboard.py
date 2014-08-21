@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from admin_tools.dashboard.modules import DashboardModule
-from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()

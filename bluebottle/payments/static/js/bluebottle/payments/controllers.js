@@ -125,34 +125,36 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
             payment.save().then(
                 // Success
-
                 function (payment) {
-                    // Reload the order to receive any backend updates to the order status
-                    // NOTE: when using the mock api we will need to manually set the order
-                    //       status here.
-                    payment.get('order').then(function (order) {
-                        order.reload();
-                    });
+                    // Reload the order to receive any backend updates to the 
+                    // order status
+                    // NOTE: when using the mock api we will need to manually 
+                    //       set the order status here.
+                    var order = payment.get('order');
+                    order.reload();
+
                     // Proceed to the next step based on the status of the payment
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
 
-                    // FIXME: For testing purposes we will direct the user to the success
-                    //        modal for creditcard payments and to the mock service provider
-                    //        for all others.
-                    if (_this.get('payment_method.profile') == 'creditcard') {
-                        // Load the success modal
-                        // Since all models are already loaded in Ember here, we should just be able
+                    // FIXME: For testing purposes we will direct the user to 
+                    //        the success modal for creditcard payments and to
+                    //        the mock service provider for all others.
+                    if (order.get('status') == 'success') {
+                        // Load the success modal. Since all models are already 
+                        // loaded in Ember here, we should just be able
                         // to get the first donation of the order here
-                        var donation = payment.get('order.donations').objectAt(0);
+                        var donation = order.get('donations').objectAt(0);
                         _this.send('modalSlide', 'donationSuccess', donation);
                     } else {
+                        // Process the authorization action to determine next
+                        // step in payment process.
                         _this._processAuthorizationAction();
                     }
                 },
                 // Failure
                 function (payment) {
-
+                    // FIXME: Add error handing for failed order_payment save
                 }
             );
         },

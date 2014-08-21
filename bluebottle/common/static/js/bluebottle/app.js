@@ -312,10 +312,21 @@ App.Store = DS.Store.extend({
     adapter: 'App.Adapter'
 });
 
+App.ModelMetaMixin = Ember.Mixin.create({
+    meta_data: DS.attr('object'),
+    _modelProperty: 'content',
 
-DS.Model.reopen({
-    meta_data: DS.attr('object')
+    modelName: function() {
+        return String(this.constructor);
+    }.property('constructor'),
+
+    modelType: function() {
+        var name = this.get('modelName').split('.');
+        return Ember.String.camelize(name.pop());
+    }.property('modelName')
 });
+
+DS.Model.reopen(App.ModelMetaMixin, {});
 
 /* Application Controller */
 
@@ -551,7 +562,11 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             App.MyOrder.createRecord().save().then(
                 // Success
                 function(order) {
-                    var donation = App.MyDonation.createRecord({order: order, project: project});
+                    var donation =  App.MyDonation.createRecord({
+                                        order: order, 
+                                        project: project, 
+                                        fundraiser: fundraiser
+                                    });
 
                     controller.send('openInDynamic', 'donation', donation, 'modalFront');
                 },

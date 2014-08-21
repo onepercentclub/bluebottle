@@ -73,8 +73,7 @@ class OrderPayment(models.Model):
 
     def set_authorization_action(self, action, save=True):
         self.authorization_action = OrderPaymentAction(**action)
-        authorization_action.save()
-        self.authorization_action = authorization_action
+        self.authorization_action.save()
 
         if save:
             self.save()

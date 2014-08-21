@@ -1,11 +1,12 @@
-from bluebottle.payments.adapters import get_payment_methods
+import json
+from bluebottle.payments.services import get_payment_methods
 from bluebottle.payments.models import Payment
 from bluebottle.payments.serializers import ManagePaymentSerializer
+from bluebottle.payments.services import PaymentService
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from adapters import get_adapter
 
 
 class PaymentMethodList(APIView):
@@ -43,9 +44,7 @@ class ManagePaymentList(ListCreateAPIView):
     serializer_class = ManagePaymentSerializer
     # FIXME: Permissions
 
-    def post_save(self, obj, created):
-        integration_data = self.request.DATA.get('integration_data', None)
-        adapter = get_adapter(obj.payment_method)
-        payment = adapter.create_payment(obj, integration_data)
-        obj.set_authorization_action(adapter.get_authorization_action(obj))
+    def post_save(self, obj, created=False):
+        service = PaymentService(obj)
+        service.start_payment()
 

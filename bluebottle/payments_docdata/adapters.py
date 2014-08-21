@@ -1,7 +1,9 @@
 # coding=utf-8
 import logging
-from bluebottle.payments.adapters import AbstractPaymentAdapter
+from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments_docdata.exceptions import MerchantTransactionIdNotUniqueException
+from django.utils.http import urlencode
+import gateway
 from interface import DocdataInterface
 from django.conf import settings
 from .models import DocdataPayment
@@ -9,70 +11,96 @@ from .models import DocdataPayment
 logger = logging.getLogger(__name__)
 
 
-class DocdataPaymentAdapter(AbstractPaymentAdapter):
+class DocdataPaymentAdapter(BasePaymentAdapter):
 
-    @staticmethod
-    def create_payment(order_payment, integration_data):
-        payment = DocdataPayment(order_payment=order_payment)
-        payment.total_gross_amount = order_payment.amount
+    MODEL_CLASS = DocdataPayment
 
-        interface = DocdataInterface(debug=True)
-        user = order_payment.order.user
+    def create_payment(self):
+        payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
+        payment.total_gross_amount = self.order_payment.amount
 
-        merchant_order_id = order_payment.id
-        result = None
-        t = 1
+        testing_mode = True
 
-        # Docdata will need an unique id
-        # Since we might send the same order-payment multiple times to Dd,
-        # make sure we catch and resolve errors.
-        while not result:
-            merchant_order_id = "{0}-{1}".format(order_payment.id, t)
-            try:
-                # FIXME: Replace some hardcoded values here with actual values.
-                result = interface.new_payment_cluster(
-                    merchant_name=settings.DOCDATA_MERCHANT_NAME,
-                    merchant_password=settings.DOCDATA_MERCHANT_PASSWORD,
-                    merchant_transaction_id=merchant_order_id,
-                    profile='webmenu',
-                    client_id=user.id,
-                    price=order_payment.amount,
-                    cur_price='EUR',
-                    client_email=user.email,
-                    client_firstname=user.full_name,
-                    client_lastname=user.full_name,
-                    client_address='Unkown',
-                    client_zip='Unkown',
-                    client_city='Unkown',
-                    client_country='NL',
-                    client_language='en',
-                    days_pay_period=5
-                )
-            except MerchantTransactionIdNotUniqueException:
-                t += 1
+        merchant = gateway.Merchant(name=settings.DOCDATA_MERCHANT_NAME, password=settings.DOCDATA_MERCHANT_PASSWORD)
+
+        amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
+        user = self.order_payment.order.user
+
+        name = gateway.Name(
+            first=u'Henkie',
+            last=u'Henk'
+        )
+
+        shopper = gateway.Shopper(
+            id=user.id,
+            name=name,
+            email=user.email,
+            language='en',
+            gender="U",
+            date_of_birth=None,
+            phone_number=None,
+            mobile_phone_number=None,
+            ipAddress=None)
+
+        address = gateway.Address(
+            street=u'Henkdijk',
+            house_number='1',
+            house_number_addition=u'',
+            postal_code='u1234HK',
+            city=u'Henkendam',
+            state=u'',
+            country_code='NL',
+        )
+
+        bill_to = gateway.Destination(name=name, address=address)
+
+        client = gateway.DocdataClient(testing_mode)
+
+        merchant_order_id = "{0}-{1}".format(self.order_payment.id, 'a')
+
+        response = client.create(
+            merchant=merchant,
+            payment_id=self.order_payment.id,
+            total_gross_amount=amount,
+            shopper=shopper,
+            bill_to=bill_to,
+            description="Bluebottle donation",
+            receiptText="Bluebottle donation",
+            includeCosts=False,
+            profile='webmenu',
+            days_to_pay=5,
+            )
 
         payment.merchant_order_id = merchant_order_id
-        payment.payment_cluster_key = result['payment_cluster_key']
-        payment.payment_cluster_id = result['payment_cluster_id']
+        payment.payment_cluster_key = response['order_key']
+        payment.payment_cluster_id = response['order_id']
         payment.save()
 
-        return True
+        return payment
 
+    def get_authorization_action(self):
 
-    @staticmethod
-    def get_authorization_action(order_payment):
+        testing_mode = True
 
-        payment = DocdataPayment.objects.filter(order_payment=order_payment).all()[0]
+        client = gateway.DocdataClient(testing_mode)
 
-        interface = DocdataInterface(debug=True)
-        url = interface.get_payment_url(payment)
+        return_url = 'http://localhost:8000/payments_docdata/payment/'
+        client_language = 'en'
 
-        # url = interface.show_payment_cluster_url(
-        #     merchant_name=settings.DOCDATA_MERCHANT_NAME,
-        #     payment_cluster_key=payment.payment_cluster_key,
-        #     #payment_cluster_id=payment.payment_cluster_id,
-        #     #merchant_transaction_id=payment.merchant_order_id,
-        # )
+        integration_data = self.order_payment.integration_data
 
+        url = client.get_payment_menu_url(
+            order_key=self.payment.payment_cluster_key,
+            return_url=return_url,
+            client_language=client_language,
+        )
+
+        params = {
+            'default_pm': getattr(integration_data, 'default_pm', None),
+            'ideal_issuer_id': getattr(integration_data, 'ideal_issuer_id', None),
+            'default_act': 'true'
+        }
+
+        url += '&' + urlencode(params)
         return {'type': 'redirect', 'method': 'get', 'url': url}
 

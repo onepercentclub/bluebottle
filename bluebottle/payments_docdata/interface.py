@@ -68,6 +68,7 @@ class DocdataInterface(object):
             self.url = self.TEST_URL
         else:
             self.url = self.PROD_URL
+        return None
 
     def new_payment_cluster(self, **kwargs):
         """

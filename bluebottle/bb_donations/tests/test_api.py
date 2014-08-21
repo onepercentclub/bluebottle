@@ -21,7 +21,10 @@ class DonationApiTestCase(OrderApiTestCase):
 
 class TestCreateDonation(DonationApiTestCase):
 
-    def test_create_donation(self):
+    def test_create_single_donation(self):
+        """
+        Test donation in the current donation flow where we have just one donation that can't be deleted.
+        """
 
         # Create an order
         response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
@@ -36,6 +39,31 @@ class TestCreateDonation(DonationApiTestCase):
         response = self.client.post(self.manage_donation_list_url, donation1, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'new')
+        donation_id = response.data['id']
+
+        # Check that the order total is equal to the donation amount
+        order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
+        response = self.client.get(order_url, HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['total'], 35)
+
+    def test_crud_multiple_donations(self):
+        """
+        Test more advanced modifications to donations and orders that aren't currently supported by our
+        front-en but
+        """
+
+        # Create an order
+        response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
+        order_id = response.data['id']
+
+        donation1 = {
+            "project": self.project1.slug,
+            "order": order_id,
+            "amount": 35
+        }
+
+        response = self.client.post(self.manage_donation_list_url, donation1, HTTP_AUTHORIZATION=self.user1_token)
         donation_id = response.data['id']
 
         # Check that the order total is equal to the donation amount

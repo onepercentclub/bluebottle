@@ -42,8 +42,8 @@ class PaymentAction(models.Model):
                                                  choices=ActionTypes.choices)
     method = models.CharField(_("Authorization action method"), blank=True, max_length=20,
                                                    choices=ActionMethods.choices)
-    url = models.CharField(_("Authorization action url"), blank=True, max_length=500)
-    payload = models.CharField(_("Authorization action payload"), blank=True, max_length=1000)
+    url = models.CharField(_("Authorization action url"), blank=True, max_length=2000)
+    payload = models.CharField(_("Authorization action payload"), blank=True, max_length=5000)
 
 
 class OrderPayment(models.Model):
@@ -64,8 +64,7 @@ class OrderPayment(models.Model):
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)
-    #payment_meta_data = models.CharField(_("Integration data"), max_length=1000, blank=True)
-    payment_meta_data = JSONField(_("Integration data"), max_length=1000, blank=True)
+    payment_meta_data = JSONField(_("Integration data"), max_length=5000, blank=True)
 
     authorization_action = models.OneToOneField(PaymentAction, verbose_name=_("Authorization action"), null=True)
 
@@ -73,7 +72,10 @@ class OrderPayment(models.Model):
         self.amount = self.order.total
 
     def set_authorization_action(self, action, save=True):
-        self.authorization_action = PaymentAction(**action)
+        authorization_action = PaymentAction.objects.create(**action)
+        authorization_action.save()
+        self.authorization_action = authorization_action
+        print authorization_action
         if save:
             self.save()
 

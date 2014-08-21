@@ -32,7 +32,7 @@ App.PaymentController = Em.ObjectController.extend({
         }
     }.observes('methods.length'),
 
-    _processPaymentMetadata: function () {
+    _processAuthorizationAction: function () {
         // This function will handle where to direct the user after they submit the
         // payment selection. It handles the step based on these properties returned
         // by the server when they submitted the purchase:
@@ -43,9 +43,8 @@ App.PaymentController = Em.ObjectController.extend({
         var meta = this.get('model.authorizationAction');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
-              var getUrl = this._buildUrl(meta.url, meta.payload);
-
-              window.location.replace(getUrl);
+              //var getUrl = this._buildUrl(meta.url, meta.payload);
+               window.location = meta.url;
             }
         }
     },
@@ -58,8 +57,8 @@ App.PaymentController = Em.ObjectController.extend({
 
         // TODO: How we handle the payment details will depend on the PSP.
         if (paymentMethodController) {
-            var paymentMetaData = paymentMethodController.getIntegrationData();
-            this.set('paymentMetaData', paymentMetaData);
+            var integrationData = paymentMethodController.getIntegrationData();
+            this.set('integrationData', integrationData);
         }
     },
 
@@ -151,7 +150,7 @@ App.PaymentController = Em.ObjectController.extend({
                         var donation = payment.get('order.donations').objectAt(0);
                         _this.send('modalSlide', 'donationSuccess', donation);
                     } else {
-                        _this._processPaymentMetadata();
+                        _this._processAuthorizationAction();
                     }
                 },
                 // Failure

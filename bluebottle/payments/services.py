@@ -14,40 +14,37 @@ def get_payment_methods(country=None, amount=None):
 
 
 class PaymentService(object):
-
-    order_payment = None
+    """
+    order_payment: OrderPayment
+    adapter: a payment adapter e.g. DocdataPaymentAdapter
+    payment: a provider payment e.g. DocdataPayment
+    """
 
     def __init__(self, order_payment=None):
         if not order_payment or not isinstance(order_payment, OrderPayment):
             raise Exception("Need an OrderPayment to in initiate PaymentService")
+
         self.order_payment = order_payment
+        self.adapter = self._get_adapter()
 
     def _get_payment_method(self):
         return self.order_payment.payment_method
 
     def _get_adapter(self):
-        provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1', self._get_payment_method())
+        # FIXME: Check if payment_method is set.
+        provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1', self.order_payment.payment_method)
         app_name = 'payments_' + provider_name
         class_name = provider_name.title() + 'PaymentAdapter'
         class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
-        return import_class(class_path)
-
-    def _get_or_create_payment(self):
-        return self._get_adapter().get_or_create_payment(self.order_payment)
+        adapter_class = import_class(class_path)
+        adapter = adapter_class(self.order_payment)
+        return adapter
 
     def start_payment(self):
-
         # Remove the previous authorization action if there is one
         # FIXME: maybe we want to return this old action rather then generate a new one.
         if self.order_payment.authorization_action:
             self.order_payment.authorization_action.delete()
 
-        payment = self._get_or_create_payment()
-        action = self._get_adapter().get_authorization_action(payment)
-
-
+        action = self.adapter.get_authorization_action()
         self.order_payment.set_authorization_action(action)
-
-
-
-

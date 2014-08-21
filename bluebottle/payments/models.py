@@ -23,9 +23,9 @@ class OrderPaymentStatuses(DjangoChoices):
     paid = ChoiceItem('paid', label=_("Paid"))
 
 
-class PaymentAction(models.Model):
+class OrderPaymentAction(models.Model):
     """
-    This is used as action to process Payment.
+    This is used as action to process OrderPayment.
     For now this is only used as AuthorizationAction
     """
 
@@ -66,16 +66,16 @@ class OrderPayment(models.Model):
     payment_method = models.CharField(max_length=20, default='', blank=True)
     integration_data = JSONField(_("Integration data"), max_length=5000, blank=True)
 
-    authorization_action = models.OneToOneField(PaymentAction, verbose_name=_("Authorization action"), null=True)
+    authorization_action = models.OneToOneField(OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
 
     def full_clean(self, exclude=None):
         self.amount = self.order.total
 
     def set_authorization_action(self, action, save=True):
-        authorization_action = PaymentAction.objects.create(**action)
+        self.authorization_action = OrderPaymentAction(**action)
         authorization_action.save()
         self.authorization_action = authorization_action
-        print authorization_action
+
         if save:
             self.save()
 

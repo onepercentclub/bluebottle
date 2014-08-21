@@ -1,4 +1,4 @@
-App.PaymentController = Em.ObjectController.extend({
+App.OrderPaymentController = Em.ObjectController.extend({
     needs: ['application'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
@@ -84,7 +84,7 @@ App.PaymentController = Em.ObjectController.extend({
         // Render the payment method view
         var applicationRoute = App.__container__.lookup('route:application');
         applicationRoute.render(method.get('uniqueId'), {
-            into: 'payment',
+            into: 'orderPayment',
             outlet: 'paymentMethod'
         });
 
@@ -116,8 +116,6 @@ App.PaymentController = Em.ObjectController.extend({
                 this.send('modalError');
                 return false;
             }
-
-//            this.get('currentPaymentMethodController').normalizeData();
 
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
@@ -184,12 +182,6 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
 
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
 
-
-//    normalizeData: function () {
-//
-//        this.set('cardNumber', (this.get('cardNumber').replace(/ /g,'')));
-//    },
-
     // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
         // Enable the validation of errors on fields only after pressing the signup button
@@ -203,8 +195,8 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
     },
 
     init: function () {
-
         this._super();
+
         this.set('errorDefinitions', [
             {
                 'property': 'cardOwner',
@@ -238,5 +230,4 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
             }
         ]);
     }
-
 });

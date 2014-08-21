@@ -14,7 +14,6 @@ App.DocdataIdealBankSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
     prompt: gettext("Select your bank")
-
 });
 
 

@@ -61,16 +61,16 @@ App.OrderRoute = Em.Route.extend({
                             case 'cancelled':
                                 // Create a new payment for this order
                                 // TODO: set error message
-                                var payment = App.MyPayment.createRecord({order: model});
+                                var payment = App.MyOrderPayment.createRecord({order: model});
 
-                                _this.send('openInDynamic', 'payment', payment, 'modalFront');
+                                _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
                                 break;
 
                             case 'failed':
                                 // Create a new payment for this order
                                 // TODO: set error message
-                                var payment = App.MyPayment.createRecord({order: model});
-                                _this.send('openInDynamic', 'payment', payment, 'modalFront');
+                                var payment = App.MyOrderPayment.createRecord({order: model});
+                                _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
                                 break;
                             default:
                                 throw new Em.error('Incorrect order status: ' + status);

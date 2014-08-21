@@ -1,9 +1,8 @@
 App.PaymentMethod = DS.Model.extend({
-    url: 'payments/payment-methods',
+    url: 'payments/payment_methods',
 
     provider: DS.attr('string'),
     profile: DS.attr('string'),
-
     name: DS.attr('string'),
 
     uniqueId: function () {
@@ -18,7 +17,7 @@ App.PaymentMethod = DS.Model.extend({
 });
 
 
-App.Payment = DS.Model.extend({
+App.OrderPayment = DS.Model.extend({
     user: DS.belongsTo('App.UserPreview'),
     order: DS.belongsTo('App.MyOrder'),
     status: DS.attr('string'),
@@ -28,8 +27,8 @@ App.Payment = DS.Model.extend({
     amount: DS.attr('number')
 });
 
-App.MyPayment = App.Payment.extend({
-    url: 'payments/my',
+App.MyOrderPayment = App.OrderPayment.extend({
+    url: 'order_payments/my',
 
     paymentMethod: DS.attr('string'),
     integrationData: DS.attr('object'),
@@ -62,51 +61,34 @@ App.StandardCreditCardPaymentModel = Em.Object.extend({
     },
 
     creditcardBrandDetector: function () {
-
         var cardNumber = this.get('cardNumber');
         for (var key in this.creditcardRegexDict) {
-            if (cardNumber.search(key) == 0){
+            if (cardNumber.search(key) === 0){
                 return this.creditcardRegexDict[key];
             }
         }
         return null;
-
     },
 
     creditcardLengthVerifier: function (brand) {
-
         var lengthRegex = this.creditcardLengthDict[brand];
         var cardNumber = this.get('cardNumber');
-        return (cardNumber.search(lengthRegex) == 0);
-
+        return (cardNumber.search(lengthRegex) === 0);
     },
 
     creditcardVerifier: function () {
-
         this.set('validCreditcard', false);
         this.set('creditcardBrand', this.creditcardBrandDetector());
         this.set('validCreditcard', this.creditcardLengthVerifier(this.get('cardNumber').replace(/ /g,'')));
 
         this.addWhiteSpacesToCardNumber();
-
-
     }.observes('cardNumber.length'),
 
     addWhiteSpacesToCardNumber: function () {
-
         var cardNumber = this.get('cardNumber');
         var length = cardNumber.length;
         if (length == 4 || length == 9 || length == 14 || length == 19) {
             this.set('cardNumber', cardNumber + ' ');
-//            for (var i=1; i<length+1; i++) {
-//                debugger
-//                if (i%4 == 0){
-//                    spacedCardNumber = cardNumber.substr(0, i) + ' ' + cardNumber.substr(i);
-//                }
-//            }
-//            this.set('cardNumber', spacedCardNumber);
         }
-
     }
-
 });

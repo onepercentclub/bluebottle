@@ -32,7 +32,7 @@ App.PaymentController = Em.ObjectController.extend({
         }
     }.observes('methods.length'),
 
-    _processPaymentMetadata: function () {
+    _processAuthorizationAction: function () {
         // This function will handle where to direct the user after they submit the
         // payment selection. It handles the step based on these properties returned
         // by the server when they submitted the purchase:
@@ -43,9 +43,7 @@ App.PaymentController = Em.ObjectController.extend({
         var meta = this.get('model.authorizationAction');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
-              var getUrl = this._buildUrl(meta.url, meta.payload);
-
-              window.location.replace(getUrl);
+                window.location = meta.url;
             }
         }
     },
@@ -151,7 +149,7 @@ App.PaymentController = Em.ObjectController.extend({
                         var donation = payment.get('order.donations').objectAt(0);
                         _this.send('modalSlide', 'donationSuccess', donation);
                     } else {
-                        _this._processPaymentMetadata();
+                        _this._processAuthorizationAction();
                     }
                 },
                 // Failure
@@ -174,17 +172,12 @@ App.PaymentController = Em.ObjectController.extend({
 
 App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerValidationMixin, {
 
-    getIntegrationData: function(){
-        return {};
+    getIntegrationData: function() {
+        return this.get('model');
     },
-
     validateFields: function(){
         return true;
     }
-
-//    normalizeData: function () {
-//
-//    }
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({

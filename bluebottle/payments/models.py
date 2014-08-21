@@ -1,8 +1,10 @@
+import json
 from django.conf import settings
 from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from jsonfield.fields import JSONField
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.polymorphic_model import PolymorphicModel
 from django.db.models import options
@@ -40,8 +42,8 @@ class PaymentAction(models.Model):
                                                  choices=ActionTypes.choices)
     method = models.CharField(_("Authorization action method"), blank=True, max_length=20,
                                                    choices=ActionMethods.choices)
-    url = models.CharField(_("Authorization action url"), blank=True, max_length=500)
-    payload = models.CharField(_("Authorization action payload"), blank=True, max_length=1000)
+    url = models.CharField(_("Authorization action url"), blank=True, max_length=2000)
+    payload = models.CharField(_("Authorization action payload"), blank=True, max_length=5000)
 
 
 class OrderPayment(models.Model):
@@ -62,7 +64,7 @@ class OrderPayment(models.Model):
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)
-    payment_meta_data = models.CharField(_("Integration data"), blank=True, max_length=1000)
+    integration_data = JSONField(_("Integration data"), max_length=5000, blank=True)
 
     authorization_action = models.OneToOneField(PaymentAction, verbose_name=_("Authorization action"), null=True)
 
@@ -70,12 +72,22 @@ class OrderPayment(models.Model):
         self.amount = self.order.total
 
     def set_authorization_action(self, action, save=True):
-        self.authorization_action = PaymentAction(**action)
+        authorization_action = PaymentAction.objects.create(**action)
+        authorization_action.save()
+        self.authorization_action = authorization_action
+        print authorization_action
         if save:
             self.save()
 
 
 class Payment(PolymorphicModel):
+
+    @classmethod
+    def get_by_order_payment(cls, order_payment):
+        if len(cls.objects.filter(order_payment=order_payment).all()):
+            return cls.objects.filter(order_payment=order_payment).all()[0]
+        return None
+
     order_payment = models.OneToOneField('payments.OrderPayment')
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))

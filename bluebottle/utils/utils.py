@@ -138,6 +138,68 @@ def get_project_model():
     return project_model
 
 
+class ModelDispatcher:
+    """
+    Responsible for dispatching modules of the Bluebottle project
+    """
+    def get_task_model(self):
+        return self.get_model_class('TASKS_TASK_MODEL')
+
+    def get_taskmember_model(self):
+        return self.get_model_class('TASKS_TASKMEMBER_MODEL')
+
+    def get_taskfile_model(self):
+        return self.get_model_class('TASKS_SKILL_MODEL')
+
+    def get_skill_model(self):
+        return self.get_model_class('TASKS_SKILL_MODEL')
+
+    def get_project_model(self):
+        return self.get_model_class('PROJECTS_PROJECT_MODEL')
+
+    def get_donation_model(self):
+        return self.get_model_class('DONATIONS_DONATION_MODEL')
+
+    def get_order_model(self):
+        return self.get_model_class('ORDERS_ORDER_MODEL')
+
+    def get_organization_model(self):
+        return self.get_model_class('ORGANIZATIONS_ORGANIZATION_MODEL')
+
+    def get_organizationmember_model(self):
+        return self.get_model_class('ORGANIZATIONS_MEMBER_MODEL')
+
+    def get_organizationdocument_model(self):
+        return self.get_model_class('ORGANIZATIONS_DOCUMENT_MODEL')
+
+    def get_project_phaselog_model(self):
+        return self.get_model_class('PROJECTS_PHASELOG_MODEL')
+
+    def get_model_class(self, model_name=None):
+        """
+        Returns a model class
+        model_name: The model eg 'User' or 'Project'
+        """
+
+        if model_name == 'AUTH_USER_MODEL':
+            model = get_user_model()
+        else:
+            model_path = getattr(settings, model_name)
+            try:
+                app_label, model_class_name = model_path.split('.')
+            except ValueError:
+                raise ImproperlyConfigured(
+                    "{0} must be of the form 'app_label.model_name'").format(model_name)
+
+            model = get_model(app_label, model_class_name)
+            if model is None:
+                raise ImproperlyConfigured(
+                    "{0} refers to model '{0}' that has not been "
+                    "installed".format(model_name))
+
+        return model
+
+
 def get_organization_model():
     """
     Returns the Organization model that is active in this BlueBottle project.
@@ -260,7 +322,7 @@ def get_serializer_class(model_name=None, serializer_type='default'):
     serializer_type: The serializer eg 'preview' or 'manage'
     """
 
-    model = get_model_class(model_name)
+    model = ModelDispatcher().get_model_class(model_name)
 
     if serializer_type == 'manage':
         try:

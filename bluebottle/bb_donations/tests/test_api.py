@@ -1,12 +1,11 @@
 import json
 from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.utils import InitProjectDataMixin
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.utils import get_model_class
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+
 from rest_framework import status
 
 ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
@@ -17,6 +16,11 @@ class DonationApiTestCase(OrderApiTestCase):
     def setUp(self):
         super(DonationApiTestCase, self).setUp()
         self.manage_donation_list_url = reverse('manage-donation-list')
+
+        self.user = BlueBottleUserFactory.create()
+        self.project = ProjectFactory.create()
+        self.order = OrderFactory.create()
+
 
 
 class TestCreateDonation(DonationApiTestCase):
@@ -102,3 +106,32 @@ class TestCreateDonation(DonationApiTestCase):
         donation1['amount'] = 5
         response = self.client.put(donation_url, json.dumps(donation1), content_type='application/json', HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+
+
+
+class TestDonationCreate(DonationApiTestCase):
+
+    def test_create_anonymous_donation(self):
+
+        self.client.login(username=self.user.email, password='testing')
+        donation_url = reverse('manage-donation-list')
+
+        response = self.client.get(donation_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # create a new anonymous donation
+        response = self.client.post(donation_url, {'order': self.order.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True})
+
+        self.assertEqual(response.status_code, 201)
+
+        # retrieve the donation just created
+        donation_url = reverse('manage-donation-detail', kwargs={'pk': response.data['id']})
+        response = self.client.get(donation_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # check if the anonymous is set to True
+        self.assertEqual(True, response.data['anonymous'])
+

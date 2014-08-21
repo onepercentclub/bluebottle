@@ -34,6 +34,8 @@ class BaseDonation(models.Model):
     updated = ModificationDateTimeField(_("Updated"))
     completed = models.DateTimeField(_("Ready"), blank=True, editable=False, null=True)
 
+    anonymous = models.BooleanField(_("Anonymous"), default=False)
+
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_donations.serializers.DonationSerializer'

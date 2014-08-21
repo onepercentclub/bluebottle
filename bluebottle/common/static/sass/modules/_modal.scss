@@ -444,11 +444,13 @@ $modal-item-background									   : #F5F4F6;
 			&.slide-in-left {
 				@include animation(slideInLeft .3s ease-out);
 				@include animation-fill-mode(forwards);
+				z-index: 1;
 			}
 
 			&.slide-out-left {
 				@include animation(slideOutLeft .2s ease-in);
 				@include animation-fill-mode(forwards);
+				z-index: 0;
 			}
 
 			&.scale-back {
@@ -474,11 +476,13 @@ $modal-item-background									   : #F5F4F6;
 			&.slide-in-right {
 				@include animation(slideInRight .3s ease-out);
 				@include animation-fill-mode(forwards);
+				z-index: 1;
 			}
 
 			&.slide-out-right {
 				@include animation(slideOutRight .2s ease-in);
 				@include animation-fill-mode(forwards);
+				z-index: 0;
 			}
 
 			&.scale-up {

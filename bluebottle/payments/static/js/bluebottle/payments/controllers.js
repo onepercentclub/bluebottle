@@ -43,8 +43,7 @@ App.PaymentController = Em.ObjectController.extend({
         var meta = this.get('model.authorizationAction');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
-                console.log(meta.url)
-                if (confirm("Ready? \n" + meta.url)) window.location = meta.url;
+                window.location = meta.url;
             }
         }
     },

@@ -1,10 +1,8 @@
 # coding=utf-8
 import logging
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.payments_docdata.exceptions import MerchantTransactionIdNotUniqueException
 from django.utils.http import urlencode
 import gateway
-from interface import DocdataInterface
 from django.conf import settings
 from .models import DocdataPayment
 
@@ -91,6 +89,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         url = client.get_payment_menu_url(
             order_key=self.payment.payment_cluster_key,
+            order_id=self.order_payment.order_id,
             return_url=return_url,
             client_language=client_language,
         )

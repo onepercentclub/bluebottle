@@ -426,7 +426,7 @@ class DocdataClient(object):
             raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')
 
 
-    def get_payment_menu_url(self, order_key, return_url=None, client_language=None, **extra_url_args):
+    def get_payment_menu_url(self, order_key, order_id, return_url=None, client_language=None, **extra_url_args):
         """
         Return the URL to the payment menu,
         where the user can be redirected to after creating a successful payment.
@@ -441,8 +441,6 @@ class DocdataClient(object):
 
         :param extra_args: Additional URL arguments, e.g. default_pm=IDEAL, ideal_issuer_id=0021, default_act='true'
         """
-        if not return_url:
-            return_url = reverse('return_url', current_app='oscar_docdata')
 
         # Add order_id= parameter to the URL
         if '?' in return_url:
@@ -454,10 +452,10 @@ class DocdataClient(object):
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
             'merchant_name': settings.DOCDATA_MERCHANT_NAME,
-            'return_url_success': url_format.format(return_url, callback='SUCCESS', order_id=order_key),
-            'return_url_pending': url_format.format(return_url, callback='PENDING', order_id=order_key),
-            'return_url_canceled': url_format.format(return_url, callback='CANCELLED', order_id=order_key),
-            'return_url_error': url_format.format(return_url, callback='ERROR', order_id=order_key),
+            'return_url_success': "{0}/#!/orders/{1}/success".format(return_url, order_id),
+            'return_url_pending': "{0}/#!/orders/{1}/pending".format(return_url, order_id),
+            'return_url_canceled': "{0}/#!/orders/{1}/cancelled".format(return_url, order_id),
+            'return_url_error': "{0}/#!/orders/{1}/error".format(return_url, order_id),
             'client_language': (client_language or get_language()).upper()
         }
         args.update(extra_url_args)

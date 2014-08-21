@@ -23,17 +23,27 @@ class BasePaymentAdapter(object):
         except self.MODEL_CLASS.MultipleObjectsReturned:
             raise Exception("Multiple payments for OrderPayment {0}".format(self.order_payment))
 
+    def get_user_data(self):
+        user = self.order_payment.order.user
+        if user:
+            user_data = {
+                'id': user.id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+            }
+        else:
+            user_data = {
+                'id': None,
+                'first_name': 'Nomen',
+                'last_name': 'Nescio',
+                'email': settings.CONTACT_EMAIL,
+            }
+        return user_data
+
     def create_payment(self):
         """
         Create a Payment specific to the chosen provider/payment_method
-        """
-        raise NotImplementedError
-
-    def get_payment_authorization_action(self):
-        """
-        Get an object with payment authorization action.
-        Typical response would be
-        {'type': 'redirect', 'url' '...', 'method': 'get', 'payload': None}
         """
         raise NotImplementedError
 

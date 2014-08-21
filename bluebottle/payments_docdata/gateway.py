@@ -322,7 +322,7 @@ class DocdataClient(object):
         elif hasattr(reply, 'startError'):
             error = reply.createError.error
             log_docdata_error(error, "DocdataClient: failed to get start payment for order {0}".format(order_key))
-            raise DocdataStartError(error._code, error.value)
+            raise Exception(error.value)
         else:
             raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')
 

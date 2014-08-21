@@ -5,6 +5,7 @@ from django.utils.http import urlencode
 import gateway
 from django.conf import settings
 from .models import DocdataPayment
+from django.utils.translation import ugettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
@@ -17,22 +18,22 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
         payment.total_gross_amount = self.order_payment.amount
 
-        testing_mode = True
+        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
         merchant = gateway.Merchant(name=settings.DOCDATA_MERCHANT_NAME, password=settings.DOCDATA_MERCHANT_PASSWORD)
 
         amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
-        user = self.order_payment.order.user
+        user = self.get_user_data()
 
         name = gateway.Name(
-            first=u'Henkie',
-            last=u'Henk'
+            first=user['first_name'],
+            last=user['last_name']
         )
 
         shopper = gateway.Shopper(
-            id=user.id,
+            id=user['id'],
             name=name,
-            email=user.email,
+            email=user['email'],
             language='en',
             gender="U",
             date_of_birth=None,
@@ -41,11 +42,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             ipAddress=None)
 
         address = gateway.Address(
-            street=u'Henkdijk',
+            street=u'Unknown',
             house_number='1',
             house_number_addition=u'',
-            postal_code='u1234HK',
-            city=u'Henkendam',
+            postal_code='Unknown',
+            city=u'Unknown',
             state=u'',
             country_code='NL',
         )
@@ -54,22 +55,19 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         client = gateway.DocdataClient(testing_mode)
 
-        merchant_order_id = "{0}-{1}".format(self.order_payment.id, 'a')
-
         response = client.create(
             merchant=merchant,
-            payment_id=self.order_payment.id,
+            payment_id=payment.id,
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,
             description=_("Bluebottle donation"),
-            receiptText="Bluebottle donation",
+            receiptText=_("Bluebottle donation"),
             includeCosts=False,
-            profile='webmenu',
-            days_to_pay=5,
+            profile=settings.DOCDATA_SETTINGS['profile'],
+            days_to_pay=settings.DOCDATA_SETTINGS['days_to_pay'],
             )
 
-        payment.merchant_order_id = merchant_order_id
         payment.payment_cluster_key = response['order_key']
         payment.payment_cluster_id = response['order_id']
         payment.save()
@@ -78,11 +76,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def get_authorization_action(self):
 
-        testing_mode = True
+        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
         client = gateway.DocdataClient(testing_mode)
 
-        return_url = 'http://localhost:8000/'
+        return_url = 'http://localhost:8000'
         client_language = 'en'
 
         integration_data = self.order_payment.integration_data

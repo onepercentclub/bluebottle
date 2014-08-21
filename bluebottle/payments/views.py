@@ -1,6 +1,6 @@
 import json
 from bluebottle.payments.services import get_payment_methods
-from bluebottle.payments.models import Payment
+from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.serializers import ManagePaymentSerializer
 from bluebottle.payments.services import PaymentService
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
@@ -31,7 +31,7 @@ class PaymentMethodDetail(RetrieveAPIView):
 
 
 class ManagePaymentDetail(RetrieveUpdateAPIView):
-    model = Payment
+    model = OrderPayment
     serializer_class = ManagePaymentSerializer
     # FIXME: Permissions
 
@@ -40,7 +40,7 @@ class ManagePaymentDetail(RetrieveUpdateAPIView):
 
 
 class ManagePaymentList(ListCreateAPIView):
-    model = Payment
+    model = OrderPayment
     serializer_class = ManagePaymentSerializer
     # FIXME: Permissions
 

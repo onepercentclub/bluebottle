@@ -1,8 +1,8 @@
-from bluebottle.bb_orders.models import OrderStatuses
 from bluebottle.utils.model_dispatcher import get_order_model
 from rest_framework import permissions
 
 ORDER_MODEL = get_order_model()
+
 
 class IsUser(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """
@@ -63,7 +63,7 @@ class OrderIsNew(permissions.BasePermission):
         # This is for creating new objects that have a relation (fk) to Order.
         order = self._get_order_from_request(request)
         if order:
-            return order.status == OrderStatuses.new
+            return order.status == ORDER_MODEL.OrderStatuses.new
         return True
 
 
@@ -75,6 +75,6 @@ class OrderIsNew(permissions.BasePermission):
 
         # Check if the object is an Order or if it some object that has a foreign key to Order.
         if isinstance(obj, ORDER_MODEL):
-            return obj.status == OrderStatuses.new
-        return obj.order.status == OrderStatuses.new
+            return obj.status == ORDER_MODEL.OrderStatuses.new
+        return obj.order.status == ORDER_MODEL.OrderStatuses.new
 

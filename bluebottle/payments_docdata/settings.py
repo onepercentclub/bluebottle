@@ -1,6 +1,6 @@
 # Either import these settings in your base.py or write your own.
 
-PAYMENT_METHODS = (
+DOCDATA_PAYMENT_METHODS = (
     {
         'provider': 'docdata',
         'id': 'docdata-ideal',
@@ -24,3 +24,9 @@ PAYMENT_METHODS = (
         'supports_recurring': True,
     }
 )
+
+DOCDATA_SETTINGS = {
+    'profile': 'webmenu',
+    'days_to_pay': 5,
+    'testing_mode': True
+}

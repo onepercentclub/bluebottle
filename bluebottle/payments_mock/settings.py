@@ -1,6 +1,6 @@
 # Either import these settings in your base.py or write your own.
 
-PAYMENT_METHODS = (
+MOCK_PAYMENT_METHODS = (
     {
         'provider': 'mock',
         'id': 'mock-paypal',

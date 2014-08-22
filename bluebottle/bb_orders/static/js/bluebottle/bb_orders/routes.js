@@ -20,62 +20,61 @@ App.OrderRoute = Em.Route.extend({
     },
 
     redirect: function(model) {
-        var _this = this,
-            status = _this.get('status');
+        var _this = this;
 
         App.MyDonation.find({order: model.get('id')}).then(
-            function(donations){
+            function(donations) {
                 // Take the first donation form the order and redirect to that project.
                 var donation = donations.objectAt(0);
+                    status = _this.get('status'),
+                    fundraiser = donation.get('fundraiser'),
+                    project = donation.get('project'),
+                    donationTarget = fundraiser ? fundraiser : project;
 
-                // FIXME: For testing purposes we need to reload the project here.
-                //        We also need to handle the donation on a fundraiser.
-                donation.get('project').reload().then( function () {
-                    _this.transitionTo('project', donation.get('project.id')).promise.then(function () {
-                        // FIXME: Temporary for testing purposes
-                        switch (status) {
-                            case 'success':
-                                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
-                                break;
+                _this.transitionTo(donationTarget.get('modelType'), donationTarget).promise.then(function () {
+                    // FIXME: Temporary for testing purposes
+                    switch (status) {
+                        case 'success':
+                            _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+                            break;
 
-                            case 'pending':
-                                // Display flash message until payment no longer pending
-                                _this.send('setFlash', gettext('Processing payment'), 'is-loading', false);
+                        case 'pending':
+                            // Display flash message until payment no longer pending
+                            _this.send('setFlash', gettext('Processing payment'), 'is-loading', false);
 
-                                // Check the status of the order and then clear 
-                                // the flash message when the check resolves
+                            // Check the status of the order and then clear 
+                            // the flash message when the check resolves
 
-                                // FIXME: Temporary for testing purposes we add
-                                //        a timeout before checking order as the 
-                                //        mock api will return a 'success' immediately
-                                //        causing the toast to only show briefly.
-                                setTimeout(function () {
-                                    _this._checkOrderStatus(model).then(function () {
-                                        _this.send('clearFlash');
-                                        _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
-                                    });
-                                }, 2000);
+                            // FIXME: Temporary for testing purposes we add
+                            //        a timeout before checking order as the 
+                            //        mock api will return a 'success' immediately
+                            //        causing the toast to only show briefly.
+                            setTimeout(function () {
+                                _this._checkOrderStatus(model).then(function () {
+                                    _this.send('clearFlash');
+                                    _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+                                });
+                            }, 2000);
 
-                                break;
+                            break;
 
-                            case 'cancelled':
-                                // Create a new payment for this order
-                                // TODO: set error message
-                                var payment = App.MyPayment.createRecord({order: model});
+                        case 'cancelled':
+                            // Create a new payment for this order
+                            // TODO: set error message
+                            var payment = App.MyOrderPayment.createRecord({order: model});
 
-                                _this.send('openInDynamic', 'payment', payment, 'modalFront');
-                                break;
+                            _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
+                            break;
 
-                            case 'failed':
-                                // Create a new payment for this order
-                                // TODO: set error message
-                                var payment = App.MyPayment.createRecord({order: model});
-                                _this.send('openInDynamic', 'payment', payment, 'modalFront');
-                                break;
-                            default:
-                                throw new Em.error('Incorrect order status: ' + status);
-                        }
-                    });
+                        case 'failed':
+                            // Create a new payment for this order
+                            // TODO: set error message
+                            var payment = App.MyOrderPayment.createRecord({order: model});
+                            _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
+                            break;
+                        default:
+                            throw new Em.error('Incorrect order status: ' + status);
+                    }
                 });
             },
             function(){

@@ -189,6 +189,7 @@ INSTALLED_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_mock',
+    'bluebottle.payments_logger',
 
     # Test Bb implementations
     'bluebottle.test',

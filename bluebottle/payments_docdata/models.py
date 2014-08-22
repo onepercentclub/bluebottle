@@ -3,6 +3,7 @@ from django.utils.translation import ugettext as _
 from django.db import models
 from django_countries.fields import CountryField
 from decimal import Decimal as D
+from bluebottle.payments_logger.models import PaymentLogEntry
 
 
 class DocdataPayment(Payment):
@@ -84,4 +85,5 @@ class DocDataDirectDebitTransaction(Transaction):
     account_city = models.CharField(max_length=35)  # max_length from DocData
     iban = models.CharField(max_length=35)  # max_length from DocData
     bic = models.CharField(max_length=35)  # max_length from DocData
+
 

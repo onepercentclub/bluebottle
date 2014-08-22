@@ -1,15 +1,20 @@
-# coding=utf-8
 import logging
 from bluebottle.payments.adapters import AbstractPaymentAdapter
 from bluebottle.payments_docdata.exceptions import MerchantTransactionIdNotUniqueException
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from interface import DocdataInterface
 from django.conf import settings
 from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
+payment_docdata_logger = logging.getLogger('payment.docdata')
 
 
 class DocdataPaymentAdapter(AbstractPaymentAdapter):
+
+    def __init__(self, *args, **kwargs):
+        super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
+        self.payment_logger = PaymentLogAdapter(payment_docdata_logger)
 
     @staticmethod
     def create_payment(order_payment, integration_data):

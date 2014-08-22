@@ -1,4 +1,4 @@
-from bluebottle.utils.utils import get_model_class
+from bluebottle.utils.model_dispatcher import get_fundraiser_model
 from rest_framework import serializers
 
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
@@ -6,7 +6,7 @@ from bluebottle.bluebottle_drf2.serializers import EuroField, ImageSerializer, O
 
 from bluebottle.utils.serializers import MetaField
 
-FUNDRAISER_MODEL = get_model_class('FUNDRAISERS_FUNDRAISER_MODEL')
+FUNDRAISER_MODEL = get_fundraiser_model()
 
 
 class ImageSerializerExt(ImageSerializer):

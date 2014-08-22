@@ -7,10 +7,9 @@ from django.template.loader import get_template, render_to_string
 from django.template import Context
 from django.core.mail import EmailMultiAlternatives
 
-from bluebottle.utils.utils import get_model_class
+from bluebottle.utils.model_dispatcher import get_taskmember_model
 
-TASK_MODEL = get_model_class('TASKS_TASK_MODEL')
-TASK_MEMBER_MODEL = get_model_class('TASKS_TASKMEMBER_MODEL')
+TASK_MEMBER_MODEL = get_taskmember_model()
 
 
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)

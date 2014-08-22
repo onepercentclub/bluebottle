@@ -1,9 +1,8 @@
 from bluebottle.bb_orders.models import OrderStatuses
-from bluebottle.utils.utils import get_model_class
-from django.conf import settings
+from bluebottle.utils.model_dispatcher import get_order_model
 from rest_framework import permissions
 
-ORDER_MODEL = get_model_class('ORDERS_ORDER_MODEL')
+ORDER_MODEL = get_order_model()
 
 class IsUser(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """

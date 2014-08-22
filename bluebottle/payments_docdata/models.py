@@ -42,6 +42,7 @@ class DocdataPayment(Payment):
     language = models.CharField(_("Language"), max_length=5, blank=True, default='en')
 
     ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100, default='')
+    default_pm = models.CharField(_("Default Payment Method"), max_length=100, default='')
 
     # Track sent information
     total_gross_amount = models.DecimalField(_("Total gross amount"), max_digits=15, decimal_places=2)

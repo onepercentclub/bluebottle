@@ -1,4 +1,4 @@
-App.PaymentController = Em.ObjectController.extend({
+App.OrderPaymentController = Em.ObjectController.extend({
     needs: ['application'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
@@ -43,8 +43,7 @@ App.PaymentController = Em.ObjectController.extend({
         var meta = this.get('model.authorizationAction');
         if (meta.type == 'redirect') {
             if (meta.method == 'get') {
-              //var getUrl = this._buildUrl(meta.url, meta.payload);
-               window.location = meta.url;
+                window.location = meta.url;
             }
         }
     },
@@ -85,7 +84,7 @@ App.PaymentController = Em.ObjectController.extend({
         // Render the payment method view
         var applicationRoute = App.__container__.lookup('route:application');
         applicationRoute.render(method.get('uniqueId'), {
-            into: 'payment',
+            into: 'orderPayment',
             outlet: 'paymentMethod'
         });
 
@@ -118,8 +117,6 @@ App.PaymentController = Em.ObjectController.extend({
                 return false;
             }
 
-//            this.get('currentPaymentMethodController').normalizeData();
-
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
 
@@ -128,34 +125,36 @@ App.PaymentController = Em.ObjectController.extend({
 
             payment.save().then(
                 // Success
-
                 function (payment) {
-                    // Reload the order to receive any backend updates to the order status
-                    // NOTE: when using the mock api we will need to manually set the order
-                    //       status here.
-                    payment.get('order').then(function (order) {
-                        order.reload();
-                    });
+                    // Reload the order to receive any backend updates to the 
+                    // order status
+                    // NOTE: when using the mock api we will need to manually 
+                    //       set the order status here.
+                    var order = payment.get('order');
+                    order.reload();
+
                     // Proceed to the next step based on the status of the payment
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
 
-                    // FIXME: For testing purposes we will direct the user to the success
-                    //        modal for creditcard payments and to the mock service provider
-                    //        for all others.
-                    if (_this.get('payment_method.profile') == 'creditcard') {
-                        // Load the success modal
-                        // Since all models are already loaded in Ember here, we should just be able
+                    // FIXME: For testing purposes we will direct the user to 
+                    //        the success modal for creditcard payments and to
+                    //        the mock service provider for all others.
+                    if (order.get('status') == 'success') {
+                        // Load the success modal. Since all models are already 
+                        // loaded in Ember here, we should just be able
                         // to get the first donation of the order here
-                        var donation = payment.get('order.donations').objectAt(0);
+                        var donation = order.get('donations').objectAt(0);
                         _this.send('modalSlide', 'donationSuccess', donation);
                     } else {
+                        // Process the authorization action to determine next
+                        // step in payment process.
                         _this._processAuthorizationAction();
                     }
                 },
                 // Failure
                 function (payment) {
-
+                    // FIXME: Add error handing for failed order_payment save
                 }
             );
         },
@@ -173,28 +172,17 @@ App.PaymentController = Em.ObjectController.extend({
 
 App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerValidationMixin, {
 
-    getIntegrationData: function(){
-        return {};
+    getIntegrationData: function() {
+        return this.get('model');
     },
-
     validateFields: function(){
         return true;
     }
-
-//    normalizeData: function () {
-//
-//    }
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
 
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
-
-
-//    normalizeData: function () {
-//
-//        this.set('cardNumber', (this.get('cardNumber').replace(/ /g,'')));
-//    },
 
     // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
@@ -209,8 +197,8 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
     },
 
     init: function () {
-
         this._super();
+
         this.set('errorDefinitions', [
             {
                 'property': 'cardOwner',
@@ -244,5 +232,4 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
             }
         ]);
     }
-
 });

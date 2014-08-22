@@ -1,49 +1,11 @@
 {% load bb_ember i18n static %}
 
 {% tplhandlebars "docdataCreditcard" %}
-    <form>
-        <div class="row">
-            <div class="col12">
-                <span>{% blocktrans %}Full name (as on Card){% endblocktrans %}</span>
-                {{input valueBinding="model.cardOwner" placeholder=view.cardOwner classBinding="errorList.cardOwner.length:error"}}
-            </div>
-        </div>
+    <p>
+        <img src="{% static 'images/docdata/docdata.png' %}" alt="Docdata"  />
+        <br/>
+        You're about to pay with Credit Card through Docdata.
+        {{view App.DocdataCreditcardSelectView valueBinding='default_pm'}}
 
-        <div class="row">
-            <div class="col12">
-                <span>{% blocktrans %}Card Number{% endblocktrans %}</span>
-                <span {{bindAttr class=":icon-card :creditcard-detector model.creditcardBrand"}}></span>
-                {{input valueBinding="model.cardNumber" placeholder=view.cardNumber classBinding="errorList.cardNumber.length:error"}}
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col8">
-                <span>{% blocktrans %}Expiration Date {% endblocktrans %}</span>
-            </div>
-            <div class="col4 creditcard-cvc">
-                <span>CVC</span>
-                <div class="tooltip-holder">
-                    <span class="exclamationmark">!</span>
-                    <span class="modal-btn-signup" href="#">
-                        <div class="tooltip">
-                            <div class="cvcPreview"></div>
-                        </div>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col4">
-                {{input valueBinding="model.expirationMonth" placeholder=view.expirationMonth classBinding="errorList.expirationMonth.length:error" maxlength=2}}
-            </div>
-            <div class="col4">
-                {{input valueBinding="model.expirationYear" placeholder=view.expirationYear classBinding="errorList.expirationYear.length:error" maxlength=2}}
-            </div>
-            <div class="col4">
-                {{input valueBinding="model.cvcCode" placeholder=view.cvc classBinding="errorList.cvcCode.length:error" maxlength=3}}
-            </div>
-        </div>
-    </form>
+    </p>
 {% endtplhandlebars %}

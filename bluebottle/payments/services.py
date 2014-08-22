@@ -1,7 +1,7 @@
 import re
 from django.conf import settings
 from bluebottle.utils.utils import import_class
-from bluebottle.payments.models import OrderPayment, PaymentAction
+from bluebottle.payments.models import OrderPayment
 
 
 def get_payment_methods(country=None, amount=None):
@@ -40,7 +40,7 @@ class PaymentService(object):
         adapter = adapter_class(self.order_payment)
         return adapter
 
-    def start_payment(self):
+    def start_payment(self, **integration_details):
         # Remove the previous authorization action if there is one
         # FIXME: maybe we want to return this old action rather then generate a new one.
         if self.order_payment.authorization_action:

@@ -1,17 +1,14 @@
 import factory
-import uuid
 
 from bluebottle.utils.model_dispatcher import get_order_model
 
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-def random_order_number(length=30):
-    return unicode(uuid.uuid4().hex)[0:length]
+from .accounts import BlueBottleUserFactory
 
 ORDER_MODEL = get_order_model()
+
 
 class OrderFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ORDER_MODEL
 
     user = factory.SubFactory(BlueBottleUserFactory)
-    # uuid = factory.LazyAttribute(lambda t: 3)
+    status = ORDER_MODEL.OrderStatuses.new

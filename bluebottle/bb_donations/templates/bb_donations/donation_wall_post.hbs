@@ -7,7 +7,9 @@
         <div class="wallpost-message">
             <div class="wallpost-header">
                 <div class="row">
-                    <div class="col9 wallpost-header-title"><strong>{% trans 'Leave a message on the project wall'%}</strong></div>
+                    <div class="col9 wallpost-header-title">
+                        <strong>{{formTitle}}</strong>
+                    </div>
                     <div class="col3 wallpost-header-count">
                         <span class="count-words">0</span>
                          / 
@@ -28,7 +30,7 @@
                     <button class="btn is-inactive" {{action 'closeModal'}}>{% trans "No Thanks" %}</button>
                 </div>
                 <div class="col7">
-                    <button class="btn btn-sec" {{action 'saveWallPost'}}>{% trans "Leave Message" %}</button>
+                    <button {{bind-attr class="isSaving:is-loading :btn :btn-sec"}} {{action 'saveWallPost'}}>{% trans "Leave Message" %}</button>
                 </div>
             </div>
         </div>

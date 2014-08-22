@@ -44,9 +44,9 @@
             
             <div class="modal-footer profile-preview-actions">
                 <a class="close-link" rel="close">&times; Close</a>
-                {{#link-to "viewProfile" id class="go-to-profile" rel="close"}}
+                <a {{action "viewProfile"}} class="go-to-profile" rel="close">
                     View full profile&nbsp;&rsaquo;
-                {{/link-to}}
+                </a>
             </div>
             
             {{!--}}

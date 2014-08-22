@@ -1,8 +1,9 @@
 """
 Backend calls to docdata.
 
-Gateway module - this module is ignorant of Oscar and could be used in a non-Oscar project.
-All Oscar-related functionality should be in the facade.
+Thanks to https://github.com/edoburu/django-oscar-docdata for extending our original implementation
+which is Apache licensed, copyright (c) 2013 Diederik van der Boor
+
 """
 import logging
 from django.core.exceptions import ImproperlyConfigured
@@ -38,22 +39,6 @@ __all__ = (
     'ElvPayment',
 )
 
-
-# Thanks to https://github.com/onepercentclub/onepercentclub-site for an example implmentation,
-# which is BSD licensed, copyright (c) 2013 1%CLUB and Ben Konrath.
-
-
-# Getting call metadata:
-#
-# >>> from suds.client import Client
-# >>> url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_0?wsdl'
-# >>> client = Client(url)
-#
-# >>> print client
-#
-# >>> client.factory.create('ns0:name')
-
-
 def get_suds_client(testing_mode=False):
     """
     Create the suds client to connect to docdata.
@@ -80,15 +65,6 @@ class DocdataAPIVersionPlugin(plugin.MessagePlugin):
         body = context.envelope.getChild('Body')
         request = body[0]
         request.set('version', '1.2')
-
-
-#class DocdataBrokenWSDLPlugin(suds.plugin.DocumentPlugin):
-#    def parsed(self, context):
-#        """ Called after parsing a WSDL or XSD document. The context contains the url & document root. """
-#        # The WSDL for the live payments API incorrectly references the wrong location.
-#        if len(context.document.children) == 19 and len(context.document.children[18]) > 0:
-#            location_attribute = context.document.children[18].children[0].getChild('address').attributes[0]
-#            location_attribute.setValue('https://secure.docdatapayments.com:443/ps/services/paymentservice/1_0')
 
 
 def log_docdata_error(error, message):
@@ -279,110 +255,10 @@ class DocdataClient(object):
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
-
-    def start(self, order_key, payment, payment_method=None, amount=None):
-        """
-        The start operation is used for starting a (web direct) payment on an order.
-        It does not need to be used if the merchant makes use of Docdata Payments web menu.
-
-        The web direct can be used for recurring payments for example.
-        Standard payments (e.g. iDEAL, creditcard) all happen through the web menu
-        because implementing those locally requires certification by the credit card companies.
-
-        TODO: untested
-
-        :type order_key: str
-        :param payment: A subclass of the payment class, which one depends on the payment method.
-        :type payment: Payment
-        :param payment_method: One of the supported payment methods, e.g. PAYMENT_METHOD_IDEAL, PAYMENT_METHOD_MASTERCARD.
-                               If omitted, the payment method of the ``payment`` object is used.
-        :type payment_method: str
-        :param amount: Optional payment amount. If left empty, the full amount of the payment order is used.
-        :type amount: Amount
-        """
-        if not order_key:
-            raise Exception("Missing order_key!")
-
-        # We only need to set amount because of bug in suds library. Otherwise it defaults to order amount.
-
-        paymentRequestInput = self.client.factory.create('ns0:paymentRequestInput')
-        if amount is not None:
-            paymentRequestInput.paymentAmount = amount.to_xml(self.client.factory)
-        paymentRequestInput.paymentMethod = payment_method or payment.payment_method
-        paymentRequestInput[payment.request_parameter] = payment.to_xml(self.client.factory)
-
-        # Execute start payment request.
-        reply = self.client.service.start(
-            self.merchant,
-            order_key,
-            paymentRequestInput,
-            integrationInfo=self.integration_info.to_xml(self.client.factory)
-        )
-        if hasattr(reply, 'startSuccess'):
-            return StartReply(reply.startSuccess.paymentId)
-        elif hasattr(reply, 'startError'):
-            error = reply.createError.error
-            log_docdata_error(error, "DocdataClient: failed to get start payment for order {0}".format(order_key))
-            raise Exception(error.value)
-        else:
-            raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')
-
-
-    def cancel(self, order_key):
-        """
-        The cancel command is used for canceling a previously created payment,
-        and can only be used for payments with status NEW, STARTED and AUTHORIZED.
-        """
-        if not order_key:
-            raise OrderKeyMissing("Missing order_key!")
-
-        reply = self.client.service.cancel(self.merchant, order_key)
-
-        if hasattr(reply, 'cancelSuccess'):
-            return True
-        elif hasattr(reply, 'cancelError'):
-            error = reply.cancelError.error
-            log_docdata_error(error, "DocdataClient: failed to cancel the order {0}".format(order_key))
-            raise DocdataCancelError(error._code, error.value)
-        else:
-            logger.error("Unexpected response node from docdata!")
-            raise NotImplementedError('Received unknown reply from DocData. Remote Payment not cancelled.')
-
-
     def status(self, order_key):
         """
         Request the status of of order and it's payments.
-
-        :rtype: StatusReply
         """
-        # Example response:
-        #
-        # <?xml version='1.0' encoding='UTF-8'?>
-        # <statusResponse xmlns="http://www.docdatapayments.com/services/paymentservice/1_0/">
-        #   <statusSuccess>
-        #     <success code="SUCCESS">Operation successful.</success>
-        #     <report>
-        #       <approximateTotals exchangedTo="EUR" exchangeRateDate="2012-12-04 14:39:53">
-        #         <totalRegistered>3310</totalRegistered>
-        #         <totalShopperPending>0</totalShopperPending>
-        #         <totalAcquirerPending>0</totalAcquirerPending>
-        #         <totalAcquirerApproved>3310</totalAcquirerApproved>
-        #         <totalCaptured>0</totalCaptured>
-        #         <totalRefunded>0</totalRefunded>
-        #         <totalChargedback>0</totalChargedback>
-        #       </approximateTotals>
-        #       <payment>           # Can occur multiple times.
-        #         <id>1606709142</id>
-        #         <paymentMethod>MASTERCARD</paymentMethod>
-        #         <authorization>
-        #           <status>AUTHORIZED</status>
-        #           <amount currency="EUR">3310</amount>
-        #           <confidenceLevel>ACQUIRER_APPROVED</confidenceLevel>
-        #         </authorization>
-        #       </payment>
-        #     </report>
-        #   </statusSuccess>
-        # </statusResponse>
         if not order_key:
             raise Exception("Missing order_key!")
 
@@ -417,6 +293,7 @@ class DocdataClient(object):
         )
 
         if hasattr(reply, 'statusSuccess'):
+            print reply.statusSuccess.report
             return reply.statusSuccess.report
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
@@ -425,7 +302,6 @@ class DocdataClient(object):
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')
-
 
     def get_payment_menu_url(self, order_key, order_id, return_url=None, client_language=None, **extra_url_args):
         """

@@ -78,6 +78,9 @@ class OrderPayment(models.Model):
         if save:
             self.save()
 
+    def __unicode__(self):
+        return "{0} : {1} : {2}".format(self.id, self.amount, self.status)
+
 
 class Payment(PolymorphicModel):
 

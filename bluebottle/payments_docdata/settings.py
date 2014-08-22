@@ -1,6 +1,6 @@
 # Either import these settings in your base.py or write your own.
 
-PAYMENT_METHODS = (
+DOCDATA_PAYMENT_METHODS = (
     {
         'provider': 'docdata',
         'id': 'docdata-ideal',

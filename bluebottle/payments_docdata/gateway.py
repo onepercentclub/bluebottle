@@ -264,6 +264,7 @@ class DocdataClient(object):
             )
             if hasattr(reply, 'createSuccess'):
                 done = True
+                print reply
                 order_key = str(reply['createSuccess']['key'])
 
             elif hasattr(reply, 'createError'):
@@ -383,7 +384,7 @@ class DocdataClient(object):
         #   </statusSuccess>
         # </statusResponse>
         if not order_key:
-            raise OrderKeyMissing("Missing order_key!")
+            raise Exception("Missing order_key!")
 
         reply = self.client.service.status(
             self.merchant,
@@ -392,11 +393,11 @@ class DocdataClient(object):
         )
 
         if hasattr(reply, 'statusSuccess'):
-            return StatusReply(order_key, reply.statusSuccess.report)
+            return reply.statusSuccess.report
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise DocdataStatusError(error._code, error.value)
+            raise Exception(error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
@@ -407,7 +408,7 @@ class DocdataClient(object):
         Request the status with extended information.
         """
         if not order_key:
-            raise OrderKeyMissing("Missing order_key!")
+            raise Exception("Missing order_key!")
 
         reply = self.client.service.statusExtended(
             self.merchant,
@@ -416,11 +417,11 @@ class DocdataClient(object):
         )
 
         if hasattr(reply, 'statusSuccess'):
-            return StatusReply(order_key, reply.statusSuccess.report)
+            return reply.statusSuccess.report
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise DocdataStatusError(error._code, error.value)
+            raise Exception(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')
@@ -452,8 +453,6 @@ class DocdataClient(object):
             'client_language': (client_language or get_language()).upper()
         }
         args.update(extra_url_args)
-
-        print args
 
         if self.testing_mode:
             return 'https://test.docdatapayments.com/ps/menu?' + urlencode(args)

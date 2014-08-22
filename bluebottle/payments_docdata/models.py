@@ -71,10 +71,18 @@ class DocdataTransaction(Transaction):
     """
     # Note: We're not using DjangoChoices here so that we can write unknown statuses if they are presented by DocData.
     status = models.CharField(_("status"), max_length=30, default='NEW')
-    payment_id = models.CharField(_("payment id"), max_length=100, default='', blank=True)
+    docdata_id = models.CharField(_("Docdata ID"), max_length=100, unique=True)
 
     # This is the payment method id from DocData (e.g. IDEAL, MASTERCARD, etc)
     payment_method = models.CharField(max_length=60, default='', blank=True)
+
+    authorization_status = models.CharField(max_length=60, default='', blank=True)
+    authorization_amount = models.IntegerField(_("Amount in cents"), null=True)
+    authorization_currency = models.CharField(max_length=10, default='', blank=True)
+
+    capture_status = models.CharField(max_length=60, default='', blank=True)
+    capture_amount = models.IntegerField(_("Amount in cents"), null=True)
+    capture_currency = models.CharField(max_length=10, default='', blank=True)
 
     def __unicode__(self):
         return self.payment_id

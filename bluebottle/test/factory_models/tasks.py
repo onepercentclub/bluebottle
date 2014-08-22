@@ -1,18 +1,17 @@
 from datetime import timedelta
-from random import randrange
 
 from django.utils.timezone import now
 
 import factory
 import factory.fuzzy
 
-from bluebottle.utils.utils import get_task_model, get_skill_model, get_taskmember_model
+from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_task_skill_model
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
 
 TASK_MODEL = get_task_model()
 TASK_MEMBER_MODEL = get_taskmember_model()
-TASK_SKILL_MODEL = get_skill_model()
+TASK_SKILL_MODEL = get_task_skill_model()
 
 
 class SkillFactory(factory.DjangoModelFactory):

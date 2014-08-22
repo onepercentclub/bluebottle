@@ -6,17 +6,18 @@ from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 
-from .permissions import IsTaskAuthorOrReadOnly, IsMemberOrReadOnly, IsMemberOrAuthorOrReadOnly
+from .permissions import IsMemberOrAuthorOrReadOnly
 from .serializers import (
     BaseTaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
     MyTaskMemberSerializer, SkillSerializer)
 
-from bluebottle.utils.utils import get_task_model, get_taskmember_model, get_taskfile_model, get_skill_model
+from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
+    get_task_skill_model
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
-BB_SKILL_MODEL = get_skill_model()
+BB_SKILL_MODEL = get_task_skill_model()
 
 
 class TaskPreviewList(generics.ListAPIView):

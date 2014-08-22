@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+from django.views.generic import View
 from rest_framework import response
 from rest_framework import status
 from bluebottle.payments_logger.views import GenericStatusChangedNotificationView
@@ -16,3 +18,12 @@ class DocdataStatusChangedNotificationView(GenericStatusChangedNotificationView)
             logger.error('Could not find order {0} to update payment status.'.format(order_id))
             return response.Response(status=status.HTTP_403_FORBIDDEN)
         return payment
+
+
+class PaymentStatusUpdateView(View):
+
+    def get(self, request):
+        print request.DATA
+
+
+        return HttpResponse('success')

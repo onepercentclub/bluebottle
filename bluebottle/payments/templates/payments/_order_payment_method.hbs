@@ -1,6 +1,7 @@
 {% load bb_ember i18n static %}
 
-{% tplhandlebars "_payment_method" %}
+
+{% tplhandlebars "_order_payment_method" %}
     <div {{bindAttr class=":modal-fullscreen-content"}}>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
 
@@ -19,7 +20,7 @@
         </div>
 
         <button {{action 'nextStep'}}>Next</button>
-        {{ partial "_payment_errors" }}
+        {{ partial "_order_payment_errors" }}
     </div>
 
 {% endtplhandlebars %}

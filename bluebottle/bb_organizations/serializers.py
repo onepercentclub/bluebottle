@@ -3,7 +3,8 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.utils.serializers import URLField
 
-from bluebottle.utils.utils import get_organization_model, get_organizationdocument_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model, get_organizationdocument_model
+
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()

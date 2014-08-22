@@ -1,11 +1,14 @@
 {% load bb_ember i18n static %}
 
-{% tplhandlebars "payment" %}
+
+{% tplhandlebars "order_payment" %}
     <div class="modal-fullscreen-content" id="payment">
         <span {{action 'previousStep'}} class="modal-fullscreen-back"></span>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
         <h4>{% blocktrans %}Select your method of payment{% endblocktrans %}</h4>
-        <big>{% blocktrans %}You're about to support &euro; {{amount}},- to '{{order.projects.firstObject.title}}'. Good job!{% endblocktrans %}</big>
+        {{#each donation in order.donations}}
+            <big>{% trans "You're about to support"%} &euro; {{donation.amount}},- {% trans 'to'%} {{order.donations.firstObject.project.title}}. {% trans 'Good job!'%}</big>
+        {{/each}}
         
         <div class="row">
             <div class="col4">
@@ -51,7 +54,7 @@
 				<a {{action 'nextStep'}} {{bindAttr class=":btn-sec :btn :payment-btn isBusy:is-loading blockingErrors:is-inactive"}}>{% trans 'Proceed with'%} {{view.currentPaymentMethodName}}</a>
             </div>
         </div>
-        {{partial "_payment_errors"}}
+        {{partial "_order_payment_errors"}}
     </div>
     <div class="modal-fullscreen-footer">
         <div class="modal-payment-provider">

@@ -1,5 +1,6 @@
 App.PaymentMethodView = Em.View.extend({
     layoutName: 'payment_provider_layout',
+
     templateName: function(){
         return this.get('content.provider') + '/' + this.get('content.profile');
     }.property('content.provider', 'content.profile'),
@@ -13,8 +14,8 @@ App.PaymentMethodView = Em.View.extend({
 
 });
 
-App.PaymentView = Em.View.extend({
-    layoutName: 'payment',
+App.OrderPaymentView = Em.View.extend({
+    layoutName: 'order_payment',
 
     currentPaymentMethodBinding: 'controller.payment_method',
 
@@ -38,5 +39,4 @@ App.CreditcardView = Em.View.extend({
     expirationMonth: gettext('Month'),
     expirationYear: gettext('Year'),
     cvcCode: gettext('CVC')
-
 });

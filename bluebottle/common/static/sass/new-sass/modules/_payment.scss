@@ -1,4 +1,6 @@
 #payment {
+    padding-left: 30px;
+    padding-right: 30px;
 
     // reset ul and li
     ul {
@@ -26,7 +28,7 @@
                 position: relative;
                 cursor: pointer;
                 height: 46px;
-                padding: 10px 10px 10px 70px;
+                padding: 10px 10px 10px 65px;
                 font-size: 15px;
             }
 
@@ -88,8 +90,9 @@
         position: relative;
         text-align: left;
         background: #F5F4F6;
-        border-radius: 0 8px 8px 8px;
+        border-radius: 8px;
         font-size: 13px;
+        line-height: 18px;
 
         form, .no-form {
             padding: 15px;
@@ -136,6 +139,7 @@
         width: 41.6px;
         height: 26px;
         display: block;
+        margin: auto;
 
         &.creditcard-detector {
             position: absolute;
@@ -185,27 +189,37 @@
 
         &.paypal {
             background: image-url("icons/icon-paypal-card.svg") transparent no-repeat 0 0;
+            background-size: 95%;
         }
 
         &.visa {
             background: image-url("icons/icon-visa-card.svg") transparent no-repeat 0 0;
+            background-size: 95%;
         }
 
         &.mastercard {
             background: image-url("icons/icon-mastercard-card.svg") transparent no-repeat 0 0;
+            background-size: 95%;
         }
 
         &.americanexpress {
             background: image-url("icons/icon-americanexpress-card.svg") transparent no-repeat 0 0;
+            background-size: 95%;
         }
 
         &.discover {
             background: image-url("icons/icon-discover-card.svg") transparent no-repeat 0 0;
+            background-size: 95%;
         }
 
         &.maestro {
             background: image-url("icons/icon-maestro-card.svg") transparent no-repeat 0 0;
+            background-size: 95%;
         }
+    }
+
+    .modal-flash-message {
+        margin: 15px -31px 0 -31px;
     }
 }
 

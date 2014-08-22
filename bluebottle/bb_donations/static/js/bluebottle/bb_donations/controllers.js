@@ -45,9 +45,9 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
 
             // If the donation is unchanged then move on to the payments modal.
             if (!donation.get('isDirty')) {
-                var payment = App.MyPayment.createRecord({order: order});
+                var payment = App.MyOrderPayment.createRecord({order: order});
                 
-                this.send('modalSlide', 'payment', payment);
+                this.send('modalSlide', 'orderPayment', payment);
             }
 
             // Set is loading property until success or error response
@@ -56,8 +56,8 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
             donation.save().then(
                 // Success
                 function() {
-                    var payment = App.MyPayment.createRecord({order: order});
-                    _this.send('modalSlide', 'payment', payment);
+                    var payment = App.MyOrderPayment.createRecord({order: order});
+                    _this.send('modalSlide', 'orderPayment', payment);
                 },
                 // Failure
                 function(){

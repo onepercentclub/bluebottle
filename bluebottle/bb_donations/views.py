@@ -1,4 +1,3 @@
-from bluebottle.bb_donations.models import DonationStatuses
 from bluebottle.bb_orders.permissions import OrderIsNew
 from django.http.response import Http404
 import logging
@@ -59,7 +58,7 @@ class ProjectDonationList(generics.ListAPIView):
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")
-        queryset = queryset.filter(status__in=[DonationStatuses.paid, DonationStatuses.pending])
+        queryset = queryset.filter(status__in=[DONATION_MODEL.DonationStatuses.paid, DONATION_MODEL.DonationStatuses.pending])
 
         return queryset
 

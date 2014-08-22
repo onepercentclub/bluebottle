@@ -1,3 +1,4 @@
+from bluebottle.utils.model_dispatcher import get_donation_model
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum
@@ -6,8 +7,7 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from djchoices import DjangoChoices, ChoiceItem
 from uuidfield import UUIDField
 from django.db.models import options
-from django.db.models.signals import post_save, post_delete
-from bluebottle.utils.model_dispatcher import get_donation_model
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
@@ -15,16 +15,15 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_s
 DONATION_MODEL = get_donation_model()
 
 
-class OrderStatuses(DjangoChoices):
-    new = ChoiceItem('new', label=_("new"))
-    locked = ChoiceItem('locked', label=_("Locked"))
-    closed = ChoiceItem('closed', label=_("Closed"))
-
-
 class BaseOrder(models.Model):
     """
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
+    class OrderStatuses(DjangoChoices):
+        new = ChoiceItem('new', label=_("new"))
+        locked = ChoiceItem('locked', label=_("Locked"))
+        closed = ChoiceItem('closed', label=_("Closed"))
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     status = models.CharField(_("Status"), max_length=20, choices=OrderStatuses.choices, default=OrderStatuses.new, db_index=True)
 

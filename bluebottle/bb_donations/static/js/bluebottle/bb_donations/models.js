@@ -10,7 +10,7 @@ App.Adapter.map('App.ProjectDonation', {
 App.Donation = DS.Model.extend({
     amount: DS.attr('number'),
     project: DS.belongsTo('App.Project'),
-    fundraiser: DS.belongsTo('App.Fundraiser'),
+    fundraiser: DS.belongsTo('App.FundRaiser'),
     user: DS.belongsTo('App.UserPreview'),
     created: DS.attr('date'),
     anonymous: DS.attr('boolean', {defaultValue: false})
@@ -20,7 +20,7 @@ App.ProjectDonation = DS.Model.extend({
     url: 'donations/project',
 
     project: DS.belongsTo('App.Project'),
-    fundraiser: DS.belongsTo('App.Fundraiser'),
+    fundraiser: DS.belongsTo('App.FundRaiser'),
 
     amount: DS.attr('number'),
     created: DS.attr('date'),
@@ -30,12 +30,12 @@ App.ProjectDonation = DS.Model.extend({
 App.MyDonation = App.Donation.extend({
     url: 'donations/my',
 
+    order: DS.belongsTo('App.MyOrder'),
+    amount: DS.attr('number', {defaultValue: 25}),
+
     defaultAmount: function () {
         return 25;
     }.property(),
-
-    order: DS.belongsTo('App.MyOrder'),
-    amount: DS.attr('number', {defaultValue: 25}),
 
     validAmount: function () {
         var amount = this.get('amount');

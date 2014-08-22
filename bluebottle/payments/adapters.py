@@ -1,62 +1,63 @@
-from bluebottle.utils.utils import import_class
+from bluebottle.payments.models import Payment
 from django.conf import settings
-import re
 
 
-def get_payment_methods(country=None, amount=None):
-    """
-    Get all payment methods from settings.
-    """
-    # TODO: Add logic to filter methods based on amount and country
-    methods = getattr(settings, 'PAYMENT_METHODS', ())
-    return methods
-
-
-def get_adapter(name=''):
-    """
-    Get de PaymentAdapter class based on PaymentMethod name.
-    """
-    provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1', name)
-    app_name = 'payments_' + provider_name
-    class_name = provider_name.title() + 'PaymentAdapter'
-    class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
-    return import_class(class_path)
-
-
-class AbstractPaymentAdapter(object):
+class BasePaymentAdapter(object):
     """
     This is the abstract base class that should be used by all PaymentAdapters.
     """
-    @staticmethod
-    def create_payment_object(order_payment, integration_data=None):
+
+    MODEL_CLASS = Payment
+
+    def __init__(self, order_payment):
+        self.order_payment = order_payment
+        if self.MODEL_CLASS.__class__ == Payment:
+            raise Exception("Please override MODEL_CLASS with extended payment model.")
+
+        try:
+            self.payment = self.MODEL_CLASS.objects.get(order_payment=self.order_payment)
+        except self.MODEL_CLASS.DoesNotExist:
+            self.payment = self.create_payment()
+        except self.MODEL_CLASS.MultipleObjectsReturned:
+            raise Exception("Multiple payments for OrderPayment {0}".format(self.order_payment))
+
+    def get_user_data(self):
+        user = self.order_payment.order.user
+        if user:
+            user_data = {
+                'id': user.id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+            }
+        else:
+            user_data = {
+                'id': None,
+                'first_name': 'Nomen',
+                'last_name': 'Nescio',
+                'email': settings.CONTACT_EMAIL,
+            }
+        return user_data
+
+    def create_payment(self):
+        """
+        Create a Payment specific to the chosen provider/payment_method
+        """
         raise NotImplementedError
 
-    @staticmethod
-    def get_payment_authorization_action(payment):
-        """
-        Get an object with payment authorization action.
-        Typical response would be
-        {'type': 'redirect', 'url' '...', 'method': 'get', 'payload': None}
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def check_payment_status(payment):
+    def check_payment_status(self):
         """
         Fetch the latest payment status from PSP.
         """
         raise NotImplementedError
 
-    @staticmethod
-    def cancel_payment(payment):
+    def cancel_payment(self):
         """
         Try to cancel the payment at PSP
         """
         raise NotImplementedError
 
-
-    @staticmethod
-    def refund_payment(payment):
+    def refund_payment(self):
         """
         Try to refund the payment at PSP
         """

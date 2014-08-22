@@ -396,3 +396,9 @@ class TaggableSerializerMixin(object):
                 self.tag_list = json.loads(self.tag_list)
             for tag in self.tag_list:
                 tags.add(tag['id'])
+
+
+class ObjectFieldSerializer(serializers.CharField):
+
+    def from_native(self, value):
+        return json.dumps(value)

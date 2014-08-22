@@ -1,4 +1,4 @@
-from bluebottle.utils.model_dispatcher import get_order_model
+from bluebottle.utils.model_dispatcher import get_donation_model
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum
@@ -12,7 +12,7 @@ from django.dispatch import receiver
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
-DONATION_MODEL = get_order_model()
+DONATION_MODEL = get_donation_model()
 
 
 class BaseOrder(models.Model):

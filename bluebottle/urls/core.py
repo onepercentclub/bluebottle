@@ -25,7 +25,9 @@ urlpatterns = patterns('',
     url(r'^api/donations/', include('bluebottle.bb_donations.urls.api')),
     url(r'^api/order_payments/', include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/', include('bluebottle.payments.urls.api')),
+
     url(r'^payments_mock/', include('bluebottle.payments_mock.urls.core')),
+    url(r'^payments_docdata/', include('bluebottle.payments_docdata.urls.core')),
 
     url(r'^documents/', include('bluebottle.utils.urls.main')),
 

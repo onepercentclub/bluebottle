@@ -28,6 +28,5 @@ DOCDATA_PAYMENT_METHODS = (
 DOCDATA_SETTINGS = {
     'profile': 'webmenu',
     'days_to_pay': 5,
-
     'testing_mode': True
 }

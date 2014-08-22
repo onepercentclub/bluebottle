@@ -1,9 +1,9 @@
 from django.conf.urls import patterns, url
 
-from ..views import PaymentMethodList, PaymentMethodDetail, ManagePaymentList, ManagePaymentDetail
+from ..views import PaymentStatusUpdateView
 
 
 urlpatterns = patterns(
     '',
-    url(r'^payment/(?P<pk>\d+)$', PaymentMethodDetail.as_view(), name='docdata-payment-method-detail'),
+    url(r'^status-update/(?P<order_id>\w+)$', PaymentStatusUpdateView.as_view(), name='docdata-payment-status-update'),
 )

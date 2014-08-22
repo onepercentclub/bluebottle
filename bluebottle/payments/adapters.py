@@ -1,7 +1,5 @@
 from bluebottle.payments.models import Payment
-from bluebottle.utils.utils import import_class
 from django.conf import settings
-import re
 
 
 class BasePaymentAdapter(object):

@@ -5,8 +5,6 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.utils import InitProjectDataMixin
-from bluebottle.utils.utils import get_model_class
 
 from django.core.urlresolvers import reverse
 
@@ -23,7 +21,7 @@ class DonationApiTestCase(OrderApiTestCase):
 
         self.user = BlueBottleUserFactory.create()
         self.project = ProjectFactory.create()
-        self.order = OrderFactory.create()
+        self.order = OrderFactory.create(user=self.user)
 
 
 class TestCreateDonation(DonationApiTestCase):
@@ -191,4 +189,10 @@ class TestDonationCreate(DonationApiTestCase):
 
         # check if the anonymous is set to True
         self.assertEqual(True, response.data['anonymous'])
+
+
+class TestAnonymousDonationCreate(DonationApiTestCase):
+
+    # FIXME: Write tests for anonymous donations
+    pass
 

@@ -26,8 +26,6 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_donation_mo
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
 
-PROJECT_PAYOUT_MODEL = get_project_payout_model()
-ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
 
 class InvoiceReferenceBase(models.Model):
     """ Abstract base class for generating an invoice reference. """

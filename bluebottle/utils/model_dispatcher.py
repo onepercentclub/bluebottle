@@ -56,6 +56,14 @@ def get_payment_logger_model():
     return get_model_class('PAYMENT_LOGGER_MODEL')
 
 
+def get_project_payout_model():
+    return get_model_class('PAYOUTS_PROJECTPAYOUT_MODEL')
+
+
+def get_organization_payout_model():
+    return get_model_class('PAYOUTS_ORGANIZATIONPAYOUT_MODEL')
+
+
 def get_auth_user_model():
     return get_user_model()
 

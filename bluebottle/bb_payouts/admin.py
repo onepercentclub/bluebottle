@@ -22,6 +22,7 @@ from .admin_utils import link_to
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
 
+
 class PayoutLogBase(admin.TabularInline):
     extra = 0
     max_num = 0
@@ -56,6 +57,7 @@ class OrganizationPayoutLogInline(PayoutLogBase):
 #
 #     can_delete = False
 #
+
 
 class PayoutAdmin(admin.ModelAdmin):
     model = PROJECT_PAYOUT_MODEL
@@ -272,6 +274,8 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'start_date'
 
+    can_delete = False
+
     list_filter = ['status', ]
 
     list_display = [
@@ -356,6 +360,10 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
         return response
 
     export_sepa.short_description = "Export SEPA file."
+
+    def has_add_permission(self, request):
+        return False
+
 
 admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)
 

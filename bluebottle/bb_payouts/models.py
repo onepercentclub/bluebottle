@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
+from djchoices.choices import DjangoChoices, ChoiceItem
 
 from .fields import MoneyField
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
@@ -196,9 +197,16 @@ class BaseProjectPayout(PayoutBase):
     Project payouts are checked manually. Selected projects can be exported to a SEPA file.
     """
 
+    class PayoutRules(DjangoChoices):
+        """ Which rules to use to calculate fees. """
+        seven = ChoiceItem('seven', label=_("7%"))
+        twelve = ChoiceItem('twelve', label=_("12%"))
+
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 
-    payout_rule = models.CharField(_("Payout rule"), max_length=20, help_text=_("The payout rule for this project."))
+    payout_rule = models.CharField(_("Payout rule"), max_length=20, choices=PayoutRules.choices,
+                                   help_text=_("The payout rule for this project."))
+
     service_percentage = models.DecimalField(_("Service fee percentage"), max_digits=5, decimal_places=2)
 
     amount_raised = MoneyField(_("amount raised"),
@@ -246,12 +254,12 @@ class BaseProjectPayout(PayoutBase):
         if not self.payout_rule:
             error_message = "Payout rule not set on ProjectPayout for Project ({0}) '{1}'".\
                 format(self.project.id, self.project.title)
-            raise PayoutException(error_message)
+            raise PayoutException(error_message, [])
 
         if self.service_percentage is None:
             error_message = "Service percentage not set on ProjectPayout for Project ({0}) '{1}'".\
                 format(self.project.id, self.project.title)
-            raise PayoutException(error_message)
+            raise PayoutException(error_message, [])
 
         fee_factor = float(self.service_percentage) / 100
 

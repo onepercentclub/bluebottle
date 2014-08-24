@@ -1,4 +1,3 @@
-from bluebottle.bb_payouts.choices import PayoutRules
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_model
 
@@ -46,7 +45,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             payout.calculate_amounts()
 
             # Exception for legacy projects. Close them right away.
-            if payout.payout_rule == PayoutRules.old:
+            if payout.payout_rule == PROJECT_PAYOUT_MODEL.PayoutRules.old:
                 payout.status == PayoutLineStatuses.completed
 
             # Set payment details
@@ -60,4 +59,3 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
             # Generate invoice reference, saves twice
             payout.update_invoice_reference(auto_save=True)
-

@@ -1,5 +1,4 @@
 import logging
-from bluebottle.accounting.models import BankTransaction
 from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model
 from django.core.urlresolvers import reverse
 
@@ -14,7 +13,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.utils.text import Truncator
 
-from .models import PayoutLog, OrganizationPayoutLog
+from .models import ProjectPayoutLog, OrganizationPayoutLog
 
 from .choices import PayoutLineStatuses
 from .admin_filters import PendingDonationsPayoutFilter, HasIBANPayoutFilter
@@ -32,36 +31,36 @@ class PayoutLogBase(admin.TabularInline):
 
 
 class PayoutLogInline(PayoutLogBase):
-    model = PayoutLog
+    model = ProjectPayoutLog
 
 
 class OrganizationPayoutLogInline(PayoutLogBase):
     model = OrganizationPayoutLog
 
-
-class PayoutTransactionInline(admin.TabularInline):
-    model = BankTransaction
-    extra = 0
-
-    readonly_fields = ('transaction_link', 'counter_name', 'counter_account', 'amount', 'book_date', 'credit_debit')
-    fields = readonly_fields
-
-    def has_add_permission(self, request):
-        return False
-
-    def transaction_link(self, object):
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
-        return "<a href='%s'>%s</a>" % (str(url), object)
-
-    transaction_link.allow_tags = True
-    
-    can_delete = False
-
+#
+# class PayoutTransactionInline(admin.TabularInline):
+#     model = BankTransaction
+#     extra = 0
+#
+#     readonly_fields = ('transaction_link', 'counter_name', 'counter_account', 'amount', 'book_date', 'credit_debit')
+#     fields = readonly_fields
+#
+#     def has_add_permission(self, request):
+#         return False
+#
+#     def transaction_link(self, object):
+#         url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
+#         return "<a href='%s'>%s</a>" % (str(url), object)
+#
+#     transaction_link.allow_tags = True
+#
+#     can_delete = False
+#
 
 class PayoutAdmin(admin.ModelAdmin):
     model = PROJECT_PAYOUT_MODEL
 
-    inlines = (PayoutLogInline, PayoutTransactionInline)
+    inlines = (PayoutLogInline, )#  PayoutTransactionInline)
 
     search_fields = [
         'invoice_reference', 'receiver_account_iban', 'receiver_account_number',

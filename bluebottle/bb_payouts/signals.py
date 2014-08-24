@@ -1,5 +1,4 @@
 from bluebottle.bb_payouts.choices import PayoutRules
-from dateutil.relativedelta import relativedelta
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_model
 
@@ -22,10 +21,8 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             project.status == ProjectPhase.objects.get(slug='done-incomplete')) \
             and project.amount_asked:
 
-        if now.day <= 15:
-            next_date = timezone.datetime(now.year, now.month, 15)
-        else:
-            next_date = timezone.datetime(now.year, now.month, 1) + relativedelta(months=1)
+        # Don't schedule for 1st or 15th of the month. Just schedule it for NOW!
+        next_date = now
 
         try:
             # Update existing Payout

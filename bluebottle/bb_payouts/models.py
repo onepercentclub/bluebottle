@@ -2,7 +2,9 @@ import csv
 import decimal
 
 import datetime
+from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_payouts.utils import money_from_cents
+from bluebottle.payments.models import OrderPaymentStatuses, OrderPayment
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
@@ -10,25 +12,22 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
 
 from .fields import MoneyField
-from .utils import (round_money,calculate_vat, calculate_vat_exclusive, date_timezone_aware
-)
-from .choices import PayoutLineStatuses, PayoutRules
-
-from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model, \
-    get_organization_payout_model
+from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
+from .choices import PayoutLineStatuses
+from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
 
 
-class InvoiceReferenceBase(models.Model):
-    """ Abstract base class for generating an invoice reference. """
+class InvoiceReferenceMixin(models.Model):
+    """
+    Mixin for generating an invoice reference.
+    """
 
     invoice_reference = models.CharField(max_length=100)
 
@@ -50,19 +49,19 @@ class InvoiceReferenceBase(models.Model):
 
         if auto_save and not self.id:
             # Save to generate self.id
-            super(InvoiceReferenceBase, self).save()
+            super(InvoiceReferenceMixin, self).save()
 
         assert not self.invoice_reference, 'Invoice reference already set!'
 
         self.invoice_reference = self.generate_invoice_reference()
 
         if save:
-            super(InvoiceReferenceBase, self).save()
+            super(InvoiceReferenceMixin, self).save()
 
 
-class CompletedDateTimeBase(models.Model):
+class CompletedDateTimeMixin(models.Model):
     """
-    Abstract base class for Payout objects logging when the status is changed
+    Mixin for Payout objects logging when the status is changed
     from progress to completed in a 'completed' field.
     """
 
@@ -90,21 +89,19 @@ class CompletedDateTimeBase(models.Model):
             # No completed date was set and our current status is completed
             self.completed = timezone.now()
 
-        super(CompletedDateTimeBase, self).save(*args, **kwargs)
+        super(CompletedDateTimeMixin, self).save(*args, **kwargs)
 
 
-class PayoutBase(InvoiceReferenceBase, CompletedDateTimeBase, models.Model):
+class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
     """
-    Common abstract base class for Payout and OrganizationPayout.
+    Common abstract base class for ProjectPayout and OrganizationPayout.
     """
     planned = models.DateField(_("Planned"),
-        help_text=_("Date on which this batch should be processed.")
-    )
+                               help_text=_("Date on which this batch should be processed."))
 
-    status = models.CharField(
-        _("status"), max_length=20, choices=PayoutLineStatuses.choices,
-        default=PayoutLineStatuses.new
-    )
+    status = models.CharField(_("status"), max_length=20, choices=PayoutLineStatuses.choices,
+                              default=PayoutLineStatuses.new)
+
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
 
@@ -114,7 +111,9 @@ class PayoutBase(InvoiceReferenceBase, CompletedDateTimeBase, models.Model):
         abstract = True
 
     def _get_old_status(self):
-        """ Get previous status based on state change logs. """
+        """
+        Get previous status based on state change logs.
+        """
 
         assert self.pk
 
@@ -127,7 +126,9 @@ class PayoutBase(InvoiceReferenceBase, CompletedDateTimeBase, models.Model):
             return None
 
     def _log_status_change(self):
-        """ Log the change from one status to another. """
+        """
+        Log the change from one status to another.
+        """
 
         old_status = self._get_old_status()
 
@@ -156,7 +157,6 @@ class PayoutBase(InvoiceReferenceBase, CompletedDateTimeBase, models.Model):
 class PayoutLogBase(models.Model):
     """
     Abstract base class for logging state changes.
-
     Requires a 'payout' ForeignKey with related_name='log_set' to be defined.
     """
 
@@ -192,32 +192,23 @@ class PayoutLogBase(models.Model):
 
 class BaseProjectPayout(PayoutBase):
     """
-    A projects is payed after it's fully funded in the first batch (2x/month).
+    A projects is payed after the campaign deadline is hit..
     Project payouts are checked manually. Selected projects can be exported to a SEPA file.
     """
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 
-    payout_rule = models.CharField(
-        _("Payout rule"), max_length=20,
-        choices=PayoutRules.choices,
-        help_text=_("The payout rule for this project.")
-    )
+    payout_rule = models.CharField(_("Payout rule"), max_length=20, help_text=_("The payout rule for this project."))
+    service_percentage = models.DecimalField(_("Service fee percentage"), max_digits=5, decimal_places=2)
 
-    amount_raised = MoneyField(
-        _("amount raised"),
-        help_text=_('Amount raised when Payout was created or last recalculated.')
-    )
+    amount_raised = MoneyField(_("amount raised"),
+                               help_text=_('Amount raised when Payout was created or last recalculated.'))
 
-    organization_fee = MoneyField(
-        _("organization fee"),
-        help_text=_('Fee substracted from amount raised for the organization.')
-    )
+    organization_fee = MoneyField(_("organization fee"),
+                                  help_text=_('Fee subtracted from amount raised for the organization.'))
 
-    amount_payable = MoneyField(
-        _("amount payable"),
-        help_text=_('Payable amount; raised amount minus organization fee.')
-    )
+    amount_payable = MoneyField(_("amount payable"),
+                                help_text=_('Payable amount; raised amount minus organization fee.'))
 
     sender_account_number = models.CharField(max_length=100)
     receiver_account_number = models.CharField(max_length=100, blank=True)
@@ -237,66 +228,6 @@ class BaseProjectPayout(PayoutBase):
         ordering = ['-created']
         abstract = True
 
-    def _get_fee_percentage(self):
-        """
-        Get fee percentage according to the current PayoutRule.
-
-        Note: this should *only* be called internally.
-        """
-        assert self.payout_rule
-
-        if self.payout_rule == PayoutRules.old:
-            # 5%
-            return decimal.Decimal('0.05')
-
-        elif self.payout_rule == PayoutRules.five:
-            # 5%
-            return decimal.Decimal('0.05')
-
-        elif self.payout_rule == PayoutRules.seven:
-            # 7%
-            return decimal.Decimal('0.07')
-
-        elif self.payout_rule == PayoutRules.twelve:
-            # 12%
-            return decimal.Decimal('0.12')
-
-        elif self.payout_rule == PayoutRules.hundred:
-            # 100%
-            return decimal.Decimal('1')
-
-        # Other
-        raise NotImplementedError('Payment rule "%s" not implemented yet.' % self.payout_rule)
-
-    def _get_payout_rule(self):
-        """
-        Return the payout rule considering the current state of the Payout.
-
-        Note: this should *only* be called internally.
-        """
-        assert self.project
-
-        # 1st of January 2014
-        start_2014 = date_timezone_aware(datetime.date(2014, 1, 1))
-
-        if self.project.created >= start_2014:
-            # New rules per 2014
-
-            if self.project.amount_donated >= self.project.amount_asked:
-                # Fully funded
-                # New default payout rule is 7 percent
-                return PayoutRules.seven
-            elif self.project.amount_donated < settings.MINIMAL_PAYOUT_AMOUNT:
-                # Funding less then minimal payment ammount.
-                return PayoutRules.hundred
-            else:
-                # Not fully funded
-                return PayoutRules.twelve
-
-        # Campaign started before 2014
-        # Always 5 percent
-        return PayoutRules.five
-
     def calculate_amounts(self, save=True):
         """
         Calculate amounts according to payment_rule.
@@ -313,9 +244,16 @@ class BaseProjectPayout(PayoutBase):
 
         # Set payout rule if none set.
         if not self.payout_rule:
-            self.payout_rule = self._get_payout_rule()
+            error_message = "Payout rule not set on ProjectPayout for Project ({0}) '{1}'".\
+                format(self.project.id, self.project.title)
+            raise PayoutException(error_message)
 
-        fee_factor = self._get_fee_percentage()
+        if self.service_percentage is None:
+            error_message = "Service percentage not set on ProjectPayout for Project ({0}) '{1}'".\
+                format(self.project.id, self.project.title)
+            raise PayoutException(error_message)
+
+        fee_factor = float(self.service_percentage) / 100
 
         self.amount_raised = self.get_amount_raised()
 
@@ -326,7 +264,9 @@ class BaseProjectPayout(PayoutBase):
             self.save()
 
     def generate_invoice_reference(self):
-        """ Generate invoice reference from project and payout id's. """
+        """
+        Generate invoice reference from project and payout id's.
+        """
         assert self.id
         assert self.project
         assert self.project.id
@@ -334,26 +274,28 @@ class BaseProjectPayout(PayoutBase):
         return u'%d-%d' % (self.project.id, self.id)
 
     def get_amount_raised(self):
-        """ Realtime amount of raised ('paid', 'pending') donations. """
-
-        # Get amount as Decimal
+        """
+        Real time amount of raised ('paid', 'pending') donations.
+        """
         return self.project.amount_donated
 
     def get_amount_safe(self):
-        """ Realtime amount of safe ('paid') donations. """
-        # Get amount as Decimal
+        """
+        Real time amount of safe ('paid') donations.
+        """
         return self.project.amount_safe
 
     def get_amount_pending(self):
-        """ Realtime amount of pending donations. """
-        # Get amount as Decimal
+        """
+        Real time amount of pending donations.
+        """
         return self.project.amount_pending
 
     def get_amount_failed(self):
         """
-        Realtime difference between saved amount_raised, safe and pending.
+        Real time difference between saved amount_raised, safe and pending.
 
-        Note: amount_raised is the saved property, other values are realtime.
+        Note: amount_raised is the saved property, other values are real time.
         """
 
         amount_safe = self.get_amount_safe()
@@ -414,8 +356,8 @@ class BaseProjectPayout(PayoutBase):
         return  self.invoice_reference + " : " + date + " : " + self.receiver_account_number + " : EUR " + str(self.amount_payable)
 
 
-class PayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(Payout, related_name='log_set')
+class ProjectPayoutLog(PayoutLogBase):
+    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='log_set')
 
 
 class BaseOrganizationPayout(PayoutBase):
@@ -500,17 +442,17 @@ class BaseOrganizationPayout(PayoutBase):
 
         Note: this should *only* be called internally.
         """
-        # Allowed payment statusus (statusus generating fees)
+        # Allowed payment statuses (statusus generating fees)
         # In apps.cowry_docdata.adapters it appears that fees are only
         # calculated for the paid status, with implementation for chargedback
         # coming. There are probably other fees
         allowed_statuses = (
-            PaymentStatuses.paid,
-            PaymentStatuses.chargedback,
-            PaymentStatuses.refunded
+            OrderPaymentStatuses.paid,
+            OrderPaymentStatuses.chargedback,
+            OrderPaymentStatuses.refunded
         )
 
-        payments = Payment.objects.filter(
+        payments = OrderPayment.objects.filter(
             status__in=allowed_statuses
         )
 
@@ -703,8 +645,9 @@ class BaseOrganizationPayout(PayoutBase):
 
         return sepa.as_xml()
 
+
 class OrganizationPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(ORGANIZATION_PAYOUT_MODEL, related_name='log_set')
+    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='log_set')
 
 
 # Connect signals after defining models

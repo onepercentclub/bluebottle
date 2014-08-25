@@ -61,7 +61,7 @@ $modal-item-background									   : #F5F4F6;
 			display: block;
 			font-size: 13px;
 			color: #9F9F9F;
-			    
+					
 			span {
 				display: inline-block;
 				width: 17px;
@@ -73,7 +73,7 @@ $modal-item-background									   : #F5F4F6;
 
 			input[type="checkbox"],
 			input[type="radio"] {
-			    display: none;
+					display: none;
 			}
 
 			input[type="checkbox"] + span {
@@ -530,6 +530,15 @@ $modal-item-background									   : #F5F4F6;
 
 		.modal-fullscreen-item {
 			width: 550px;
+			text-align: left;
+		}
+	}
+
+	&.x-large {
+		width: 750px;
+
+		.modal-fullscreen-item {
+			width: 750px;
 			text-align: left;
 		}
 	}

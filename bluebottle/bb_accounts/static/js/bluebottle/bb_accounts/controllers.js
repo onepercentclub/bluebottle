@@ -238,7 +238,14 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
         }
 
         this.set('model', App.User.find(id));
-    }.observes('model')
+    }.observes('model'),
+
+    actions: {
+        viewProfile: function () {
+            this.send('close');
+            this.transitionToRoute('viewProfile', this);
+        }
+    }
 });
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {

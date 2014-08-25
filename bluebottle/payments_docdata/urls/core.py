@@ -5,5 +5,6 @@ from ..views import PaymentStatusUpdateView
 
 urlpatterns = patterns(
     '',
-    url(r'^status-update/(?P<order_id>\w+)$', PaymentStatusUpdateView.as_view(), name='docdata-payment-status-update'),
+    url(r'^status_update/(?P<payment_cluster_id>[\d-]+)$', PaymentStatusUpdateView.as_view(),
+        name='docdata-payment-status-update'),
 )

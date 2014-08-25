@@ -30,16 +30,14 @@ class GenericStatusChangedNotificationView(generics.GenericAPIView):
                 logger.error('Could not match order {0} to update payment status.'.format(order_id))
         return response.Response(status=status.HTTP_403_FORBIDDEN)
 
-
     def _update_status(self, payment, order_id):
         status_log = PaymentLogEntry(payment=payment, level=PaymentLogLevels.info)
         status_log.message = 'Received status changed notification for merchant_order_reference {0}.'.format(order_id)
         status_log.save()
 
-        # we had this in cowry_docdata, don't know if we need it here.
+        # The following we had in cowry_docdata, don't know if we need it here.
         # if so we have to implement a update_payment_status method in the adapter(?)
-        payments.update_payment_status(payment, status_changed_notification=True)
-
+        # payments.update_payment_status(payment, status_changed_notification=True)
 
     def _find_payment(self, order_id):
         #TODO: To be implemented in the sub classes

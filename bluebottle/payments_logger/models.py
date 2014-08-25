@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.text import Truncator
 from djchoices import DjangoChoices, ChoiceItem
@@ -8,6 +10,7 @@ from bluebottle.payments.models import Payment
 
 
 class PaymentLogLevels(DjangoChoices):
+
     info = ChoiceItem('info', label=_("INFO"))
     warn = ChoiceItem('warn', label=_("WARN"))
     error = ChoiceItem('error', label=_("ERROR"))
@@ -15,12 +18,19 @@ class PaymentLogLevels(DjangoChoices):
 
 # TODO: Add fields for: source file, source line number, source version, IP
 class PaymentLogEntry(models.Model):
+
     message = models.CharField(max_length=400)
     level = models.CharField(max_length=15, choices=PaymentLogLevels.choices)
     timestamp = CreationDateTimeField()
 
     # TODO: Enable when not abstract.
-    payment = models.ForeignKey(Payment, related_name='log_entries')
+    # payment = models.ForeignKey(Payment, related_name='log_entries')
+
+    # Trying to create a foreign key with a polimorfic model
+    # https://docs.djangoproject.com/en/dev/ref/contrib/contenttypes/#django.contrib.contenttypes.generic.GenericForeignKey
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    payment = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
 

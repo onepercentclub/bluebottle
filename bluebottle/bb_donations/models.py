@@ -5,7 +5,7 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from djchoices import DjangoChoices, ChoiceItem
 from django.db.models import options
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
 
 class BaseDonation(models.Model):

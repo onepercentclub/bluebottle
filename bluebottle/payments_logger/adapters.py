@@ -1,6 +1,5 @@
 import logging
-from .models import PaymentLogLevels, PaymentLogEntry
-
+from .models import PaymentLogEntry, PaymentLogLevels
 
 class PaymentLogAdapter:
 
@@ -11,6 +10,7 @@ class PaymentLogAdapter:
 
         if level == PaymentLogLevels.error:
             self.logger.error("{0} - {1}".format(payment, message))
+            # Send mail to developer
 
         log_entry = PaymentLogEntry(payment=payment, level=level, message=message)
         log_entry.save()

@@ -243,7 +243,7 @@ LOGGING = {
         },
         'sentry': {
             'level': 'INFO',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'class': 'raven.contrib.django.handlers.SentryHandler',
         }
     },
     'loggers': {

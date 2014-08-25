@@ -130,6 +130,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
                     // order status
                     // NOTE: when using the mock api we will need to manually 
                     //       set the order status here.
+
                     var order = payment.get('order');
                     order.reload();
 

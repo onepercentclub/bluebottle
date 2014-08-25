@@ -13,14 +13,15 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 
 class OrderPaymentStatuses(DjangoChoices):
-    new = ChoiceItem('new', label=_("New"))
-    in_progress = ChoiceItem('in_progress', label=_("In Progress"))
-    pending = ChoiceItem('pending', label=_("Pending"))
+    created = ChoiceItem('created', label=_("Created"))
+    started = ChoiceItem('started', label=_("Started"))
+    authorized = ChoiceItem('authorized', label=_("Authorized"))
+    settled = ChoiceItem('settled', label=_("Settled"))
     failed = ChoiceItem('failed', label=_("Failed"))
-    unknown = ChoiceItem('unknown', label=_("Unknown"))
     cancelled = ChoiceItem('cancelled', label=_("Cancelled"))
     chargedback = ChoiceItem('charged_back', label=_("Charged back"))
-    paid = ChoiceItem('paid', label=_("Paid"))
+    refunded = ChoiceItem('refunded', label=_("Refunded"))
+    unknown = ChoiceItem('unknown', label=_("Unknown"))
 
 
 class OrderPaymentAction(models.Model):
@@ -54,7 +55,7 @@ class OrderPayment(models.Model):
     order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
 
     status = models.CharField(_("Status"), max_length=20, choices=OrderPaymentStatuses.choices,
-                              default=OrderPaymentStatuses.new, db_index=True)
+                              default=OrderPaymentStatuses.created, db_index=True)
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))

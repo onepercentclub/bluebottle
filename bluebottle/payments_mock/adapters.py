@@ -1,17 +1,42 @@
 # coding=utf-8
-from bluebottle.payments.adapters import AbstractPaymentAdapter
-from .models import MockPayment
+from django.core.urlresolvers import reverse
+from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.models import OrderPaymentStatuses
+from .models import MockPayment, MockPaymentStatuses
 
+class MockPaymentAdapter(BasePaymentAdapter):
+    MODEL_CLASS = MockPayment
 
-class MockPaymentAdapter(AbstractPaymentAdapter):
-
-    @staticmethod
-    def create_payment(self, order_payment, meta_data=None, **kwargs):
-        payment = MockPayment(**meta_data)
+    def create_payment(self):
+        payment = self.MODEL_CLASS(order_payment=self.order_payment)
+        payment.save()
         return payment
 
-    @staticmethod
-    def get_authorization_action(self, order_payment):
-        return {}
+    def get_authorization_action(self):
+        """
+        This is the PSP url where Ember redirects the user to.
+        """
+        return {'type': 'redirect',
+                'method':'get',
+                'url': reverse('payment-service-provider', kwargs={'order_payment_id': self.order_payment.id})}
+
+    def _get_mapped_status(self, status):
+        """
+        Helper to map the status of a PSP specific status to our own status pipeline
+        """
+
+        status_mapping = {
+            MockPaymentStatuses.created: OrderPaymentStatuses.created,
+            MockPaymentStatuses.started: OrderPaymentStatuses.started,
+            MockPaymentStatuses.authorized: OrderPaymentStatuses.authorized,
+            MockPaymentStatuses.settled: OrderPaymentStatuses.settled,
+            MockPaymentStatuses.failed: OrderPaymentStatuses.failed,
+            MockPaymentStatuses.cancelled: OrderPaymentStatuses.cancelled,
+            MockPaymentStatuses.chargedback: OrderPaymentStatuses.chargedback,
+            MockPaymentStatuses.refunded: OrderPaymentStatuses.refunded,
+            MockPaymentStatuses.unknown: OrderPaymentStatuses.unknown,
+        }
+        return status_mapping.get(status, OrderPaymentStatuses.unknown)
+
 
 

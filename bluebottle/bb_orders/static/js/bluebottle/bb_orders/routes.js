@@ -19,7 +19,7 @@ App.OrderRoute = Em.Route.extend({
         return App.MyOrder.find(params.order_id);
     },
 
-    redirect: function(model) {
+    afterModel: function(model) {
         var _this = this;
 
         App.MyDonation.find({order: model.get('id')}).then(

@@ -202,6 +202,8 @@ INSTALLED_APPS = (
 
     'django_wysiwyg',
     'templatetag_handlebars',
+
+    'raven.contrib.django.raven_compat',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -243,7 +245,7 @@ LOGGING = {
         },
         'sentry': {
             'level': 'INFO',
-            'class': 'raven.contrib.django.handlers.SentryHandler',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         }
     },
     'loggers': {

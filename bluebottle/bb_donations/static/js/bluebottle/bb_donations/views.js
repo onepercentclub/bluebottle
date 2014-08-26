@@ -34,4 +34,24 @@ App.DonationWallPostView = Em.View.extend({
         });
 
     }
-})
+});
+
+App.DonationSuccessView = Em.View.extend({
+    templateName: 'donation_success',
+
+    didInsertElement: function() {
+        if(!document.createElement('svg').getAttributeNS) {
+            this.setProperties({
+                supported: false
+            });
+        }
+    },
+
+    supported: true,
+});
+
+App.CanvasView = Em.View.extend({
+    tagName: 'canvas',
+    elementId: 'confetti-canvas'
+
+});

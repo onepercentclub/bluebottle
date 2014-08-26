@@ -1,7 +1,11 @@
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile
+from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, BaseSkill
 
 
 class Task(BaseTask):
+    pass
+
+
+class Skill(BaseSkill):
     pass
 
 

@@ -24,7 +24,6 @@ class MockPaymentAdapter(BasePaymentAdapter):
         """
         Helper to map the status of a PSP specific status to our own status pipeline
         """
-
         status_mapping = {
             MockPaymentStatuses.created: OrderPaymentStatuses.created,
             MockPaymentStatuses.started: OrderPaymentStatuses.started,
@@ -38,5 +37,9 @@ class MockPaymentAdapter(BasePaymentAdapter):
         }
         return status_mapping.get(status, OrderPaymentStatuses.unknown)
 
+    def set_order_payment_new_status(self, order_payment, status):
+        order_payment.status = self._get_mapped_status(status)
+        order_payment.save()
+        return order_payment
 
 

@@ -59,7 +59,7 @@ class PaymentStatusListener(View):
     """
     This view simulates our listener that handles incoming messages from an external PSP to update the status of
     a payment. It's an "underwater" view and the user does not directly engage with this view or url, only the
-    external server.
+    external server by making a POST request to it.
     """
 
     def post(self, request, *args, **kwargs):
@@ -67,12 +67,11 @@ class PaymentStatusListener(View):
         order_payment_id = request.POST.get('order_payment_id')
 
         order_payment = OrderPayment.objects.get(id=order_payment_id)
+
         service = PaymentService(order_payment=order_payment)
 
         #We pass the MockPayment status and get back the status name of our OrderStatus definition
-        new_status = service.adapter._get_mapped_status(status)
-        order_payment.status = new_status
-        order_payment.save()
+        service.adapter.set_order_payment_new_status(order_payment, status)
 
         return HttpResponse()
 

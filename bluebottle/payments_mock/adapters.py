@@ -37,9 +37,9 @@ class MockPaymentAdapter(BasePaymentAdapter):
         }
         return status_mapping.get(status, OrderPaymentStatuses.unknown)
 
-    def set_order_payment_new_status(self, order_payment, status):
-        order_payment.status = self._get_mapped_status(status)
-        order_payment.save()
-        return order_payment
+    def set_order_payment_new_status(self, status):
+        self.order_payment.status = self._get_mapped_status(status)
+        self.order_payment.save()
+        return self.order_payment
 
 

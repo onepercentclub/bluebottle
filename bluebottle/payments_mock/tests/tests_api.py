@@ -63,3 +63,13 @@ class PaymentMockTests(TestCase):
         self.assertEqual(response.status_code, 200)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
         self.assertEquals(order_payment.status, 'unknown')
+
+    def test_update_status_nonexisting_order_payment(self):
+        self.assertEqual(self.order_payment.status, 'created')
+
+        data = {'order_payment_id': 5, 'status': 'very_obscure_unknown_status'}
+        response = self.client.post(reverse('payment-service-provider-status-update'), data)
+
+        self.assertEqual(response.status_code, 404)
+        order_payment = OrderPayment.objects.get(id=self.order_payment.id)
+        self.assertEquals(order_payment.status, 'created')

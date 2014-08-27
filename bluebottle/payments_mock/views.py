@@ -66,7 +66,10 @@ class PaymentStatusListener(View):
         status = request.POST.get('status', None)
         order_payment_id = request.POST.get('order_payment_id')
 
-        order_payment = OrderPayment.objects.get(id=order_payment_id)
+        try:
+            order_payment = OrderPayment.objects.get(id=order_payment_id)
+        except OrderPayment.DoesNotExist:
+            raise Http404
 
         service = PaymentService(order_payment=order_payment)
 

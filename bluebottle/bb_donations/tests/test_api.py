@@ -4,7 +4,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.model_dispatcher import get_order_model
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
 
 from django.core.urlresolvers import reverse
 
@@ -35,7 +35,7 @@ class TestCreateDonation(DonationApiTestCase):
         response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
         order_id = response.data['id']
 
-        fundraiser = FundraiserFactory.create(amount=100)
+        fundraiser = FundRaiserFactory.create(amount=100)
 
         donation1 = {
             "fundraiser": fundraiser.pk,

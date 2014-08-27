@@ -1,6 +1,7 @@
 from .base import *
 from .secrets import *
 
+TEST_RUNNER = 'discover_runner.DiscoverRunner'
 
 INSTALLED_APPS += (
     'django_extensions',

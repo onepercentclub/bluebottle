@@ -1,3 +1,28 @@
+class FSMTransition:
+    """
+    Class mixin to add transition_to method for Django FSM
+    """
+    def transition_to(self, new_status):
+        # If the new_status is the same as then current then return early
+        if self.status == new_status:
+            return
+
+        # Lookup the available next transition - from Django FSM
+        available_transitions = self.get_available_status_transitions()
+
+        # Check that the new_status is in the available transitions - created with Django FSM decorator
+        transition_method = [i[1] for i in available_transitions if i[0] == new_status].pop()
+         
+        # Get the function method on the instance 
+        instance_method = getattr(self, transition_method.__name__)
+
+        # Call it. 
+        try:
+            instance_method()
+        except Exception as e:
+            raise e
+
+
 def get_client_ip(request):
     """ A utility method that returns the client IP for the given request. """
 

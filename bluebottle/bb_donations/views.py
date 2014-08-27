@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class DonationList(generics.ListAPIView):
-    model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
     # FIXME: Filter on donations that are viewable (pending & paid)
 

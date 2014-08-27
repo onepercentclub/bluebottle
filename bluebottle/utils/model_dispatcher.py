@@ -75,7 +75,6 @@ def get_model_class(model_name=None):
                 "{0} must be of the form 'app_label.model_name'").format(model_name)
 
         model = get_model(app_label, model_class_name)
-        # import ipdb; ipdb.set_trace()
         if model is None:
             raise ImproperlyConfigured(
                 "{0} refers to model '{0}' that has not been "

@@ -6,39 +6,11 @@ from decimal import Decimal as D
 
 
 class DocdataPayment(Payment):
-    # FIXME: This model is copied from https://github.com/edoburu/django-oscar-docdata
-    # We have to decide if we need all these fields and the way status choices
-
-    # Simplified internal status codes.
-    # Lowercased on purpose to avoid mixing the statuses together.
-    STATUS_NEW = 'new'                    # Initial state
-    STATUS_IN_PROGRESS = 'in_progress'    # In the redirect phase
-    STATUS_PENDING = 'pending'            # Waiting for user to complete payment (e.g. credit cards)
-    STATUS_PAID = 'paid'                  # End of story, paid!
-    STATUS_CANCELLED = 'cancelled'        # End of story, cancelled
-    STATUS_CHARGED_BACK = 'charged_back'  # End of story, consumer asked for charge back
-    STATUS_REFUNDED = 'refunded'          # End of story, refunded, merchant refunded
-    STATUS_EXPIRED = 'expired'           # No results of customer, order was closed.
-    STATUS_UNKNOWN = 'unknown'            # Help!
-
-    STATUS_CHOICES = (
-        (STATUS_NEW, _("New")),
-        (STATUS_IN_PROGRESS, _("In Progress")),
-        (STATUS_PENDING, _("Pending")),
-        (STATUS_PAID, _("Paid")),
-        (STATUS_CANCELLED, _("Cancelled")),
-        (STATUS_CHARGED_BACK, _("Charged back")),
-        (STATUS_REFUNDED, _("Refunded")),
-        (STATUS_EXPIRED, _("Expired")),
-        (STATUS_UNKNOWN, _("Unknown")),
-    )
-
     merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
 
     payment_cluster_id = models.CharField(_("Payment cluster id"), max_length=200, default='', unique=True)
     payment_cluster_key = models.CharField(_("Payment cluster key"), max_length=200, default='', unique=True)
 
-    status = models.CharField(_("Status"), max_length=50, choices=STATUS_CHOICES, default=STATUS_NEW)
     language = models.CharField(_("Language"), max_length=5, blank=True, default='en')
 
     ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100, default='')

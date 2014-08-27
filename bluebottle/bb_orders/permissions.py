@@ -63,7 +63,7 @@ class OrderIsNew(permissions.BasePermission):
         # This is for creating new objects that have a relation (fk) to Order.
         order = self._get_order_from_request(request)
         if order:
-            return order.status == ORDER_MODEL.OrderStatuses.new
+            return order.status == ORDER_MODEL.StatusDefinition.CREATED
         return True
 
 
@@ -75,6 +75,6 @@ class OrderIsNew(permissions.BasePermission):
 
         # Check if the object is an Order or if it some object that has a foreign key to Order.
         if isinstance(obj, ORDER_MODEL):
-            return obj.status == ORDER_MODEL.OrderStatuses.new
-        return obj.order.status == ORDER_MODEL.OrderStatuses.new
+            return obj.status == ORDER_MODEL.StatusDefinition.CREATED
+        return obj.order.status == ORDER_MODEL.StatusDefinition.CREATED
 

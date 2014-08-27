@@ -11,4 +11,4 @@ class OrderFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ORDER_MODEL
 
     user = factory.SubFactory(BlueBottleUserFactory)
-    status = ORDER_MODEL.OrderStatuses.new
+    status = ORDER_MODEL.StatusDefinition.CREATED

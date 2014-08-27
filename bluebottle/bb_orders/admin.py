@@ -6,6 +6,8 @@ from django.contrib import admin
 
 class OrderAdmin(admin.ModelAdmin):
     model = Order
+    list_display = ('id', 'created', 'closed', 'total', 'status', 'user')
+    list_filter = ('status', )
     raw_id_fields = ('user', )
     readonly_fields = ('total', )
     fields = readonly_fields + ('user', 'status')

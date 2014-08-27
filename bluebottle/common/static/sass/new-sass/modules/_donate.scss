@@ -1,6 +1,8 @@
+$color-primary: #5DC0ED;
+
 .donation-amount {
     background: #F5F4F6;
-    padding: 15px;
+    padding: 20px;
     border-radius: 8px;
     @include placeholder-color($color-primary);
 

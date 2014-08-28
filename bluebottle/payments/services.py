@@ -48,3 +48,7 @@ class PaymentService(object):
 
         action = self.adapter.get_authorization_action()
         self.order_payment.set_authorization_action(action)
+
+    def check_payment_status(self, **integration_details):
+        action = self.adapter.check_payment_status()
+

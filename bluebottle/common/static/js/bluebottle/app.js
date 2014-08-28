@@ -252,7 +252,7 @@ App.AdapterPlurals = {
     "donations/my": "donations/my",
     "donations/project": "donations/project",
     'order_payments/my': 'order_payments/my',
-    'payments/payment-methods': 'payments/payment-methods',
+    'payments/payment_methods': 'payments/payment_methods',
 
     // My Projects
     "bb_projects/manage": "bb_projects/manage",

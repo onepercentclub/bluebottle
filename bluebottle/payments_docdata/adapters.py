@@ -1,5 +1,6 @@
 import logging
 from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments_docdata.models import DocdataTransaction
 from django.utils.http import urlencode
 import gateway
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
@@ -112,3 +113,36 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         url += '&' + urlencode(params)
         return {'type': 'redirect', 'method': 'get', 'url': url}
 
+    def check_payment_status(self):
+
+        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
+        client = gateway.DocdataClient(testing_mode)
+        response = client.status(self.payment.payment_cluster_key)
+
+        status = response.payment[0].authorization.status
+        if self.payment.status <> status:
+            totals = response.approximateTotals
+            self.payment.total_registered = totals.totalRegistered
+            self.payment.total_shopper_pending = totals.totalShopperPending
+            self.payment.total_acquirer_pending = totals.totalAcquirerPending
+            self.payment.total_acquirer_approved = totals.totalAcquirerApproved
+            self.payment.total_captured = totals.totalCaptured
+            self.payment.total_refunded = totals.totalRefunded
+            self.payment.total_charged_back = totals.totalChargedback
+
+            self.payment.status = status
+            self.payment.save()
+
+        for transaction in response.payment:
+            self._store_payment_transaction(transaction)
+
+    def _store_payment_transaction(self, transaction):
+        dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)
+        dd_transaction.payment_method = transaction.paymentMethod
+        dd_transaction.authorization_amount = transaction.authorization.amount.value
+        dd_transaction.authorization_currency = transaction.authorization.amount._currency
+        dd_transaction.authorization_status = transaction.authorization.status
+        dd_transaction.capture_status = transaction.authorization.capture[0].status
+        dd_transaction.capture_amount = transaction.authorization.capture[0].amount.value
+        dd_transaction.capture_currency = transaction.authorization.capture[0].amount._currency
+        dd_transaction.save()

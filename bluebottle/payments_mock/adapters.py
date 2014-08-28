@@ -22,7 +22,7 @@ class MockPaymentAdapter(BasePaymentAdapter):
 
     def _get_mapped_status(self, status):
         """
-        Helper to map the status of a PSP specific status to our own status pipeline
+        Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment
         """
         status_mapping = {
             MockPaymentStatuses.created: OrderPaymentStatuses.created,

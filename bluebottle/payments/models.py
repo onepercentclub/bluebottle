@@ -7,6 +7,7 @@ from django_extensions.db.fields.json import JSONField
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.polymorphic_model import PolymorphicModel
 from django.db.models import options
+from bluebottle.payments.managers import PaymentManager
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
@@ -89,6 +90,8 @@ class Payment(PolymorphicModel):
     order_payment = models.OneToOneField('payments.OrderPayment')
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
+
+    objects = PaymentManager()
 
     class Meta:
         ordering = ('-created', '-updated')

@@ -26,7 +26,7 @@ class Payment(PolymorphicModel):
         (StatusDefinition.CANCELLED, _('Cancelled')),
         (StatusDefinition.AUTHORIZED, _('Authorized')),
         (StatusDefinition.SETTLED, _('Settled')),
-        (StatusDefinition.CHARGEDBACK, _('Charged_back')),
+        (StatusDefinition.CHARGED_BACK, _('Charged_back')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
         (StatusDefinition.UNKNOWN, _('Unknown')),
@@ -121,7 +121,7 @@ class OrderPayment(models.Model, FSMTransition):
         self.save()
         pass
 
-    @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGEDBACK)
+    @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         # TODO: add charged_back state behaviour here
         self.save()

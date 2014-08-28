@@ -14,7 +14,6 @@ USER_MODEL = settings.AUTH_USER_MODEL.split('.')[1]
 
 class Migration(SchemaMigration):
     depends_on = (
-        ('projects', '0001_initial'),
         ('orders', '0001_initial'),
     )
 

@@ -1,11 +1,15 @@
 # coding=utf-8
 import logging
-from bluebottle.payments.adapters import BasePaymentAdapter
-from django.utils.http import urlencode
 import gateway
+
+from django.utils.http import urlencode
 from django.conf import settings
-from .models import DocdataPayment
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.utils.utils import StatusDefinition
+from .models import DocdataPayment
+from .gateway import DocdataClient
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +17,25 @@ logger = logging.getLogger(__name__)
 class DocdataPaymentAdapter(BasePaymentAdapter):
 
     MODEL_CLASS = DocdataPayment
+
+    # TODO: is this really needed?
+    STATUS_MAPPING = {
+        'NEW':                            StatusDefinition.STARTED,
+        'STARTED':                        StatusDefinition.STARTED,
+        'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # ??
+        'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # ??
+        'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
+        'PAID':                           StatusDefinition.SETTLED, 
+        'CANCELLED':                      StatusDefinition.CANCELLED,
+        'CHARGED_BACK':                   StatusDefinition.CHARGED_BACK,
+        'CONFIRMED_PAID':                 StatusDefinition.PAID,
+        'CONFIRMED_CHARGEDBACK':          StatusDefinition.CHARGED_BACK,
+        'CLOSED_SUCCESS':                 StatusDefinition.PAID,
+        'CLOSED_CANCELLED':               StatusDefinition.CANCELLED,
+    }
+
+    def get_status_mapping(self, external_payment_status):
+        return self.STATUS_MAPPING.get(external_payment_status, StatusDefinition.PENDING)
 
     def create_payment(self):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
@@ -106,4 +129,18 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         }
         url += '&' + urlencode(params)
         return {'type': 'redirect', 'method': 'get', 'url': url}
+
+    def check_payment_status(self):
+        # Get latest status for payment
+        client = gateway.DocdataClient()
+        status_report = client.status(self.payment.payment_cluster_key)
+
+        return status_report
+
+    def update_payment_status(self):
+        report_status = self.check_payment_status().report.payment[0].authorization.status
+        new_payment_status = self.get_status_mapping(report_status)
+
+        self.payment.status = new_payment_status
+        self.payment.save()
 

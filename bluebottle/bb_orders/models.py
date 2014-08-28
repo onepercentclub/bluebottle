@@ -28,7 +28,7 @@ class BaseOrder(models.Model, FSMTransition):
         StatusDefinition.STARTED:      StatusDefinition.LOCKED,
         StatusDefinition.AUTHORIZED:   StatusDefinition.SUCCESS,
         StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
-        StatusDefinition.CHARGEDBACK:  StatusDefinition.FAILED,
+        StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
         StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
         StatusDefinition.FAILED:       StatusDefinition.FAILED,
         StatusDefinition.UNKNOWN:      StatusDefinition.FAILED

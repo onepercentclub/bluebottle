@@ -5,6 +5,9 @@ class StatusDefinition:
     """
     Various status definitions for FSM's
     """
+    NEW = 'new'
+    IN_PROGRESS = 'in_progress'
+    PENDING = 'pending'
     CREATED = 'created'
     LOCKED = 'locked'
     SUCCESS = 'success'
@@ -12,11 +15,11 @@ class StatusDefinition:
     CANCELLED = 'cancelled'
     AUTHORIZED = 'authorized'
     SETTLED = 'settled'
-    CHARGEDBACK = 'charged_back'
+    CHARGED_BACK = 'charged_back'
     REFUNDED = 'refunded'
+    PAID = 'paid'
     FAILED = 'failed'
     UNKNOWN = 'unknown'
-
 
 class FSMTransition:
 

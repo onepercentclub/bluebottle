@@ -9,6 +9,8 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from rest_framework import status
 
+from bluebottle.utils.utils import StatusDefinition
+
 ORDER_MODEL = get_order_model()
 
 
@@ -45,7 +47,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], ORDER_MODEL.StatusDefinition.CREATED)
+        self.assertEqual(response.data['status'], StatusDefinition.CREATED)
         self.assertEqual(response.data['total'], 0)
         order_id = response.data['id']
 
@@ -59,7 +61,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], ORDER_MODEL.StatusDefinition.CREATED)
+        self.assertEqual(response.data['status'], StatusDefinition.CREATED)
         self.assertEqual(response.data['total'], 0)
         order_id = response.data['id']
 
@@ -70,7 +72,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
 
         # Change order status to 'locked'
         order = Order.objects.get(pk=order_id)
-        order.status = ORDER_MODEL.StatusDefinition.LOCKED
+        order.status = StatusDefinition.LOCKED
         order.save()
 
         # User should not be able to update the order now that it has status 'locked'

@@ -1,13 +1,25 @@
 from django.dispatch import Signal
 from django.dispatch import receiver
+from django.conf import settings
+from django.db.models.signals import post_save, post_delete
 
 from django_fsm.signals import pre_transition, post_transition
 
-from bluebottle.utils.model_dispatcher import get_order_model
-from bluebottle.payments.signals import order_payment_status_changed
 from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model
 
-ORDER_MODEL = get_order_model()
+DONATION_MODEL = get_donation_model()
+
+
+@receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
+def update_order_amount(sender, instance, **kwargs):
+    instance.order.update_total()
+
+
+@receiver(post_delete, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
+def update_order_amount(sender, instance, **kwargs):
+    instance.order.update_total()
 
 
 @receiver(post_transition, sender=OrderPayment)
@@ -19,7 +31,7 @@ def _on_payment_status_changed(**kwargs):
     order = kwargs['instance'].order
      
     # Get the mapped status OrderPayment to Order
-    new_order_status = ORDER_MODEL.status_mapping.get(kwargs['target'], ORDER_MODEL.StatusDefinition.FAILED)
+    new_order_status = order.get_status_mapping(kwargs['target'])
      
     order.transition_to(new_order_status)
     

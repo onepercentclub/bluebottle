@@ -7,12 +7,14 @@ from .accounts import BlueBottleUserFactory
 from .orders import OrderFactory
 
 
-class PaymentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Payment
-
-
 class OrderPaymentFactory(factory.DjangoModelFactory):
     FACTORY_FOR = OrderPayment
 
     amount = 100
     order = factory.SubFactory(OrderFactory)
+
+
+class PaymentFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = Payment
+
+    order_payment = factory.SubFactory(OrderPaymentFactory)

@@ -3,7 +3,7 @@ import datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
-
+from django.conf import settings
 
 class Migration(SchemaMigration):
 
@@ -12,8 +12,8 @@ class Migration(SchemaMigration):
         db.create_table(u'wallposts_wallpost', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_wallposts.wallpost_set', null=True, to=orm['contenttypes.ContentType'])),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='wallpost_wallpost', null=True, to=orm['test.TestBaseUser'])),
-            ('editor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['test.TestBaseUser'], null=True, blank=True)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='wallpost_wallpost', null=True, to=orm[settings.AUTH_USER_MODEL])),
+            ('editor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL], null=True, blank=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
@@ -39,8 +39,8 @@ class Migration(SchemaMigration):
             ('photo', self.gf('django.db.models.fields.files.ImageField')(max_length=100)),
             ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
             ('ip_address', self.gf('django.db.models.fields.IPAddressField')(default=None, max_length=15, null=True, blank=True)),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='mediawallpostphoto_wallpost_photo', null=True, to=orm['test.TestBaseUser'])),
-            ('editor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['test.TestBaseUser'], null=True, blank=True)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='mediawallpostphoto_wallpost_photo', null=True, to=orm[settings.AUTH_USER_MODEL])),
+            ('editor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL], null=True, blank=True)),
         ))
         db.send_create_signal(u'wallposts', ['MediaWallPostPhoto'])
 
@@ -63,8 +63,8 @@ class Migration(SchemaMigration):
         # Adding model 'Reaction'
         db.create_table(u'wallposts_reaction', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wallpost_reactions', to=orm['test.TestBaseUser'])),
-            ('editor', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='+', null=True, to=orm['test.TestBaseUser'])),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wallpost_reactions', to=orm[settings.AUTH_USER_MODEL])),
+            ('editor', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='+', null=True, to=orm[settings.AUTH_USER_MODEL])),
             ('text', self.gf('django.db.models.fields.TextField')(max_length=300)),
             ('wallpost', self.gf('django.db.models.fields.related.ForeignKey')(related_name='reactions', to=orm['wallposts.WallPost'])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
@@ -135,8 +135,8 @@ class Migration(SchemaMigration):
             'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'tag': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'taggit_taggeditem_items'", 'to': u"orm['taggit.Tag']"})
         },
-        u'test.testbaseuser': {
-            'Meta': {'object_name': 'TestBaseUser'},
+        settings.AUTH_USER_MODEL.lower(): {
+            'Meta': {'object_name': settings.AUTH_USER_MODEL.split('.')[-1]},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
@@ -180,9 +180,9 @@ class Migration(SchemaMigration):
         },
         u'wallposts.mediawallpostphoto': {
             'Meta': {'object_name': 'MediaWallPostPhoto'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'mediawallpostphoto_wallpost_photo'", 'null': 'True', 'to': u"orm['test.TestBaseUser']"}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'mediawallpostphoto_wallpost_photo'", 'null': 'True', 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'editor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['test.TestBaseUser']", 'null': 'True', 'blank': 'True'}),
+            'editor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ip_address': ('django.db.models.fields.IPAddressField', [], {'default': 'None', 'max_length': '15', 'null': 'True', 'blank': 'True'}),
             'mediawallpost': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'photos'", 'null': 'True', 'to': u"orm['wallposts.MediaWallPost']"}),
@@ -190,10 +190,10 @@ class Migration(SchemaMigration):
         },
         u'wallposts.reaction': {
             'Meta': {'ordering': "('created',)", 'object_name': 'Reaction'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'wallpost_reactions'", 'to': u"orm['test.TestBaseUser']"}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'wallpost_reactions'", 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'editor': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'+'", 'null': 'True', 'to': u"orm['test.TestBaseUser']"}),
+            'editor': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'+'", 'null': 'True', 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ip_address': ('django.db.models.fields.IPAddressField', [], {'default': 'None', 'max_length': '15', 'null': 'True', 'blank': 'True'}),
             'text': ('django.db.models.fields.TextField', [], {'max_length': '300'}),
@@ -214,11 +214,11 @@ class Migration(SchemaMigration):
         },
         u'wallposts.wallpost': {
             'Meta': {'ordering': "('created',)", 'object_name': 'WallPost'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'wallpost_wallpost'", 'null': 'True', 'to': u"orm['test.TestBaseUser']"}),
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'wallpost_wallpost'", 'null': 'True', 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'content_type_set_for_wallpost'", 'to': u"orm['contenttypes.ContentType']"}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'editor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['test.TestBaseUser']", 'null': 'True', 'blank': 'True'}),
+            'editor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ip_address': ('django.db.models.fields.IPAddressField', [], {'default': 'None', 'max_length': '15', 'null': 'True', 'blank': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),

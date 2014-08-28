@@ -4,7 +4,6 @@ from .validators import Alpha2CodeValidator, Alpha3CodeValidator, NumericCodeVal
 
 
 class GeoBaseModel(models.Model):
-    
     """
     Abstract base model for the UN M.49 geoscheme.
     Refs: http://unstats.un.org/unsd/methods/m49/m49.htm

@@ -1,6 +1,7 @@
 import factory
 
 from bluebottle.utils.model_dispatcher import get_order_model
+from bluebottle.utils.utils import StatusDefinition
 
 from .accounts import BlueBottleUserFactory
 
@@ -11,4 +12,4 @@ class OrderFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ORDER_MODEL
 
     user = factory.SubFactory(BlueBottleUserFactory)
-    status = ORDER_MODEL.StatusDefinition.CREATED
+    status = StatusDefinition.CREATED

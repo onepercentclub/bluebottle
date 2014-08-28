@@ -12,25 +12,13 @@ from django.db.models import options
 from django_fsm.db.fields import FSMField, transition
 from django_fsm.signals import pre_transition, post_transition
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save, post_delete
 
-from bluebottle.utils.utils import FSMTransition
+from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 
 class Payment(PolymorphicModel):
-
-    class StatusDefinition:
-        CREATED = 'created'
-        STARTED = 'started'
-        CANCELLED = 'cancelled'
-        AUTHORIZED = 'authorized'
-        SETTLED = 'settled'
-        CHARGEDBACK = 'charged_back'
-        REFUNDED = 'refunded'
-        FAILED = 'failed'
-        UNKNOWN = 'unknown'
 
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
@@ -44,14 +32,14 @@ class Payment(PolymorphicModel):
         (StatusDefinition.UNKNOWN, _('Unknown')),
     )
 
-
     @classmethod
     def get_by_order_payment(cls, order_payment):
         if len(cls.objects.filter(order_payment=order_payment).all()):
             return cls.objects.filter(order_payment=order_payment).all()[0]
         return None
 
-    status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
+    status = FSMField(default=StatusDefinition.STARTED, choices=STATUS_CHOICES, protected=False)
+    previous_status = None
     order_payment = models.OneToOneField('payments.OrderPayment')
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
@@ -87,30 +75,20 @@ class OrderPayment(models.Model, FSMTransition):
     """
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
-    class StatusDefinition(Payment.StatusDefinition):
-        pass
-
     STATUS_CHOICES = Payment.STATUS_CHOICES
 
-    @classmethod
-    def status_mapping(payment_status):
-        # Currently the status in Payment and OrderPayment is one to one.
-        return payment_status
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
-
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
-
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)
     integration_data = JSONField(_("Integration data"), max_length=5000, blank=True)
-
     authorization_action = models.OneToOneField(OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
 
     @transition(field=status, source=StatusDefinition.CREATED, target=StatusDefinition.STARTED)
@@ -161,6 +139,10 @@ class OrderPayment(models.Model, FSMTransition):
         self.save()
         pass
 
+    def get_status_mapping(self, payment_status):
+        # Currently the status in Payment and OrderPayment is one to one.
+        return payment_status
+
     def full_clean(self, exclude=None):
         self.amount = self.order.total
 
@@ -171,25 +153,12 @@ class OrderPayment(models.Model, FSMTransition):
         if save:
             self.save()
 
-@receiver(post_save, weak=False, sender=OrderPayment, dispatch_uid='order_payment_model')
-def check_order_payment_status(sender, instance, **kwargs):
-    # Send status change notification when record first created
-    # This is to ensure any components listening for a status 
-    # on an OrderPayment will also receive the initial status.
-    if (instance.status == OrderPayment.StatusDefinition.CREATED):
-        signal_kwargs = {
-            'sender': sender,
-            'instance': instance,
-            'target': instance.status
-        }
-        post_transition.send(**signal_kwargs)
-
-
 class Transaction(PolymorphicModel):
-
     payment = models.ForeignKey('payments.Payment')
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
 
     class Meta:
         ordering = ('-created', '-updated')
+
+from .signals import *

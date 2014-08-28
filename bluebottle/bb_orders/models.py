@@ -11,8 +11,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django_fsm.db.fields import FSMField, transition
 
-from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import FSMTransition
+from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
@@ -23,11 +22,17 @@ class BaseOrder(models.Model, FSMTransition):
     """
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
-    class StatusDefinition:
-        CREATED = 'created'
-        LOCKED = 'locked'
-        SUCCESS = 'success'
-        FAILED = 'failed'
+    # Mapping the Order Payment Status to the Order Status
+    STATUS_MAPPING = {
+        StatusDefinition.CREATED:      StatusDefinition.LOCKED,
+        StatusDefinition.STARTED:      StatusDefinition.LOCKED,
+        StatusDefinition.AUTHORIZED:   StatusDefinition.SUCCESS,
+        StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
+        StatusDefinition.CHARGEDBACK:  StatusDefinition.FAILED,
+        StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
+        StatusDefinition.FAILED:       StatusDefinition.FAILED,
+        StatusDefinition.UNKNOWN:      StatusDefinition.FAILED
+    }
 
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
@@ -35,17 +40,6 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.FAILED, _('Failed')),
     )
-
-    status_mapping = {
-        OrderPayment.StatusDefinition.CREATED:      StatusDefinition.LOCKED,
-        OrderPayment.StatusDefinition.STARTED:      StatusDefinition.LOCKED,
-        OrderPayment.StatusDefinition.AUTHORIZED:   StatusDefinition.SUCCESS,
-        OrderPayment.StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
-        OrderPayment.StatusDefinition.CHARGEDBACK:  StatusDefinition.FAILED,
-        OrderPayment.StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
-        OrderPayment.StatusDefinition.FAILED:       StatusDefinition.FAILED,
-        OrderPayment.StatusDefinition.UNKNOWN:      StatusDefinition.FAILED
-    }
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
@@ -83,6 +77,9 @@ class BaseOrder(models.Model, FSMTransition):
         if save:
             self.save()
 
+    def get_status_mapping(self, order_payment_status):
+        return self.STATUS_MAPPING.get(order_payment_status, StatusDefinition.FAILED)
+
     def set_status(self, status, save=True):
         self.status = status
         if save:
@@ -94,12 +91,4 @@ class BaseOrder(models.Model, FSMTransition):
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
 
-
-@receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
-def update_order_amount(sender, instance, **kwargs):
-    instance.order.update_total()
-
-
-@receiver(post_delete, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
-def update_order_amount(sender, instance, **kwargs):
-    instance.order.update_total()
+from .signals import *

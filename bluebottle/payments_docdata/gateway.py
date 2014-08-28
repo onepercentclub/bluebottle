@@ -14,6 +14,8 @@ from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
 
+from .exceptions import PaymentStatusException
+
 logger = logging.getLogger()
 
 __all__ = (
@@ -396,7 +398,7 @@ class DocdataClient(object):
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise DocdataStatusError(error._code, error.value)
+            raise PaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
@@ -420,7 +422,7 @@ class DocdataClient(object):
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise DocdataStatusError(error._code, error.value)
+            raise PaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')

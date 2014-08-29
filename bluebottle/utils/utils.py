@@ -1,5 +1,5 @@
 from django_fsm.db.fields import TransitionNotAllowed
-
+import logging
 
 class StatusDefinition:
     """
@@ -33,6 +33,8 @@ class FSMTransition:
 
         # Lookup the available next transition - from Django FSM
         available_transitions = self.get_available_status_transitions()
+
+        logging.debug("{0} state change: '{1}' to '{2}'".format(self.__class__.__name__, self.status, new_status))
 
         # Check that the new_status is in the available transitions - created with Django FSM decorator
         try:

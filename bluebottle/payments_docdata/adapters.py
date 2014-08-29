@@ -2,6 +2,7 @@ import logging
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments_docdata.models import DocdataTransaction
 from django.utils.http import urlencode
+from bluebottle.payments_logger.models import PaymentLogLevels
 import gateway
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from django.conf import settings
@@ -26,6 +27,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         # Make sure that Payment has an ID
         payment.save()
+        self.payment_logger.create(message='A docdata payment has been created',
+                                   level=PaymentLogLevels.info,
+                                   payment=payment.pk)
 
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 

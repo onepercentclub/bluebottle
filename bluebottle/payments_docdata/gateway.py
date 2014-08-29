@@ -114,12 +114,12 @@ class DocdataClient(object):
     PAYMENT_METHOD_ELV = 'ELV'
 
 
-    def __init__(self):
+    def __init__(self, testing_mode=None):
         """
         Initialize the client.
         """
         try:
-            testing_mode = settings.DOCDATA_TESTING
+            testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
         except AttributeError:
             testing_mode = False
 

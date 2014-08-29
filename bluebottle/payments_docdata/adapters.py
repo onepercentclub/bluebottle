@@ -132,7 +132,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def check_payment_status(self):
         # Get latest status for payment
-        client = gateway.DocdataClient()
+        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
+
+        client = gateway.DocdataClient(testing_mode)
         status_report = client.status(self.payment.payment_cluster_key)
 
         return status_report

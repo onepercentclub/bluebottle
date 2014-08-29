@@ -95,49 +95,41 @@ class OrderPayment(models.Model, FSMTransition):
     def started(self):
         # TODO: add started state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=StatusDefinition.STARTED, target=StatusDefinition.AUTHORIZED)
     def authorized(self):
         # TODO: add authorized state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.SETTLED)
     def settled(self):
         # TODO: add settled state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=[StatusDefinition.STARTED, StatusDefinition.SETTLED], target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=[StatusDefinition.STARTED, StatusDefinition.FAILED], target=StatusDefinition.CANCELLED)
     def cancelled(self):
         # TODO: add cancelled state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         # TODO: add charged_back state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.REFUNDED)
     def refunded(self):
         # TODO: add refunded state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED], target=StatusDefinition.UNKNOWN)
     def unknown(self):
         # TODO: add unknown state behaviour here
         self.save()
-        pass
 
     def get_status_mapping(self, payment_status):
         # Currently the status in Payment and OrderPayment is one to one.

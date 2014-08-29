@@ -9,11 +9,10 @@ class UpdatePaymentMixin(object):
     Base mixin for updating the order from the API or return URL.
     """
 
-    # What docdata calls the order_id, we call the payment_cluster_key
+    # Docdata order_id == BB payment_cluster_key
     # Docdata uses both the payment_cluster_id and merchant_order_id in the requests, depending on the view.
     payment_query_arg = 'order_id'
     payment_slug_field = 'payment_cluster_id'
-    facade_class = Facade
 
     def get_order_slug(self):
         try:

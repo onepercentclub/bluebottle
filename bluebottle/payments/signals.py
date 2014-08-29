@@ -9,8 +9,12 @@ from bluebottle.payments.models import Payment, OrderPayment
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
 
 
-@receiver(pre_save, weak=False, sender=Payment, dispatch_uid='pre_payment_model')
+@receiver(pre_save, weak=False, dispatch_uid='pre_payment_model')
 def set_previous_payment_status(sender, instance, **kwargs):
+    # Only respond to classes extending Payment
+    if not isinstance(instance, Payment):
+        return
+
     # Store the previous status when the Payment is saved
     # so that it can be used on the next save to determine
     # if the status has changed.
@@ -36,16 +40,21 @@ def order_payment_changed(sender, instance, **kwargs):
         post_transition.send(**signal_kwargs)
 
 
-@receiver(post_save, weak=False, sender=Payment, dispatch_uid='payment_model')
+@receiver(post_save, weak=False, dispatch_uid='payment_model')
 def payment_status_changed(sender, instance, **kwargs):
     """
     TODO: Here we need to get the status from the payment and update the associated Order Payment.
           The mapping is currently one to one so we can handle a transition to the same status.
     """
+    # Only respond to classes extending Payment
+    if not isinstance(instance, Payment):
+        return
+
     # Get the Order from the Signal 
     order_payment = instance.order_payment
      
     # Get the mapped status OrderPayment to Order
     new_order_payment_status = order_payment.get_status_mapping(instance.status)
      
+    # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)

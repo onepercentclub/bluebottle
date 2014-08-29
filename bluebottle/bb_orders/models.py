@@ -57,19 +57,16 @@ class BaseOrder(models.Model, FSMTransition):
     def locked(self):
         # TODO: add locked state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=StatusDefinition.LOCKED, target=StatusDefinition.SUCCESS)
     def succeeded(self):
         # TODO: add success state behaviour here
         self.save()
-        pass
 
     @transition(field=status, source=StatusDefinition.LOCKED, target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
         self.save()
-        pass
 
     def update_total(self, save=True):
         donations = DONATION_MODEL.objects.filter(order=self)

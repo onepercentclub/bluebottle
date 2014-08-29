@@ -101,6 +101,7 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
 
     parentType: function(){
         if (this.get('controllers.donationSuccess.fundRaiser')) return 'fundRaiser';
+
         return 'project';
     }.property('controllers.donationSuccess.fundRaiser'),
 
@@ -108,6 +109,7 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
         if (this.get('controllers.donationSuccess.fundRaiser')) {
             return this.get('controllers.donationSuccess.fundRaiser.id');
         }
+
         return this.get('controllers.donationSuccess.project.id');
     }.property('controllers.donationSuccess.fundRaiser.id', 'controllers.donationSuccess.project.id'),
 
@@ -123,25 +125,41 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
         }
     }.observes('parentType', 'parentId'),
 
+    // Override default _wallPostSuccess method
     _wallPostSuccess: function (record) {
         var _this = this,
             list = _this.get('wallPostList');
 
+        // Add new wallpost to project/fundraiser view
         list.unshiftObject(record);
+
+        // Close modal
         this.send('close');
+        this.send('setFlash', gettext("Thanks for your message!"));
     },
+
     targetType: function () {
-      var parentType = this.get('parentType');
-      if (!parentType) return null;
-      return parentType.match(/project/) ? 'project' : 'fundraiser';
+        var parentType = this.get('parentType');
+        if (!parentType) return null;
+
+        return parentType.match(/project/) ? 'project' : 'fundraiser';
     }.property('parentType'),
 
     wallPostList: function() {
         var parentType = this.get('parentType');
+        
         if (!parentType) return null;
         var indexType = parentType.match(/project/) ? 'controllers.projectIndex.model' : 'controllers.fundRaiserIndex.model';
+
         return this.get(indexType);
-    }.property('parentType')
+    }.property('parentType'),
+
+    formTitle: function () {
+        var parentType = this.get('parentType');
+        
+        if (parentType == 'fundraiser') return gettext('Leave a message on the fundraiser wall');
+        else return gettext('Leave a message on the project wall');
+    }.property()
 });
 
 

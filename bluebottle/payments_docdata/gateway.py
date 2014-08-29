@@ -206,6 +206,7 @@ class DocdataClient(object):
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
+
     def status(self, order_key):
         """
         Request the status of of order and it's payments.

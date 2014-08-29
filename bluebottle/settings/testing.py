@@ -1,5 +1,9 @@
 from .base import *
 from .secrets import *
+from bluebottle.payments_docdata.settings import *
+
+DOCDATA_MERCHANT_NAME = 'merchant_name'
+DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
 
 TEST_RUNNER = 'discover_runner.DiscoverRunner'
 
@@ -32,3 +36,4 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+

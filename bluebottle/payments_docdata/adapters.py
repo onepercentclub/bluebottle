@@ -19,12 +19,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     MODEL_CLASS = DocdataPayment
 
-    # TODO: is this really needed?
     STATUS_MAPPING = {
         'NEW':                            StatusDefinition.STARTED,
         'STARTED':                        StatusDefinition.STARTED,
-        'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # ??
-        'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # ??
+        'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # Is this mapping correct?
+        'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # Is this mapping correct?
         'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
         'PAID':                           StatusDefinition.SETTLED, 
         'CANCELLED':                      StatusDefinition.CANCELLED,
@@ -137,7 +136,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         client = gateway.DocdataClient(testing_mode)
         response = client.status(self.payment.payment_cluster_key)
 
-        status = response.payment[0].authorization.status
+        import ipdb;ipdb.set_trace()
+        status = self.get_status_mapping(response.payment[0].authorization.status)
         if self.payment.status <> status:
             totals = response.approximateTotals
             self.payment.total_registered = totals.totalRegistered

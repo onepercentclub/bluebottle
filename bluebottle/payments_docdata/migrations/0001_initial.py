@@ -3,6 +3,7 @@ import datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
+from django.conf import settings
 
 USER_APP = settings.AUTH_USER_MODEL.split('.')[0]
 USER_MODEL = settings.AUTH_USER_MODEL.split('.')[1]

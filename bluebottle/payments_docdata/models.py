@@ -1,8 +1,12 @@
-from bluebottle.payments.models import Payment, Transaction
+from decimal import Decimal as D
+
 from django.utils.translation import ugettext as _
 from django.db import models
+from django.db.models.signals import pre_save, post_save, post_delete
 from django_countries.fields import CountryField
-from decimal import Decimal as D
+
+from bluebottle.payments.models import Payment, Transaction
+from bluebottle.payments.signals import payment_status_changed, set_previous_payment_status
 
 
 class DocdataPayment(Payment):
@@ -34,6 +38,14 @@ class DocdataPayment(Payment):
         ordering = ('-created', '-updated')
         verbose_name = _("Docdata Order")
         verbose_name_plural = _("Docdata Orders")
+
+post_save.connect(payment_status_changed, 
+                  sender=DocdataPayment, 
+                  dispatch_uid='change_status_model_docdata_payment')
+
+pre_save.connect(set_previous_payment_status,
+                  sender=DocdataPayment, 
+                  dispatch_uid='previous_status_model_docdata_payment')
 
 
 class DocdataTransaction(Transaction):

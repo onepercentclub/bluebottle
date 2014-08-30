@@ -15,7 +15,9 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save, post_delete
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
-from bluebottle.payments.signals import payment_status_changed, set_previous_payment_status
+from bluebottle.payments.signals import (payment_status_changed, 
+                                         set_previous_status,
+                                         default_status_check)
 
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
@@ -50,13 +52,17 @@ class Payment(PolymorphicModel):
     class Meta:
         ordering = ('-created', '-updated')
 
+pre_save.connect(set_previous_status,
+                  sender=Payment, 
+                  dispatch_uid='previous_status_model_payment')
+
 post_save.connect(payment_status_changed, 
                   sender=Payment, 
                   dispatch_uid='change_status_model_payment')
 
-pre_save.connect(set_previous_payment_status,
+post_save.connect(default_status_check, 
                   sender=Payment, 
-                  dispatch_uid='previous_status_model_payment')
+                  dispatch_uid='default_status_model_payment')
 
 
 class OrderPaymentAction(models.Model):
@@ -92,6 +98,7 @@ class OrderPayment(models.Model, FSMTransition):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
+    previous_status = None
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
@@ -102,45 +109,45 @@ class OrderPayment(models.Model, FSMTransition):
     integration_data = JSONField(_("Integration data"), max_length=5000, blank=True)
     authorization_action = models.OneToOneField(OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
 
-    @transition(field=status, source=StatusDefinition.CREATED, target=StatusDefinition.STARTED)
+    @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.STARTED)
     def started(self):
         # TODO: add started state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=StatusDefinition.STARTED, target=StatusDefinition.AUTHORIZED)
+    @transition(field=status, save=True, source=StatusDefinition.STARTED, target=StatusDefinition.AUTHORIZED)
     def authorized(self):
         # TODO: add authorized state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.SETTLED)
+    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.SETTLED)
     def settled(self):
         # TODO: add settled state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=[StatusDefinition.STARTED, StatusDefinition.SETTLED], target=StatusDefinition.FAILED)
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.SETTLED], target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=[StatusDefinition.STARTED, StatusDefinition.FAILED], target=StatusDefinition.CANCELLED)
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.FAILED], target=StatusDefinition.CANCELLED)
     def cancelled(self):
         # TODO: add cancelled state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGED_BACK)
+    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         # TODO: add charged_back state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.REFUNDED)
+    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.REFUNDED)
     def refunded(self):
         # TODO: add refunded state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED], target=StatusDefinition.UNKNOWN)
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED], target=StatusDefinition.UNKNOWN)
     def unknown(self):
         # TODO: add unknown state behaviour here
-        self.save()
+        pass
 
     def get_status_mapping(self, payment_status):
         # Currently the status in Payment and OrderPayment is one to one.
@@ -155,6 +162,15 @@ class OrderPayment(models.Model, FSMTransition):
 
         if save:
             self.save()
+
+pre_save.connect(set_previous_status,
+                  sender=OrderPayment, 
+                  dispatch_uid='previous_status_model_order_payment')
+
+post_save.connect(default_status_check, 
+                  sender=OrderPayment, 
+                  dispatch_uid='default_status_model_order_payment')
+
 
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')

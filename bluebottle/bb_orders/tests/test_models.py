@@ -5,8 +5,6 @@ from django_fsm.db.fields import TransitionNotAllowed
 
 from bluebottle.test.factory_models.payments import PaymentFactory, OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.models import TestBaseUser
-
 from bluebottle.utils.utils import StatusDefinition
 
 

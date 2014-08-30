@@ -34,7 +34,7 @@ class FSMTransition:
         # Lookup the available next transition - from Django FSM
         available_transitions = self.get_available_status_transitions()
 
-        logging.debug("{0} state change: '{1}' to '{2}'".format(self.__class__.__name__, self.status, new_status))
+        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(self.__class__.__name__, self.pk, self.status, new_status))
 
         # Check that the new_status is in the available transitions - created with Django FSM decorator
         try:
@@ -52,6 +52,11 @@ class FSMTransition:
             instance_method()
         except Exception as e:
             raise e
+
+    def refresh_from_db(self):
+        """Refreshes this instance from db"""
+        new_self = self.__class__.objects.get(pk=self.pk)
+        self.__dict__.update(new_self.__dict__)
 
 
 def get_client_ip(request):

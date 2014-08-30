@@ -6,7 +6,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django_countries.fields import CountryField
 
 from bluebottle.payments.models import Payment, Transaction
-from bluebottle.payments.signals import payment_status_changed, set_previous_payment_status
+from bluebottle.payments.signals import payment_status_changed, set_previous_status
 
 
 class DocdataPayment(Payment):
@@ -43,7 +43,7 @@ post_save.connect(payment_status_changed,
                   sender=DocdataPayment, 
                   dispatch_uid='change_status_model_docdata_payment')
 
-pre_save.connect(set_previous_payment_status,
+pre_save.connect(set_previous_status,
                   sender=DocdataPayment, 
                   dispatch_uid='previous_status_model_docdata_payment')
 

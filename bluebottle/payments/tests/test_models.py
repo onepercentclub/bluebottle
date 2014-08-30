@@ -83,7 +83,8 @@ class BlueBottlePaymentTestCase(TestCase):
         with self.assertRaises(TransitionNotAllowed):
             self.payment.save()
             
-        self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
+        self.assertEqual(self.payment.order_payment.status, StatusDefinition.AUTHORIZED,
             'Starting an authorized Payment should not change Order Payment status')
-        self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
+
+        self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.SUCCESS,
             'Starting an authorized Payment should not change Order status')

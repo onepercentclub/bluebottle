@@ -53,20 +53,20 @@ class BaseOrder(models.Model, FSMTransition):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
-    @transition(field=status, source=StatusDefinition.CREATED, target=StatusDefinition.LOCKED)
+    @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.LOCKED)
     def locked(self):
         # TODO: add locked state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=StatusDefinition.LOCKED, target=StatusDefinition.SUCCESS)
+    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.SUCCESS)
     def succeeded(self):
         # TODO: add success state behaviour here
-        self.save()
+        pass
 
-    @transition(field=status, source=StatusDefinition.LOCKED, target=StatusDefinition.FAILED)
+    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
-        self.save()
+        pass
 
     def update_total(self, save=True):
         donations = DONATION_MODEL.objects.filter(order=self)

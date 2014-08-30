@@ -136,7 +136,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         client = gateway.DocdataClient(testing_mode)
         response = client.status(self.payment.payment_cluster_key)
 
-        import ipdb;ipdb.set_trace()
         status = self.get_status_mapping(response.payment[0].authorization.status)
         if self.payment.status <> status:
             totals = response.approximateTotals

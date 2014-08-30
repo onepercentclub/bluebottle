@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views.generic import View
 
 
+class PaymentStatusUpdateView(View):
 
     def get(self, request, **kwargs):
         payment_cluster_id = kwargs['payment_cluster_id']

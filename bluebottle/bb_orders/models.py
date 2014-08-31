@@ -63,7 +63,7 @@ class BaseOrder(models.Model, FSMTransition):
         # TODO: add success state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.FAILED)
+    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
         pass

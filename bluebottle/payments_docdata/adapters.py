@@ -35,7 +35,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     }
 
     def get_status_mapping(self, external_payment_status):
-        return self.STATUS_MAPPING.get(external_payment_status, StatusDefinition.PENDING)
+        return self.STATUS_MAPPING.get(external_payment_status)
 
     def create_payment(self):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)

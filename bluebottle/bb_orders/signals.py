@@ -23,12 +23,12 @@ def update_order_amount(sender, instance, **kwargs):
 
 
 @receiver(post_transition, sender=OrderPayment)
-def _on_payment_status_changed(**kwargs):
+def _order_payment_status_changed(sender, instance, **kwargs):
     """
     TODO: Here we need to get the status from the Order Payment and update the associated Order.
     """
-    # Get the Order from the Signal 
-    order = kwargs['instance'].order
+    # Get the Order from the OrderPayment 
+    order = instance.order
      
     # Get the mapped status OrderPayment to Order
     new_order_status = order.get_status_mapping(kwargs['target'])

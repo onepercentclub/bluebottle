@@ -72,8 +72,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
 
         # Change order status to 'locked'
         order = Order.objects.get(pk=order_id)
-        order.status = StatusDefinition.LOCKED
-        order.save()
+        order.locked()
 
         # User should not be able to update the order now that it has status 'locked'
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)

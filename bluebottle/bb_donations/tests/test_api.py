@@ -148,7 +148,7 @@ class TestCreateDonation(DonationApiTestCase):
 
         # Set order to status 'locked'
         order = ORDER_MODEL.objects.get(id=order_id)
-        order.set_status('locked')
+        order.locked()
 
         donation3 = {
             "project": self.project1.slug,

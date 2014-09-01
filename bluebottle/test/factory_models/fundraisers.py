@@ -1,14 +1,15 @@
+from datetime import timedelta
+from django.utils.timezone import now
 import factory
 
-from bluebottle.bb_fundraisers.models import Fundraiser
+from bluebottle.fundraisers.models import FundRaiser
 
 from .accounts import BlueBottleUserFactory
-from .geo import CountryFactory
 from .projects import ProjectFactory
 
 
 class FundraiserFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Fundraiser
+    FACTORY_FOR = FundRaiser
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)

@@ -9,7 +9,9 @@ App.MockIdealController = App.StandardPaymentMethodController.extend(App.Control
 });
 
 App.MockPaypalController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
-
+    getIntegrationData: function(){
+        return {};
+    }
 });
 
 App.MockCreditcardController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {

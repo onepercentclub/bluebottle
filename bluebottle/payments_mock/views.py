@@ -8,6 +8,7 @@ from django.contrib.sites.models import get_current_site
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
 
+
 class PaymentMock(TemplateView):
     """
     This view simulates an external Mock PSP server environment.
@@ -41,16 +42,17 @@ class PaymentResponseMockHandler(TemplateView):
 
         if order_payment and status in self.payment_responses:
             url = "/en/#!/orders/{0}/{1}".format(order_payment.order.id, status)
+
         else:
             raise Http404
 
-        #Fake an external signal by calling our Payment Status Listener view and sending the chosen status.s
-        payload = {'order_payment_id': order_payment_id, 'status': status}
-        status_url = ''.join(['http://', get_current_site(request).domain,
-                              reverse('payment-service-provider-status-update')])
-
-        import requests
-        r = requests.post(status_url, data=payload)
+        # # #Fake an external signal by calling our Payment Status Listener view and sending the chosen status.s
+        # payload = {'order_payment_id': order_payment_id, 'status': status}
+        # status_url = ''.join(['http://', get_current_site(request).domain,
+        #                       reverse('payment-service-provider-status-update')])
+        # import requests
+        #
+        # r = requests.post(status_url, data=payload)
 
         return HttpResponseRedirect(url)
 
@@ -76,6 +78,7 @@ class PaymentStatusListener(View):
         #We pass the MockPayment status and get back the status name of our OrderStatus definition
         service.adapter.set_order_payment_new_status(status)
 
-        return HttpResponse()
+        return HttpResponse('success')
+
 
 

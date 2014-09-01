@@ -1,13 +1,16 @@
 import logging
-from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments_docdata.models import DocdataTransaction
 from django.utils.http import urlencode
 from bluebottle.payments_logger.models import PaymentLogLevels
 import gateway
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from django.conf import settings
-from .models import DocdataPayment
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.utils.utils import StatusDefinition
+from .models import DocdataPayment
+from .gateway import DocdataClient
 
 logger = logging.getLogger(__name__)
 payment_docdata_logger = logging.getLogger('payment.docdata')
@@ -17,9 +20,27 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     MODEL_CLASS = DocdataPayment
 
+    STATUS_MAPPING = {
+        'NEW':                            StatusDefinition.STARTED,
+        'STARTED':                        StatusDefinition.STARTED,
+        'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # Is this mapping correct?
+        'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # Is this mapping correct?
+        'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
+        'PAID':                           StatusDefinition.SETTLED, 
+        'CANCELLED':                      StatusDefinition.CANCELLED,
+        'CHARGED_BACK':                   StatusDefinition.CHARGED_BACK,
+        'CONFIRMED_PAID':                 StatusDefinition.PAID,
+        'CONFIRMED_CHARGEDBACK':          StatusDefinition.CHARGED_BACK,
+        'CLOSED_SUCCESS':                 StatusDefinition.PAID,
+        'CLOSED_CANCELLED':               StatusDefinition.CANCELLED,
+    }
+
     def __init__(self, *args, **kwargs):
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
         self.payment_logger = PaymentLogAdapter(payment_docdata_logger)
+
+    def get_status_mapping(self, external_payment_status):
+        return self.STATUS_MAPPING.get(external_payment_status)
 
     def create_payment(self):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
@@ -123,7 +144,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         client = gateway.DocdataClient(testing_mode)
         response = client.status(self.payment.payment_cluster_key)
 
-        status = response.payment[0].authorization.status
+        status = self.get_status_mapping(response.payment[0].authorization.status)
         if self.payment.status <> status:
             totals = response.approximateTotals
             self.payment.total_registered = totals.totalRegistered

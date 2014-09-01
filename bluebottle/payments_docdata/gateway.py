@@ -15,6 +15,8 @@ from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
 
+from .exceptions import PaymentStatusException
+
 logger = logging.getLogger()
 
 __all__ = (
@@ -79,62 +81,6 @@ class DocdataClient(object):
     providing more Python-friendly wrappers.
     """
 
-    # Status values. Besides the regular ones mentioned in the documentation,
-    # the WSDL also mentions additional status values for the authorizationStatus enum.
-    # The CANCELLED statuses are actually misspelled in the protocol.
-    STATUS_NEW = 'NEW'
-
-    STATUS_RISK_CHECK_OK = 'RISK_CHECK_OK'
-    STATUS_RISK_CHECK_FAILED = 'RISK_CHECK_FAILED'
-
-    STATUS_STARTED = 'STARTED'
-    STATUS_START_ERROR = 'START_ERROR'
-
-    STATUS_AUTHENTICATED = 'AUTHENTICATED'
-    STATUS_REDIRECTED_FOR_AUTHENTICATION = 'REDIRECTED_FOR_AUTHENTICATION'
-    STATUS_AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED'
-    STATUS_AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR'
-
-    STATUS_AUTHORIZED = 'AUTHORIZED'
-    STATUS_REDIRECTED_FOR_AUTHORIZATION = 'REDIRECTED_FOR_AUTHORIZATION'
-    STATUS_AUTHORIZATION_REQUESTED = 'AUTHORIZATION_REQUESTED'
-    STATUS_AUTHORIZATION_FAILED = 'AUTHORIZATION_FAILED'
-    STATUS_AUTHORIZATION_ERROR = 'AUTHORIZATION_ERROR'
-
-    STATUS_PAID = 'PAID'
-
-    STATUS_CANCELLED = 'CANCELED'  # Typoo in protocol, not mentioned in the docs
-    STATUS_CANCEL_FAILED = 'CANCEL_FAILED'
-    STATUS_CANCEL_ERROR = 'CANCEL_ERROR'
-    STATUS_CANCEL_REQUESTED = 'CANCEL_REQUESTED'
-
-    STATUS_CHARGED_BACK = 'CHARGED-BACK'
-    STATUS_CONFIRMED_PAID = 'CONFIRMED_PAID'
-    STATUS_CONFIRMED_CHARGEDBACK = 'CONFIRMED_CHARGEDBACK'
-    STATUS_CLOSED_SUCCESS = 'CLOSED_SUCCESS'
-    STATUS_CLOSED_CANCELLED = 'CLOSED_CANCELED'  # Typoo in protocol
-
-    DOCUMENTED_STATUS_VALUES = (
-        STATUS_NEW,
-        STATUS_STARTED,
-        STATUS_REDIRECTED_FOR_AUTHENTICATION,
-        STATUS_AUTHORIZED,
-        STATUS_AUTHORIZATION_REQUESTED,
-        STATUS_PAID,
-        STATUS_CANCELLED,
-        STATUS_CHARGED_BACK,
-        STATUS_CONFIRMED_PAID,
-        STATUS_CONFIRMED_CHARGEDBACK,
-        STATUS_CLOSED_SUCCESS,
-        STATUS_CLOSED_CANCELLED,
-    )
-
-    SEEN_UNDOCUMENTED_STATUS_VALUES = (
-        STATUS_AUTHORIZATION_FAILED,
-        STATUS_CANCEL_FAILED,
-        STATUS_AUTHORIZATION_ERROR,
-    )
-
     # Payment methods for the start operation.
     PAYMENT_METHOD_AMEX = 'AMEX'
     PAYMENT_METHOD_MASTERCARD = 'MASTERCARD'
@@ -148,6 +94,11 @@ class DocdataClient(object):
         """
         Initialize the client.
         """
+        try:
+            testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
+        except AttributeError:
+            testing_mode = False
+
         self.client = get_suds_client(testing_mode)
         self.testing_mode = testing_mode
 
@@ -255,6 +206,7 @@ class DocdataClient(object):
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
+
     def status(self, order_key):
         """
         Request the status of of order and it's payments.
@@ -273,7 +225,7 @@ class DocdataClient(object):
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise Exception(error.value)
+            raise PaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
@@ -298,7 +250,7 @@ class DocdataClient(object):
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise Exception(error._code, error.value)
+            raise PaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')

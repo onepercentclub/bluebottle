@@ -9,23 +9,40 @@ from uuidfield import UUIDField
 from django.db.models import options
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
+from django_fsm.db.fields import FSMField, transition
+
+from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 DONATION_MODEL = get_donation_model()
 
 
-class BaseOrder(models.Model):
+class BaseOrder(models.Model, FSMTransition):
     """
     An order is a collection of OrderItems and vouchers with a connected payment.
     """
-    class OrderStatuses(DjangoChoices):
-        new = ChoiceItem('new', label=_("new"))
-        locked = ChoiceItem('locked', label=_("Locked"))
-        closed = ChoiceItem('closed', label=_("Closed"))
+    # Mapping the Order Payment Status to the Order Status
+    STATUS_MAPPING = {
+        StatusDefinition.CREATED:      StatusDefinition.LOCKED,
+        StatusDefinition.STARTED:      StatusDefinition.LOCKED,
+        StatusDefinition.AUTHORIZED:   StatusDefinition.SUCCESS,
+        StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
+        StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
+        StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
+        StatusDefinition.FAILED:       StatusDefinition.FAILED,
+        StatusDefinition.UNKNOWN:      StatusDefinition.FAILED
+    }
+
+    STATUS_CHOICES = (
+        (StatusDefinition.CREATED, _('Created')),
+        (StatusDefinition.LOCKED, _('Locked')),
+        (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.FAILED, _('Failed')),
+    )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
-    status = models.CharField(_("Status"), max_length=20, choices=OrderStatuses.choices, default=OrderStatuses.new, db_index=True)
+    status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
 
     uuid = UUIDField(verbose_name=("Order number"), auto=True)
 
@@ -36,11 +53,29 @@ class BaseOrder(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
+    @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.LOCKED)
+    def locked(self):
+        # TODO: add locked state behaviour here
+        pass
+
+    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.SUCCESS)
+    def succeeded(self):
+        # TODO: add success state behaviour here
+        pass
+
+    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
+    def failed(self):
+        # TODO: add failed state behaviour here
+        pass
+
     def update_total(self, save=True):
         donations = DONATION_MODEL.objects.filter(order=self)
         self.total = donations.aggregate(Sum('amount'))['amount__sum']
         if save:
             self.save()
+
+    def get_status_mapping(self, order_payment_status):
+        return self.STATUS_MAPPING.get(order_payment_status, StatusDefinition.FAILED)
 
     def set_status(self, status, save=True):
         self.status = status
@@ -53,12 +88,4 @@ class BaseOrder(models.Model):
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
 
-
-@receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
-def update_order_amount(sender, instance, **kwargs):
-    instance.order.update_total()
-
-
-@receiver(post_delete, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
-def update_order_amount(sender, instance, **kwargs):
-    instance.order.update_total()
+from .signals import *

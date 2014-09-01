@@ -75,7 +75,7 @@ dependency_links = [
 # TODO: update
 tests_require = [
     'coverage==3.6',
-    'django-nose',
+    'django-nose==1.2',
     'django-admin-tools==0.5.1',
     'django-apptemplates==0.0.1',
     'django_compressor==1.2',
@@ -94,7 +94,7 @@ tests_require = [
     'micawber==0.2.6',
     'mock==1.0.1',
     'mollie-api-python==1.0.0',
-    'nose==1.3.3',
+    'nose==1.3.4',
     'pylint==1.1.0',
     'requests==2.3.0',
     'sauceclient==0.1.0',

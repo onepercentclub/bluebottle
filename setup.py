@@ -58,7 +58,6 @@ install_requires = [
     'psycopg2==2.2.1',
     'requests==2.3.0',
     'django-fsm==1.6.0',
-    'suds-jurko==0.4.1.jurko.5'
 ]
 
 

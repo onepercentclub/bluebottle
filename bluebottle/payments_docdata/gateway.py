@@ -10,7 +10,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from suds.client import Client
 from suds import plugin
-from django.core.urlresolvers import reverse
 from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
@@ -118,6 +117,8 @@ class DocdataClient(object):
 
     def create(self, merchant, payment_id, total_gross_amount, shopper, bill_to, description, receiptText=None,
                includeCosts=False, profile='webmenu', days_to_pay=7):
+        import ipdb; ipdb.set_trace()
+
         """
         Create the payment in docdata.
 
@@ -199,13 +200,13 @@ class DocdataClient(object):
                     t += 1
                 else:
                     error = reply.createError.error
-                    log_docdata_error(error, "DocdataClient: failed to create payment for order {0}".format(order_id))
+                    log_docdata_error(error, "DocdataClient: failed to create docdata payment for payment {0}".format(payment_id))
                     raise Exception(error, error.value)
             else:
                 raise Exception('Received unknown reply from DocData. Remote Payment not created.')
 
-        return {'order_id': merchant_order_reference, 'order_key': order_key}
 
+        return {'order_id': merchant_order_reference, 'order_key': order_key}
 
     def status(self, order_key):
         """

@@ -10,10 +10,9 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition
 from .models import DocdataPayment
-from .gateway import DocdataClient
 
 logger = logging.getLogger(__name__)
-payment_docdata_logger = logging.getLogger('payment.docdata')
+# payment_docdata_logger = logging.getLogger('payment.docdata')
 
 
 class DocdataPaymentAdapter(BasePaymentAdapter):
@@ -36,8 +35,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     }
 
     def __init__(self, *args, **kwargs):
+
+        self.payment_logger = PaymentLogAdapter('payment.docdata')
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
-        self.payment_logger = PaymentLogAdapter(payment_docdata_logger)
 
     def get_status_mapping(self, external_payment_status):
         return self.STATUS_MAPPING.get(external_payment_status)
@@ -48,7 +48,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         # Make sure that Payment has an ID
         payment.save()
-        self.payment_logger.log(payment=payment.pk,
+        self.payment_logger.log(payment=payment,
                                 level=PaymentLogLevels.info,
                                 message='A docdata payment has been created')
 
@@ -126,7 +126,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             return_url=return_url,
             client_language=client_language,
         )
-        self.payment_logger.log(payment=self.payment.pk,
+        self.payment_logger.log(payment=self.payment,
                                 level=PaymentLogLevels.info,
                                 message='A docdata payment got the authorization')
         default_act = False

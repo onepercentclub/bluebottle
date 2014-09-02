@@ -32,12 +32,12 @@ App.DonationWallPostView = Em.View.extend({
 
             countWord.html(total);
         });
-
     }
 });
 
 App.DonationSuccessView = Em.View.extend({
     templateName: 'donation_success',
+    supported: true,
 
     didInsertElement: function() {
         if(!document.createElement('svg').getAttributeNS) {
@@ -45,9 +45,7 @@ App.DonationSuccessView = Em.View.extend({
                 supported: false
             });
         }
-    },
-
-    supported: true,
+    }
 });
 
 App.CanvasView = Em.View.extend({

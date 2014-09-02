@@ -28,20 +28,6 @@ App.DocdataCreditcardSelectView = Em.Select.extend({
 
 });
 
-Ember.RadioButton = Ember.View.extend({
-    tagName : "input",
-    type : "radio",
-    attributeBindings : [ "name", "type", "value", "checked:checked:", 'id' ],
-
-    click : function() {
-        this.set("selection", this.$().val())
-    },
-
-    checked : function() {
-        return this.get("value") == this.get("selection");
-    }.property()
-});
-
 App.DocdataCreditcardView = Em.View.extend({
     templateName: 'docdataCreditcard',
 

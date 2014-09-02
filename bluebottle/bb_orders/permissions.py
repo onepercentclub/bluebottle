@@ -1,6 +1,8 @@
 from bluebottle.utils.model_dispatcher import get_order_model
 from rest_framework import permissions
 
+from bluebottle.utils.utils import StatusDefinition
+
 ORDER_MODEL = get_order_model()
 
 
@@ -39,7 +41,7 @@ class OrderIsNew(permissions.BasePermission):
     """
     Check if the Order has status new. This also works for objects that have a foreign key to order.
 
-    """
+    """ 
 
     def _get_order_from_request(self, request):
         if request.DATA:
@@ -63,7 +65,7 @@ class OrderIsNew(permissions.BasePermission):
         # This is for creating new objects that have a relation (fk) to Order.
         order = self._get_order_from_request(request)
         if order:
-            return order.status == ORDER_MODEL.OrderStatuses.new
+            return order.status == StatusDefinition.CREATED
         return True
 
 
@@ -75,6 +77,6 @@ class OrderIsNew(permissions.BasePermission):
 
         # Check if the object is an Order or if it some object that has a foreign key to Order.
         if isinstance(obj, ORDER_MODEL):
-            return obj.status == ORDER_MODEL.OrderStatuses.new
-        return obj.order.status == ORDER_MODEL.OrderStatuses.new
+            return obj.status == StatusDefinition.CREATED
+        return obj.order.status == StatusDefinition.CREATED
 

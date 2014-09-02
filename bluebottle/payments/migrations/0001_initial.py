@@ -5,70 +5,79 @@ from south.v2 import SchemaMigration
 from django.db import models
 from django.conf import settings
 
+PROJECT_APP = settings.PROJECTS_PROJECT_MODEL.split('.')[0]
+PROJECT_MODEL = settings.PROJECTS_PROJECT_MODEL.split('.')[1]
+
 USER_APP = settings.AUTH_USER_MODEL.split('.')[0]
 USER_MODEL = settings.AUTH_USER_MODEL.split('.')[1]
 
 
 class Migration(SchemaMigration):
+    depends_on = (
+        ('orders', '0001_initial'),
+    )
 
     def forwards(self, orm):
-        # Adding model 'DocdataPayment'
-        db.create_table(u'payments_docdata_docdatapayment', (
-            (u'payment_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Payment'], unique=True, primary_key=True)),
-            ('merchant_order_id', self.gf('django.db.models.fields.CharField')(default='', max_length=100)),
-            ('payment_cluster_id', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200)),
-            ('payment_cluster_key', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200)),
-            ('language', self.gf('django.db.models.fields.CharField')(default='en', max_length=5, blank=True)),
-            ('ideal_issuer_id', self.gf('django.db.models.fields.CharField')(default='', max_length=100)),
-            ('default_pm', self.gf('django.db.models.fields.CharField')(default='', max_length=100)),
-            ('total_gross_amount', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2)),
-            ('currency', self.gf('django.db.models.fields.CharField')(max_length=10)),
-            ('country', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, blank=True)),
-            ('total_registered', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
-            ('total_shopper_pending', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
-            ('total_acquirer_pending', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
-            ('total_acquirer_approved', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
-            ('total_captured', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
-            ('total_refunded', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
-            ('total_charged_back', self.gf('django.db.models.fields.DecimalField')(default='0.00', max_digits=15, decimal_places=2)),
+        # Adding model 'Payment'
+        db.create_table(u'payments_payment', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_payments.payment_set', null=True, to=orm['contenttypes.ContentType'])),
+            ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='started', max_length=50)),
+            ('order_payment', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.OrderPayment'], unique=True)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
         ))
-        db.send_create_signal(u'payments_docdata', ['DocdataPayment'])
+        db.send_create_signal(u'payments', ['Payment'])
 
-        # Adding model 'DocdataTransaction'
-        db.create_table(u'payments_docdata_docdatatransaction', (
-            (u'transaction_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Transaction'], unique=True, primary_key=True)),
-            ('status', self.gf('django.db.models.fields.CharField')(default='NEW', max_length=30)),
-            ('docdata_id', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100)),
-            ('payment_method', self.gf('django.db.models.fields.CharField')(default='', max_length=60, blank=True)),
-            ('authorization_status', self.gf('django.db.models.fields.CharField')(default='', max_length=60, blank=True)),
-            ('authorization_amount', self.gf('django.db.models.fields.IntegerField')(null=True)),
-            ('authorization_currency', self.gf('django.db.models.fields.CharField')(default='', max_length=10, blank=True)),
-            ('capture_status', self.gf('django.db.models.fields.CharField')(default='', max_length=60, blank=True)),
-            ('capture_amount', self.gf('django.db.models.fields.IntegerField')(null=True)),
-            ('capture_currency', self.gf('django.db.models.fields.CharField')(default='', max_length=10, blank=True)),
+        # Adding model 'OrderPaymentAction'
+        db.create_table(u'payments_orderpaymentaction', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('type', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
+            ('method', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
+            ('url', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
+            ('payload', self.gf('django.db.models.fields.CharField')(max_length=5000, blank=True)),
         ))
-        db.send_create_signal(u'payments_docdata', ['DocdataTransaction'])
+        db.send_create_signal(u'payments', ['OrderPaymentAction'])
 
-        # Adding model 'DocDataDirectDebitTransaction'
-        db.create_table(u'payments_docdata_docdatadirectdebittransaction', (
-            (u'transaction_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Transaction'], unique=True, primary_key=True)),
-            ('account_name', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('account_city', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('iban', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('bic', self.gf('django.db.models.fields.CharField')(max_length=35)),
+        # Adding model 'OrderPayment'
+        db.create_table(u'payments_orderpayment', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL], null=True, blank=True)),
+            ('order', self.gf('django.db.models.fields.related.ForeignKey')(related_name='payments', to=orm[settings.ORDERS_ORDER_MODEL])),
+            ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='created', max_length=50)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('closed', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
+            ('amount', self.gf('django.db.models.fields.DecimalField')(max_digits=16, decimal_places=2)),
+            ('payment_method', self.gf('django.db.models.fields.CharField')(default='', max_length=20, blank=True)),
+            ('integration_data', self.gf('django.db.models.fields.TextField')(default='{}', max_length=5000, blank=True)),
+            ('authorization_action', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.OrderPaymentAction'], unique=True, null=True)),
         ))
-        db.send_create_signal(u'payments_docdata', ['DocDataDirectDebitTransaction'])
+        db.send_create_signal(u'payments', ['OrderPayment'])
+
+        # Adding model 'Transaction'
+        db.create_table(u'payments_transaction', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_payments.transaction_set', null=True, to=orm['contenttypes.ContentType'])),
+            ('payment', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['payments.Payment'])),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        ))
+        db.send_create_signal(u'payments', ['Transaction'])
 
 
     def backwards(self, orm):
-        # Deleting model 'DocdataPayment'
-        db.delete_table(u'payments_docdata_docdatapayment')
+        # Deleting model 'Payment'
+        db.delete_table(u'payments_payment')
 
-        # Deleting model 'DocdataTransaction'
-        db.delete_table(u'payments_docdata_docdatatransaction')
+        # Deleting model 'OrderPaymentAction'
+        db.delete_table(u'payments_orderpaymentaction')
 
-        # Deleting model 'DocDataDirectDebitTransaction'
-        db.delete_table(u'payments_docdata_docdatadirectdebittransaction')
+        # Deleting model 'OrderPayment'
+        db.delete_table(u'payments_orderpayment')
+
+        # Deleting model 'Transaction'
+        db.delete_table(u'payments_transaction')
 
 
     models = {
@@ -130,7 +139,7 @@ class Migration(SchemaMigration):
             'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [], {'default': '0', 'max_digits': '16', 'decimal_places': '2'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['test.TestBaseUser']", 'null': 'True', 'blank': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '32', 'blank': 'True'})
         },
         u'payments.orderpayment': {
@@ -141,11 +150,11 @@ class Migration(SchemaMigration):
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'integration_data': ('django.db.models.fields.TextField', [], {'default': "'{}'", 'max_length': '5000', 'blank': 'True'}),
-            'order': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'payments'", 'to': u"orm['orders.Order']"}),
+            'order': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'payments'", 'to': u"orm['{0}']".format(settings.ORDERS_ORDER_MODEL)}),
             'payment_method': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '20', 'blank': 'True'}),
             'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'created'", 'max_length': '50'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['test.TestBaseUser']", 'null': 'True', 'blank': 'True'})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'})
         },
         u'payments.orderpaymentaction': {
             'Meta': {'object_name': 'OrderPaymentAction'},
@@ -171,47 +180,6 @@ class Migration(SchemaMigration):
             'payment': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['payments.Payment']"}),
             'polymorphic_ctype': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'polymorphic_payments.transaction_set'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
-        },
-        u'payments_docdata.docdatadirectdebittransaction': {
-            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocDataDirectDebitTransaction', '_ormbases': [u'payments.Transaction']},
-            'account_city': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            'account_name': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            'bic': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            'iban': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            u'transaction_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Transaction']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        u'payments_docdata.docdatapayment': {
-            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocdataPayment', '_ormbases': [u'payments.Payment']},
-            'country': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
-            'currency': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
-            'default_pm': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
-            'ideal_issuer_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
-            'language': ('django.db.models.fields.CharField', [], {'default': "'en'", 'max_length': '5', 'blank': 'True'}),
-            'merchant_order_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
-            'payment_cluster_id': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200'}),
-            'payment_cluster_key': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200'}),
-            u'payment_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Payment']", 'unique': 'True', 'primary_key': 'True'}),
-            'total_acquirer_approved': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
-            'total_acquirer_pending': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
-            'total_captured': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
-            'total_charged_back': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
-            'total_gross_amount': ('django.db.models.fields.DecimalField', [], {'max_digits': '15', 'decimal_places': '2'}),
-            'total_refunded': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
-            'total_registered': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
-            'total_shopper_pending': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'})
-        },
-        u'payments_docdata.docdatatransaction': {
-            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocdataTransaction', '_ormbases': [u'payments.Transaction']},
-            'authorization_amount': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
-            'authorization_currency': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '10', 'blank': 'True'}),
-            'authorization_status': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '60', 'blank': 'True'}),
-            'capture_amount': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
-            'capture_currency': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '10', 'blank': 'True'}),
-            'capture_status': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '60', 'blank': 'True'}),
-            'docdata_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
-            'payment_method': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '60', 'blank': 'True'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "'NEW'", 'max_length': '30'}),
-            u'transaction_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Transaction']", 'unique': 'True', 'primary_key': 'True'})
         },
         u'taggit.tag': {
             'Meta': {'object_name': 'Tag'},
@@ -264,4 +232,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['payments_docdata']
+    complete_apps = ['payments']

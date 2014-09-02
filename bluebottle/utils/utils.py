@@ -1,3 +1,64 @@
+from django_fsm.db.fields import TransitionNotAllowed
+import logging
+
+class StatusDefinition:
+    """
+    Various status definitions for FSM's
+    """
+    NEW = 'new'
+    IN_PROGRESS = 'in_progress'
+    PENDING = 'pending'
+    CREATED = 'created'
+    LOCKED = 'locked'
+    SUCCESS = 'success'
+    STARTED = 'started'
+    CANCELLED = 'cancelled'
+    AUTHORIZED = 'authorized'
+    SETTLED = 'settled'
+    CHARGED_BACK = 'charged_back'
+    REFUNDED = 'refunded'
+    PAID = 'paid'
+    FAILED = 'failed'
+    UNKNOWN = 'unknown'
+
+class FSMTransition:
+
+    """
+    Class mixin to add transition_to method for Django FSM
+    """
+    def transition_to(self, new_status):
+        # If the new_status is the same as then current then return early
+        if self.status == new_status:
+            return
+
+        # Lookup the available next transition - from Django FSM
+        available_transitions = self.get_available_status_transitions()
+
+        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(self.__class__.__name__, self.pk, self.status, new_status))
+
+        # Check that the new_status is in the available transitions - created with Django FSM decorator
+        try:
+            transition_method = [i[1] for i in available_transitions if i[0] == new_status].pop()
+        except IndexError:
+            # TODO: should we raise exception here?
+            raise TransitionNotAllowed(
+                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
+         
+        # Get the function method on the instance 
+        instance_method = getattr(self, transition_method.__name__)
+
+        # Call state transition method
+        try:
+            instance_method()
+        except Exception as e:
+            raise e
+
+    def refresh_from_db(self):
+        """Refreshes this instance from db"""
+        new_self = self.__class__.objects.get(pk=self.pk)
+        self.__dict__.update(new_self.__dict__)
+
+
 def get_client_ip(request):
     """ A utility method that returns the client IP for the given request. """
 

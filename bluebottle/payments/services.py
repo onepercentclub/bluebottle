@@ -36,8 +36,10 @@ class PaymentService(object):
         app_name = 'payments_' + provider_name
         class_name = provider_name.title() + 'PaymentAdapter'
         class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
+
         adapter_class = import_class(class_path)
         adapter = adapter_class(self.order_payment)
+
         return adapter
 
     def start_payment(self, **integration_details):

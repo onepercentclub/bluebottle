@@ -18,6 +18,7 @@ class BasePaymentAdapter(object):
             self.payment = self.MODEL_CLASS.objects.get(order_payment=self.order_payment)
         except self.MODEL_CLASS.DoesNotExist:
             self.payment = self.create_payment()
+
         except self.MODEL_CLASS.MultipleObjectsReturned:
             raise Exception("Multiple payments for OrderPayment {0}".format(self.order_payment))
 

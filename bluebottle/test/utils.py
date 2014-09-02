@@ -239,7 +239,7 @@ class InitProjectDataMixin(object):
 
         for language in language_data:
             LanguageFactory.create(**language)
-
+            
 
 RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
 

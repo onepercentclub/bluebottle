@@ -55,13 +55,12 @@ install_requires = [
     'psycopg2==2.2.1',
     'requests==2.3.0',
     'django-fsm==1.6.0',
+    'suds-jurko==0.6'
 ]
 
 
 dependency_links = [
     'https://github.com/onepercentclub/django-rest-framework-jwt/archive/master.zip#egg=djangorestframework-jwt-0.1.5',
-
-    'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
 

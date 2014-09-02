@@ -7,6 +7,8 @@ import json
 import requests
 import base64
 
+from bunch import bunchify
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
@@ -237,7 +239,7 @@ class InitProjectDataMixin(object):
 
         for language in language_data:
             LanguageFactory.create(**language)
-
+            
 
 RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
 
@@ -473,3 +475,34 @@ class SeleniumTestCase(LiveServerTestCase):
 
         else:
             print 'Imgur API keys not found!'
+
+class FsmTestMixin(object):
+    def pass_method(self, transaction):
+        pass
+
+    def create_status_response(self, status='AUTHORIZED'):
+        return bunchify({
+            'payment': [{
+                'id': 123456789,
+                'amount': 1000,
+                'authorization': {'status': status}}
+            ],
+            'approximateTotals': {
+                'totalRegistered': 1000,
+                'totalShopperPending': 0,
+                'totalAcquirerPending': 0,
+                'totalAcquirerApproved': 0,
+                'totalCaptured': 0,
+                'totalRefunded': 0,
+                'totalChargedback': 0
+            }
+        })
+
+    def assert_status(self, instance, new_status):
+        try:
+            instance.refresh_from_db()
+        except AttributeError:
+            pass
+
+        self.assertEqual(instance.status, new_status,
+            '{0} should change to {1} not {2}'.format(instance.__class__.__name__, new_status, instance.status))

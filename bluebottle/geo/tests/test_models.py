@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from .models import Region, SubRegion, Country
+from bluebottle.geo.models import Region, SubRegion, Country
 
 
 class GeoTestsMixin(object):

@@ -2,7 +2,6 @@ from django.conf import settings
 from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import simplejson
 from django.utils.timezone import now

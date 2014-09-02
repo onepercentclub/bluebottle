@@ -24,7 +24,6 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 
 class Payment(PolymorphicModel):
-
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
         (StatusDefinition.STARTED, _('Started')),

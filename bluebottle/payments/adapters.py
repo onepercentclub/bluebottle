@@ -64,3 +64,9 @@ class BasePaymentAdapter(object):
         """
         raise NotImplementedError
 
+    def _get_mapped_status(self, status):
+        """
+        Mao the status of the PSP to our own status pipeline
+        """
+        raise NotImplementedError
+

@@ -34,7 +34,7 @@ App.OrderRoute = Em.Route.extend({
                 _this.transitionTo(donationTarget.get('modelType'), donationTarget).promise.then(function () {
                     // FIXME: Temporary for testing purposes
                     switch (status) {
-                        case 'success':
+                        case 'settled': //'success':
                             _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
                             break;
 

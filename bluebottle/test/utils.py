@@ -405,8 +405,8 @@ class SeleniumTestCase(LiveServerTestCase):
         return element
 
     def scroll_to_and_click_by_css(self, selector):
-        element = self.scroll_to_by_css(selector);
-        
+        element = self.scroll_to_by_css(selector)
+
         if element:
             element.click()
             return True
@@ -414,7 +414,7 @@ class SeleniumTestCase(LiveServerTestCase):
             return False
 
     def scroll_to_and_fill_by_css(self, selector, text):
-        element = self.scroll_to_by_css(selector);
+        element = self.scroll_to_by_css(selector)
 
         if element:
             element.send_keys(text)
@@ -423,9 +423,9 @@ class SeleniumTestCase(LiveServerTestCase):
             return False
             
     # This function isn't very useful when the element is fading in with JS/CSS.
-    # It is probably better to use the assert_css function below which also takes a timeout but 
+    # It is probably better to use the assert_css function below which also takes a timeout but
     # will not assert true until the element is fully visible, eg opacity is also 1.
-    def wait_for_element_css(self, selector, timeout=10):
+    def wait_for_element_css(self, selector, timeout=30):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))

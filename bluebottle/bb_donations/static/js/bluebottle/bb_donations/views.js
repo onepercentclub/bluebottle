@@ -32,6 +32,24 @@ App.DonationWallPostView = Em.View.extend({
 
             countWord.html(total);
         });
-
     }
-})
+});
+
+App.DonationSuccessView = Em.View.extend({
+    templateName: 'donation_success',
+    supported: true,
+
+    didInsertElement: function() {
+        if(!document.createElement('svg').getAttributeNS) {
+            this.setProperties({
+                supported: false
+            });
+        }
+    }
+});
+
+App.CanvasView = Em.View.extend({
+    tagName: 'canvas',
+    elementId: 'confetti-canvas'
+
+});

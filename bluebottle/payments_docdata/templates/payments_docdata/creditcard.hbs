@@ -1,11 +1,28 @@
 {% load bb_ember i18n static %}
 
 {% tplhandlebars "docdataCreditcard" %}
-    <p>
-        <img src="{% static 'images/docdata/docdata.png' %}" alt="Docdata"  />
-        <br/>
-        You're about to pay with Credit Card through Docdata.
-        {{view App.DocdataCreditcardSelectView valueBinding='default_pm'}}
-
-    </p>
+    <form>
+        <h6>{% trans 'Select your creditcard type'%}</h6>
+        {% blocktrans %} 
+            We'll redirect you through our payment service provider where you can finish your donation securely.
+        {% endblocktrans%}
+        <ul class="card-types-list">
+            <li>
+                <label for="mastercard" class="is-active">
+                    {{view App.RadioButton name='creditcard' value='mastercard' id='mastercard' checked='checked'}}
+                    <i class="checked-icon"></i>
+                    <span class="creditcard-type">Mastercard</span>
+                    <span class="icon-card mastercard"></span>
+                </label>
+            </li>
+            <li>
+                <label for="visa">
+                    {{view App.RadioButton name='creditcard' value='visa' id='visa'}}
+                    <i class="checked-icon"></i>
+                    <span class="creditcard-type">Visa</span>
+                    <span class="icon-card visa"></span>
+                </label>
+            </li>
+        </ul>
+    </form>
 {% endtplhandlebars %}

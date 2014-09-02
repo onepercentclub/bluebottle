@@ -1,4 +1,5 @@
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_model
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
@@ -18,5 +19,5 @@ class OrganizationPayout(BaseOrganizationPayout):
 def post_project_create_payout(sender, instance, created, **kwargs):
 
     project = instance
-    if instance.status == PROJECT_MODEL.ProjectStatuses.realized:
+    if instance.status == ProjectPhase.objects.get(slug='realised'):
         payout, created = ProjectPayout.objects.get_or_create(project=project)

@@ -16,9 +16,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     project = instance
     now = timezone.now()
 
-    if (project.status == ProjectPhase.objects.get(slug='done-complete') or
-            project.status == ProjectPhase.objects.get(slug='done-incomplete')) \
-            and project.amount_asked:
+    if project.status == ProjectPhase.objects.get(slug='realised') and project.amount_asked:
 
         # Don't schedule for 1st or 15th of the month. Just schedule it for NOW!
         next_date = now

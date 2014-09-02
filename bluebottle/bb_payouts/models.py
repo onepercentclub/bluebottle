@@ -4,7 +4,8 @@ import decimal
 import datetime
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_payouts.utils import money_from_cents
-from bluebottle.payments.models import OrderPaymentStatuses, OrderPayment
+from bluebottle.payments.models import OrderPayment, Payment
+from bluebottle.utils.utils import StatusDefinition
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
@@ -19,7 +20,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from .fields import MoneyField
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
 from .choices import PayoutLineStatuses
-from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
@@ -426,6 +427,7 @@ class BaseOrganizationPayout(PayoutBase):
 
         Note: this should *only* be called internally.
         """
+        PROJECT_PAYOUT_MODEL = get_project_payout_model()
         # Get Payouts
         payouts = PROJECT_PAYOUT_MODEL.objects.filter(
             completed__gte=self.start_date,
@@ -455,9 +457,9 @@ class BaseOrganizationPayout(PayoutBase):
         # calculated for the paid status, with implementation for chargedback
         # coming. There are probably other fees
         allowed_statuses = (
-            OrderPaymentStatuses.paid,
-            OrderPaymentStatuses.chargedback,
-            OrderPaymentStatuses.refunded
+            StatusDefinition.PAID,
+            StatusDefinition.CHARGED_BACK,
+            StatusDefinition.REFUNDED,
         )
 
         payments = OrderPayment.objects.filter(

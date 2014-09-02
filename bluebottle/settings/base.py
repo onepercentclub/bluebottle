@@ -168,11 +168,6 @@ INSTALLED_APPS = (
     'bluebottle.bb_orders',
     'bluebottle.bb_donations',
 
-    # Basic Bb implementations
-    'bluebottle.fundraisers',
-    'bluebottle.orders',
-    'bluebottle.donations',
-
     # Other Bb apps
     'bluebottle.common',
     'bluebottle.contact',
@@ -185,6 +180,11 @@ INSTALLED_APPS = (
     'bluebottle.redirects',
     'bluebottle.utils',
     'bluebottle.wallposts',
+
+    # Basic Bb implementations
+    'bluebottle.fundraisers',
+    'bluebottle.orders',
+    'bluebottle.donations',
 
     'bluebottle.payments',
     'bluebottle.payments_docdata',

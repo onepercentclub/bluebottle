@@ -56,7 +56,8 @@ install_requires = [
     # JSON Web Token based authentication for Django REST framework
     'djangorestframework-jwt==0.1.5',
     'psycopg2==2.2.1',
-    'requests==2.3.0'
+    'requests==2.3.0',
+    'django-fsm==1.6.0',
 ]
 
 
@@ -105,6 +106,8 @@ tests_require = [
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'tdaemon==0.1.1',
+    'django-discover-runner==1.0',
+    'bunch==1.0.1'
 ]
 
 

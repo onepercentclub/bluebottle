@@ -1,44 +1,20 @@
-from bluebottle.payments.models import Payment, Transaction
+from decimal import Decimal as D
+
 from django.utils.translation import ugettext as _
 from django.db import models
+from django.db.models.signals import pre_save, post_save, post_delete
 from django_countries.fields import CountryField
-from decimal import Decimal as D
+
+from bluebottle.payments.models import Payment, Transaction
+from bluebottle.payments.signals import payment_status_changed, set_previous_status
 
 
 class DocdataPayment(Payment):
-    # FIXME: This model is copied from https://github.com/edoburu/django-oscar-docdata
-    # We have to decide if we need all these fields and the way status choices
-
-    # Simplified internal status codes.
-    # Lowercased on purpose to avoid mixing the statuses together.
-    STATUS_NEW = 'new'                    # Initial state
-    STATUS_IN_PROGRESS = 'in_progress'    # In the redirect phase
-    STATUS_PENDING = 'pending'            # Waiting for user to complete payment (e.g. credit cards)
-    STATUS_PAID = 'paid'                  # End of story, paid!
-    STATUS_CANCELLED = 'cancelled'        # End of story, cancelled
-    STATUS_CHARGED_BACK = 'charged_back'  # End of story, consumer asked for charge back
-    STATUS_REFUNDED = 'refunded'          # End of story, refunded, merchant refunded
-    STATUS_EXPIRED = 'expired'           # No results of customer, order was closed.
-    STATUS_UNKNOWN = 'unknown'            # Help!
-
-    STATUS_CHOICES = (
-        (STATUS_NEW, _("New")),
-        (STATUS_IN_PROGRESS, _("In Progress")),
-        (STATUS_PENDING, _("Pending")),
-        (STATUS_PAID, _("Paid")),
-        (STATUS_CANCELLED, _("Cancelled")),
-        (STATUS_CHARGED_BACK, _("Charged back")),
-        (STATUS_REFUNDED, _("Refunded")),
-        (STATUS_EXPIRED, _("Expired")),
-        (STATUS_UNKNOWN, _("Unknown")),
-    )
-
     merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
 
     payment_cluster_id = models.CharField(_("Payment cluster id"), max_length=200, default='', unique=True)
     payment_cluster_key = models.CharField(_("Payment cluster key"), max_length=200, default='', unique=True)
 
-    status = models.CharField(_("Status"), max_length=50, choices=STATUS_CHOICES, default=STATUS_NEW)
     language = models.CharField(_("Language"), max_length=5, blank=True, default='en')
 
     ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100, default='')
@@ -62,6 +38,14 @@ class DocdataPayment(Payment):
         ordering = ('-created', '-updated')
         verbose_name = _("Docdata Payment")
         verbose_name_plural = _("Docdata Payments")
+
+post_save.connect(payment_status_changed, 
+                  sender=DocdataPayment, 
+                  dispatch_uid='change_status_model_docdata_payment')
+
+pre_save.connect(set_previous_status,
+                  sender=DocdataPayment, 
+                  dispatch_uid='previous_status_model_docdata_payment')
 
 
 class DocdataTransaction(Transaction):

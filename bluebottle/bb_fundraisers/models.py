@@ -20,7 +20,7 @@ class BaseFundRaiser(models.Model):
     image = ImageField(_("picture"), max_length=255, blank=True, null=True, upload_to='fundraiser_images/', help_text=_("Minimal of 800px wide"))
     video_url = models.URLField(max_length=100, blank=True, default='')
 
-    amount = models.PositiveIntegerField(_("amount (in cents)"))
+    amount = models.PositiveIntegerField(_("amount"))
     currency = models.CharField(max_length="10", default='EUR')
     deadline = models.DateTimeField(null=True)
 
@@ -65,5 +65,5 @@ class BaseFundRaiser(models.Model):
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
-        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserPreviewSerializer'
+        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
         manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'

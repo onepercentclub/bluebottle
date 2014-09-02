@@ -32,12 +32,12 @@ class DocdataPayment(Payment):
     total_acquirer_approved = models.DecimalField(_("Total acquirer approved"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_captured = models.DecimalField(_("Total captured"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_refunded = models.DecimalField(_("Total refunded"), max_digits=15, decimal_places=2, default=D('0.00'))
-    total_charged_back = models.DecimalField(_("Total changed back"), max_digits=15, decimal_places=2, default=D('0.00'))
+    total_charged_back = models.DecimalField(_("Total charged back"), max_digits=15, decimal_places=2, default=D('0.00'))
 
     class Meta:
         ordering = ('-created', '-updated')
-        verbose_name = _("Docdata Order")
-        verbose_name_plural = _("Docdata Orders")
+        verbose_name = _("Docdata Payment")
+        verbose_name_plural = _("Docdata Payments")
 
 post_save.connect(payment_status_changed, 
                   sender=DocdataPayment, 

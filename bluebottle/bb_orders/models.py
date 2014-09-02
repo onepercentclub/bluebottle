@@ -44,13 +44,10 @@ class BaseOrder(models.Model, FSMTransition):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
 
-    uuid = UUIDField(verbose_name=("Order number"), auto=True)
-
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
 
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
     @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.LOCKED)
@@ -81,6 +78,9 @@ class BaseOrder(models.Model, FSMTransition):
         self.status = status
         if save:
             self.save()
+
+    def __unicode__(self):
+        return "{0} : {1}".format(self.id, self.created)
 
     class Meta:
         abstract = True

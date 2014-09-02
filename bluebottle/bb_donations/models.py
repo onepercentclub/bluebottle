@@ -19,8 +19,10 @@ class BaseDonation(models.Model):
         paid = ChoiceItem('paid', label=_("Paid"))
         failed = ChoiceItem('failed', label=_("Failed"))
 
-
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+    currency = models.CharField(_("Currency"), max_length=10, default="EUR")
+
+    donation_type = models.CharField(_("Type"), max_length=10, default="one-off")
 
     # User is just a cache of the order user.
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("User"), null=True, blank=True)

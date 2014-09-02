@@ -2,27 +2,33 @@
 
 
 {% tplhandlebars "project_fundraiser_list" %}
-    <h4>
+
+    <h3 class="activity-title">
         {% trans "Fundraisers" %}
-        {{#if fundraisers.length}}
-            <em>
-                <a {{action 'showAllFundraisers' controllers.project}}>
-                    {{fundraisers.meta.total}} {% trans "Total" %}
-                </a>
-            </em>
-        {{/if}}
-    </h4>
+    </h3>
+
 
     {{#if fundraisers.length}}
-        <ul>
+        <ul class="activity-list">
             {{#each fundraiser in controller}}
                 {{render "projectFundRaiser" fundraiser}}
             {{/each}}
+            <li>
+                {{#if controllers.project.isStatusCampaign}}
+                    {{#linkTo 'fundRaiserNew' controllers.project.id class="activity-action"}}
+                        {% trans "Start a fundraiser" %}
+                    {{/linkTo}}
+                {{/if}}
+            </li>
         </ul>
+    {{else}}
+        {% trans "No fundraisers for this project." %}
+        {{#if controllers.project.isStatusCampaign}}
+            {{#linkTo 'fundRaiserNew' controllers.project.id class="activity-action"}}
+                {% trans "Be the first to start a fundraiser" %}
+            {{/linkTo}}
+        {{/if}}
+
     {{/if}}
-    {{#if controllers.project.isStatusCampaign}}
-        {{#linkTo 'fundRaiserNew' controllers.project.id class="fundraiser-become"}}
-            {% trans "Become a fundraiser" %}
-        {{/linkTo}}
-    {{/if}}
+
 {% endtplhandlebars %}

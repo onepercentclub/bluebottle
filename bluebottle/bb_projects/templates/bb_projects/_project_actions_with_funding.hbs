@@ -1,0 +1,52 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "_project_actions_with_funding" %}
+    <div class="l-section detail" id="project-members">
+        <section class="l-wrapper">
+
+            {{#if deadline}}
+                <div class="project-deadline">
+                    <span class="flaticon solid stopwatch-1"></span>
+                    <span class="text">
+                        {{daysToGoText daysToGo}}
+                    </span>
+                </div>
+            {{/if}}
+
+            <div class="project-fund">
+                <p class="project-fund-amount">
+                    <strong class="amount-donated">&euro;{{localize amount_donated}}</strong>
+                    {% trans "raised" %}
+                </p>
+                {{bb-progressbar targetValue=amount_asked currentValue=amount_donated}}
+            </div>
+
+            {{#if isSupportable}}
+                <div class="project-action">
+                    <a href='#' {{ action 'addDonation' this }} class="btn btn-primary btn-iconed btn-donation-sec"><span class="flaticon solid wallet-1"></span> {% trans "Donate" %}</a>
+                </div>
+            {{/if}}
+
+        </section>
+    </div>
+
+    <div class="l-section detail" id="project-actions">
+        <section class="l-wrapper">
+
+            <ul class="member-list">
+                <li class="member-initiator">
+                    <a {{action 'openInBigBox' 'userModal' owner }} class="member">
+                        <figure class="member-avatar"><img {{bindAttr src="owner.getAvatar"}} /></figure>
+                        <h4>{% trans "Initiator" %}</h4>
+                        <strong class="member-name">{{owner.full_name}}</strong>
+                    </a>
+                </li>
+                <li class="project-member-supporters">
+                    {{render "projectSupporterList"}}
+                </li>
+            </ul>
+        </section>
+    </div>
+
+{% endtplhandlebars %}

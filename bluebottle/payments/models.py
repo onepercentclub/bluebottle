@@ -24,9 +24,6 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 
 class Payment(PolymorphicModel):
-    refunded = ChoiceItem('refunded', label=_("Refunded"))
-    unknown = ChoiceItem('unknown', label=_("Unknown"))
-
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
         (StatusDefinition.STARTED, _('Started')),

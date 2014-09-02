@@ -1,5 +1,6 @@
 import json
 
+import logging
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -12,6 +13,7 @@ from django_fsm.db.fields import FSMField, transition
 from django_fsm.signals import pre_transition, post_transition
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save, post_delete
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 from bluebottle.payments.signals import (payment_status_changed, 
@@ -22,6 +24,8 @@ from bluebottle.payments.managers import PaymentManager
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
+payment_docdata_logger = logging.getLogger('payment.docdata')
+payment_logger = PaymentLogAdapter(payment_docdata_logger)
 
 class Payment(PolymorphicModel):
 
@@ -51,6 +55,7 @@ class Payment(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+
 
 pre_save.connect(set_previous_status,
                   sender=Payment, 
@@ -162,6 +167,7 @@ class OrderPayment(models.Model, FSMTransition):
 
         if save:
             self.save()
+
 
 pre_save.connect(set_previous_status,
                   sender=OrderPayment, 

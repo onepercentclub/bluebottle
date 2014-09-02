@@ -1,16 +1,16 @@
 from django.dispatch import Signal
-from django.dispatch import receiver
-from django_fsm.signals import pre_transition, post_transition
-from django.db.models.signals import pre_save, post_save, post_delete
+from django_fsm.signals import post_transition
 
 
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
+
 
 def set_previous_status(sender, instance, **kwargs):
     # Store the previous status when the Instance is saved
     # so that it can be used on the next save to determine
     # if the status has changed.
     instance.previous_status = instance.status
+
 
 def payment_status_changed(sender, instance, **kwargs):
     """
@@ -25,6 +25,7 @@ def payment_status_changed(sender, instance, **kwargs):
     
     # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)
+
 
 def default_status_check(sender, instance, **kwargs):
     # Send status change notification when record first created

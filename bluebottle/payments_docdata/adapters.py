@@ -48,9 +48,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         # Make sure that Payment has an ID
         payment.save()
-        self.payment_logger.create(message='A docdata payment has been created',
-                                   level=PaymentLogLevels.info,
-                                   payment=payment.pk)
+        self.payment_logger.log(payment=payment.pk,
+                                level=PaymentLogLevels.info,
+                                message='A docdata payment has been created')
 
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
@@ -110,6 +110,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def get_authorization_action(self):
 
+        #FIXME: get rid of these testing
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
         client = gateway.DocdataClient(testing_mode)
@@ -125,7 +126,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             return_url=return_url,
             client_language=client_language,
         )
-
+        self.payment_logger.log(payment=self.payment.pk,
+                                level=PaymentLogLevels.info,
+                                message='A docdata payment got the authorization')
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True

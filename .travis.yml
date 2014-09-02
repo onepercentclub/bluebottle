@@ -9,8 +9,10 @@ install:
 before_script:
 - npm install
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
+- python setup.py install
+- pip install -r test_requirements.txt
 script:
-- python setup.py test
+- python manage.py test
 - grunt travis --verbose
 notifications:
   hipchat:

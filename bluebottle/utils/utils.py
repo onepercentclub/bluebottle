@@ -1,5 +1,7 @@
 from django_fsm.db.fields import TransitionNotAllowed
 import logging
+from django_tools.middlewares import ThreadLocal
+
 
 class StatusDefinition:
     """
@@ -121,3 +123,16 @@ def import_class(cl):
     class_name = cl[d+1:len(cl)]
     m = __import__(cl[0:d], globals(), locals(), [class_name])
     return getattr(m, class_name)
+
+
+def get_current_host():
+    """
+    Get the current hostname with protocol
+    E.g. http://localhost:8000 or https://bluebottle.org
+    """
+    request = ThreadLocal.get_current_request()
+    if request.is_secure():
+        scheme = 'https'
+    else:
+        scheme = 'http'
+    return '{0}://{1}'.format(scheme, request.get_host())

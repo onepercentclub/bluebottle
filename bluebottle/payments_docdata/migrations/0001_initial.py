@@ -131,7 +131,6 @@ class Migration(SchemaMigration):
             'total': ('django.db.models.fields.DecimalField', [], {'default': '0', 'max_digits': '16', 'decimal_places': '2'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm[{0}]".format(USER_MODEL), 'null': 'True', 'blank': 'True'}),
-            'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '32', 'blank': 'True'})
         },
         u'payments.orderpayment': {
             'Meta': {'object_name': 'OrderPayment'},

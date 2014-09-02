@@ -1,5 +1,6 @@
 # coding=utf-8
 import logging
+from django.contrib.sites.models import get_current_site
 import gateway
 
 from bluebottle.payments_docdata.models import DocdataTransaction
@@ -8,7 +9,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.utils import StatusDefinition, get_current_host
 from .models import DocdataPayment
 from .gateway import DocdataClient
 
@@ -106,7 +107,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         client = gateway.DocdataClient(testing_mode)
 
-        return_url = 'http://localhost:8000'
+        return_url_base = get_current_host()
         client_language = 'en'
 
         integration_data = self.order_payment.integration_data
@@ -114,7 +115,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         url = client.get_payment_menu_url(
             order_key=self.payment.payment_cluster_key,
             order_id=self.order_payment.order_id,
-            return_url=return_url,
+            return_url=return_url_base,
             client_language=client_language,
         )
 

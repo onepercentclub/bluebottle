@@ -4,7 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 
 TASK_MODEL = get_task_model()
 
-class RecentTasks(DashboardModule):
+
+class TaskModule(DashboardModule):
     """
     """
     title = _('Recently Created Tasks')
@@ -15,7 +16,7 @@ class RecentTasks(DashboardModule):
 
     def __init__(self, title=None, limit=10, **kwargs):
         kwargs.update({'limit': limit})
-        super(RecentTasks, self).__init__(title, **kwargs)
+        super(TaskModule, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
         qs = TASK_MODEL.objects.order_by('-created')

@@ -32,7 +32,6 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.related.ForeignKey')(to=orm[USER_MODEL], null=True, blank=True),
                       keep_default=False)
 
-
     models = {
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
@@ -47,13 +46,13 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
-        u'{0}.timeavailable'.format(USER_APP): {
+        u'bb_accounts.timeavailable': {
             'Meta': {'ordering': "['type']", 'object_name': 'TimeAvailable'},
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'type': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
         },
-        u'{0}.projectphase'.format(PROJECT_APP): {
+        u'bb_projects.projectphase': {
             'Meta': {'ordering': "['sequence']", 'object_name': 'ProjectPhase'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '400', 'blank': 'True'}),
@@ -65,7 +64,7 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '200'}),
             'viewable': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
         },
-        u'{0}.projecttheme'.format(PROJECT_APP): {
+        u'bb_projects.projecttheme': {
             'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -90,10 +89,10 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'order': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'donations'", 'null': 'True', 'to': u"orm['{0}']".format(settings.ORDERS_ORDER_MODEL)}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.PROJECTS_PROJECT_MODEL)}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         settings.FUNDRAISERS_FUNDRAISER_MODEL.lower(): {
-            'Meta': {'object_name': 'FundRaiser'},
+            'Meta': {'object_name': settings.FUNDRAISERS_FUNDRAISER_MODEL.split('.')[-1]},
             'amount': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'currency': ('django.db.models.fields.CharField', [], {'default': "'EUR'", 'max_length': "'10'"}),
@@ -213,8 +212,8 @@ class Migration(SchemaMigration):
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
             'why': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'})
         },
-        u'test.testorganization': {
-            'Meta': {'ordering': "['name']", 'object_name': 'TestOrganization'},
+        settings.ORGANIZATIONS_ORGANIZATION_MODEL.lower(): {
+            'Meta': {'ordering': "['name']", 'object_name': settings.ORGANIZATIONS_ORGANIZATION_MODEL.split('.')[-1]},
             'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),

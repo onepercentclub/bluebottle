@@ -1,7 +1,5 @@
 from bluebottle.payments.services import PaymentService
-from django.dispatch import Signal
 from django.dispatch import receiver
-from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch.dispatcher import Signal
 
@@ -46,6 +44,9 @@ def _order_payment_status_changed(sender, instance, **kwargs):
 
 @receiver(order_requested)
 def _order_requested(sender, order, **kwargs):
-    order_payment = OrderPayment.get_latest_by_order(order)
-    service = PaymentService(order_payment)
-    service.check_payment_status()
+
+    # Check the status at PSP if status is still locked
+    if order.status == StatusDefinition.LOCKED:
+        order_payment = OrderPayment.get_latest_by_order(order)
+        service = PaymentService(order_payment)
+        service.check_payment_status()

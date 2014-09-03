@@ -1,7 +1,9 @@
+from bluebottle.payments.services import PaymentService
 from django.dispatch import Signal
 from django.dispatch import receiver
 from django.conf import settings
 from django.db.models.signals import post_save, post_delete
+from django.dispatch.dispatcher import Signal
 
 from django_fsm.signals import pre_transition, post_transition
 
@@ -11,6 +13,9 @@ from bluebottle.utils.model_dispatcher import get_order_model, get_donation_mode
 
 DONATION_MODEL = get_donation_model()
 
+order_status_changed = Signal(providing_args=["order"])
+
+order_requested = Signal(providing_args=["order"])
 
 @receiver(post_save, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
 def update_order_amount(sender, instance, **kwargs):
@@ -34,4 +39,13 @@ def _order_payment_status_changed(sender, instance, **kwargs):
     new_order_status = order.get_status_mapping(kwargs['target'])
      
     order.transition_to(new_order_status)
-    
+
+    # Trigger Order status changed signal
+    order_status_changed.send(sender=order, order=order)
+
+
+@receiver(order_requested)
+def _order_requested(sender, order, **kwargs):
+    order_payment = OrderPayment.get_latest_by_order(order)
+    service = PaymentService(order_payment)
+    service.check_payment_status()

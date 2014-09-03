@@ -9,9 +9,10 @@ DONATION_MODEL = get_donation_model()
 class ManageDonationSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     fundraiser = serializers.PrimaryKeyRelatedField(required=False)
-    status = serializers.ChoiceField(read_only=True)
     order = serializers.PrimaryKeyRelatedField()
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    status = serializers.CharField(source='status', read_only=True)
+    user = serializers.CharField(source='user', read_only=True)
 
     class Meta:
         model = DONATION_MODEL
@@ -23,7 +24,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 class DonationSerializer(serializers.ModelSerializer):
     project = get_serializer_class('PROJECTS_PROJECT_MODEL', 'preview')
     fundraiser = serializers.PrimaryKeyRelatedField(required=False)
-    user = get_serializer_class('AUTH_USER_MODEL', 'preview')
+    user = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
 
     class Meta:
         model = DONATION_MODEL

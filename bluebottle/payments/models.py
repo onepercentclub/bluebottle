@@ -92,7 +92,6 @@ class OrderPayment(models.Model, FSMTransition):
     """
     STATUS_CHOICES = Payment.STATUS_CHOICES
 
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
@@ -106,6 +105,13 @@ class OrderPayment(models.Model, FSMTransition):
     payment_method = models.CharField(max_length=20, default='', blank=True)
     integration_data = JSONField(_("Integration data"), max_length=5000, blank=True)
     authorization_action = models.OneToOneField(OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
+
+    @classmethod
+    def get_latest_by_order(cls, order):
+        order_payments = cls.objects.order_by('-created').filter(order=order).all()
+        if len(order_payments) > 0:
+            return order_payments[0]
+        return None
 
     @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.STARTED)
     def started(self):

@@ -2,8 +2,8 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 from django.conf import settings
+
 
 PROJECT_APP = settings.PROJECTS_PROJECT_MODEL.split('.')[0]
 PROJECT_MODEL = settings.PROJECTS_PROJECT_MODEL.split('.')[1]
@@ -11,34 +11,26 @@ PROJECT_MODEL = settings.PROJECTS_PROJECT_MODEL.split('.')[1]
 USER_APP = settings.AUTH_USER_MODEL.split('.')[0]
 USER_MODEL = settings.AUTH_USER_MODEL.split('.')[1]
 
-
 class Migration(SchemaMigration):
-    depends_on = (
-        ('orders', '0001_initial'),
-    )
 
     def forwards(self, orm):
-        # Adding model 'Donation'
-        db.create_table(u'donations_donation', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('amount', self.gf('django.db.models.fields.DecimalField')(max_digits=16, decimal_places=2)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL], null=True, blank=True)),
-            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.PROJECTS_PROJECT_MODEL])),
-            ('fundraiser', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.FUNDRAISERS_FUNDRAISER_MODEL], null=True, blank=True)),
-            ('order', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='donations', null=True, to=orm[settings.ORDERS_ORDER_MODEL])),
-            ('status', self.gf('django.db.models.fields.CharField')(default='new', max_length=20, db_index=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('completed', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('anonymous', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal(u'donations', ['Donation'])
+        # Deleting field 'Donation.status'
+        db.delete_column(u'donations_donation', 'status')
+
+        # Deleting field 'Donation.user'
+        db.delete_column(u'donations_donation', 'user_id')
 
 
     def backwards(self, orm):
-        # Deleting model 'Donation'
-        db.delete_table(u'donations_donation')
+        # Adding field 'Donation.status'
+        db.add_column(u'donations_donation', 'status',
+                      self.gf('django.db.models.fields.CharField')(default='new', max_length=20, db_index=True),
+                      keep_default=False)
 
+        # Adding field 'Donation.user'
+        db.add_column(u'donations_donation', 'user',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm[USER_MODEL], null=True, blank=True),
+                      keep_default=False)
 
     models = {
         u'auth.group': {
@@ -97,9 +89,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'order': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'donations'", 'null': 'True', 'to': u"orm['{0}']".format(settings.ORDERS_ORDER_MODEL)}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.PROJECTS_PROJECT_MODEL)}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "'new'", 'max_length': '20', 'db_index': 'True'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'})
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         settings.FUNDRAISERS_FUNDRAISER_MODEL.lower(): {
             'Meta': {'object_name': settings.FUNDRAISERS_FUNDRAISER_MODEL.split('.')[-1]},

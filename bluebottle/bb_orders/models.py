@@ -20,7 +20,7 @@ DONATION_MODEL = get_donation_model()
 
 class BaseOrder(models.Model, FSMTransition):
     """
-    An order is a collection of OrderItems and vouchers with a connected payment.
+    An Order is a collection of Donations with one or more OrderPayments referring to it.
     """
     # Mapping the Order Payment Status to the Order Status
     STATUS_MAPPING = {

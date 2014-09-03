@@ -14,9 +14,6 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save, post_delete
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
-from bluebottle.payments.signals import (payment_status_changed, 
-                                         set_previous_status,
-                                         default_status_check)
 
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
@@ -49,18 +46,6 @@ class Payment(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
-
-pre_save.connect(set_previous_status,
-                  sender=Payment, 
-                  dispatch_uid='previous_status_model_payment')
-
-post_save.connect(payment_status_changed, 
-                  sender=Payment, 
-                  dispatch_uid='change_status_model_payment')
-
-post_save.connect(default_status_check, 
-                  sender=Payment, 
-                  dispatch_uid='default_status_model_payment')
 
 
 class OrderPaymentAction(models.Model):
@@ -161,14 +146,6 @@ class OrderPayment(models.Model, FSMTransition):
         if save:
             self.save()
 
-pre_save.connect(set_previous_status,
-                  sender=OrderPayment, 
-                  dispatch_uid='previous_status_model_order_payment')
-
-post_save.connect(default_status_check, 
-                  sender=OrderPayment, 
-                  dispatch_uid='default_status_model_order_payment')
-
 
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')
@@ -178,21 +155,3 @@ class Transaction(PolymorphicModel):
     class Meta:
         ordering = ('-created', '-updated')
 
-
-@receiver(post_save, weak=False, sender=OrderPayment, dispatch_uid='order_payment_model')
-def order_payment_changed(sender, instance, **kwargs):
-    # Send status change notification when record first created
-    # This is to ensure any components listening for a status 
-    # on an OrderPayment will also receive the initial status.
-
-    # Get the default status for the status field on OrderPayment
-    default_status = OrderPayment._meta.get_field_by_name('status')[0].get_default()
-
-    # Signal new status if current status is the default value
-    if (instance.status == default_status):
-        signal_kwargs = {
-            'sender': sender,
-            'instance': instance,
-            'target': instance.status
-        }
-        post_transition.send(**signal_kwargs)

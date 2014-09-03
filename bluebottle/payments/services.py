@@ -1,7 +1,6 @@
 import re
 from django.conf import settings
 from bluebottle.utils.utils import import_class
-from bluebottle.payments.models import OrderPayment
 
 
 def get_payment_methods(country=None, amount=None):
@@ -21,6 +20,7 @@ class PaymentService(object):
     """
 
     def __init__(self, order_payment=None):
+        from bluebottle.payments.models import OrderPayment
         if not order_payment or not isinstance(order_payment, OrderPayment):
             raise Exception("Need an OrderPayment to in initiate PaymentService")
 

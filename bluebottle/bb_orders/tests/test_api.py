@@ -1,13 +1,18 @@
 import json
+from django.core.urlresolvers import reverse
+from django.test import TestCase
+from rest_framework import status
 from bluebottle.orders.models import Order
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import InitProjectDataMixin
 from bluebottle.utils.model_dispatcher import get_order_model
-from django.core.urlresolvers import reverse
-from django.test import TestCase
-from rest_framework import status
+from bluebottle.payments.services import PaymentService
+from bluebottle.payments_mock.adapters import MockPaymentAdapter
+from mock import patch
 
 from bluebottle.utils.utils import StatusDefinition
 
@@ -79,3 +84,17 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         response = self.client.put(order_url, json.dumps({}), 'application/json', HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+
+class TestStatusUpdates(TestCase):
+    def setUp(self):
+        self.user1 = BlueBottleUserFactory.create()
+        self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
+
+    @patch.object(MockPaymentAdapter, 'check_payment_status')
+    def test_success_payment_status_check(self, mock_check_payment_status):
+        self.order = OrderFactory.create()
+        # self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdata')
+        # self.service = PaymentService(order_payment=self.order_payment)
+        response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.id}),
+                                   HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(mock_check_payment_status.called, True)

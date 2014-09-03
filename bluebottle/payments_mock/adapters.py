@@ -1,7 +1,6 @@
 # coding=utf-8
 from django.core.urlresolvers import reverse
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.payments.models import OrderPaymentStatuses
 from .models import MockPayment, MockPaymentStatuses
 
 class MockPaymentAdapter(BasePaymentAdapter):
@@ -24,18 +23,19 @@ class MockPaymentAdapter(BasePaymentAdapter):
         """
         Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment
         """
-        status_mapping = {
-            MockPaymentStatuses.created: OrderPaymentStatuses.created,
-            MockPaymentStatuses.started: OrderPaymentStatuses.started,
-            MockPaymentStatuses.authorized: OrderPaymentStatuses.authorized,
-            MockPaymentStatuses.settled: OrderPaymentStatuses.settled,
-            MockPaymentStatuses.failed: OrderPaymentStatuses.failed,
-            MockPaymentStatuses.cancelled: OrderPaymentStatuses.cancelled,
-            MockPaymentStatuses.chargedback: OrderPaymentStatuses.chargedback,
-            MockPaymentStatuses.refunded: OrderPaymentStatuses.refunded,
-            MockPaymentStatuses.unknown: OrderPaymentStatuses.unknown,
-        }
-        return status_mapping.get(status, OrderPaymentStatuses.unknown)
+        # status_mapping = {
+        #     MockPaymentStatuses.created: OrderPaymentStatuses.created,
+        #     MockPaymentStatuses.started: OrderPaymentStatuses.started,
+        #     MockPaymentStatuses.authorized: OrderPaymentStatuses.authorized,
+        #     MockPaymentStatuses.settled: OrderPaymentStatuses.settled,
+        #     MockPaymentStatuses.failed: OrderPaymentStatuses.failed,
+        #     MockPaymentStatuses.cancelled: OrderPaymentStatuses.cancelled,
+        #     MockPaymentStatuses.chargedback: OrderPaymentStatuses.chargedback,
+        #     MockPaymentStatuses.refunded: OrderPaymentStatuses.refunded,
+        #     MockPaymentStatuses.unknown: OrderPaymentStatuses.unknown,
+        # }
+        return False#status_mapping.get(status, OrderPaymentStatuses.unknown)
+
 
     def set_order_payment_new_status(self, status):
         self.order_payment.status = self._get_mapped_status(status)

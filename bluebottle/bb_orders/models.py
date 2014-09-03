@@ -88,3 +88,4 @@ class BaseOrder(models.Model, FSMTransition):
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
 
+import signals

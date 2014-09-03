@@ -65,7 +65,7 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
 
     def check_status_psp(self, order_payment):
         service = PaymentService(order_payment)
-        service.check_payment_status()
+        service.adapter.check_payment_status()
 
     def get_object(self, queryset=None):
         object = super(ManageOrderDetail, self).get_object(queryset)

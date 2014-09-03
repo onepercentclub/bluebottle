@@ -6,10 +6,10 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django_countries.fields import CountryField
 
 from bluebottle.payments.models import Payment, Transaction
-from bluebottle.payments.signals import payment_status_changed, set_previous_status
 
 
 class DocdataPayment(Payment):
+
     merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
 
     payment_cluster_id = models.CharField(_("Payment cluster id"), max_length=200, default='', unique=True)
@@ -38,14 +38,6 @@ class DocdataPayment(Payment):
         ordering = ('-created', '-updated')
         verbose_name = _("Docdata Order")
         verbose_name_plural = _("Docdata Orders")
-
-post_save.connect(payment_status_changed, 
-                  sender=DocdataPayment, 
-                  dispatch_uid='change_status_model_docdata_payment')
-
-pre_save.connect(set_previous_status,
-                  sender=DocdataPayment, 
-                  dispatch_uid='previous_status_model_docdata_payment')
 
 
 class DocdataTransaction(Transaction):

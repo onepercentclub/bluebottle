@@ -1,3 +1,4 @@
+from bluebottle.utils.utils import StatusDefinition
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum
@@ -34,8 +35,7 @@ class BaseFundRaiser(models.Model):
     @property
     def amount_donated(self):
         # FIXME: Removed import of DonationStatuses because it was resulting in circular imports.
-        valid_statuses = ('pending', 'paid')
-        donations = self.donation_set.filter(status__in=valid_statuses)
+        donations = self.donation_set.filter(order__status=StatusDefinition.SUCCESS)
         if donations:
             total = donations.aggregate(sum=Sum('amount'))
             return total['sum']

@@ -1,6 +1,5 @@
 import logging
 from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model
-from django.core.urlresolvers import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ class PayoutAdmin(admin.ModelAdmin):
 
     list_display = [
         'payout', 'status', 'admin_project', 'amount_payable',
-        'admin_amount_raised', 'admin_amount_pending',
+        # 'amount_raised', 'amount_pending',
         'payout_rule', 'admin_has_iban', 'created_date', 'submitted_date', 'completed_date'
     ]
 
@@ -91,7 +90,7 @@ class PayoutAdmin(admin.ModelAdmin):
 
     readonly_fields = [
         'admin_project', 'admin_organization', 'created', 'updated',
-        'admin_amount_safe', 'admin_amount_pending', 'admin_amount_failed'
+        # 'amount_safe', 'amount_pending', 'amount_failed'
     ]
 
     fieldsets = (
@@ -106,11 +105,11 @@ class PayoutAdmin(admin.ModelAdmin):
                 'created', 'updated', 'submitted', 'completed',
             )
         }),
-        (_('Realtime amounts'), {
-            'fields': (
-                'admin_amount_safe', 'admin_amount_pending', 'admin_amount_failed'
-            )
-        }),
+        # (_('Realtime amounts'), {
+        #     'fields': (
+        #         'amount_safe', 'amount_pending', 'amount_failed'
+        #     )
+        # }),
         (_('Payout amounts'), {
             'fields': ('amount_raised', 'organization_fee', 'amount_payable', 'payout_rule')
         }),
@@ -154,45 +153,6 @@ class PayoutAdmin(admin.ModelAdmin):
     completed_date.admin_order_field = 'completed'
     completed_date.short_description = 'Completed'
 
-    # Link to all donations for project
-    admin_amount_raised = link_to(
-        'amount_raised', 'admin:fund_donation_changelist',
-        query=lambda obj: {
-            'project': obj.project.id,
-            'status__exact': 'all'
-        },
-        short_description=_('Raised')
-    )
-
-    # Link to pending donations for project
-    admin_amount_pending = link_to(
-        lambda obj: obj.get_amount_pending(), 'admin:fund_donation_changelist',
-        query=lambda obj: {
-            'project': obj.project.id,
-            'status__exact': 'pending'
-        },
-        short_description=_('Pending')
-    )
-
-    # Link to paid donations for project
-    admin_amount_safe = link_to(
-        lambda obj: obj.get_amount_safe(), 'admin:fund_donation_changelist',
-        query=lambda obj: {
-            'project': obj.project.id,
-            'status__exact': 'paid'
-        },
-        short_description=_('Safe')
-    )
-
-    # Link to failed donations for project
-    admin_amount_failed = link_to(
-        lambda obj: obj.get_amount_failed(), 'admin:fund_donation_changelist',
-        query=lambda obj: {
-            'project': obj.project.id,
-            'status__exact': 'failed'
-        },
-        short_description=_('Failed')
-    )
 
     # Link to project
     def admin_project(self, obj):

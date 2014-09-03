@@ -1,10 +1,10 @@
+from decimal import Decimal
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.utils.model_dispatcher import get_project_payout_model
 
 from django.utils import timezone
 from .choices import PayoutLineStatuses
 
-PROJECT_PAYOUT_MODEL = get_project_model()
 
 
 def create_payout_finished_project(sender, instance, created, **kwargs):
@@ -20,6 +20,8 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
         # Don't schedule for 1st or 15th of the month. Just schedule it for NOW!
         next_date = now
+
+        PROJECT_PAYOUT_MODEL = get_project_payout_model()
 
         try:
             # Update existing Payout
@@ -37,14 +39,15 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             payout = PROJECT_PAYOUT_MODEL(
                 planned=next_date,
                 project=project
+
             )
+
+            # FIXME: Set these based on  business rules and not here but on model.
+            payout.payout_rule = 'seven'
+            payout.service_percentage = 7
 
             # Calculate amounts
             payout.calculate_amounts()
-
-            # Exception for legacy projects. Close them right away.
-            if payout.payout_rule == PROJECT_PAYOUT_MODEL.PayoutRules.old:
-                payout.status == PayoutLineStatuses.completed
 
             # Set payment details
             organization = project.organization

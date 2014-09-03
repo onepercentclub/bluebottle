@@ -2,6 +2,7 @@ import csv
 import decimal
 
 import datetime
+from decimal import Decimal
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_payouts.utils import money_from_cents
 from bluebottle.payments.models import OrderPayment, Payment
@@ -266,7 +267,7 @@ class BaseProjectPayout(PayoutBase):
 
         self.amount_raised = self.get_amount_raised()
 
-        self.organization_fee = self.amount_raised * fee_factor
+        self.organization_fee = self.amount_raised * Decimal(fee_factor)
         self.amount_payable = self.amount_raised - self.organization_fee
 
         if save:

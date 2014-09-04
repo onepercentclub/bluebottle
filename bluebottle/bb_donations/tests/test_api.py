@@ -1,10 +1,15 @@
 import json
-from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
+from mock import patch
+
+from django.test import TestCase
+
+from bluebottle.bb_orders.views import ManageOrderDetail
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
+from bluebottle.test.utils import InitProjectDataMixin
 
 from django.core.urlresolvers import reverse
 
@@ -13,10 +18,20 @@ from rest_framework import status
 ORDER_MODEL = get_order_model()
 
 
-class DonationApiTestCase(OrderApiTestCase):
+class DonationApiTestCase(InitProjectDataMixin, TestCase):
 
     def setUp(self):
-        super(DonationApiTestCase, self).setUp()
+        self.user1 = BlueBottleUserFactory.create()
+        self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
+
+        self.init_projects()
+        self.project1 = ProjectFactory.create(amount_asked=5000)
+        self.project1.set_status('campaign')
+
+        self.project2 = ProjectFactory.create(amount_asked=3750)
+        self.project2.set_status('campaign')
+
+        self.manage_order_list_url = reverse('manage-order-list')
         self.manage_donation_list_url = reverse('manage-donation-list')
 
         self.user = BlueBottleUserFactory.create()
@@ -24,9 +39,11 @@ class DonationApiTestCase(OrderApiTestCase):
         self.order = OrderFactory.create(user=self.user)
 
 
+# Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
+@patch.object(ManageOrderDetail, 'check_status_psp')
 class TestCreateDonation(DonationApiTestCase):
 
-    def test_create_single_donation(self):
+    def test_create_single_donation(self, mock_check_status_psp):
         """
         Test donation in the current donation flow where we have just one donation that can't be deleted.
         """
@@ -49,13 +66,15 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.data['status'], 'created')
         donation_id = response.data['id']
 
+
+
         # Check that the order total is equal to the donation amount
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
         response = self.client.get(order_url, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total'], 50)
 
-    def test_create_fundraiser_donation(self):
+    def test_create_fundraiser_donation(self, mock_check_status_psp):
         """
         Test donation in the current donation flow where we have just one donation that can't be deleted.
         """
@@ -81,7 +100,7 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total'], 35)
 
-    def test_crud_multiple_donations(self):
+    def test_crud_multiple_donations(self, mock_check_status_psp):
         """
         Test more advanced modifications to donations and orders that aren't currently supported by our
         front-en but

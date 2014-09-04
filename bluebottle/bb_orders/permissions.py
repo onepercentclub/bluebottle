@@ -6,6 +6,12 @@ from bluebottle.utils.utils import StatusDefinition
 ORDER_MODEL = get_order_model()
 
 
+class LoggedInUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated():
+            return True
+        return False
+
 class IsUser(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """
     def has_object_permission(self, request, view, obj):

@@ -1,4 +1,5 @@
 import logging
+from django.http import Http404
 from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
 from bluebottle.bb_orders.signals import order_requested
 from bluebottle.geo.models import Country
@@ -6,6 +7,8 @@ from bluebottle.utils.utils import StatusDefinition
 from rest_framework import generics
 from bluebottle.utils.model_dispatcher import get_order_model, get_project_model
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.payments.services import PaymentService
+from bluebottle.utils.utils import StatusDefinition
 
 ORDER_MODEL = get_order_model()
 PROJECT_MODEL = get_project_model()
@@ -55,6 +58,22 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
     model = ORDER_MODEL
     serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'manage')
     permission_classes = (IsOrderCreator, OrderIsNew)
+
+    def get(self, request, *args, **kwargs):
+        order = self.get_object()
+
+        if order.status != StatusDefinition.SUCCESS:
+            self.check_status_psp(order)
+        return super(ManageOrderDetail, self).get(request, *args, **kwargs)
+
+    def check_status_psp(self, order):
+        try:
+            order_payment = order.payments.all().order_by('-created')[0]
+        except IndexError:
+            raise Http404
+
+        service = PaymentService(order_payment)
+        service.adapter.check_payment_status()
 
     def get_object(self, queryset=None):
         object = super(ManageOrderDetail, self).get_object(queryset)

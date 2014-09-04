@@ -20,7 +20,7 @@ App.PaymentMethod = DS.Model.extend({
 App.OrderPayment = DS.Model.extend({
     user: DS.belongsTo('App.UserPreview'),
     order: DS.belongsTo('App.MyOrder'),
-    status: DS.attr('string'),
+    status: DS.attr('string', {defaultValue: null}),
     created: DS.attr('date'),
     updated: DS.attr('date'),
     closed: DS.attr('date'),

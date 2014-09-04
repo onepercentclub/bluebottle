@@ -21,6 +21,6 @@ App.MockCreditcardController = App.StandardPaymentMethodController.extend(App.Co
     },
 
     getIntegrationData: function(){
-        return this.get('model');
+        return {};
     }
 });

@@ -126,6 +126,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
             payment.save().then(
                 // Success
                 function (payment) {
+
                     // Reload the order to receive any backend updates to the 
                     // order status
                     // NOTE: when using the mock api we will need to manually 
@@ -156,6 +157,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
                 // Failure
                 function (payment) {
                     // FIXME: Add error handing for failed order_payment save
+                    console.log("error!");
                 }
             );
         },

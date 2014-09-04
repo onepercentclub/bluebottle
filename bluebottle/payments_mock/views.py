@@ -32,7 +32,7 @@ class PaymentResponseMockHandler(TemplateView):
     page matching the user' chosen action.
     """
 
-    payment_responses = ['settled', 'cancelled', 'pending']
+    payment_responses = ['success', 'cancelled', 'pending']
 
     def get(self, request, *args, **kwargs):
         status = request.GET.get('status')

@@ -7,7 +7,6 @@ from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import CreationDateTimeField
 from bluebottle.payments.models import Payment
-from bluebottle.payments_logger.managers import PaymentLogManager
 
 
 class PaymentLogLevels(DjangoChoices):
@@ -26,15 +25,6 @@ class PaymentLogEntry(models.Model):
 
     # TODO: Enable when not abstract.
     payment = models.ForeignKey(Payment, related_name='payments')
-
-    # Trying to create a foreign key with a polimorfic model
-    # https://docs.djangoproject.com/en/dev/ref/contrib/contenttypes/#django.contrib.contenttypes.generic.GenericForeignKey
-    # content_type = models.ForeignKey(ContentType, verbose_name=_('content type'), related_name="content_type_set_for_%(class)s")
-    # object_id = models.PositiveIntegerField(_('object ID'))
-    # content_object = GenericForeignKey('content_type', 'object_id')
-
-    #Manager
-    objects = PaymentLogManager()
 
     class Meta:
 

@@ -10,7 +10,6 @@ class BasePaymentAdapter(object):
     MODEL_CLASS = Payment
 
     def __init__(self, order_payment):
-        import ipdb; ipdb.set_trace()
         self.order_payment = order_payment
         if self.MODEL_CLASS.__class__ == Payment:
             raise Exception("Please override MODEL_CLASS with extended payment model.")

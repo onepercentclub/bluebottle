@@ -4,16 +4,13 @@ from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from djchoices import DjangoChoices, ChoiceItem
 from uuidfield import UUIDField
 from django.db.models import options
-from django.db.models.signals import pre_save, post_save, post_delete
-from django.dispatch import receiver
 from django_fsm.db.fields import FSMField, transition
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
 DONATION_MODEL = get_donation_model()
 

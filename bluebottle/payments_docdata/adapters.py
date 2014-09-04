@@ -12,7 +12,6 @@ from bluebottle.utils.utils import StatusDefinition
 from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
-# payment_docdata_logger = logging.getLogger('payment.docdata')
 
 
 class DocdataPaymentAdapter(BasePaymentAdapter):

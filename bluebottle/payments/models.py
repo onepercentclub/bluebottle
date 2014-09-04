@@ -8,9 +8,9 @@ from django_extensions.db.fields.json import JSONField
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.polymorphic_model import PolymorphicModel
 from django.db.models import options
-from django_fsm.db.fields import FSMField, transition
 from django.dispatch import receiver
 from django_fsm.signals import post_transition
+from django_fsm.db.fields import FSMField, transition
 from django.db.models.signals import pre_save, post_save
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition

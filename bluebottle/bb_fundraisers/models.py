@@ -1,3 +1,4 @@
+from bluebottle.utils.utils import StatusDefinition
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum
@@ -20,7 +21,7 @@ class BaseFundRaiser(models.Model):
     image = ImageField(_("picture"), max_length=255, blank=True, null=True, upload_to='fundraiser_images/', help_text=_("Minimal of 800px wide"))
     video_url = models.URLField(max_length=100, blank=True, default='')
 
-    amount = models.PositiveIntegerField(_("amount (in cents)"))
+    amount = models.PositiveIntegerField(_("amount"))
     currency = models.CharField(max_length="10", default='EUR')
     deadline = models.DateTimeField(null=True)
 
@@ -34,8 +35,7 @@ class BaseFundRaiser(models.Model):
     @property
     def amount_donated(self):
         # FIXME: Removed import of DonationStatuses because it was resulting in circular imports.
-        valid_statuses = ('pending', 'paid')
-        donations = self.donation_set.filter(status__in=valid_statuses)
+        donations = self.donation_set.filter(order__status=StatusDefinition.SUCCESS)
         if donations:
             total = donations.aggregate(sum=Sum('amount'))
             return total['sum']
@@ -65,5 +65,5 @@ class BaseFundRaiser(models.Model):
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
-        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserPreviewSerializer'
+        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
         manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'

@@ -17,7 +17,7 @@ DONATION_MODEL = get_donation_model()
 
 class BaseOrder(models.Model, FSMTransition):
     """
-    An order is a collection of OrderItems and vouchers with a connected payment.
+    An Order is a collection of Donations with one or more OrderPayments referring to it.
     """
     # Mapping the Order Payment Status to the Order Status
     STATUS_MAPPING = {
@@ -41,13 +41,10 @@ class BaseOrder(models.Model, FSMTransition):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
 
-    uuid = UUIDField(verbose_name=("Order number"), auto=True)
-
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
 
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
     @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.LOCKED)
@@ -79,10 +76,13 @@ class BaseOrder(models.Model, FSMTransition):
         if save:
             self.save()
 
+    def __unicode__(self):
+        return "{0} : {1}".format(self.id, self.created)
+
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
 
-from .signals import *
+import signals

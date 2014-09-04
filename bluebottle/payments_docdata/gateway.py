@@ -40,6 +40,7 @@ __all__ = (
     'ElvPayment',
 )
 
+
 def get_suds_client(testing_mode=False):
     """
     Create the suds client to connect to docdata.
@@ -192,7 +193,6 @@ class DocdataClient(object):
             )
             if hasattr(reply, 'createSuccess'):
                 done = True
-                print reply
                 order_key = str(reply['createSuccess']['key'])
 
             elif hasattr(reply, 'createError'):
@@ -230,31 +230,6 @@ class DocdataClient(object):
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
-
-
-    def status_extended(self, order_key):
-        """
-        Request the status with extended information.
-        """
-        if not order_key:
-            raise Exception("Missing order_key!")
-
-        reply = self.client.service.statusExtended(
-            self.merchant,
-            order_key,
-            self.integration_info.to_xml(self.client.factory)  # NOTE: called iIntegrationInfo in the XSD!!
-        )
-
-        if hasattr(reply, 'statusSuccess'):
-            print reply.statusSuccess.report
-            return reply.statusSuccess.report
-        elif hasattr(reply, 'statusError'):
-            error = reply.statusError.error
-            log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise PaymentStatusException(error._code, error.value)
-        else:
-            logger.error("Unexpected response node from docdata!")
-            raise NotImplementedError('Received unknown reply from DocData. Remote Payment not created.')
 
     def get_payment_menu_url(self, order_key, order_id, return_url=None, client_language=None, **extra_url_args):
         """

@@ -46,7 +46,7 @@ class TestCreateDonation(DonationApiTestCase):
 
         response = self.client.post(self.manage_donation_list_url, donation1, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'new')
+        self.assertEqual(response.data['status'], 'created')
         donation_id = response.data['id']
 
         # Check that the order total is equal to the donation amount
@@ -72,7 +72,7 @@ class TestCreateDonation(DonationApiTestCase):
 
         response = self.client.post(self.manage_donation_list_url, donation1, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'new')
+        self.assertEqual(response.data['status'], 'created')
         donation_id = response.data['id']
 
         # Check that the order total is equal to the donation amount
@@ -126,7 +126,7 @@ class TestCreateDonation(DonationApiTestCase):
         }
         response = self.client.post(self.manage_donation_list_url, donation2, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'new')
+        self.assertEqual(response.data['status'], 'created')
 
         # Check that the order total is equal to the two donations
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)

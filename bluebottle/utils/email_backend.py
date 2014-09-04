@@ -4,7 +4,6 @@ import dkim
 from django_tools.middlewares import ThreadLocal
 
 
-
 class DKIMBackend(EmailBackend):
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""

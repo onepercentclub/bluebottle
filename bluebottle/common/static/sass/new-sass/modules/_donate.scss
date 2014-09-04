@@ -1,6 +1,8 @@
+$color-primary: #5DC0ED;
+
 .donation-amount {
     background: #F5F4F6;
-    padding: 15px;
+    padding: 20px;
     border-radius: 8px;
     @include placeholder-color($color-primary);
 
@@ -41,31 +43,46 @@
 #donation-success {
     min-height: 350px;
     padding-top: 45px;
+    background: #E4EDE9;
 
     .backdrop {
         position: absolute;
         top: 0px;
         left: 0px;
-        height: 276px;
+        height: 100%;
+        width: 100%;
         overflow: hidden;
-        img.backdrop-image {
+
+        .backdrop-gradient {
+            position: absolute;
             width: 100%;
+            height: 100%;
+            @include background(linear-gradient(to top, rgba(#fff, 1), rgba(#fff, 0)));
+        }
+
+        .backdrop-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: image-url("thankyou-modal-bg.jpg") transparent no-repeat;
+        }
+
+        canvas#confetti-canvas {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
         }
     }
     .modal-fullscreen-close {
-        font-family: $base-font-family;
-        text-shadow: 1px 1px 0px rgba(80, 80, 80, 0.5);
-        color: white;
-        font-weight: bold;
-        background: none;
-        font-size: $font-size-large;
+        background: image-url('icons/icon-close-modal-black.svg') transparent no-repeat;
     }
 
     h4, .donor-name {
         position: relative;
         font-family: $base-font-family;
-        text-shadow: 1px 1px 0px rgba(80, 80, 80, 0.5);
-        color: white;
+        color: #444;
         font-weight: bold;
     }
     h4 {
@@ -76,12 +93,12 @@
         left: 50%;
         top: -40px;
         margin: 0px -40px;
-        height: 80px;
-        width: 80px;
-        background-color: $modal-footer-bg-color;
-        border: 1px solid white;
+        height: 73px;
+        width: 73px;
+        background-color: $white;
+        border: 6px solid $modal-footer-bg-color;
         border-radius: 50%;
-        padding: 4px;
+        padding: 2px;
         overflow: hidden;
         img {
             width: 100%;
@@ -101,6 +118,7 @@
             border: solid 1px #D8D8D8;
             border-radius: 4px;
             margin-bottom: 20px;
+            @include opacity(0.9);
 
             textarea {
                 height: 65%;
@@ -115,6 +133,10 @@
 
                 .wallpost-header-title {
                     text-align: left;
+
+                    strong {
+                        padding-left: 5px;
+                    }
                 }
 
                 .wallpost-header-count {
@@ -130,5 +152,9 @@
         width: 80%;
         margin: auto;
         padding: 5px 0 10px 0;
+
+        .btn {
+            font-weight: normal;
+        }
     }
 }

@@ -6,7 +6,6 @@ from datetime import timedelta
 from bluebottle.fundraisers.models import FundRaiser
 
 from .accounts import BlueBottleUserFactory
-from .geo import CountryFactory
 from .projects import ProjectFactory
 
 

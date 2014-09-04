@@ -54,10 +54,10 @@
         Please choose from the options bellow what you want the Big Duck Bank to respond back to the website.
         <br />
         <h3>Response</h3>
-        <a class="btn btn-ok" href="{{return_url}}?status=success&payment_id={{payment_id}}"><span class="icon">&check;</span> Pay </a>
-        <a class="btn" href="{{return_url}}?status=cancelled&payment_id={{payment_id}}"><span class="icon">&times;</span> Cancel</a>
-        <a class="btn" href="{{return_url}}?status=pending&payment_id={{payment_id}}"><span class="icon">&hellip;</span> Pending</a>
-        <a class="btn" href="{{return_url}}?status=failed&payment_id={{payment_id}}"><span class="icon">!</span> Failed</a>
+        <a class="btn btn-ok" href="{{return_url}}?status=settled&order_payment_id={{order_payment_id}}"><span class="icon">&check;</span> Pay </a>
+        <a class="btn" href="{{return_url}}?status=cancelled&order_payment_id={{order_payment_id}}"><span class="icon">&times;</span> Cancel</a>
+        <a class="btn" href="{{return_url}}?status=pending&order_payment_id={{order_payment_id}}"><span class="icon">&hellip;</span> Pending</a>
+        <a class="btn" href="{{return_url}}?status=failed&order_payment_id={{order_payment_id}}"><span class="icon">!</span> Failed</a>
         <br />
         <br />
         <ul>
@@ -69,7 +69,7 @@
         <br/>
         <h3>Payment details</h3>
         Return URL: {{return_url}} <br/>
-        Payment ID: {{payment_id}}
+        OrderPayment ID: {{order_payment_id}}
         <br />
     </body>
 </html>

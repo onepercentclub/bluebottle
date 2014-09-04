@@ -23,6 +23,6 @@ class ManageOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ORDER_MODEL
-        fields = ('id', 'user', 'total', 'status', 'donations', 'created', 'country')
+        fields = ('id', 'user', 'total', 'status', 'donations', 'created')
 
 

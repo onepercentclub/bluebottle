@@ -14,7 +14,7 @@ class ManageOrderPaymentSerializer(serializers.ModelSerializer):
 
     status = serializers.CharField(read_only=True)
     amount = serializers.DecimalField(read_only=True)
-    authorization_action = OrderPaymentActionSerializer()
+    authorization_action = OrderPaymentActionSerializer(required=False)
     integration_data = ObjectFieldSerializer()
 
     class Meta:

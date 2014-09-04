@@ -1,8 +1,10 @@
 # coding=utf-8
 from django.core.urlresolvers import reverse
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.payments.models import OrderPaymentStatuses
-from .models import MockPayment, MockPaymentStatuses
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.payments.models import OrderPayment
+from .models import MockPayment
+
 
 class MockPaymentAdapter(BasePaymentAdapter):
     MODEL_CLASS = MockPayment
@@ -25,21 +27,22 @@ class MockPaymentAdapter(BasePaymentAdapter):
         Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment
         """
         status_mapping = {
-            MockPaymentStatuses.created: OrderPaymentStatuses.created,
-            MockPaymentStatuses.started: OrderPaymentStatuses.started,
-            MockPaymentStatuses.authorized: OrderPaymentStatuses.authorized,
-            MockPaymentStatuses.settled: OrderPaymentStatuses.settled,
-            MockPaymentStatuses.failed: OrderPaymentStatuses.failed,
-            MockPaymentStatuses.cancelled: OrderPaymentStatuses.cancelled,
-            MockPaymentStatuses.chargedback: OrderPaymentStatuses.chargedback,
-            MockPaymentStatuses.refunded: OrderPaymentStatuses.refunded,
-            MockPaymentStatuses.unknown: OrderPaymentStatuses.unknown,
+            MockPayment.STATUS_CHOICES.StatusDefinition.CREATED: OrderPayment.STATUS_CHOICES.StatusDefinition.CREATED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.STARTED: OrderPayment.STATUS_CHOICES.StatusDefinition.STARTED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.AUTHORIZED: OrderPayment.STATUS_CHOICES.StatusDefinition.AUTHORIZED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.SETTLED: OrderPayment.STATUS_CHOICES.StatusDefinition.SETTLED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.FAILED: OrderPayment.STATUS_CHOICES.StatusDefinition.FAILED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.CANCELLED: OrderPayment.STATUS_CHOICES.StatusDefinition.CANCELLED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.CHARGED_BACK: OrderPayment.STATUS_CHOICES.StatusDefinition.CHARGED_BACK,
+            MockPayment.STATUS_CHOICES.StatusDefinition.REFUNDED: OrderPayment.STATUS_CHOICES.StatusDefinition.REFUNDED,
+            MockPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN: OrderPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN,
         }
-        return status_mapping.get(status, OrderPaymentStatuses.unknown)
+        return status_mapping.get(status, OrderPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN)
 
     def set_order_payment_new_status(self, status):
         self.order_payment.status = self._get_mapped_status(status)
         self.order_payment.save()
         return self.order_payment
 
-
+    def check_payment_status(self):
+        pass

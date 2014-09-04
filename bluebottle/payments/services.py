@@ -39,7 +39,6 @@ class PaymentService(object):
 
         adapter_class = import_class(class_path)
         adapter = adapter_class(self.order_payment)
-
         return adapter
 
     def start_payment(self, **integration_details):

@@ -43,3 +43,5 @@ class MockPaymentAdapter(BasePaymentAdapter):
         return self.order_payment
 
 
+    def check_payment_status(self):
+        pass

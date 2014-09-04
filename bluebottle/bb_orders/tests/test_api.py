@@ -91,10 +91,21 @@ class TestStatusUpdates(TestCase):
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
     @patch.object(MockPaymentAdapter, 'check_payment_status')
-    def test_success_payment_status_check(self, mock_check_payment_status):
-        self.order = OrderFactory.create()
-        # self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdata')
-        # self.service = PaymentService(order_payment=self.order_payment)
+    def test_no_success_payment_status_check(self, mock_check_payment_status):
+        self.order = OrderFactory.create(user=self.user1)
+        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
+        self.service = PaymentService(order_payment=self.order_payment)
         response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.id}),
                                    HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, True)
+
+    @patch.object(MockPaymentAdapter, 'check_payment_status')
+    def test_success_payment_status_check(self, mock_check_payment_status):
+        self.order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
+        self.order_payment = OrderPaymentFactory.create(order=self.order,
+                                                        payment_method='mock',
+                                                        status=StatusDefinition.AUTHORIZED)
+
+        response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.id}),
+                                   HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(mock_check_payment_status.called, False)

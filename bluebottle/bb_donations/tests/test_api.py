@@ -4,6 +4,7 @@ from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
 from bluebottle.utils.utils import StatusDefinition
@@ -92,6 +93,94 @@ class TestDonationPermissions(DonationApiTestCase):
         response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+
+    def test_donation_update_not_same_owner(self):
+        """ Test that an update to a donation where the user is not the owner produces a 403"""
+
+        donation = DonationFactory(order=self.order, amount=35)
+
+        updated_donation = {
+            "project": self.project.slug,
+            "order": self.order.id,
+            "amount": 50
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        response = self.client.put(reverse('manage-donation-detail',
+                                   kwargs={'pk': donation.id}),
+                                   json.dumps(updated_donation),
+                                   'application/json',
+                                   HTTP_AUTHORIZATION=self.user_token2)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+
+    def test_donation_update_same_owner(self):
+        """ Test that an update to a donation where the user is the owner produces a 200 OK"""
+
+        donation = DonationFactory(order=self.order, amount=35)
+
+        updated_donation = {
+            "project": self.project.slug,
+            "order": self.order.id,
+            "amount": 50
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        response = self.client.put(reverse('manage-donation-detail',
+                                   kwargs={'pk': donation.id}),
+                                   json.dumps(updated_donation),
+                                   'application/json',
+                                   HTTP_AUTHORIZATION=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+
+    def test_donation_update_order_not_new(self):
+        """ Test that an update to a donation where the order does not have status CREATED produces 403 FORBIDDEN"""
+
+        order = OrderFactory.create(user=self.user, status=StatusDefinition.SUCCESS)
+
+        donation = DonationFactory(order=order, amount=35)
+
+        updated_donation = {
+            "project": self.project.slug,
+            "order": order.id,
+            "amount": 50
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        response = self.client.put(reverse('manage-donation-detail',
+                                   kwargs={'pk': donation.id}),
+                                   json.dumps(updated_donation),
+                                   'application/json',
+                                   HTTP_AUTHORIZATION=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+
+    def test_donation_update_order_new(self):
+        """ Test that an update to a donation where the order does has status CREATED produces 200 OK response"""
+
+        order = OrderFactory.create(user=self.user, status=StatusDefinition.CREATED)
+
+        donation = DonationFactory(order=order, amount=35)
+
+        updated_donation = {
+            "project": self.project.slug,
+            "order": order.id,
+            "amount": 50
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        response = self.client.put(reverse('manage-donation-detail',
+                                   kwargs={'pk': donation.id}),
+                                   json.dumps(updated_donation),
+                                   'application/json',
+                                   HTTP_AUTHORIZATION=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
 

@@ -1,9 +1,6 @@
 import factory
 
 from bluebottle.payments.models import Payment, OrderPayment
-
-from .projects import ProjectFactory
-from .accounts import BlueBottleUserFactory
 from .orders import OrderFactory
 
 

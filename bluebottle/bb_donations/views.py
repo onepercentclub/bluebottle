@@ -99,5 +99,5 @@ class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
 
-    permission_classes = (OrderIsNew, )
+    permission_classes = (OrderIsNew, IsOrderCreator)
 

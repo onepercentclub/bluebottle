@@ -2,7 +2,7 @@ from bluebottle.payments.services import PaymentService
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 from django.dispatch.dispatcher import Signal
-
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.model_dispatcher import get_donation_model
 from django_fsm.signals import post_transition

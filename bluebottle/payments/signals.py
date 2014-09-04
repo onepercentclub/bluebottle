@@ -4,6 +4,8 @@ from django_fsm.signals import post_transition
 from django.dispatch import receiver
 
 from .models import Payment, OrderPayment
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
+
 
 
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
@@ -17,8 +19,20 @@ def order_payment_changed(sender, instance, **kwargs):
     # Get the default status for the status field on OrderPayment
     default_status = OrderPayment._meta.get_field_by_name('status')[0].get_default()
 
+    # FIXME: for now is hardcoded but it shouldn't
+    # payment_logger = PaymentLogAdapter('payment.docdata')
+
     # Signal new status if current status is the default value
     if (instance.status == default_status):
+        # try:
+        #     from bluebottle.payments.models import Payment
+        #     import ipdb; ipdb.set_trace()
+        #     payment = Payment.objects.get(order_payment=instance)
+        #     payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
+        #
+        # except:
+        #     pass
+
         signal_kwargs = {
             'sender': sender,
             'instance': instance,

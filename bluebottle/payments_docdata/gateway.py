@@ -118,8 +118,6 @@ class DocdataClient(object):
 
     def create(self, merchant, payment_id, total_gross_amount, shopper, bill_to, description, receiptText=None,
                includeCosts=False, profile='webmenu', days_to_pay=7):
-        import ipdb; ipdb.set_trace()
-
         """
         Create the payment in docdata.
 

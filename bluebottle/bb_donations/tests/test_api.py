@@ -1,16 +1,17 @@
 import json
+from django.core.urlresolvers import reverse
 from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.utils.model_dispatcher import get_order_model
+from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
-
-from django.core.urlresolvers import reverse
+from bluebottle.utils.utils import StatusDefinition
 
 from rest_framework import status
 
 ORDER_MODEL = get_order_model()
+DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
 class DonationApiTestCase(OrderApiTestCase):
@@ -20,8 +21,78 @@ class DonationApiTestCase(OrderApiTestCase):
         self.manage_donation_list_url = reverse('manage-donation-list')
 
         self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.user2 = BlueBottleUserFactory.create()
+        self.user_token2 = "JWT {0}".format(self.user2.get_jwt_token())
+
         self.project = ProjectFactory.create()
         self.order = OrderFactory.create(user=self.user)
+
+
+class TestDonationPermissions(DonationApiTestCase):
+
+    def test_user_is_order_owner(self):
+        """ Test that a user that is owner of the order can post a new donation """
+        donation1 = {
+            "project": self.project.slug,
+            "order": self.order.id,
+            "amount": 35
+        }
+        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+
+    def test_user_is_not_order_owner(self):
+        """ Test that a user who is not owner of an order cannot create a new donation """
+
+        donation1 = {
+            "project": self.project.slug,
+            "order": self.order.id,
+            "amount": 35
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token2)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+
+    def test_order_status_not_new(self):
+        """ Test that a non-new order status produces a forbidden response """
+
+        order = OrderFactory.create(user=self.user, status=StatusDefinition.SUCCESS)
+
+        donation1 = {
+            "project": self.project.slug,
+            "order": order.id,
+            "amount": 35
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+
+    def test_order_status_new(self):
+        """ Test that a new order status produces a 201 created response """
+
+        order = OrderFactory.create(user=self.user, status=StatusDefinition.CREATED)
+
+        donation1 = {
+            "project": self.project.slug,
+            "order": order.id,
+            "amount": 35
+        }
+
+        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
 
 class TestCreateDonation(DonationApiTestCase):
@@ -195,4 +266,3 @@ class TestAnonymousDonationCreate(DonationApiTestCase):
 
     # FIXME: Write tests for anonymous donations
     pass
-

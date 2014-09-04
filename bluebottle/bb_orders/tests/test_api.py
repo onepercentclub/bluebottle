@@ -85,6 +85,32 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class TestOrderPermissions(TestCase):
+    """ Test the permissions for order ownership in bb_orders """
+
+    def setUp(self):
+        self.user1 = BlueBottleUserFactory.create()
+        self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
+
+        self.user2 = BlueBottleUserFactory.create()
+        self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
+
+        self.order = OrderFactory.create(user=self.user1)
+        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
+
+    def test_user_not_owner(self):
+        """ User that is not owner of the order tries to do a get to the order should get a 403"""
+        response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.pk}),
+                                   HTTP_AUTHORIZATION=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_is_owner(self):
+        """ User that is owner of the order must get a 200 response """
+        response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.pk}),
+                                   HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
 class TestStatusUpdates(TestCase):
     def setUp(self):
         self.user1 = BlueBottleUserFactory.create()

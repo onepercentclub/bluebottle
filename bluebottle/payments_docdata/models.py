@@ -27,6 +27,11 @@ class DocdataPayment(Payment):
     currency = models.CharField(_("Currency"), max_length=10)
     country = models.CharField(_("Country_code"), max_length=2, null=True, blank=True)
 
+    account_name = models.CharField(max_length=35, null=True, blank=True)
+    account_city = models.CharField(max_length=35, null=True, blank=True)
+    iban = models.CharField(max_length=35, null=True, blank=True)
+    bic = models.CharField(max_length=35, null=True, blank=True)
+
     # Track received information
     total_registered = models.DecimalField(_("Total registered"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_shopper_pending = models.DecimalField(_("Total shopper pending"), max_digits=15, decimal_places=2, default=D('0.00'))

@@ -11,6 +11,14 @@ App.DocdataIdeal = App.DocdataPayment.extend({
     ideal_issuer_id: ''
 });
 
+App.DocdataDirectdebit = App.DocdataPayment.extend({
+    iban: '',
+    bic: '',
+    account_name: '',
+    account_city: '',
+    agree: false
+});
+
 App.DocdataPaypal = App.DocdataPayment.extend({
     default_pm: 'paypal'
 });

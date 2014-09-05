@@ -41,7 +41,7 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
 
 App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
-    requiredFields: ['iban', 'bic', 'account_name', 'account_city', 'agree'],
+    requiredFields: ['iban', 'bic', 'accountName', 'accountCity', 'agree'],
 
     bicHelp: function(){
         var bic = '';
@@ -83,12 +83,11 @@ App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
 
     init: function () {
         var user = this.get('currentUser');
-
-        this._super();
         this.set('model', App.DocdataDirectdebit.create());
         if (user) {
-            this.set('account_name', user.get('full_name'));
+            this.set('model.account_name', user.get('full_name'));
         }
+        this._super();
     }
 });
 

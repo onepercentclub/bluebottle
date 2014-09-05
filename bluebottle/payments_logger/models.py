@@ -23,13 +23,9 @@ class PaymentLogEntry(models.Model):
     level = models.CharField(max_length=15, choices=PaymentLogLevels.choices)
     timestamp = CreationDateTimeField()
 
-    # TODO: Enable when not abstract.
     payment = models.ForeignKey(Payment, related_name='payments')
 
     class Meta:
-
-        # TODO: This shouldn't be abstract but for various reasons it's harder to deal with in the admin.
-        # abstract = True
 
         ordering = ('-timestamp',)
         verbose_name = _("Payment Log")

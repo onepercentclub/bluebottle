@@ -9,7 +9,6 @@ class PaymentLogAdapter:
 
     def log(self, payment, level, message):
 
-        import ipdb; ipdb.set_trace()
         log_context = "{0} - {1}".format(payment, message)
 
         getattr(self.logger, level)(log_context)

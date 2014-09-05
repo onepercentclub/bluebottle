@@ -23,10 +23,7 @@ def order_payment_changed(sender, instance, **kwargs):
     # Signal new status if current status is the default value
     if (instance.status == default_status):
         try:
-
-            import ipdb; ipdb.set_trace()
             from bluebottle.payments.models import Payment
-
             payment_logger = PaymentLogAdapter()
             # if there is no Payment associated to the order_payment do not log
             payment = Payment.objects.get(order_payment=instance)

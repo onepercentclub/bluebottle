@@ -132,10 +132,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         return {'type': 'redirect', 'method': 'get', 'url': url}
 
     def check_payment_status(self):
-
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        client = gateway.DocdataClient(testing_mode)
-        response = client.status(self.payment.payment_cluster_key)
+        response = self._fetch_status()
 
         status = self.get_status_mapping(response.payment[0].authorization.status)
         if self.payment.status <> status:
@@ -164,3 +161,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         dd_transaction.capture_amount = transaction.authorization.capture[0].amount.value
         dd_transaction.capture_currency = transaction.authorization.capture[0].amount._currency
         dd_transaction.save()
+
+    def _fetch_status(self):
+        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
+        client = gateway.DocdataClient(testing_mode)
+        response = client.status(self.payment.payment_cluster_key)
+
+        return response

@@ -19,26 +19,29 @@ def order_payment_changed(sender, instance, **kwargs):
     # Get the default status for the status field on OrderPayment
     default_status = OrderPayment._meta.get_field_by_name('status')[0].get_default()
 
-    # FIXME: for now is hardcoded but it shouldn't
-    # payment_logger = PaymentLogAdapter('payment.docdata')
 
     # Signal new status if current status is the default value
     if (instance.status == default_status):
-        # try:
-        #     from bluebottle.payments.models import Payment
-        #     import ipdb; ipdb.set_trace()
-        #     payment = Payment.objects.get(order_payment=instance)
-        #     payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
-        #
-        # except:
-        #     pass
+        try:
 
-        signal_kwargs = {
-            'sender': sender,
-            'instance': instance,
-            'target': instance.status
-        }
-        post_transition.send(**signal_kwargs)
+            import ipdb; ipdb.set_trace()
+            from bluebottle.payments.models import Payment
+
+            payment_logger = PaymentLogAdapter()
+            # if there is no Payment associated to the order_payment do not log
+            payment = Payment.objects.get(order_payment=instance)
+            payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
+
+        except:
+            pass
+
+        finally:
+            signal_kwargs = {
+                'sender': sender,
+                'instance': instance,
+                'target': instance.status
+            }
+            post_transition.send(**signal_kwargs)
 
 
 @receiver(post_save, weak=False, dispatch_uid='payments_previous_status')

@@ -3,7 +3,6 @@ from bluebottle.payments_docdata.models import DocdataTransaction
 from django.utils.http import urlencode
 from bluebottle.payments_logger.models import PaymentLogLevels
 import gateway
-from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
@@ -34,8 +33,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     }
 
     def __init__(self, *args, **kwargs):
-
-        self.payment_logger = PaymentLogAdapter('payment.docdata')
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
     def get_status_mapping(self, external_payment_status):
@@ -47,9 +44,12 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         # Make sure that Payment has an ID
         payment.save()
+
         self.payment_logger.log(payment=payment,
                                 level=PaymentLogLevels.info,
                                 message='A docdata payment has been created')
+
+
 
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 

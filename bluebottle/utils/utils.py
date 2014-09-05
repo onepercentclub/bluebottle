@@ -1,6 +1,7 @@
-from django_fsm.db.fields import TransitionNotAllowed
 import logging
+from django_fsm.db.fields import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
+from django.core.urlresolvers import reverse
 
 
 class StatusDefinition:

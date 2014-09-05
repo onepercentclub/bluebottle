@@ -249,7 +249,7 @@ LOGGING = {
         }
     },
     'loggers': {
-        'payment.docdata': {
+        'payments.payment': {
             'handlers': ['mail_admins', 'sentry'],
             'level': 'INFO',
             'propagate': True,

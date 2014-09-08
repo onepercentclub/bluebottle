@@ -1,11 +1,10 @@
-from bluebottle.bb_orders.permissions import OrderIsNew
+from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.utils.utils import StatusDefinition
 from django.http.response import Http404
 import logging
 from rest_framework import generics
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_fundraiser_model
-
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
@@ -73,9 +72,7 @@ class ProjectDonationDetail(generics.RetrieveAPIView):
 class ManageDonationList(generics.ListCreateAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
-    # FIXME: Add permission for OrderOwner
-
-    permission_classes = (OrderIsNew, )
+    permission_classes = (IsOrderCreator, OrderIsNew)
 
     def get_queryset(self):
         queryset = super(ManageDonationList, self).get_queryset()
@@ -102,5 +99,5 @@ class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
 
-    permission_classes = (OrderIsNew, )
+    permission_classes = (OrderIsNew, IsOrderCreator)
 

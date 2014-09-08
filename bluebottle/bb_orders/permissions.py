@@ -6,6 +6,12 @@ from bluebottle.utils.utils import StatusDefinition
 ORDER_MODEL = get_order_model()
 
 
+class LoggedInUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated():
+            return True
+        return False
+
 class IsUser(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """
     def has_object_permission(self, request, view, obj):
@@ -18,6 +24,7 @@ class IsOrderCreator(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         # Use duck typing to check if we have an order or a payment.
+
         if hasattr(obj, 'user'):
             order = obj
         else:
@@ -35,6 +42,31 @@ class IsOrderCreator(permissions.BasePermission):
             if order_id:
                 return order_id == order.id
             return False
+
+    def _get_order_from_request(self, request):
+        if request.DATA:
+            order_id = request.DATA.get('order', None)
+        else:
+            order_id = request.QUERY_PARAMS.get('order', None)
+        if order_id:
+            try:
+                project = ORDER_MODEL.objects.get(id=order_id)
+                return project
+            except ORDER_MODEL.DoesNotExist:
+                return None
+        else:
+            return None
+
+    def has_permission(self, request, view):
+        # Allow non modifying actions
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # This is for creating new objects that have a relation (fk) to Order.
+        order = self._get_order_from_request(request)
+        if order:
+            return order.user == request.user
+        return False
 
 
 class OrderIsNew(permissions.BasePermission):
@@ -67,7 +99,6 @@ class OrderIsNew(permissions.BasePermission):
         if order:
             return order.status == StatusDefinition.CREATED
         return True
-
 
     def has_object_permission(self, request, view, obj):
 

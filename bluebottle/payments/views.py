@@ -1,17 +1,18 @@
 import json
-from bluebottle.payments.serializers import ManageOrderPaymentSerializer
-from bluebottle.payments.services import get_payment_methods
-from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments.services import PaymentService
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from bluebottle.bb_orders.permissions import IsOrderCreator, LoggedInUser
+from bluebottle.payments.serializers import ManageOrderPaymentSerializer
+from bluebottle.payments.services import get_payment_methods
+from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments.services import PaymentService
 
 
 class PaymentMethodList(APIView):
     #serializer_class = OrderPaymentMethodSerializer
-    # FIXME: Permissions
+    permission_classes = (LoggedInUser,)
 
     def get(self, request, *args, **kw):
         # TODO: Determine country based on GET param, user settings or IP.
@@ -25,14 +26,13 @@ class PaymentMethodList(APIView):
 
 
 class PaymentMethodDetail(RetrieveAPIView):
-    # FIXME: Permissions
-    pass
+    permission_classes = (LoggedInUser,)
 
 
 class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer
-    # FIXME: Permissions
+    permission_classes = (IsOrderCreator,)
 
     def pre_save(self, obj):
         obj.amount = obj.order.total
@@ -41,7 +41,7 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
 class ManageOrderPaymentList(ListCreateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer
-    # FIXME: Permissions
+    permission_classes = (IsOrderCreator,)
 
     def post_save(self, obj, created=False):
         service = PaymentService(obj)

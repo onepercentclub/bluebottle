@@ -45,7 +45,7 @@ class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     prepopulated_fields = {'slug': ('title',)}
 
-    readonly_fields = ('amount_donated', 'amount_needed', 'popularity')
+    readonly_fields = ('amount_donated', 'amount_needed')
 
     def queryset(self, request):
         # Optimization: Select related fields that are used in admin specific display fields.

@@ -125,6 +125,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             return_url=return_url_base,
             client_language=client_language,
         )
+
         self.payment_logger.log(payment=self.payment,
                                 level=PaymentLogLevels.info,
                                 message='A docdata payment got the authorization')
@@ -143,8 +144,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     def check_payment_status(self):
         response = self._fetch_status()
 
-        # import ipdb; ipdb.set_trace()
-        
         status = self.get_status_mapping(response.payment[0].authorization.status)
         if self.payment.status <> status:
             totals = response.approximateTotals

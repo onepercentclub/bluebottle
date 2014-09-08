@@ -38,19 +38,5 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
     payment_link.short_description = "Related Payment"
     payment_link.allow_tags = True
 
-    def payment(self, obj):
-        # creates a link to the payment
-        payment = obj.payment
-        url = reverse('admin:{0}_{1}_change'.format(payment._meta.app_label, payment._meta.module_name), args=[payment.id])
-        return "<a href='{0}'>{1}: {2}</a>".format(str(url), payment.polymorphic_ctype, payment.id)
-
-    payment.allow_tags = True
-    # payment.allow_tags = True
-
-    # # Don't allow the detail view to be accessed.
-    # def has_change_permission(self, request, obj=None):
-    #     if not obj:
-    #         return True
-    #     return False
 
 admin.site.register(PaymentLogEntry, PaymentLogEntryAdmin)

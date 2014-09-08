@@ -125,13 +125,20 @@ MIDDLEWARE_CLASSES = (
 #     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
 # }
 
+# Django REST Framework settings
 REST_FRAMEWORK = {
-    # Don't do basic authentication.
-    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+#     )
+#
+# }
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=12)
@@ -311,3 +318,4 @@ ACCOUNT_ACTIVATION_DAYS = 7
 HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
+

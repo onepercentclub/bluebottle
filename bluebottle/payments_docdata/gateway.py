@@ -207,13 +207,12 @@ class DocdataClient(object):
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
-
-    def start_direct_debit_payment(self, order_key, order_id, amount=None, iban=None, bic=None, account_name=None, account_city=None, **extra_args):
+    def start_remote_payment(self, order_key, order_id, payment=None, payment_method='SEPA_DIRECT_DEBIT', **extra_args):
         """
         The start operation is used for starting a (web direct) payment on an order.
         It does not need to be used if the merchant makes use of Docdata Payments web menu.
 
-        The web direct can be used for recurring payments for example.
+        The web direct can be used for direct debit for example.
         Standard payments (e.g. iDEAL, creditcard) all happen through the web menu
         because implementing those locally requires certification by the credit card companies.
         """
@@ -224,23 +223,26 @@ class DocdataClient(object):
 
         # We only need to set amount because of bug in suds library. Otherwise it defaults to order amount.
         paymentAmount = self.client.factory.create('ns0:amount')
-        paymentAmount.value = str(int(amount))
+        paymentAmount.value = str(int(payment.total_gross_amount))
         paymentAmount._currency = 'EUR'
         paymentRequestInput.paymentAmount = paymentAmount
 
-        paymentRequestInput.paymentMethod = 'SEPA_DIRECT_DEBIT'
+        if payment_method == 'SEPA_DIRECT_DEBIT':
+            paymentRequestInput.paymentMethod = 'SEPA_DIRECT_DEBIT'
+            PaymentInput = DirectDebitPayment(holder_name=self.convert_to_ascii(payment.account_name),
+                                              holder_city=self.convert_to_ascii(payment.account_city),
+                                              holder_country_code='NL',
+                                              bic=payment.bic, iban=payment.iban)
 
-        directDebitPaymentInput = self.client.factory.create('ddp:directDebitPaymentInput')
-        directDebitPaymentInput.iban = iban
-        directDebitPaymentInput.bic = bic
-        directDebitPaymentInput.holderCity = self.convert_to_ascii(account_city)
-        directDebitPaymentInput.holderName = self.convert_to_ascii(account_name)
+            paymentRequestInput.directDebitPaymentInput = PaymentInput.to_xml(self.client.factory)
 
-        country = self.client.factory.create('ns0:country')
-        country._code = 'NL'
-        directDebitPaymentInput.holderCountry = country
-
-        paymentRequestInput.directDebitPaymentInput = directDebitPaymentInput
+        if payment_method == 'MASTERCARD':
+            paymentRequestInput.paymentMethod = 'MASTERCARD'
+            PaymentInput = MasterCardPayment(credit_card_number=None,
+                                             expiry_date=None,
+                                             cvc2=None,
+                                             card_holder=None,
+                                             email_address=None)
 
         # Execute start payment request.
         reply = self.client.service.start(self.merchant, order_key, paymentRequestInput)
@@ -257,7 +259,6 @@ class DocdataClient(object):
             error_message = 'Received unknown reply from DocData. WebDirect payment not created.'
             logger.error(error_message)
             raise Exception('REPLY_ERROR', error_message)
-
 
     def status(self, order_key):
         """

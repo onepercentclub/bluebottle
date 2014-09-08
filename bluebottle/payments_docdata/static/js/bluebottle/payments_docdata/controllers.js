@@ -41,11 +41,15 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
 
 App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
-    requiredFields: ['iban', 'bic', 'accountName', 'accountCity', 'agree'],
+    requiredFields: ['iban', 'bic', 'account_name', 'account_city', 'agree'],
 
     bicHelp: function(){
-        var bic = '';
-        var bank = this.get('iban').substring(4,8);
+        var bic = '',
+            iban = this.get('iban').toUpperCase(),
+            bank = iban.substring(4,8);
+        // Iban to upper
+        this.set('iban', iban);
+        // Lookup Bic based on Iban
         switch (bank) {
             case 'ABNA':
                 bic = 'ABNANL2A';

@@ -94,7 +94,37 @@ class DocdataTransaction(Transaction):
         return self.id
 
 
-class DocdataDirectdebitPayment(DocdataPayment):
+class DocdataDirectdebitPayment(Payment):
+
+    merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
+
+    payment_cluster_id = models.CharField(_("Payment cluster id"), max_length=200, default='', unique=True)
+    payment_cluster_key = models.CharField(_("Payment cluster key"), max_length=200, default='', unique=True)
+
+    language = models.CharField(_("Language"), max_length=5, blank=True, default='en')
+
+    ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100, default='')
+    default_pm = models.CharField(_("Default Payment Method"), max_length=100, default='')
+
+    # Track sent information
+    total_gross_amount = models.IntegerField(_("Total gross amount"), help_text=_("Amount in cents"))
+    currency = models.CharField(_("Currency"), max_length=10)
+    country = models.CharField(_("Country_code"), max_length=2, null=True, blank=True)
+
+    # Track received information
+    total_registered = models.IntegerField(_("Total registered"), default=D('0.00'))
+    total_shopper_pending = models.IntegerField(_("Total shopper pending"), default=D('0.00'))
+    total_acquirer_pending = models.IntegerField(_("Total acquirer pending"), default=D('0.00'))
+    total_acquirer_approved = models.IntegerField(_("Total acquirer approved"), default=D('0.00'))
+    total_captured = models.IntegerField(_("Total captured"), default=D('0.00'))
+    total_refunded = models.IntegerField(_("Total refunded"), default=D('0.00'))
+    total_charged_back = models.IntegerField(_("Total charged back"), default=D('0.00'))
+
+    class Meta:
+        ordering = ('-created', '-updated')
+        verbose_name = _("Docdata Direct Debit Payment")
+        verbose_name_plural = _("Docdata Direct Debit Payments")
+
     account_name = models.CharField(max_length=35)  # max_length from DocData
     account_city = models.CharField(max_length=35)  # max_length from DocData
     iban = models.CharField(max_length=35)  # max_length from DocData

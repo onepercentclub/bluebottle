@@ -160,7 +160,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # specifying the serializer here allows us to leave the urls/views untouched while
         # modifying the serializer for the user model
         default_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
-        preview_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
+        preview_serializer = 'bluebottle.bb_accounts.serializers.UserPreviewSerializer'
         manage_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
         current_user_serializer = 'bluebottle.bb_accounts.serializers.CurrentUserSerializer'
 

@@ -8,35 +8,56 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Deleting model 'DocDataDirectDebitTransaction'
-        #db.delete_table(u'payments_docdata_docdatadirectdebittransaction')
 
-        # Adding model 'DocDataDirectDebitPaymentTransaction'
-        db.create_table(u'payments_docdata_docdatadirectdebitpayment', (
-            (u'docdatapayment_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments_docdata.DocdataPayment'], unique=True, primary_key=True)),
-            ('account_name', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('account_city', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('iban', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('bic', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('agree', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal(u'payments_docdata', ['DocDataDirectDebitPaymentTransaction'])
+        # Changing field 'DocdataDirectdebitPayment.total_acquirer_pending'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_acquirer_pending', self.gf('django.db.models.fields.IntegerField')())
 
+        # Changing field 'DocdataDirectdebitPayment.total_acquirer_approved'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_acquirer_approved', self.gf('django.db.models.fields.IntegerField')())
+
+        # Changing field 'DocdataDirectdebitPayment.total_gross_amount'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_gross_amount', self.gf('django.db.models.fields.IntegerField')())
+
+        # Changing field 'DocdataDirectdebitPayment.total_refunded'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_refunded', self.gf('django.db.models.fields.IntegerField')())
+
+        # Changing field 'DocdataDirectdebitPayment.total_charged_back'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_charged_back', self.gf('django.db.models.fields.IntegerField')())
+
+        # Changing field 'DocdataDirectdebitPayment.total_shopper_pending'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_shopper_pending', self.gf('django.db.models.fields.IntegerField')())
+
+        # Changing field 'DocdataDirectdebitPayment.total_registered'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_registered', self.gf('django.db.models.fields.IntegerField')())
+
+        # Changing field 'DocdataDirectdebitPayment.total_captured'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_captured', self.gf('django.db.models.fields.IntegerField')())
 
     def backwards(self, orm):
-        # Adding model 'DocDataDirectDebitTransaction'
-        db.create_table(u'payments_docdata_docdatadirectdebittransaction', (
-            (u'transaction_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Transaction'], unique=True, primary_key=True)),
-            ('bic', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('iban', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('account_city', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('account_name', self.gf('django.db.models.fields.CharField')(max_length=35)),
-        ))
-        db.send_create_signal(u'payments_docdata', ['DocDataDirectDebitTransaction'])
 
-        # Deleting model 'DocDataDirectDebitPaymentTransaction'
-        db.delete_table(u'payments_docdata_docdatadirectdebitpayment')
+        # Changing field 'DocdataDirectdebitPayment.total_acquirer_pending'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_acquirer_pending', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
 
+        # Changing field 'DocdataDirectdebitPayment.total_acquirer_approved'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_acquirer_approved', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
+
+        # Changing field 'DocdataDirectdebitPayment.total_gross_amount'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_gross_amount', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
+
+        # Changing field 'DocdataDirectdebitPayment.total_refunded'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_refunded', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
+
+        # Changing field 'DocdataDirectdebitPayment.total_charged_back'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_charged_back', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
+
+        # Changing field 'DocdataDirectdebitPayment.total_shopper_pending'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_shopper_pending', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
+
+        # Changing field 'DocdataDirectdebitPayment.total_registered'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_registered', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
+
+        # Changing field 'DocdataDirectdebitPayment.total_captured'
+        db.alter_column(u'payments_docdata_docdatadirectdebitpayment', 'total_captured', self.gf('django.db.models.fields.DecimalField')(max_digits=15, decimal_places=2))
 
     models = {
         u'auth.group': {
@@ -197,13 +218,29 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         u'payments_docdata.docdatadirectdebitpayment': {
-            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocDataDirectDebitPaymentTransaction', '_ormbases': [u'payments_docdata.DocdataPayment']},
+            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocdataDirectdebitPayment', '_ormbases': [u'payments.Payment']},
             'account_city': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
             'account_name': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
             'agree': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'bic': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            u'docdatapayment_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments_docdata.DocdataPayment']", 'unique': 'True', 'primary_key': 'True'}),
-            'iban': ('django.db.models.fields.CharField', [], {'max_length': '35'})
+            'country': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
+            'currency': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'default_pm': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
+            'iban': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
+            'ideal_issuer_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
+            'language': ('django.db.models.fields.CharField', [], {'default': "'en'", 'max_length': '5', 'blank': 'True'}),
+            'merchant_order_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
+            'payment_cluster_id': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200'}),
+            'payment_cluster_key': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200'}),
+            u'payment_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Payment']", 'unique': 'True', 'primary_key': 'True'}),
+            'total_acquirer_approved': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"}),
+            'total_acquirer_pending': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"}),
+            'total_captured': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"}),
+            'total_charged_back': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"}),
+            'total_gross_amount': ('django.db.models.fields.IntegerField', [], {}),
+            'total_refunded': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"}),
+            'total_registered': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"}),
+            'total_shopper_pending': ('django.db.models.fields.IntegerField', [], {'default': "'0.00'"})
         },
         u'payments_docdata.docdatapayment': {
             'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocdataPayment', '_ormbases': [u'payments.Payment']},

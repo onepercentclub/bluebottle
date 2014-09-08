@@ -1,5 +1,3 @@
-import re
-from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.model_dispatcher import get_donation_model
 from django.contrib import admin
 from django.core.urlresolvers import reverse

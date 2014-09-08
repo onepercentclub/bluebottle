@@ -18,6 +18,7 @@ from bluebottle.utils.model_dispatcher import get_project_phaselog_model
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
+
 class ProjectTheme(models.Model):
     """ Themes for Projects. """
 

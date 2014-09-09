@@ -24,24 +24,13 @@ class MockPaymentAdapter(BasePaymentAdapter):
 
     def _get_mapped_status(self, status):
         """
-        Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment
+        Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment.
+        The status of a MockPayment maps 1-1 to OrderStatus so we can return the status
         """
-        status_mapping = {
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.CREATED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.CREATED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.STARTED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.STARTED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.AUTHORIZED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.AUTHORIZED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.SETTLED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.SETTLED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.FAILED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.FAILED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.CANCELLED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.CANCELLED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.CHARGED_BACK): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.CHARGED_BACK),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.REFUNDED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.REFUNDED),
-            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.UNKNOWN) : dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.UNKNOWN),
-        }
-        return status_mapping.get(status, dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.UNKNOWN))
+        return status
 
     def set_order_payment_new_status(self, status):
-        self.order_payment.status = self._get_mapped_status(status)
-        self.order_payment.save()
+        self.order_payment.transition_to(self._get_mapped_status(status))
         return self.order_payment
 
     def check_payment_status(self):

@@ -85,7 +85,6 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         response = self.client.put(order_url, json.dumps({}), 'application/json', HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-<<<<<<< HEAD
 
 class TestOrderPermissions(TestCase):
     """ Test the permissions for order ownership in bb_orders """

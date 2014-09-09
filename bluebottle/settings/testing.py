@@ -30,9 +30,9 @@ GRAPH_MODELS = {
   'group_models': True,
 }
 
-# DATABASES = {
-# 	'default': {
-# 		'ENGINE': 'django.db.backends.sqlite3',
-# 		'NAME': ':memory:'
-# 	}
-# }
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.sqlite3',
+		'NAME': ':memory:'
+	}
+}

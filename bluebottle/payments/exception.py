@@ -6,7 +6,7 @@ class PaymentException(Exception):
         self.error_list = error_list
 
     def __str__(self):
-        return '%s, messages: %s' % (self.message, ' '.join(self.error_list))
+        return self.message
 
     def __unicode__(self):
         return str(self)

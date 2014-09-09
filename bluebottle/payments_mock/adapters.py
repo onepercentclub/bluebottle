@@ -19,10 +19,10 @@ class MockPaymentAdapter(BasePaymentAdapter):
 
         pattern = re.compile(r'\W')
         if pattern.findall(user_data['first_name']):
-            raise PaymentException("First {0} name has got illegal characters.".format(user_data['first_name']))
+            raise PaymentException("First name '{0}' has got illegal characters.".format(user_data['first_name']))
 
         if len(user_data['last_name']) > 30:
-            raise PaymentException("Last name too long.")
+            raise PaymentException("Last name too long: '{0}'".format(user_data["last_name"]))
 
         payment = self.MODEL_CLASS(order_payment=self.order_payment)
         payment.save()

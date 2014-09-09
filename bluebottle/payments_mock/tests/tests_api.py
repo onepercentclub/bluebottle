@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.payments.models import OrderPayment
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
+from bluebottle.utils.utils import StatusDefinition
 
 class PaymentMockTests(TestCase):
     """
@@ -13,7 +13,7 @@ class PaymentMockTests(TestCase):
     """
 
     def setUp(self):
-        self.order_payment = OrderPaymentFactory.create(status='created', amount=100, payment_method='mockCreditcard')
+        self.order_payment = OrderPaymentFactory.create(status=StatusDefinition.CREATED, amount=100, payment_method='mock')
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -27,9 +27,10 @@ class PaymentMockTests(TestCase):
         self.assertEqual(response.status_code, 200)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
         self.assertEquals(order_payment.status, status)
-        self.assertEqual(OrderPayment.objects.count(), 1)
+        self.assertEquals(OrderPayment.objects.count(), 1)
 
     def test_status_started_update(self):
+        import pdb;pdb.set_trace()
         self.api_status('started')
 
     def test_status_authorized_update(self):

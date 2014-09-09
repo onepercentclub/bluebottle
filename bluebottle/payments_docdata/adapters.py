@@ -83,7 +83,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         response = client.create(
             merchant=merchant,
-            payment_id=self.order_payment,
+            payment_id=self.order_payment.id,
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,

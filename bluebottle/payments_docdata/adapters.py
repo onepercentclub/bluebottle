@@ -40,10 +40,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def create_payment(self):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
-        payment.total_gross_amount = self.order_payment.amount
-
-        # Make sure that Payment has an ID
-        payment.save()
+        payment.total_gross_amount = self.order_payment.amount * 100
 
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
@@ -84,7 +81,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         response = client.create(
             merchant=merchant,
-            payment_id=payment.id,
+            payment_id=self.order_payment.id,
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,

@@ -206,12 +206,11 @@ class TestDonationCreate(DonationApiTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # check if the anonymous is set to True
+        # Check if the anonymous is set to True
         self.assertEqual(True, response.data['anonymous'])
 
+        # Check that no user is shown
+        self.assertEqual(None, response.data['user'])
 
-class TestAnonymousDonationCreate(DonationApiTestCase):
 
-    # FIXME: Write tests for anonymous donations
-    pass
 

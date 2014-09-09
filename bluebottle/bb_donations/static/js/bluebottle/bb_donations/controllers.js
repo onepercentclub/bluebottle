@@ -3,6 +3,8 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
     requiredFields: ['amount' ],
     fieldsToWatch: ['amount' ],
 
+    defaultAmounts: [50, 75, 100],
+
     init: function() {
         this._super();
 

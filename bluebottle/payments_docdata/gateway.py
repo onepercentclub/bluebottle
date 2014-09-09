@@ -6,16 +6,16 @@ which is Apache licensed, copyright (c) 2013 Diederik van der Boor
 
 """
 import logging
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from suds.client import Client
 from suds import plugin
-from django.core.urlresolvers import reverse
 from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
 
-from .exceptions import PaymentStatusException
+from .exceptions import DocdataPaymentStatusException
 
 logger = logging.getLogger()
 
@@ -68,10 +68,6 @@ class DocdataAPIVersionPlugin(plugin.MessagePlugin):
         body = context.envelope.getChild('Body')
         request = body[0]
         request.set('version', '1.2')
-
-
-def log_docdata_error(error, message):
-    logger.error(u"{0}: code={1}, error={2}".format(message, error._code, error.value))
 
 
 class DocdataClient(object):
@@ -199,10 +195,11 @@ class DocdataClient(object):
                     t += 1
                 else:
                     error = reply.createError.error
-                    log_docdata_error(error, "DocdataClient: failed to create payment for order {0}".format(order_id))
-                    raise Exception(error, error.value)
+                    message = error.value
+                    message = message.replace("XML request does not match XSD. The data is: cvc-type.3.1.3: ", "")
+                    raise DocdataPaymentException(message, error._code)
             else:
-                raise Exception('Received unknown reply from DocData. Remote Payment not created.')
+                raise DocdataPaymentException('Received unknown reply from DocData. Remote Payment not created.')
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
@@ -224,7 +221,7 @@ class DocdataClient(object):
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
             log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise PaymentStatusException(error._code, error.value)
+            raise DocdataPaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
@@ -327,10 +324,10 @@ class Name(object):
     :type suffix: unicode
     """
     def __init__(self, first, last, middle=None, initials=None, prefix=None, suffix=None):
-        if not last:
-            raise ValueError("Name.last is required!")
-        if not first:
-            raise ValueError("Name.first is required!")
+        # if not last:
+        #     raise ValueError("Name.last is required!")
+        # if not first:
+        #     raise ValueError("Name.first is required!")
         self.first = first
         self.last = last
         self.prefix = prefix

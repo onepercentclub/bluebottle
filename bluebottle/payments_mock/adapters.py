@@ -1,4 +1,6 @@
 # coding=utf-8
+import re
+from bluebottle.payments.exception import PaymentException
 from django.core.urlresolvers import reverse
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition
@@ -10,6 +12,18 @@ class MockPaymentAdapter(BasePaymentAdapter):
     MODEL_CLASS = MockPayment
 
     def create_payment(self):
+        if self.order_payment.amount < 10:
+            raise PaymentException("Amount for Mock payments should be greater then 10")
+
+        user_data = self.get_user_data()
+
+        pattern = re.compile(r'\W')
+        if pattern.findall(user_data['first_name']):
+            raise PaymentException("First {0} name has got illegal characters.".format(user_data['first_name']))
+
+        if len(user_data['last_name']) > 30:
+            raise PaymentException("Last name too long.")
+
         payment = self.MODEL_CLASS(order_payment=self.order_payment)
         payment.save()
         return payment

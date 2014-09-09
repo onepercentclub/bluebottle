@@ -1,3 +1,5 @@
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from django.test import TestCase
 from django.test import Client
 from django.core.urlresolvers import reverse
@@ -73,3 +75,26 @@ class PaymentMockTests(TestCase):
         self.assertEqual(response.status_code, 404)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
         self.assertEquals(order_payment.status, 'created')
+
+
+class PaymentErrorTests(TestCase):
+
+    def setUp(self):
+        self.donation1 = DonationFactory.create(amount=500)
+        self.donation2 = DonationFactory.create(amount=5)
+
+        self.user2 = BlueBottleUserFactory.create(first_name="Jimmy 1%")
+        self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
+
+        self.user3 = BlueBottleUserFactory.create(last_name="Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongname")
+        self.user3_token = "JWT {0}".format(self.user3.get_jwt_token())
+
+    def test_illegal_first_name(self):
+        data = {'order_id': self.donation1.order.id,
+                'paymentMethod': 'mockIdeal',
+                'integrationData': '{"issuerId": "huey"}'}
+
+        response = self.client.post(reverse('manage-order-payment-list'), data)
+
+        self.assertEqual(response.status_code, 400)
+

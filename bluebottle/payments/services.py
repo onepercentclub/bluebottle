@@ -1,3 +1,4 @@
+from bluebottle.payments.exception import PaymentException
 import re
 from django.conf import settings
 from bluebottle.utils.utils import import_class
@@ -52,4 +53,5 @@ class PaymentService(object):
 
     def check_payment_status(self, **integration_details):
         action = self.adapter.check_payment_status()
+
 

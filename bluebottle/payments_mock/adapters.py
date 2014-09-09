@@ -11,7 +11,6 @@ class MockPaymentAdapter(BasePaymentAdapter):
 
     def create_payment(self):
         payment = self.MODEL_CLASS(order_payment=self.order_payment)
-        import pdb;pdb.set_trace()
         payment.save()
         return payment
 

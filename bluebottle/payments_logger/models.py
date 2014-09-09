@@ -10,7 +10,6 @@ from bluebottle.payments.models import Payment
 
 
 class PaymentLogLevels(DjangoChoices):
-
     info = ChoiceItem('info', label=_("INFO"))
     warn = ChoiceItem('warn', label=_("WARN"))
     error = ChoiceItem('error', label=_("ERROR"))

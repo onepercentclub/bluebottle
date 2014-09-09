@@ -47,7 +47,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         self.payment_logger.log(payment=payment,
                                 level=PaymentLogLevels.info,
-                                message='A docdata payment has been created')
+                                message='A Docdata payment has been created')
 
 
 

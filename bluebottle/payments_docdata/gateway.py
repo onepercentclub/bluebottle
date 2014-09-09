@@ -220,10 +220,11 @@ class DocdataClient(object):
             return reply.statusSuccess.report
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
-            log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
+            # FIXME Log ERROR here
             raise DocdataPaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
+            # FIXME Log ERROR here
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
 
     def get_payment_menu_url(self, order_key, order_id, return_url=None, client_language=None, **extra_url_args):
@@ -324,10 +325,10 @@ class Name(object):
     :type suffix: unicode
     """
     def __init__(self, first, last, middle=None, initials=None, prefix=None, suffix=None):
-        # if not last:
-        #     raise ValueError("Name.last is required!")
-        # if not first:
-        #     raise ValueError("Name.first is required!")
+        if not last:
+            raise DocdataPaymentException("Last name is required!")
+        if not first:
+            raise DocdataPaymentException("First name is required!")
         self.first = first
         self.last = last
         self.prefix = prefix

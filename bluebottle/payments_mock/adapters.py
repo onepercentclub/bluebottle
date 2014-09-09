@@ -12,11 +12,13 @@ class MockPaymentAdapter(BasePaymentAdapter):
     MODEL_CLASS = MockPayment
 
     def create_payment(self):
+        """
+        Have some basic criteria that might fail so we can check our error parsing.
+        """
         if self.order_payment.amount < 10:
             raise PaymentException("Amount for Mock payments should be greater then 10")
 
         user_data = self.get_user_data()
-
         pattern = re.compile(r'\W')
         if pattern.findall(user_data['first_name']):
             raise PaymentException("First name '{0}' has got illegal characters.".format(user_data['first_name']))
@@ -24,6 +26,7 @@ class MockPaymentAdapter(BasePaymentAdapter):
         if len(user_data['last_name']) > 30:
             raise PaymentException("Last name too long: '{0}'".format(user_data["last_name"]))
 
+        # Now just create the payment.
         payment = self.MODEL_CLASS(order_payment=self.order_payment)
         payment.save()
         return payment

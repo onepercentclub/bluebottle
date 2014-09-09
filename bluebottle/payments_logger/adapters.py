@@ -15,4 +15,3 @@ class PaymentLogAdapter:
 
         log_entry = PaymentLogEntry(payment=payment, level=level, message=message)
         log_entry.save()
-

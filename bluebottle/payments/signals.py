@@ -4,6 +4,7 @@ from django_fsm.signals import post_transition
 from django.dispatch import receiver
 
 from .models import Payment, OrderPayment
+from bluebottle.payments.models import Payment
 
 
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
@@ -19,30 +20,15 @@ def order_payment_changed(sender, instance, **kwargs):
 
     # Signal new status if current status is the default value
     if (instance.status == default_status):
-        try:
-            # adding a Log when the status changes
-            from bluebottle.payments.models import Payment
-            from bluebottle.payments_logger.adapters import PaymentLogAdapter
-            payment_logger = PaymentLogAdapter()
-            # if there is no Payment associated to the order_payment do not log
-            # The log will be created in the adapter
-            payment = Payment.objects.get(order_payment=instance)
-            payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
-
-        except:
-            pass
-
-        finally:
-            signal_kwargs = {
-                'sender': sender,
-                'instance': instance,
-                'target': instance.status
-            }
-            post_transition.send(**signal_kwargs)
+        signal_kwargs = {
+            'sender': sender,
+            'instance': instance,
+            'target': instance.status
+        }
+        post_transition.send(**signal_kwargs)
 
 
 @receiver(post_save, weak=False, dispatch_uid='payments_previous_status')
-
 def set_previous_status(sender, instance, **kwargs):
     if not (isinstance(instance, Payment) or isinstance(instance, OrderPayment)): return
 
@@ -80,11 +66,25 @@ def default_status_check(sender, instance, **kwargs):
     # Get the default status for the status field on Sender
     default_status = sender._meta.get_field_by_name('status')[0].get_default()
 
-    # Signal new status if current status is the default value
-    if (instance.status == default_status):
-        signal_kwargs = {
-            'sender': sender,
-            'instance': instance,
-            'target': instance.status
-        }
-        post_transition.send(**signal_kwargs)
+    try:
+        from bluebottle.payments_logger.adapters import PaymentLogAdapter
+
+        # adding a Log when the status changes
+        payment_logger = PaymentLogAdapter()
+        # if there is no Payment associated to the order_payment do not log
+        # The log will be created in the adapter
+        payment = Payment.objects.get(order_payment=instance)
+        payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
+
+    except:
+        pass
+
+    finally:
+        # Signal new status if current status is the default value
+        if (instance.status == default_status):
+            signal_kwargs = {
+                'sender': sender,
+                'instance': instance,
+                'target': instance.status
+            }
+            post_transition.send(**signal_kwargs)

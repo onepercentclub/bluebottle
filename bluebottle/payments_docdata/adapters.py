@@ -126,9 +126,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             client_language=client_language,
         )
 
-        self.payment_logger.log(payment=self.payment,
-                                level=PaymentLogLevels.info,
-                                message='A docdata payment got the authorization')
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True

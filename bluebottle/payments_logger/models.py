@@ -26,7 +26,6 @@ class PaymentLogEntry(models.Model):
     payment = models.ForeignKey(Payment, related_name='payments')
 
     class Meta:
-
         ordering = ('-timestamp',)
         verbose_name = _("Payment Log")
         verbose_name_plural = verbose_name

@@ -16,7 +16,6 @@ from bluebottle.test.utils import FsmTestMixin
 from raven.contrib.django.raven_compat.handlers import SentryHandler
 
 
-@patch(SentryHandler, 'emit')
 class TestPaymentLogger(TestCase, FsmTestMixin):
 
     @patch.object(DocdataClient, 'create')

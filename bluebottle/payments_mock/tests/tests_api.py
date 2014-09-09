@@ -1,11 +1,9 @@
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from django.test import TestCase
-from django.test import Client
-from django.core.urlresolvers import reverse
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
-from bluebottle.payments.models import OrderPayment
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from django.test import TestCase
+from django.core.urlresolvers import reverse
+from bluebottle.payments.models import OrderPayment
 
 
 class PaymentMockTests(TestCase):
@@ -80,21 +78,32 @@ class PaymentMockTests(TestCase):
 class PaymentErrorTests(TestCase):
 
     def setUp(self):
+
         self.donation1 = DonationFactory.create(amount=500)
         self.donation2 = DonationFactory.create(amount=5)
 
-        self.user2 = BlueBottleUserFactory.create(first_name="Jimmy 1%")
+        self.user1 = self.donation1.order.user
+        self.user1.first_name = 'Jimmy 1%'
+        self.user1.save()
+
+        self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
+
+        self.user2 = self.donation2.order.user
+        self.user2.last_name = "Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongname"
+        self.user2.save()
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
-        self.user3 = BlueBottleUserFactory.create(last_name="Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongname")
-        self.user3_token = "JWT {0}".format(self.user3.get_jwt_token())
+        self.order_payment_url = reverse('manage-order-payment-list')
 
     def test_illegal_first_name(self):
-        data = {'order_id': self.donation1.order.id,
+        data = {'order': self.donation1.order.id,
                 'paymentMethod': 'mockIdeal',
-                'integrationData': '{"issuerId": "huey"}'}
+                'integration_data': {'issuerId': 'huey'}
+                }
 
-        response = self.client.post(reverse('manage-order-payment-list'), data)
+        response = self.client.get(self.order_payment_url, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=self.user1_token)
 
         self.assertEqual(response.status_code, 400)
+        print response
 

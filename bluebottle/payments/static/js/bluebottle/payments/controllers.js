@@ -49,14 +49,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
         if (meta.type == 'success') {
             // Refresh project and donations
             var donation = this.get('order.donations').objectAt(0);
-            // TODO: refresh donation list
-//            if (donation.get('fundRaiser')) {
-//                this.get('controllers.fundRaiserDonationList').set('fundRaiseDonations', App.ProjectDonation.find({fundRaiser: donation.get('fundRaiser.id')}));
-//            } else {
-//                this.get('controllers.projectDonationList').set('projectDonations', App.ProjectDonation.find({project: donation.get('project.id')}));
-//            }
-
-            // TODO: refresh FundRaiser if it's a FundRaisser
+            // TODO: Refresh FundRaiser if it's a FundRaisser
+            // TODO: Refresh donation list
             donation.get('project.getProject').reload();
 
             this.send('modalFlip', 'donationSuccess', donation, 'modalBack');
@@ -146,8 +140,24 @@ App.OrderPaymentController = Em.ObjectController.extend({
                     // order status
                     var order = payment.get('order');
                     order.reload();
-                    _this._processAuthorizationAction();
-                },
+                    // Proceed to the next step based on the status of the payment
+                    // 1) Payment status is 'success'
+                    // 2) Payment status is 'in_progress'
+
+                    // FIXME: For testing purposes we will direct the user to
+                    //        the success modal for creditcard payments and to
+                    //        the mock service provider for all others.
+                    if (order.get('status') == 'success') {
+                        // Load the success modal. Since all models are already
+                        // loaded in Ember here, we should just be able
+                        // to get the first donation of the order here
+                        var donation = order.get('donations').objectAt(0);
+                        _this.send('modalSlide', 'donationSuccess', donation);
+                    } else {
+                        // Process the authorization action to determine next
+                        // step in payment process.
+                        _this._processAuthorizationAction();
+                    }                },
                 // Failure
                 function (payment) {
                     _this.set('isBusy', false);
@@ -211,7 +221,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
             },
             {
                 'property': 'expirationMonth',
-                'validateProperty': /^1[0-2]$|^0[1-9]$/,
+                'validateProperty': /^1[02]$|^0[1-9]$/,
                 'message': gettext('The expiration month is not valid'),
                 'priority': 3
             },

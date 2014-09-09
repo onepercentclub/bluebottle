@@ -27,17 +27,17 @@ class MockPaymentAdapter(BasePaymentAdapter):
         Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment
         """
         status_mapping = {
-            MockPayment.STATUS_CHOICES.StatusDefinition.CREATED: OrderPayment.STATUS_CHOICES.StatusDefinition.CREATED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.STARTED: OrderPayment.STATUS_CHOICES.StatusDefinition.STARTED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.AUTHORIZED: OrderPayment.STATUS_CHOICES.StatusDefinition.AUTHORIZED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.SETTLED: OrderPayment.STATUS_CHOICES.StatusDefinition.SETTLED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.FAILED: OrderPayment.STATUS_CHOICES.StatusDefinition.FAILED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.CANCELLED: OrderPayment.STATUS_CHOICES.StatusDefinition.CANCELLED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.CHARGED_BACK: OrderPayment.STATUS_CHOICES.StatusDefinition.CHARGED_BACK,
-            MockPayment.STATUS_CHOICES.StatusDefinition.REFUNDED: OrderPayment.STATUS_CHOICES.StatusDefinition.REFUNDED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN: OrderPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN,
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.CREATED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.CREATED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.STARTED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.STARTED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.AUTHORIZED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.AUTHORIZED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.SETTLED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.SETTLED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.FAILED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.FAILED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.CANCELLED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.CANCELLED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.CHARGED_BACK): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.CHARGED_BACK),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.REFUNDED): dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.REFUNDED),
+            dict(MockPayment.STATUS_CHOICES).get(StatusDefinition.UNKNOWN) : dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.UNKNOWN),
         }
-        return status_mapping.get(status, OrderPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN)
+        return status_mapping.get(status, dict(OrderPayment.STATUS_CHOICES).get(StatusDefinition.UNKNOWN))
 
     def set_order_payment_new_status(self, status):
         self.order_payment.status = self._get_mapped_status(status)

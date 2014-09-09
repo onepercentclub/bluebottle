@@ -3,30 +3,30 @@
 
 {% tplhandlebars "_donation_amount" %}
     <div {{bindAttr class=":modal-fullscreen-content"}}>
-		<span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
-		<h4>{% blocktrans %}Thanks for supporting this cause!{% endblocktrans %}</h4>
-		<big>{% blocktrans %}Select or type the amount you would like to give.{% endblocktrans %}</big>
-		<div class="row donation-amount">
-			<div class="col4 input">
-				<form>
+        <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+        <h4>{% blocktrans %}Thanks for supporting this cause!{% endblocktrans %}</h4>
+        <big>{% blocktrans %}Select or type the amount you would like to give.{% endblocktrans %}</big>
+        <div class="row donation-amount">
+            <div class="col4 input">
+                <form>
                     {{input valueBinding="amount" classBinding=":donation-input errorList.amount.length:error" placeholder=defaultAmount}}
-				</form>
-			</div>
-			<div class="col8">
-				<div class="row donation-buttons">
-					<div class="col4"><a {{action 'changeAmount' 50}} class="btn btn-donate first">&euro; 50,-</a></div>
-					<div class="col4"><a {{action 'changeAmount' 75}} class="btn btn-donate">&euro; 75,-</a></div>
-					<div class="col4"><a {{action 'changeAmount' 100}} class="btn btn-donate last">&euro; 100,-</a></div>
-				</div>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col12">
+                </form>
+            </div>
+            <div class="col8">
+                <div class="row donation-buttons">
+                    {{#each amount in defaultAmounts}}
+                        <div class="col4"><a {{action 'changeAmount' amount}} class="btn btn-donate first">&euro; {{amount}},-</a></div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col12">
                 <a {{ action 'nextStep' }} {{bindAttr class=":btn :btn-sec :donate-btn blockingErrors:is-inactive"}} name="login">{% trans "Donate now" %}</a>
-			</div>
-		</div>
+            </div>
+        </div>
         {{ partial "_donation_errors" }}
-	</div>
+    </div>
 
     <div class="modal-fullscreen-footer">
         <div class="modal-hide-name">

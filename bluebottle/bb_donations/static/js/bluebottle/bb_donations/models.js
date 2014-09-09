@@ -31,11 +31,9 @@ App.MyDonation = App.Donation.extend({
     url: 'donations/my',
 
     order: DS.belongsTo('App.MyOrder'),
-    amount: DS.attr('number', {defaultValue: 25}),
+    amount: DS.attr('number'),
 
-    defaultAmount: function () {
-        return 25;
-    }.property(),
+    defaultAmount: 25,
 
     validAmount: function () {
         var amount = this.get('amount');

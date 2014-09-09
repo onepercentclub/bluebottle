@@ -73,12 +73,13 @@ class PaymentStatusListener(View):
         except OrderPayment.DoesNotExist:
             raise Http404
 
-        service = PaymentService(order_payment=order_payment)
+        service = PaymentService(order_payment)
 
         #We pass the MockPayment status and get back the status name of our OrderStatus definition
         service.adapter.set_order_payment_new_status(status)
 
         return HttpResponse('success')
+
 
 
 

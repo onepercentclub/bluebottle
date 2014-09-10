@@ -2,7 +2,8 @@ import factory
 from bluebottle.utils.model_dispatcher import get_model_class
 from .orders import OrderFactory
 from .projects import ProjectFactory
-
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
@@ -12,3 +13,5 @@ class DonationFactory(factory.DjangoModelFactory):
 
     order = factory.SubFactory(OrderFactory)
     project = factory.SubFactory(ProjectFactory)
+    amount = 25
+

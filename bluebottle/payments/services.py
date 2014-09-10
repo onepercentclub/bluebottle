@@ -1,3 +1,4 @@
+from bluebottle.payments.exception import PaymentException
 import re
 from django.conf import settings
 from bluebottle.utils.utils import import_class
@@ -37,7 +38,11 @@ class PaymentService(object):
         class_name = provider_name.title() + 'PaymentAdapter'
         class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
 
-        adapter_class = import_class(class_path)
+        try:
+            adapter_class = import_class(class_path)
+        except ImportError:
+            raise PaymentException("Couldn't find an adapter for payment method '{0}'".format(self.order_payment.payment_method))
+
         adapter = adapter_class(self.order_payment)
         return adapter
 
@@ -52,4 +57,5 @@ class PaymentService(object):
 
     def check_payment_status(self, **integration_details):
         action = self.adapter.check_payment_status()
+
 

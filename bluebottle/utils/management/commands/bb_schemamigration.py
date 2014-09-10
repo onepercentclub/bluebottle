@@ -172,21 +172,16 @@ class Command(DataCommand):
         # Work out which apps to freeze
         apps_to_freeze = self.calc_frozen_apps(migrations, freeze_list)
 
-        # Custom Bluebottle
-        # We find and replace the base apps with our mapped models
-        forwards = "\n".join(forwards_actions or ["        pass"])
-        backwards = "\n".join(backwards_actions or ["        pass"])
-        frozen_models = freezer.freeze_apps_to_string(apps_to_freeze)
-        complete_apps = apps_to_freeze and "complete_apps = [%s]" % (", ".join(map(repr, apps_to_freeze))) or ""
-
         # So, what's in this file, then?
         file_contents = MIGRATION_TEMPLATE % {
-            "forwards": forwards,
-            "backwards": backwards,
-            "frozen_models":  frozen_models,
-            "complete_apps": complete_apps
+            "forwards": "\n".join(forwards_actions or ["        pass"]),
+            "backwards": "\n".join(backwards_actions or ["        pass"]),
+            "frozen_models":  freezer.freeze_apps_to_string(apps_to_freeze),
+            "complete_apps": apps_to_freeze and "complete_apps = [%s]" % (", ".join(map(repr, apps_to_freeze))) or ""
         }
 
+        # Custom Bluebottle
+        # We find and replace the base apps with our mapped models
         for model in MODEL_MAP:
             model_map = MODEL_MAP[model]
             mapping = {
@@ -196,6 +191,8 @@ class Command(DataCommand):
                 'to=orm[\'{0}\']'.format(model_map['model']): 'to=orm[MODEL_MAP[\'{0}\'][\'model\']]'.format(model),
             }
             file_contents = reduce(lambda x, y: x.replace(y, mapping[y]), mapping, file_contents)
+
+        # End Custom Bluebottle
 
         # Deal with update mode as late as possible, avoid a rollback as long
         # as something else can go wrong.

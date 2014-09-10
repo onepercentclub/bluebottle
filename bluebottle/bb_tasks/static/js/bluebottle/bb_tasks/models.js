@@ -161,12 +161,12 @@ App.Task = DS.Model.extend({
     }.property('isAvailable'),
 
     membersCount: function() {
-		    return this.get('members.length')
+        return this.get('members.length')
     }.property("members.length"),
     
 	hasMoreThanOneMember: function() {
         return this.get('membersCount') > 1
-	  }.property('membersCount'),
+    }.property('membersCount'),
     
     hasMembers: function() {
         return this.get('members.length') > 0;
@@ -205,15 +205,6 @@ App.Task = DS.Model.extend({
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();
         return Math.ceil(microseconds / (1000 * 60 * 60 * 24));
-    }.property('deadline'),
-
-    readableDeadline: function() {
-        if (!this.get('deadline')) {
-            return null;
-        }
-        var deadline = this.get('deadline');
-        return deadline.getDate() +'/'+ (deadline.getMonth()+1) +'/'+ deadline.getFullYear();
-
     }.property('deadline'),
 
     // Return individual labels here so they're added to translations.

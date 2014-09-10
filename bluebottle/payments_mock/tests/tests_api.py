@@ -76,8 +76,6 @@ class PaymentMockTests(TestCase):
         self.assertEqual(response.status_code, 404)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
         self.assertEquals(order_payment.status, 'created')
-<<<<<<< HEAD
-=======
 
 
 class PaymentErrorTests(TestCase):
@@ -144,4 +142,3 @@ class PaymentErrorTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:6], 'Amount')
->>>>>>> origin/feature/fund-loving-criminals

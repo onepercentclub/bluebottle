@@ -13,8 +13,6 @@ from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import FsmTestMixin
 
-from raven.contrib.django.raven_compat.handlers import SentryHandler
-
 
 class TestPaymentLogger(TestCase, FsmTestMixin):
 

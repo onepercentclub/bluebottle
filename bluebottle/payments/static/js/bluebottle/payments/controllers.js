@@ -1,5 +1,5 @@
 App.OrderPaymentController = Em.ObjectController.extend({
-    needs: ['application'],
+    needs: ['application', 'projectDonationList', 'fundRaiserDonationList'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
     validationErrorsBinding: 'paymentMethodController.validationErrors',
@@ -45,6 +45,15 @@ App.OrderPaymentController = Em.ObjectController.extend({
             if (meta.method == 'get') {
                 window.location = meta.url;
             }
+        }
+        if (meta.type == 'success') {
+            // Refresh project and donations
+            var donation = this.get('order.donations').objectAt(0);
+            // TODO: Refresh FundRaiser if it's a FundRaisser
+            // TODO: Refresh donation list
+            donation.get('project.getProject').reload();
+
+            this.send('modalFlip', 'donationSuccess', donation, 'modalBack');
         }
     },
 
@@ -120,30 +129,26 @@ App.OrderPaymentController = Em.ObjectController.extend({
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
 
+
             // Set is loading property until success or error response
             _this.set('isBusy', true);
 
             payment.save().then(
                 // Success
                 function (payment) {
-
-                    // Reload the order to receive any backend updates to the 
+                    // Reload the order to receive any backend updates to the
                     // order status
-                    // NOTE: when using the mock api we will need to manually 
-                    //       set the order status here.
-
                     var order = payment.get('order');
                     order.reload();
-
                     // Proceed to the next step based on the status of the payment
                     // 1) Payment status is 'success'
                     // 2) Payment status is 'in_progress'
 
-                    // FIXME: For testing purposes we will direct the user to 
+                    // FIXME: For testing purposes we will direct the user to
                     //        the success modal for creditcard payments and to
                     //        the mock service provider for all others.
                     if (order.get('status') == 'success') {
-                        // Load the success modal. Since all models are already 
+                        // Load the success modal. Since all models are already
                         // loaded in Ember here, we should just be able
                         // to get the first donation of the order here
                         var donation = order.get('donations').objectAt(0);
@@ -152,14 +157,13 @@ App.OrderPaymentController = Em.ObjectController.extend({
                         // Process the authorization action to determine next
                         // step in payment process.
                         _this._processAuthorizationAction();
-                    }
-                },
+                    }                },
                 // Failure
                 function (payment) {
-                    // FIXME: Add error handing for failed order_payment save
-                    console.log("error!");
+                    _this.set('isBusy', false);
                 }
             );
+
         },
 
         selectedPaymentMethod: function(paymentMethod) {
@@ -217,7 +221,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
             },
             {
                 'property': 'expirationMonth',
-                'validateProperty': /^1[0-2]$|^0[1-9]$/,
+                'validateProperty': /^1[02]$|^0[1-9]$/,
                 'message': gettext('The expiration month is not valid'),
                 'priority': 3
             },

@@ -96,8 +96,8 @@ class TestOrderPermissions(TestCase):
         self.user2 = BlueBottleUserFactory.create()
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
-        self.order = OrderFactory.create(user=self.user1)
-        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
+        self.order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
+        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock', status=StatusDefinition.SUCCESS)
 
     def test_user_not_owner(self):
         """ User that is not owner of the order tries to do a get to the order should get a 403"""

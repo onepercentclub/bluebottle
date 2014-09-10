@@ -53,7 +53,7 @@ class DonationApiTestCase(InitProjectDataMixin, TestCase):
 @patch.object(ManageOrderDetail, 'check_status_psp')
 class TestDonationPermissions(DonationApiTestCase):
 
-    def test_user_is_order_owner(self):
+    def test_user_is_order_owner(self, mock_check_status_psp):
         """ Test that a user that is owner of the order can post a new donation """
         donation1 = {
             "project": self.project.slug,
@@ -66,7 +66,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
-    def test_user_is_not_order_owner(self):
+    def test_user_is_not_order_owner(self, mock_check_status_psp):
         """ Test that a user who is not owner of an order cannot create a new donation """
 
         donation1 = {
@@ -81,7 +81,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
 
-    def test_order_status_not_new(self):
+    def test_order_status_not_new(self, mock_check_status_psp):
         """ Test that a non-new order status produces a forbidden response """
 
         order = OrderFactory.create(user=self.user, status=StatusDefinition.SUCCESS)
@@ -98,7 +98,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
 
-    def test_order_status_new(self):
+    def test_order_status_new(self, mock_check_status_psp):
         """ Test that a new order status produces a 201 created response """
 
         order = OrderFactory.create(user=self.user, status=StatusDefinition.CREATED)
@@ -115,7 +115,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
-    def test_donation_update_not_same_owner(self):
+    def test_donation_update_not_same_owner(self, mock_check_status_psp):
         """ Test that an update to a donation where the user is not the owner produces a 403"""
 
         donation = DonationFactory(order=self.order, amount=35)
@@ -136,7 +136,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
-    def test_donation_update_same_owner(self):
+    def test_donation_update_same_owner(self, mock_check_status_psp):
         """ Test that an update to a donation where the user is the owner produces a 200 OK"""
 
         donation = DonationFactory(order=self.order, amount=35)
@@ -157,7 +157,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
-    def test_donation_update_order_not_new(self):
+    def test_donation_update_order_not_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does not have status CREATED produces 403 FORBIDDEN"""
 
         order = OrderFactory.create(user=self.user, status=StatusDefinition.SUCCESS)
@@ -180,7 +180,7 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
-    def test_donation_update_order_new(self):
+    def test_donation_update_order_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does has status CREATED produces 200 OK response"""
 
         order = OrderFactory.create(user=self.user, status=StatusDefinition.CREATED)

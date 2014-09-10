@@ -24,7 +24,6 @@ class IsOrderCreator(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         # Use duck typing to check if we have an order or a payment.
-
         if hasattr(obj, 'user'):
             order = obj
         else:
@@ -58,16 +57,19 @@ class IsOrderCreator(permissions.BasePermission):
             return None
 
     def has_permission(self, request, view):
+
         # Allow non modifying actions
         if request.method in permissions.SAFE_METHODS:
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
-        order = self._get_order_from_request(request)
-        if order:
-            return order.user == request.user
-        return False
-
+        if not view.model == ORDER_MODEL:
+            order = self._get_order_from_request(request)
+            if order:
+                return order.user == request.user
+            else:
+                return False
+        return True
 
 class OrderIsNew(permissions.BasePermission):
     """

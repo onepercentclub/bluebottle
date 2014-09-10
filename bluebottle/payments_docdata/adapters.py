@@ -1,4 +1,5 @@
 import logging
+
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from django.contrib.sites.models import get_current_site
@@ -44,12 +45,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     def create_payment(self):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
         payment.total_gross_amount = self.order_payment.amount * 100
-
-        self.payment_logger.log(payment=payment,
-                                level=PaymentLogLevels.info,
-                                message='A Docdata payment has been created')
-
-
 
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 

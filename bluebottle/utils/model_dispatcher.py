@@ -52,6 +52,10 @@ def get_project_phaselog_model():
     return get_model_class('PROJECTS_PHASELOG_MODEL')
 
 
+def get_payment_logger_model():
+    return get_model_class('PAYMENT_LOGGER_MODEL')
+
+
 def get_auth_user_model():
     return get_user_model()
 

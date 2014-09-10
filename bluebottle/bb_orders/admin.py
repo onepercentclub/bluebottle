@@ -1,16 +1,13 @@
-from bluebottle.bb_donations.admin import DonationInline
-from bluebottle.orders.models import Order
-from bluebottle.payments.admin import OrderPaymentInline
 from django.contrib import admin
+from bluebottle.utils.model_dispatcher import get_order_model
+
+ORDER_MODEL = get_order_model()
 
 
-class OrderAdmin(admin.ModelAdmin):
-    model = Order
-    list_display = ('id', 'created', 'closed', 'total', 'status', 'user')
-    list_filter = ('status', )
-    raw_id_fields = ('user', )
-    readonly_fields = ('total', )
-    fields = readonly_fields + ('user', 'status')
-    inlines = (DonationInline, OrderPaymentInline, )
+class BaseOrderAdmin(admin.ModelAdmin):
+    model = get_order_model()
 
-admin.site.register(Order, OrderAdmin)
+# if you want to display more fields, unregister the model first, define a new admin class
+# (possibly inheriting from BaseProjectAdmin), and then re-register it
+admin.site.register(ORDER_MODEL, BaseOrderAdmin)
+

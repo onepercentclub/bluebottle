@@ -43,22 +43,10 @@ class MockPaymentAdapter(BasePaymentAdapter):
         """
         Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment
         """
-        status_mapping = {
-            MockPayment.STATUS_CHOICES.StatusDefinition.CREATED: OrderPayment.STATUS_CHOICES.StatusDefinition.CREATED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.STARTED: OrderPayment.STATUS_CHOICES.StatusDefinition.STARTED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.AUTHORIZED: OrderPayment.STATUS_CHOICES.StatusDefinition.AUTHORIZED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.SETTLED: OrderPayment.STATUS_CHOICES.StatusDefinition.SETTLED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.FAILED: OrderPayment.STATUS_CHOICES.StatusDefinition.FAILED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.CANCELLED: OrderPayment.STATUS_CHOICES.StatusDefinition.CANCELLED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.CHARGED_BACK: OrderPayment.STATUS_CHOICES.StatusDefinition.CHARGED_BACK,
-            MockPayment.STATUS_CHOICES.StatusDefinition.REFUNDED: OrderPayment.STATUS_CHOICES.StatusDefinition.REFUNDED,
-            MockPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN: OrderPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN,
-        }
-        return status_mapping.get(status, OrderPayment.STATUS_CHOICES.StatusDefinition.UNKNOWN)
+        return status
 
     def set_order_payment_new_status(self, status):
-        self.order_payment.status = self._get_mapped_status(status)
-        self.order_payment.save()
+        self.order_payment.transition_to(self._get_mapped_status(status))
         return self.order_payment
 
     def check_payment_status(self):

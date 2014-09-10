@@ -76,7 +76,7 @@ class UserApiIntegrationTest(TestCase):
         # Settings shouldn't be accessible until a user is logged in.
         user_settings_url = "{0}{1}".format(self.user_settings_api_url, self.user_1.id)
         response = self.client.get(user_settings_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Settings should be accessible after a user is logged in.
         user_1_settings_url = "{0}{1}".format(self.user_settings_api_url, self.user_1.id)

@@ -351,22 +351,17 @@ class TestCreateDonation(DonationApiTestCase):
 class TestDonationCreate(DonationApiTestCase):
 
     def test_create_anonymous_donation(self):
-
-        self.client.login(username=self.user.email, password='testing')
         donation_url = reverse('manage-donation-list')
 
-        response = self.client.get(donation_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         # create a new anonymous donation
-        response = self.client.post(donation_url, {'order': self.order.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True})
+        response = self.client.post(donation_url, {'order': self.order.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True}, HTTP_AUTHORIZATION=self.user_token)
 
         self.assertEqual(response.status_code, 201)
 
         # retrieve the donation just created
         donation_id = response.data['id']
         donation_url = reverse('manage-donation-detail', kwargs={'pk': donation_id})
-        response = self.client.get(donation_url)
+        response = self.client.get(donation_url, HTTP_AUTHORIZATION=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -388,6 +383,3 @@ class TestDonationCreate(DonationApiTestCase):
 
         # Check that user is NOT shown in public API
         self.assertEqual(None, response.data['user'])
-
-    # FIXME: Write tests for anonymous donations
-

@@ -93,10 +93,10 @@ tests_require = [
     'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
-    'nose==1.3.3',
+    'nose==1.3.4',
     'pylint==0.28.0',
     'sauceclient==0.1.0',
-    'selenium==2.42.1',
+    'selenium==2.43.0',
     'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
     'splinter==0.5.4', # Functional testing libraries

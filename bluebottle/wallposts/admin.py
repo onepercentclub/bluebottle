@@ -98,6 +98,7 @@ class WallPostParentAdmin(PolymorphicParentModelAdmin):
 # Only the parent needs to be registered:
 admin.site.register(WallPost, WallPostParentAdmin)
 
+# So why you are also registering the child?
 admin.site.register(MediaWallPost, MediaWallPostAdmin)
 admin.site.register(TextWallPost, TextWallPostAdmin)
 admin.site.register(SystemWallPost, SystemWallPostAdmin)

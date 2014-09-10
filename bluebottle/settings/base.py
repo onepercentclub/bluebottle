@@ -189,6 +189,7 @@ INSTALLED_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_mock',
+    'bluebottle.payments_logger',
 
     # Test Bb implementations
     'bluebottle.test',
@@ -201,6 +202,8 @@ INSTALLED_APPS = (
 
     'django_wysiwyg',
     'templatetag_handlebars',
+
+    'raven.contrib.django.raven_compat',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -239,9 +242,22 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'sentry': {
+            'level': 'INFO',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+        },
+        'payment_logs': {
+            'level': 'INFO',
+            'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
         }
     },
     'loggers': {
+        'payments.payment': {
+            'handlers': ['mail_admins', 'payment_logs', 'sentry'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
@@ -270,7 +286,6 @@ ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
 
 DONATIONS_DONATION_MODEL = 'donations.Donation'
 ORDERS_ORDER_MODEL = 'orders.Order'
-
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

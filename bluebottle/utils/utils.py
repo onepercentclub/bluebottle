@@ -2,6 +2,7 @@ from django.conf import settings
 from django_fsm.db.fields import TransitionNotAllowed
 import logging
 from django_tools.middlewares import ThreadLocal
+from django.core.urlresolvers import reverse
 
 
 class StatusDefinition:
@@ -137,4 +138,3 @@ def get_current_host():
     else:
         scheme = 'http'
     return '{0}://{1}'.format(scheme, request.get_host())
-

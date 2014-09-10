@@ -6,6 +6,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django_countries.fields import CountryField
 
 from bluebottle.payments.models import Payment, Transaction
+from bluebottle.payments_logger.models import PaymentLogEntry
 
 
 class DocdataPayment(Payment):
@@ -69,4 +70,5 @@ class DocDataDirectDebitTransaction(Transaction):
     account_city = models.CharField(max_length=35)  # max_length from DocData
     iban = models.CharField(max_length=35)  # max_length from DocData
     bic = models.CharField(max_length=35)  # max_length from DocData
+
 

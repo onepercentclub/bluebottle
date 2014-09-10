@@ -1,19 +1,21 @@
 import json
+
 from django.conf import settings
 from django.db import models
-from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django_extensions.db.fields.json import JSONField
+# from django_fsm import FSMField, transition
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.polymorphic_model import PolymorphicModel
 from django.db.models import options
-from django_fsm.db.fields import FSMField, transition
-from django_fsm.signals import pre_transition, post_transition
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save, post_delete
+from django_fsm.signals import post_transition
+from django_fsm.db.fields import FSMField, transition
+from django.db.models.signals import pre_save, post_save
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
+from bluebottle.payments.managers import PaymentManager
 
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
@@ -46,6 +48,7 @@ class Payment(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+
 
 
 class OrderPaymentAction(models.Model):
@@ -153,10 +156,13 @@ class OrderPayment(models.Model, FSMTransition):
             self.save()
 
 
+
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
+
+    objects = PaymentManager()
 
     class Meta:
         ordering = ('-created', '-updated')

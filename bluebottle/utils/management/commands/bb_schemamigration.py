@@ -1,5 +1,6 @@
 """
 Based on South schemamigration
+Also see: https://github.com/onepercentclub/bluebottle/wiki/Migrations
 """
 
 from __future__ import print_function

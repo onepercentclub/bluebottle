@@ -84,6 +84,9 @@ def get_model_class(model_name=None):
 
 
 def _map_model(name, model_name):
+    """
+    Derive some partials of a model based on settings
+    """
     model = getattr(settings, model_name)
     db_table = getattr(get_model_class(model_name).Meta, 'db_table', model.lower())
     return {
@@ -97,6 +100,12 @@ def _map_model(name, model_name):
 
 
 def get_model_mapping():
+    """
+    Return a dictionary with all base models and their parts (model, class, app, table).
+
+    This is used by bb_schemamigration command.
+    https://github.com/onepercentclub/bluebottle/wiki/Migrations
+    """
     map = dict(_map_model('user', 'AUTH_USER_MODEL').items()
 
         + _map_model('project', 'PROJECTS_PROJECT_MODEL').items()

@@ -203,10 +203,11 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
-
+# Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
+@patch.object(ManageOrderDetail, 'check_status_psp')
 class TestCreateDonation(DonationApiTestCase):
 
-    def test_create_single_donation(self, mock_check_status_psp):
+    def test_create_single_donation(self, check_status_psp):
         """
         Test donation in the current donation flow where we have just one donation that can't be deleted.
         """
@@ -229,15 +230,13 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.data['status'], 'created')
         donation_id = response.data['id']
 
-
-
         # Check that the order total is equal to the donation amount
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
         response = self.client.get(order_url, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total'], 50)
 
-    def test_create_fundraiser_donation(self, mock_check_status_psp):
+    def test_create_fundraiser_donation(self, check_status_psp):
         """
         Test donation in the current donation flow where we have just one donation that can't be deleted.
         """
@@ -263,7 +262,7 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total'], 35)
 
-    def test_crud_multiple_donations(self, mock_check_status_psp):
+    def test_crud_multiple_donations(self, check_status_psp):
         """
         Test more advanced modifications to donations and orders that aren't currently supported by our
         front-en but

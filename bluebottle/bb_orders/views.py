@@ -60,7 +60,6 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
     permission_classes = (IsOrderCreator, OrderIsNew)
 
     def get(self, request, *args, **kwargs):
-        import pdb;pdb.set_trace()
         order = self.get_object()
 
         if order.status != StatusDefinition.SUCCESS:

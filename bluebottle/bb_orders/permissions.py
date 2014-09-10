@@ -57,9 +57,8 @@ class IsOrderCreator(permissions.BasePermission):
             return None
 
     def has_permission(self, request, view):
-
         # Allow non modifying actions
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
@@ -93,13 +92,16 @@ class OrderIsNew(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Allow non modifying actions
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
-        order = self._get_order_from_request(request)
-        if order:
-            return order.status == StatusDefinition.CREATED
+        if not view.model == ORDER_MODEL:
+            order = self._get_order_from_request(request)
+            if order:
+                return order.status == StatusDefinition.CREATED
+            else:
+                return False
         return True
 
     def has_object_permission(self, request, view, obj):

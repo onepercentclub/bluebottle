@@ -100,4 +100,3 @@ class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
 
     permission_classes = (OrderIsNew, IsOrderCreator)
-

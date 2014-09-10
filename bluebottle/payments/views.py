@@ -1,8 +1,10 @@
 import json
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.serializers import ManageOrderPaymentSerializer
 from bluebottle.payments.services import get_payment_methods
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
+from rest_framework.exceptions import APIException, ParseError
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -44,6 +46,9 @@ class ManageOrderPaymentList(ListCreateAPIView):
     # FIXME: Permissions
 
     def post_save(self, obj, created=False):
-        service = PaymentService(obj)
-        service.start_payment()
+        try:
+            service = PaymentService(obj)
+            service.start_payment()
+        except PaymentException as error:
+            raise ParseError(detail=str(error))
 

@@ -7,7 +7,7 @@
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
         <h4>{% blocktrans %}Select your method of payment{% endblocktrans %}</h4>
         {{#each donation in order.donations}}
-            <big>{% trans "You're about to support"%} &euro; {{donation.amount}},- {% trans 'to'%} {{order.donations.firstObject.project.title}}. {% trans 'Good job!'%}</big>
+            <big>{% trans "You're about to support"%} {{order.donations.firstObject.project.title}} {% trans 'with'%} &euro; {{donation.amount}}. {% trans 'Good job!'%}</big>
         {{/each}}
         
         <div class="row">
@@ -51,14 +51,14 @@
                 <div class="modal-facebook-password">
                     <input type="text" placeholder="Choose a password">
                 </div>
-				<a {{action 'nextStep'}} {{bindAttr class=":btn-sec :btn :payment-btn isBusy:is-loading blockingErrors:is-inactive"}}>{% trans 'Proceed with'%} {{view.currentPaymentMethodName}}</a>
+				<a {{action 'nextStep'}} {{bindAttr class=":btn-sec :btn :payment-btn isBusy:is-loading blockingErrors:is-inactive"}}>{% trans 'Proceed with'%} {{currentPaymentMethod.name}}</a>
             </div>
         </div>
         {{partial "_order_payment_errors"}}
     </div>
     <div class="modal-fullscreen-footer">
         <div class="modal-payment-provider">
-            <span>Payment processing is handled by <a {{bindAttr href=view.currentPaymentMethodURL }} target="_blank">{{view.currentPaymentMethodProvider}}</a>.</span>
+            <span>Payment processing is handled by <a {{bindAttr href=currentPaymentMethodURL }} target="_blank">{{currentPaymentMethod.provider}}</a>.</span>
         </div>
     </div>
 {% endtplhandlebars %}

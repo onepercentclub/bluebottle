@@ -31,6 +31,12 @@ class BaseDonation(models.Model):
     def user(self):
         return self.order.user
 
+    @property
+    def public_user(self):
+        if self.anonymous:
+            return None
+        return self.user
+
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_donations.serializers.DonationSerializer'

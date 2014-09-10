@@ -7,6 +7,11 @@
             {{fixedFieldsMessage}}
         </div>
     {{else}}
+        {{#if errors}}
+            <div class="modal-flash-message error">
+                {{errors.detail}}
+            </div>
+        {{/if}}
         {{#if validationErrors}}
             <div class="modal-flash-message error">
                 {{validationErrors.error}}

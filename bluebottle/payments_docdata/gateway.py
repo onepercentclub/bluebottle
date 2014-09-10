@@ -6,6 +6,7 @@ which is Apache licensed, copyright (c) 2013 Diederik van der Boor
 
 """
 import logging
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from suds.client import Client
@@ -14,7 +15,7 @@ from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
 
-from .exceptions import PaymentStatusException
+from .exceptions import DocdataPaymentStatusException
 
 logger = logging.getLogger()
 
@@ -67,10 +68,6 @@ class DocdataAPIVersionPlugin(plugin.MessagePlugin):
         body = context.envelope.getChild('Body')
         request = body[0]
         request.set('version', '1.2')
-
-
-def log_docdata_error(error, message):
-    logger.error(u"{0}: code={1}, error={2}".format(message, error._code, error.value))
 
 
 class DocdataClient(object):
@@ -198,10 +195,13 @@ class DocdataClient(object):
                     t += 1
                 else:
                     error = reply.createError.error
-                    log_docdata_error(error, "DocdataClient: failed to create docdata payment for payment {0}".format(payment_id))
-                    raise Exception(error, error.value)
+                    message = error.value
+                    message = message.replace("XML request does not match XSD. The data is: cvc-type.3.1.3: ", "")
+
+                    log_docdata_error(error, message)
+                    raise DocdataPaymentException(message, error._code)
             else:
-                raise Exception('Received unknown reply from DocData. Remote Payment not created.')
+                raise DocdataPaymentException('Received unknown reply from DocData. Remote Payment not created.')
 
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
@@ -223,10 +223,11 @@ class DocdataClient(object):
             return reply.statusSuccess.report
         elif hasattr(reply, 'statusError'):
             error = reply.statusError.error
-            log_docdata_error(error, "DocdataClient: failed to get status for order {0}".format(order_key))
-            raise PaymentStatusException(error._code, error.value)
+            # FIXME Log ERROR here
+            raise DocdataPaymentStatusException(error._code, error.value)
         else:
             logger.error("Unexpected response node from docdata!")
+            # FIXME Log ERROR here
             raise NotImplementedError('Received unknown reply from DocData. No status processed from Docdata.')
 
     def get_payment_menu_url(self, order_key, order_id, return_url=None, client_language=None, **extra_url_args):
@@ -328,9 +329,9 @@ class Name(object):
     """
     def __init__(self, first, last, middle=None, initials=None, prefix=None, suffix=None):
         if not last:
-            raise ValueError("Name.last is required!")
+            raise DocdataPaymentException("Last name is required!")
         if not first:
-            raise ValueError("Name.first is required!")
+            raise DocdataPaymentException("First name is required!")
         self.first = first
         self.last = last
         self.prefix = prefix

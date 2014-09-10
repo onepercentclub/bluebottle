@@ -161,12 +161,12 @@ App.Task = DS.Model.extend({
     }.property('isAvailable'),
 
     membersCount: function() {
-		    return this.get('members.length')
+        return this.get('members.length')
     }.property("members.length"),
     
-	  hasMoreThanOneMember: function() {
+	hasMoreThanOneMember: function() {
         return this.get('membersCount') > 1
-	  }.property('membersCount'),
+    }.property('membersCount'),
     
     hasMembers: function() {
         return this.get('members.length') > 0;

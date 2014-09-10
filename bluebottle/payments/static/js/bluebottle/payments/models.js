@@ -16,7 +16,6 @@ App.PaymentMethod = DS.Model.extend({
     }.property('provider', 'profile')
 });
 
-
 App.OrderPayment = DS.Model.extend({
     user: DS.belongsTo('App.UserPreview'),
     order: DS.belongsTo('App.MyOrder'),
@@ -30,7 +29,7 @@ App.OrderPayment = DS.Model.extend({
 App.MyOrderPayment = App.OrderPayment.extend({
     url: 'order_payments/my',
 
-    paymentMethod: DS.attr('string'),
+    payment_method: DS.attr('string'),
     integrationData: DS.attr('object'),
     authorizationAction: DS.attr('object')
 });

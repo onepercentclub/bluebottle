@@ -202,10 +202,29 @@ class TestAnonymousDonationCreate(DonationApiTestCase):
         self.assertEqual(response.status_code, 201)
 
         # retrieve the donation just created
-        donation_url = reverse('manage-donation-detail', kwargs={'pk': response.data['id']})
+        donation_id = response.data['id']
+        donation_url = reverse('manage-donation-detail', kwargs={'pk': donation_id})
         response = self.client.get(donation_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # check if the anonymous is set to True
+        # Check if the anonymous is set to True
         self.assertEqual(True, response.data['anonymous'])
+
+        # Check that user is shown in private API
+        self.assertEqual(self.order.user.id, response.data['user'])
+
+        # Set the order to success
+        self.order.locked()
+        self.order.succeeded()
+
+        # retrieve the donation through public API
+        donation_url = reverse('donation-detail', kwargs={'pk': donation_id})
+        response = self.client.get(donation_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check that user is NOT shown in public API
+        self.assertEqual(None, response.data['user'])
+
+

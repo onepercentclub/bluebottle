@@ -102,18 +102,18 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
     needs: ['donationSuccess', 'projectIndex', 'fundRaiserIndex'],
 
     parentType: function(){
-        if (this.get('controllers.donationSuccess.fundRaiser')) return 'fundRaiser';
+        if (this.get('controllers.donationSuccess.fundraiser')) return 'fundraiser';
 
         return 'project';
-    }.property('controllers.donationSuccess.fundRaiser'),
+    }.property('controllers.donationSuccess.fundraiser'),
 
     parentId: function(){
-        if (this.get('controllers.donationSuccess.fundRaiser')) {
-            return this.get('controllers.donationSuccess.fundRaiser.id');
+        if (this.get('controllers.donationSuccess.fundraiser')) {
+            return this.get('controllers.donationSuccess.fundraiser.id');
         }
 
         return this.get('controllers.donationSuccess.project.id');
-    }.property('controllers.donationSuccess.fundRaiser.id', 'controllers.donationSuccess.project.id'),
+    }.property('controllers.donationSuccess.fundraiser.id', 'controllers.donationSuccess.project.id'),
 
     createNewWallPost: function(){
         var parent_type = this.get('parentType');

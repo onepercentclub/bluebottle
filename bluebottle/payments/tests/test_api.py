@@ -1,4 +1,5 @@
 import json
+from mock import patch
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
@@ -9,7 +10,7 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory, OrderActionFactory
-
+from bluebottle.bb_orders.views import ManageOrderDetail
 
 class TestOrderPaymentPermissions(TestCase):
     """ Test the permissions for order ownership in bb_orders """
@@ -35,13 +36,15 @@ class TestOrderPaymentPermissions(TestCase):
 
         }
 
-    def test_create_orderpayment_user_not_owner(self):
+    @patch.object(ManageOrderDetail, 'check_status_psp')
+    def test_create_orderpayment_user_not_owner(self, check_status_psp):
         """ User that is not owner of the order tries to create an order payment gets 403"""
         response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
                                    HTTP_AUTHORIZATION=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_create_orderpayment_user_owner(self):
+    @patch.object(ManageOrderDetail, 'check_status_psp')
+    def test_create_orderpayment_user_owner(self, check_status_psp):
         """ User that is owner of the order tries to create an order payment gets a 201 CREATED"""
         response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
                                    HTTP_AUTHORIZATION=self.user1_token)

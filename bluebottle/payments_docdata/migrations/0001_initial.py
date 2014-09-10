@@ -98,8 +98,8 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['order']['db_table']: {
-            'Meta': {'object_name': 'Order'},
+        MODEL_MAP['order']['table']: {
+            'Meta': {'object_name': MODEL_MAP['order']['class']},
             'closed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -201,8 +201,8 @@ class Migration(SchemaMigration):
             'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'tag': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'taggit_taggeditem_items'", 'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['db_table']: {
-            'Meta': {'object_name': 'TestBaseUser'},
+        MODEL_MAP['user']['table']: {
+            'Meta': {'object_name': MODEL_MAP['user']['class']},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),

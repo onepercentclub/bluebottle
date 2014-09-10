@@ -11,6 +11,10 @@ MODEL_MAP = get_model_mapping()
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('orders', '0001_initial'),
+    )
+
     def forwards(self, orm):
         # Adding model 'Donation'
         db.create_table(u'donations_donation', (
@@ -26,9 +30,11 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(MODEL_MAP['task_file']['app'], ['Donation'])
 
+
     def backwards(self, orm):
         # Deleting model 'Donation'
         db.delete_table(u'donations_donation')
+
 
     models = {
         u'auth.group': {
@@ -77,8 +83,8 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['task_file']['db_table']: {
-            'Meta': {'object_name': 'Donation'},
+        MODEL_MAP['task_file']['table']: {
+            'Meta': {'object_name': MODEL_MAP['task_file']['class']},
             'amount': ('django.db.models.fields.DecimalField', [], {'max_digits': '16', 'decimal_places': '2'}),
             'anonymous': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'completed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
@@ -89,8 +95,8 @@ class Migration(SchemaMigration):
             'project': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['fundraiser']['db_table']: {
-            'Meta': {'object_name': 'FundRaiser'},
+        MODEL_MAP['fundraiser']['table']: {
+            'Meta': {'object_name': MODEL_MAP['fundraiser']['class']},
             'amount': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'currency': ('django.db.models.fields.CharField', [], {'default': "'EUR'", 'max_length': "'10'"}),
@@ -128,8 +134,8 @@ class Migration(SchemaMigration):
             'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['order']['db_table']: {
-            'Meta': {'object_name': 'Order'},
+        MODEL_MAP['order']['table']: {
+            'Meta': {'object_name': MODEL_MAP['order']['class']},
             'closed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -151,8 +157,8 @@ class Migration(SchemaMigration):
             'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'tag': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'taggit_taggeditem_items'", 'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['project']['db_table']: {
-            'Meta': {'ordering': "['title']", 'object_name': 'TestBaseProject'},
+        MODEL_MAP['project']['table']: {
+            'Meta': {'ordering': "['title']", 'object_name': MODEL_MAP['project']['class']},
             'amount_asked': ('bluebottle.bb_projects.fields.MoneyField', [], {'default': '0', 'null': 'True', 'max_digits': '12', 'decimal_places': '2', 'blank': 'True'}),
             'amount_donated': ('bluebottle.bb_projects.fields.MoneyField', [], {'default': '0', 'max_digits': '12', 'decimal_places': '2'}),
             'amount_needed': ('bluebottle.bb_projects.fields.MoneyField', [], {'default': '0', 'max_digits': '12', 'decimal_places': '2'}),
@@ -172,8 +178,8 @@ class Migration(SchemaMigration):
             'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['user']['db_table']: {
-            'Meta': {'object_name': 'TestBaseUser'},
+        MODEL_MAP['user']['table']: {
+            'Meta': {'object_name': MODEL_MAP['user']['class']},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
@@ -208,8 +214,8 @@ class Migration(SchemaMigration):
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
             'why': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'})
         },
-        MODEL_MAP['organization']['db_table']: {
-            'Meta': {'ordering': "['name']", 'object_name': 'TestOrganization'},
+        MODEL_MAP['organization']['table']: {
+            'Meta': {'ordering': "['name']", 'object_name': MODEL_MAP['organization']['class']},
             'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),

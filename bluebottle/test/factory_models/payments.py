@@ -8,6 +8,7 @@ from .orders import OrderFactory
 class OrderPaymentFactory(factory.DjangoModelFactory):
     FACTORY_FOR = OrderPayment
 
+    payment_method = 'mock'
     amount = 100
     order = factory.SubFactory(OrderFactory)
 

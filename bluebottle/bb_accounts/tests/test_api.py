@@ -41,7 +41,7 @@ class UserApiIntegrationTest(TestCase):
         # Profile should not be able to be updated by anonymous users.
         full_name = {'first_name': 'Nijntje', 'last_name': 'het Konijntje'}
         response = self.client.put(user_profile_url, json.dumps(full_name), 'application/json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Profile should be able to be updated by logged in user.
         response = self.client.put(user_profile_url, json.dumps(full_name), 'application/json', HTTP_AUTHORIZATION=self.user_1_token)

@@ -246,11 +246,15 @@ LOGGING = {
         'sentry': {
             'level': 'INFO',
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+        },
+        'payment_logs': {
+            'level': 'INFO',
+            'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
         }
     },
     'loggers': {
         'payments.payment': {
-            'handlers': ['mail_admins', 'sentry'],
+            'handlers': ['mail_admins', 'payment_logs', 'sentry'],
             'level': 'INFO',
             'propagate': True,
         },

@@ -10,10 +10,9 @@ from bluebottle.payments.models import Payment
 
 
 class PaymentLogLevels(DjangoChoices):
-
-    info = ChoiceItem('info', label=_("INFO"))
-    warn = ChoiceItem('warn', label=_("WARN"))
-    error = ChoiceItem('error', label=_("ERROR"))
+    info = ChoiceItem('INFO', label=_("INFO"))
+    warn = ChoiceItem('WARN', label=_("WARN"))
+    error = ChoiceItem('ERROR', label=_("ERROR"))
 
 
 # TODO: Add fields for: source file, source line number, source version, IP

@@ -32,7 +32,7 @@ class TestPaymentLogger(TestCase, FsmTestMixin):
         # Get the number of logs in the table
         last_log = PaymentLogEntry.objects.all().order_by('-timestamp')[:1][0]
 
-        # We expect to have one log more than before
+        # The latest entry should be for the payment associated with this test
         self.assertEqual(last_log.payment_id, self.order_payment.payment.id)
 
 
@@ -45,47 +45,40 @@ class TestPaymentLogger(TestCase, FsmTestMixin):
 
         last_log = PaymentLogEntry.objects.all().order_by('-timestamp')[:1][0]
 
-        # Check that the status propagated through to order
+        # Check that the status change was logged
         self.assertEqual(last_log.payment_id, self.order_payment.payment.id)
-        self.assertEqual(last_log.message, 'a new payment status authorized')
-        self.assertEqual(last_log.level, 'info')
+        self.assertEqual(last_log.message, 'DocdataPayment object - a new payment status authorized')
+        self.assertEqual(last_log.level, 'INFO')
         
 
 class TestPaymentLoggerAdapter(TestCase):
 
-    def setUp(self):
+    @patch.object(DocdataClient, 'create')
+    def setUp(self, mock_client_create):
+        # Mock response to creating the payment at docdata
+        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(payment_method='docdata', order=self.order)
+        self.service = PaymentService(self.order_payment)
 
+        PaymentLogEntry.objects.all().delete()
 
     def test_payment_log_adapter(self):
         """
         Tests the adapter creating different log messages
         """
-        payment = PaymentFactory.create(order_payment=self.order_payment)
-
-        before_logs = PaymentLogEntry.objects.all()
-        before_logs_num = len(before_logs)
-
-        payment_logger = PaymentLogAdapter('payment.docdata')
+        payment = self.order_payment.payment
+        payment_logger = PaymentLogAdapter()
 
         payment_logger.log(payment=payment,
-                           level='error',
+                           level='ERROR',
                            message='Test Error log')
-        time.sleep(2)
         payment_logger.log(payment=payment,
-                           level='info',
+                           level='INFO',
                            message='Test Info log')
-        time.sleep(2)
         payment_logger.log(payment=payment,
-                           level='warn',
+                           level='WARN',
                            message='Test Warn log')
 
-        after_logs = PaymentLogEntry.objects.all()
-        after_logs_num = len(after_logs)
-
-        self.assertEqual(before_logs_num + 3, after_logs_num)
-
-        # need to wait some time between creating the logs and before finishing the test
-        # otherwise the messages won't be sent (or the rate will be to high) and an error will occur
-        time.sleep(5)
+        self.assertEqual(3, PaymentLogEntry.objects.all().count())

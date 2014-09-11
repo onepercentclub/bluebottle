@@ -70,7 +70,12 @@ class BasePaymentAdapter(object):
 
     def _get_mapped_status(self, status):
         """
-        Mao the status of the PSP to our own status pipeline
+        Map the status of the PSP to our own status pipeline
         """
         raise NotImplementedError
 
+    def get_authorization_action(self):
+        """
+        Create the AuthorizationAction for the PSP
+        """
+        raise NotImplementedError

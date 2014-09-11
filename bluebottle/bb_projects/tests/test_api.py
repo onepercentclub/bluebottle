@@ -256,7 +256,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         """
         response = self.client.get(reverse('project_manage_list'))
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')
@@ -328,7 +328,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         response = self.client.get(
             reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')

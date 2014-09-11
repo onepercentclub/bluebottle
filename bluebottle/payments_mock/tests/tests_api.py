@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.payments.models import OrderPayment
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.utils.utils import StatusDefinition
 
 
 @unittest.skip("The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
@@ -13,9 +14,8 @@ class PaymentMockTests(TestCase):
     Tests for updating and order payment via mock PSP listener. The listener calls the service to fetch the
     appropriate adapter and update the OrderPayment status. It sets the status of the order payment to
     """
-
     def setUp(self):
-        self.order_payment = OrderPaymentFactory.create(status='created', amount=100, payment_method='mockCreditcard')
+        self.order_payment = OrderPaymentFactory.create(status=StatusDefinition.CREATED, amount=100, payment_method='mock')
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -29,7 +29,7 @@ class PaymentMockTests(TestCase):
         self.assertEqual(response.status_code, 200)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
         self.assertEquals(order_payment.status, status)
-        self.assertEqual(OrderPayment.objects.count(), 1)
+        self.assertEquals(OrderPayment.objects.count(), 1)
 
     def test_status_started_update(self):
         self.api_status('started')
@@ -132,12 +132,15 @@ class PaymentErrorTests(TestCase):
         self.assertEqual(response.data['detail'][0:9], 'Last name')
 
     def test_amount_too_low(self):
+        user3 = self.donation3.order.user
+        user3_token = "JWT {0}".format(user3.get_jwt_token())
+
         data = {'order': self.donation3.order.id,
                 'payment_method': 'mockIdeal',
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=self.user2_token)
+        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=user3_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:6], 'Amount')

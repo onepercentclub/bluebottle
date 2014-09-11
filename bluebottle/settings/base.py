@@ -121,15 +121,12 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware'
 )
-# REST_FRAMEWORK = {
-#     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
-# }
 
 REST_FRAMEWORK = {
     # Don't do basic authentication.
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
 }
 
@@ -326,3 +323,4 @@ ACCOUNT_ACTIVATION_DAYS = 7
 HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
+

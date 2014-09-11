@@ -112,7 +112,6 @@ class TestOrderPermissions(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-@unittest.skip("These tests are breaking because there is an integrity error when updating MockPayments")
 class TestStatusUpdates(TestCase):
     def setUp(self):
         self.user1 = BlueBottleUserFactory.create()
@@ -120,7 +119,6 @@ class TestStatusUpdates(TestCase):
 
     @patch.object(MockPaymentAdapter, 'check_payment_status')
     def test_no_success_payment_status_check(self, mock_check_payment_status):
-        self.skip("For some reason the status of the payment is NULL in tests when saving")
         self.order = OrderFactory.create(user=self.user1)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)
@@ -130,7 +128,6 @@ class TestStatusUpdates(TestCase):
 
     @patch.object(MockPaymentAdapter, 'check_payment_status')
     def test_success_payment_status_check(self, mock_check_payment_status):
-        self.skip("For some reason the status of the payment is NULL in tests when saving")
         self.order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='mock',

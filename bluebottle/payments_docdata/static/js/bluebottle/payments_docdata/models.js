@@ -1,7 +1,9 @@
-App.DocdataCreditcard = App.StandardCreditCardPaymentModel.extend();
-
 App.DocdataPayment = Em.Object.extend({
     paymentMethod: ''
+});
+
+App.DocdataCreditcard = App.DocdataPayment.extend({
+    default_pm: ''
 });
 
 App.DocdataIdeal = App.DocdataPayment.extend({

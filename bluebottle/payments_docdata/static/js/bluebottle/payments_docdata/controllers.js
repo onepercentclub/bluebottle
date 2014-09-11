@@ -1,9 +1,14 @@
 App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
     requiredFields: ['default_pm'],
 
+    isVisa: Em.computed.equal('default_pm', 'visa'),
+    isMastercard: Em.computed.equal('default_pm', 'mastercard'),
+
     init: function() {
         this._super();
-        this.set('model', App.DocdataCreditcard.create());
+        this.set('model', App.DocdataCreditcard.create({
+            default_pm: 'mastercard'
+        }));
     }
 });
 

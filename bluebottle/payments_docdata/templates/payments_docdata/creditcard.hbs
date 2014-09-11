@@ -8,15 +8,15 @@
         {% endblocktrans%}
         <ul class="card-types-list">
             <li>
-                <label for="mastercard" class="is-active">
-                    {{view App.RadioButton name='creditcard' value='mastercard' id='mastercard' selectionBinding='default_pm' checked='checked'}}
+                <label for="mastercard" {{bind-attr class='isMastercard:is-active:'}}>
+                    {{view App.RadioButton name='creditcard' value='mastercard' id='mastercard' selectionBinding='default_pm'}}
                     <i class="checked-icon"></i>
                     <span class="creditcard-type">Mastercard</span>
                     <span class="icon-card mastercard"></span>
                 </label>
             </li>
             <li>
-                <label for="visa">
+                <label for="visa" {{bind-attr class='isVisa:is-active:'}}>
                     {{view App.RadioButton name='creditcard' value='visa' id='visa' selectionBinding='default_pm'}}
                     <i class="checked-icon"></i>
                     <span class="creditcard-type">Visa</span>

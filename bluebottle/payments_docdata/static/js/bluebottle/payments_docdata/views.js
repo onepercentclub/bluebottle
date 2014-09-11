@@ -25,16 +25,4 @@ App.DocdataCreditcardSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
     prompt: gettext("Select your credit card")
-
-});
-
-App.DocdataCreditcardView = Em.View.extend({
-    templateName: 'docdataCreditcard',
-
-    didInsertElement: function() {
-        $('.card-types-list label').on('click', function(e) {
-            $('.card-types-list label').removeClass('is-active');
-            $(this).addClass('is-active');
-        });
-    }
 });

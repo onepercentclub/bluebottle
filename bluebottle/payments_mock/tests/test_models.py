@@ -14,7 +14,6 @@ from bluebottle.utils.utils import StatusDefinition
 
 from mock import patch
 
-@unittest.skip("MockPayments currently give an error when changing the status")
 class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
     def setUp(self):
         self.order = OrderFactory.create()

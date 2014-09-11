@@ -1,5 +1,6 @@
 from bluebottle.payments.models import Payment
 from django.conf import settings
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
 
 
 class BasePaymentAdapter(object):
@@ -10,6 +11,9 @@ class BasePaymentAdapter(object):
     MODEL_CLASS = Payment
 
     def __init__(self, order_payment):
+
+        self.payment_logger = PaymentLogAdapter()
+
         self.order_payment = order_payment
         if self.MODEL_CLASS.__class__ == Payment:
             raise Exception("Please override MODEL_CLASS with extended payment model.")

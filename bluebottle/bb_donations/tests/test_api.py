@@ -347,8 +347,9 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestDonationCreate(DonationApiTestCase):
+class TestAnonymousDonationCreate(DonationApiTestCase):
 
+    # FIXME: Write tests for anonymous donations
     def test_create_anonymous_donation(self):
         donation_url = reverse('manage-donation-list')
 
@@ -382,3 +383,4 @@ class TestDonationCreate(DonationApiTestCase):
 
         # Check that user is NOT shown in public API
         self.assertEqual(None, response.data['user'])
+

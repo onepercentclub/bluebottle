@@ -32,23 +32,22 @@ class TestOrderPaymentPermissions(TestCase):
             'user': None,
             'status': '',
             'updated': None,
-            'amount' : 25
+            'amount' : 100
 
         }
 
-    @patch.object(ManageOrderDetail, 'check_status_psp')
-    def test_create_orderpayment_user_not_owner(self, check_status_psp):
+    def test_create_orderpayment_user_owner(self):
+        """ User that is owner of the order tries to create an order payment gets a 201 CREATED"""
+        import pdb;pdb.set_trace()
+        response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
+                                   HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_orderpayment_user_not_owner(self):
         """ User that is not owner of the order tries to create an order payment gets 403"""
         response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
                                    HTTP_AUTHORIZATION=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @patch.object(ManageOrderDetail, 'check_status_psp')
-    def test_create_orderpayment_user_owner(self, check_status_psp):
-        """ User that is owner of the order tries to create an order payment gets a 201 CREATED"""
-        response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
-                                   HTTP_AUTHORIZATION=self.user1_token)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_get_payment_methods_unauthenticated(self):
         """ Test that  unauthenticated users may not retrieve payment methods """

@@ -1,5 +1,5 @@
-# coding=utf-8
 import logging
+
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from django.contrib.sites.models import get_current_site
@@ -13,7 +13,6 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition, get_current_host
 from .models import DocdataPayment
-from .gateway import DocdataClient
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +35,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'CLOSED_SUCCESS':                 StatusDefinition.PAID,
         'CLOSED_CANCELLED':               StatusDefinition.CANCELLED,
     }
+
+    def __init__(self, *args, **kwargs):
+        super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
     def get_status_mapping(self, external_payment_status):
         return self.STATUS_MAPPING.get(external_payment_status)
@@ -102,6 +104,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def get_authorization_action(self):
 
+        #FIXME: get rid of these testing
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
         client = gateway.DocdataClient(testing_mode)

@@ -15,20 +15,14 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
     def order_link(self, obj):
         object = obj.order
-        print object._meta.app_label
-        print object._meta.module_name
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
         return "<a href='{0}'>Order: {1}</a>".format(str(url), object.id)
 
     order_link.allow_tags = True
 
     def payment_link(self, obj):
         object = obj.payment
-        print object._meta.app_label
-        print object._meta.module_name
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
         return "<a href='{0}'>{1}: {2}</a>".format(str(url), object.polymorphic_ctype, object.id)
 
     payment_link.allow_tags = True

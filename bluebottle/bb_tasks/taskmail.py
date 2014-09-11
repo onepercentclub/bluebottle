@@ -12,6 +12,16 @@ from bluebottle.utils.model_dispatcher import get_taskmember_model
 TASK_MEMBER_MODEL = get_taskmember_model()
 
 
+def mail_sender(receiver, mail_html, mail_txt, subject, ctx):
+
+    translation.activate(receiver.primary_language)
+    translation.deactivate()
+    text_content = render_to_string(mail_txt, context_instance=ctx)
+    html_content = render_to_string(mail_html, context_instance=ctx)
+    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
 def new_reaction_notification(sender, instance, created, **kwargs):
     task_member = instance
@@ -24,19 +34,11 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         receiver = task.author
         sender = task_member.member
         link = '/go/tasks/{0}'.format(task.id)
-
-        # Compose the mail
-        # Set the language for the receiver
-        translation.activate(receiver.primary_language)
         subject = _('%(sender)s applied for your task.') % {'sender': sender.get_short_name()}
         ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
                        'motivation': task_member.motivation})
-        text_content = render_to_string('task_member_applied.mail.txt', context_instance=ctx)
-        html_content = render_to_string('task_member_applied.mail.html', context_instance=ctx)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
+
+        mail_sender(receiver, 'task_member_applied.mail.txt', 'task_member_applied.mail.html', subject, ctx)
 
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.rejected:
         sender = task.author
@@ -46,16 +48,10 @@ def new_reaction_notification(sender, instance, created, **kwargs):
 
         # Compose the mail
         # Set the language for the receiver
-        translation.activate(receiver.primary_language)
         subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.get_short_name()}
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+        ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
                            'task_list': task_list})
-        text_content = get_template('task_member_rejected.mail.txt').render(context)
-        html_content = get_template('task_member_rejected.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
+        mail_sender(receiver, 'task_member_rejected.mail.txt', 'task_member_rejected.mail.html', subject, ctx)
 
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.accepted:
         sender = task.author
@@ -64,15 +60,10 @@ def new_reaction_notification(sender, instance, created, **kwargs):
 
         # Compose the mail
         # Set the language for the receiver
-        translation.activate(receiver.primary_language)
         subject = _('%(sender)s accepted you to complete the tasks you applied for.') % {'sender': sender.get_short_name()}
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
-        text_content = get_template('task_member_accepted.mail.txt').render(context)
-        html_content = get_template('task_member_accepted.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
+        ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
+
+        mail_sender(receiver, 'task_member_accepted.mail.txt', 'task_member_accepted.mail.html', subject, ctx)
 
     if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.realized:
         sender = task.author
@@ -83,16 +74,11 @@ def new_reaction_notification(sender, instance, created, **kwargs):
 
         # Compose the mail
         # Set the language for the receiver
-        translation.activate(receiver.primary_language)
         subject = _('You realised your <Bluebottle Project> task!')
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
-                           'task_list':task_list, 'project_link':project_link})
-        text_content = get_template('task_member_realized.mail.txt').render(context)
-        html_content = get_template('task_member_realized.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
+        ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+                           'task_list':task_list, 'project_link': project_link })
+
+        mail_sender(receiver, 'task_member_realized.mail.txt', 'task_member_realized.mail.html', subject, ctx)
 
 
 @receiver(pre_delete, weak=False, sender=TASK_MEMBER_MODEL)

@@ -24,6 +24,10 @@ def get_project_model():
     return get_model_class('PROJECTS_PROJECT_MODEL')
 
 
+def get_project_phaselog_model():
+    return get_model_class('PROJECTS_PHASELOG_MODEL')
+
+
 def get_donation_model():
     return get_model_class('DONATIONS_DONATION_MODEL')
 
@@ -46,10 +50,6 @@ def get_organizationmember_model():
 
 def get_organizationdocument_model():
     return get_model_class('ORGANIZATIONS_DOCUMENT_MODEL')
-
-
-def get_project_phaselog_model():
-    return get_model_class('PROJECTS_PHASELOG_MODEL')
 
 
 def get_payment_logger_model():
@@ -85,3 +85,48 @@ def get_model_class(model_name=None):
                 "installed".format(model_name))
 
     return model
+
+
+def _map_model(name, model_name):
+    """
+    Derive some partials of a model based on settings
+    """
+    model = getattr(settings, model_name)
+    db_table = getattr(get_model_class(model_name).Meta, 'db_table', model.lower())
+    return {
+        name: {
+            'model': model,
+            'class': model.split('.')[1],
+            'app': model.split('.')[0],
+            'table': db_table
+        }
+    }
+
+
+def get_model_mapping():
+    """
+    Return a dictionary with all base models and their parts (model, class, app, table).
+
+    This is used by bb_schemamigration command.
+    https://github.com/onepercentclub/bluebottle/wiki/Migrations
+    """
+    map = dict(_map_model('user', 'AUTH_USER_MODEL').items()
+
+        + _map_model('project', 'PROJECTS_PROJECT_MODEL').items()
+        + _map_model('project_phaselog', 'PROJECTS_PHASELOG_MODEL').items()
+
+        + _map_model('task', 'TASKS_TASK_MODEL').items()
+        + _map_model('task_skill', 'TASKS_SKILL_MODEL').items()
+        + _map_model('task_member', 'TASKS_TASKMEMBER_MODEL').items()
+        + _map_model('task_file', 'TASKS_TASKFILE_MODEL').items()
+
+        + _map_model('task_file', 'DONATIONS_DONATION_MODEL').items()
+        + _map_model('order', 'ORDERS_ORDER_MODEL').items()
+        + _map_model('donation', 'DONATIONS_DONATION_MODEL').items()
+        + _map_model('fundraiser', 'FUNDRAISERS_FUNDRAISER_MODEL').items()
+        + _map_model('organization', 'ORGANIZATIONS_ORGANIZATION_MODEL').items()
+        + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()
+        + _map_model('organization_document', 'ORGANIZATIONS_DOCUMENT_MODEL').items()
+    )
+
+    return map

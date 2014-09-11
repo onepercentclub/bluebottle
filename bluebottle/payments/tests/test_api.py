@@ -11,6 +11,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory, OrderActionFactory
 from bluebottle.bb_orders.views import ManageOrderDetail
+from bluebottle.payments_mock.adapters import MockPaymentAdapter
 
 class TestOrderPaymentPermissions(TestCase):
     """ Test the permissions for order ownership in bb_orders """
@@ -22,7 +23,7 @@ class TestOrderPaymentPermissions(TestCase):
         self.user2 = BlueBottleUserFactory.create()
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
-        self.order = OrderFactory.create(user=self.user1)
+        self.order = OrderFactory.create(user=self.user1, total=10)
 
         self.order_payment_data = {
             'order': self.order.id,
@@ -32,15 +33,17 @@ class TestOrderPaymentPermissions(TestCase):
             'user': None,
             'status': '',
             'updated': None,
-            'amount' : 100
+            'amount' : 25
 
         }
 
-    def test_create_orderpayment_user_owner(self):
+    @patch.object(MockPaymentAdapter, 'create_payment')
+    def test_create_orderpayment_user_owner(self, mock_create_payment):
         """ User that is owner of the order tries to create an order payment gets a 201 CREATED"""
-        import pdb;pdb.set_trace()
+
         response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
                                    HTTP_AUTHORIZATION=self.user1_token)
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_orderpayment_user_not_owner(self):

@@ -75,7 +75,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
         # Compose the mail
         # Set the language for the receiver
         subject = _('You realised your <Bluebottle Project> task!')
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
+        ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
                            'task_list':task_list, 'project_link': project_link })
 
         mail_sender(receiver, 'task_member_realized.mail.txt', 'task_member_realized.mail.html', subject, ctx)

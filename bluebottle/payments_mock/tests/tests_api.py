@@ -8,7 +8,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.utils import StatusDefinition
 
 
-
 @unittest.skip("The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
 class PaymentMockTests(TestCase):
     """
@@ -133,12 +132,15 @@ class PaymentErrorTests(TestCase):
         self.assertEqual(response.data['detail'][0:9], 'Last name')
 
     def test_amount_too_low(self):
+        user3 = self.donation3.order.user
+        user3_token = "JWT {0}".format(user3.get_jwt_token())
+
         data = {'order': self.donation3.order.id,
                 'payment_method': 'mockIdeal',
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=self.user2_token)
+        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=user3_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:6], 'Amount')

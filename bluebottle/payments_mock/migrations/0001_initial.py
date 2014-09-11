@@ -12,66 +12,16 @@ MODEL_MAP = get_model_mapping()
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Payment'
-        db.create_table(u'payments_payment', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_payments.payment_set', null=True, to=orm['contenttypes.ContentType'])),
-            ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='started', max_length=50)),
-            ('order_payment', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.OrderPayment'], unique=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        # Adding model 'MockPayment'
+        db.create_table(u'payments_mock_mockpayment', (
+            (u'payment_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Payment'], unique=True, primary_key=True)),
         ))
-        db.send_create_signal(u'payments', ['Payment'])
-
-        # Adding model 'OrderPaymentAction'
-        db.create_table(u'payments_orderpaymentaction', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('type', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('method', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('url', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('payload', self.gf('django.db.models.fields.CharField')(max_length=5000, blank=True)),
-        ))
-        db.send_create_signal(u'payments', ['OrderPaymentAction'])
-
-        # Adding model 'OrderPayment'
-        db.create_table(u'payments_orderpayment', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[MODEL_MAP['user']['model']], null=True, blank=True)),
-            ('order', self.gf('django.db.models.fields.related.ForeignKey')(related_name='payments', to=orm[MODEL_MAP['order']['model']])),
-            ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='created', max_length=50)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('closed', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('amount', self.gf('django.db.models.fields.DecimalField')(max_digits=16, decimal_places=2)),
-            ('payment_method', self.gf('django.db.models.fields.CharField')(default='', max_length=20, blank=True)),
-            ('integration_data', self.gf('django.db.models.fields.TextField')(default='{}', max_length=5000, blank=True)),
-            ('authorization_action', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.OrderPaymentAction'], unique=True, null=True)),
-        ))
-        db.send_create_signal(u'payments', ['OrderPayment'])
-
-        # Adding model 'Transaction'
-        db.create_table(u'payments_transaction', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_payments.transaction_set', null=True, to=orm['contenttypes.ContentType'])),
-            ('payment', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['payments.Payment'])),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-        ))
-        db.send_create_signal(u'payments', ['Transaction'])
+        db.send_create_signal(u'payments_mock', ['MockPayment'])
 
 
     def backwards(self, orm):
-        # Deleting model 'Payment'
-        db.delete_table(u'payments_payment')
-
-        # Deleting model 'OrderPaymentAction'
-        db.delete_table(u'payments_orderpaymentaction')
-
-        # Deleting model 'OrderPayment'
-        db.delete_table(u'payments_orderpayment')
-
-        # Deleting model 'Transaction'
-        db.delete_table(u'payments_transaction')
+        # Deleting model 'MockPayment'
+        db.delete_table(u'payments_mock_mockpayment')
 
 
     models = {
@@ -142,13 +92,9 @@ class Migration(SchemaMigration):
             'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'started'", 'max_length': '50'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        u'payments.transaction': {
-            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'Transaction'},
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'payment': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['payments.Payment']"}),
-            'polymorphic_ctype': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'polymorphic_payments.transaction_set'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
+        u'payments_mock.mockpayment': {
+            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'MockPayment', '_ormbases': [u'payments.Payment']},
+            u'payment_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Payment']", 'unique': 'True', 'primary_key': 'True'})
         },
         u'taggit.tag': {
             'Meta': {'object_name': 'Tag'},
@@ -201,4 +147,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['payments']
+    complete_apps = ['payments_mock']

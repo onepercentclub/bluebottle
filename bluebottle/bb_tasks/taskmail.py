@@ -14,6 +14,10 @@ TASK_MEMBER_MODEL = get_taskmember_model()
 
 class TaskMemberMailSender:
 
+    """
+    The base class for Task Mail senders
+    """
+
     def __init__(self, instance, *args, **kwargs):
 
         self.task_member = instance

@@ -46,7 +46,7 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
         self.template_mail = 'task_member_applied.mail'
         self.receiver = self.task.author
         self.subject = _('{0} applied for your task.'.format(self.task_member.member.get_short_name()))
-        self.ctx = Context({'task': self.task, 'receiver': receiver, 'sender': self.task_member.member, 'link': self.task_link,
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member, 'link': self.task_link,
                             'site': self.site, 'motivation': self.task_member.motivation})
 
 
@@ -58,7 +58,7 @@ class TaskMemberRejectMail(TaskMemberMailSender):
         self.template_mail = 'task_member_rejected.mail'
         self.receiver = self.task_member.member
         self.subject = _('{0}s found someone else to do the task you applied for.'.format(self.task.authorget_short_name()))
-        self.ctx = Context({'task': self.task, 'receiver': receiver, 'sender': self.task.author, 'link': self.task_link,
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list})
 
 
@@ -70,7 +70,7 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
         self.template_mail = 'task_member_accepted.mail'
         self.receiver = self.task_member.member
         self.subject = _('{0}s accepted you to complete the tasks you applied for.'.format(self.task.author.get_short_name()))
-        self.ctx = Context({'task': self.task, 'receiver': receiver, 'sender': self.task.author, 'link': self.task_link,
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site})
 
 
@@ -82,7 +82,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
         self.template_mail = 'task_member_realized.mail'
         self.receiver = self.task_member.member
         self.subject = _('You realised your {0} task!'.format(self.task.project.title))
-        self.ctx = Context({'task': self.task, 'receiver': receiver, 'sender': self.task.author, 'link': self.task_link,
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list,
                             'project_link': self.project_link})
 

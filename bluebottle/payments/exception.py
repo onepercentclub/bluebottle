@@ -10,3 +10,7 @@ class PaymentException(Exception):
 
     def __unicode__(self):
         return str(self)
+
+
+class PaymentAdminException(Exception):
+    pass

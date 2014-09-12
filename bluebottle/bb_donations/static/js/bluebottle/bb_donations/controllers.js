@@ -79,17 +79,17 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
 App.ProjectSupporterListController = Em.ArrayController.extend({
     needs: ['project'],
 
-    supporters: function () {
+    model: function () {
         return App.ProjectDonation.find({project: this.get('controllers.project.id')});
     }.property('controllers.project.id'),
 
     supportersLoaded: function(sender, key) {
         if (this.get(key)) {
-            this.set('model', this.get('supporters').toArray());
+            this.set('recentSupporters', this.get('model').toArray().splice(0, 10));
         } else {
-            this.set('model', null);
+            this.set('recentSupporters', null);
         }
-    }.observes('supporters.isLoaded')
+    }.observes('model.isLoaded')
 });
 
 

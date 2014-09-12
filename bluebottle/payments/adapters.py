@@ -1,5 +1,6 @@
 from bluebottle.payments.models import Payment
 from django.conf import settings
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
 
 
 class BasePaymentAdapter(object):
@@ -10,6 +11,9 @@ class BasePaymentAdapter(object):
     MODEL_CLASS = Payment
 
     def __init__(self, order_payment):
+
+        self.payment_logger = PaymentLogAdapter()
+
         self.order_payment = order_payment
         if self.MODEL_CLASS.__class__ == Payment:
             raise Exception("Please override MODEL_CLASS with extended payment model.")
@@ -66,7 +70,12 @@ class BasePaymentAdapter(object):
 
     def _get_mapped_status(self, status):
         """
-        Mao the status of the PSP to our own status pipeline
+        Map the status of the PSP to our own status pipeline
         """
         raise NotImplementedError
 
+    def get_authorization_action(self):
+        """
+        Create the AuthorizationAction for the PSP
+        """
+        raise NotImplementedError

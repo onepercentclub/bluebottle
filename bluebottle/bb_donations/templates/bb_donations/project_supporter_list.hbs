@@ -3,10 +3,10 @@
 {% load static %}
 
 {% tplhandlebars "project_supporter_list" %}
-    {{#if supporters.length}}
-        <h4>{% trans "Supporters" %} <em>{{supporters.meta.total}} {% trans "Total" %}</em></h4>
+    {{#if model.length}}
+        <h4>{% trans "Supporters" %} <em>{{model.meta.total}} {% trans "Total" %}</em></h4>
         <ul>
-            {{#each supporter in supporters}}
+            {{#each supporter in recentSupporters}}
                 {{view "App.ProjectSupporterView" }}
             {{/each}}
         </ul>

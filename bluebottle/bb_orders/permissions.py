@@ -6,6 +6,12 @@ from bluebottle.utils.utils import StatusDefinition
 ORDER_MODEL = get_order_model()
 
 
+class LoggedInUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated():
+            return True
+        return False
+
 class IsUser(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """
     def has_object_permission(self, request, view, obj):
@@ -36,6 +42,33 @@ class IsOrderCreator(permissions.BasePermission):
                 return order_id == order.id
             return False
 
+    def _get_order_from_request(self, request):
+        if request.DATA:
+            order_id = request.DATA.get('order', None)
+        else:
+            order_id = request.QUERY_PARAMS.get('order', None)
+        if order_id:
+            try:
+                project = ORDER_MODEL.objects.get(id=order_id)
+                return project
+            except ORDER_MODEL.DoesNotExist:
+                return None
+        else:
+            return None
+
+    def has_permission(self, request, view):
+        # Allow non modifying actions
+        if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
+            return True
+
+        # This is for creating new objects that have a relation (fk) to Order.
+        if not view.model == ORDER_MODEL:
+            order = self._get_order_from_request(request)
+            if order:
+                return order.user == request.user
+            else:
+                return False
+        return True
 
 class OrderIsNew(permissions.BasePermission):
     """
@@ -59,15 +92,17 @@ class OrderIsNew(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Allow non modifying actions
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
-        order = self._get_order_from_request(request)
-        if order:
-            return order.status == StatusDefinition.CREATED
+        if not view.model == ORDER_MODEL:
+            order = self._get_order_from_request(request)
+            if order:
+                return order.status == StatusDefinition.CREATED
+            else:
+                return False
         return True
-
 
     def has_object_permission(self, request, view, obj):
 

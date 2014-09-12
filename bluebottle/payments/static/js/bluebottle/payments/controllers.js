@@ -4,6 +4,11 @@ App.OrderPaymentController = Em.ObjectController.extend({
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
     validationErrorsBinding: 'paymentMethodController.validationErrors',
     isBusyBinding: 'paymentMethodController.isBusy',
+    currentPaymentMethod: null,
+
+    currentPaymentMethodURL: function() {
+        return 'http://www.' + this.get('currentPaymentMethod.provider') + '.com';
+    }.property('currentPaymentMethod.provider'),
 
     // Override modal willOpen handler to fetch the payment methods
     willOpen: function () {
@@ -27,8 +32,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
     },
 
     _setFirstPaymentMethod: function () {
-        if (this.get('methods.length') && !this.get('payment_method')) {
-            this.set('payment_method', this.get('methods').objectAt(0));
+        if (this.get('methods.length') && !this.get('currentPaymentMethod')) {
+            this.set('currentPaymentMethod', this.get('methods').objectAt(0));
         }
     }.observes('methods.length'),
 
@@ -59,9 +64,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     // Process the data associated with the current payment method
     _setIntegrationData: function () {
-
-        var paymentMethodController = this.get('currentPaymentMethodController');
-        this.set('payment_method', paymentMethodController.get('model'));
+        var paymentMethodController = this.get('paymentMethodController');
 
         // TODO: How we handle the payment details will depend on the PSP.
         if (paymentMethodController) {
@@ -88,18 +91,22 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     // Set the current payment method controller based on selected method
     _setPaymentMethodController: function () {
-        var method = this.get('payment_method');
-        if (!method || !method.get('uniqueId')) return;
+        var method = this.get('currentPaymentMethod'),
+            methodId = this.get('currentPaymentMethod.uniqueId');
+
+        if (!methodId) return;
+        
         // Render the payment method view
         var applicationRoute = App.__container__.lookup('route:application');
-        applicationRoute.render(method.get('uniqueId'), {
+        applicationRoute.render(methodId, {
             into: 'orderPayment',
             outlet: 'paymentMethod'
         });
+        this.set('paymentMethodController', this.container.lookup('controller:' + methodId));
 
-        this.set('currentPaymentMethodController', this.container.lookup('controller:' + this.get('payment_method.uniqueId')));
-
-    }.observes('payment_method'),
+        // Set paymentMethod on the payment based on the currentPaymentMethod
+        this.set('payment_method', methodId)
+    }.observes('currentPaymentMethod'),
 
     actions: {
         previousStep: function () {
@@ -114,9 +121,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
-            payment.set('paymentMethod', this.get('payment_method.uniqueId'));
             // check for validation errors generated in the current payment method controller
-            var validationErrors = this.get('currentPaymentMethodController').validateFields();
+            var validationErrors = this.get('paymentMethodController').validateFields();
             this.set('validationErrors', validationErrors[0]);
             this.set('errorsFixed', validationErrors[1]);
 
@@ -132,7 +138,6 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
             // Set is loading property until success or error response
             _this.set('isBusy', true);
-
             payment.save().then(
                 // Success
                 function (payment) {
@@ -168,7 +173,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
         selectedPaymentMethod: function(paymentMethod) {
             // Set the payment method on the payment model
-            this.set('payment_method', paymentMethod);
+            this.set('currentPaymentMethod', paymentMethod);
         }
     }
 });
@@ -178,10 +183,12 @@ App.OrderPaymentController = Em.ObjectController.extend({
  */
 
 App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerValidationMixin, {
+    isBusy: null,
 
     getIntegrationData: function() {
         return this.get('model');
     },
+
     validateFields: function(){
         return true;
     }

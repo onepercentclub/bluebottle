@@ -1,10 +1,13 @@
+from django.contrib import admin
+from django.core.urlresolvers import reverse
+
 from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments.exception import PaymentAdminException
 from bluebottle.payments_docdata.admin import DocdataPaymentAdmin
 from bluebottle.payments_docdata.models import DocdataPayment
 from bluebottle.payments_mock.admin import MockPaymentAdmin
 from bluebottle.payments_mock.models import MockPayment
-from django.contrib import admin
-from django.core.urlresolvers import reverse
+
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 
 
@@ -15,20 +18,14 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
     def order_link(self, obj):
         object = obj.order
-        print object._meta.app_label
-        print object._meta.module_name
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
         return "<a href='{0}'>Order: {1}</a>".format(str(url), object.id)
 
     order_link.allow_tags = True
 
     def payment_link(self, obj):
         object = obj.payment
-        print object._meta.app_label
-        print object._meta.module_name
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
         return "<a href='{0}'>{1}: {2}</a>".format(str(url), object.polymorphic_ctype, object.id)
 
     payment_link.allow_tags = True
@@ -65,11 +62,12 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     # list_filter = ('status', )
     ordering = ('-created', )
 
-    child_models = (
-        (DocdataPayment, DocdataPaymentAdmin),
-        (MockPayment, MockPaymentAdmin),
-    )
-
+    def get_child_models(self):
+        try:
+            return tuple((cls, globals()['{0}Admin'.format(cls.__name__)]) for cls in Payment.__subclasses__())
+        except KeyError as e:
+            raise PaymentAdminException('Class not found: {0}. Classes extending Payment need a corresponding Admin class.'.format(e.message))
+        
     def order_payment_amount(self, instance):
         return instance.order_payment.amount
 

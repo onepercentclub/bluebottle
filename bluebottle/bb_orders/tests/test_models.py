@@ -3,7 +3,7 @@ from datetime import datetime
 from django.test import TestCase
 from django_fsm.db.fields import TransitionNotAllowed
 
-from bluebottle.test.factory_models.payments import PaymentFactory, OrderPaymentFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.utils import StatusDefinition
 
@@ -50,4 +50,5 @@ class BlueBottleOrderTestCase(TestCase):
         self.order.succeeded()
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
             'Changing the Order status should not change the Order Payment status')
+
 

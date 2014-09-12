@@ -120,3 +120,4 @@ class BlueBottleUserAdmin(UserAdmin):
 
 if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
    admin.site.register(BB_USER_MODEL, BlueBottleUserAdmin)
+

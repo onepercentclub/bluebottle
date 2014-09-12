@@ -4,8 +4,8 @@
 {% tplhandlebars "_donation_amount" %}
     <div {{bindAttr class=":modal-fullscreen-content"}}>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
-        <h4>{% blocktrans %}Thanks for supporting this cause!{% endblocktrans %}</h4>
-        <big>{% blocktrans %}Select or type the amount you would like to give.{% endblocktrans %}</big>
+        <h4>{% blocktrans %}Thank you for supporting this project!{% endblocktrans %}</h4>
+        <big>{% blocktrans %}Select or enter the amount you would like to donate{% endblocktrans %}</big>
         <div class="row donation-amount">
             <div class="col4 input">
                 <form>
@@ -33,7 +33,7 @@
             <label for="hideMyName" class="modal-checkbox">
                 {{input type="checkbox" checkedBinding="anonymous" id="hideMyName"}}
                 <span></span>
-                {% trans "I'd like to support anonymous."%}
+                {% trans "Hide my name for this donation"%}
             </label>
         </div>
     </div>

@@ -1,10 +1,13 @@
+from django.contrib import admin
+from django.core.urlresolvers import reverse
+
 from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments.exception import PaymentAdminException
 from bluebottle.payments_docdata.admin import DocdataPaymentAdmin
 from bluebottle.payments_docdata.models import DocdataPayment
 from bluebottle.payments_mock.admin import MockPaymentAdmin
 from bluebottle.payments_mock.models import MockPayment
-from django.contrib import admin
-from django.core.urlresolvers import reverse
+
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 
 
@@ -59,11 +62,12 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     # list_filter = ('status', )
     ordering = ('-created', )
 
-    child_models = (
-        (DocdataPayment, DocdataPaymentAdmin),
-        (MockPayment, MockPaymentAdmin),
-    )
-
+    def get_child_models(self):
+        try:
+            return tuple((cls, globals()['{0}Admin'.format(cls.__name__)]) for cls in Payment.__subclasses__())
+        except KeyError as e:
+            raise PaymentAdminException('Class not found: {0}. Classes extending Payment need a corresponding Admin class.'.format(e.message))
+        
     def order_payment_amount(self, instance):
         return instance.order_payment.amount
 

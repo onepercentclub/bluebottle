@@ -5,14 +5,15 @@ App.PaymentMethod = DS.Model.extend({
     profile: DS.attr('string'),
     name: DS.attr('string'),
 
+    providerName: function () {
+        return this.get('provider').capitalize()
+    }.property('provider'),
+
     uniqueId: function () {
-
         var profile = this.get('profile');
-        if (profile) {
-            profile = profile.capitalize();
-        }
-        return this.get('provider') + profile;
+        if (profile) profile = profile.capitalize();
 
+        return this.get('provider') + profile;
     }.property('provider', 'profile')
 });
 

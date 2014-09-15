@@ -71,7 +71,7 @@ class ProjectDonationDetail(generics.RetrieveAPIView):
 
 class MyProjectDonationList(generics.ListAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
+    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'default')
 
     def get_queryset(self):
         queryset = super(MyProjectDonationList, self).get_queryset()
@@ -93,7 +93,7 @@ class MyProjectDonationList(generics.ListAPIView):
 
 class MyFundraiserDonationList(generics.ListAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
+    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'default')
 
     def get_queryset(self):
         queryset = super(MyFundraiserDonationList, self).get_queryset()
@@ -111,7 +111,7 @@ class MyFundraiserDonationList(generics.ListAPIView):
         queryset = queryset.filter(order__status=StatusDefinition.SUCCESS)
 
         return queryset
-        
+
 
 class ManageDonationList(generics.ListCreateAPIView):
     model = DONATION_MODEL

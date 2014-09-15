@@ -412,7 +412,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
 
         donation = response.data[0]
         self.assertEqual(donation['amount'], 1000.0)
-        self.assertEqual(donation['project'], self.project3.slug)
+        self.assertEqual(donation['project'], self.project3.pk)
 
     def test_successful_my_project_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
@@ -457,7 +457,7 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
 
         donation = response.data[0]
         self.assertEqual(donation['amount'], 1000.0)
-        self.assertEqual(donation['project'], self.project4.slug)
+        self.assertEqual(donation['project'], self.project4.pk)
         self.assertEqual(donation['fundraiser'], self.fundraiser.pk)
 
     def test_successful_my_fundraiser_donation_list(self, check_status_psp):

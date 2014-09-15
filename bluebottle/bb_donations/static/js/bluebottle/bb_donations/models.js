@@ -4,6 +4,14 @@ App.Adapter.map('App.ProjectDonation', {
     user: {embedded: 'load'}
 });
 
+App.Adapter.map('App.MyFundraiserDonation', {
+    user: {embedded: 'load'}
+});
+
+App.Adapter.map('App.MyProjectDonation', {
+    user: {embedded: 'load'}
+});
+
 
 /* Models */
 
@@ -50,12 +58,8 @@ App.MyDonation = App.Donation.extend({
 
 App.MyFundraiserDonation = App.Donation.extend({
     url: 'donations/my/fundraisers',
-
-    amount: DS.attr('number'),
 });
 
 App.MyProjectDonation = App.Donation.extend({
     url: 'donations/my/projects',
-
-    amount: DS.attr('number'),
 });

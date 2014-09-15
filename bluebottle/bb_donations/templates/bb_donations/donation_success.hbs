@@ -3,7 +3,7 @@
 {% tplhandlebars "donation_success" %}
     <div id="donation-success" class="modal-fullscreen-content">
         <div class="backdrop">
-            <div class="backdrop-image"></div>
+            <div class="backdrop-image" {{bindAttr style=view.backdropStyle}}></div>
             <div class="backdrop-gradient"></div>
         </div>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>

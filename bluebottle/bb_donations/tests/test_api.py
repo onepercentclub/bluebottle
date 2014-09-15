@@ -432,7 +432,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
 @patch.object(ManageOrderDetail, 'check_status_psp')
 class TestMyFundraiserDonationList(DonationApiTestCase):
     """
-    Test that the project donations list only works for the project owner
+    Test that the fundraiser donations list only works for the fundraiser owner
     """
     def setUp(self):
         super(TestMyFundraiserDonationList, self).setUp()

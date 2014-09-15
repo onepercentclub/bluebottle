@@ -39,8 +39,8 @@ class BaseDonation(models.Model):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.bb_donations.serializers.DonationSerializer'
-        preview_serializer = 'bluebottle.bb_donations.serializers.DonationSerializer'
+        default_serializer = 'bluebottle.bb_donations.serializers.DefaultDonationSerializer'
+        preview_serializer = 'bluebottle.bb_donations.serializers.PreviewDonationSerializer'
         manage_serializer = 'bluebottle.bb_donations.serializers.ManageDonationSerializer'
 
 from signals import *

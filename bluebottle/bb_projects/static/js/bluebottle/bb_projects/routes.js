@@ -266,7 +266,7 @@ App.ProjectDonationListRoute = Em.Route.extend({
 
     setupController: function(controller, project) {
         this._super(controller, project);
-        controller.set('projectDonations', App.ProjectDonation.find({project: project.id}));
+        controller.set('projectDonations', App.MyProjectDonation.find({project: project.id}));
 
     }
 });

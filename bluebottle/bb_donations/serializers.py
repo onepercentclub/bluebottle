@@ -21,7 +21,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     # FIXME Add validations for amount and project phase
 
 
-class DonationSerializer(serializers.ModelSerializer):
+class PreviewDonationSerializer(serializers.ModelSerializer):
     project = get_serializer_class('PROJECTS_PROJECT_MODEL', 'preview')
     fundraiser = serializers.PrimaryKeyRelatedField(required=False)
     user = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='public_user')
@@ -29,3 +29,9 @@ class DonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DONATION_MODEL
         fields = ('id', 'project', 'fundraiser', 'user', 'created', 'anonymous')
+
+
+class DefaultDonationSerializer(PreviewDonationSerializer):
+    class Meta:
+        model = DONATION_MODEL
+        fields = PreviewDonationSerializer.Meta.fields + ('amount',)

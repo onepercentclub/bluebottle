@@ -47,3 +47,15 @@ App.MyDonation = App.Donation.extend({
 
     }.property('amount')
 });
+
+App.MyFundraiserDonation = App.Donation.extend({
+    url: 'donations/my/fundraisers',
+
+    amount: DS.attr('number'),
+});
+
+App.MyProjectDonation = App.Donation.extend({
+    url: 'donations/my/projects',
+
+    amount: DS.attr('number'),
+});

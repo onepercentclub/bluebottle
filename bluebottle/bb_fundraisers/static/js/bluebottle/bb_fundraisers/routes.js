@@ -82,8 +82,7 @@ App.FundRaiserDonationListRoute = Em.Route.extend({
     setupController: function(controller, fundraiser) {
         this._super(controller, fundraiser);
 
-        var project_id = fundraiser.get('project.id');
-        controller.set('fundRaiseDonations', App.ProjectDonation.find({project: project_id, fundraiser: fundraiser.id}));
+        controller.set('fundRaiseDonations', App.MyFundraiserDonation.find({fundraiser: fundraiser.id}));
     }
 });
 

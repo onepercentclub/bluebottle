@@ -43,7 +43,7 @@ class DonationApiTestCase(InitProjectDataMixin, TestCase):
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
         self.user2 = BlueBottleUserFactory.create()
-        self.user_token2 = "JWT {0}".format(self.user2.get_jwt_token())
+        self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
         self.project = ProjectFactory.create()
         self.order = OrderFactory.create(user=self.user)
@@ -76,7 +76,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token2)
+        response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
@@ -131,7 +131,7 @@ class TestDonationPermissions(DonationApiTestCase):
                                    kwargs={'pk': donation.id}),
                                    json.dumps(updated_donation),
                                    'application/json',
-                                   HTTP_AUTHORIZATION=self.user_token2)
+                                   HTTP_AUTHORIZATION=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
@@ -384,3 +384,92 @@ class TestAnonymousDonationCreate(DonationApiTestCase):
         # Check that user is NOT shown in public API
         self.assertEqual(None, response.data['user'])
 
+
+@patch.object(ManageOrderDetail, 'check_status_psp')
+class TestMyProjectDonationList(DonationApiTestCase):
+    """
+    Test that the project donations list only works for the project owner
+    """
+    def setUp(self):
+        super(TestMyProjectDonationList, self).setUp()
+
+        self.project3 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
+        self.project3.set_status('campaign')
+
+        # User 2 makes a donation
+        order = OrderFactory.create(user=self.user2)
+        donation = DonationFactory.create(amount=1000, project=self.project3, order=order)
+
+        order.locked()
+        order.succeeded()
+
+        self.project_donation_list_url = reverse('my-project-donation-list')
+
+    def test_my_project_donation_list(self, check_status_psp):
+        response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        donation = response.data[0]
+        self.assertEqual(donation['amount'], 1000.0)
+        self.assertEqual(donation['project'], self.project3.slug)
+
+    def test_successful_my_project_donation_list(self, check_status_psp):
+        # Unsuccessful donations should not be shown
+        order = OrderFactory.create(user=self.user2)
+        donation = DonationFactory.create(amount=2000, project=self.project3, order=order)
+
+        response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1, 'Only the successful donation should be returned')
+
+
+    def test_my_project_donation_list_unauthorized(self, check_status_psp):
+        response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, HTTP_AUTHORIZATION=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+@patch.object(ManageOrderDetail, 'check_status_psp')
+class TestMyFundraiserDonationList(DonationApiTestCase):
+    """
+    Test that the project donations list only works for the project owner
+    """
+    def setUp(self):
+        super(TestMyFundraiserDonationList, self).setUp()
+
+        self.project4 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
+        self.project4.set_status('campaign')
+        self.fundraiser = FundRaiserFactory.create(amount=4000, owner=self.user1, project=self.project4)
+
+        # User 2 makes a donation
+        order = OrderFactory.create(user=self.user2)
+        donation = DonationFactory.create(amount=1000, project=self.project4, fundraiser=self.fundraiser, order=order)
+
+        order.locked()
+        order.succeeded()
+
+        self.fundraiser_donation_list_url = reverse('my-fundraiser-donation-list')
+
+    def test_my_fundraiser_donation_list(self, check_status_psp):
+        response = self.client.get(self.fundraiser_donation_list_url, {'fundraiser': self.fundraiser.pk}, HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        donation = response.data[0]
+        self.assertEqual(donation['amount'], 1000.0)
+        self.assertEqual(donation['project'], self.project4.slug)
+        self.assertEqual(donation['fundraiser'], self.fundraiser.pk)
+
+    def test_successful_my_fundraiser_donation_list(self, check_status_psp):
+        # Unsuccessful donations should not be shown
+        order = OrderFactory.create(user=self.user2)
+        donation = DonationFactory.create(amount=2000, project=self.project4, fundraiser=self.fundraiser, order=order)
+
+        response = self.client.get(self.fundraiser_donation_list_url, {'fundraiser': self.fundraiser.pk}, HTTP_AUTHORIZATION=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1, 'Only the successful donation should be returned')
+
+
+    def test_my_fundraiser_donation_list_unauthorized(self, check_status_psp):
+        response = self.client.get(self.fundraiser_donation_list_url, {'project': self.fundraiser.pk}, HTTP_AUTHORIZATION=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

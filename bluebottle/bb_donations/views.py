@@ -69,6 +69,50 @@ class ProjectDonationDetail(generics.RetrieveAPIView):
     # FIXME: Filter on donations that are viewable (pending & paid)
 
 
+class MyProjectDonationList(generics.ListAPIView):
+    model = DONATION_MODEL
+    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
+
+    def get_queryset(self):
+        queryset = super(MyProjectDonationList, self).get_queryset()
+
+        filter_kwargs = {}
+
+        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        try:
+            project = PROJECT_MODEL.objects.get(slug=project_slug, owner=self.request.user)
+        except PROJECT_MODEL.DoesNotExist:
+            raise Http404(u"No project found matching the query")
+
+        filter_kwargs['project'] = project
+        queryset = queryset.filter(**filter_kwargs).order_by('-created')
+        queryset = queryset.filter(order__status=StatusDefinition.SUCCESS)
+
+        return queryset
+
+
+class MyFundraiserDonationList(generics.ListAPIView):
+    model = DONATION_MODEL
+    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
+
+    def get_queryset(self):
+        queryset = super(MyFundraiserDonationList, self).get_queryset()
+
+        filter_kwargs = {}
+
+        fundraiser_pk = self.request.QUERY_PARAMS.get('fundraiser', None)
+        try:
+            fundraiser = FUNDRAISER_MODEL.objects.get(pk=fundraiser_pk, owner=self.request.user)
+        except FUNDRAISER_MODEL.DoesNotExist:
+            raise Http404(u"No fundraiser found matching the query")
+
+        filter_kwargs['fundraiser'] = fundraiser
+        queryset = queryset.filter(**filter_kwargs).order_by('-created')
+        queryset = queryset.filter(order__status=StatusDefinition.SUCCESS)
+
+        return queryset
+        
+
 class ManageDonationList(generics.ListCreateAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')

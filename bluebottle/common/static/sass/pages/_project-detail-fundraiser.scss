@@ -104,8 +104,18 @@
 }
 
 #fundraiser-new, #fundraiser-edit {
+    span.hint {
+        font-size: 11px;
+        display: inline-block;
+        width: 60%;
+        float: left;
+        line-height: 16px;
+        margin-top: 3px;
+        color: $gray-light; 
+    }
+
     .member-avatar img {
-        @include grid(10,0,2);
+        @include grid(12,0,2);
         float: left;
         vertical-align: top;
     }

@@ -254,8 +254,8 @@ App.WallPostReactionListController = Em.ArrayController.extend({
         var reaction =  store.createRecord(App.WallPostReaction);
         var name = this.get('currentUser.full_name');
         var values = {'name': name};
-        var placeholder_unformatted = "Hey %(name)s, you can leave a comment";
-        var formatted_placeholder = interpolate(placeholder_unformatted, values);
+        var placeholder_unformatted = gettext("Hey %(name)s, you can leave a comment");
+        var formatted_placeholder = interpolate(placeholder_unformatted, values, true);       
         reaction.set('placeholder', formatted_placeholder);
         this.set('newReaction', reaction);
     },

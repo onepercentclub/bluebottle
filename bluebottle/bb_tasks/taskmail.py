@@ -57,7 +57,7 @@ class TaskMemberRejectMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_rejected.mail'
         self.receiver = self.task_member.member
-        self.subject = _('{0}s found someone else to do the task you applied for.'.format(self.task.authorget_short_name()))
+        self.subject = _('{0}s found someone else to do the task you applied for.'.format(self.task.author.get_short_name()))
         self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list})
 
@@ -113,14 +113,19 @@ class TaskMemberMailAdapter:
         'withdraw': TaskMemberWithdrawMail,
     }
 
+    mail_sender = None
+
     def __init__(self, instance, status=None):
+
         if not status:
             status = instance.status
-        self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance)
+        # If a mailer is provided for the task status, set the mail_sender
+        if self.TASK_MEMBER_MAIL.get(status):
+            self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance)
 
     def send_mail(self):
-        self.mail_sender.send()
-
+        if self.mail_sender:
+            self.mail_sender.send()
 
 
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)

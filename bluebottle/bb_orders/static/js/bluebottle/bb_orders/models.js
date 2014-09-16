@@ -1,3 +1,7 @@
+App.Adapter.map('App.MyOrder', {
+    donations: {embedded: 'load'}
+});
+
 App.Order = DS.Model.extend({
     status: DS.attr('string'),
     user: DS.belongsTo('App.UserPreview'),
@@ -8,5 +12,6 @@ App.Order = DS.Model.extend({
 });
 
 App.MyOrder = App.Order.extend({
-    url: 'orders/my'
+    url: 'orders/my',
+    donations: DS.hasMany('App.MyDonation'),
 });

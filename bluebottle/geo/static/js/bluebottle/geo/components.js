@@ -47,12 +47,17 @@ App.BbProjectMapComponent = Ember.Component.extend({
     },
 
     center: [52.3722499, 4.907800400000042],
+
     getCenter: function(){
         return new google.maps.LatLng(52.3722499, 4.907800400000042);
     }.property('center'),
+
     zoom_level:  3,
+
     map: null,
-	markers: [],
+
+    markers: [],
+
     info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-title">{{#link-to "project" this}}{{title}}{{/link-to}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
 
@@ -105,6 +110,10 @@ App.BbProjectMapComponent = Ember.Component.extend({
 
     },
 
+    getProjectIcon: function(project){
+        return project.get('status.id') == 4 ?  this.get('icon1'): this.get('icon2');
+    },
+
     placeMarker: function(project){
         var view = this;
 
@@ -147,15 +156,13 @@ App.BbProjectMapComponent = Ember.Component.extend({
 			position: latLng
 		});
 
-
-
         var marker = new google.maps.Marker({
 		    position: latLng,
 		    map: view.map,
 		    title: project.get('title'),
-		    icon: project.get('status.id') == 4 ?  this.get('icon1'): this.get('icon2')
+		    icon: view.getProjectIcon(project)
 	    });
-        		
+
 	    google.maps.event.addListener(marker, 'click', function() {
             this.get("map").panTo(marker.getPosition());
             if (view.active_info_window) {

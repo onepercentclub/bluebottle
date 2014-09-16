@@ -257,6 +257,16 @@ BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin
 BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
     tagName: null,
 
+    touchStart: function(event) {
+        var _this = this,
+            string = event.target.className.substring()
+            className = string.indexOf("is-active");
+
+        if (className > 0) {
+            _this.get('controller').send('closeModal');
+        }
+    },
+
     click: function(e) {
         var _this = this,
             string = e.target.className.substring()

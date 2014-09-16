@@ -39,14 +39,6 @@ App.DonationSuccessView = Em.View.extend({
     templateName: 'donation_success',
     supported: true,
 
-    backdropStyle: function(){
-        return "background: url(" + this.get('controller.project.image.large') + ") no-repeat center top; " +
-        "-webkit-background-size: cover; " +
-        "-moz-background-size: cover; " +
-        "-o-background-size: cover; " +
-        "background-size: cover; ";
-    }.property('project'),
-
     didInsertElement: function() {
         if(!document.createElement('svg').getAttributeNS) {
             this.setProperties({

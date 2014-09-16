@@ -65,6 +65,7 @@ $color-primary: #5DC0ED;
             width: 100%;
             height: 100%;
             background: image-url("thankyou-modal-bg.jpg") transparent no-repeat;
+            background-size: cover;
         }
 
         canvas#confetti-canvas {

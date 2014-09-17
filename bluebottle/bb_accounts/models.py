@@ -78,7 +78,7 @@ class BlueBottleUserManager(BaseUserManager):
         u.is_superuser = True
         u.save(using=self._db)
         return u
-        
+
 
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """

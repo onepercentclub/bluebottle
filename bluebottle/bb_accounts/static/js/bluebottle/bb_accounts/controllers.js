@@ -205,15 +205,15 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
 
 App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
     needs: ['userProfile'],
-    userTypeList: (function() {
+    userTypeList: function() {
         var list = Em.A();
-        list.addObject({ name: gettext('Person'), value: 'person'});
-        list.addObject({ name: gettext('Company'), value: 'company'});
-        list.addObject({ name: gettext('Foundation'), value: 'foundation'});
-        list.addObject({ name: gettext('School'), value: 'school'});
-        list.addObject({ name: gettext('Club / Association'), value: 'group'});
+        list.addObject(Em.Object.create({ name: gettext('Person'), value: 'person'}));
+        list.addObject(Em.Object.create({ name: gettext('Company'), value: 'company'}));
+        list.addObject(Em.Object.create({ name: gettext('Foundation'), value: 'foundation'}));
+        list.addObject(Em.Object.create({ name: gettext('School'), value: 'school'}));
+        list.addObject(Em.Object.create({ name: gettext('Club / Association'), value: 'group'}));
         return list;
-    }).property()
+    }.property()
 });
 
 

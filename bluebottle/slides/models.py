@@ -55,6 +55,11 @@ class Slide(models.Model):
 
     objects = SlideManager()
 
+    @property
+    def background_image_full_path(self):
+        return "{0}{1}".format(settings.MEDIA_URL, str(self.background_image))
+
+
     def __unicode__(self):
         return self.title
 

@@ -23,21 +23,3 @@ App.BbProgressbarComponent = Ember.Component.extend({
 
 App.BbDatepickerComponent = Ember.Component.extend({
 });
-
-App.CheetahProgressbarComponent = Ember.Component.extend({
-    didInsertElement: function(){
-        this.$('.slider-progress, .funded-cheetah-progress').css('width', '0px');
-        var width = 0;
-        if (this.targetValue > 0) {
-            if(this.currentValue >= this.targetValue){
-                width = 100;
-            } else {
-                width = 100 * this.currentValue / this.targetValue;
-            }
-            width += '%';
-        }
-        this.$('.slider-progress, .funded-cheetah-progress').animate({'width': width}, 1000);
-    }
-});
-
-

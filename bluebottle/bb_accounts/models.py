@@ -77,23 +77,7 @@ class BlueBottleUserManager(BaseUserManager):
         u.is_superuser = True
         u.save(using=self._db)
         return u
-
-
-class TimeAvailable(models.Model):
-    """
-    A class for modeling the time available
-    """
-    type = models.CharField(_('type'), max_length=100, unique=True)
-    description = models.TextField(_('description'))
-
-    class Meta:
-        ordering = ['type']
-        verbose_name = _('time available')
-        verbose_name_plural = _('times available')
-
-    def __unicode__(self):
-        return u'{0} - {1}'.format(self.type, self.description)
-
+        
 
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """

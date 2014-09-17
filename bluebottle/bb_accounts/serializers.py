@@ -51,7 +51,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name',
-                                                      'time_available', 'last_login', 'date_joined')
+                                                      'available_time', 'last_login', 'date_joined')
 
 
 class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -73,7 +73,7 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
-                  'about', 'why', 'website', 'time_available', 'date_joined', 'location', 'twitter', 'facebook',
+                  'about', 'why', 'website', 'available_time', 'date_joined', 'location', 'twitter', 'facebook',
                   'skypename', 'tags')
 
 

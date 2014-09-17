@@ -150,7 +150,7 @@ class TimeAvailableViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = TimeAvailable.objects.all()
     serializer_class = TimeAvailableSerializer
-    permission_classes = (IsAuthenticated, )
+    #spermission_classes = (IsAuthenticated, )
 
 
 class PasswordReset(views.APIView):

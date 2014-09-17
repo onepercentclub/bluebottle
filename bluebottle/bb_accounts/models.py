@@ -149,7 +149,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     about = models.TextField(_('about'), max_length=265, blank=True)
     why = models.TextField(_('why'), max_length=265, blank=True)
 
-    time_available = models.ForeignKey('bb_accounts.TimeAvailable', null=True, blank=True)
+    available_time = models.CharField(_('available time'), max_length=50, null=True, blank=True)
     # max length is not entirely clear, however over 50 characters throws errors on facebook
     facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
     # max length: see https://support.twitter.com/articles/14609-changing-your-username

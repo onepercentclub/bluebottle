@@ -23,7 +23,7 @@ App.User = DS.Model.extend({
 
     about: DS.attr('string'),
     why: DS.attr('string'),
-    time_available: DS.belongsTo('App.TimeAvailable'),
+    available_time: DS.attr('string'),
     location: DS.attr('string'),
 
     picture: DS.attr('image'),
@@ -345,14 +345,6 @@ App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
 
 
 });
-
-
-App.TimeAvailable = DS.Model.extend({
-    url: 'users/time_available',
-	type: DS.attr('string'),
-	description : DS.attr('string')
-});
-
 
 App.UserLogin = Em.Object.extend({
     matchId: null,

@@ -1,0 +1,718 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-09-15 12:32+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin.py:18
+msgid "A user with that email already exists."
+msgstr ""
+
+#: admin.py:19
+msgid "The two password fields didn't match."
+msgstr ""
+
+#: admin.py:21 admin.py:59 models.py:128
+msgid "email address"
+msgstr ""
+
+#: admin.py:22 admin.py:60
+msgid "Required. 254 characters or fewer. A valid email address."
+msgstr ""
+
+#: admin.py:23 admin.py:61 templates/registration/login.html:33
+msgid "Password"
+msgstr ""
+
+#: admin.py:25
+msgid "Password confirmation"
+msgstr ""
+
+#: admin.py:27
+msgid "Enter the same password as above, for verification."
+msgstr ""
+
+#: admin.py:62
+msgid "Raw passwords are not stored, so there is no way to see this user's password, but you can change the password using <a href=\"password/\">this form</a>."
+msgstr ""
+
+#: admin.py:86
+msgid "Personal info"
+msgstr ""
+
+#: admin.py:87 templates/bb_accounts/_profile_anchor.hbs:7
+#: templates/bb_accounts/profile_nav.hbs:18
+#: templates/bb_accounts/profile_nav.hbs:32
+msgid "Profile"
+msgstr ""
+
+#: admin.py:88 templates/bb_accounts/profile_nav.hbs:39
+msgid "Settings"
+msgstr ""
+
+#: admin.py:89
+msgid "Permissions"
+msgstr ""
+
+#: admin.py:90
+msgid "Important dates"
+msgstr ""
+
+#: dashboard.py:16
+msgid "Users"
+msgstr ""
+
+#: dashboard.py:42
+msgid "No users found."
+msgstr ""
+
+#: dashboard.py:48
+msgid "View all users"
+msgstr ""
+
+#: models.py:86
+msgid "type"
+msgstr ""
+
+#: models.py:87
+msgid "description"
+msgstr ""
+
+#: models.py:91
+msgid "time available"
+msgstr ""
+
+#: models.py:92
+msgid "times available"
+msgstr ""
+
+#: models.py:108 templates/bb_accounts/account_personal_details.hbs:44
+msgid "Male"
+msgstr ""
+
+#: models.py:109 templates/bb_accounts/account_personal_details.hbs:43
+msgid "Female"
+msgstr ""
+
+#: models.py:112
+msgid "1-4 hours per week"
+msgstr ""
+
+#: models.py:113
+msgid "5-8 hours per week"
+msgstr ""
+
+#: models.py:114
+msgid "9-16 hours per week"
+msgstr ""
+
+#: models.py:115
+msgid "1-4 hours per month"
+msgstr ""
+
+#: models.py:116
+msgid "5-8 hours per month"
+msgstr ""
+
+#: models.py:117
+msgid "9-16 hours per month"
+msgstr ""
+
+#: models.py:118
+msgid "I have all the time in the world. Bring it on :D"
+msgstr ""
+
+#: models.py:119
+msgid "It depends on the content of the tasks. Challenge me!"
+msgstr ""
+
+#: models.py:122
+msgid "Person"
+msgstr ""
+
+#: models.py:123
+msgid "Company"
+msgstr ""
+
+#: models.py:124
+msgid "Foundation"
+msgstr ""
+
+#: models.py:125
+msgid "School"
+msgstr ""
+
+#: models.py:126
+msgid "Club / association"
+msgstr ""
+
+#: models.py:129
+msgid "username"
+msgstr ""
+
+#: models.py:131
+msgid "staff status"
+msgstr ""
+
+#: models.py:131
+msgid "Designates whether the user can log into this admin site."
+msgstr ""
+
+#: models.py:133
+msgid "active"
+msgstr ""
+
+#: models.py:134
+msgid "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
+msgstr ""
+
+#: models.py:136
+msgid "date joined"
+msgstr ""
+
+#: models.py:138
+msgid "deleted"
+msgstr ""
+
+#: models.py:139
+msgid "Member Type"
+msgstr ""
+
+#: models.py:142
+msgid "first name"
+msgstr ""
+
+#: models.py:143
+msgid "last name"
+msgstr ""
+
+#: models.py:144
+msgid "location"
+msgstr ""
+
+#: models.py:145
+msgid "website"
+msgstr ""
+
+#: models.py:147
+msgid "picture"
+msgstr ""
+
+#: models.py:148
+msgid "about"
+msgstr ""
+
+#: models.py:149
+msgid "why"
+msgstr ""
+
+#: models.py:153
+msgid "facebook profile"
+msgstr ""
+
+#: models.py:155
+msgid "twitter profile"
+msgstr ""
+
+#: models.py:156
+msgid "skype profile"
+msgstr ""
+
+#: models.py:160
+msgid "primary language"
+msgstr ""
+
+#: models.py:160
+msgid "Language used for website and emails."
+msgstr ""
+
+#: models.py:162
+msgid "share time and knowledge"
+msgstr ""
+
+#: models.py:163
+msgid "share money"
+msgstr ""
+
+#: models.py:164
+msgid "newsletter"
+msgstr ""
+
+#: models.py:164
+msgid "Subscribe to newsletter."
+msgstr ""
+
+#: models.py:165
+msgid "phone number"
+msgstr ""
+
+#: models.py:166
+msgid "gender"
+msgstr ""
+
+#: models.py:167
+msgid "birthdate"
+msgstr ""
+
+#: models.py:171
+msgid "tags"
+msgstr ""
+
+#: models.py:183
+msgid "member"
+msgstr ""
+
+#: models.py:184
+msgid "members"
+msgstr ""
+
+#: templates/bb_accounts/_account_nav_anon.hbs:6
+#: templates/bb_accounts/_standard_login_form.hbs:15
+msgid "Sign in"
+msgstr ""
+
+#: templates/bb_accounts/_login_footer.hbs:7
+#: templates/bb_accounts/password_request.hbs:31
+#: templates/bb_accounts/password_reset.hbs:39
+msgid "Don’t have an account?"
+msgstr ""
+
+#: templates/bb_accounts/_login_footer.hbs:9
+#: templates/bb_accounts/password_request.hbs:33
+#: templates/bb_accounts/password_reset.hbs:41
+msgid "Sign up here"
+msgstr ""
+
+#: templates/bb_accounts/_matched_login_content.hbs:7
+msgid "Hello, is it me you're looking&nbsp;for"
+msgstr ""
+
+#: templates/bb_accounts/_matched_login_content.hbs:15
+msgid "has already been registered via Facebook. Is this you? Please sign in below."
+msgstr ""
+
+#: templates/bb_accounts/_matched_login_content.hbs:19
+msgid "has already been registered with Bluebottle Project. Is this you? Please sign in below."
+msgstr ""
+
+#: templates/bb_accounts/_my_menu.hbs:7
+msgid "Edit my profile & settings"
+msgstr ""
+
+#: templates/bb_accounts/_my_menu.hbs:15
+msgid "My Projects"
+msgstr ""
+
+#: templates/bb_accounts/_my_menu.hbs:36
+msgid "View my profile"
+msgstr ""
+
+#: templates/bb_accounts/_my_menu.hbs:41
+msgid "Logout"
+msgstr ""
+
+#: templates/bb_accounts/_my_menu.hbs:46
+msgid "Language"
+msgstr ""
+
+#: templates/bb_accounts/_signup_content.hbs:7
+msgid "Welcome!"
+msgstr ""
+
+#: templates/bb_accounts/_signup_content.hbs:12
+#, python-format
+msgid "By signing up, you accept our <a %(link)s>terms of service</a>"
+msgstr ""
+
+#: templates/bb_accounts/_signup_content.hbs:18
+#: templates/bb_accounts/_signup_sidebar.hbs:13
+msgid "Already have an account?"
+msgstr ""
+
+#: templates/bb_accounts/_signup_content.hbs:18
+msgid "Sign in here"
+msgstr ""
+
+#: templates/bb_accounts/_signup_sidebar.hbs:14
+msgid "Log in here, fast & easy"
+msgstr ""
+
+#: templates/bb_accounts/_signup_sidebar.hbs:25
+msgid "Why join &lt;BlueBottle-project-name&gt;"
+msgstr ""
+
+#: templates/bb_accounts/_signup_sidebar.hbs:27
+msgid "Reason 1"
+msgstr ""
+
+#: templates/bb_accounts/_signup_sidebar.hbs:28
+msgid "Reason 2"
+msgstr ""
+
+#: templates/bb_accounts/_signup_sidebar.hbs:29
+msgid "Reason 3"
+msgstr ""
+
+#: templates/bb_accounts/_standard_login_form.hbs:11
+msgid "Lost your password?"
+msgstr ""
+
+#: templates/bb_accounts/_standard_signup_form.hbs:19
+msgid "Join Bluebottle Project"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:6
+msgid "Personal Details"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:7
+msgid "We'd like to match you to projects and events based on your location & a personal thank you in your mailbox."
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:11
+msgid "Address Line 1"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:13
+msgid "Address Line 2"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:15
+msgid "City"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:17
+msgid "State"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:19
+msgid "Postal Code"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:24
+msgid "Country"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:38
+msgid "Gender"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:45
+msgid "Unset"
+msgstr ""
+
+#: templates/bb_accounts/account_personal_details.hbs:50
+msgid "Birthdate"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:9
+msgid "Edit your account"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:10
+msgid "These are the details we currently have for you – update or change them below."
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:19
+msgid "Email Address"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:41
+msgid "I'd like to receive emails about"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:49
+msgid "&lt;Organisation-name&gt;"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:62
+msgid "Account type"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:80
+msgid "Primary language"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:98
+msgid "I want to share"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:104
+msgid "Time & Knowledge"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:108
+msgid "Money"
+msgstr ""
+
+#: templates/bb_accounts/account_settings.hbs:122
+msgid "Account settings saved"
+msgstr ""
+
+#: templates/bb_accounts/disable.hbs:9
+msgid "That’s weird, apparently someone registered an account with your email. Click \"delete\" below to have it removed."
+msgstr ""
+
+#: templates/bb_accounts/disable.hbs:13
+msgid "Delete"
+msgstr ""
+
+#: templates/bb_accounts/disable.hbs:16
+msgid "Just kidding!"
+msgstr ""
+
+#: templates/bb_accounts/password_request.hbs:9
+msgid "This link is expired, please request a new one."
+msgstr ""
+
+#: templates/bb_accounts/password_request.hbs:15
+msgid "To reset your password, enter the email address you use to sign in."
+msgstr ""
+
+#: templates/bb_accounts/password_request.hbs:20
+msgid "Continue"
+msgstr ""
+
+#: templates/bb_accounts/password_reset.hbs:10
+msgid "Setup your new password. Minimum 6 characters."
+msgstr ""
+
+#: templates/bb_accounts/password_reset.hbs:19
+msgid "Confirm"
+msgstr ""
+
+#: templates/bb_accounts/profile_components.hbs:18
+msgid "No items selected"
+msgstr ""
+
+#: templates/bb_accounts/profile_form.hbs:11
+msgid "Edit your profile"
+msgstr ""
+
+#: templates/bb_accounts/profile_form.hbs:18
+msgid "First Name"
+msgstr ""
+
+#: templates/bb_accounts/profile_form.hbs:19
+msgid "Last Name"
+msgstr ""
+
+#: templates/bb_accounts/profile_form.hbs:33
+msgid "About me"
+msgstr ""
+
+#: templates/bb_accounts/profile_form.hbs:37
+msgid "An example placeholder"
+msgstr ""
+
+#: templates/bb_accounts/profile_form.hbs:57
+msgid "Profile saved"
+msgstr ""
+
+#: templates/bb_accounts/profile_nav.hbs:18
+msgid "My"
+msgstr ""
+
+#: templates/bb_accounts/profile_nav.hbs:23
+msgid "Preview my profile"
+msgstr ""
+
+#: templates/bb_accounts/profile_nav.hbs:32
+msgid "Public info"
+msgstr ""
+
+#: templates/bb_accounts/profile_nav.hbs:39
+msgid "Account"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:16
+msgid "Member since"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:29
+#: templates/bb_accounts/view_profile.hbs:26
+msgid "projects"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:30
+#: templates/bb_accounts/view_profile.hbs:27
+msgid "supported"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:34
+#: templates/bb_accounts/user_modal.hbs:40
+#: templates/bb_accounts/view_profile.hbs:31
+#: templates/bb_accounts/view_profile.hbs:37
+msgid "tasks"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:35
+#: templates/bb_accounts/view_profile.hbs:32
+msgid "realized"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:39
+#: templates/bb_accounts/view_profile.hbs:36
+msgid "hours spent"
+msgstr ""
+
+#: templates/bb_accounts/user_modal.hbs:40
+#: templates/bb_accounts/view_profile.hbs:37
+msgid "on"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:47
+msgid "About"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:50
+msgid "Is a ...organization... member because"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:56
+msgid "Website"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:58
+msgid "Facebook profile"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:66
+msgid "Location"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:72
+msgid "Fav themes"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:78
+msgid "Fav countries"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:84
+msgid "Time available"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:90
+msgid "Expertise"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:96
+msgid "Tags"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:112
+msgid "Projects supported"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:114
+msgid "tasks realized"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:115
+msgid "projects supported"
+msgstr ""
+
+#: templates/bb_accounts/view_profile.hbs:120
+msgid "Show on map"
+msgstr ""
+
+#: templates/registration/activation_email.html:7
+msgid "Override registration/activation_email.html to create your own activation mail template."
+msgstr ""
+
+#: templates/registration/activation_email.html:14
+msgid "You can put your site logo here."
+msgstr ""
+
+#: templates/registration/activation_email.html:23
+msgid "Confirm your registration"
+msgstr ""
+
+#: templates/registration/activation_email.html:31
+msgid "You're almost done!"
+msgstr ""
+
+#: templates/registration/activation_email.html:39
+msgid "Click the link below to confirm your registration"
+msgstr ""
+
+#: templates/registration/activation_email.html:49
+msgid "activate profile"
+msgstr ""
+
+#: templates/registration/activation_email.html:59
+#, python-format
+msgid "Your activation code will expire in %(expiration_days)s days."
+msgstr ""
+
+#: templates/registration/activation_email_subject.txt:3
+msgid "Welcome to <...>"
+msgstr ""
+
+#: templates/registration/logged_out.html:6
+msgid "Logged out."
+msgstr ""
+
+#: templates/registration/login.html:11
+#, python-format
+msgid "Log in to 1%%Club"
+msgstr ""
+
+#: templates/registration/login.html:18
+msgid "Your email address and password didn't match. Please try again."
+msgstr ""
+
+#: templates/registration/login.html:24
+msgid "Email"
+msgstr ""
+
+#: templates/registration/login.html:42
+msgid "Login"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:13
+msgid "Override registration/password_reset_email.html to provide your logo."
+msgstr ""
+
+#: templates/registration/password_reset_email.html:21
+msgid "Click on this link to reset your password."
+msgstr ""
+
+#: templates/registration/password_reset_email.html:31
+msgid "Reset"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:41
+msgid "See you at"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:41
+msgid "in a minute!"
+msgstr ""
+
+#: templates/registration/password_reset_subject.txt:2
+#, python-format
+msgid "Password reset on %(site_name)s"
+msgstr ""
+
+#: templates/utils/components.hbs:7
+msgid "Profile Picture"
+msgstr ""
+
+#: templates/utils/components.hbs:15
+msgid "Upload picture"
+msgstr ""

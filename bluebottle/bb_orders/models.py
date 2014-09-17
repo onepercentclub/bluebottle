@@ -4,7 +4,6 @@ from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from uuidfield import UUIDField
 from django.db.models import options
 from django_fsm.db.fields import FSMField, transition
 

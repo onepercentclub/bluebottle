@@ -1,4 +1,3 @@
-from bluebottle.bb_accounts.models import TimeAvailable
 from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
@@ -30,13 +29,6 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
-
-
-class TimeAvailableSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = TimeAvailable
-        fields = ('id', 'type', 'description')
 
 
 class CurrentUserSerializer(UserPreviewSerializer):

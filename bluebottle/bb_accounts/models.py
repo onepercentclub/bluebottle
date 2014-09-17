@@ -108,16 +108,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
 
-    class Availability(DjangoChoices):
-        one_to_four_week = ChoiceItem('1-4_hours_week', label=_('1-4 hours per week'))
-        five_to_eight_week = ChoiceItem('5-8_hours_week', label=_('5-8 hours per week'))
-        nine_to_sixteen_week = ChoiceItem('9-16_hours_week', label=_('9-16 hours per week'))
-        one_to_four_month = ChoiceItem('1-4_hours_month', label=_('1-4 hours per month'))
-        five_to_eight_month = ChoiceItem('5-8_hours_month', label=_('5-8 hours per month'))
-        nine_to_sixteen_month = ChoiceItem('9-16_hours_month', label=_('9-16 hours per month'))
-        lots_of_time = ChoiceItem('lots_of_time', label=_('I have all the time in the world. Bring it on :D'))
-        depends_on_task = ChoiceItem('depends', label=_('It depends on the content of the tasks. Challenge me!'))
-
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))
         company = ChoiceItem('company', label=_('Company'))
@@ -148,7 +138,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     about = models.TextField(_('about'), max_length=265, blank=True)
     why = models.TextField(_('why'), max_length=265, blank=True)
 
-    time_available = models.ForeignKey('bb_accounts.TimeAvailable', null=True, blank=True)
+    available_time = models.CharField(_('time available'), max_length=50, null=True, blank=True)
     # max length is not entirely clear, however over 50 characters throws errors on facebook
     facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
     # max length: see https://support.twitter.com/articles/14609-changing-your-username

@@ -187,23 +187,33 @@ App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixi
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
-    availableTimes: function() {
-        return App.TimeAvailable.find();
-    }.property()
+    timeAvailableList: function() {
+        var list = Em.A();
+        list.addObject(Em.Object.create({ name: '- - - - - - - - - - - - - - - - - -', value: ''}));
+        list.addObject(Em.Object.create({ name: gettext('1-4 hours per week'), value: '1-4_hours_week' }));
+        list.addObject(Em.Object.create({ name: gettext('5-8 hours per week'), value: '5-8_hours_week' }));
+        list.addObject(Em.Object.create({ name: gettext('9-16 hours per week'), value: '9-16_hours_week' }));
+        list.addObject(Em.Object.create({ name: gettext('1-4 hours per month'), value: '1-4_hours_month' }));
+        list.addObject(Em.Object.create({ name: gettext('5-8 hours per month'), value: '5-8_hours_month' }));
+        list.addObject(Em.Object.create({ name: gettext('9-16 hours per month'), value: '9-16_hours_month' }));
+        list.addObject(Em.Object.create({ name: gettext('I have all the time in the world. Bring it on!'), value: 'lots_of_time' }));
+        list.addObject(Em.Object.create({ name: gettext('It depends on the content of the tasks. Challenge me!'), value: 'depends' }));
+        return list;
+    }.property(),
 });
 
 
 App.UserSettingsController = Em.ObjectController.extend(App.Editable, {
     needs: ['userProfile'],
-    userTypeList: (function() {
+    userTypeList: function() {
         var list = Em.A();
-        list.addObject({ name: gettext('Person'), value: 'person'});
-        list.addObject({ name: gettext('Company'), value: 'company'});
-        list.addObject({ name: gettext('Foundation'), value: 'foundation'});
-        list.addObject({ name: gettext('School'), value: 'school'});
-        list.addObject({ name: gettext('Club / Association'), value: 'group'});
+        list.addObject(Em.Object.create({ name: gettext('Person'), value: 'person'}));
+        list.addObject(Em.Object.create({ name: gettext('Company'), value: 'company'}));
+        list.addObject(Em.Object.create({ name: gettext('Foundation'), value: 'foundation'}));
+        list.addObject(Em.Object.create({ name: gettext('School'), value: 'school'}));
+        list.addObject(Em.Object.create({ name: gettext('Club / Association'), value: 'group'}));
         return list;
-    }).property()
+    }.property()
 });
 
 

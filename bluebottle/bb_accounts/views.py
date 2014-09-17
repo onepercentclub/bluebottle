@@ -1,4 +1,3 @@
-from bluebottle.bb_accounts.models import TimeAvailable
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import AnonymousUser
@@ -22,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 #this belongs now to onepercent should be here in bluebottle
 from .serializers import (
     CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
-    PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL, TimeAvailableSerializer)
+    PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
 
 class UserProfileDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
@@ -128,20 +127,6 @@ class UserActivate(generics.RetrieveAPIView):
             return response.Response(serializer.data)
         # Return 400 when the activation didn't work.
         return response.Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-"""
-With a viewsets.ModelViewSet we don't need to create duplicate for
-List and Detail, we will use routers for the urls
-"""
-class TimeAvailableViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    This viewset automatically provides 'list', 'create', 'retrieve',
-    'update' and 'destroy actions'.
-    """
-    queryset = TimeAvailable.objects.all()
-    serializer_class = TimeAvailableSerializer
-    permission_classes = (IsAuthenticated, )
 
 
 class PasswordReset(views.APIView):

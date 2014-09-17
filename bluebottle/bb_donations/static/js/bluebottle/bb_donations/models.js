@@ -40,7 +40,7 @@ App.MyDonation = App.Donation.extend({
 
     order: DS.belongsTo('App.MyOrder'),
     amount: DS.attr('number'),
-
+    completed: DS.attr('date'),
     defaultAmount: 25,
 
     validAmount: function () {

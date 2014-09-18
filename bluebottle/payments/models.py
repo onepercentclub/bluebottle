@@ -17,8 +17,6 @@ from django.db.models.signals import pre_save, post_save
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 from bluebottle.payments.managers import PaymentManager
 
-from .signals import *
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 

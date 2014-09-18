@@ -266,42 +266,6 @@ class BaseProject(models.Model):
 
         return tweet
 
-    def update_amounts(self, save=True):
-
-        self.amount_donated = self.get_amount_total([StatusDefinition.SUCCESS])
-
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed < 0:
-            # Should never be less than zero
-            self.amount_needed = 0
-
-        if save:
-            self.save()
-
-    def get_amount_total(self, status_in=None):
-        """
-        Calculate the total (realtime) amount of money for donations,
-        optionally filtered by status.
-        """
-
-        if self.amount_asked == 0:
-            # No money asked, return 0
-            return 0
-
-        donations = self.donation_set.all()
-
-        if status_in:
-            donations = donations.filter(order__status__in=status_in)
-
-        total = donations.aggregate(sum=Sum('amount'))
-
-        if not total['sum']:
-            # No donations, manually set amount
-            return 0
-
-        return total['sum']
-
     @property
     def editable(self):
         return self.status.editable
@@ -324,4 +288,3 @@ class BaseProjectPhaseLog(models.Model):
     class Meta():
         abstract = True
 
-from .signals import *

@@ -46,6 +46,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
         payment.total_gross_amount = self.order_payment.amount * 100
 
+        if payment.default_pm == 'paypal':
+            payment.default_pm = 'paypal_express_checkout'
+
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
         merchant = gateway.Merchant(name=settings.DOCDATA_MERCHANT_NAME, password=settings.DOCDATA_MERCHANT_PASSWORD)
@@ -126,6 +129,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         default_act = False
         if self.payment.ideal_issuer_id:
+            default_act = True
+        if self.payment.default_pm == 'paypal_express_checkout':
             default_act = True
 
         params = {

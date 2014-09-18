@@ -2,6 +2,7 @@
 
 {% tplhandlebars "user_modal" %}
 <div id="profile-preview">
+	{{#with user}}
 	<a class="close" rel="close">&times;</a>
     <div class="modal-header">
         <figure class="profile-avatar">
@@ -36,7 +37,7 @@
 	        <li class="account-achievements-time">
 	            <strong>{{user_statistics.hours_spent}}</strong>
 				{% trans "hours spent" %}<br /> 
-				{% trans "on" %} <em>{{user.statistics.tasks}}</em> {% trans "tasks" %}
+				{% trans "on" %} <em>{{user_statistics.tasks}}</em> {% trans "tasks" %}
 	        </li>
 	    </ul>
 	</div>
@@ -54,6 +55,7 @@
         {% endblock profile_model_content %}
     </div>
 	{{--}}
+	{{/with}}
 </div>
 {% endtplhandlebars %}
 	

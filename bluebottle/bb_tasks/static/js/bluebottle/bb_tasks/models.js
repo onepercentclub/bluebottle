@@ -91,7 +91,7 @@ App.MyTaskMember = App.TaskMember.extend({
 App.TaskFile = DS.Model.extend({
     url: 'bb_tasks/files',
 
-    author: DS.belongsTo('App.User'),
+    author: DS.belongsTo('App.UserPreview'),
     title: DS.attr('string'),
     created: DS.attr('date'),
     file: DS.attr('file'),

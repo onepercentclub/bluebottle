@@ -104,17 +104,13 @@ App.UserModalController = Ember.ObjectController.extend({
 	// 		
 	// 	}
 	// },
-    loadProfile: function() {
-        var model = this.get('model');
-        var id = model.get('id');
-
-        if (id == "current") {
-            // Get user id for current user
-            id = model.get('id_for_ember');
+    user: function() {
+        if (!this.get('id') && !this.get('isLoaded')) {
+            return;
         }
-
-        this.set('model', App.User.find(id));
-    }.observes('model')
+        debugger
+        return App.User.find(this.get('model.id'));
+    }.property('id', 'isLoaded')
 });
 
 

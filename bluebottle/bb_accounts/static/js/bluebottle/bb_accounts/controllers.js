@@ -99,16 +99,10 @@ App.UserOrdersController = Em.ObjectController.extend(App.Editable, {
 
 
 App.UserModalController = Ember.ObjectController.extend({
-	// actions: function() {
-	// 	goToProfile: function() {
-	// 		
-	// 	}
-	// },
     user: function() {
         if (!this.get('id') && !this.get('isLoaded')) {
             return;
         }
-        debugger
         return App.User.find(this.get('model.id'));
     }.property('id', 'isLoaded')
 });

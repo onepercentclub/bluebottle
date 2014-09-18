@@ -59,7 +59,6 @@ App.OrderRoute = Em.Route.extend({
                     // Create a new payment for this order
                     // TODO: set error message
                     App.MyOrderPayment.createRecord({order: model}).then(function (payment) {
-                        debugger;
                         _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
                     });
 

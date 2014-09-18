@@ -11,3 +11,7 @@ App.DocdataIdeal = App.DocdataPayment.extend({
     ideal_issuer_id: ''
 });
 
+App.DocdataPaypal = App.DocdataPayment.extend({
+    default_pm: 'paypal'
+});
+

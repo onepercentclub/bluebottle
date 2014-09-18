@@ -16,7 +16,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DONATION_MODEL
-        fields = ('id', 'project', 'fundraiser', 'user', 'amount', 'status', 'order', 'anonymous')
+        fields = ('id', 'project', 'fundraiser', 'user', 'amount', 'status', 'order', 'anonymous', 'completed', 'created')
 
     # FIXME Add validations for amount and project phase
 

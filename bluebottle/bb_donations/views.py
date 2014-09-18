@@ -136,7 +136,11 @@ class ManageDonationList(generics.ListCreateAPIView):
         if user_id:
             filter_kwargs['owner__pk'] = user_id
 
-        return queryset.filter(**filter_kwargs).order_by('-created')
+        status = self.request.QUERY_PARAMS.get('status', None)
+        if status:
+            filter_kwargs['order__status'] = status
+
+        return queryset.filter(**filter_kwargs).order_by('-created', 'order__status')
 
 
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):

@@ -601,3 +601,89 @@ App.UserIndexRoute = Em.Route.extend({
         this.transitionTo('userProfile');
     }
 });
+
+App.EventMixin = Em.Mixin.create({
+
+  bindScrolling: function(opts) {
+    var onScroll, self = this;
+
+    onScroll = function() {
+      var scrollTop = $(this).scrollTop();
+      return self.scrolled(scrollTop);
+    };
+
+    $(window).bind('scroll', onScroll);
+    $(document).bind('touchmove', onScroll);
+  },
+
+  startStopScrolling: function(elm, nameClass) {
+    var lastScroll = 0,
+        st, startScroll;
+
+    startScroll = function() {
+        st = $(this).scrollTop();
+
+        if (st > lastScroll) {
+            $(elm).removeClass(nameClass);
+        } else {
+            $(elm).addClass(nameClass);
+        }
+
+        lastScroll = st;
+    };
+
+    $(window).bind('scroll', startScroll);
+    $(document).bind('touchmove', startScroll);
+  },
+
+  unbindScrolling: function () {
+    $(window).unbind('scroll');
+    $(document).unbind('touchmove');
+  },
+
+  bindMobileClick: function() {
+    toggleMenu = function() {
+      $('.mobile-nav-holder').toggleClass('is-active');
+    };
+
+    closeMenu = function(event) {
+      $('.mobile-nav-holder').removeClass('is-active');
+    };
+
+    $('.mobile-nav-btn').bind('click', toggleMenu);
+    $('#content').bind('hover', closeMenu);
+  }
+});
+
+
+App.ApplicationView = Em.View.reopen(App.EventMixin, {
+    setBindScrolling: function() {
+        this.bindScrolling();
+        this.startStopScrolling('#cheetah-header', 'is-active');
+    }.on('didInsertElement'),
+
+    setUnbindScrolling: function() {
+        this.unbindScrolling();
+    }.on('didInsertElement'),
+
+    setBindClick: function() {
+        this.bindMobileClick();
+    }.on('didInsertElement'),
+
+    scrolled: function(dist) {
+        top = $('#content').offset();
+        elm = top.screen.availTop;
+
+        if (dist <= 53) {
+            $('#header').removeClass('is-scrolled');
+            $('.nav-member-dropdown').removeClass('is-scrolled');
+            $('.mobile-nav-holder').removeClass('is-scrolled');
+            //$('#content').append('<div class="scrolled-area"></div>');
+        } else {
+            $('#header').addClass('is-scrolled');
+            $('.nav-member-dropdown').addClass('is-scrolled');
+            $('.mobile-nav-holder').addClass('is-scrolled');
+        }
+    }
+})
+

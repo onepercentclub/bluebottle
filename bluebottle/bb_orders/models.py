@@ -1,4 +1,4 @@
-from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum

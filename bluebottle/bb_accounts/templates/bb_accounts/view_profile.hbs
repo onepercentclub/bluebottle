@@ -13,10 +13,12 @@
 				<div class="account-personal">
 		            <h2 class="account-title">{{full_name}}</h2>
 
-                    {{#link-to "userProfile" classNames="account-edit-link"}}
-                        <span class="flaticon solid settings-1"></span>
-                        Edit profile
-                    {{/link-to }}
+		            {{#if sameUser}}
+	                    {{#link-to "userProfile" classNames="account-edit-link"}}
+	                        <span class="flaticon solid settings-1"></span>
+	                        Edit profile
+	                    {{/link-to }}
+	                 {{/if}}
 				</div>
 
 	            <ul class="account-achievements">

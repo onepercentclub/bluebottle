@@ -109,7 +109,7 @@ App.DatePickerValue = Ember.TextField.extend({
 
 // See/Use App.DatePicker
 App.DatePickerWidget = Ember.TextField.extend({
-
+    placeholderBinding: "parentView.placeholder",
     dateBinding: "parentView.value",
     configBinding: "parentView.config",
 

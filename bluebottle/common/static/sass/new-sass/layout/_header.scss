@@ -224,11 +224,23 @@
                         }
 
                         strong {
+                            position: relative;
                             font-family: $font-family-body;
                             font-weight: 700;
-                            background: image-url("img/icons/icon-dropdown.svg") transparent no-repeat 100% 50%;
                             background-size: 9px;
                             padding-right: 12px;
+
+                            &:after {
+                                position: absolute;
+                                content: '';
+                                right: 0;
+                                top: 7px;
+                                width: 9px;
+                                height: 6px;
+                                background: image-url("img/icons/icon-dropdown.svg") transparent no-repeat 100% 50%;
+                                @include transform(rotate(0deg));
+                                @include transition(transform .2s ease-in-out);
+                            }
                         }
 
                         img {
@@ -355,6 +367,13 @@
                     .nav-member-dropdown {
                         color: $white;
                         background: $color-primary;
+
+                        strong {
+                            
+                            &:after {
+                                @include transform(rotate(180deg));
+                            }
+                        }
                     }
 
                     .nav-member-dropdown-menu {

@@ -29,7 +29,7 @@ App.TaskMenuView = Em.View.extend({
 });
 
 App.TaskSearchView = Em.TextField.extend({
-    placeholder: gettext('Search');
+    placeholder: gettext('Search')
 });
 
 

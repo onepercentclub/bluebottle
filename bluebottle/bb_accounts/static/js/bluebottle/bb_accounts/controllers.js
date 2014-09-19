@@ -108,6 +108,13 @@ App.UserModalController = Ember.ObjectController.extend({
 });
 
 
+App.ViewProfileController = Em.ObjectController.extend({
+    needs: "currentUser",
+    sameUser: function() {
+        return App.CurrentUser.find('current') == this.get('model');
+    }.property() 
+});
+
 App.LoginController = Em.Controller.extend({
     actions: {
         requestPasswordReset: function() {

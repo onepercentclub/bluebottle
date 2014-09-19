@@ -13,7 +13,7 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Adding model 'Order'
-        db.create_table(u'orders_order', (
+        db.create_table(MODEL_MAP['order']['table'], (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[MODEL_MAP['user']['model']], null=True, blank=True)),
             ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='created', max_length=50)),
@@ -27,7 +27,7 @@ class Migration(SchemaMigration):
 
     def backwards(self, orm):
         # Deleting model 'Order'
-        db.delete_table(u'orders_order')
+        db.delete_table(MODEL_MAP['order']['table'])
 
 
     models = {
@@ -57,7 +57,7 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['order']['table']: {
+        MODEL_MAP['order']['model_lower']: {
             'Meta': {'object_name': MODEL_MAP['order']['class']},
             'closed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
@@ -80,7 +80,7 @@ class Migration(SchemaMigration):
             'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'tag': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'taggit_taggeditem_items'", 'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['table']: {
+        MODEL_MAP['user']['model_lower']: {
             'Meta': {'object_name': MODEL_MAP['user']['class']},
             'about': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
@@ -118,4 +118,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['orders']
+    complete_apps = [MODEL_MAP['order']['app']]

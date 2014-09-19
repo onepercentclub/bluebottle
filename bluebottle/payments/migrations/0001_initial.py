@@ -11,6 +11,10 @@ MODEL_MAP = get_model_mapping()
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('orders', '0001_initial'),
+    )
+
     def forwards(self, orm):
         # Adding model 'Payment'
         db.create_table(u'payments_payment', (

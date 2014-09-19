@@ -188,7 +188,9 @@ class Command(DataCommand):
             mapping = {
                 'u"orm[\'{0}\']"'.format(model_map['model']): '"orm[\'{0}\']".format(MODEL_MAP[\'{1}\'][\'model\'])'.format('{0}', model),
                 'u\'{0}\''.format(model_map['table']): 'MODEL_MAP[\'{0}\'][\'table\']'.format(model),
+                'u\'{0}\''.format(model_map['model_lower']): 'MODEL_MAP[\'{0}\'][\'model_lower\']'.format(model),
                 'u\'{0}\''.format(model_map['app']): 'MODEL_MAP[\'{0}\'][\'app\']'.format(model),
+                '[\'{0}\']'.format(model_map['app']): '[MODEL_MAP[\'{0}\'][\'app\']]'.format(model),
                 'to=orm[\'{0}\']'.format(model_map['model']): 'to=orm[MODEL_MAP[\'{0}\'][\'model\']]'.format(model),
                 '\'object_name\': \'{0}\''.format(model_map['class']): '\'object_name\': MODEL_MAP[\'{0}\'][\'class\']'.format(model)
             }

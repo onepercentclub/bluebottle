@@ -115,7 +115,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     var tracker = _this.get('tracker');
                     if (tracker) {
                         tracker.trackEvent("Signup", {"type": "regular"});
-                        tracker.identify(authorizedUser.get('id_for_ember'));
+                        tracker.alias(authorizedUser.get('id_for_ember'));
                         tracker.peopleSet({
                                 "$first_name": authorizedUser.get('first_name'),
                                 "$last_name": authorizedUser.get('last_name'),
@@ -364,8 +364,8 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
 
                 if (_this.get('tracker')) {
                     var tracker = _this.get('tracker');
-                    tracker.trackEvent("Login", {"type": "regular"});
                     tracker.identify(user.get('id_for_ember'));
+                    tracker.trackEvent("Login", {"type": "regular"});
                 }
 
                 // Call the loadNextTransition in case the user was unauthenticated and was

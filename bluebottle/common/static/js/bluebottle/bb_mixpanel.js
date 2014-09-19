@@ -56,6 +56,12 @@ App.TrackerController = Em.ObjectController.extend({
         }
     },
 
+    alias: function(id) {
+        if (Em.typeOf(id) == 'number') {
+            this.get('_tracker').alias(id);
+        }
+    }},
+
     peopleSet: function(properties) {
         if (Em.typeOf(properties) == 'undefined') properties = {};
 

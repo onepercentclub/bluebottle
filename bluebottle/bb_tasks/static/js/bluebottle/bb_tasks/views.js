@@ -28,6 +28,9 @@ App.TaskMenuView = Em.View.extend({
     tagName: 'form'
 });
 
+App.TaskSearchView = Em.TextField.extend({
+    placeholder: gettext('Search')
+});
 
 
 App.TaskNewView = Em.View.extend(App.ScrollInView, {

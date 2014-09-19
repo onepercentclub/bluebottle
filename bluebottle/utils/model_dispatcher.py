@@ -92,10 +92,11 @@ def _map_model(name, model_name):
     Derive some partials of a model based on settings
     """
     model = getattr(settings, model_name)
-    db_table = getattr(get_model_class(model_name).Meta, 'db_table', model.lower())
+    db_table = getattr(get_model_class(model_name).Meta, 'db_table', model.lower().replace('.', '_'))
     return {
         name: {
             'model': model,
+            'model_lower': model.lower(),
             'class': model.split('.')[1],
             'app': model.split('.')[0],
             'table': db_table
@@ -120,7 +121,6 @@ def get_model_mapping():
         + _map_model('task_member', 'TASKS_TASKMEMBER_MODEL').items()
         + _map_model('task_file', 'TASKS_TASKFILE_MODEL').items()
 
-        + _map_model('task_file', 'DONATIONS_DONATION_MODEL').items()
         + _map_model('order', 'ORDERS_ORDER_MODEL').items()
         + _map_model('donation', 'DONATIONS_DONATION_MODEL').items()
         + _map_model('fundraiser', 'FUNDRAISERS_FUNDRAISER_MODEL').items()
@@ -128,5 +128,4 @@ def get_model_mapping():
         + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()
         + _map_model('organization_document', 'ORGANIZATIONS_DOCUMENT_MODEL').items()
     )
-
     return map

@@ -2,13 +2,13 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with amount=amount|floatformat:2 donor_name=donor_name site=site link=link %}
-Hello,<br/>
-<br/>
-You just received a EUR {{ amount }} donation!<br/>
-<br/>
-Quickly thank your supporter by posting a personal message on your <a href="{{ site }}{{ link }}">fundraise action wall</a>.<br/>
-<br/>
-Cheers,<br/>
+{% blocktrans with amount=amount|floatformat:2 donor_name=donor_name site=site link=link receiver=receiver %}
+Hello {{receiver}},
+<br/><br/>
+You just received a EUR {{ amount }} donation!
+<br/><br/>
+Quickly thank your supporter on your fundraise action wall: <a href="{{ site }}{{ link }}">{{site}}{{link}}</a>.
+<br/><br/>
+Thanks!<br/>
 {% endblocktrans %}
 {% endblock %}

@@ -4,28 +4,19 @@ import doctest
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.organizations_factories import OrganizationFactory
 
-from django.test import TestCase
-
-from django_dynamic_fixture import N, G
-
-from apps.projects.models import Project
-
-from apps.fund.models import Donation, DonationStatuses
-
-from apps.cowry import factory
-from apps.cowry.models import PaymentStatuses
-
-from apps.sepa.tests.base import SepaXMLTestMixin
-
-from ..models import Payout, PayoutLog, OrganizationPayout, OrganizationPayoutLog
-from ..choices import PayoutRules, PayoutLineStatuses
-from onepercentclub.tests.factory_models.donation_factories import DonationFactory
-from onepercentclub.tests.factory_models.project_factories import OnePercentProjectFactory
-from onepercentclub.tests.utils import OnePercentTestCase
-from ..utils import date_timezone_aware
 
 
-class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
+from bluebottle.sepa.tests.base import SepaXMLTestMixin
+
+from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
+from bluebottle.donations.models import Donation
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.utils import SeleniumTestCase
+from bluebottle.utils.utils import StatusDefinition
+
+
+class PayoutTestCase(SepaXMLTestMixin, SeleniumTestCase):
     """ Testcase for Payouts. """
 
     def setUp(self):
@@ -35,7 +26,7 @@ class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
 
         organization = OrganizationFactory.create()
         organization.save()
-        self.project = OnePercentProjectFactory.create(organization=organization, amount_asked=50)
+        self.project = ProjectFactory.create(organization=organization, amount_asked=50)
 
         # Update phase to campaign.
         self.project.status = ProjectPhase.objects.get(slug='campaign')
@@ -57,7 +48,7 @@ class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
         """ Test saving a payout. """
 
         # Generate new payout
-        payout = N(Payout, completed=None)
+        payout = N(ProjectPayout, completed=None)
 
         # Validate
         payout.clean()
@@ -68,13 +59,13 @@ class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
     def test_unicode(self):
         """ Test unicode() on payout. """
 
-        payout = G(Payout, completed=None)
+        payout = G(ProjectPayout, completed=None)
         self.assertTrue(unicode(payout))
 
     def test_completed(self):
         """ Test the transition to completed. """
 
-        payout = G(Payout, completed=None, status=PayoutLineStatuses.progress)
+        payout = G(ProjectPayout, completed=None, status=PayoutLineStatuses.progress)
         payout.save()
 
         self.assertFalse(payout.completed)
@@ -92,10 +83,10 @@ class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
         """
 
         # No payouts should exist yet as project is not in act phase yet
-        self.assertFalse(Payout.objects.exists())
+        self.assertFalse(ProjectPayout.objects.exists())
 
         # Set status of donation to pending
-        self.donation.status = DonationStatuses.pending
+        self.donation.status = StatusDefinition.PENDING
         self.donation.save()
 
         # Update phase to act.
@@ -103,9 +94,9 @@ class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
         self.project.save()
 
         # Payout should have been created
-        self.assertEquals(Payout.objects.count(), 1)
+        self.assertEquals(ProjectPayout.objects.count(), 1)
 
-        payout = Payout.objects.all()[0]
+        payout = ProjectPayout.objects.all()[0]
 
         # Check the project and the amount
         self.assertEquals(payout.project, self.project)
@@ -122,7 +113,7 @@ class PayoutTestCase(SepaXMLTestMixin, OnePercentTestCase):
         self.project.save()
 
         # Fetch payout
-        payout = Payout.objects.all()[0]
+        payout = ProjectPayout.objects.all()[0]
 
         self.assertIn(str(self.project.id), payout.invoice_reference)
         self.assertIn(str(payout.id), payout.invoice_reference)

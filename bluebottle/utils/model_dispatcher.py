@@ -131,6 +131,8 @@ def get_model_mapping():
 
         + _map_model('order', 'ORDERS_ORDER_MODEL').items()
         + _map_model('donation', 'DONATIONS_DONATION_MODEL').items()
+        + _map_model('project_payout', 'PAYOUTS_PROJECTPAYOUT_MODEL').items()
+        + _map_model('organization_payout', 'PAYOUTS_ORGANIZATIONPAYOUT_MODEL').items()
         + _map_model('fundraiser', 'FUNDRAISERS_FUNDRAISER_MODEL').items()
         + _map_model('organization', 'ORGANIZATIONS_ORGANIZATION_MODEL').items()
         + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()

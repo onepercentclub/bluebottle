@@ -1,4 +1,5 @@
 from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.utils.utils import StatusDefinition
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin import SimpleListFilter
@@ -37,14 +38,6 @@ class CustomBooleanFilter(SimpleListFilter):
             queryset = queryset.distinct()
 
         return queryset
-
-
-class PendingDonationsPayoutFilter(CustomBooleanFilter):
-    """ Filter payouts by ones having pending donations. """
-
-    title = _('pending donations')
-    parameter_name = 'is_pending'
-    q_filter = Q(project__donation__status=DONATION_MODEL.DonationStatuses.pending)
 
 
 class HasIBANPayoutFilter(CustomBooleanFilter):

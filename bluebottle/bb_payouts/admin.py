@@ -15,7 +15,7 @@ from django.utils.text import Truncator
 from .models import ProjectPayoutLog, OrganizationPayoutLog
 
 from .choices import PayoutLineStatuses
-from .admin_filters import PendingDonationsPayoutFilter, HasIBANPayoutFilter
+from .admin_filters import HasIBANPayoutFilter
 from .admin_utils import link_to
 
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
@@ -72,8 +72,7 @@ class PayoutAdmin(admin.ModelAdmin):
     can_delete = False
 
     list_filter = [
-        'status', 'payout_rule',
-        PendingDonationsPayoutFilter, HasIBANPayoutFilter
+        'status', 'payout_rule', HasIBANPayoutFilter
     ]
 
     actions = ['export_sepa', 'recalculate_amounts']

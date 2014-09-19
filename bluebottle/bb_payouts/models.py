@@ -5,7 +5,8 @@ import datetime
 from decimal import Decimal
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_payouts.utils import money_from_cents
-from bluebottle.payments.models import OrderPayment, Payment
+from bluebottle.bb_projects.fields import MoneyField
+from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -18,7 +19,6 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from .fields import MoneyField
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
 from .choices import PayoutLineStatuses
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
@@ -201,15 +201,12 @@ class BaseProjectPayout(PayoutBase):
 
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        seven = ChoiceItem('seven', label=_("7%"))
-        twelve = ChoiceItem('twelve', label=_("12%"))
+        five = ChoiceItem('five', label=_("5%"))
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 
     payout_rule = models.CharField(_("Payout rule"), max_length=20, choices=PayoutRules.choices,
                                    help_text=_("The payout rule for this project."))
-
-    service_percentage = models.DecimalField(_("Service fee percentage"), max_digits=5, decimal_places=2)
 
     amount_raised = MoneyField(_("amount raised"),
                                help_text=_('Amount raised when Payout was created or last recalculated.'))
@@ -238,6 +235,21 @@ class BaseProjectPayout(PayoutBase):
         ordering = ['-created']
         abstract = True
 
+    def get_payout_rule(self):
+        """
+        Override this if you want different payout rules for different circumstances.
+        e.g. project target reached, minimal amount reached.
+
+        Default is just payout rule 5.
+        """
+        return self.PayoutRules.five
+
+    def calculate_amount_payable_rule_five(self, total):
+        """
+        Calculate the amount payable for 5% rule
+        """
+        return self.amount_raised * Decimal(0.95)
+
     def calculate_amounts(self, save=True):
         """
         Calculate amounts according to payment_rule.
@@ -254,21 +266,19 @@ class BaseProjectPayout(PayoutBase):
 
         # Set payout rule if none set.
         if not self.payout_rule:
-            error_message = "Payout rule not set on ProjectPayout for Project ({0}) '{1}'".\
-                format(self.project.id, self.project.title)
-            raise PayoutException(error_message, [])
-
-        if self.service_percentage is None:
-            error_message = "Service percentage not set on ProjectPayout for Project ({0}) '{1}'".\
-                format(self.project.id, self.project.title)
-            raise PayoutException(error_message, [])
-
-        fee_factor = float(self.service_percentage) / 100
+            self.payout_rule = self.get_payout_rule()
 
         self.amount_raised = self.get_amount_raised()
 
-        self.organization_fee = self.amount_raised * Decimal(fee_factor)
-        self.amount_payable = self.amount_raised - self.organization_fee
+        calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
+        try:
+            calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
+        except AttributeError:
+            message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
+            raise PayoutException(message)
+
+        self.amount_payable = calculator(self.get_amount_raised())
+        self.organization_fee = self.amount_raised - self.amount_payable
 
         if save:
             self.save()
@@ -492,8 +502,7 @@ class BaseOrganizationPayout(PayoutBase):
 
         Should only be called for Payouts with status 'new'.
         """
-        assert self.status == PayoutLineStatuses.new, \
-            'Can only recalculate for new Payout.'
+        assert self.status == PayoutLineStatuses.new, 'Can only recalculate for new Payout.'
 
         # Calculate original values
         self.organization_fee_incl = self._get_organization_fee()
@@ -668,3 +677,4 @@ class OrganizationPayoutLog(PayoutLogBase):
 from .signals import create_payout_finished_project
 
 post_save.connect(create_payout_finished_project, weak=False, sender=PROJECT_MODEL)
+

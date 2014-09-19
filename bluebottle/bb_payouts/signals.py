@@ -42,10 +42,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
             )
 
-            # FIXME: Set these based on  business rules and not here but on model.
-            payout.payout_rule = 'seven'
-            payout.service_percentage = 7
-
             # Calculate amounts
             payout.calculate_amounts()
 

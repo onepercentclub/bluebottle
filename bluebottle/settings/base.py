@@ -284,6 +284,10 @@ ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
 DONATIONS_DONATION_MODEL = 'donations.Donation'
 ORDERS_ORDER_MODEL = 'orders.Order'
 
+PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
+PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
+
+
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True
 

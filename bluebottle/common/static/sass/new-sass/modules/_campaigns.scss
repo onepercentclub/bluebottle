@@ -308,6 +308,28 @@
                     }
                 }
             }
+
+            .campaign-tasks {
+                position: relative;
+                color: $gray-light;
+                text-align: center;
+                width: 60%;
+                margin: auto;
+
+                &:before {
+                    position: absolute;
+                    left: 10%;
+                    content: '';
+                    display: block;
+                    width: 22px;
+                    height: 23px;
+                    background: url("/static/assets/images/img/icons/icon-tasks.svg") transparent no-repeat 50% 50%;
+                }
+
+                p {
+                    font-weight: 800;
+                }
+            }
         }
 
         &:hover {

@@ -107,4 +107,3 @@ Ember.Handlebars.helper('daysToGoText', function(value, options) {
 
   return new Handlebars.SafeString(text);
 });
-

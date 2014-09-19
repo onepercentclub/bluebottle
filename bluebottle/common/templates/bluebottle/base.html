@@ -34,13 +34,13 @@
 
     {# Stylesheets #}
     {% compress css %}
-		{% block screen_css %}
+        {% block screen_css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" media="screen" />
         <link rel="stylesheet" href="{{ STATIC_URL }}css/vendor/redactor.css" media="screen" />
         <!--[if IE]>
             <link rel="stylesheet" href="{{ STATIC_URL }}css/ie.css" media="screen" />
         <![endif]-->
-		{% endblock screen_css %}
+        {% endblock screen_css %}
     {% endcompress %}
 
     {# Scripts #}
@@ -124,6 +124,7 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/mixins.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/controllers.js"></script>
             <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/overrides.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/components.js"></script>
 
             {% for app in bb_apps %}
                 <script type="text/javascript" src="{{ STATIC_URL }}js/bluebottle/{{ app }}/routes.js"></script>
@@ -140,6 +141,9 @@
         {% for app in bb_apps %}
             {% include app|add:"/base.hbs" %}
         {% endfor %}
+        {% include "bluebottle/components.hbs" %}
+        {% include "bluebottle/footer.hbs" %}
+        {% include "bluebottle/not_allowed.hbs" %}
     {% endblock handlebars_templates %}
 
 
@@ -243,15 +247,14 @@
 
     {% endtplhandlebars %}
 
-	{% include "bluebottle/footer.hbs" %}
-  {% include "bluebottle/not_allowed.hbs" %}
+
 
 </head>
 <body id="body">
     <!-- Scripts -->
     <div id="fb-root"></div>
 
-	{% block google_analytics %}
+    {% block google_analytics %}
         <script type="text/javascript">
           var _gaq = _gaq || [];
             {% if ANALYTICS_CODE %}
@@ -262,8 +265,8 @@
                 )();
             {%  endif %}
         </script>
-	{% endblock %}
-	
+    {% endblock %}
+    
     <!--[if lte IE 9]>
         <script type="text/javascript" src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->

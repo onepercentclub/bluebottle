@@ -1,0 +1,14 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "bbMenu" %}
+    {{#each item in menuItems}}
+        {{#link-to item.link classNames="account-edit-link"}}
+            <span {{bind-attr class=":flaticon :solid item.icon:"}}></span>{{item.label}}
+        {{/link-to }}       
+    {{/each}}
+{% endtplhandlebars %}
+
+{% tplhandlebars "components/bb-profile-menu" %}
+    {{partial bbMenu }}
+{% endtplhandlebars %}

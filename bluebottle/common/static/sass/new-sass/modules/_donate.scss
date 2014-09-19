@@ -1,0 +1,161 @@
+$color-primary: #5DC0ED;
+
+.donation-amount {
+    background: #F5F4F6;
+    padding: 20px;
+    border-radius: 8px;
+    @include placeholder-color($color-primary);
+
+
+    .donation-input {
+        height: 57px;
+        padding: 5px 5px 5px 35px;
+        font-size: 28px;
+        font-weight: bold;
+        line-height: 34px;
+        color: $color-primary !important;
+        @include transition(font-size, ease-in-out .2s);
+
+        &.is-long {
+            font-size: 20px;
+        }
+    }
+
+    .donation-buttons {
+        margin-top: 6px;
+    }
+
+    .input {
+        position: relative;
+
+        &:before {
+            position: absolute;
+            content: '\20AC';
+            left: 15px;
+            top: 22px;
+            font-size: 28px;
+            font-weight: bold;
+            color: $color-primary;
+        }
+    }
+}
+
+#donation-success {
+    min-height: 350px;
+    padding-top: 45px;
+    background: #E4EDE9;
+
+    .backdrop {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+
+        .backdrop-gradient {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            @include background(linear-gradient(to top, rgba(#fff, 1), rgba(#fff, 0)));
+        }
+
+        .backdrop-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: image-url("thankyou-modal-bg.jpg") transparent no-repeat;
+            background-size: cover;
+        }
+
+        canvas#confetti-canvas {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    .modal-fullscreen-close {
+        background: image-url('icons/icon-close-modal-black.svg') transparent no-repeat;
+    }
+
+    h4, .donor-name {
+        position: relative;
+        font-family: $base-font-family;
+        color: #444;
+        font-weight: bold;
+    }
+    h4 {
+        font-size: $font-size-larger;
+    }
+    .top-icon {
+        position: absolute;
+        left: 50%;
+        top: -40px;
+        margin: 0px -40px;
+        height: 73px;
+        width: 73px;
+        background-color: $white;
+        border: 6px solid $modal-footer-bg-color;
+        border-radius: 50%;
+        padding: 2px;
+        overflow: hidden;
+        img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+    }
+    .wallpost-form {
+        font-size: 15px;
+
+        .wallpost-message {
+            position: relative;
+            margin: auto;
+            width: 90%;
+            background: $white;
+            height: 170px;
+            border: solid 1px #D8D8D8;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            @include opacity(0.9);
+
+            textarea {
+                height: 65%;
+                border: none;
+                font-size: 18px;
+                color: #9F9F9F;
+            }
+
+            .wallpost-header {
+                padding: 12px;
+                border-bottom: solid 1px #d8d8d8;
+
+                .wallpost-header-title {
+                    text-align: left;
+
+                    strong {
+                        padding-left: 5px;
+                    }
+                }
+
+                .wallpost-header-count {
+                    text-align: right;
+                    color: #d8d8d8;
+                }
+            }
+
+        }
+    }
+
+    .wallpost-buttons {
+        width: 80%;
+        margin: auto;
+        padding: 5px 0 10px 0;
+
+        .btn {
+            font-weight: normal;
+        }
+    }
+}

@@ -183,15 +183,31 @@ BB.ModalMixin = Em.Mixin.create({
             $('#card').removeClass('flipped');
         },
 
-        modalSlide: function(name, context) {
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack', context);
-
-            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
-            this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
+        modalSlide: function (name, context) {
+            if ($('#card .front').hasClass('slide-out-left')) {
+                this.send('modalSlideRight', name, context);
+            } else {
+                this.send('modalSlideLeft', name, context);
+            }
         },
 
-        modalSlideBack: function(name, context) {
+        modalSlideLeft: function(name, context) {
+            // Handle any cleanup for the previously set content for the modal
+            this.send('modalWillTransition', name, 'modalBack', context);
+            debugger
+            if ($('#card').hasClass('flipped')) {
+                $('#card').removeClass('flipped');
+                $('#card').addClass('flipped-alt');
+            } else {
+                this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
+            }
+
+        },
+
+        modalSlideRight: function(name, context) {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                _this = this;
+
             // Handle any cleanup for the previously set content for the modal
             if ($.browser.msie && parseInt($.browser.version) < 10){
                 this.send('modalWillTransition', 'modalFlip', 'modalFront', context);
@@ -199,8 +215,13 @@ BB.ModalMixin = Em.Mixin.create({
                 return;
             }
             this.send('modalWillTransition', name, 'modalFront', context);
-            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
-            this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+            if (!$('#card').hasClass('flipped')) {
+                this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
+                this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+                $('#card').one(animationEnd, function(){
+                    _this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+                });
+            }
         },
 
         modalScale: function(name, context) {

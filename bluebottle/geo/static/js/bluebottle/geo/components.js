@@ -63,12 +63,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
-        // var point = new google.maps.LatLng(22, 10);
+        var point = new google.maps.LatLng(22, 10);
         var MyMapType = new google.maps.StyledMapType(this.get("mapStyle"), {name: 'Grey'});
 
         var mapOptions = {
             zoom: 2,
-            // center: point,
+            center: point,
             scrollwheel: false,
             panControl: false,
             zoomControl: true,
@@ -90,7 +90,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
         });
     },
     placeMarkers: function() {
-        var comp = this;
+        var comp = this,
+            map = comp.get('map');
         var bounds = new google.maps.LatLngBounds();
         var markers = [];
         App.ProjectPreview.find({page_size: 500}).then(function(records){
@@ -98,9 +99,9 @@ App.BbProjectMapComponent = Ember.Component.extend({
                 var marker = comp.placeMarker(project);
                 markers.push(marker);
                 bounds.extend(marker.position);
-                comp.get("map").fitBounds(bounds);
+                //map.fitBounds(bounds);
             });
-            var markerCluster = new MarkerClusterer(comp.get("map"), markers, comp.get('clusterOptions'));
+            var markerCluster = new MarkerClusterer(map, markers, comp.get('clusterOptions'));
         });
 
     },

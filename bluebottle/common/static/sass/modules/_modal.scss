@@ -390,6 +390,9 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				z-index: 4;
 			}
 		}
+      &.flipped-alt {
+            @include transform(rotateY(-180deg));
+      }
 	}
 
 	&.normal {

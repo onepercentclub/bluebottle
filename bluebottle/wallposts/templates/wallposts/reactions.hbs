@@ -63,7 +63,10 @@
             </fieldset>
         </form>
     {{else}}
-        <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or {{#link-to "signup"}}{% trans "Sign up" %}{{/link-to}} {% trans "to leave a reaction" %}.</div>
+        <div class="login-box">
+            <a {{action openInBox "login"}}>{%  trans "Login" %}</a> {% trans "or" %}
+            <a {{action openInBox "signup"}}>{% trans "Sign up" %}</a> {% trans "to leave a reaction" %}.
+        </div>
     {{/if}}
 
 {% endtplhandlebars %}

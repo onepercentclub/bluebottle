@@ -2,8 +2,6 @@
 $font-family-body					   					   : 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
 $gray-border                                               : #D8D8D8;
 $gray-border-hover                                         : #9F9F9F;
-$modal-background-color									   : rgba(#8A9993, .65);
-$modal-item-background									   : #F5F4F6;
 
 .modal-fullscreen-background {
 	position: fixed;
@@ -260,25 +258,6 @@ $modal-item-background									   : #F5F4F6;
 				margin-top: 7px;
 				width: 100%;
 				border-radius: 8px;
-			}
-
-			.donation-buttons {
-				margin-top: 3px;
-
-				.btn {
-					width: 90%;
-					height: 48px;
-					font-size: 18px;
-					padding: 12px 0 12px 0;
-
-					&.first {
-						float: left;
-					}
-
-					&.last {
-						float: right;
-					}
-				}	
 			}
 
 			.or-hr {
@@ -566,7 +545,7 @@ $modal-item-background									   : #F5F4F6;
 	}
 
 	&.donation {
-		width: 600px;
+		width: 500px;
 	}
 	
 	// TODO: Remove old modal padding

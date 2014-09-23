@@ -8,13 +8,13 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
     model = DocdataPayment
 
-    readonly_fields = ('order_payment_link', 'payment_cluster_id', 'payment_cluster_key', 'status',
+    readonly_fields = ('order_payment_link', 'payment_cluster_id', 'payment_cluster_key',
                        'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency',
                        'total_registered', 'total_shopper_pending',
                        'total_acquirer_pending', 'total_acquirer_approved',
                        'total_captured', 'total_refunded', 'total_charged_back')
 
-    fields = readonly_fields
+    fields = ('status', ) + readonly_fields
 
     def order_payment_link(self, obj):
         object = obj.order_payment

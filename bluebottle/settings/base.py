@@ -164,6 +164,7 @@ INSTALLED_APPS = (
     'bluebottle.bb_fundraisers',
     'bluebottle.bb_orders',
     'bluebottle.bb_donations',
+    'bluebottle.bb_payouts',
 
     # Other Bb apps
     'bluebottle.common',
@@ -182,6 +183,7 @@ INSTALLED_APPS = (
     'bluebottle.fundraisers',
     'bluebottle.orders',
     'bluebottle.donations',
+    'bluebottle.payouts',
 
     'bluebottle.payments',
     'bluebottle.payments_docdata',
@@ -283,6 +285,10 @@ ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
 
 DONATIONS_DONATION_MODEL = 'donations.Donation'
 ORDERS_ORDER_MODEL = 'orders.Order'
+
+PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
+PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
+
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

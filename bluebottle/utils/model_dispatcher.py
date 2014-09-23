@@ -56,6 +56,14 @@ def get_payment_logger_model():
     return get_model_class('PAYMENT_LOGGER_MODEL')
 
 
+def get_project_payout_model():
+    return get_model_class('PAYOUTS_PROJECTPAYOUT_MODEL')
+
+
+def get_organization_payout_model():
+    return get_model_class('PAYOUTS_ORGANIZATIONPAYOUT_MODEL')
+
+
 def get_auth_user_model():
     return get_user_model()
 
@@ -81,8 +89,8 @@ def get_model_class(model_name=None):
         model = get_model(app_label, model_class_name)
         if model is None:
             raise ImproperlyConfigured(
-                "{0} refers to model '{0}' that has not been "
-                "installed".format(model_name))
+                "{0} refers to model '{1}' that has not been "
+                "installed".format(model_name, model_path))
 
     return model
 
@@ -123,6 +131,8 @@ def get_model_mapping():
 
         + _map_model('order', 'ORDERS_ORDER_MODEL').items()
         + _map_model('donation', 'DONATIONS_DONATION_MODEL').items()
+        + _map_model('project_payout', 'PAYOUTS_PROJECTPAYOUT_MODEL').items()
+        + _map_model('organization_payout', 'PAYOUTS_ORGANIZATIONPAYOUT_MODEL').items()
         + _map_model('fundraiser', 'FUNDRAISERS_FUNDRAISER_MODEL').items()
         + _map_model('organization', 'ORGANIZATIONS_ORGANIZATION_MODEL').items()
         + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()

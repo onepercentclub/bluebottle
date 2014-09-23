@@ -11,8 +11,6 @@ from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
-DONATION_MODEL = get_donation_model()
-
 
 class BaseOrder(models.Model, FSMTransition):
     """
@@ -62,6 +60,7 @@ class BaseOrder(models.Model, FSMTransition):
         pass
 
     def update_total(self, save=True):
+        DONATION_MODEL = get_donation_model()
         donations = DONATION_MODEL.objects.filter(order=self)
         self.total = donations.aggregate(Sum('amount'))['amount__sum']
         if save:

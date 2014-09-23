@@ -36,3 +36,5 @@ DATABASES = {
 		'NAME': ':memory:'
 	}
 }
+
+VAT_RATE = 21

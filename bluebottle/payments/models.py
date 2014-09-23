@@ -49,7 +49,6 @@ class Payment(PolymorphicModel):
         ordering = ('-created', '-updated')
 
 
-
 class OrderPaymentAction(models.Model):
     """
     This is used as action to process OrderPayment.
@@ -87,6 +86,9 @@ class OrderPayment(models.Model, FSMTransition):
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+
+    transaction_fee = models.DecimalField(_("Transaction Fee"), max_digits=16, decimal_places=2, null=True,
+                                          help_text=_("Bank & transaction fee, withheld by payment provider."))
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)

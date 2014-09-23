@@ -1,5 +1,4 @@
 App.OrderPaymentController = Em.ObjectController.extend({
-
     needs: ['application', 'projectDonationList', 'fundRaiserDonationList'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
@@ -21,7 +20,6 @@ App.OrderPaymentController = Em.ObjectController.extend({
         //       will determine the payment methods. Also, in the future we will
         //       need to send the country with the amount.
         App.PaymentMethod.find().then(
-
             // Success
             function(methods) {
                 _this.set('methods', methods);

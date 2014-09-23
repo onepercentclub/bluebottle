@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import timedelta
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 
@@ -18,8 +19,10 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
     if project.status == ProjectPhase.objects.get(slug='realised') and project.amount_asked:
 
-        # Don't schedule for 1st or 15th of the month. Just schedule it for NOW!
-        next_date = now
+        if now.day <= 15:
+            next_date = timezone.datetime(now.year, now.month, 15)
+        else:
+            next_date = timezone.datetime(now.year, now.month, 1) + timedelta(months=1)
 
         PROJECT_PAYOUT_MODEL = get_project_payout_model()
 

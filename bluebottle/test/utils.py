@@ -13,6 +13,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings
+from django.test import TestCase
 
 from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList

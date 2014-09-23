@@ -213,7 +213,7 @@ $modal-item-background									   : #F5F4F6;
 			background: white;
 			border-radius: 4px;
 			border: solid 1px #ccc;
-			padding: 20px 20px 20px 20px;
+			padding: 35px;
 
 			h4 {
 				font-size: 22px;
@@ -221,6 +221,7 @@ $modal-item-background									   : #F5F4F6;
 				text-transform: inherit;
 				font-weight: 700;
 				margin-bottom: 15px;
+				margin-top: 0;
 			}
 
 			big {
@@ -315,10 +316,8 @@ $modal-item-background									   : #F5F4F6;
 				font-size: 18px;
 				min-width: 193px;
 				width: auto;
-			}
-
-			.donate-btn, .payment-btn {
 				margin: 34px 0 15px;
+				margin-bottom: 0;
 			}
 
 		}
@@ -327,7 +326,7 @@ $modal-item-background									   : #F5F4F6;
 			position: absolute;
 			display: block;
 			top: 10px;
-			right: 10px;
+			right: 14px;
 			width: 20px;
 			height: 20px;
 			background: image-url("icons/icon-close-modal.svg") transparent no-repeat;
@@ -343,12 +342,12 @@ $modal-item-background									   : #F5F4F6;
 			position: absolute;
 			display: block;
 			top: 10px;
-			left: 10px;
-			width: 20px;
+			left: 7px;
+			width: 30px;
 			height: 20px;
 			background: image-url("icons/icon-back-modal.svg") transparent no-repeat;
 			background-position: 7px;
-			background-size: 65%;
+			background-size: 55%;
 			cursor: pointer;
 
 			.modal-close-image {
@@ -413,6 +412,7 @@ $modal-item-background									   : #F5F4F6;
 						width: 10px;
 						height: 13px;
 						background: image-url("icons/icon-lock.svg") transparent no-repeat;
+						background-size: 10px;
 					}
 				}
 

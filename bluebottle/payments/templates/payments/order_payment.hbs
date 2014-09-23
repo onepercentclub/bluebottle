@@ -51,7 +51,7 @@
                 <div class="modal-facebook-password">
                     <input type="text" placeholder="Choose a password">
                 </div>
-				<a {{action 'nextStep'}} {{bindAttr class=":btn-sec :btn :payment-btn isBusy:is-loading blockingErrors:is-inactive"}}>
+				<a {{action 'nextStep'}} {{bindAttr class=":btn :payment-btn isBusy:is-loading blockingErrors:is-inactive"}}>
                     {% trans 'Proceed with'%} {{currentPaymentMethod.providerName}}
                 </a>
             </div>

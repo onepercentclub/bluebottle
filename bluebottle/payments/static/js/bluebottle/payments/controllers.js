@@ -1,4 +1,5 @@
 App.OrderPaymentController = Em.ObjectController.extend({
+
     needs: ['application', 'projectDonationList', 'fundRaiserDonationList'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
@@ -20,9 +21,13 @@ App.OrderPaymentController = Em.ObjectController.extend({
         //       will determine the payment methods. Also, in the future we will
         //       need to send the country with the amount.
         App.PaymentMethod.find().then(
+
             // Success
             function(methods) {
                 _this.set('methods', methods);
+                // Also explicitely reload the payment method tab when the methods are fetched. This is required
+                // when the user closes and reopens the modal. 
+                _this._setPaymentMethodController();
             },
             // Failure
             function(methods) {

@@ -21,6 +21,19 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     MODEL_CLASS = DocdataPayment
 
+    # Payment methods specified by DocData. They should map to the payment methods we specify in our settings file so we can map
+    # payment methods of Docdata to our own definitions of payment methods
+    PAYMENT_METHODS = {
+        'Mastercard'                        : 'docdataCreditcard',
+        'VISA'                              : 'docdataCreditcard',
+        'Maestro'                           : 'docdataCreditcard',
+        'Bancontact Mister Cash'            : 'docdataCreditcard',
+        'American Express'                  : 'docdataCreditcard',
+        'iDeal'                             : 'docdataIDeal',
+        'Bank transfers'                    : 'docdataBanktransfer',
+        'Direct Debits'                     : 'docdataDirectdebit'
+    }
+
     STATUS_MAPPING = {
         'NEW':                            StatusDefinition.STARTED,
         'STARTED':                        StatusDefinition.STARTED,

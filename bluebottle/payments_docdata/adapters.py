@@ -29,7 +29,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'Maestro'                           : 'docdataCreditcard',
         'Bancontact Mister Cash'            : 'docdataCreditcard',
         'American Express'                  : 'docdataCreditcard',
-        'iDeal'                             : 'docdataIDeal',
+        'iDeal'                             : 'docdataiDeal',
         'Bank transfers'                    : 'docdataBanktransfer',
         'Direct Debits'                     : 'docdataDirectdebit'
     }

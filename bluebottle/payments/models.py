@@ -151,7 +151,6 @@ class OrderPayment(models.Model, FSMTransition):
 
     def full_clean(self, exclude=None):
         self.amount = self.order.total
-        self.transaction_fee = self.payment.get_fee()
 
     def set_authorization_action(self, action, save=True):
         self.authorization_action = OrderPaymentAction(**action)

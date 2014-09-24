@@ -88,3 +88,5 @@ class BlueBottlePaymentTestCase(TestCase):
 
         self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.PENDING,
             'Starting an authorized Payment should not change Order status')
+
+

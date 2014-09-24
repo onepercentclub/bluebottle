@@ -54,7 +54,6 @@ App.ProjectFundRaiserAllController = Em.ArrayController.extend({
 });
 
 
-
 App.ProjectFundRaiserListController = Em.ArrayController.extend({
     needs: ['project', 'projectFundRaiserAll'],
 
@@ -69,6 +68,23 @@ App.ProjectFundRaiserListController = Em.ArrayController.extend({
 			this.set('model', null);
 		}
 	}.observes('fundraisers.isLoaded'),
+
+    activeFundraisers: function() {
+        // Reorder Fundraiser list, first the active ones (with donation)
+        fundraisers = this.get('model');
+        activeFundraisers = [];
+        newFundraisers = [];
+        fundraisers.forEach(function (fundraiser) {
+            if (fundraiser.get('amount_donated')) {
+                activeFundraisers.push(fundraiser);
+            } else {
+                newFundraisers.push(fundraiser);
+            }
+        });
+        activeFundraisers.push.apply(activeFundraisers, newFundraisers);
+        return activeFundraisers;
+
+    }.property('fundraisers'),
 
     actions: {
         showAllFundraisers: function(project){

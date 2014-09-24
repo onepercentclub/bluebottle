@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
@@ -17,7 +18,7 @@ class FundRaiserListView(ListCreateAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    paginate_by = 4
+    paginate_by = 10
     paginate_by_param = 'page_size'
 
     # because we overwrite get_queryset, this is ignored
@@ -43,7 +44,11 @@ class FundRaiserListView(ListCreateAPIView):
         if user_id:
             filter_kwargs['owner__pk'] = user_id
 
-        return queryset.filter(**filter_kwargs).order_by('-created')
+
+        # queryset.filter(**filter_kwargs).order_by('-created') # shows all not ordered per donation__created
+        # queryset.filter(**filter_kwargs).order_by('-donation__created') # last donation appears more than one time some donation are not shown
+        # queryset.filter(**filter_kwargs).order_by('id', '-donation__created').distinct('id')
+        return queryset.filter(**filter_kwargs).order_by('-updated')
 
     def pre_save(self, obj):
         if not self.request.user.is_authenticated():

@@ -5,13 +5,12 @@ App.Adapter.map('App.ProjectDonation', {
 });
 
 App.Adapter.map('App.MyFundraiserDonation', {
-    user: {embedded: 'load'}
+    user: {embedded: 'load'},
 });
 
 App.Adapter.map('App.MyProjectDonation', {
     user: {embedded: 'load'}
 });
-
 
 /* Models */
 

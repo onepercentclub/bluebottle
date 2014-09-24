@@ -55,6 +55,7 @@ def payment_status_changed(sender, instance, **kwargs):
     # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)
 
+
 @receiver(post_save, weak=False, dispatch_uid='default_status')
 def default_status_check(sender, instance, **kwargs):
     if not (isinstance(instance, Payment) or isinstance(instance, OrderPayment)): return

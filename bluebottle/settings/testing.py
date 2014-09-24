@@ -38,3 +38,13 @@ DATABASES = {
 }
 
 VAT_RATE = 21
+
+DOCDATA_FEES = {
+    'transaction': 0.20,
+    'payment_methods': {
+        'IDEAL': 0.35,
+        'MASTERCARD': '3.0%',
+        'VISA': '3.5%',
+        'SEPA_DIRECT_DEBIT': 0.25
+    }
+}

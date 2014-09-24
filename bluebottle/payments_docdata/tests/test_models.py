@@ -65,7 +65,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_no_payment_method_change(self, mock_fetch_status, mock_transaction):
-        self.assertEquals(PaymentLogEntry.objects.count(), 0)
+        self.assertEquals(PaymentLogEntry.objects.count(), 2)
 
         # Mock the status check with docdata
         mock_fetch_status.return_value = self.create_status_response('AUTHORIZED')
@@ -125,10 +125,11 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_unknown_payment_method_change(self, mock_fetch_status, mock_transaction):
+        # Two payment log entries already exist: 2x 'a new payment status "started" '  
+        self.assertEquals(PaymentLogEntry.objects.count(), 2)
+
         # Mock the status check with docdata
         mock_fetch_status.return_value = self.create_status_response('AUTHORIZED')
-
-
 
         order = OrderFactory.create()
         # Ensure that we use an existing payment_method or the adapter throws an exception

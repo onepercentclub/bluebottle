@@ -1,3 +1,4 @@
+from bluebottle.test.utils import BluebottleTestCase
 from django.core import mail
 from django.test import TestCase
 
@@ -11,10 +12,11 @@ TASKS_MEMBER_MODEL = get_taskmember_model()
 
 from bluebottle.bb_tasks import taskmail
 
-class TaskEmailTests(TestCase):
+class TaskEmailTests(BluebottleTestCase):
     """ Tests for tasks: sending e-mails on certain status changes. """
 
     def setUp(self):
+        super(TaskEmailTests, self).setUp()
         self.some_user = BlueBottleUserFactory.create(first_name='King')
         self.another_user = BlueBottleUserFactory.create(first_name='Kong')
 

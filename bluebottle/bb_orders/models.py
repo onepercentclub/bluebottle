@@ -20,7 +20,7 @@ class BaseOrder(models.Model, FSMTransition):
     STATUS_MAPPING = {
         StatusDefinition.CREATED:      StatusDefinition.LOCKED,
         StatusDefinition.STARTED:      StatusDefinition.LOCKED,
-        StatusDefinition.AUTHORIZED:   StatusDefinition.SUCCESS,
+        StatusDefinition.AUTHORIZED:   StatusDefinition.PENDING,
         StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
         StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
@@ -49,12 +49,17 @@ class BaseOrder(models.Model, FSMTransition):
         # TODO: add locked state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.SUCCESS)
+    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.PENDING)
+    def pending(self):
+        # TODO: add success state behaviour here
+        pass
+
+    @transition(field=status, save=True, source=[StatusDefinition.PENDING, StatusDefinition.LOCKED], target=StatusDefinition.SUCCESS)
     def succeeded(self):
         # TODO: add success state behaviour here
         pass
 
-    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
+    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.PENDING, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
         pass

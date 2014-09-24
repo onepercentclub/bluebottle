@@ -7,7 +7,6 @@ from django.utils import timezone
 from .choices import PayoutLineStatuses
 
 
-
 def create_payout_finished_project(sender, instance, created, **kwargs):
     """
     Create or update Payout for finished projects.
@@ -22,7 +21,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
         if now.day <= 15:
             next_date = timezone.datetime(now.year, now.month, 15)
         else:
-            next_date = timezone.datetime(now.year, now.month, 1) + timedelta(months=1)
+            next_date = timezone.datetime(now.year, now.month, 1).replace(month=now.month+1)
 
         PROJECT_PAYOUT_MODEL = get_project_payout_model()
 
@@ -42,7 +41,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             payout = PROJECT_PAYOUT_MODEL(
                 planned=next_date,
                 project=project
-
             )
 
             # Calculate amounts

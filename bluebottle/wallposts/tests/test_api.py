@@ -1,3 +1,4 @@
+from bluebottle.test.utils import BluebottleTestCase
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -56,12 +57,13 @@ from ..models import Reaction
 from bluebottle.wallposts import mails
 
 
-class WallPostReactionApiIntegrationTest(TestCase):
+class WallPostReactionApiIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Project Media WallPost API.
     """
 
     def setUp(self):
+        super(WallPostReactionApiIntegrationTest, self).setUp()
         self.some_wallpost = TextWallPostFactory.create()
         self.another_wallpost = TextWallPostFactory.create()
         
@@ -302,10 +304,12 @@ class WallPostReactionApiIntegrationTest(TestCase):
 #         response = self.client.post(self.wallpost_reaction_url, {'text': reaction_text, 'wallpost': self.wallpost.id})
 #         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 #         self.assertEqual(escaped_reaction_text, response.data['text'])
-#
-#
-class WallpostMailTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
+
+
+class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTestsMixin,
+    
     def setUp(self):
+        super(WallpostMailTests, self).setUp()
         self.user_a = self.create_user(email='a@example.com', first_name='aname ', last_name='alast')
         self.user_b = self.create_user(email='b@example.com', first_name='bname ', last_name='blast')
         self.user_c = self.create_user(email='c@example.com', first_name='cname ', last_name='clast')

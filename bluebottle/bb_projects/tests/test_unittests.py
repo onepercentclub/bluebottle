@@ -1,3 +1,4 @@
+from bluebottle.test.utils import BluebottleTestCase
 from django.test import TestCase
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
@@ -5,9 +6,10 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_project_pha
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()
 
-class TestProjectTestCase(TestCase):
+
+class TestProjectTestCase(BluebottleTestCase):
     def setUp(self):
-            pass
+        self.init_projects()
 
     def test_fake(self):
         self.assertEquals(PROJECT_MODEL.objects.count(), 0)

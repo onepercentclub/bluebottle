@@ -222,7 +222,7 @@ class InitProjectDataMixin(object):
                       {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
                       {'id': 5, 'name': 'Campaign', 'viewable': True},
                       {'id': 7, 'name': 'Stopped', 'viewable': False},
-                      {'id': 8, 'name': 'Done - Complete', 'viewable': True},
+                      {'id': 8, 'name': 'Realised', 'viewable': True},
                       {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
 
         theme_data = [{'id': 1, 'name': 'Education'},
@@ -252,6 +252,15 @@ else:
     USERNAME = os.environ.get('SAUCE_USERNAME')
     ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
     sauce = SauceClient(USERNAME, ACCESS_KEY)
+
+
+
+@override_settings(DEBUG=True)
+class BluebottleTestCase(InitProjectDataMixin, TestCase):
+
+    def setUp(self):
+        self.init_projects()
+
 
 
 @override_settings(DEBUG=True)

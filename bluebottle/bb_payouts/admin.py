@@ -75,7 +75,7 @@ class PayoutAdmin(admin.ModelAdmin):
         'status', 'payout_rule', HasIBANPayoutFilter
     ]
 
-    actions = ['export_sepa', 'recalculate_amounts']
+    actions = ['recalculate_amounts']
 
     list_display = [
         'payout', 'status', 'admin_project', 'amount_payable',
@@ -186,21 +186,6 @@ class PayoutAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    def export_sepa(self, request, queryset):
-        """
-        Dowload a sepa file with selected ProjectPayments
-        """
-        objs = queryset.all()
-        if not request.user.is_staff:
-            raise PermissionDenied
-        response = HttpResponse(mimetype='text/xml')
-        date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
-        response['Content-Disposition'] = 'attachment; filename=payments_sepa%s.xml' % date
-        response.write(Payout.create_sepa_xml(objs))
-        return response
-
-    export_sepa.short_description = "Export SEPA file."
-
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
         filter_args = {'status': PayoutLineStatuses.new}
@@ -283,7 +268,7 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
         })
     )
 
-    actions = ('recalculate_amounts', 'export_sepa')
+    actions = ('recalculate_amounts', )
 
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
@@ -304,21 +289,6 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
         self.message_user(request, message)
 
     recalculate_amounts.short_description = _("Recalculate amounts for new payouts.")
-
-    def export_sepa(self, request, queryset):
-        """
-        Dowload a sepa file with selected ProjectPayments
-        """
-        objs = queryset.all()
-        if not request.user.is_staff:
-            raise PermissionDenied
-        response = HttpResponse(mimetype='text/xml')
-        date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
-        response['Content-Disposition'] = 'attachment; filename=payments_sepa%s.xml' % date
-        response.write(ORGANIZATION_PAYOUT_MODEL.create_sepa_xml(objs))
-        return response
-
-    export_sepa.short_description = "Export SEPA file."
 
     def has_add_permission(self, request):
         return False

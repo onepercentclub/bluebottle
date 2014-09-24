@@ -1,3 +1,4 @@
+from bluebottle.test.utils import BluebottleTestCase
 from django.core import mail
 from django.test import TestCase
 
@@ -13,10 +14,11 @@ DONATION_MODEL = get_donation_model()
 ORDER_MODEL = get_order_model()
 
 
-class DonationEmailTests(TestCase):
+class DonationEmailTests(BluebottleTestCase):
     """ Tests for tasks: sending e-mails on certain status changes. """
 
     def setUp(self):
+        super(DonationEmailTests, self).setUp()
         self.user = BlueBottleUserFactory.create(first_name='user')
         self.fund_owner = BlueBottleUserFactory.create(first_name='fundraiser')
 

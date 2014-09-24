@@ -16,7 +16,6 @@ from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from bluebottle.sepa.sepa import SepaDocument, SepaAccount
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
@@ -88,7 +87,7 @@ class CompletedDateTimeMixin(models.Model):
             )
 
     def save(self, *args, **kwargs):
-        if self.status == PayoutLineStatuses.completed and not self.completed:
+        if self.status == StatusDefinition.SETTLED and not self.completed:
             # No completed date was set and our current status is completed
             self.completed = timezone.now()
 
@@ -99,11 +98,15 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
     """
     Common abstract base class for ProjectPayout and OrganizationPayout.
     """
-    planned = models.DateField(_("Planned"),
-                               help_text=_("Date on which this batch should be processed."))
+    STATUS_CHOICES = (
+        (StatusDefinition.NEW, _('New')),
+        (StatusDefinition.IN_PROGRESS, _('In progress')),
+        (StatusDefinition.SETTLED, _('Settled')),
+    )
 
-    status = models.CharField(_("status"), max_length=20, choices=PayoutLineStatuses.choices,
-                              default=PayoutLineStatuses.new)
+    planned = models.DateField(_("Planned"), help_text=_("Date on which this batch should be processed."))
+
+    status = models.CharField(_("status"), max_length=20, choices=STATUS_CHOICES, default=StatusDefinition.NEW)
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
@@ -196,7 +199,7 @@ class PayoutLogBase(models.Model):
 class BaseProjectPayout(PayoutBase):
     """
     A projects is payed after the campaign deadline is hit..
-    Project payouts are checked manually. Selected projects can be exported to a SEPA file.
+    Project payouts are checked manually.
     """
 
     class PayoutRules(DjangoChoices):
@@ -277,7 +280,7 @@ class BaseProjectPayout(PayoutBase):
             message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
             raise PayoutException(message)
 
-        self.amount_payable = calculator(self.get_amount_raised())
+        self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
         self.organization_fee = self.amount_raised - self.amount_payable
 
         if save:
@@ -328,48 +331,6 @@ class BaseProjectPayout(PayoutBase):
             return decimal.Decimal('0.00')
 
         return amount_failed
-
-    @classmethod
-    def create_sepa_xml(cls, qs):
-        """ Create a SEPA XML file for Payouts in QuerySet. """
-
-        batch_id = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
-
-        sepa = SepaDocument(type='CT')
-
-        sepa.set_initiating_party(
-            name=settings.BANK_ACCOUNT_DONATIONS['name']
-        )
-        debtor = SepaAccount(
-            name=settings.BANK_ACCOUNT_DONATIONS['name'],
-            iban=settings.BANK_ACCOUNT_DONATIONS['iban'],
-            bic=settings.BANK_ACCOUNT_DONATIONS['bic']
-        )
-
-        sepa.set_debtor(debtor)
-        sepa.set_info(
-            message_identification=batch_id, payment_info_id=batch_id)
-        sepa.set_initiating_party(name=settings.BANK_ACCOUNT_DONATIONS['name'])
-
-        now = timezone.now()
-
-        for payout in qs.all():
-            payout.status = PayoutLineStatuses.progress
-            payout.submitted = now
-            payout.save()
-            creditor = SepaAccount(
-                name=payout.receiver_account_name,
-                iban=payout.receiver_account_iban,
-                bic=payout.receiver_account_bic
-            )
-
-            sepa.add_credit_transfer(
-                creditor=creditor,
-                amount=payout.amount_payable,
-                creditor_payment_id=payout.invoice_reference
-            )
-
-        return sepa.as_xml()
 
     def __unicode__(self):
         date = self.created.strftime('%d-%m-%Y')
@@ -622,48 +583,6 @@ class BaseOrganizationPayout(PayoutBase):
             'start_date': self.start_date,
             'end_date': self.end_date
         }
-
-    @classmethod
-    def create_sepa_xml(cls, qs):
-        """ Create a SEPA XML file for OrganizationPayouts in QuerySet. """
-
-        batch_id = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
-
-        sepa = SepaDocument(type='CT')
-
-        sepa.set_initiating_party(
-            name=settings.BANK_ACCOUNT_DONATIONS['name']
-        )
-        debtor = SepaAccount(
-            name=settings.BANK_ACCOUNT_DONATIONS['name'],
-            iban=settings.BANK_ACCOUNT_DONATIONS['iban'],
-            bic=settings.BANK_ACCOUNT_DONATIONS['bic']
-        )
-
-        sepa.set_debtor(debtor)
-        sepa.set_info(
-            message_identification=batch_id, payment_info_id=batch_id)
-        sepa.set_initiating_party(name=settings.BANK_ACCOUNT_DONATIONS['name'])
-
-        now = timezone.now()
-
-        for payout in qs.all():
-            payout.status = PayoutLineStatuses.progress
-            payout.submitted = now
-            payout.save()
-            creditor = SepaAccount(
-                name=settings.BANK_ACCOUNT_ORGANISATION['name'],
-                iban=settings.BANK_ACCOUNT_ORGANISATION['iban'],
-                bic=settings.BANK_ACCOUNT_ORGANISATION['bic']
-            )
-
-            sepa.add_credit_transfer(
-                creditor=creditor,
-                amount=payout.payable_amount_incl,
-                creditor_payment_id=payout.invoice_reference
-            )
-
-        return sepa.as_xml()
 
 
 class OrganizationPayoutLog(PayoutLogBase):

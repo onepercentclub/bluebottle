@@ -6,6 +6,23 @@ $color-primary: #5DC0ED;
     border-radius: 8px;
     @include placeholder-color($color-primary);
 
+    .btn-donate {
+        @include border-radius(5px);
+
+        position: relative;
+        font-family: $font-family-heavy;
+        font-size: $font-size-large;
+        line-height: $base-line-height;
+        padding: $base-padding/2 $base-padding;
+        display: inline-block;
+        background-color: darken($modal-item-background, 15%);
+        color: $button-color; 
+        text-decoration: none;
+        text-transform: uppercase;
+        cursor: pointer;
+        overflow: hidden;
+        vertical-align: top;  
+    }
 
     .donation-input {
         height: 57px;
@@ -22,7 +39,23 @@ $color-primary: #5DC0ED;
     }
 
     .donation-buttons {
-        margin-top: 6px;
+        margin-top: 26px;
+
+        .btn-donate {
+            width: 90%;
+            height: 35px;
+            font-size: 17px;
+            padding: 6px 0px;
+            font-weight: bold;
+
+            &.first {
+                float: left;
+            }
+
+            &.last {
+                float: right;
+            }
+        } 
     }
 
     .input {

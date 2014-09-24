@@ -62,7 +62,7 @@ class DocdataTransaction(Transaction):
     capture_currency = models.CharField(max_length=10, default='', blank=True)
 
     def __unicode__(self):
-        return self.payment_id
+        return self.id
 
 
 class DocDataDirectDebitTransaction(Transaction):

@@ -198,7 +198,7 @@ class DocdataClient(object):
                     message = error.value
                     message = message.replace("XML request does not match XSD. The data is: cvc-type.3.1.3: ", "")
 
-                    log_docdata_error(error, message)
+                    # log_docdata_error(error, message)
                     raise DocdataPaymentException(message, error._code)
             else:
                 raise DocdataPaymentException('Received unknown reply from DocData. Remote Payment not created.')

@@ -2,6 +2,9 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
+from django.shortcuts import render_to_response
+from django.template.context import RequestContext
+
 
 
 urlpatterns = patterns('',
@@ -36,6 +39,12 @@ urlpatterns = patterns('',
 
 )
 
+# Nicely parse 500 errors so we get semantic messages in tests.
+def handler500(request):
+    response = render_to_response('500.html', {},
+                                  context_instance=RequestContext(request))
+    response.status_code = 500
+    return response
 
 urlpatterns += patterns(
     'loginas.views',

@@ -45,6 +45,9 @@ class Payment(PolymorphicModel):
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
 
+    def get_fee(self):
+        raise NotImplemented("get_fee() not implemented for {0}".format(self.__class__.__name__))
+
     class Meta:
         ordering = ('-created', '-updated')
 
@@ -148,6 +151,7 @@ class OrderPayment(models.Model, FSMTransition):
 
     def full_clean(self, exclude=None):
         self.amount = self.order.total
+        self.transaction_fee = self.payment.get_fee()
 
     def set_authorization_action(self, action, save=True):
         self.authorization_action = OrderPaymentAction(**action)

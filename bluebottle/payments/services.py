@@ -58,4 +58,3 @@ class PaymentService(object):
     def check_payment_status(self, **integration_details):
         action = self.adapter.check_payment_status()
 
-

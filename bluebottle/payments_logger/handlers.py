@@ -11,6 +11,7 @@ class PaymentLogHandler(logging.Handler):
     def emit(self, record):
         # NOTE: need to import this here otherwise it causes a circular reference
         #       i.e. settings imports loggers imports models imports settings...
+        import pdb;pdb.set_trace()
         from bluebottle.payments_logger.models import PaymentLogEntry
 
         # TODO: we should use the formatting features of the logging library

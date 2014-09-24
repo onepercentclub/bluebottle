@@ -16,7 +16,7 @@ class PaymentLogLevels(DjangoChoices):
 
 
 # TODO: Add fields for: source file, source line number, source version, IP
-class PaymentLogEntry(PolymorphicModel):
+class PaymentLogEntry(models.Model):
 
     message = models.CharField(max_length=400)
     level = models.CharField(max_length=15, choices=PaymentLogLevels.choices)

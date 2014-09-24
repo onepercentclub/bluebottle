@@ -89,7 +89,8 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_payment_method_change(self, mock_fetch_status, mock_transaction):
-        self.assertEquals(PaymentLogEntry.objects.count(), 0)
+        # Two payment log entries already exist: 2x 'a new payment status "started" '  
+        self.assertEquals(PaymentLogEntry.objects.count(), 2)
 
         # Mock the status check with docdata
         mock_fetch_status.return_value = self.create_status_response('AUTHORIZED')
@@ -108,17 +109,18 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         self.assertEqual(resp.content, 'success')
 
         # # Reload the order payment
-        # order_payment = OrderPayment.objects.get(id=order_payment.id)
-        # self.assertEqual(order_payment.payment_method, 'docdataCreditcard')
+        order_payment = OrderPayment.objects.get(id=order_payment.id)
+        self.assertEqual(order_payment.payment_method, 'docdataCreditcard')
 
-        # # Check that all is logged correctly
-        # self.assertEquals(PaymentLogEntry.objects.count(), 1)
-        # log = PaymentLogEntry.objects.all()[0]
-        # self.assertEqual(log.message, 
-        #     "Payment method changed for payment with id {0} and order payment with id {1}.".format(docdata_payment.id,
-        #                                                                                             docdata_payment.order_payment.id))
-        # self.assertEqual(log.payment.id, docdata_payment.id)
-        # self.assertEqual(log.level, 'INFO')
+        # Check that all is logged correctly
+        self.assertEquals(PaymentLogEntry.objects.filter(payment=docdata_payment).count(), 6) # The status changes triggers the
+                                                                                              # creation of more payment log entries
+        log = PaymentLogEntry.objects.all()[0]
+        self.assertEqual(log.message, 
+            "{0} - Payment method changed for payment with id {1} and order payment with id {2}.".format(docdata_payment, docdata_payment.id,
+                                                                                                    docdata_payment.order_payment.id))
+        self.assertEqual(log.payment.id, docdata_payment.id)
+        self.assertEqual(log.level, 'INFO')
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
@@ -146,10 +148,11 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         self.assertEqual(order_payment.payment_method, 'unknown')
 
         # Check that all is logged correctly
-        self.assertEquals(PaymentLogEntry.objects.count(), 1)
+        self.assertEquals(PaymentLogEntry.objects.filter(payment=docdata_payment).count(), 6) # The status changes triggers the
+                                                                                              # creation of more payment log entries
         log = PaymentLogEntry.objects.all()[0]
         self.assertEqual(log.message, 
-            "Payment method changed for payment with id {0} and order payment with id {1}.".format(docdata_payment.id,
+            "{0} - Payment method changed for payment with id {1} and order payment with id {2}.".format(docdata_payment, docdata_payment.id,
                                                                                                     docdata_payment.order_payment.id))
         self.assertEqual(log.payment.id, docdata_payment.id)
         self.assertEqual(log.level, 'INFO')

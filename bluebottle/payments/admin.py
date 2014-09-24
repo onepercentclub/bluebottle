@@ -14,7 +14,8 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 class OrderPaymentAdmin(admin.ModelAdmin):
     model = OrderPayment
     raw_id_fields = ('user', )
-    readonly_fields = ('order_link', 'payment_link', 'authorization_action', 'amount', 'integration_data', 'payment_method')
+    readonly_fields = ('order_link', 'payment_link', 'authorization_action', 'amount', 'integration_data',
+                       'payment_method', 'transaction_fee')
 
     def order_link(self, obj):
         object = obj.order

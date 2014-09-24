@@ -1,4 +1,6 @@
-from decimal import Decimal as D
+from decimal import Decimal as D, Decimal
+from bluebottle.payments.exception import PaymentException
+from django.conf import settings
 
 from django.utils.translation import ugettext as _
 from django.db import models
@@ -34,6 +36,25 @@ class DocdataPayment(Payment):
     total_captured = models.DecimalField(_("Total captured"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_refunded = models.DecimalField(_("Total refunded"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_charged_back = models.DecimalField(_("Total charged back"), max_digits=15, decimal_places=2, default=D('0.00'))
+
+    def get_fee(self):
+        if not hasattr(settings, 'DOCDATA_FEES'):
+            raise PaymentException("Missing fee DOCDATA_FEES")
+        fees = settings.DOCDATA_FEES
+        if not fees['transaction']:
+            raise PaymentException("Missing fee 'transaction'")
+        if not fees['payment_methods']:
+            raise PaymentException("Missing fee 'payment_methods'")
+        transaction_fee = fees['transaction']
+        pm = self.default_pm
+        if not fees['payment_methods'][pm]:
+            raise PaymentException("Missing fee {0}".format(pm))
+        pm_fee = fees['payment_methods'][pm]
+        if '%' in str(pm_fee):
+            part = Decimal(pm_fee.replace('%', '')) / 100
+            return self.order_payment.amount * part
+        else:
+            return pm_fee + transaction_fee
 
     class Meta:
         ordering = ('-created', '-updated')

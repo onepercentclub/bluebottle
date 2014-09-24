@@ -17,7 +17,9 @@
                     </div>
                 </div>
             </div>
-            {{view Ember.TextArea valueBinding="text" cols="50" rows="4" maxlength="140" name="wallpost-update" classBinding="errors.text.length:error :wallpost-textarea" placeholder="Your comment"}}
+            <div class="wallpost-message-area">
+                {{view Ember.TextArea valueBinding="text" cols="50" rows="4" maxlength="140" name="wallpost-update" classBinding="errors.text.length:error :wallpost-textarea" placeholder="Your comment"}}
+            </div>
         </div>
 
         {{#if errors.text }}

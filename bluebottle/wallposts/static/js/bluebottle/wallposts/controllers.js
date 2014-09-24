@@ -72,6 +72,10 @@ App.TextWallPostNewController = Em.ObjectController.extend({
             _this.createNewWallPost();
         });
     },
+
+    _hideWallPostMessage: function() {
+        $(".wallpost-message-area").hide();
+    },
     
     actions: {
         saveWallPost: function() {
@@ -79,6 +83,8 @@ App.TextWallPostNewController = Em.ObjectController.extend({
                 parent_type = this.get('parentType'),
                 parent_id = this.get('parentId'),
                 wallPost = this.get('model');
+
+            controller._hideWallPostMessage();
 
             if (parent_type && parent_id) {
                 wallPost.set('parent_id', parent_id);

@@ -26,7 +26,6 @@ class PaymentStatusUpdateView(View):
 
     def get(self, request, **kwargs):
         payment_cluster_id = kwargs['payment_cluster_id']
-        import pdb;pdb.set_trace()
         try:
             payment = DocdataPayment.objects.get(payment_cluster_id=payment_cluster_id)
         except DocdataPayment.DoesNotExist:

@@ -59,7 +59,6 @@ class PayoutAdmin(admin.ModelAdmin):
 
     list_display = [
         'payout', 'status', 'admin_project', 'amount_payable',
-        # 'amount_raised', 'amount_pending',
         'payout_rule', 'admin_has_iban', 'created_date', 'submitted_date', 'completed_date'
     ]
 
@@ -69,7 +68,6 @@ class PayoutAdmin(admin.ModelAdmin):
 
     readonly_fields = [
         'admin_project', 'admin_organization', 'created', 'updated',
-        # 'amount_safe', 'amount_pending', 'amount_failed'
     ]
 
     fieldsets = (
@@ -84,11 +82,6 @@ class PayoutAdmin(admin.ModelAdmin):
                 'created', 'updated', 'submitted', 'completed',
             )
         }),
-        # (_('Realtime amounts'), {
-        #     'fields': (
-        #         'amount_safe', 'amount_pending', 'amount_failed'
-        #     )
-        # }),
         (_('Payout amounts'), {
             'fields': ('amount_raised', 'organization_fee', 'amount_payable', 'payout_rule')
         }),

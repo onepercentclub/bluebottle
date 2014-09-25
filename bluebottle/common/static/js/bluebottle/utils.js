@@ -57,14 +57,28 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // set to true to enable it
     validationEnabled: false,
 
+    // The highest priority property validation error based on the priorty set 
+    // in the errorDefinitions property
+    validationErrors: null,
+
     // used in validateErrors function
     errorDictionaryFields: ['property', 'validateProperty', 'message', 'priority'],
+
+    // List of all validation errors
+    errorList: null,
+
+    // True if any validated property has an error
+    allError: null,
 
     // set validationEnable to true, this has to be called from the controller to enable the validation
     // I use it since we want to be in control when to start the validation, for example just after
     // pressing a submit button
     enableValidation: function() {
         this.set('validationEnabled', true);
+    },
+
+    disableValidation: function() {
+        this.set('validationEnabled', false);
     },
 
     // set the strength of the field, use this in the template
@@ -214,21 +228,29 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         return this._clientSideErrors(arrayOfDict, model);
     },
 
+    // Set the validationErrors property on the based on client-side validations 
+    clientSideValidationErrors: function () {
+        // Enable the validation of errors
+        this.enableValidation();
+
+        // Ignoring API errors here, we are passing ignoreApiErrors=true
+        return this._checkErrors(true);
+    },
+
     // If you are not doing live validation with "fieldsToWatch" then this function can be called
     // manually to set both client and server side validation errors. This would be done automatically
     // using an observer on fieldsToWatch.
-    processValidationErrors: function(arrayOfDict, model){
+    processValidationErrors: function(arrayOfDict, model, ignoreApiErrors) {
         this._checkErrors();
-        this.set('validationErrors', this.validateErrors(arrayOfDict, model));
+        this.set('validationErrors', this.validateErrors(arrayOfDict, model, ignoreApiErrors));
     },
 
     // At runtime observers are attached to this function
     // it calls the validateAndCheck function
-    _checkErrors: function() {
+    _checkErrors: function(ignoreApiErrors) {
         // Check if there were previous errors which are now fixed
-
-        if (this.get('validationErrors')) {
-            if (this._validateAndCheck()) {
+        if (this.get('validationEnabled')) {
+            if (this._validateAndCheck(ignoreApiErrors)) {
                 this.set('errorsFixed', true)
             }else {
                 this.set('errorsFixed', false)
@@ -237,15 +259,16 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     },
 
     // return true if there are no errors
-    _validateAndCheck: function() {
+    _validateAndCheck: function(ignoreApiErrors) {
         // run the validateErrors and set the errors in validationErrors
-        this._validate();
+        this._validate(ignoreApiErrors);
         return !this.get('validationErrors');
     },
 
     // run the validateErrors and set the errors in validationErrors
-    _validate: function() {
-        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+    _validate: function(ignoreApiErrors) {
+        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), ignoreApiErrors));
+        Em.run.sync();
     },
 
     // set blockingErrors to true if there are fields which aren't fulfilled
@@ -258,6 +281,13 @@ App.ControllerValidationMixin = Ember.Mixin.create({
                 _this.set('blockingErrors', true);
             }
         });
+    },
+
+    clearValidations: function () {
+        this.set('errorsFixed', true);
+        this.set('validationErrors', null);
+        this.set('isBusy', false);
+        Em.run.sync();
     },
 
     // Dynamically assign observerFields to a function f

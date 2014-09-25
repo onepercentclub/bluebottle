@@ -52,7 +52,7 @@
                     <input type="text" placeholder="Choose a password">
                 </div>
 				<a {{action 'nextStep'}} {{bindAttr class=":btn :payment-btn isBusy:is-loading blockingErrors:is-inactive"}}>
-                    {% trans 'Proceed with'%} {{currentPaymentMethod.providerName}}
+                    {% trans 'Proceed with'%} {{currentPaymentMethod.name}}
                 </a>
             </div>
         </div>

@@ -3,9 +3,7 @@ App.DocdataPayment = Em.Object.extend({
 });
 
 App.DocdataCreditcard = App.DocdataPayment.extend({
-    default_pm: '',
-
-    isCardSelected: Em.computed.match('default_pm', /[a-z|_]+/i )
+    default_pm: ''
 });
 
 App.DocdataIdeal = App.DocdataPayment.extend({

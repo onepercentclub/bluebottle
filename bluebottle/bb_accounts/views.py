@@ -1,4 +1,3 @@
-from bluebottle.bb_accounts.models import TimeAvailable
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import AnonymousUser

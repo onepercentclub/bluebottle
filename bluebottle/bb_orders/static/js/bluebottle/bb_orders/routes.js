@@ -21,6 +21,7 @@ App.OrderRoute = Em.Route.extend({
 
     redirect: function(model) {
         var _this = this;
+        
         var donation = model.get('donations').objectAt(0);
             status = _this.get('status'),
             fundraiser = donation.get('fundraiser'),

@@ -1,4 +1,5 @@
 import json
+from bluebottle.payments.exception import PaymentException
 
 from django.conf import settings
 from django.db import models
@@ -46,7 +47,8 @@ class Payment(PolymorphicModel):
     updated = ModificationDateTimeField(_("Updated"))
 
     def get_fee(self):
-        raise NotImplemented("get_fee() not implemented for {0}".format(self.__class__.__name__))
+        if not isinstance(self, Payment):
+            raise PaymentException("get_fee() not implemented for {0}".format(self.__class__.__name__))
 
     class Meta:
         ordering = ('-created', '-updated')

@@ -41,7 +41,8 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
 
         self.order = OrderFactory.create()
-        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdata')
+        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',
+                                                        integration_data={'default_pm': 'ideal'})
         self.service = PaymentService(order_payment=self.order_payment)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
@@ -68,6 +69,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         order = OrderFactory.create()
         order_payment = OrderPaymentFactory.create(order=order, payment_method='docdataCreditcard')
         docdata_payment = DocdataPaymentFactory.create(order_payment=order_payment,
+                                                       default_pm='mastercard',
                                                        payment_cluster_id='1234',
                                                        total_gross_amount=100)
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='VISA')
@@ -94,6 +96,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         # Ensure that we use an existing payment_method or the adapter throws an exception
         order_payment = OrderPaymentFactory.create(order=order, payment_method='docdataPaypal')
         docdata_payment = DocdataPaymentFactory.create(order_payment=order_payment,
+                                                       default_pm='paypal',
                                                        payment_cluster_id='1235',
                                                        total_gross_amount=100)
 
@@ -130,6 +133,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         # Ensure that we use an existing payment_method or the adapter throws an exception
         order_payment = OrderPaymentFactory.create(order=order, payment_method='docdataPaypal')
         docdata_payment = DocdataPaymentFactory.create(order_payment=order_payment,
+                                                       default_pm='paypal',
                                                        payment_cluster_id='1236',
                                                        total_gross_amount=100)
 

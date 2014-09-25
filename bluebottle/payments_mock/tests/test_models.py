@@ -11,7 +11,7 @@ from bluebottle.utils.utils import StatusDefinition
 class PaymentsMockTestCase(TestCase, FsmTestMixin):
 
     def setUp(self):
-        self.order = OrderFactory.create()
+        self.order = OrderFactory.create(total=35)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)
 

@@ -1,4 +1,3 @@
-from django.db.models.signals import post_save
 from django_fsm.signals import post_transition
 from bluebottle.bb_donations.donationmail import successful_donation_fundraiser_mail
 from bluebottle.utils.model_dispatcher import get_order_model
@@ -14,9 +13,13 @@ def _order_status_changed(sender, instance, **kwargs):
     - Update amount on project when order is in an ending status.
     - Get the status from the Order and Send an Email.
     """
-    if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.FAILED]:
+    if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING, StatusDefinition.FAILED]:
         for donation in instance.donations.all():
             donation.project.update_amounts()
-        if instance.status == StatusDefinition.SUCCESS:
+
+        # Send mail if status transitions in ro success/pending for the first time.
+        if (kwargs['source'] not in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]
+            and  kwargs['target'] in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]):
+
             for donation in instance.donations.all():
                 successful_donation_fundraiser_mail(donation)

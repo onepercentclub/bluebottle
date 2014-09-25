@@ -156,6 +156,14 @@ class BaseProject(models.Model):
     amount_donated = MoneyField(default=0)
     amount_needed = MoneyField(default=0)
 
+    @property
+    def amount_pending(self):
+        return self.get_amount_total([StatusDefinition.PENDING])
+
+    @property
+    def amount_safe(self):
+        return self.get_amount_total([StatusDefinition.SUCCESS])
+
     _initial_status = None
 
     objects = BaseProjectManager()
@@ -201,8 +209,7 @@ class BaseProject(models.Model):
         """
         Update amount_donated and amount_needed
         """
-        self.amount_donated = self.get_amount_total([StatusDefinition.SUCCESS])
-
+        self.amount_donated = self.get_amount_total([StatusDefinition.SUCCESS, StatusDefinition.PENDING])
         self.amount_needed = self.amount_asked - self.amount_donated
 
         if self.amount_needed < 0:
@@ -287,3 +294,4 @@ class BaseProjectPhaseLog(models.Model):
 
     class Meta():
         abstract = True
+

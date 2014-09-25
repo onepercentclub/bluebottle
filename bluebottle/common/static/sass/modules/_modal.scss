@@ -179,7 +179,7 @@ $gray-border-hover                                         : #9F9F9F;
 		background-color: $modal-item-background;
 		border-radius: 8px;
 		font-family: $font-family-body;
-		padding: 5px;
+		padding: 6px;
 		text-align: center;
 		@include transform-style(preserve-3d);
 		@include single-box-shadow(rgba(138,153,147,0.60), 0, 0, 15px, 10px, false);
@@ -308,7 +308,9 @@ $gray-border-hover                                         : #9F9F9F;
 			right: 14px;
 			width: 20px;
 			height: 20px;
-			background: image-url("icons/icon-close-modal.svg") transparent no-repeat;
+			background-color: transparent;
+			background-repeat: no-repeat;
+			background-image: image-url("icons/icon-close-modal.svg");
 			background-position: 7px;
 			cursor: pointer;
 
@@ -545,7 +547,7 @@ $gray-border-hover                                         : #9F9F9F;
 	}
 
 	&.donation {
-		width: 500px;
+		width: 565px;
 	}
 	
 	// TODO: Remove old modal padding

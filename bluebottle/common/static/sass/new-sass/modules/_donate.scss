@@ -1,5 +1,11 @@
 $color-primary: #5DC0ED;
 
+.donation.modal-fullscreen-container {
+    .modal-flash-message.success {
+        display: none;
+    }
+}
+
 .donation-amount {
     background: #F5F4F6;
     padding: 20px;
@@ -77,6 +83,7 @@ $color-primary: #5DC0ED;
     min-height: 350px;
     padding-top: 45px;
     background: #E4EDE9;
+    @include border-radius(5px);
 
     .backdrop {
         position: absolute;
@@ -85,6 +92,7 @@ $color-primary: #5DC0ED;
         height: 100%;
         width: 100%;
         overflow: hidden;
+        @include border-radius(4px);
 
         .backdrop-gradient {
             position: absolute;
@@ -110,17 +118,16 @@ $color-primary: #5DC0ED;
         }
     }
     .modal-fullscreen-close {
-        background: image-url('icons/icon-close-modal-black.svg') transparent no-repeat;
+        background-image: image-url('icons/icon-close-modal-black.svg');
     }
 
     h4, .donor-name {
         position: relative;
         font-family: $base-font-family;
         color: #444;
-        font-weight: bold;
     }
     h4 {
-        font-size: $font-size-larger;
+        font-size: $font-size-largest;
     }
     .top-icon {
         position: absolute;
@@ -157,8 +164,9 @@ $color-primary: #5DC0ED;
             textarea {
                 height: 65%;
                 border: none;
-                font-size: 18px;
-                color: #9F9F9F;
+                font-size: 14px;
+                padding-top: 14px;
+                color: $form-input-color;
             }
 
             .wallpost-header {
@@ -175,7 +183,7 @@ $color-primary: #5DC0ED;
 
                 .wallpost-header-count {
                     text-align: right;
-                    color: #d8d8d8;
+                    color: $wallposts-wallpost-timestamp-color;
                 }
             }
 
@@ -188,6 +196,7 @@ $color-primary: #5DC0ED;
         padding: 5px 0 10px 0;
 
         .btn {
+            width: auto !important;
             font-weight: normal;
         }
     }

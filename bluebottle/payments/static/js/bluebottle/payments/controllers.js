@@ -3,6 +3,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
     validationErrorsBinding: 'paymentMethodController.validationErrors',
+    blockingErrorsBinding: 'paymentMethodController.blockingErrors',
     isBusyBinding: 'paymentMethodController.isBusy',
     currentPaymentMethod: null,
 
@@ -33,6 +34,21 @@ App.OrderPaymentController = Em.ObjectController.extend({
             }
         );
     },
+
+    willClose: function () {
+        var currentPaymentMethodController = this.get('paymentMethodController');
+        if (currentPaymentMethodController) currentPaymentMethodController.clearValidations();
+    },
+
+    didError: function () {
+        if (this.get('validationErrors')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
+
+            // Call error action on the modal
+            this.send('modalError');
+        }
+    }.observes('validationErrors'),
 
     _setFirstPaymentMethod: function () {
         if (this.get('methods.length') && !this.get('currentPaymentMethod')) {
@@ -95,20 +111,31 @@ App.OrderPaymentController = Em.ObjectController.extend({
     // Set the current payment method controller based on selected method
     _setPaymentMethodController: function () {
         var method = this.get('currentPaymentMethod'),
-            methodId = this.get('currentPaymentMethod.uniqueId');
+            methodId = this.get('currentPaymentMethod.uniqueId'),
+            currentPaymentMethodController = this.get('paymentMethodController');
 
         if (!methodId) return;
+
+        // Clear the validations on the current payment method controller
+        if (currentPaymentMethodController) currentPaymentMethodController.clearValidations();
         
         // Render the payment method view
-        var applicationRoute = App.__container__.lookup('route:application');
+        var applicationRoute = this.container.lookup('route:application'),
+            paymentMethodController = this.container.lookup('controller:' + methodId);
+
         applicationRoute.render(methodId, {
             into: 'orderPayment',
             outlet: 'paymentMethod'
         });
-        this.set('paymentMethodController', this.container.lookup('controller:' + methodId));
+
+        // Validations should be initially disabled
+        paymentMethodController.disableValidation();
+
+        // Set the payment method controller
+        this.set('paymentMethodController', paymentMethodController);
 
         // Set paymentMethod on the payment based on the currentPaymentMethod
-        this.set('payment_method', methodId)
+        this.set('payment_method', methodId);
     }.observes('currentPaymentMethod'),
 
     actions: {
@@ -125,22 +152,22 @@ App.OrderPaymentController = Em.ObjectController.extend({
                 payment = this.get('model');
 
             // check for validation errors generated in the current payment method controller
-            var validationErrors = this.get('paymentMethodController').validateFields();
-            this.set('validationErrors', validationErrors[0]);
-            this.set('errorsFixed', validationErrors[1]);
+            // This call will set the 'validationErrors' property on the payment methods 
+            // controller.
+            this.get('paymentMethodController').clientSideValidationErrors();
 
-            // Check client side errors
+            // Check client side errors - there is a binding between validationErrors on the 
+            // PaymentController and the PaymentMethodController.
             if (this.get('validationErrors')) {
-                this.send('modalError');
                 return false;
             }
 
             // Set the integration data coming from the current payment method controller
             this._setIntegrationData();
 
-
             // Set is loading property until success or error response
-            _this.set('isBusy', true);
+            this.set('isBusy', true);
+
             payment.save().then(
                 // Success
                 function (payment) {
@@ -190,28 +217,12 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
 
     getIntegrationData: function() {
         return this.get('model');
-    },
-
-    validateFields: function(){
-        return true;
     }
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
 
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
-
-    // returns a list of two values [validateErrors, errorsFixed]
-    validateFields: function () {
-        // Enable the validation of errors on fields only after pressing the signup button
-        this.enableValidation();
-
-        // Clear the errors fixed message
-        this.set('errorsFixed', false);
-
-        // Ignoring API errors here, we are passing ignoreApiErrors=true
-        return [this.validateErrors(this.get('errorDefinitions'), this.get('model'), true), this.get('errorsFixed')];
-    },
 
     init: function () {
         this._super();

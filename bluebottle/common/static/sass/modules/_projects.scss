@@ -89,7 +89,7 @@
 .project-fund-amount-slider {
     @include border-radius(1em);
     display: block;
-    overflow: inherit;
+    overflow: hidden;
     background-color: $projects-project-fund-amount-slider-bg-color;
     
     .slider-progress {

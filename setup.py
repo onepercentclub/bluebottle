@@ -40,6 +40,7 @@ install_requires = [
     'djangorestframework==2.3.12',
     'dkimpy==0.5.4',
     'html5lib==0.95',
+    'lxml==3.3.5',
     'micawber==0.2.6',
     'mock==1.0.1',
     'requests==2.3.0',

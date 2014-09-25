@@ -1,13 +1,24 @@
 App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
     requiredFields: ['default_pm'],
 
-    isVisa: Em.computed.equal('default_pm', 'visa'),
-    isMastercard: Em.computed.equal('default_pm', 'mastercard'),
-
     init: function() {
         this._super();
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'default_pm',
+                'validateProperty': 'default_pm.length',
+                'message': gettext('Select a credit card'),
+                'priority': 1
+            }
+        ]);
+
+        this._clearModel();
+    },
+
+    _clearModel: function () {
         this.set('model', App.DocdataCreditcard.create({
-            default_pm: 'mastercard'
+            default_pm: ''
         }));
     }
 });
@@ -17,11 +28,25 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
     init: function () {
         this._super();
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'ideal_issuer_id',
+                'validateProperty': 'ideal_issuer_id.length',
+                'message': gettext('Select your bank'),
+                'priority': 1
+            }
+        ]);
+
         this.set('model', App.DocdataIdeal.create());
     }
 });
 
 App.DocdataPaypalController = App.StandardPaymentMethodController.extend({
+    // Ignore client-side validations as the form doesn't need user input
+    blockingErrors: false,
+    clientSideValidationErrors: Em.K,
+
     init: function () {
         this._super();
         this.set('model', App.DocdataPaypal.create({

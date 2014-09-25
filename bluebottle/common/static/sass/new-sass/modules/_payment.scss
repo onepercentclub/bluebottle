@@ -62,7 +62,8 @@
             }
             &.ideal {
                 &:before {
-                    background: image-url("icons/ideal.png") transparent no-repeat 0 14px;
+                    background: image-url("icons/ideal.png") transparent no-repeat 0 11px;
+                    background-size: 22px;
                 }
             }
 

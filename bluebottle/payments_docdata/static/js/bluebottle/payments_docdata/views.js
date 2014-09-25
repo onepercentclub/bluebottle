@@ -19,6 +19,7 @@ App.DocdataIdealBankSelectView = Em.Select.extend({
 
 App.DocdataCreditcardSelectView = Em.Select.extend({
     content:  [
+        {'id':'americanexpress', 'name': 'American Express'},
         {'id':'visa', 'name': 'Visa Card'},
         {'id':'mastercard', 'name': 'Master Card'},
     ],

@@ -53,4 +53,4 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         # Check that the status propagated through to order
         self.assert_status(self.order_payment.payment, StatusDefinition.AUTHORIZED)
         self.assert_status(self.order_payment, StatusDefinition.AUTHORIZED)
-        self.assert_status(self.order, StatusDefinition.SUCCESS)
+        self.assert_status(self.order, StatusDefinition.PENDING)

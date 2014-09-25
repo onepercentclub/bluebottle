@@ -1,5 +1,11 @@
 $color-primary: #5DC0ED;
 
+.donation.modal-fullscreen-container {
+    .modal-flash-message.success {
+        display: none;
+    }
+}
+
 .donation-amount {
     background: #F5F4F6;
     padding: 20px;

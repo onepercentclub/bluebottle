@@ -17,7 +17,42 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
     init: function () {
         this._super();
-        this.set('model', App.DocdataIdeal.create());
+        this.set('model', App.DocdataIdeal.create({
+            default_pm: 'ideal'}
+        ));
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'ideal_issuer_id',
+                'validateProperty': 'ideal_issuer_id',
+                'message': gettext('You must select a bank'),
+                'priority': 1
+            }
+        ]);
+    },
+
+    getIntegrationData: function() {
+        // If there are no errors, error properties should be removed from the model
+
+        var model = this.get('model');
+        model.set('allErrors', undefined);
+        model.set('allError', undefined);
+        model.set('validationErrors', undefined);
+        model.set('errorList', undefined);
+        
+        return model;
+    },
+    
+    // returns a list of two values [validateErrors, errorsFixed]
+    validateFields: function () {
+        // Enable the validation of errors on fields only after pressing the signup button
+        this.enableValidation();
+
+        // Clear the errors fixed message
+        this.set('errorsFixed', false);
+
+        // Ignoring API errors here, we are passing ignoreApiErrors=true
+        return [this.validateErrors(this.get('errorDefinitions'), this.get('model'), true), this.get('errorsFixed')];
     }
 });
 

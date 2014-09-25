@@ -124,8 +124,10 @@ App.OrderPaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
+
             // check for validation errors generated in the current payment method controller
             var validationErrors = this.get('paymentMethodController').validateFields();
+
             this.set('validationErrors', validationErrors[0]);
             this.set('errorsFixed', validationErrors[1]);
 
@@ -203,7 +205,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
 
     // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
-        // Enable the validation of errors on fields only after pressing the signup button
+        // Enable the validation of errors on fields only after pressing proceed to payment button
         this.enableValidation();
 
         // Clear the errors fixed message

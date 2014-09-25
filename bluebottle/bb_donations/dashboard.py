@@ -7,37 +7,31 @@ from bluebottle.utils.model_dispatcher import get_donation_model
 
 DONATION_MODEL = get_donation_model()
 
-class BaseDonationModule(DashboardModule):
-    template = 'admin_tools/dashboard/donation_module.html'
-    donation_url = '/admin/donations/donation'
-    limit = 10
 
-    def __init__(self, **kwargs):
-        kwargs.update({'limit': limit})
-        super(BaseDonationModule, self).__init__(**kwargs)
-
-    def successful_donations(self):
-        return DONATION_MODEL.objects.filter(order__status=StatusDefinition.SUCCESS)
-
-    def donation_url(self):
-        return self.donation_url
-
-class DonationModule(BaseDonationModule):
+class DonationModule(DashboardModule):
 
     title = _('Donations')
+    template = 'admin_tools/dashboard/donation_module.html'
+    donation_url = '/admin/donations/donation'
 
-    def init_with_context(self, context):
+    def __init__(self, **kwargs):
 
         # import ipdb;ipdb.set_trace()
 
-        donations = self.successful_donations()
+        donations = DONATION_MODEL.objects.filter(order__status=StatusDefinition.SUCCESS)
+        donation_url = '/admin/donations/donation'
         number_of_donations = donations.count()
         total_amount = donations.aggregate(Sum('amount'))['amount__sum']
         number_of_employees = donations.distinct('order__user').count()
-        donation_url = self.donation_url()
 
         #cd.filter(order__user__office__country__subregion__region='Europe')
         # cd[1].order.user.office.country.subregion.region
+
+        # sort_europe = donations.filter(order__user__office__country__subregion__region__name="Europe").count()
+        # sort_africa = donations.filter(order__user__office__country__subregion__region__name="Africa").count()
+        # sort_americas = donations.filter(order__user__office__country__subregion__region__name="Americas").count()
+        # sort_oceania = donations.filter(order__user__office__country__subregion__region__name="Oceania").count()
+        # sort_asia = donations.filter(order__user__office__country__subregion__region__name="Asia").count()
 
         # office country subregio regio
         self.children = (
@@ -56,43 +50,4 @@ class DonationModule(BaseDonationModule):
             # Sort metrics per project (for loop?)
             # donation order user office
         )
-        self._initialized = True
-
-
-class RegionDonationModule(BaseDonationModule):
-    title = _('Donations per region')
-    # template = 'admin_tools/dashboard/donation_module.html'
-
-    def init_with_context(self, context):
-        # donation_url = '/admin/donations/donation'
-        # successful_donations = DONATION_MODEL.objects.filter(order__status=StatusDefinition.SUCCESS)
-        donations = self.successful_donations()
-        sort_europe = donations.filter(order__user__office__country__subregion__region__name="Europe").count()
-        sort_africa = donations.filter(order__user__office__country__subregion__region__name="Africa").count()
-        sort_americas = donations.filter(order__user__office__country__subregion__region__name="Americas").count()
-        sort_oceania = donations.filter(order__user__office__country__subregion__region__name="Oceania").count()
-        sort_asia = donations.filter(order__user__office__country__subregion__region__name="Asia").count()
-        donation_url = self.donation_url()
-
-        self.children = (
-            {'title': 'Africa', 'value': sort_africa, 'url': donation_url},
-            {'title': 'Americas', 'value': sort_americas, 'url': donation_url},
-            {'title': 'Asia', 'value': sort_asia, 'url': donation_url},
-            {'title': 'Europe', 'value': sort_europe, 'url': donation_url},
-            {'title': 'Oceania', 'value': sort_oceania, 'url': donation_url},
-
-        )
-        # if not len(self.children):
-        #     self.pre_content = _('No tasks found.')
-        self._initialized = True
-
-# Sort metrics per region:
-# Africa
-# Americas
-# Asia
-# Europe
-# Oceania
-#
-# Sort metrics per project:
-# Project A
-# Project B
+        super(DonationModule, self).__init__(**kwargs)

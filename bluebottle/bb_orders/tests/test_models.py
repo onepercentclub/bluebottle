@@ -24,8 +24,8 @@ class BlueBottleOrderTestCase(TestCase):
 
         # Set the associated order payment to authorized
         self.order_payment.authorized()
-        self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
-            'Authorizing an Order Payment should change Order to success')
+        self.assertEqual(self.order.status, StatusDefinition.PENDING,
+            'Authorizing an Order Payment should change Order to pending.')
 
         # Set the associated order payment to settled
         self.order_payment.settled()

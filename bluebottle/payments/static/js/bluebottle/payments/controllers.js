@@ -213,6 +213,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
  */
 
 App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerValidationMixin, {
+    requiredFields: [],
     isBusy: null,
 
     getIntegrationData: function() {

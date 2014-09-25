@@ -6,3 +6,8 @@ PROJECT_MODEL = get_project_model()
 
 class ProjectPayout(BaseProjectPayout):
     pass
+
+
+class OrganizationPayout(BaseOrganizationPayout):
+    pass
+

@@ -1,5 +1,5 @@
 App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
-    requiredFields: ['default_pm.length'],
+    requiredFields: ['default_pm'],
 
     init: function() {
         this._super();
@@ -7,7 +7,7 @@ App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
         this.set('errorDefinitions', [
             {
                 'property': 'default_pm',
-                'validateProperty': 'isCardSelected',
+                'validateProperty': 'default_pm.length',
                 'message': gettext('Select a credit card'),
                 'priority': 1
             }
@@ -28,6 +28,16 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
     init: function () {
         this._super();
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'ideal_issuer_id',
+                'validateProperty': 'ideal_issuer_id.length',
+                'message': gettext('Select your bank'),
+                'priority': 1
+            }
+        ]);
+
         this.set('model', App.DocdataIdeal.create());
     }
 });

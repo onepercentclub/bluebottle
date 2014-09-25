@@ -24,3 +24,10 @@ MOCK_PAYMENT_METHODS = (
         'supports_recurring': False,
     }
 )
+
+
+MOCK_FEES = {
+    'creditcard': '3.5%',
+    'ideal': 0.75,
+    'paypal': '3%'
+}

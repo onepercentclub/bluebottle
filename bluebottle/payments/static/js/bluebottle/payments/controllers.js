@@ -36,7 +36,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
     },
 
     willClose: function () {
-        this._clearValidations();
+        var currentPaymentMethodController = this.get('paymentMethodController');
+        if (currentPaymentMethodController) currentPaymentMethodController.clearValidations();
     },
 
     didError: function () {

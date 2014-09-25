@@ -41,7 +41,7 @@ class OrganizationPayoutLogInline(PayoutLogBase):
 class PayoutAdmin(admin.ModelAdmin):
     model = PROJECT_PAYOUT_MODEL
 
-    inlines = (PayoutLogInline, )#  PayoutTransactionInline)
+    inlines = (PayoutLogInline, )
 
     search_fields = [
         'invoice_reference', 'receiver_account_iban', 'receiver_account_number',

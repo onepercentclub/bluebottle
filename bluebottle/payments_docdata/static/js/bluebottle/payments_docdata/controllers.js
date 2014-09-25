@@ -3,16 +3,6 @@ App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
 
     init: function() {
         this._super();
-
-        this.set('errorDefinitions', [
-            {
-                'property': 'default_pm',
-                'validateProperty': 'default_pm.length',
-                'message': gettext('Select a credit card'),
-                'priority': 1
-            }
-        ]);
-
         this._clearModel();
     },
 
@@ -25,19 +15,17 @@ App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
 
 App.DocdataIdealController = App.StandardPaymentMethodController.extend({
     requiredFields: ['default_pm', 'ideal_issuer_id'],
+    errorDefinitions: [
+        {
+            'property': 'ideal_issuer_id',
+            'validateProperty': 'ideal_issuer_id.length',
+            'message': gettext('Select your bank'),
+            'priority': 1
+        }
+    ],
 
     init: function () {
         this._super();
-
-        this.set('errorDefinitions', [
-            {
-                'property': 'ideal_issuer_id',
-                'validateProperty': 'ideal_issuer_id.length',
-                'message': gettext('Select your bank'),
-                'priority': 1
-            }
-        ]);
-
         this.set('model', App.DocdataIdeal.create());
     }
 });

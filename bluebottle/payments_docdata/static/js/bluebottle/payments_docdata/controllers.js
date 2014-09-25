@@ -1,5 +1,14 @@
 App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
     requiredFields: ['default_pm'],
+    errorDefinitions: [
+        {
+                'property': 'default_pm',
+                'validateProperty': 'default_pm.length',
+                'message': gettext('Select a credit card'),
+                'priority': 1
+        }
+    ],
+
 
     init: function() {
         this._super();

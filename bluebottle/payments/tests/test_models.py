@@ -30,8 +30,8 @@ class BlueBottlePaymentTestCase(TestCase):
             'Starting an Order Payment should change status to started')
 
         self.order_payment.authorized()
-        self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
-            'Authorizing an Order Payment should change Order to success')
+        self.assertEqual(self.order.status, StatusDefinition.PENDING,
+            'Authorizing an Order Payment should change Order to pending')
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
             'Authorizing an Order Payment should status to authorized')
 
@@ -53,7 +53,7 @@ class BlueBottlePaymentTestCase(TestCase):
         with self.assertRaises(TransitionNotAllowed):
             self.order_payment.cancelled()
 
-        self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
+        self.assertEqual(self.order.status, StatusDefinition.PENDING,
             'A failed Order Payment transition should not change Order status')
 
     def test_payment_status_changes(self):
@@ -66,8 +66,8 @@ class BlueBottlePaymentTestCase(TestCase):
         self.payment.save()
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
             'Authorizing a Payment should change Order Payment to authorized')
-        self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
-            'Authorizing a Payment should change Order Payment to success')
+        self.assertEqual(self.order.status, StatusDefinition.PENDING,
+            'Authorizing a Payment should change Order Payment to pending')
 
     def test_bad_payment_status_changes(self):
         self.payment = PaymentFactory.create(order_payment=self.order_payment)
@@ -86,5 +86,5 @@ class BlueBottlePaymentTestCase(TestCase):
         self.assertEqual(self.payment.order_payment.status, StatusDefinition.AUTHORIZED,
             'Starting an authorized Payment should not change Order Payment status')
 
-        self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.SUCCESS,
+        self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.PENDING,
             'Starting an authorized Payment should not change Order status')

@@ -1,5 +1,6 @@
 from bluebottle.test.factory_models.donations import DonationFactory
 import unittest
+from bluebottle.test.utils import BluebottleTestCase
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
@@ -9,12 +10,13 @@ from bluebottle.utils.utils import StatusDefinition
 
 
 @unittest.skip("The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
-class PaymentMockTests(TestCase):
+class PaymentMockTests(BluebottleTestCase):
     """
     Tests for updating and order payment via mock PSP listener. The listener calls the service to fetch the
     appropriate adapter and update the OrderPayment status. It sets the status of the order payment to
     """
     def setUp(self):
+        super(PaymentMockTests, self).setUp()
         self.order_payment = OrderPaymentFactory.create(status=StatusDefinition.CREATED, amount=100, payment_method='mock')
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
@@ -77,10 +79,10 @@ class PaymentMockTests(TestCase):
         self.assertEquals(order_payment.status, 'created')
 
 
-class PaymentErrorTests(TestCase):
+class PaymentErrorTests(BluebottleTestCase):
 
     def setUp(self):
-
+        super(PaymentErrorTests, self).setUp()
         self.donation1 = DonationFactory.create(amount=500)
         self.donation2 = DonationFactory.create(amount=700)
         self.donation3 = DonationFactory.create(amount=5)

@@ -11,8 +11,6 @@ from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
-DONATION_MODEL = get_donation_model()
-
 
 class BaseOrder(models.Model, FSMTransition):
     """
@@ -22,7 +20,7 @@ class BaseOrder(models.Model, FSMTransition):
     STATUS_MAPPING = {
         StatusDefinition.CREATED:      StatusDefinition.LOCKED,
         StatusDefinition.STARTED:      StatusDefinition.LOCKED,
-        StatusDefinition.AUTHORIZED:   StatusDefinition.SUCCESS,
+        StatusDefinition.AUTHORIZED:   StatusDefinition.PENDING,
         StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
         StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
@@ -33,6 +31,7 @@ class BaseOrder(models.Model, FSMTransition):
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
         (StatusDefinition.LOCKED, _('Locked')),
+        (StatusDefinition.PENDING, _('Pending')),
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.FAILED, _('Failed')),
     )
@@ -51,17 +50,23 @@ class BaseOrder(models.Model, FSMTransition):
         # TODO: add locked state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.SUCCESS)
+    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.PENDING)
+    def pending(self):
+        # TODO: add success state behaviour here
+        pass
+
+    @transition(field=status, save=True, source=[StatusDefinition.PENDING, StatusDefinition.LOCKED], target=StatusDefinition.SUCCESS)
     def succeeded(self):
         # TODO: add success state behaviour here
         pass
 
-    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
+    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.PENDING, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
     def failed(self):
         # TODO: add failed state behaviour here
         pass
 
     def update_total(self, save=True):
+        DONATION_MODEL = get_donation_model()
         donations = DONATION_MODEL.objects.filter(order=self)
         self.total = donations.aggregate(Sum('amount'))['amount__sum']
         if save:

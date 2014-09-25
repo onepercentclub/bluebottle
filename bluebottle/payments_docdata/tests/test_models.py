@@ -1,13 +1,9 @@
-from datetime import datetime
-
 from django.test import TestCase
-from django_fsm.db.fields import TransitionNotAllowed
 from django.test import Client
 from django.core.urlresolvers import reverse
 
-from bluebottle.test.factory_models.payments import PaymentFactory, OrderPaymentFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.models import TestBaseUser
 from bluebottle.test.utils import FsmTestMixin
 
 from bluebottle.payments.services import PaymentService
@@ -18,7 +14,6 @@ from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory, DocdataTransactionFactory
 from bluebottle.payments.models import OrderPayment 
 from bluebottle.payments_logger.models import PaymentLogEntry
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 from mock import patch
@@ -60,7 +55,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         # Check that the status propagated through to order
         self.assert_status(self.order_payment.payment, StatusDefinition.AUTHORIZED)
         self.assert_status(self.order_payment, StatusDefinition.AUTHORIZED)
-        self.assert_status(self.order, StatusDefinition.SUCCESS)
+        self.assert_status(self.order, StatusDefinition.PENDING)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')

@@ -6,7 +6,7 @@ DOCDATA_PAYMENT_METHODS = (
         'id': 'docdata-ideal',
         'profile': 'ideal',
         'name': 'iDEAL',
-        'restricted_countries': ('NL',),
+        'restricted_countries': ('NL', 'Netherlands'),
         'supports_recurring': False,
     },
     {

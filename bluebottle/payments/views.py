@@ -1,30 +1,35 @@
 import json
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments.serializers import ManageOrderPaymentSerializer
-from bluebottle.payments.services import get_payment_methods
-from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments.services import PaymentService
+from ipware.ip import get_ip
 from rest_framework.exceptions import APIException, ParseError
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments.serializers import ManageOrderPaymentSerializer
+from bluebottle.payments.services import get_payment_methods
+from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments.services import PaymentService
 from bluebottle.bb_orders.permissions import IsOrderCreator, LoggedInUser
 from bluebottle.payments.serializers import ManageOrderPaymentSerializer
 from bluebottle.payments.services import get_payment_methods
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
-
+from bluebottle.utils.utils import get_country_by_ip
 
 class PaymentMethodList(APIView):
     #serializer_class = OrderPaymentMethodSerializer
     permission_classes = (LoggedInUser,)
 
     def get(self, request, *args, **kw):
-        # TODO: Determine country based on GET param, user settings or IP.
-        country = 'NL'
-        # TODO: Determine available methods based on country and GET params (amount).
-        methods = get_payment_methods('NL', 500)
+        ip = get_ip(request)
+        if ip == '127.0.0.1':
+            country = 'all' #get_payment_methods returns all methods when 'all' is specified
+        else:
+            country = get_country_by_ip(ip)
+
+        # TODO: Determine available methods based on GET params (amount).
+        methods = get_payment_methods(country, 500)
 
         result = {'country': country, 'results': methods}
         response = Response(result, status=status.HTTP_200_OK)

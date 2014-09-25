@@ -174,9 +174,9 @@ class PayoutLogBase(models.Model):
         get_latest_by = 'date'
 
     STATUS_CHOICES = (
-        StatusDefinition.NEW, _("New"),
-        StatusDefinition.IN_PROGRESS, _("In progress"),
-        StatusDefinition.SETTLED, _("Settled"),
+        (StatusDefinition.NEW, _("New")),
+        (StatusDefinition.IN_PROGRESS, _("In progress")),
+        (StatusDefinition.SETTLED, _("Settled"))
     )
 
     date = CreationDateTimeField(_("date"))

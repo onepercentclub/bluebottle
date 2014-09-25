@@ -1,5 +1,6 @@
 import logging
 from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model
+from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,6 @@ from django.utils.text import Truncator
 
 from .models import ProjectPayoutLog, OrganizationPayoutLog
 
-from .choices import PayoutLineStatuses
 from .admin_filters import HasIBANPayoutFilter
 from .admin_utils import link_to
 
@@ -161,7 +161,7 @@ class PayoutAdmin(admin.ModelAdmin):
 
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
-        filter_args = {'status': PayoutLineStatuses.new}
+        filter_args = {'status': StatusDefinition.NEW}
         qs_new = queryset.all().filter(**filter_args)
 
         for payout in qs_new:
@@ -245,7 +245,7 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
 
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
-        filter_args = {'status': PayoutLineStatuses.new}
+        filter_args = {'status': StatusDefinition.NEW}
         qs_new = queryset.all().filter(**filter_args)
 
         for payout in qs_new:

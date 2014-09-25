@@ -2,9 +2,9 @@ from decimal import Decimal
 from datetime import timedelta
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
+from bluebottle.utils.utils import StatusDefinition
 
 from django.utils import timezone
-from .choices import PayoutLineStatuses
 
 
 def create_payout_finished_project(sender, instance, created, **kwargs):
@@ -29,7 +29,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             # Update existing Payout
             payout = PROJECT_PAYOUT_MODEL.objects.get(project=project)
 
-            if payout.status == PayoutLineStatuses.new:
+            if payout.status == StatusDefinition.NEW:
                 # Update planned payout date for new Payouts
                 payout.calculate_amounts()
                 payout.planned = next_date

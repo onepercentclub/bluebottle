@@ -124,10 +124,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
-
             // check for validation errors generated in the current payment method controller
             var validationErrors = this.get('paymentMethodController').validateFields();
-
             this.set('validationErrors', validationErrors[0]);
             this.set('errorsFixed', validationErrors[1]);
 

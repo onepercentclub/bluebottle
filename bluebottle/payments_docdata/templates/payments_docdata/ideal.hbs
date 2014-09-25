@@ -1,13 +1,11 @@
 {% load bb_ember i18n static %}
 
 {% tplhandlebars "docdataIdeal" %}
-    <p>
-        <img src="{% static 'images/docdata/docdata.png' %}" alt="Docdata"  />
-        <br/>
-        <img src="{% static 'images/docdata/ideal.png' %}" alt="iDEAL"  />
-        <br/>
-        You're about to pay with iDEAL through Docdata.
+    <form>
+        <h6>{% trans 'Select your bank below'%}</h6>
+        {% blocktrans %} 
+            We'll redirect you through to iDeal where you can finish your donation securely.
+        {% endblocktrans %}
         {{view App.DocdataIdealBankSelectView valueBinding='ideal_issuer_id' name='docDataiDealSelect'}}
-
-    </p>
+    </form>
 {% endtplhandlebars %}

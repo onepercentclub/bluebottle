@@ -155,7 +155,6 @@ class OrderPayment(models.Model, FSMTransition):
             self.save()
 
 
-
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')
     created = CreationDateTimeField(_("Created"))

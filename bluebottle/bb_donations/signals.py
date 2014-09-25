@@ -17,6 +17,9 @@ def _order_status_changed(sender, instance, **kwargs):
         for donation in instance.donations.all():
             donation.project.update_amounts()
 
-        # if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]:
-        #     for donation in instance.donations.all():
-        #         successful_donation_fundraiser_mail(donation)
+        # Send mail if status transitions in ro success/pending for the first time.
+        if (kwargs['source'] not in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]
+            and  kwargs['target'] in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]):
+
+            for donation in instance.donations.all():
+                successful_donation_fundraiser_mail(donation)

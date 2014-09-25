@@ -31,6 +31,7 @@ class BaseOrder(models.Model, FSMTransition):
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
         (StatusDefinition.LOCKED, _('Locked')),
+        (StatusDefinition.PENDING, _('Pending')),
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.FAILED, _('Failed')),
     )

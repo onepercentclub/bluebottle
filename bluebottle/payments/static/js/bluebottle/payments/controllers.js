@@ -203,7 +203,7 @@ App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.ex
 
     // returns a list of two values [validateErrors, errorsFixed]
     validateFields: function () {
-        // Enable the validation of errors on fields only after pressing the signup button
+        // Enable the validation of errors on fields only after pressing proceed to payment button
         this.enableValidation();
 
         // Clear the errors fixed message

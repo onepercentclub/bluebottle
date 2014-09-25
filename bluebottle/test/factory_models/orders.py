@@ -14,5 +14,7 @@ class OrderFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
     status = StatusDefinition.CREATED
 
+
 class OrderActionFactory(factory.DjangoModelFactory):
     FACTORY_FOR = OrderPaymentAction
+

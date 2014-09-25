@@ -1,12 +1,8 @@
 from django.test import TestCase
-import time
-
 from mock import patch
-
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
-from bluebottle.test.factory_models.payments import OrderPaymentFactory, PaymentFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments.models import Payment
 from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_logger.models import PaymentLogEntry
@@ -20,8 +16,9 @@ class TestPaymentLogger(TestCase, FsmTestMixin):
     def setUp(self, mock_client_create):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 
-        self.order = OrderFactory.create()
-        self.order_payment = OrderPaymentFactory.create(payment_method='docdata', order=self.order)
+        self.order = OrderFactory.create(total=35)
+        self.order_payment = OrderPaymentFactory.create(payment_method='docdataIdeal', order=self.order,
+                                                        integration_data={'default_pm': 'ideal'})
         self.service = PaymentService(self.order_payment)
 
     def test_create_payment_create_log(self):
@@ -59,7 +56,8 @@ class TestPaymentLoggerAdapter(TestCase):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 
         self.order = OrderFactory.create()
-        self.order_payment = OrderPaymentFactory.create(payment_method='docdata', order=self.order)
+        self.order_payment = OrderPaymentFactory.create(payment_method='docdata', order=self.order,
+                                                        integration_data={'default_pm': 'ideal'})
         self.service = PaymentService(self.order_payment)
 
         PaymentLogEntry.objects.all().delete()

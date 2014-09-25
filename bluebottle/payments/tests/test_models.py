@@ -1,4 +1,7 @@
 from datetime import datetime
+from bluebottle.payments.services import PaymentService
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 from django.test import TestCase
 from django_fsm.db.fields import TransitionNotAllowed
@@ -88,3 +91,44 @@ class BlueBottlePaymentTestCase(TestCase):
 
         self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.PENDING,
             'Starting an authorized Payment should not change Order status')
+
+
+class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(BlueBottlePaymentFeeTestCase, self).setUp()
+        self.order = OrderFactory.create()
+        self.donation = DonationFactory(amount=60, order=self.order)
+        self.order_payment = OrderPaymentFactory.create(order=self.order)
+
+    def test_fixed_transaction_fee(self):
+        """
+        Check that the flat 0.75 mockIdeal fee is set
+        """
+        self.order_payment.payment_method = 'mockIdeal'
+        self.order_payment.save()
+        PaymentService(self.order_payment)
+        self.assertEqual(self.order_payment.transaction_fee, 0.75)
+
+    def test_relative_transaction_fee(self):
+        """
+        Check that the 3.25% mockCard fee is calculated
+        """
+        self.assertEqual(self.order.total, 60)
+        self.order_payment.payment_method = 'mockCard'
+        self.order_payment.save()
+        PaymentService(self.order_payment)
+        self.assertEqual(self.order_payment.transaction_fee, 1.95)
+
+    def test_changing_fee_when_changing_payment_method(self):
+        """
+        Check that the fee changes when we change payment method
+        """
+        self.order_payment.payment_method = 'mockIdeal'
+        self.order_payment.save()
+        PaymentService(self.order_payment)
+        self.assertEqual(self.order_payment.transaction_fee, 0.75)
+        self.order_payment.payment_method = 'mockCard'
+        self.order_payment.save()
+        self.assertEqual(self.order_payment.transaction_fee, 1.95)
+

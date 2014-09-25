@@ -48,12 +48,16 @@ def payment_status_changed(sender, instance, **kwargs):
 
     # Get the Order from the Signal 
     order_payment = instance.order_payment
-     
+
+    # Set the fee on OrderPayment
+    order_payment.transaction_fee = instance.get_fee()
+
     # Get the mapped status OrderPayment to Order
     new_order_payment_status = order_payment.get_status_mapping(instance.status)
     
     # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)
+
 
 @receiver(post_save, weak=False, dispatch_uid='default_status')
 def default_status_check(sender, instance, **kwargs):

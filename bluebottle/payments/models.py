@@ -1,6 +1,8 @@
 import json
+from bluebottle.payments.exception import PaymentException
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -45,9 +47,12 @@ class Payment(PolymorphicModel):
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
 
+    def get_fee(self):
+        if not isinstance(self, Payment):
+            raise PaymentException("get_fee() not implemented for {0}".format(self.__class__.__name__))
+
     class Meta:
         ordering = ('-created', '-updated')
-
 
 
 class OrderPaymentAction(models.Model):
@@ -87,6 +92,9 @@ class OrderPayment(models.Model, FSMTransition):
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+
+    transaction_fee = models.DecimalField(_("Transaction Fee"), max_digits=16, decimal_places=2, null=True,
+                                          help_text=_("Bank & transaction fee, withheld by payment provider."))
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)
@@ -146,6 +154,14 @@ class OrderPayment(models.Model, FSMTransition):
 
     def full_clean(self, exclude=None):
         self.amount = self.order.total
+        if self.id:
+            # If the payment method has changed we should recalculate the fee.
+            previous = OrderPayment.objects.get(id=self.id)
+            if previous.payment_method != self.payment_method:
+                try:
+                    self.transaction_fee = self.payment.get_fee()
+                except ObjectDoesNotExist:
+                    pass
 
     def set_authorization_action(self, action, save=True):
         self.authorization_action = OrderPaymentAction(**action)
@@ -154,6 +170,9 @@ class OrderPayment(models.Model, FSMTransition):
         if save:
             self.save()
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.full_clean()
+        super(OrderPayment, self).save(force_insert, force_update, using, update_fields)
 
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')

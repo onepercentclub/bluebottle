@@ -14,7 +14,6 @@ changes = ''
 
 install_requires = [
     'Babel==1.3',
-    'BeautifulSoup==3.2.1',
     'Django==1.5.5',
     'Pillow==2.3.0',
     'South==0.8.1',
@@ -41,7 +40,6 @@ install_requires = [
     'djangorestframework==2.3.12',
     'dkimpy==0.5.4',
     'html5lib==0.95',
-    'lxml==3.3.5',
     'micawber==0.2.6',
     'mock==1.0.1',
     'requests==2.3.0',

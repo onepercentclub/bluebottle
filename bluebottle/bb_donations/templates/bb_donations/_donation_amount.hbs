@@ -15,14 +15,14 @@
             <div class="col8">
                 <div class="row donation-buttons">
                     {{#each amount in defaultAmounts}}
-                        <div class="col4"><a {{action 'changeAmount' amount}} class="btn btn-donate first">&euro; {{amount}},-</a></div>
+                        <div class="col4"><a {{action 'changeAmount' amount}} class="btn-donate first">&euro; {{amount}},-</a></div>
                     {{/each}}
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col12">
-                <a {{ action 'nextStep' }} {{bindAttr class=":btn :btn-sec :donate-btn blockingErrors:is-inactive"}} name="login">{% trans "Donate now" %}</a>
+                <a {{ action 'nextStep' }} {{bindAttr class=":btn :donate-btn blockingErrors:is-inactive"}} name="login">{% trans "Donate now" %}</a>
             </div>
         </div>
         {{ partial "_donation_errors" }}

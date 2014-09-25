@@ -14,6 +14,7 @@ changes = ''
 
 install_requires = [
     'Babel==1.3',
+    'BeautifulSoup==3.2.1',
     'Django==1.5.5',
     'Pillow==2.3.0',
     'South==0.8.1',

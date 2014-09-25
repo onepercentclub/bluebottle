@@ -80,7 +80,7 @@ class CompletedDateTimeMixin(models.Model):
     def clean(self):
         """ Validate completed/completed date consistency. """
 
-        if self.completed and self.status != PayoutLineStatuses.completed:
+        if self.completed and self.status != StatusDefinition.SETTLED:
             raise ValidationError(
                 _('Closed date is set but status is not completed.')
             )
@@ -173,15 +173,21 @@ class PayoutLogBase(models.Model):
         ordering = ['-date']
         get_latest_by = 'date'
 
+    STATUS_CHOICES = (
+        StatusDefinition.NEW, _("New"),
+        StatusDefinition.IN_PROGRESS, _("In progress"),
+        StatusDefinition.SETTLED, _("Settled"),
+    )
+
     date = CreationDateTimeField(_("date"))
 
     old_status = models.CharField(
-        _("old status"), max_length=20, choices=PayoutLineStatuses.choices,
+        _("old status"), max_length=20, choices=STATUS_CHOICES,
         blank=True, null=True
     )
 
     new_status = models.CharField(
-        _("new status"), max_length=20, choices=PayoutLineStatuses.choices,
+        _("new status"), max_length=20, choices=STATUS_CHOICES,
     )
 
     def __unicode__(self):
@@ -264,7 +270,7 @@ class BaseProjectPayout(PayoutBase):
 
         Should only be called for Payouts with status 'new'.
         """
-        assert self.status == PayoutLineStatuses.new, 'Can only recalculate for new Payout.'
+        assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
 
         # Set payout rule if none set.
         if not self.payout_rule:

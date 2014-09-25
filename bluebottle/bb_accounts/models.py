@@ -140,8 +140,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     user_type = models.CharField(_('Member Type'), max_length=25, choices=UserType.choices, default=UserType.person)
 
     # Public Profile
-    first_name = models.CharField(_('first name'), max_length=30, blank=True)
-    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    first_name = models.CharField(_('first name'), max_length=100, blank=True)
+    last_name = models.CharField(_('last name'), max_length=100, blank=True)
     location = models.CharField(_('location'), max_length=100, blank=True)
     website = models.URLField(_('website'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to

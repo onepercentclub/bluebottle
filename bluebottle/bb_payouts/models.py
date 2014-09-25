@@ -19,7 +19,6 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
-from .choices import PayoutLineStatuses
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
 
 PROJECT_MODEL = get_project_model()
@@ -463,7 +462,7 @@ class BaseOrganizationPayout(PayoutBase):
 
         Should only be called for Payouts with status 'new'.
         """
-        assert self.status == PayoutLineStatuses.new, 'Can only recalculate for new Payout.'
+        assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
 
         # Calculate original values
         self.organization_fee_incl = self._get_organization_fee()
@@ -533,8 +532,8 @@ class BaseOrganizationPayout(PayoutBase):
             old_status = self.__class__.objects.get(id=self.id).status
 
             if (
-                old_status == PayoutLineStatuses.new and
-                self.status == PayoutLineStatuses.progress
+                old_status == StatusDefinition.NEW and
+                self.status == StatusDefinition.IN_PROGRESS
             ):
                 # Old status: new
                 # New status: progress
@@ -557,7 +556,7 @@ class BaseOrganizationPayout(PayoutBase):
         if not self.id:
             # No id? Not previously saved
 
-            if self.status == PayoutLineStatuses.new:
+            if self.status == StatusDefinition.NEW:
                 # This exists mainly for testing reasons, payouts should
                 # always be created new
                 self.calculate_amounts(save=False)

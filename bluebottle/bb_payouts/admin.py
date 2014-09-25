@@ -37,26 +37,6 @@ class PayoutLogInline(PayoutLogBase):
 class OrganizationPayoutLogInline(PayoutLogBase):
     model = OrganizationPayoutLog
 
-#
-# class PayoutTransactionInline(admin.TabularInline):
-#     model = BankTransaction
-#     extra = 0
-#
-#     readonly_fields = ('transaction_link', 'counter_name', 'counter_account', 'amount', 'book_date', 'credit_debit')
-#     fields = readonly_fields
-#
-#     def has_add_permission(self, request):
-#         return False
-#
-#     def transaction_link(self, object):
-#         url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
-#         return "<a href='%s'>%s</a>" % (str(url), object)
-#
-#     transaction_link.allow_tags = True
-#
-#     can_delete = False
-#
-
 
 class PayoutAdmin(admin.ModelAdmin):
     model = PROJECT_PAYOUT_MODEL

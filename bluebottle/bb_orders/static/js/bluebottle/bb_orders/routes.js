@@ -21,7 +21,6 @@ App.OrderRoute = Em.Route.extend({
 
     redirect: function(model) {
         var _this = this;
-
         var donation = model.get('donations').objectAt(0);
             status = _this.get('status'),
             fundraiser = donation.get('fundraiser'),
@@ -64,6 +63,12 @@ App.OrderRoute = Em.Route.extend({
 
                     break;
 
+                case 'error':
+                    App.MyOrderPayment.createRecord({order: model, 'errors': {'detail': gettext('Oops, something went wrong. Please try again.')}}).then(function (payment) {
+                        _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
+                    });
+                    break;
+                             
                 case 'failed':
                     // Create a new payment for this order
                     // TODO: set error message

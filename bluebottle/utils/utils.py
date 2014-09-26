@@ -1,9 +1,14 @@
+import socket
+import os
+
 from django.conf import settings
 from django_fsm.db.fields import TransitionNotAllowed
-import logging
 from django_tools.middlewares import ThreadLocal
 from django.core.urlresolvers import reverse
+from django.conf import settings
 
+import pygeoip
+import logging
 
 class StatusDefinition:
     """
@@ -138,3 +143,33 @@ def get_current_host():
     else:
         scheme = 'http'
     return '{0}://{1}'.format(scheme, request.get_host())
+
+class InvalidIpError(Exception):
+    """ Custom exception for an invalid IP address """
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+def get_country_by_ip(ip_address=None):
+    """ 
+    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    the popular Maxmind's GeoIP C API
+    """
+    if not ip_address:
+        return None
+    
+    try:
+        socket.inet_aton(ip_address)
+    except socket.error:
+        raise InvalidIpError("Invalid IP address")
+
+    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gi.country_name_by_addr(ip_address)
+    
+
+
+
+

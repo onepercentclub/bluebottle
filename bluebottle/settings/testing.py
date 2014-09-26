@@ -49,3 +49,21 @@ DOCDATA_FEES = {
         'sepa_direct_debit': 0.25
     }
 }
+
+PAYMENT_METHODS = (
+    {
+        'provider': 'docdata',
+        'id': 'docdata-creditcard',
+        'profile': 'creditcard',
+        'name': 'CreditCard',
+        'supports_recurring': False,
+    },
+    {
+        'provider': 'docdata',
+        'id': 'docdata-ideal',
+        'profile': 'ideal',
+        'name': 'iDEAL',
+        'restricted_countries': ('NL', 'Netherlands'),
+        'supports_recurring': False,
+    },
+)

@@ -9,9 +9,22 @@ def get_payment_methods(country=None, amount=None):
     """
     Get all payment methods from settings.
     """
-    # TODO: Add logic to filter methods based on amount and country
-    methods = getattr(settings, 'PAYMENT_METHODS', ())
-    return methods
+    # TODO: Add logic to filter methods based on amount
+    all_methods = getattr(settings, 'PAYMENT_METHODS', ())
+    if country == 'all':
+        return all_methods
+
+    allowed_methods = []
+    
+    for method in all_methods:
+        try:
+            countries = method['restricted_countries']
+            if country in countries:
+                allowed_methods.append(method) 
+        except KeyError:
+            allowed_methods.append(method)
+
+    return allowed_methods
 
 
 class PaymentService(object):

@@ -5,6 +5,7 @@ from django.conf import settings
 from django_fsm.db.fields import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.core.urlresolvers import reverse
+from django.conf import settings
 
 import pygeoip
 import logging
@@ -152,11 +153,10 @@ class InvalidIpError(Exception):
         return repr(self.value)
 
 
-
 def get_country_by_ip(ip_address=None):
     """ 
-        Returns the country associated with the IP address. Uses pygeoip library which is based on
-        the popular Maxmind's GeoIP C API
+    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    the popular Maxmind's GeoIP C API
     """
     if not ip_address:
         return None
@@ -166,9 +166,7 @@ def get_country_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    path_chunks = os.getcwd().split('/') #Strip the last dir from the path
-    path = "/".join(path_chunks[:-1])
-    gi = pygeoip.GeoIP(path + '/env/src/bluebottle/GeoIP.dat')
+    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gi.country_name_by_addr(ip_address)
     
 

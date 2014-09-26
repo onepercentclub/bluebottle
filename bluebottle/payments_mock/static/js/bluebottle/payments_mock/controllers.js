@@ -1,20 +1,28 @@
-App.MockIdealController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
+App.MockIdealController = App.StandardPaymentMethodController.extend({
     requiredFields: ['issuerId'],
 
     init: function() {
         this._super();
+        this.set('errorDefinitions', [
+            {
+                'property': 'issuerId',
+                'validateProperty': 'issuerId.length',
+                'message': gettext('Select your bank'),
+                'priority': 1
+            }
+        ]);
         this.set('model', App.MockIdeal.create());
     }
 
 });
 
-App.MockPaypalController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
+App.MockPaypalController = App.StandardPaymentMethodController.extend({
     getIntegrationData: function(){
         return {};
     }
 });
 
-App.MockCreditcardController = App.StandardPaymentMethodController.extend(App.ControllerValidationMixin, {
+App.MockCreditcardController = App.StandardPaymentMethodController.extend({
     init: function() {
         this._super();
         this.set('model', App.MockCreditcard.create());

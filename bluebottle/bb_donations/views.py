@@ -58,7 +58,7 @@ class ProjectDonationList(generics.ListAPIView):
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")
-        queryset = queryset.filter(order__status=StatusDefinition.SUCCESS)
+        queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
 
         return queryset
 
@@ -86,7 +86,7 @@ class MyProjectDonationList(generics.ListAPIView):
 
         filter_kwargs['project'] = project
         queryset = queryset.filter(**filter_kwargs).order_by('-created')
-        queryset = queryset.filter(order__status=StatusDefinition.SUCCESS)
+        queryset = queryset.filter(order__status=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
 
         return queryset
 
@@ -108,7 +108,7 @@ class MyFundraiserDonationList(generics.ListAPIView):
 
         filter_kwargs['fundraiser'] = fundraiser
         queryset = queryset.filter(**filter_kwargs).order_by('-created')
-        queryset = queryset.filter(order__status=StatusDefinition.SUCCESS)
+        queryset = queryset.filter(order__status=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
 
         return queryset
 

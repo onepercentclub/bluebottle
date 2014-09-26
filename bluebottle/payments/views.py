@@ -21,7 +21,7 @@ class PaymentMethodList(APIView):
     #serializer_class = OrderPaymentMethodSerializer
     permission_classes = (LoggedInUser,)
 
-    def get(self, request, *args, **kw):
+    def get(self, request, *args, **kwargs):
         ip = get_ip(request)
         if ip == '127.0.0.1':
             country = 'all' #get_payment_methods returns all methods when 'all' is specified

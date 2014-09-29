@@ -1,5 +1,5 @@
 import logging
-from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model
+from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model, get_model_mapping
 from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ from .admin_utils import link_to
 
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
+MODEL_MAP = get_model_mapping()
 
 
 class PayoutLogBase(admin.TabularInline):
@@ -125,17 +126,13 @@ class PayoutAdmin(admin.ModelAdmin):
     completed_date.admin_order_field = 'completed'
     completed_date.short_description = 'Completed'
 
-
     # Link to project
-    def admin_project(self, obj):
-        """ Link to project in front end. """
-        project = obj.project
-
-        return u'<a href="/#!/projects/{0}">{1}</a>'.format(
-            project.slug, Truncator(unicode(project)).chars(35)
-        )
-    admin_project.allow_tags = True
-    admin_project.short_description = _('project')
+    admin_project = link_to(
+        lambda obj: obj.project,
+        'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'], MODEL_MAP['project']['class'].lower()),
+        view_args=lambda obj: (obj.project.id, ),
+        short_description=_('project')
+    )
 
     # Link to organization
     admin_organization = link_to(
@@ -190,8 +187,6 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
     search_fields = ['invoice_reference']
 
     date_hierarchy = 'start_date'
-
-    can_delete = False
 
     list_filter = ['status', ]
 
@@ -262,9 +257,6 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
         self.message_user(request, message)
 
     recalculate_amounts.short_description = _("Recalculate amounts for new payouts.")
-
-    def has_add_permission(self, request):
-        return False
 
 
 admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)

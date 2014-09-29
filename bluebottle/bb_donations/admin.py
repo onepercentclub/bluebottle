@@ -32,8 +32,11 @@ class DonationAdmin(admin.ModelAdmin):
             return
         provider_and_method = order_payment.payment_method
         split_list = [x for x in re.split(r'([A-Z][a-z]*)', provider_and_method) if x]
+
         provider = split_list[0]
-        method = split_list[1]
+        method = 'none'
+        if len(split_list) > 1:
+            method = split_list[1]
         return '{0} - {1}'.format(provider.capitalize(), method)
 
     user_full_name.short_description = 'Employee name'

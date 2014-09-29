@@ -4,6 +4,7 @@ from bluebottle.payments.exception import PaymentException
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django_extensions.db.fields.json import JSONField
@@ -118,15 +119,13 @@ class OrderPayment(models.Model, FSMTransition):
         # TODO: add authorized state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.SETTLED)
+    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED, StatusDefinition.STARTED], target=StatusDefinition.SETTLED)
     def settled(self):
-        # TODO: add settled state behaviour here
-        pass
+        self.closed = now()
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.SETTLED], target=StatusDefinition.FAILED)
     def failed(self):
-        # TODO: add failed state behaviour here
-        pass
+        self.closed = None
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.FAILED], target=StatusDefinition.CANCELLED)
     def cancelled(self):
@@ -135,13 +134,11 @@ class OrderPayment(models.Model, FSMTransition):
 
     @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
-        # TODO: add charged_back state behaviour here
-        pass
+        self.closed = None
 
     @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.REFUNDED)
     def refunded(self):
-        # TODO: add refunded state behaviour here
-        pass
+        self.closed = None
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED], target=StatusDefinition.UNKNOWN)
     def unknown(self):

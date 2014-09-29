@@ -15,7 +15,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     model = OrderPayment
     raw_id_fields = ('user', )
     readonly_fields = ('order_link', 'payment_link', 'authorization_action', 'amount', 'integration_data',
-                       'payment_method', 'transaction_fee')
+                       'payment_method', 'transaction_fee', 'status', 'created', 'closed')
     list_display = ('created', 'user', 'status', 'amount', 'payment_method', 'transaction_fee')
 
     def order_link(self, obj):
@@ -44,10 +44,7 @@ class OrderPaymentInline(admin.TabularInline):
 
     def order_payment_link(self, obj):
         object = obj
-        print object._meta.app_label
-        print object._meta.module_name
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
         return "<a href='{0}'>OrderPayment {1}</a>".format(str(url), obj.id)
 
     order_payment_link.allow_tags = True

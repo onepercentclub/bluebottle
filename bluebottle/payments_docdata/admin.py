@@ -18,10 +18,7 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
 
     def order_payment_link(self, obj):
         object = obj.order_payment
-        print object._meta.app_label
-        print object._meta.module_name
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
         return "<a href='{0}'>Order Payment: {1}</a>".format(str(url), object.id)
 
     order_payment_link.allow_tags = True

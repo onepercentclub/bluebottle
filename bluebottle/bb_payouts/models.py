@@ -434,7 +434,7 @@ class BaseOrganizationPayout(PayoutBase):
         # calculated for the paid status, with implementation for chargedback
         # coming. There are probably other fees
         allowed_statuses = (
-            StatusDefinition.PAID,
+            StatusDefinition.SETTLED,
             StatusDefinition.CHARGED_BACK,
             StatusDefinition.REFUNDED,
         )
@@ -445,22 +445,22 @@ class BaseOrganizationPayout(PayoutBase):
 
         # Do a silly trick by filtering the date the donation became paid
         # (the only place where the Docdata closed/paid status is matched).
-        payments = payments.order_by('order__donations__ready')
+        # payments = payments.order_by('order__closed')
         payments = payments.filter(
-            order__donations__ready__gte=date_timezone_aware(self.start_date),
-            order__donations__ready__lte=date_timezone_aware(self.end_date)
+            closed__gte=date_timezone_aware(self.start_date),
+            closed__lte=date_timezone_aware(self.end_date)
         )
 
         # Make sure this does not create additional objects
         payments = payments.distinct()
 
         # Aggregate the variable fees and count the amount of payments
-        aggregate = payments.aggregate(models.Sum('fee'))
+        aggregate = payments.aggregate(models.Sum('transaction_fee'))
 
         # Aggregated value (in cents) or 0
-        fee = aggregate.get('fee__sum', 0) or 0
+        fee = aggregate.get('transaction_fee__sum', 0) or 0
 
-        return money_from_cents(fee)
+        return Decimal(fee)
 
     def calculate_amounts(self, save=True):
         """

@@ -165,6 +165,10 @@ App.ProjectIndexController = Em.ArrayController.extend({
         return this.get('controllers.project.owner.username') == this.get('currentUser.username');
     }.property('controllers.project.model.owner', 'currentUser.username'),
 
+    canDonate: function () {
+        return !!this.get('controllers.project.amount_asked');
+    }.property('controllers.project.amount_asked'),
+
     remainingItemCount: function(){
         if (this.get('meta.total')) {
             return this.get('meta.total') - (this.get('page')  * this.get('perPage'));

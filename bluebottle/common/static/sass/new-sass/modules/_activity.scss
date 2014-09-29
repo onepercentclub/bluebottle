@@ -17,6 +17,12 @@ $activity-list-item-bold-color         : $color-secondary !default;
             float: right;
             font-size: 1rem;
             text-decoration: underline;
+            font-weight: bold;
+            color: $color-secondary;
+
+            &:hover {
+                color: $color-secondary;
+            }
         }
     }
 

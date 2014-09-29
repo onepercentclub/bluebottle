@@ -80,22 +80,6 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
-class TimeAvailable(models.Model):
-    """
-    A class for modeling the time available
-    """
-    type = models.CharField(_('type'), max_length=100, unique=True)
-    description = models.TextField(_('description'))
-
-    class Meta:
-        ordering = ['type']
-        verbose_name = _('time available')
-        verbose_name_plural = _('times available')
-
-    def __unicode__(self):
-        return u'{0} - {1}'.format(self.type, self.description)
-
-
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.
@@ -108,16 +92,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
-
-    class Availability(DjangoChoices):
-        one_to_four_week = ChoiceItem('1-4_hours_week', label=_('1-4 hours per week'))
-        five_to_eight_week = ChoiceItem('5-8_hours_week', label=_('5-8 hours per week'))
-        nine_to_sixteen_week = ChoiceItem('9-16_hours_week', label=_('9-16 hours per week'))
-        one_to_four_month = ChoiceItem('1-4_hours_month', label=_('1-4 hours per month'))
-        five_to_eight_month = ChoiceItem('5-8_hours_month', label=_('5-8 hours per month'))
-        nine_to_sixteen_month = ChoiceItem('9-16_hours_month', label=_('9-16 hours per month'))
-        lots_of_time = ChoiceItem('lots_of_time', label=_('I have all the time in the world. Bring it on :D'))
-        depends_on_task = ChoiceItem('depends', label=_('It depends on the content of the tasks. Challenge me!'))
 
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))
@@ -140,8 +114,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     user_type = models.CharField(_('Member Type'), max_length=25, choices=UserType.choices, default=UserType.person)
 
     # Public Profile
-    first_name = models.CharField(_('first name'), max_length=30, blank=True)
-    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    first_name = models.CharField(_('first name'), max_length=100, blank=True)
+    last_name = models.CharField(_('last name'), max_length=100, blank=True)
     location = models.CharField(_('location'), max_length=100, blank=True)
     website = models.URLField(_('website'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
@@ -149,7 +123,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     about = models.TextField(_('about'), max_length=265, blank=True)
     why = models.TextField(_('why'), max_length=265, blank=True)
 
-    time_available = models.ForeignKey('bb_accounts.TimeAvailable', null=True, blank=True)
+    available_time = models.CharField(_('time available'), max_length=50, null=True, blank=True)
     # max length is not entirely clear, however over 50 characters throws errors on facebook
     facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
     # max length: see https://support.twitter.com/articles/14609-changing-your-username

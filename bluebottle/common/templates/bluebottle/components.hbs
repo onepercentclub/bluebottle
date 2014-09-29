@@ -19,3 +19,11 @@
         <div class="backdrop-gradient"></div>
     </div>
 {% endtplhandlebars %}
+
+
+{% tplhandlebars "components/bb-backdrop-fallback" %}
+    <div class="backdrop">
+        <div class="backdrop-image" {{bind-attr style='backdropStyle'}}></div>
+        <div class="backdrop-gradient"></div>
+    </div>
+{% endtplhandlebars %}

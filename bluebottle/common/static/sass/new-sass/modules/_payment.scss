@@ -101,6 +101,10 @@
 
         form, .no-form {
             padding: 20px 25px 25px 25px;
+
+            select {
+                margin-top: 8px;
+            }
         }
 
         span {
@@ -109,6 +113,7 @@
         }
 
         h6 {
+            margin: -8px 0 8px 0;
             font-size: 15px;
         }
 
@@ -223,8 +228,22 @@
         }
     }
 
+    .card-holder {
+        display: inline-block;
+        margin: 15px 0 -15px 0;
+
+        .card-item {
+            float: left;
+            max-width: 35px;
+
+            .icon-card {
+                background-size: 75%;
+            }
+        }
+    }
+
     .modal-flash-message {
-        margin: 15px -31px 0 -31px;
+        margin: 31px -31px 0 -31px;
     }
 
     .card-types-list {

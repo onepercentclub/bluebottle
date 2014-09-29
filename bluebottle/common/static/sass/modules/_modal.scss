@@ -292,11 +292,12 @@ $gray-border-hover                                         : #9F9F9F;
 			}
 
 			.donate-btn, .payment-btn {
-				font-size: 18px;
-				min-width: 193px;
+				min-width: 250px;
 				width: auto;
 				margin: 34px 0 15px;
 				margin-bottom: 0;
+				font-size: 18px;
+				font-weight: bold;
 			}
 
 		}
@@ -546,8 +547,26 @@ $gray-border-hover                                         : #9F9F9F;
 		}
 	}
 
-	&.donation {
-		width: 565px;
+	&.big-modal {
+		max-width: 600px;
+		@include transition(all .2s ease-in-out);
+
+		&.donation {
+			max-width: 600px;
+			@include transition(all .2s ease-in-out);
+		}
+
+		&.donation-small {
+			max-width: 500px;
+
+			.modal-fullscreen-item {
+				.modal-fullscreen-content {
+					.modal-flash-message {
+						margin: 34px -36px 0 -36px;
+					}
+				}
+			}
+		}
 	}
 	
 	// TODO: Remove old modal padding

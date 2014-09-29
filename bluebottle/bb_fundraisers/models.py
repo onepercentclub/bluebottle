@@ -35,7 +35,7 @@ class BaseFundRaiser(models.Model):
     @property
     def amount_donated(self):
         # FIXME: Removed import of DonationStatuses because it was resulting in circular imports.
-        donations = self.donation_set.filter(order__status=StatusDefinition.SUCCESS)
+        donations = self.donation_set.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
         if donations:
             total = donations.aggregate(sum=Sum('amount'))
             return total['sum']

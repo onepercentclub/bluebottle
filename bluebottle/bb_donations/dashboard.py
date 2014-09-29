@@ -14,16 +14,20 @@ class DonationModule(DashboardModule):
     template = 'admin_tools/dashboard/donation_module.html'
     donation_url = '/admin/donations/donation'
     euro_currency = u"\u20AC"
+    statuses_to_analyze = [StatusDefinition.SUCCESS, StatusDefinition.PENDING]
 
     def __init__(self, **kwargs):
 
-        donations = DONATION_MODEL.objects.filter(order__status=StatusDefinition.SUCCESS)
+        donations = DONATION_MODEL.objects.filter(order__status__in=self.statuses_to_analyze)
         number_of_donations = donations.count()
         total_amount = donations.aggregate(Sum('amount'))['amount__sum']
         number_of_employees = donations.distinct('order__user').count()
 
         #initialize children
         self.children = ()
+
+        if not total_amount:
+            total_amount = '0.00'
 
         self.append_to_children('Total amount donated', total_amount, self.euro_currency)
 

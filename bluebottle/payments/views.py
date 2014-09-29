@@ -17,6 +17,7 @@ from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.utils.utils import get_country_by_ip
 
+
 class PaymentMethodList(APIView):
     #serializer_class = OrderPaymentMethodSerializer
     permission_classes = (LoggedInUser,)
@@ -53,6 +54,10 @@ class ManageOrderPaymentList(ListCreateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator,)
+
+    def pre_save(self, obj):
+        if self.request.user and self.request.user.is_authenticated():
+            obj.user = self.request.user
 
     def post_save(self, obj, created=False):
         try:

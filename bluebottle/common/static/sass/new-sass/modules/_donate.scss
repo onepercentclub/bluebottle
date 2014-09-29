@@ -1,4 +1,5 @@
 $color-primary: #5DC0ED;
+$modal-profile-border: #f5f4f6;
 
 .donation.modal-fullscreen-container {
     .modal-flash-message.success {
@@ -13,8 +14,6 @@ $color-primary: #5DC0ED;
     @include placeholder-color($color-primary);
 
     .btn-donate {
-        @include border-radius(5px);
-
         position: relative;
         font-family: $font-family-heavy;
         font-size: $font-size-large;
@@ -27,7 +26,13 @@ $color-primary: #5DC0ED;
         text-transform: uppercase;
         cursor: pointer;
         overflow: hidden;
-        vertical-align: top;  
+        vertical-align: top;
+        @include border-radius(5px);
+        @include transition(background-color, ease-in-out .2s);
+
+        &:hover {
+            background-color: #999;
+        }
     }
 
     .donation-input {
@@ -128,6 +133,7 @@ $color-primary: #5DC0ED;
     }
     h4 {
         font-size: $font-size-largest;
+        font-size: 34px;
     }
     .top-icon {
         position: absolute;
@@ -137,7 +143,7 @@ $color-primary: #5DC0ED;
         height: 73px;
         width: 73px;
         background-color: $white;
-        border: 6px solid $modal-footer-bg-color;
+        border: 6px solid $modal-profile-border;
         border-radius: 50%;
         padding: 2px;
         overflow: hidden;
@@ -167,6 +173,7 @@ $color-primary: #5DC0ED;
                 font-size: 14px;
                 padding-top: 14px;
                 color: $form-input-color;
+                box-shadow: none;
             }
 
             .wallpost-header {
@@ -175,10 +182,6 @@ $color-primary: #5DC0ED;
 
                 .wallpost-header-title {
                     text-align: left;
-
-                    strong {
-                        padding-left: 5px;
-                    }
                 }
 
                 .wallpost-header-count {
@@ -194,10 +197,19 @@ $color-primary: #5DC0ED;
         width: 80%;
         margin: auto;
         padding: 5px 0 10px 0;
+        margin-bottom: -10px;
 
         .btn {
             width: auto !important;
             font-weight: normal;
+
+            &:first-of-type {
+                margin-right: 10px;
+            }
+
+            &:last-of-type {
+                width: 200px!important;
+            }
         }
     }
 }

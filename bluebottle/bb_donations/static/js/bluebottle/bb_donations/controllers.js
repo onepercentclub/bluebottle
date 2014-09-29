@@ -18,6 +18,14 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
         ]);
     },
 
+	willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'donation-small');
+    },
+
+    willClose: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'donation');
+    },
+
     cleanCommas: function() {
         var amount = this.get('model.amount');
         if (typeof amount == 'string' && amount.indexOf(",") != -1) {

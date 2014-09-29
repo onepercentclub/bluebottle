@@ -32,7 +32,11 @@ App.OrderRoute = Em.Route.extend({
             // FIXME: Temporary for testing purposes
             switch (status) {
                 case 'success':
-                    _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+                    if (donation.get('anonymous')){
+                        _this.send('setFlash', gettext("Thank you for supporting this project"));
+                    } else {
+                        _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+                    }
                     break;
 
                 case 'pending':

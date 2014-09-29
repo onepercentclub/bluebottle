@@ -31,6 +31,9 @@ class ImageSerializerExt(ImageSerializer):
             if provided_full_url.endswith(expected_full_url):
                 return
 
+        if request.method == 'PUT' and field_name not in data and not files:
+            return 
+
         return super(ImageSerializerExt, self).field_from_native(data, files, field_name, into)
 
 

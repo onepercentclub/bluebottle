@@ -20,7 +20,7 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
 
     cleanCommas: function() {
         var amount = this.get('model.amount');
-        if (amount.indexOf(",") != -1) {
+        if (typeof amount == 'string' && amount.indexOf(",") != -1) {
             this.set('amount', amount.replace(",", "."));
         }
         return;

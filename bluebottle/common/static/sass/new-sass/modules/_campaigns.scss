@@ -296,8 +296,8 @@
                     color: #fff;
                     text-align: right;
                     white-space: nowrap;
-                    line-height: 0.8em;
-                    height: 0.8em;
+                    line-height: inherit;
+                    height: inherit;
                 }
                 
                 &.is-funded {

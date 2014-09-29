@@ -18,7 +18,7 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
         ]);
     },
 
-    cleanKommas: function() {
+    cleanCommas: function() {
         var amount = this.get('model.amount');
         if (amount.indexOf(",") != -1) {
             this.set('amount', amount.replace(",", "."));
@@ -37,7 +37,7 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
                 donation = this.get('model'),
                 order = donation.get('order');
 
-            _this.cleanKommas();
+            _this.cleanCommas();
 
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation();

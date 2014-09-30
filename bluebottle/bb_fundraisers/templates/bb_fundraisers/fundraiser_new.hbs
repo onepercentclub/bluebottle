@@ -22,8 +22,9 @@
 
                         {{partial "fundraiser_form"}}
 
-                        <button {{bindAttr class=":btn :btn-iconed :btn-next isDirty::disabled"}} {{action updateRecordOnServer}}><span class="flaticon solid right-2"></span>{% trans "Start Fundraising" %}</button>
-
+                        <button {{bindAttr class=":btn :btn-primary :btn-iconed :btn-save isDirty::disabled"}} {{action updateRecordOnServer}}>
+                            <span class="flaticon solid checkmark-1"></span>{% trans "Start Fundraising" %}
+                        </button>
                     </form>
                 {{else}}
                     <header class="l-page-header">

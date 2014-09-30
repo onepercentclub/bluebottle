@@ -31,11 +31,11 @@ App.OrderPaymentController = Em.ObjectController.extend({
         );
     },
 
-    resetCurrentPaymentMethod: function() {
-        if (!this.get('payment_method')) {
-            return;
-        }
-
+    // resetCurrentPaymentMethod sets a payment method on the order payment using the payment method of the previously
+    // failed payment. 
+    _resetCurrentPaymentMethod: function() {
+        if (!this.get('payment_method')) return;
+        
         var methods = this.get('methods'),
             currentItem = methods.objectAt(methods.get('length') - 1);
 

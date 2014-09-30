@@ -50,6 +50,7 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
         obj.amount = obj.order.total
 
 
+
 class ManageOrderPaymentList(ListCreateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer
@@ -65,4 +66,12 @@ class ManageOrderPaymentList(ListCreateAPIView):
             service.start_payment()
         except PaymentException as error:
             raise ParseError(detail=str(error))
+    
+    def get_queryset(self):
+        """ If there is an Order parameter in the GET request, filter the OrderPayments on the order """
+        qs = OrderPayment.objects.all()
+        order_id = self.request.QUERY_PARAMS.get('order', None)
+        if order_id:
+            qs = qs.filter(order__id=order_id)
+        return qs
 

@@ -69,9 +69,12 @@ App.OrderRoute = Em.Route.extend({
                     break;
 
                 case 'error':
-                    App.MyOrderPayment.createRecord({order: model, 'errors': {'detail': gettext('Oops, something went wrong. Please try again.')}}).then(function (payment) {
-                        _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
+                    App.MyOrderPayment.find({order: model.get('id')}).then(function(orderPayment){
+                        App.MyOrderPayment.createRecord({order: model, payment_method: orderPayment.get('firstObject.payment_method'), 'errors': {'detail': gettext('Oops, something went wrong. Please try again.')}}).then(function (payment) {
+                            _this.send('openInDynamic', 'orderPayment', payment, 'modalFront');
+                        });
                     });
+
                     break;
                              
                 case 'failed':

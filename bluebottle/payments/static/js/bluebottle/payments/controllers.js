@@ -6,6 +6,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
     blockingErrorsBinding: 'paymentMethodController.blockingErrors',
     isBusyBinding: 'paymentMethodController.isBusy',
     currentPaymentMethod: null,
+    methods: null,
 
     currentPaymentMethodURL: function() {
         return 'http://www.' + this.get('currentPaymentMethod.provider') + '.com';
@@ -13,13 +14,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     // Override modal willOpen handler to fetch the payment methods
     willOpen: function () {
-        var _this = this,
-            controller = this.get('controller'),
-            payment = this.get('model');
+        var _this = this;
 
-        // TODO: we need to send the amount associated with the payment as this
-        //       will determine the payment methods. Also, in the future we will
-        //       need to send the country with the amount.
         App.PaymentMethod.find().then(
             // Success
             function(methods) {
@@ -34,6 +30,15 @@ App.OrderPaymentController = Em.ObjectController.extend({
             }
         );
     },
+
+    resetCurrentPaymentMethod: function() {
+        var methods = this.get('methods'),
+            currentItem = methods.objectAt(methods.get('length') - 1);
+
+        if (currentItem && typeof this.get('payment_method') == 'string' &&  currentItem.get('uniqueId') == this.get('payment_method')) {
+            this.set('currentPaymentMethod', currentItem);
+        }
+    }.observes('methods.@each.name'),
 
     willClose: function () {
         var currentPaymentMethodController = this.get('paymentMethodController');
@@ -51,7 +56,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
     }.observes('validationErrors'),
 
     _setFirstPaymentMethod: function () {
-        if (this.get('methods.length') && !this.get('currentPaymentMethod')) {
+        if (this.get('methods.length') && !this.get('currentPaymentMethod') && !this.get('payment_method')) {
             this.set('currentPaymentMethod', this.get('methods').objectAt(0));
         }
     }.observes('methods.length'),

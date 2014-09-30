@@ -1,3 +1,4 @@
+from django.db.models.aggregates import Max
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
@@ -43,7 +44,9 @@ class FundRaiserListView(ListCreateAPIView):
         if user_id:
             filter_kwargs['owner__pk'] = user_id
 
-        return queryset.filter(**filter_kwargs).order_by('-created')
+        queryset = queryset.filter(**filter_kwargs)
+        queryset = queryset.annotate(latest_donation=Max('donation__order__closed')).order_by('-latest_donation')
+        return queryset
 
     def pre_save(self, obj):
         if not self.request.user.is_authenticated():

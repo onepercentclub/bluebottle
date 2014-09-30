@@ -6,13 +6,14 @@ from django.core.urlresolvers import reverse
 
 DONATION_MODEL = get_donation_model()
 
+
 class DonationAdmin(admin.ModelAdmin):
     date_hierarchy = 'updated'
     list_display = ('updated', 'project', 'user', 'user_full_name', 'amount', 'related_payment_method', 'status')
     list_filter = ('order__status', )
     ordering = ('-updated', )
     raw_id_fields = ('project', 'fundraiser')
-    readonly_fields = ('order_link', 'created', 'updated', 'status', 'user')
+    readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user')
     fields = readonly_fields + ('amount', 'project', 'fundraiser')
     search_fields = ('user__first_name', 'user__last_name', 'user__email', 'project__title')
 

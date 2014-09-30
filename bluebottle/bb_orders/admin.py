@@ -16,7 +16,7 @@ class BaseOrderAdmin(admin.ModelAdmin):
     inlines = (DonationInline, OrderPaymentInline)
 
     raw_id_fields = ('user', )
-    readonly_fields = ('status', 'total')
+    readonly_fields = ('status', 'total', 'created', 'updated', 'closed')
 
 admin.site.register(ORDER_MODEL, BaseOrderAdmin)
 

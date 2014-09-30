@@ -45,7 +45,7 @@ class FundRaiserListView(ListCreateAPIView):
             filter_kwargs['owner__pk'] = user_id
 
         queryset = queryset.filter(**filter_kwargs)
-        queryset = queryset.annotate(latest_donation=Max('donation__order__closed')).order_by('-latest_donation')
+        queryset = queryset.annotate(latest_donation=Max('donation__order__confirmed')).order_by('-latest_donation')
         return queryset
 
     def pre_save(self, obj):

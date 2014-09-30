@@ -2,6 +2,7 @@ from bluebottle.utils.model_dispatcher import get_donation_model, get_order_mode
 from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum
+from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django.db.models import options
@@ -41,7 +42,8 @@ class BaseOrder(models.Model, FSMTransition):
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
-    closed = models.DateTimeField(_("Closed"), blank=True, editable=False, null=True)
+    confirmed = models.DateTimeField(_("Confirmed"), blank=True, editable=False, null=True)
+    completed = models.DateTimeField(_("Completed"), blank=True, editable=False, null=True)
 
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
 
@@ -52,18 +54,16 @@ class BaseOrder(models.Model, FSMTransition):
 
     @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.PENDING)
     def pending(self):
-        # TODO: add success state behaviour here
-        pass
+        self.confirmed = now()
 
     @transition(field=status, save=True, source=[StatusDefinition.PENDING, StatusDefinition.LOCKED], target=StatusDefinition.SUCCESS)
     def succeeded(self):
-        # TODO: add success state behaviour here
-        pass
+        self.completed = now()
 
     @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.PENDING, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
     def failed(self):
-        # TODO: add failed state behaviour here
-        pass
+        self.completed = None
+        self.confirmed = None
 
     def update_total(self, save=True):
         DONATION_MODEL = get_donation_model()

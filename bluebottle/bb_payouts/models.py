@@ -445,10 +445,10 @@ class BaseOrganizationPayout(PayoutBase):
 
         # Do a silly trick by filtering the date the donation became paid
         # (the only place where the Docdata closed/paid status is matched).
-        # payments = payments.order_by('order__closed')
+        # payments = payments.order_by('order__completed')
         payments = payments.filter(
-            closed__gte=date_timezone_aware(self.start_date),
-            closed__lte=date_timezone_aware(self.end_date)
+            completed__gte=date_timezone_aware(self.start_date),
+            completed__lte=date_timezone_aware(self.end_date)
         )
 
         # Make sure this does not create additional objects

@@ -143,6 +143,44 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
         }
     }.observes('parentType', 'parentId'),
 
+    _hideWallPostMessage: function() {
+        $(".wallpost-message-area").hide();
+    },
+
+    _showWallPostMessage: function() {
+        $(".wallpost-message-area").show();
+    },
+
+    actions: {
+        saveWallPost: function() {
+            var controller = this,
+                parent_type = this.get('parentType'),
+                parent_id = this.get('parentId'),
+                wallPost = this.get('model');
+
+            if (Em.isEmpty(this.get('text'))) {
+                this.send('modalError');
+                this.set('error', gettext('Perhaps you should try typing something'));
+            }
+
+            controller._hideWallPostMessage();
+
+            if (parent_type && parent_id) {
+                wallPost.set('parent_id', parent_id);
+                wallPost.set('parent_type', parent_type);
+            }
+            wallPost.set('type', 'text');
+
+            wallPost.save().then(function (record) {
+                controller._wallPostSuccess(record);
+            }, function (record) {
+                controller._showWallPostMessage();
+                controller.set('error', record.get('error'));
+            });
+        },
+
+    },
+
     // Override default _wallPostSuccess method
     _wallPostSuccess: function (record) {
         var _this = this,

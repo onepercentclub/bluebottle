@@ -2,21 +2,9 @@
 
 
 {% tplhandlebars "_project_actions_without_funding" %}
-    <div class="l-section detail" id="project-members">
+    <div class="l-section detail without-funding" id="project-members">
         <section class="l-wrapper">
-            {{#if deadline}}
-                <div class="project-deadline">
-                    <span class="flaticon solid stopwatch-1"></span>
-                    <span class="text">
-                        {{daysToGoText daysToGo}}
-                    </span>
-                </div>
-            {{/if}}
-        </section>
-    </div>
 
-    <div class="l-section detail" id="project-actions">
-        <section class="l-wrapper">
             <ul class="member-list">
                 <li class="member-initiator">
                     <ul>
@@ -30,6 +18,14 @@
                     </ul>
                 </li>
             </ul>
+            {{#if deadline}}
+                <div class="project-deadline">
+                    <span class="flaticon solid stopwatch-1"></span>
+                    <span class="text">
+                        {{daysToGoText daysToGo}}
+                    </span>
+                </div>
+            {{/if}}
         </section>
     </div>
 {% endtplhandlebars %}

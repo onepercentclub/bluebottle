@@ -171,6 +171,25 @@
 	.member-initiator {		
 	    @include grid(24,0,0);		
 	}
+
+    &.without-funding {
+        .member-list {
+            @include grid(14,1,0);
+
+            .member-initiator {     
+                @include grid(54,0,0);
+                width: 118%;
+
+                h4 {
+                    color: $white;
+                }
+            }
+        }
+
+        .project-deadline {
+            margin-left: 0.8%;
+        }
+    }
 }
 
 #project-actions {

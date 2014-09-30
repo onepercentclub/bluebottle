@@ -202,6 +202,10 @@ App.ProjectIndexController = Em.ArrayController.extend({
         });
     }.property('tasks.@each.isUnavailable'),
 
+    haveTasks: function() {
+        return this.get('task_count');
+    }.property('task_count'),
+
     resetShowingAll: function() {
         this.set("showingAll", false);
     }.observes('parentId'),

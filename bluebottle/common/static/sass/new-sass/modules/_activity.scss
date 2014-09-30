@@ -32,7 +32,7 @@ $activity-list-item-bold-color         : $color-secondary !default;
         margin: 1em 0;
 
         li.activity-list-item {
-            margin-bottom: 1em;
+            margin-bottom: 2em;
             background-color: $activity-list-item-background-color;
 
             a {
@@ -45,7 +45,6 @@ $activity-list-item-bold-color         : $color-secondary !default;
 
             h3 {
                 color: $activity-list-item-title-color;
-                margin: 0.2em 0;
             }
 
             .picture {
@@ -66,14 +65,11 @@ $activity-list-item-bold-color         : $color-secondary !default;
             .progress {
 
                 .progress-bar {
+                    margin-top: 10px;
                     @include grid(30,0,1);
 
                     .project-fund-amount-slider {
                         background-color: white;
-
-                        .slider-progress {
-                            height: 0.8em;
-                        }
                     }
                 }
 

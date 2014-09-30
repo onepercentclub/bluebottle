@@ -32,6 +32,10 @@ App.OrderPaymentController = Em.ObjectController.extend({
     },
 
     resetCurrentPaymentMethod: function() {
+        if (!this.get('payment_method')) {
+            return;
+        }
+
         var methods = this.get('methods'),
             currentItem = methods.objectAt(methods.get('length') - 1);
 

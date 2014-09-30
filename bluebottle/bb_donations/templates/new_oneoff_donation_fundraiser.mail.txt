@@ -4,7 +4,8 @@ Hello {{receiver}},
 
 You just received a EUR {{ amount }} donation!
 
-Quickly thank your supporter on your fundraise action wall: {{ site }}{{ link }}.
+Curious who made a donation, check your fundraiser page:
+{{ site }}{{ link }}.
 
-Thanks!
+Keep up the good work!
 {% endblocktrans %}

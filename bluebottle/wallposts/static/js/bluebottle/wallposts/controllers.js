@@ -76,7 +76,7 @@ App.TextWallPostNewController = Em.ObjectController.extend({
     _hideWallPostMessage: function() {
         $(".wallpost-message-area").hide();
     },
-    
+
     actions: {
         saveWallPost: function() {
             var controller = this,

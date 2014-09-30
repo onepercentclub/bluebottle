@@ -2,20 +2,15 @@
 
 
 {% tplhandlebars "_order_payment_errors" %}
-    {{#if errorsFixed}}
-        <div class="modal-flash-message success">
-            {{fixedFieldsMessage}}
+    {{#if errors}}
+        <div class="modal-flash-message error">
+            {{errors.detail}}
         </div>
-    {{else}}
-        {{#if errors}}
-            <div class="modal-flash-message error">
-                {{errors.detail}}
-            </div>
-        {{/if}}
-        {{#if validationErrors}}
-            <div class="modal-flash-message error">
-                {{validationErrors.error}}
-            </div>
-        {{/if}}
+    {{/if}}
+    
+    {{#if validationErrors}}
+        <div class="modal-flash-message error">
+            {{validationErrors.error}}
+        </div>
     {{/if}}
 {% endtplhandlebars %}

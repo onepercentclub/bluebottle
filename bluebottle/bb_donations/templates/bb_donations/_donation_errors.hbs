@@ -2,15 +2,9 @@
 
 
 {% tplhandlebars "_donation_errors" %}
-    {{#if errorsFixed}}
-        <div class="modal-flash-message success">
-            {{fixedFieldsMessage}}
+    {{#if validationErrors}}
+        <div class="modal-flash-message error">
+            {{validationErrors.error}}
         </div>
-    {{else}}
-        {{#if validationErrors}}
-            <div class="modal-flash-message error">
-                {{validationErrors.error}}
-            </div>
-        {{/if}}
     {{/if}}
 {% endtplhandlebars %}

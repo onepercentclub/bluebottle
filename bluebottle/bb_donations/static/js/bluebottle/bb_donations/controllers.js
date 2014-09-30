@@ -1,8 +1,6 @@
 App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
-
     requiredFields: ['amount' ],
     fieldsToWatch: ['amount' ],
-
     defaultAmounts: [50, 75, 100],
 
     init: function() {

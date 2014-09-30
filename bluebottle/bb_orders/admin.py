@@ -11,12 +11,12 @@ DONATION_MODEL = get_donation_model()
 
 class BaseOrderAdmin(admin.ModelAdmin):
     model = get_order_model()
-    list_display = ('created', 'updated', 'closed', 'user', 'status', 'total')
+    list_display = ('created', 'confirmed', 'completed', 'user', 'status', 'total')
 
     inlines = (DonationInline, OrderPaymentInline)
 
     raw_id_fields = ('user', )
-    readonly_fields = ('status', 'total')
+    readonly_fields = ('status', 'total', 'created', 'confirmed', 'completed')
 
 admin.site.register(ORDER_MODEL, BaseOrderAdmin)
 

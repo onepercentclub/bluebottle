@@ -33,4 +33,9 @@
             </div>
         </div>
     </div>
+    {{#if error }}
+        <div class="modal-flash-message error">
+            {{error}}
+        </div>
+    {{/if}}
 {% endtplhandlebars %}

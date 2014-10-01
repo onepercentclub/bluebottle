@@ -249,10 +249,10 @@ class DocdataClient(object):
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
             'merchant_name': settings.DOCDATA_MERCHANT_NAME,
-            'return_url_success': "{0}/#!/orders/{1}/success".format(return_url, order_id),
-            'return_url_pending': "{0}/#!/orders/{1}/pending".format(return_url, order_id),
-            'return_url_canceled': "{0}/#!/orders/{1}/cancelled".format(return_url, order_id),
-            'return_url_error': "{0}/#!/orders/{1}/error".format(return_url, order_id),
+            'return_url_success': "{0}/go/orders/{1}/success".format(return_url, order_id),
+            'return_url_pending': "{0}/go/orders/{1}/pending".format(return_url, order_id),
+            'return_url_canceled': "{0}/go/orders/{1}/cancelled".format(return_url, order_id),
+            'return_url_error': "{0}/go/orders/{1}/error".format(return_url, order_id),
             'client_language': (client_language or get_language()).upper()
         }
         args.update(extra_url_args)

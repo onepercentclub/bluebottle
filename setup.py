@@ -47,7 +47,7 @@ install_requires = [
     'mock==1.0.1',
     'sorl-thumbnail==11.12',
     'splinter==0.5.4',
-    'transifex-client==0.9',
+    'transifex-client==0.10',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz==1.2',

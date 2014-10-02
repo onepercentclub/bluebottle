@@ -40,7 +40,18 @@ App.ApplicationView = Em.View.extend({
                 e.preventDefault();
             }
         }
-    }
+    },
+
+    addTouch: function(element) {
+        var isTouch = ('ontouchstart' in document.documentElement);
+
+        if (isTouch) {
+            $('body').addClass('touch');
+        }
+        else {
+            $('body').addClass('no-touch');
+        };
+    }.on('didInsertElement')
 });
 
 // Extend from this class to allow auto focus first input in form

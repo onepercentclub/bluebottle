@@ -31,7 +31,7 @@ $modal-profile-border: #f5f4f6;
         @include transition(background-color, ease-in-out .2s);
 
         &:hover {
-            background-color: #999;
+            background-color: #b7b2bc;
         }
     }
 
@@ -58,14 +58,7 @@ $modal-profile-border: #f5f4f6;
             font-size: 17px;
             padding: 6px 0px;
             font-weight: bold;
-
-            &.first {
-                float: left;
-            }
-
-            &.last {
-                float: right;
-            }
+            float: right;
         } 
     }
 

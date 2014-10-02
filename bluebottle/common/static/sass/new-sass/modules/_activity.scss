@@ -29,10 +29,10 @@ $activity-list-item-bold-color         : $color-secondary !default;
 
 
     ul.activity-list {
-        margin: 1em 0;
+        margin: 1em 0 40px 0;
 
         li.activity-list-item {
-            margin-bottom: 2em;
+            margin-bottom: 20px;
             background-color: $activity-list-item-background-color;
 
             a {
@@ -48,6 +48,7 @@ $activity-list-item-bold-color         : $color-secondary !default;
             }
 
             .picture {
+                max-height: 105px;
                 @include grid(10,0,0);
 
                 img {
@@ -60,12 +61,15 @@ $activity-list-item-bold-color         : $color-secondary !default;
                 color: #7c90a6;
                 @include grid(38,0,0);
                 line-height: 20px;
+
+                h3 {
+                    padding: 3px 0 8px;
+                }
             }
 
             .progress {
 
                 .progress-bar {
-                    margin-top: 10px;
                     @include grid(30,0,1);
 
                     .project-fund-amount-slider {

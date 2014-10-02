@@ -145,15 +145,17 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
 
         # Reload the order payment
         order_payment = OrderPayment.objects.get(id=order_payment.id)
-        self.assertEqual(order_payment.payment_method, 'unknown')
+        self.assertEqual(order_payment.payment_method, 'docdataPaypal')
 
         # Check that all is logged correctly
-        self.assertEquals(PaymentLogEntry.objects.filter(payment=docdata_payment).count(), 6) # The status changes triggers the
-                                                                                              # creation of more payment log entries
+        self.assertEquals(PaymentLogEntry.objects.filter(payment=docdata_payment).count(), 5)
         log = PaymentLogEntry.objects.all()[0]
         self.assertEqual(log.message, 
-            "{0} - Payment method changed for payment with id {1} and order payment with id {2}.".format(docdata_payment, docdata_payment.id,
-                                                                                                    docdata_payment.order_payment.id))
+            "{0} - Payment method '{1}' not found for payment with id {2} and order payment with id {3}.".format(
+                docdata_payment,
+                'BLABLABLA',
+                docdata_payment.id,
+                docdata_payment.order_payment.id))
         self.assertEqual(log.payment.id, docdata_payment.id)
-        self.assertEqual(log.level, 'INFO')
+        self.assertEqual(log.level, 'WARNING')
 

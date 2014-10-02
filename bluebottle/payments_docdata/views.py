@@ -45,9 +45,12 @@ class PaymentStatusUpdateView(View):
         # Map Docdata payment method naming to our naming convention
         if transaction:
             original_method = payment.order_payment.payment_method
-            new_method = service.adapter.PAYMENT_METHODS.get(transaction.payment_method, 'unknown')
-            if new_method != original_method:
-                payment.order_payment.payment_method = new_method           
+            new_method = service.adapter.PAYMENT_METHODS.get(transaction.payment_method, None)
+            if not new_method:
+                payment_logger = PaymentLogAdapter()
+                payment_logger.log(payment, 'warn', 'Payment method \'{0}\' not found for payment with id {1} and order payment with id {2}.'.format(transaction.payment_method, payment.id, payment.order_payment.id))
+            elif new_method != original_method:
+                payment.order_payment.payment_method = new_method
                 payment.order_payment.save()
 
                 payment_logger = PaymentLogAdapter()

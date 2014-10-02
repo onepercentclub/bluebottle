@@ -520,15 +520,16 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     },
 
     _clearModel: function () {
-        this.set('content', Em.Object.create());
+        this.set('model', Em.Object.create());
+    },
+
+    willOpen: function () {
+        this._clearModel();
+        this.set('validationEnabled', true);
     },
 
     willClose: function () {
-        this._clearModel();
-
-        // Clear the notifications
-        this.set('validationErrors', null);
-        this.set('error', null);
+        this.set('validationEnabled', false);
     },
 
     didError: function () {
@@ -542,8 +543,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     }.observes('error'),
 
     // pass the to the fieldStrength function the field we want to evaluate
-    passwordStrength: function(){
-        return this.fieldStrength(this.get('new_password1'))
+    passwordStrength: function() {
+        return this.fieldStrength(this.get('new_password1'));
     }.property('new_password1.length'),
 
     actions: {

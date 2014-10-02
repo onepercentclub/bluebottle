@@ -64,7 +64,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // I use it since we want to be in control when to start the validation, for example just after
     // pressing a submit button
     enableValidation: function() {
-        this.set('validationEnabled', true)
+        this.set('validationEnabled', true);
     },
 
     // set the strength of the field, use this in the template

@@ -37,7 +37,6 @@ App.OrderPaymentView = Em.View.extend({
         var x = e.target.className,
             elm = $(e.target),
             prntElm = $('.card-item .icon-card'),
-            select = prntElm.parents().find('select'),
             cardName;
 
         if (x.match("icon-card")) {

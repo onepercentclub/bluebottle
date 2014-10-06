@@ -24,6 +24,7 @@ App.FundRaiserNewController = Em.ObjectController.extend(App.Editable, App.FundR
 
             model.one('becameInvalid', function(record){
                 model.set('errors', record.get('errors'));
+                model.transitionTo('loaded.created.uncommitted');
             });
 
             model.one('didCreate', function(record){
@@ -41,7 +42,27 @@ App.FundRaiserNewController = Em.ObjectController.extend(App.Editable, App.FundR
 
 
 App.FundRaiserEditController = App.FundRaiserNewController.extend({
-});
+    actions: {
+        updateRecordOnServer: function(){
+            var controller = this;
+            var model = this.get('model');
+
+            model.one('becameInvalid', function(record){
+                model.set('errors', record.get('errors'));
+                model.transitionTo('loaded.updated.uncommitted');
+            });
+
+            model.one('didCreate', function(record){
+                controller.transitionToRoute('fundRaiser', record);
+            });
+
+            model.one('didUpdate', function(record) {
+                controller.transitionToRoute('fundRaiser', record);
+            });
+
+            model.save();
+        }
+    }});
 
 
 App.ProjectFundRaiserAllController = Em.ArrayController.extend({

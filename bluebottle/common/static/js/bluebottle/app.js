@@ -1,8 +1,8 @@
 if (DEBUG) {
     Ember.RSVP.configure('onerror', function(e) {
-      console.log(e.message); 
+      console.log(e.message);
       console.log(e.stack);
-    });  
+    });
 }
 
 Ember.Application.initializer({

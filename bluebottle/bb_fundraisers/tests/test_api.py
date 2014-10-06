@@ -6,7 +6,6 @@ from django.utils.translation import ugettext as _
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from utils.tests.factory_models.offices_factories import OfficeFactory #Booking specific test factory 
 
 
 class FundraiserAPITestCase(BluebottleTestCase):
@@ -22,7 +21,6 @@ class FundraiserAPITestCase(BluebottleTestCase):
 
         self.some_project = ProjectFactory.create(owner=self.some_user, deadline=timezone.now() + timezone.timedelta(days=15))
         self.some_other_project = ProjectFactory.create(owner=self.some_user, deadline=timezone.now() + timezone.timedelta(days=15))
-        self.some_office = OfficeFactory.create()
 
     def test_fundraiser_deadline_exceeds_project_deadline(self):
 
@@ -33,7 +31,6 @@ class FundraiserAPITestCase(BluebottleTestCase):
             'project': self.some_project.slug,
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
-            'office': self.some_office.id,
             'amount': '1000',
             'deadline': future_date
         }
@@ -50,7 +47,6 @@ class FundraiserAPITestCase(BluebottleTestCase):
             'project': self.some_other_project.slug,
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
-            'office': self.some_office.id,
             'amount': '1000',
             'deadline': future_date
         }

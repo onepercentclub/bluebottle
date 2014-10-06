@@ -15,7 +15,7 @@ class DonationAdmin(admin.ModelAdmin):
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user')
     fields = readonly_fields + ('amount', 'project', 'fundraiser')
-    search_fields = ('user__first_name', 'user__last_name', 'user__email', 'project__title')
+    search_fields = ('order__user__first_name', 'order__user__last_name', 'order__user__email', 'project__title')
 
     def user_full_name(self, obj):
         return obj.order.user.full_name

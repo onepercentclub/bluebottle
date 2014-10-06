@@ -134,7 +134,7 @@ class BaseProject(models.Model):
         _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
     status = models.ForeignKey('bb_projects.ProjectPhase')
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True)
-    favorite = models.BooleanField(default=True)
+    favorite = models.BooleanField(default=False)
     tags = TaggableManager(blank=True, verbose_name=_('tags'),
                            help_text=_('Add tags'))
 

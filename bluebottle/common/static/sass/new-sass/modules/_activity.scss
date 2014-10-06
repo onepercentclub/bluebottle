@@ -48,11 +48,11 @@ $activity-list-item-bold-color         : $color-secondary !default;
             }
 
             .picture {
-                max-height: 105px;
                 @include grid(10,0,0);
 
                 img {
                     width: 100%;
+                    max-height: 105px;
                 }
             }
 

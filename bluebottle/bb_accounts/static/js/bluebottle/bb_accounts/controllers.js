@@ -5,6 +5,7 @@
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
+    fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
     init: function() {
         this._super();
@@ -96,7 +97,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response

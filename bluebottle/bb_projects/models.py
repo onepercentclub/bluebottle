@@ -138,6 +138,9 @@ class BaseProject(models.Model):
     tags = TaggableManager(blank=True, verbose_name=_('tags'),
                            help_text=_('Add tags'))
 
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
+
+
     # Extended Description
     description = models.TextField(
         _('why, what and how'), help_text=_('Blow us away with the details!'),

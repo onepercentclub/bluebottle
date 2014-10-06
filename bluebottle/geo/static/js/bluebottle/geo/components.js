@@ -125,7 +125,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var template = Handlebars.compile(view.info_box_template);
         var title = project.get('title');
         if (title.length > 35) {
-            title =  title.substring(0, 32) + '&#8230;';
+            title =  title.substring(0, 32) + '...';
         }
         var data = {
             'id': project.get('id'),

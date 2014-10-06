@@ -1,10 +1,6 @@
 from django.contrib.sites.models import Site
 
 
-"""
-This should be in utils
-"""
-
 class WallPostObserver:
 
     def __init__(self, instance):
@@ -34,7 +30,6 @@ class ReactionObserver:
         pass
 
 
-#Change The name
 class ObserversContainer:
 
     wallpost_observer_list = []
@@ -49,12 +44,22 @@ class ObserversContainer:
         return cls._instance
 
     def register(self, observer):
-        #can be done better, move this responsibility inside the Observer
+        # can be done better, move this responsibility inside the Observer
         if issubclass(observer, WallPostObserver):
             self._register_wallpost_observer(observer)
 
         if issubclass(observer, ReactionObserver):
             self._register_reaction_observer(observer)
+
+    def notify_wallpost_observers(self, instance):
+        return self._notify(instance,
+                            self.wallpost_observer_list,
+                            instance.content_object)
+
+    def notify_reaction_observers(self, instance):
+        return self._notify(instance,
+                            self.reaction_observer_list,
+                            instance.wallpost.content_object)
 
     def _register_wallpost_observer(self, observer):
         self.wallpost_observer_list.append(observer)
@@ -62,14 +67,8 @@ class ObserversContainer:
     def _register_reaction_observer(self, observer):
         self.reaction_observer_list.append(observer)
 
-    def notify_wallpost_observers(self, instance):
-        for each in self.wallpost_observer_list:
-            if isinstance(instance.content_object, each.model):
-                observer = each(instance)
-                observer.notify()
-
-    def notify_reaction_observers(self, instance):
-        for each in self.reaction_observer_list:
-            if isinstance(instance.wallpost.content_object, each.model):
+    def _notify(self, instance, observer_list, instance_model):
+        for each in observer_list:
+            if isinstance(instance_model, each.model):
                 observer = each(instance)
                 observer.notify()

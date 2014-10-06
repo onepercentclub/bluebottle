@@ -13,7 +13,6 @@ class TaskWallObserver(WallPostObserver):
         WallPostObserver.__init__(self, instance)
 
     def notify(self):
-        print 'TaskWallNotificator'
         task = self.post
         task_owner = task.author
 
@@ -39,7 +38,6 @@ class TaskReactionObserver(ReactionObserver):
         ReactionObserver.__init__(self, instance)
 
     def notify(self):
-        print 'TaskReactionWallNotificator'
         task = self.post.content_object
         task_author = task.author
 

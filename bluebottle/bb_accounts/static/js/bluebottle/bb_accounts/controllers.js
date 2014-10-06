@@ -500,6 +500,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
     requiredFields: ['new_password1','new_password2'],
+    fieldsToWatch: ['new_password1','new_password2'],
 
     init: function() {
         this._super();
@@ -560,17 +561,19 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             _this.set('errorsFixed', false);
 
             // Ignoring API errors here, we are passing ignoreApiErrors=true
-            _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
 
-            if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
-                this.set('notEmpty', false);
-            } else {
-                this.set('notEmpty', true);
-            }
+
+//            if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
+//                this.set('notEmpty', false);
+//            } else {
+//                this.set('notEmpty', true);
+//            }
 
             // Check client side errors
             if (_this.get('validationErrors')) {
-                return false
+                this.send('modalError');
+                return false;
             }
 
             this.set('isBusy', true);
@@ -602,7 +605,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
                         // Resolve the promise
                         Ember.run(null, resolve, user);
                     }, function (error) {
-                        _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
+                        _this.processValidationErrors(_this.get('errorDefinitions'), _this.get('model'));
+//                        _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
 
                         // Reject the promise
                         Ember.run(null, reject, error);

@@ -39,7 +39,6 @@ class ProjectReactionObserver(ReactionObserver):
         ReactionObserver.__init__(self, instance)
 
     def notify(self):
-        print 'ProjectReactionNotificator'
         project = self.post.content_object
         project_owner = project.owner
 

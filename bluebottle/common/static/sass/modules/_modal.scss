@@ -182,7 +182,7 @@ $gray-border-hover                                         : #9F9F9F;
 		padding: 6px;
 		text-align: center;
 		@include transform-style(preserve-3d);
-		@include single-box-shadow(rgba(138,153,147,0.60), 0, 0, 15px, 10px, false);
+		@include single-box-shadow(rgba(0,00,0,0.55), 0, 0, 15px, 0, false);
 
 		&.is-shake {
 			@include animation(shakeModal .4s ease-in-out);

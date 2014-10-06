@@ -1,10 +1,11 @@
-from bluebottle.utils.model_dispatcher import get_fundraiser_model
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
+from bluebottle.utils.model_dispatcher import get_fundraiser_model
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import EuroField, ImageSerializer, OEmbedField
-
 from bluebottle.utils.serializers import MetaField
+
 
 FUNDRAISER_MODEL = get_fundraiser_model()
 
@@ -57,3 +58,8 @@ class BaseFundRaiserSerializer(serializers.ModelSerializer):
         fields = ('id', 'owner', 'project', 'title', 'description', 'image','created',
                   'video_html', 'video_url', 'amount', 'amount_donated', 'deadline', 'meta_data')
 
+    def validate_deadline(self, attrs, source):
+        """ Field level validation for deadline field, see http://www.django-rest-framework.org/api-guide/serializers#validation"""
+        if not attrs.get('deadline', None) or not attrs.get('project', None) or attrs.get('deadline') > attrs.get('project').deadline:
+            raise serializers.ValidationError(_("Fundraiser deadline exceeds campaign deadline."))
+        return attrs

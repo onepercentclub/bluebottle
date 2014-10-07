@@ -95,6 +95,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
             // loaded.created.invalid on server side validation, so we transition
             // to the uncommitted state to allow resubmission
             //TODO: review this after upgrading EMBERDATA
+            this.set('account_iban', this.get('account_iban').replace(/\s+/g, ''));
             if (record.get('isNew')) {
                 record.transitionTo('loaded.created.uncommitted');
             } else {

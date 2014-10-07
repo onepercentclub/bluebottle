@@ -244,14 +244,20 @@
 
             .icon-card {
                 background-size: 75%;
-                @include opacity(.4);
-                @include filter(grayscale(100%));
+                @include opacity(1);
+                @include filter(grayscale(0%));
                 @include transition(all .2s ease-in-out);
 
-                &:hover, &.is-selected {
-                    @include opacity(1);
-                    @include filter(grayscale(0%));
+                &:hover, &.is-unselected {
+                    @include opacity(.4);
+                    @include filter(grayscale(100%));
+
+                    &.is-selected {
+                        @include opacity(1);
+                        @include filter(grayscale(0%));
+                    }
                 }
+
             }
         }
     }

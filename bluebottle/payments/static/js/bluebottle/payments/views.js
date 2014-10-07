@@ -29,6 +29,7 @@ App.OrderPaymentView = Em.View.extend({
 
         if (x.match("creditcard-select")) {
             prntElm.removeClass('is-selected');
+            prntElm.addClass('is-unselected');
             $(elmValue).addClass('is-selected');
         }
     }.on('change'),
@@ -41,10 +42,12 @@ App.OrderPaymentView = Em.View.extend({
 
         if (x.match("icon-card")) {
             prntElm.removeClass('is-selected');
+            prntElm.addClass('is-unselected');
             elm.addClass('is-selected');
-            cardName = x.split(" ").pop();
+            cardName = x.split(" ");
 
-            $(".creditcard-select option[value=" + cardName +"]").attr('selected','selected');
+            $(".creditcard-select option[value=" + cardName[1] +"]").attr('selected','selected');
+            $('.payment-btn').removeClass('is-inactive');
         }
     }.on('click')
 });

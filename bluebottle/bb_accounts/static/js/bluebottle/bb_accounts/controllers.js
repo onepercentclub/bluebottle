@@ -499,6 +499,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
     requiredFields: ['new_password1','new_password2'],
+    fieldsToWatch: ['new_password2'],
 
     init: function() {
         this._super();
@@ -520,15 +521,15 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     },
 
     _clearModel: function () {
-        this.set('model', Em.Object.create());
+        this.set('model', null);
     },
 
     willOpen: function () {
-        this._clearModel();
         this.set('validationEnabled', true);
     },
 
     willClose: function () {
+        this._clearModel();
         this.set('validationEnabled', false);
     },
 

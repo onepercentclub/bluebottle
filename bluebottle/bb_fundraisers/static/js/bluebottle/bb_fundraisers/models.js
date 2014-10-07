@@ -43,5 +43,13 @@ App.FundRaiser = DS.Model.extend({
             return this.get('image.square')
         }
         return STATIC_URL + 'images/fundraisers/default-picture.png'
-    }.property('image')
+    }.property('image'),
+
+    maxDate: function(){
+        var deadline = this.get('project.deadline'),
+            now = new Date();
+        if (deadline) {
+            return '+' + parseInt((deadline.getTime() - now)/(24*3600*1000)) + 'd';
+        }
+    }.property('project.deadline')
 });

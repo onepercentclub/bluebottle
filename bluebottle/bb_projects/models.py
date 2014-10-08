@@ -160,6 +160,10 @@ class BaseProject(models.Model):
     amount_needed = MoneyField(default=0)
 
     @property
+    def is_realised(self):
+        return self.status == ProjectPhase.objects.get(slug='realised')
+
+    @property
     def amount_pending(self):
         return self.get_amount_total([StatusDefinition.PENDING])
 

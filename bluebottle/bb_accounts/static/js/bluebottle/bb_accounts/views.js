@@ -31,7 +31,10 @@ App.LoginView = App.FormView.extend({
 });
 
 App.PasswordResetView = App.FormView.extend({
-    submitAction: 'resetPassword'
+    submitAction: 'resetPassword',
+
+    newPasswordText: gettext('Choose New Password'),
+    confirmPasswordText: gettext('Confirm New Password')
 });
 
 App.PasswordRequestView = App.FormView.extend({

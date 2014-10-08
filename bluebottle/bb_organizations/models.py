@@ -27,6 +27,10 @@ class BaseOrganizationMember(models.Model):
     function = models.CharField(_('function'), max_length=20, choices=MemberFunctions.choices)
     organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, related_name="members")
 
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
+    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+
     class Meta:
         verbose_name = _('organization member')
         verbose_name_plural = _('organization members')
@@ -40,6 +44,10 @@ class BaseOrganizationDocument(models.Model):
         upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
     author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)
     organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, related_name="documents")
+
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
+    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     class Meta:
         verbose_name = _('organization document')

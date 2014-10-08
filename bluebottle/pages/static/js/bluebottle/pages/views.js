@@ -45,19 +45,57 @@ App.PageView = Ember.View.extend(App.GoTo, {
         });
     },
 
-    didInsertElement: function(evt) {
-        // Check if the content has any ember link attributes
-        // This allows custom page content to specify linkTo targets
-        var _this = this;
-        this.$('[data-ember-link-to]').on('click', function (linkEvt) {
-            var target = $(linkEvt.target),
-                newRoute = target.data('emberLinkTo'),
-                newRouteAttr = target.data('emberLinkToArg'),
-                router = _this.get('controller.target.router');
+    videoClick: function(evt) {
+        var $target = $(evt.target),
+            iframe = $('#brand-video'),
+            player = $f(iframe),
+            animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd';
+
+        if ($target.hasClass('video-play-btn')) {
+            $(".video-item").removeClass("is-inactive");
+            $(".video-item").addClass("is-active");
+            player.api("play");
+        }
+
+        if ($target.hasClass('close-video')) {
+            $(".video-item").removeClass("is-active");
+            $(".video-item").addClass("is-inactive");
+            player.api("pause");
+
+            $('.video-item').one(animationEnd, function(){
+                $(".video-item").removeClass("is-inactive");
+            });
+
+        }
+
+        function onFinish(id) {
+            $(".video-item").removeClass("is-active");
+            $(".video-item").addClass("is-inactive");
+
+            $('.video-item').one(animationEnd, function(){
+                $(".video-item").removeClass("is-inactive");
+            });
+        }
+        
+        player.addEvent('ready', function() {
+            player.addEvent('finish', onFinish);
+        });
+        
+    }.on('click'),
+
+    linkClick: function (linkEvt) {
+        var $target = $(linkEvt.target);
+
+        if ($target.data('emberLinkTo')) {
+            var newRoute = $target.data('emberLinkTo'),
+                newRouteAttr = $target.data('emberLinkToArg'),
+                router = this.get('controller.target.router');
 
             router.transitionTo(newRoute, newRouteAttr);
-        });
+        }
+    }.on('click'),
 
+    didInsertElement: function(evt) {
         this.$().find('.carousel').unslider({
             dots: true,
             fluid: true,
@@ -65,3 +103,5 @@ App.PageView = Ember.View.extend(App.GoTo, {
         });
     }
 });
+
+

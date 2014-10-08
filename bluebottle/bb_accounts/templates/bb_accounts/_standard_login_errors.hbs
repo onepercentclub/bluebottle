@@ -3,10 +3,8 @@
 
 {% tplhandlebars "_standard_login_errors" %}
     {{#if validationErrors}}
-        {{#if notEmpty}}
-            <div class="modal-flash-message error">
-                {{validationErrors.error}}
-            </div>
-        {{/if}}
+        <div class="modal-flash-message error">
+            {{validationErrors.error}}
+        </div>
     {{/if}}
 {% endtplhandlebars %}

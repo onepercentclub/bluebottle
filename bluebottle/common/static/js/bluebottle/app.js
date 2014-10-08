@@ -78,6 +78,10 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         Em.Object.create({name:'Nederlands', code: 'nl'})
     ],
 
+    isEnglish: Em.computed.equal('language', 'en'),
+    
+    isDutch: Em.computed.equal('language', 'nl'),
+
     ready: function() {
 
         // only needed when submitting a form if the user isn't authenticated
@@ -549,12 +553,24 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             });
         },
 
-        goTo: function(target) {
-            $('html, body').stop().animate({
-                scrollTop: $(target).offset().top - $('#header').height()
-            }, 500);
-        },
+        goTo: function(target, url) {
+            var go = function(){
+                $('html, body').stop().animate({
+                    scrollTop: $(target).offset().top - $('#header').height()
+                }, 500);
+            }
 
+            if (url && !this.get('controller.target').isActive(url)){
+                this.transitionTo(url).then(function(){
+                    // Small wait here to give page a chance to render
+                    Em.run.later(function(){
+                        go();
+                    }, 500)
+                });
+            } else {
+                go();
+            }
+        }
         addDonation: function (project, fundraiser) {
             var _this = this,
                 controller = this.get('controller');

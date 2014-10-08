@@ -82,14 +82,14 @@ App.ProjectIndexView = Em.View.extend({
 App.ProjectPhaseSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a phase")
+    prompt: gettext("Pick a Phase")
 
 });
 
 App.ProjectPhaseChoiceView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a phase")
+    prompt: gettext("Pick a Phase")
 
 });
 
@@ -129,7 +129,7 @@ App.MyProjectListView = Em.View.extend({
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a theme")
+    prompt: gettext("Pick a Theme")
 });
 
 App.UsedThemeSelectView = App.ThemeSelectView.extend();

@@ -7,7 +7,7 @@
 	<li class="reaction">
         <div class="reaction-avatar">
 
-            <a {{action openInBigBox "memberProfile" author}} class="member">
+            <a {{action openInBigBox "userModal" author}} class="member">
                 <span class="member-avatar">
                     <img {{ bindAttr src="author.getAvatar" }} {{ bindAttr alt="author.full_name" }}/>
                 </span>
@@ -63,7 +63,10 @@
             </fieldset>
         </form>
     {{else}}
-        <div class="login-box"><a {{action openInBox "login"}}>{%  trans "Login" %}</a> or become a {{#link-to "signup"}}{% trans "member" %}{{/link-to}} {% trans "to leave a reaction" %}.</div>
+        <div class="login-box">
+            <a {{action openInBox "login"}}>{%  trans "Login" %}</a> {% trans "or" %}
+            <a {{action openInBox "signup"}}>{% trans "Sign up" %}</a> {% trans "to leave a reaction" %}.
+        </div>
     {{/if}}
 
 {% endtplhandlebars %}

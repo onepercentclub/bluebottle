@@ -1,38 +1,36 @@
-{% load bb_ember %}
-{% load i18n %}
-{% load static %}
+{% load bb_ember i18n static %}
 
-{% tplhandlebars "my_project_start" %}
+{% tplhandlebars 'my_project_start' %}
 
         <h1 class="page-title">{% trans "Project start" %}</h1>
         <br />
 
         {{ partial "_my_project_start_intro" }}
 
-        <h3>{% trans "Your project is really about destination improvement when your project will…" %}</h3>
+        <h3>{% trans "Your project is really about destination improvement when your project will." %}</h3>
         <br />
         {% blocktrans %}
         <ul>
             <li>
-                … improve what makes your destination special, and makes people want to visit it over and over again
+                improve what makes your destination special, and makes people want to visit it over and over again
             </li>
             <li>
-                … contribute to the people living and working there, i.e. it benefits the local community
+                 contribute to the people living and working there, i.e. it benefits the local community
             </li>
             <li>
-              … help/ boost a local partner organisation
+               help/ boost a local partner organisation
             </li>
             <li>
-                … have a long(er) term impact
+                 have a long(er) term impact
             </li>
             <li>
-               … be managed and owned locally
+                be managed and owned locally
             </li>
             <li>
-               … require a team effort
+                require a team effort
             </li>
             <li>
-               … have tasks for your colleagues that can be done in half a day or a day
+                have tasks for your colleagues that can be done in half a day or a day
             </li>
         </ul>
         {% endblocktrans %}

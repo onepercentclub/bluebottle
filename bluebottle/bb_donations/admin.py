@@ -18,7 +18,9 @@ class DonationAdmin(admin.ModelAdmin):
     search_fields = ('order__user__first_name', 'order__user__last_name', 'order__user__email', 'project__title')
 
     def user_full_name(self, obj):
-        return obj.order.user.full_name
+        if obj.order.user:
+            return obj.order.user.full_name
+        return '?'
 
     def user(self, obj):
         return obj.user

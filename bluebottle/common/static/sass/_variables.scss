@@ -350,6 +350,10 @@ $members-member-list-fundraisers-become-color              : $color-primary !def
 // Modals                                                       
 // ----------------------------------                           
                                                                 
+// Modals
+// ----------------------------------
+$modal-background-color						        	   : rgba(24,24,24, .60);
+$modal-item-background							           : #F5F4F6;
 $modal-backdrop-bg-color                                   : $black !default;
 $modal-backdrop-opacity                                    : 0.85 !default;
 $modal-bg-color                                            : $white !default;

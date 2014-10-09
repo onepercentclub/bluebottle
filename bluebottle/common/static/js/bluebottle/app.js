@@ -570,7 +570,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             } else {
                 go();
             }
-        }
+        },
         addDonation: function (project, fundraiser) {
             var _this = this,
                 controller = this.get('controller');

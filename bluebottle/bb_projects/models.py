@@ -122,23 +122,18 @@ class BaseProject(models.Model):
         help_text=_('Project organization'), related_name='organization', null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this project was created.'))
+    created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    pitch = models.TextField(
-        _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
+    pitch = models.TextField(_('pitch'), help_text=_('Pitch your smart idea in one sentence'), blank=True)
     status = models.ForeignKey('bb_projects.ProjectPhase')
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True)
     favorite = models.BooleanField(default=True)
-    tags = TaggableManager(blank=True, verbose_name=_('tags'),
-                           help_text=_('Add tags'))
+    tags = TaggableManager(blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
 
     # Extended Description
-    description = models.TextField(
-        _('why, what and how'), help_text=_('Blow us away with the details!'),
-        blank=True)
+    description = models.TextField(_('why, what and how'), help_text=_('Blow us away with the details!'), blank=True)
 
     # Media
     image = ImageField(

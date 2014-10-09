@@ -69,8 +69,8 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     // since 'account_bic' is common for European and not European bank account
     // it's base required field, this also avoid a "ping pong" in the bank tab
     requiredBaseBankOrganizationFields: ['account_holder_name', 'account_holder_address', 'account_holder_postal_code',
-                                         'account_holder_city', 'account_holder_country', 'account_bic'],
-    requiredEuropeanBankOrganizationFields: ['account_iban'],
+                                         'account_holder_city', 'account_holder_country', 'validBic'],
+    requiredEuropeanBankOrganizationFields: ['validIban'],
     requiredNotEuropeanBankOrganizationFields: ['account_number', 'account_bank_name',
                                                 'account_bank_address', 'account_bank_postal_code',
                                                 'account_bank_city', 'account_bank_country'],
@@ -95,6 +95,7 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
             // loaded.created.invalid on server side validation, so we transition
             // to the uncommitted state to allow resubmission
             //TODO: review this after upgrading EMBERDATA
+            this._cleanFields();
             if (record.get('isNew')) {
                 record.transitionTo('loaded.created.uncommitted');
             } else {
@@ -103,6 +104,10 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
         });
 
         return this._super();
+    },
+
+    _cleanFields: function() {
+        this.set('account_iban', this.get('account_iban').replace(/\s+/g, ''));
     },
 
     name: DS.attr('string'),
@@ -130,6 +135,16 @@ App.MyOrganization = DS.Model.extend(App.ModelValidationMixin, {
     facebook: DS.attr('string', {defaultValue: ""}),
     twitter: DS.attr('string', {defaultValue: ""}),
     skype: DS.attr('string', {defaultValue: ""}),
+
+    validIban: function () {
+        // Valid account_iban if it has a length and there are no api errors for the account_iban.
+        return this.get('account_iban.length') && !this.get('errors.account_iban');
+    }.property('account_iban.length', 'errors.account_iban'),
+
+    validBic: function () {
+        // Valid account_bic if it has a length and there are no api errors for the account_bic.
+        return this.get('account_bic.length') && !this.get('errors.account_bic');
+    }.property('account_bic.length', 'errors.account_bic'),
 
     validProfile: Em.computed.and('name', 'description', 'email', 'address_line1', 'city', 'country'),
 

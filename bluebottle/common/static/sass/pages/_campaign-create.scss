@@ -1,7 +1,11 @@
 #campaign-create {
 	
 	margin-bottom: $base-margin * 6;
-	
+
+    .field-container {
+      position: relative;
+    }
+
 	.campaign-header {
 		background-color: $gray-lighter;
 		

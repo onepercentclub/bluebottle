@@ -169,24 +169,24 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
             if (self.get('flash'))
                 self.set('flash', null);
 
-            model.one(saveEvent, function() {
-                var message = gettext('Successfully saved.');
-                self._setFlash('success', message);
-                clearTimeout(timer);
-                resolve(message);
-            });
-
-            model.one('becameInvalid', function () {
-                clearTimeout(timer);
-                reject(gettext('Model is invalid.'));
-            });
-
-            model.one('didError', function () {
-                clearTimeout(timer);
-                reject(gettext('Error saving model.'));
-            });
-
             if (model) {
+                model.one(saveEvent, function() {
+                    var message = gettext('Successfully saved.');
+                    self._setFlash('success', message);
+                    clearTimeout(timer);
+                    resolve(message);
+                });
+
+                model.one('becameInvalid', function () {
+                    clearTimeout(timer);
+                    reject(gettext('Model is invalid.'));
+                });
+
+                model.one('didError', function () {
+                    clearTimeout(timer);
+                    reject(gettext('Error saving model.'));
+                });
+
                 model.set('errors', {});
                 model.save();
             }

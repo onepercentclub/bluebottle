@@ -16,6 +16,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     raw_id_fields = ('user', )
     readonly_fields = ('order_link', 'payment_link', 'authorization_action', 'amount', 'integration_data',
                        'payment_method', 'transaction_fee', 'status', 'created', 'closed')
+    fields = ('user',) + readonly_fields
     list_display = ('created', 'user', 'status', 'amount', 'payment_method', 'transaction_fee')
 
     def order_link(self, obj):
@@ -39,6 +40,7 @@ class OrderPaymentInline(admin.TabularInline):
     model = OrderPayment
     extra = 0
     can_delete = False
+    max_num = 0
     readonly_fields = ('order_payment_link', 'amount', 'user', 'payment_method', 'status')
     fields = readonly_fields
 

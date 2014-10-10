@@ -29,15 +29,15 @@ class DonationAdmin(admin.ModelAdmin):
         return
 
     def related_payment_method(self, obj):
-        try:
-            order_payment = OrderPayment.objects.get(order=obj.order)
-        except:
-            return
+        order_payment = obj.order.get_latest_order_payment()
         provider_and_method = order_payment.payment_method
         split_list = [x for x in re.split(r'([A-Z][a-z]*)', provider_and_method) if x]
 
-        provider = split_list[0]
-        method = 'none'
+        method = '?'
+        if len(split_list) > 0:
+            provider = split_list[0]
+        else:
+            return '?'
         if len(split_list) > 1:
             method = split_list[1]
         return '{0} - {1}'.format(provider.capitalize(), method)

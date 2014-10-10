@@ -85,6 +85,11 @@ class BaseOrder(models.Model, FSMTransition):
     def __unicode__(self):
         return "{0} : {1}".format(self.id, self.created)
 
+    def get_latest_order_payment(self):
+        if self.order_payments.count():
+            return self.order_payments.order_by('-created').all()[0]
+        return None
+
     class Meta:
         abstract = True
         default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'

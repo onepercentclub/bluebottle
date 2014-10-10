@@ -30,7 +30,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'AMEX'                              : 'docdataCreditcard',
         'IDEAL'                             : 'docdataIdeal',
         'BANK_TRANSFER'                     : 'docdataBanktransfer',
-        'DIRECT_DEBIT'                      : 'docdataDirectdebit'
+        'DIRECT_DEBIT'                      : 'docdataDirectdebit',
+        'SEPA_DIRECT_DEBIT'                 : 'docdataDirectdebit'
+
     }
 
     STATUS_MAPPING = {

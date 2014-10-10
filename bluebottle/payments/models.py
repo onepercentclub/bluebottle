@@ -33,7 +33,7 @@ class Payment(PolymorphicModel):
         (StatusDefinition.CHARGED_BACK, _('Charged_back')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
-        (StatusDefinition.UNKNOWN, _('Unknown')),
+        (StatusDefinition.UNKNOWN, _('Unknown'))
     )
 
     @classmethod
@@ -86,7 +86,7 @@ class OrderPayment(models.Model, FSMTransition):
     STATUS_CHOICES = Payment.STATUS_CHOICES
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
-    order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
+    order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='order_payments')
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
     previous_status = None
     created = CreationDateTimeField(_("Created"))

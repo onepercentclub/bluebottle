@@ -89,3 +89,14 @@
         
     }
 }
+
+// TODO: move this pice of code.
+.touch {
+    .project-list { 
+        .project-list-item {
+            .manage-delete {
+                display: block;
+            }
+        }
+    }
+}

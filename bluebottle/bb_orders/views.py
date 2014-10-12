@@ -68,7 +68,7 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
 
     def check_status_psp(self, order):
         try:
-            order_payment = order.payments.all().order_by('-created')[0]
+            order_payment = order.order_payments.all().order_by('-created')[0]
         except IndexError:
             raise Http404
 

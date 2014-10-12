@@ -32,7 +32,6 @@ def _order_payment_status_changed(sender, instance, **kwargs):
      
     # Get the mapped status OrderPayment to Order
     new_order_status = order.get_status_mapping(kwargs['target'])
-     
     order.transition_to(new_order_status)
 
 

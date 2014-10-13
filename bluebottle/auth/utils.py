@@ -10,7 +10,7 @@ USER_MODEL = get_user_model()
 def save_profile_picture(strategy, user, response, details,
                          is_new=False,*args,**kwargs):
 
-    if is_new and strategy.backend.name == 'facebook':
+    if strategy.backend.name == 'facebook':
         url = 'http://graph.facebook.com/{0}/picture'.format(response['id'])
 
         try:

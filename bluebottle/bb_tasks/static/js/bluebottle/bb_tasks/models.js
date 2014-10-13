@@ -41,15 +41,19 @@ App.TaskMember = DS.Model.extend({
     isStatusApplied: function(){
         return (this.get('status') == 'applied');
     }.property('status'),
+
     isStatusAccepted: function(){
         return (this.get('status') == 'accepted');
     }.property('status'),
+
     isStatusRejected: function(){
         return (this.get('status') == 'rejected');
     }.property('status'),
+
     isStatusRealized: function(){
         return (this.get('status') == 'realized');
     }.property('status'),
+
     isAccepted: function(){
         return (this.get('isStatusAccepted') || this.get('isStatusRealized'));
     }.property('status'),
@@ -161,7 +165,13 @@ App.Task = DS.Model.extend({
     }.property('isAvailable'),
 
     membersCount: function() {
-        return this.get('members.length')
+        var accepted = 0;
+        this.get('members').forEach(function(each) {
+            if (each.get('isStatusAccepted')) {
+                accepted += 1;
+            }
+        });
+        return accepted;
     }.property("members.length"),
     
 	hasMoreThanOneMember: function() {

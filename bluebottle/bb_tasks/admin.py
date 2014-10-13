@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib import admin
+from django.core.urlresolvers import reverse
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
@@ -60,6 +61,24 @@ class TaskAdmin(admin.ModelAdmin):
         'people_needed', 'project', 'author', 'tags', 'deadline',
     )
 
+admin.site.register(BB_TASK_MODEL, TaskAdmin)
+
+
+class TaskAdminInline(admin.TabularInline):
+    model = BB_TASK_MODEL
+    extra = 0
+
+    readonly_fields = ('task_link', 'project', 'status', 'deadline')
+    fields = readonly_fields
+
+    def task_link(self, obj):
+        object = obj
+        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+        return "<a href='{0}'>{1}</a>".format(str(url), obj.title)
+
+    task_link.allow_tags = True
+
+
 class TaskMemberAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'created'
@@ -81,7 +100,5 @@ class TaskMemberAdmin(admin.ModelAdmin):
         'task',
     )
 
-
-admin.site.register(BB_TASK_MODEL, TaskAdmin)
 
 admin.site.register(BB_TASKMEMBER_MODEL, TaskMemberAdmin)

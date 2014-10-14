@@ -165,14 +165,8 @@ App.Task = DS.Model.extend({
     }.property('isAvailable'),
 
     membersCount: function() {
-        var accepted = 0;
-        this.get('members').forEach(function(each) {
-            if (each.get('isStatusAccepted')) {
-                accepted += 1;
-            }
-        });
-        return accepted;
-    }.property("members.length"),
+        return this.get('members').filterBy('isStatusAccepted', true).length;
+    }.property("members.@each"),
     
 	hasMoreThanOneMember: function() {
         return this.get('membersCount') > 1

@@ -17,7 +17,6 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL
     paginate_by = 8
     paginate_by_param = 'page_size'
-    max_paginate_by = 100
 
     def get_queryset(self):
         query = self.request.QUERY_PARAMS

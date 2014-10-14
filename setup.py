@@ -14,7 +14,7 @@ changes = ''
 
 install_requires = [
     'Babel==1.3',
-    'bunch=1.0.1',
+    'bunch==1.0.1',
     'Django==1.5.5',
     'Pillow==2.3.0',
     'South==0.8.1',

@@ -123,7 +123,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
         assert self.pk
 
         try:
-            latest_state_change = self.log_set.latest()
+            latest_state_change = self.project_payout_logs.latest()
             return latest_state_change.new_status
 
         except ObjectDoesNotExist:
@@ -139,7 +139,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
 
         if old_status != self.status:
             # Create log entry
-            log_entry = self.log_set.model(
+            log_entry = self.project_payout_logs.model(
                 payout=self,
                 old_status=old_status, new_status=self.status
             )
@@ -343,7 +343,7 @@ class BaseProjectPayout(PayoutBase):
 
 
 class ProjectPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='log_set')
+    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='project_payout_logs')
 
 
 class BaseOrganizationPayout(PayoutBase):
@@ -591,7 +591,7 @@ class BaseOrganizationPayout(PayoutBase):
 
 
 class OrganizationPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='log_set')
+    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='organization_payout_logs')
 
 
 # Connect signals after defining models

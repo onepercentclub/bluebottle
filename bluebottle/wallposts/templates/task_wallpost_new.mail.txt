@@ -2,15 +2,17 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=receiver.first_name author_name=author.full_name %}
+{% blocktrans with receiver_name=receiver.first_name author_name=author.first_name %}
 Hello {{ receiver_name }},
 
 {{ author_name }} has left a message on your task page.
 
-Don't wait any longer and check it out.
+You must be curious what! Don't wait any longer and check it out here:
 
 {{ site }}{{ link }}
 
-1%Club
+See you in a bit!
+
+Liane | 1%Club
 {% endblocktrans %}
 {% endblock %}

@@ -67,3 +67,5 @@ class BaseFundRaiser(models.Model):
         default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
         preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
         manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
+
+from fundwallmails import *

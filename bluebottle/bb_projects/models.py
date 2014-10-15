@@ -298,3 +298,4 @@ class BaseProjectPhaseLog(models.Model):
     class Meta():
         abstract = True
 
+from projectwallmails import *

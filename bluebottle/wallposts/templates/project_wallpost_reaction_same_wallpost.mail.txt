@@ -2,14 +2,14 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=receiver.first_name author_name=author.full_name %}
+{% blocktrans with receiver_name=receiver.first_name author_name=author.first_name %}
 Hi {{ receiver_name }},
 
-{{ author_name }} left a comment on your post!
+{{ author_name }} left a comment on your message!
 
 Read the comment here:
 {{ site }}{{ link }}
 
-1%Club
+Liane | 1%Club
 {% endblocktrans %}
 {% endblock %}

@@ -13,4 +13,3 @@ Read the comment here:
 1%Club
 {% endblocktrans %}
 {% endblock %}
-gi

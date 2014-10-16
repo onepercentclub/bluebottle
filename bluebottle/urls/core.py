@@ -2,6 +2,15 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
+from django.shortcuts import render_to_response
+from django.template.context import RequestContext
+
+
+# Nicely parse 500 errors so we get semantic messages in tests.
+def handler500(request):
+    response = render_to_response('500.html', {}, context_instance=RequestContext(request))
+    response.status_code = 500
+    return response
 
 
 urlpatterns = patterns('',
@@ -19,15 +28,15 @@ urlpatterns = patterns('',
     url(r'^api/utils/', include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/', include('bluebottle.wallposts.urls.api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls.api')),
+
     url(r'^documents/', include('bluebottle.utils.urls.main')),
-    url(r'^embed/', include('bluebottle.widget.urls.api')),
+    url(r'^embed/', include('bluebottle.widget.urls.core')),
 
 
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
 
 )
-
 
 urlpatterns += patterns(
     'loginas.views',

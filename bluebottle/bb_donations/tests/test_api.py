@@ -4,10 +4,8 @@ from mock import patch
 from django.test import TestCase
 
 from bluebottle.bb_orders.views import ManageOrderDetail
-from django.core.urlresolvers import reverse
-from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
@@ -23,18 +21,16 @@ ORDER_MODEL = get_order_model()
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
-class DonationApiTestCase(InitProjectDataMixin, TestCase):
+class DonationApiTestCase(TestCase):
 
     def setUp(self):
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
-        self.init_projects()
-        self.project1 = ProjectFactory.create(amount_asked=5000)
-        self.project1.set_status('campaign')
+        self.campaign_phase = ProjectPhaseFactory.create(slug='campaign')
+        self.project1 = ProjectFactory.create(amount_asked=5000, status=self.campaign_phase)
 
-        self.project2 = ProjectFactory.create(amount_asked=3750)
-        self.project2.set_status('campaign')
+        self.project2 = ProjectFactory.create(amount_asked=3750, status=self.campaign_phase)
 
         self.manage_order_list_url = reverse('manage-order-list')
         self.manage_donation_list_url = reverse('manage-donation-list')
@@ -45,7 +41,7 @@ class DonationApiTestCase(InitProjectDataMixin, TestCase):
         self.user2 = BlueBottleUserFactory.create()
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
-        self.project = ProjectFactory.create()
+        self.project = ProjectFactory.create(status=self.campaign_phase)
         self.order = OrderFactory.create(user=self.user)
 
 
@@ -349,7 +345,6 @@ class TestCreateDonation(DonationApiTestCase):
 
 class TestAnonymousDonationCreate(DonationApiTestCase):
 
-    # FIXME: Write tests for anonymous donations
     def test_create_anonymous_donation(self):
         donation_url = reverse('manage-donation-list')
 
@@ -393,8 +388,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
     def setUp(self):
         super(TestMyProjectDonationList, self).setUp()
 
-        self.project3 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
-        self.project3.set_status('campaign')
+        self.project3 = ProjectFactory.create(amount_asked=5000, owner=self.user1, status=self.campaign_phase)
 
         # User 2 makes a donation
         order = OrderFactory.create(user=self.user2)
@@ -416,13 +410,13 @@ class TestMyProjectDonationList(DonationApiTestCase):
 
     def test_successful_my_project_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
+        # import ipdb;ipdb.set_trace()
         order = OrderFactory.create(user=self.user2)
         donation = DonationFactory.create(amount=2000, project=self.project3, order=order)
 
         response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1, 'Only the successful donation should be returned')
-
 
     def test_my_project_donation_list_unauthorized(self, check_status_psp):
         response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, HTTP_AUTHORIZATION=self.user2_token)
@@ -434,11 +428,12 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
     """
     Test that the fundraiser donations list only works for the fundraiser owner
     """
+
     def setUp(self):
         super(TestMyFundraiserDonationList, self).setUp()
 
-        self.project4 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
-        self.project4.set_status('campaign')
+        self.project4 = ProjectFactory.create(amount_asked=5000, owner=self.user1, status=self.campaign_phase)
+        # self.project4.set_status('campaign')
         self.fundraiser = FundRaiserFactory.create(amount=4000, owner=self.user1, project=self.project4)
 
         # User 2 makes a donation
@@ -468,7 +463,6 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
         response = self.client.get(self.fundraiser_donation_list_url, {'fundraiser': self.fundraiser.pk}, HTTP_AUTHORIZATION=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1, 'Only the successful donation should be returned')
-
 
     def test_my_fundraiser_donation_list_unauthorized(self, check_status_psp):
         response = self.client.get(self.fundraiser_donation_list_url, {'project': self.fundraiser.pk}, HTTP_AUTHORIZATION=self.user2_token)

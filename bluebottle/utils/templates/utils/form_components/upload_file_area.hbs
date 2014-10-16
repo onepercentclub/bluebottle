@@ -1,0 +1,20 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-upload-file-area" %}
+    {{#bb-form-field hint=hint label=label errors=errors }}
+         <div class="document-upload">
+            {{view App.UploadMultipleFile nameBinding=name fileBinding='file' acceptBinding=accept}}
+            <ul class="files">
+                {{#each files}}
+                <li>
+                    <span class="flaticon stroke document-1"></span> {{this.name}} <a class="delete flaticon stroke trash-2"></a>
+                </li>
+                {{/each}}
+            </ul>
+            <a class="upload"><span class="flaticon solid up-circle-4"></span> Upload another document</a>
+            <small class="allowed">Allowed: .pdf, .jpg or .png</small>
+        </div>
+    {{/bb-form-field}}
+{% endtplhandlebars %}

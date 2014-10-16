@@ -1,0 +1,14 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+{% load bb_ember %}
+
+{% tplhandlebars "social_share" %}
+
+    <ul id="share">
+        <li class="share-facebook"><a {{action shareOnFacebook target="view"}}><span class="flaticon social facebook-4"></span> <strong>{% trans "Share" %}</strong></a></li>
+        <li class="share-twitter"><a {{action shareOnTwitter target="view"}}><span class="flaticon social twitter-4"></span> <strong>{% trans "Tweet" %}</strong></a></li>
+        <li class="share-embed"><a {{action shareEmbedded target="view"}}><span class="flaticon social code-1"></span> <strong>{% trans "Embed" %}</strong></a></li>
+    </ul>
+
+{% endtplhandlebars %}

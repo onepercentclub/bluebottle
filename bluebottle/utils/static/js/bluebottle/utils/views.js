@@ -108,12 +108,30 @@ App.SocialShareView = Em.View.extend({
             }
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
+        },
+        shareEmbedded: function() {
+            var project = this.get('context'),
+                controller = this.get('controller');
+            controller.send('openInBox', 'shareEmbedded', project, 'modalFront');
         }
     },
 
     showDialog: function(shareUrl, urlArgs, type) {
         window.open(shareUrl + urlArgs, type + '-share-dialog', 'width=' + this.get('dialogW') + ',height=' + this.get('dialogH'));
     }
+});
+
+
+
+App.ShareEmbeddedController = Em.Controller.extend({
+
+    embedCode: function(){
+        var code = '<link rel="stylesheet" href="/static/assets/css/widget.css" media="screen" />' +
+                   '<script type="text/javascript" src="/static/assets/js/widget.js"></script>' +
+                   '<div class="widget-container" data-language="en" data-project="khalte"></div>';
+        return code;
+    }.property('project.id')
+
 });
 
 

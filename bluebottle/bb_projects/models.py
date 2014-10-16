@@ -161,7 +161,7 @@ class BaseProject(models.Model):
 
     @property
     def is_realised(self):
-        return self.status == ProjectPhase.objects.get(slug='realised')
+        return self.status in ProjectPhase.objects.filter(slug='realised')
 
     @property
     def amount_pending(self):

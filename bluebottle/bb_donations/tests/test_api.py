@@ -10,7 +10,6 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
-from bluebottle.test.utils import InitProjectDataMixin
 
 from django.core.urlresolvers import reverse
 from bluebottle.utils.utils import StatusDefinition

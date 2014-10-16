@@ -197,8 +197,10 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
     
     requiredStoryFields: ['description', 'reach'],
-    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude'],
-    friendlyFieldNames: null,
+    requiredPitchFields: ['validTitle', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    friendlyFieldNames: {
+        validTitle: gettext('Title')
+    },s
 
     init: function () {
         this._super();
@@ -224,6 +226,11 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
 
         this._super();
     },
+
+    validTitle: function () {
+        // Valid title if it has a length and there are no api errors for the title.
+        return this.get('title.length') && !this.get('errors.title');
+    }.property('title.length', 'errors.title'),
 
     valid: function(){
         return (this.get('validStory') && this.get('validPitch'));

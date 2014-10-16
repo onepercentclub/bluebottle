@@ -42,15 +42,30 @@ App.ApplicationView = Em.View.extend({
         }
     },
 
-    addTouch: function(element) {
+    isTouch: function() {
         var isTouch = ('ontouchstart' in document.documentElement);
+        return isTouch;
+    },
 
-        if (isTouch) {
+    addTouch: function(element) {
+        if (this.isTouch()) {
             $('body').addClass('touch');
         }
         else {
             $('body').addClass('no-touch');
         };
+    }.on('didInsertElement'),
+
+    touchProfileMenu: function() {
+        if (this.isTouch()) {
+            var navMember = $('.nav-member');
+            navMember.addClass('touch');
+            
+            navMember.on('click', function(e) {
+                e.preventDefault();
+                navMember.toggleClass('is-active');
+            });
+        }
     }.on('didInsertElement')
 });
 

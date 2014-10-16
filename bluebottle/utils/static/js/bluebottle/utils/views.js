@@ -128,7 +128,9 @@ App.ShareEmbeddedController = Em.Controller.extend({
     embedCode: function(){
         var code = '<link rel="stylesheet" href="/static/assets/css/widget.css" media="screen" />' +
                    '<script type="text/javascript" src="/static/assets/js/widget.js"></script>' +
-                   '<div class="widget-container" data-language="en" data-project="khalte"></div>';
+                   '<div class="widget-container" data-language="en" data-project="' +
+                    this.get('project.id') +
+                    '"></div>';
         return code;
     }.property('project.id')
 

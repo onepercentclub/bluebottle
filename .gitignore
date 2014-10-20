@@ -33,7 +33,6 @@ node_modules
 # Mac stuff and specific weirdness
 .DS\_Store
 *.sqlite
-*.sw?
 
 # Static files
 /static/media/*

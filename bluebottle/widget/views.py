@@ -1,5 +1,5 @@
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.model_dispatcher import get_project_model
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views.generic import View

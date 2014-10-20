@@ -200,7 +200,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     requiredPitchFields: ['validTitle', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
     friendlyFieldNames: {
         validTitle: gettext('Title')
-    },s
+    },
 
     init: function () {
         this._super();

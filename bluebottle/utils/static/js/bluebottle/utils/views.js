@@ -66,6 +66,21 @@ App.SocialShareView = Em.View.extend({
     dialogW: 626,
     dialogH: 436,
 
+
+    didInsertElement: function(){
+        // Because ZeroClipboard requires user interaction we can't handle the copy link as an action.
+        var controller = this.get('parentView.controller'),
+            _this = this,
+            project = this.get('context'),
+            server = document.location.protocol + '://' + document.location.host,
+            link = server + '/go/projects/'
+            clip = new ZeroClipboard(_this.$('.copy'));
+        clip.on('complete', function (client, args) {
+            clip.setText(link);
+            controller.send('setFlash', gettext("Copied!"));
+        });
+    },
+
     actions: {
         shareOnFacebook: function() {
             // context is the model object defined in the associated controller/route
@@ -129,10 +144,10 @@ App.ShareEmbeddedController = Em.Controller.extend({
         var code = '<link rel="stylesheet" href="/static/assets/css/widget.css" media="screen" />' +
                    '<script type="text/javascript" src="/static/assets/js/widget.js"></script>' +
                    '<div class="widget-container" data-language="en" data-project="' +
-                    this.get('project.id') +
+                    this.controllerFor('project').get('model.id') +
                     '"></div>';
         return code;
-    }.property('project.id')
+    }.property()
 
 });
 

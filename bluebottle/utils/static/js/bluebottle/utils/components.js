@@ -82,9 +82,9 @@ App.BbSelectComponent = App.BbFormFieldComponent.extend({
 App.BbCopyCodeComponent = Ember.Component.extend({
 
     didInsertElement: function () {
-        var controller = this.get('parentView.controller');
-            _this = this;
-        var clip = new ZeroClipboard(this.$('.copy-to-clipboard'));
+        var controller = this.get('parentView.controller'),
+            _this = this,
+            clip = new ZeroClipboard(_this.$('.copy-to-clipboard'));
         clip.on('copy', function (client, args) {
             controller.send('closeModal');
             controller.send('setFlash', gettext("Copied!"));

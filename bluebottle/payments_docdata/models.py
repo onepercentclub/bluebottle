@@ -1,12 +1,11 @@
 from decimal import Decimal as D, Decimal
-from bluebottle.payments.exception import PaymentException
 from django.conf import settings
-
 from django.utils.translation import ugettext as _
 from django.db import models
 from django.db.models.signals import pre_save, post_save, post_delete
 from django_countries.fields import CountryField
 
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, Transaction
 from bluebottle.payments_logger.models import PaymentLogEntry
 
@@ -36,6 +35,15 @@ class DocdataPayment(Payment):
     total_captured = models.DecimalField(_("Total captured"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_refunded = models.DecimalField(_("Total refunded"), max_digits=15, decimal_places=2, default=D('0.00'))
     total_charged_back = models.DecimalField(_("Total charged back"), max_digits=15, decimal_places=2, default=D('0.00'))
+
+    # Additional fields from the existing Docdata data. This data comes from the existing DocDataPaymentOrder model that is migrated.
+    customer_id = models.PositiveIntegerField(default=0)  # Defaults to 0 for anonymous.
+    email = models.EmailField(max_length=254, default='')
+    first_name = models.CharField(max_length=200, default='')
+    last_name = models.CharField(max_length=200, default='')
+    address = models.CharField(max_length=200, default='')
+    postal_code = models.CharField(max_length=20, default='')
+    city = models.CharField(max_length=200, default='')
 
     def get_fee(self):
         if not hasattr(settings, 'DOCDATA_FEES'):

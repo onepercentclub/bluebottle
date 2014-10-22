@@ -21,6 +21,7 @@ class WidgetView(View):
         callback = request.GET.get('callback', None)
 
         id = request.GET.get('id', None)
+        size = request.GET.get('size', None)
         height = request.GET.get('height', None)
         width  = request.GET.get('width', None)
         widget = request.GET.get('widget', 'project')

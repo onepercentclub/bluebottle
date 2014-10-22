@@ -23,10 +23,13 @@
                     <div class="campaign-body">
                         <p>
                             <span class="profile-name">
-                                <strong>{{project.owner.full_name}}</strong> {% trans 'campaigns for'%}
+                                <strong>{{project.owner.full_name}}</strong> <span>{% trans 'campaigns for'%}</span>
                             </span>
                             <span class="campaign-body-names">
                                 {{project.title}}
+                            </span>
+                            <span class="campaign-hover-body">
+                                {{project.pitch}}
                             </span>
                         </p>
                     </div>
@@ -40,14 +43,6 @@
                             </div>
                     </div>
                     <div class="campaign-hover">
-                        <p class="campaign-hover-head">
-                            <strong>{{project.title}}</strong>
-                        </p>
-                        <p class="campaign-hover-body">
-                            <span>
-                                {{project.pitch}}
-                            </span>
-                        </p>
                         <p class="campaign-hover-footer">
                             <span class="go-to-campaign">
                                 {% trans 'Go to campaign'%}

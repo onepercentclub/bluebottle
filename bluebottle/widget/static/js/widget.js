@@ -1,6 +1,6 @@
 (function() {
 
-    var host = 'http://localhost:8000';
+    var host = 'https://onepercentclub.com';
     var jQuery;
     var opcJquery = document.getElementById('onepercentclub-jquery');
 
@@ -40,19 +40,6 @@
 
     function main(){
         jQuery(document).ready(function($){
-            // $('.widget-container').each(function(){
-            //     var el = $(this);
-            //     var project = el.data('project') ? el.data('project') : '';
-            //     var size = el.data('size') ? el.data('size') : 'default';
-            //     var width = el.data('width') ? el.data('width') : 300;
-            //     var height = el.data('height') ? el.data('height') : 300;
-            //     var partner = el.data('partner') ? el.data('partner') : '';
-            //     var language = el.data('language') ? el.data('language') : 'en';
-            //     var jsonp_url = host + "/embed?callback=?&project=" + project + "&size=" + size + "&width=" + width + "&height=" + height +"&partner=" + partner + '&language=' + language;
-            //     $.getJSON(jsonp_url, function(data){
-            //         el.html(data.html);
-            //     });
-            // });
             $('script[data-id="opcwidget"]').each(function() {
                 var el = $(this);
                 var _this = this;
@@ -65,7 +52,6 @@
                 var language = $(this).data('language') ? $(this).data('language') : 'en';
                 var jsonp_url = host + "/embed?callback=?&project=" + project + "&size=" + size + "&width=" + width + "&height=" + height +"&partner=" + partner + '&language=' + language;
                 $.getJSON(jsonp_url, function(data){
-                    console.log(data)
                     $(_this).after(data.html);
                 });
                 

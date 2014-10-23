@@ -54,13 +54,13 @@ install_requires = [
     'psycopg2==2.2.1',
     'pygraphviz==1.2',
     'sorl-thumbnail==11.12',
-    'transifex-client==0.10',
     'splinter==0.6.0' #Required when the tests of 1%Club run
+    'transifex-client==0.10',
 ]
 
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-rest-framework-jwt/archive/master.zip#egg=djangorestframework-jwt-0.1.5',
+    'https://github.com/onepercentclub/django-rest-framework-jwt/archive/1be254ad098af00cc1a3c88249a5253e1f3e7ba7.zip#egg=djangorestframework-jwt-0.1.5',
 
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 

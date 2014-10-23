@@ -54,7 +54,8 @@ install_requires = [
     'psycopg2==2.2.1',
     'pygraphviz==1.2',
     'sorl-thumbnail==11.12',
-    'transifex-client==0.10'
+    'transifex-client==0.10',
+    'splinter==0.6.0',
 ]
 
 
@@ -98,7 +99,7 @@ tests_require = [
     'nose==1.3.4',
     'pylint==1.1.0',
     'sauceclient==0.1.0',
-    'selenium==2.42.1',
+    'selenium==2.43.0',
     'sorl-thumbnail==11.12',
     'splinter==0.6.0',
     'tdaemon==0.1.1',

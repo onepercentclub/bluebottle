@@ -4,11 +4,11 @@
 
     if (/onepercentclub.com/.test(self.location.href)) {
         host = 'https://onepercentclub.com';
-    } else if(/testing.onepercentclub.com/.test(self.location.href)) {
+    } else if(/testing.onepercentclub.com/.test(self.location.hostname)) {
         host = 'https://testing.onepercentclub.com';
-    } else if(/staging.onepercentclub.com/.test(self.location.href)) {
+    } else if(/staging.onepercentclub.com/.test(self.location.hostname)) {
         host = 'https://staging.onepercentclub.com';
-    } else if(/localhost:8000/.test(self.location.href)) {
+    } else if(/localhost:8000/.test(self.location.hostname)) {
         host = 'http://localhost:8000';
     } else {
         host = 'https://onepercentclub.com';

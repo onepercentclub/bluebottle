@@ -77,7 +77,7 @@ class DocdataTransaction(Transaction):
     """
     # Note: We're not using DjangoChoices here so that we can write unknown statuses if they are presented by DocData.
     status = models.CharField(_("status"), max_length=30, default='NEW')
-    docdata_id = models.CharField(_("Docdata ID"), max_length=100, unique=True)
+    docdata_id = models.CharField(_("Docdata ID"), max_length=100, unique=False)
 
     # This is the payment method id from DocData (e.g. IDEAL, MASTERCARD, etc)
     payment_method = models.CharField(max_length=60, default='', blank=True)

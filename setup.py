@@ -60,7 +60,7 @@ install_requires = [
 
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-rest-framework-jwt/archive/1be254ad098af00cc1a3c88249a5253e1f3e7ba7.zip#egg=djangorestframework-jwt-0.1.5',
+    'https://github.com/onepercentclub/django-rest-framework-jwt/archive/refresh-token.zip#egg=djangorestframework-jwt-0.1.5',
 
     'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
 

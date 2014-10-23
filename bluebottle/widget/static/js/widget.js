@@ -10,6 +10,8 @@
         host = 'https://testing.onepercentclub.com';
     } else if(/localhost:8000/.test(self.location.href)) {
         host = 'http://localhost:8000';
+    } else {
+        host = 'https://onepercentclub.com';
     }
 
     var jQuery;

@@ -54,7 +54,7 @@ install_requires = [
     'psycopg2==2.2.1',
     'pygraphviz==1.2',
     'sorl-thumbnail==11.12',
-    'splinter==0.6.0' #Required when the tests of 1%Club run
+    'splinter==0.6.0',
     'transifex-client==0.10',
 ]
 

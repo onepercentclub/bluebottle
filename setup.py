@@ -49,22 +49,19 @@ install_requires = [
     'html5lib==0.95',
     'micawber==0.2.6',
     'mock==1.0.1',
-    'splinter==0.6.0',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'beautifulsoup4==4.3.2',
-    # JSON Web Token based authentication for Django REST framework
-    'djangorestframework-jwt==0.1.5',
     'requests==2.3.0',
     'django-fsm==1.6.0',
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
-    'pygeoip==0.3.1'
+    'pygeoip==0.3.1',
     'psycopg2==2.2.1',
     'pygraphviz==1.2',
     'sorl-thumbnail==11.12',
     'transifex-client==0.10',
-    'splinter==0.6.0',
+    'splinter==0.6.0'
 ]
 
 

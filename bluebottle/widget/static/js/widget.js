@@ -1,6 +1,17 @@
 (function() {
 
-    var host = 'https://onepercentclub.com';
+    var host;
+
+    if (/onepercentclub.com/.test(self.location.href)) {
+        host = 'https://onepercentclub.com';
+    } else if(/testing.onepercentclub.com/.test(self.location.href)) {
+        host = 'https://staging.onepercentclub.com';
+    } else if(/staging.onepercentclub.com/.test(self.location.href)) {
+        host = 'https://testing.onepercentclub.com';
+    } else if(/localhost:8000/.test(self.location.href)) {
+        host = 'http://localhost:8000';
+    }
+
     var jQuery;
     var opcJquery = document.getElementById('onepercentclub-jquery');
 

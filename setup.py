@@ -54,7 +54,8 @@ install_requires = [
     'psycopg2==2.2.1',
     'pygraphviz==1.2',
     'sorl-thumbnail==11.12',
-    'transifex-client==0.10'
+    'transifex-client==0.10',
+    'splinter==0.6.0',
 ]
 
 

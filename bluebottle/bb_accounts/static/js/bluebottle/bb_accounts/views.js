@@ -3,7 +3,6 @@
 */
 
 App.SignupView = App.FormView.extend({
-
     submitAction: 'signup',
 
     firstName: gettext("First name"),
@@ -32,19 +31,10 @@ App.LoginView = App.FormView.extend({
 });
 
 App.PasswordResetView = App.FormView.extend({
-    clearForm: function () {
-        var controller = this.get('controller');
-
-        controller.set('new_password1', null);
-        controller.set('new_password2', null);
-        controller.set('error', null);
-    }.on('willInsertElement'),
-
     submitAction: 'resetPassword',
 
-    next: function() {
-        return  String(window.location);
-    }.property()
+    newPasswordText: gettext('Choose New Password'),
+    confirmPasswordText: gettext('Confirm New Password')
 });
 
 App.PasswordRequestView = App.FormView.extend({
@@ -61,6 +51,5 @@ App.ItemSelectView = Em.Select.extend({
 
 App.DisableAccountView = App.FormView.extend({
      templateName: 'disable'
-
 });
 

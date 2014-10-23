@@ -34,6 +34,12 @@
     }
 }
 
+@mixin calc($property, $expression) {
+    #{$property}: -moz-calc(#{$expression});
+    #{$property}: -webkit-calc(#{$expression});
+    #{$property}: calc(#{$expression});
+}
+
 @mixin resetlist {
     padding-left: 0;
     text-indent: 0;
@@ -87,5 +93,16 @@
             display: block;
         }
         
+    }
+}
+
+// TODO: move this pice of code.
+.touch {
+    .project-list { 
+        .project-list-item {
+            .manage-delete {
+                display: block;
+            }
+        }
     }
 }

@@ -52,7 +52,7 @@ App.BbUploadImageAreaComponent = App.BbFormFieldComponent.extend({
     	this.$(".image-upload-controls-browse").click(function() {
     		file_input.trigger("click");
     	});
-    },
+    }
 });
 
 App.BbUploadFileAreaComponent = App.BbFormFieldComponent.extend({
@@ -64,7 +64,7 @@ App.BbUploadFileAreaComponent = App.BbFormFieldComponent.extend({
     	this.$(".upload").click(function() {
     		file_input.trigger("click");
     	});
-    },
+    }
 });
 
 App.BbVideoLinkComponent = App.BbTextFieldComponent.extend({
@@ -77,3 +77,18 @@ App.BbRadioComponent = App.BbFormFieldComponent.extend({
 App.BbSelectComponent = App.BbFormFieldComponent.extend({
 
 });
+
+
+App.BbCopyCodeComponent = Ember.Component.extend({
+
+    didInsertElement: function () {
+        var controller = this.get('parentView.controller'),
+            _this = this,
+            clip = new ZeroClipboard(_this.$('.copy-to-clipboard'));
+        clip.on('copy', function (client, args) {
+            controller.send('closeModal');
+            controller.send('setFlash', gettext("Copied!"));
+        });
+    }
+});
+

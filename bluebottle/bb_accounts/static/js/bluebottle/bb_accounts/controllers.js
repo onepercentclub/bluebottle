@@ -5,6 +5,7 @@
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
+    fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
 
     init: function() {
         this._super();
@@ -96,7 +97,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response
@@ -336,14 +337,6 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
 
-            if (Em.isEmpty(this.get('email')) && Em.isEmpty(this.get('password'))){
-                this.set('notEmpty', false);
-            }
-
-            if (!Em.isEmpty(this.get('email')) || !Em.isEmpty(this.get('password'))){
-                this.set('notEmpty', true);
-            }
-
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation();
 
@@ -353,7 +346,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response
@@ -450,20 +443,12 @@ App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerVali
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response
             _this.set('isBusy', true);
 
-
-            // Early out if the input is empty
-            if (Em.isEmpty(this.get('email'))) {
-                this.send('modalError');
-                return
-            }
-
-            this.set('isBusy', true);
             this.set('error', null);
 
             return Ember.RSVP.Promise(function (resolve, reject) {
@@ -499,6 +484,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
     requiredFields: ['new_password1','new_password2'],
+    fieldsToWatch: ['new_password2'],
 
     init: function() {
         this._super();
@@ -520,15 +506,16 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     },
 
     _clearModel: function () {
-        this.set('content', Em.Object.create());
+        this.set('model', null);
+    },
+
+    willOpen: function () {
+        this.set('validationEnabled', true);
     },
 
     willClose: function () {
         this._clearModel();
-
-        // Clear the notifications
-        this.set('validationErrors', null);
-        this.set('error', null);
+        this.set('validationEnabled', false);
     },
 
     didError: function () {
@@ -542,8 +529,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     }.observes('error'),
 
     // pass the to the fieldStrength function the field we want to evaluate
-    passwordStrength: function(){
-        return this.fieldStrength(this.get('new_password1'))
+    passwordStrength: function() {
+        return this.fieldStrength(this.get('new_password1'));
     }.property('new_password1.length'),
 
     actions: {
@@ -560,15 +547,9 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
-            if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
-                this.set('notEmpty', false);
-            } else {
-                this.set('notEmpty', true);
-            }
-
             // Check client side errors
             if (_this.get('validationErrors')) {
-                return false
+                return false;
             }
 
             this.set('isBusy', true);

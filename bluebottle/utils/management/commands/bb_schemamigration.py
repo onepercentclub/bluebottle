@@ -195,7 +195,6 @@ class Command(DataCommand):
                 '\'object_name\': \'{0}\''.format(model_map['class']): '\'object_name\': MODEL_MAP[\'{0}\'][\'class\']'.format(model)
             }
             file_contents = reduce(lambda x, y: x.replace(y, mapping[y]), mapping, file_contents)
-
         # End Custom Bluebottle
 
         # Deal with update mode as late as possible, avoid a rollback as long

@@ -1,10 +1,30 @@
 (function() {
 
-    var host = 'https://onepercentclub.com/';
+    var host;
+
+    if (/onepercentclub.com/.test(self.location.host)) {
+        host = 'https://onepercentclub.com';
+    } else if(/testing.onepercentclub.com/.test(self.location.host)) {
+        host = 'https://testing.onepercentclub.com';
+    } else if(/staging.onepercentclub.com/.test(self.location.host)) {
+        host = 'https://staging.onepercentclub.com';
+    } else if(/localhost:8000/.test(self.location.host)) {
+        host = 'http://localhost:8000';
+    } else {
+        host = 'https://onepercentclub.com';
+    }
+
     var jQuery;
+    var opcJquery = document.getElementById('onepercentclub-jquery');
+
+    if (opcJquery) {
+        return false;
+    }
 
     if (window.jQuery === undefined || window.jQuery.fn.jquery !== '1.11.1') {
         var script_tag = document.createElement('script');
+
+        script_tag.setAttribute('id', 'onepercentclub-jquery');
         script_tag.setAttribute("type", "text/javascript");
         script_tag.setAttribute("src", "//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js");
 
@@ -33,17 +53,21 @@
 
     function main(){
         jQuery(document).ready(function($){
-            $('.widget-container').each(function(){
+            $('script[data-id="opcwidget"]').each(function() {
                 var el = $(this);
-                var project = el.data('project') ? el.data('project') : '';
-                var width = el.data('width') ? el.data('width') : 300;
-                var height = el.data('height') ? el.data('height') : 300;
-                var partner = el.data('partner') ? el.data('partner') : '';
-                var language = el.data('language') ? el.data('language') : 'en';
-                var jsonp_url = host + "/embed?callback=?&project=" + project + "&width=" + width + "&height=" + height +"&partner=" + partner + '&language=' + language;
+                var _this = this;
+
+                var project = $(this).data('project') ? $(this).data('project') : '';
+                var size = $(this).data('size') ? $(this).data('size') : 'default';
+                var width = $(this).data('width') ? $(this).data('width') : 300;
+                var height = $(this).data('height') ? $(this).data('height') : 300;
+                var partner = $(this).data('partner') ? $(this).data('partner') : '';
+                var language = $(this).data('language') ? $(this).data('language') : 'en';
+                var jsonp_url = host + "/embed?callback=?&project=" + project + "&size=" + size + "&width=" + width + "&height=" + height +"&partner=" + partner + '&language=' + language;
                 $.getJSON(jsonp_url, function(data){
-                    el.html(data.html);
+                    $(_this).after(data.html);
                 });
+                
             });
         });
     }

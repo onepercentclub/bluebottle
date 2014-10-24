@@ -243,6 +243,18 @@ class BaseProjectPayout(PayoutBase):
         ordering = ['-created']
         abstract = True
 
+    @property
+    def amount_pending(self):
+        return self.get_amount_pending()
+
+    @property
+    def amount_safe(self):
+        return self.get_amount_safe()
+
+    @property
+    def amount_failed(self):
+        return self.get_amount_failed()
+
     def get_payout_rule(self):
         """
         Override this if you want different payout rules for different circumstances.

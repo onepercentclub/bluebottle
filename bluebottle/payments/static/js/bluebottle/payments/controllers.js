@@ -88,10 +88,6 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
             this.send('modalFlip', 'donationSuccess', donation, 'modalBack');
         }
-        if (meta.type == 'success') {
-            var donation = this.get('order.donations').objectAt(0)
-            this.send('modalFlip', 'donationSuccess', donation, 'modalBack');
-        }
     },
 
     // Process the data associated with the current payment method

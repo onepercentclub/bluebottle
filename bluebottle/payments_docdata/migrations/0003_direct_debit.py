@@ -8,9 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Deleting model 'DocDataDirectDebitTransaction'
-        db.delete_table(u'payments_docdata_docdatadirectdebittransaction')
-
         # Adding model 'DocdataDirectdebitPayment'
         db.create_table(u'payments_docdata_docdatadirectdebitpayment', (
             (u'payment_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Payment'], unique=True, primary_key=True)),
@@ -239,15 +236,22 @@ class Migration(SchemaMigration):
         },
         u'payments_docdata.docdatapayment': {
             'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocdataPayment', '_ormbases': [u'payments.Payment']},
+            'address': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '200'}),
+            'city': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '200'}),
             'country': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
             'currency': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'customer_id': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
             'default_pm': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
+            'email': ('django.db.models.fields.EmailField', [], {'default': "''", 'max_length': '254'}),
+            'first_name': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '200'}),
             'ideal_issuer_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
             'language': ('django.db.models.fields.CharField', [], {'default': "'en'", 'max_length': '5', 'blank': 'True'}),
+            'last_name': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '200'}),
             'merchant_order_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100'}),
             'payment_cluster_id': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200'}),
             'payment_cluster_key': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200'}),
             u'payment_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Payment']", 'unique': 'True', 'primary_key': 'True'}),
+            'postal_code': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '20'}),
             'total_acquirer_approved': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
             'total_acquirer_pending': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),
             'total_captured': ('django.db.models.fields.DecimalField', [], {'default': "'0.00'", 'max_digits': '15', 'decimal_places': '2'}),

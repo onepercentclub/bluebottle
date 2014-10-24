@@ -61,8 +61,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             payment = DocdataDirectdebitPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
         else:
             payment = DocdataPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
-        payment.total_gross_amount = self.order_payment.amount
-        payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
+
         payment.total_gross_amount = self.order_payment.amount * 100
 
         if payment.default_pm == 'paypal':
@@ -132,16 +131,15 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
-            reply = client.start_direct_debit_payment(
-                order_key=self.payment.payment_cluster_key,
-                order_id=self.order_payment.order_id,
-                amount=self.order_payment.amount * 100,
-                iban=self.payment.iban,
-                bic=self.payment.bic,
-                account_name=self.payment.account_name,
-                account_city=self.payment.account_city
-            )
-            return {'type': 'success'}
+            try:
+                reply = client.start_remote_payment(
+                    order_key=self.payment.payment_cluster_key,
+                    payment=self.payment,
+                    payment_method='SEPA_DIRECT_DEBIT'
+                )
+                return {'type': 'success'}
+            except DocdataPaymentException as i:
+                raise PaymentException(i)
         else:
 
             return_url_base = get_current_host()
@@ -204,8 +202,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.save()
 
         # FIXME: Saving transactions fails...
-        # for transaction in response.payment:
-        #     self._store_payment_transaction(transaction)
+        for transaction in response.payment:
+            self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)

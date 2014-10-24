@@ -3,9 +3,7 @@
  */
 
 App.Router.map(function(){
-    // FIXME: Temporary for testing purposes
     this.resource('order', {path: '/orders/:order_id/:status'});
-    // this.resource('order', {path: '/orders/:order_id'});
 });
 
 /**
@@ -13,9 +11,7 @@ App.Router.map(function(){
  */
 App.OrderRoute = Em.Route.extend({
     model: function(params) {
-        // FIXME: Temporary for testing purposes
         this.set('status', params.status);
-
         return App.MyOrder.find(params.order_id);
     },
 
@@ -29,7 +25,6 @@ App.OrderRoute = Em.Route.extend({
             donationTarget = fundraiser ? fundraiser : project;
 
         _this.transitionTo(donationTarget.get('modelType'), donationTarget).promise.then(function () {
-            // FIXME: Temporary for testing purposes
             switch (status) {
                 case 'success':
                     if (donation.get('anonymous')){

@@ -107,5 +107,3 @@ App.DocdataPaypalController = App.StandardPaymentMethodController.extend({
         }));
     }
 });
-
-App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend();

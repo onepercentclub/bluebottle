@@ -349,7 +349,6 @@ class TestCreateDonation(DonationApiTestCase):
 
 class TestAnonymousDonationCreate(DonationApiTestCase):
 
-    # FIXME: Write tests for anonymous donations
     def test_create_anonymous_donation(self):
         donation_url = reverse('manage-donation-list')
 

@@ -207,7 +207,7 @@ class DocdataClient(object):
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
-    def start_remote_payment(self, order_key, order_id, payment=None, payment_method='SEPA_DIRECT_DEBIT', **extra_args):
+    def start_remote_payment(self, order_key, payment=None, payment_method='SEPA_DIRECT_DEBIT', **extra_args):
         """
         The start operation is used for starting a (web direct) payment on an order.
         It does not need to be used if the merchant makes use of Docdata Payments web menu.
@@ -217,7 +217,7 @@ class DocdataClient(object):
         because implementing those locally requires certification by the credit card companies.
         """
         if not order_key:
-            raise Exception("Missing order_key!")
+            raise DocdataPaymentException("Missing order_key!")
 
         paymentRequestInput = self.client.factory.create('ns0:paymentRequestInput')
 
@@ -253,19 +253,19 @@ class DocdataClient(object):
             error = reply['startError']['error']
             error_message = "{0} {1}".format(error['_code'], error['value'])
             logger.error(error_message)
-            raise Exception(error['_code'], error['value'])
+            raise DocdataPaymentException(error['value'])
 
         else:
             error_message = 'Received unknown reply from DocData. WebDirect payment not created.'
             logger.error(error_message)
-            raise Exception('REPLY_ERROR', error_message)
+            raise DocdataPaymentException(error_message)
 
     def status(self, order_key):
         """
         Request the status of of order and it's payments.
         """
         if not order_key:
-            raise Exception("Missing order_key!")
+            raise DocdataPaymentException("Missing order_key!")
 
         reply = self.client.service.status(
             self.merchant,

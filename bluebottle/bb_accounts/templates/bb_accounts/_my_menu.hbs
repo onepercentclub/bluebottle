@@ -8,6 +8,12 @@
         {{/link-to }}
     </li>
 
+    <li>
+        {{#linkTo "myDonationList" }}
+            {% trans "My Donations" %}
+        {{/linkTo}}
+    </li>
+
     {% if 'projects' in bb_apps %}
         {% block_verbatim 'my-projects-menu-link' %}
             <li>

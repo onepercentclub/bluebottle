@@ -1,3 +1,4 @@
+from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from django.core.urlresolvers import reverse
 from bluebottle.payments.models import Payment
 from bluebottle.payments_docdata.models import DocdataPayment
@@ -7,6 +8,8 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
     model = DocdataPayment
+
+    inlines = (PaymentLogEntryInline, )
 
     readonly_fields = ('order_payment_link', 'payment_cluster_id', 'payment_cluster_key',
                        'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency',

@@ -1,3 +1,4 @@
+from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 
@@ -60,6 +61,9 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
 
     list_display = ('created', 'order_payment_amount', 'polymorphic_ctype')
+
+    inlines = (PaymentLogEntryInline, )
+
     # list_filter = ('status', )
     ordering = ('-created', )
 

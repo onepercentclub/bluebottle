@@ -30,6 +30,8 @@ class DonationAdmin(admin.ModelAdmin):
 
     def related_payment_method(self, obj):
         order_payment = obj.order.get_latest_order_payment()
+        if not order_payment:
+            return '?'
         provider_and_method = order_payment.payment_method
         split_list = [x for x in re.split(r'([A-Z][a-z]*)', provider_and_method) if x]
 

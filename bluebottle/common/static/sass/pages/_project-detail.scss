@@ -163,7 +163,7 @@
 
                 #share {
                     display: block;
-                    @include animation(fadeInUp .2s ease-in-out);
+                    @include animation(fadeIn .2s ease-in-out);
                 }
             }
 
@@ -172,7 +172,7 @@
                 background: white;
                 border-radius: 8px 0 8px 8px;
                 padding: 10px;
-                @include animation(fadeOutDown .2s ease-in-out);
+                @include animation(fadeOut .2s ease-in-out);
                 @include animation-fill-mode(forwards);
                 //display: none;
 

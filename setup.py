@@ -71,6 +71,37 @@ dependency_links = [
     'https://bitbucket.org/sergei_maertens/django-admin-tools/get/c989fd1.zip#egg=django-admin-tools-0.5.1',
 ]
 
+tests_require = [
+    'South==0.8.1',
+    'coverage==3.6',
+    'django-nose',
+    'django-admin-tools==0.5.1',
+    'django-apptemplates==0.0.1',
+    'django_compressor==1.2',
+    'django-fluent-contents==0.9a1',
+    'django-filetransfers==0.0.0',
+    'django-localflavor==1.0',
+    'django-registration==1.0',
+    'django-setuptest==0.1.4',
+    'django-social-auth==0.7.23',
+    'django-taggit==0.10a1',
+    'django-templatetag-handlebars==1.2.0',
+    'django-tinymce==1.5.1b2',
+    'django-tools==0.25.0',
+    'django-wysiwyg==0.5.1',
+    'djangorestframework==2.3.12',
+    'factory-boy==2.3.1',
+    'micawber==0.2.6',
+    'mock==1.0.1',
+    'nose==1.3.4',
+    'pylint==1.1.0',
+    'sauceclient==0.1.0',
+    'selenium==2.44.0',
+    'sorl-thumbnail==11.12',
+    'splinter==0.6.0',
+    'tdaemon==0.1.1',
+]
+
 setup(
     name='bluebottle',
     version='.'.join(map(str, bluebottle.__version__)),
@@ -80,6 +111,7 @@ setup(
     packages=find_packages(exclude=('tests', 'tests.*')),
     install_requires=install_requires,
     dependency_links=dependency_links,
+    tests_require=tests_require,
     include_package_data=True,
     zip_safe=False,
 

@@ -1,0 +1,48 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+{% load bb_ember %}
+
+
+{% tplhandlebars "campaign_widget_preview" %}
+    <div class="campaign-container">
+        <div class="campaign-item">
+            <a href="javascript:void(0)" class="campaign-item-holder">
+                <header class="header">
+                        <img {{bindAttr src=image}} />
+                </header>
+                <span class="profile-photo">
+                        <img {{bindAttr src=project.owner.getAvatar}} />
+                </span>
+                <div class="campaign-body">
+                    <p>
+                        <span class="profile-name">
+                            <strong>{{owner.full_name}}</strong> <span>{% trans 'campaigns for'%}</span>
+                        </span>
+                        <span class="campaign-body-names">
+                            {{title}}
+                        </span>
+                        <span class="campaign-hover-body">
+                            {{pitch}}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="campaign-footer">
+                    {{bb-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider"}}
+                    <div class="campaign-fund-amount">
+                        <span class="amount-raised"><strong>&euro;  </strong>{% trans 'raised'%}</span>
+                        <span data-days-left="" class="days-left"><strong>{{daysToGo}} {% trans "days left" context "Slider project frontpage" %}</strong></span>
+                    </div>
+                </div>
+                <div class="campaign-hover">
+                    <p class="campaign-hover-footer">
+                        <span class="go-to-campaign">
+                            {% trans 'Go to campaign'%}
+                        </span>
+                    </p>
+                </div>
+            </a>
+        </div>
+    </div>
+{% endtplhandlebars %}

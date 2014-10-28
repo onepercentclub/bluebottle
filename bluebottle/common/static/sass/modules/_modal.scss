@@ -404,10 +404,10 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	}
 
 	&.large {
-		width: 550px;
+		max-width: 600px;
 
 		.modal-fullscreen-item {
-			width: 550px;
+			max-width: 600px;
 			text-align: left;
 		}
 	}

@@ -108,7 +108,7 @@ App.ProjectController = Em.ObjectController.extend({
     }.property('status'),
 
     allTags: function() {
-        var tags = this.get('plan.tags');
+        var tags = this.get('tags');
         return tags.reduce(function(previousValue, tag, index) {
             var separator = (index == 0 ? " " : ", ");
             return previousValue + separator + tag.id;

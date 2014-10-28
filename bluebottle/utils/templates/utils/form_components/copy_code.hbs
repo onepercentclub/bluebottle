@@ -5,11 +5,11 @@
 {% tplhandlebars "components/bb-copy-code" %}
 
     <div class="input-append">
-        <span class="snippet">{{value}}</span>
         <a class="copy-to-clipboard" {{bindAttr data-clipboard-text=value}} title="Copy to clipboard">
             <span class="flaticon solid add-to-clipboard"></span>
             {% trans "Copy" %}
         </a>
+        <span class="snippet">{{value}}</span>
     </div>
 
 {% endtplhandlebars %}

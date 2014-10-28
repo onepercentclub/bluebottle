@@ -124,10 +124,11 @@ App.SocialShareView = Em.View.extend({
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
         },
+        
         shareEmbedded: function() {
             var project = this.get('context'),
                 controller = this.get('controller');
-            controller.send('openInBox', 'shareEmbedded', project, 'modalFront');
+            controller.send('openInBigBox', 'shareEmbedded', project, 'modalFront');
         }
     },
 
@@ -135,22 +136,6 @@ App.SocialShareView = Em.View.extend({
         window.open(shareUrl + urlArgs, type + '-share-dialog', 'width=' + this.get('dialogW') + ',height=' + this.get('dialogH'));
     }
 });
-
-
-
-App.ShareEmbeddedController = Em.Controller.extend({
-
-    embedCode: function(){
-        var code = '<link rel="stylesheet" href="/static/assets/css/widget.css" media="screen" />' +
-                   '<script type="text/javascript" src="/static/assets/js/widget.js"></script>' +
-                   '<div class="widget-container" data-language="en" data-project="' +
-                    this.controllerFor('project').get('model.id') +
-                    '"></div>';
-        return code;
-    }.property()
-
-});
-
 
 // See/Use App.DatePicker
 App.DatePickerValue = Ember.TextField.extend({
@@ -272,5 +257,13 @@ App.CustomDatePicker = App.DatePicker.extend({
         if (this.get("maxDate") != undefined) {
             this.config.maxDate = this.get("maxDate");
         }
+    }
+});
+
+App.ShareEmbeddedView = Ember.View.extend({
+    templateName: 'share_embedded',
+
+    didInsertElement: function() {
+        
     }
 });

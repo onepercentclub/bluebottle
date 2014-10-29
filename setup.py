@@ -50,8 +50,7 @@ install_requires = [
     'django-loginas==0.1.3',
     'pygraphviz==1.2',
     'beautifulsoup4==4.3.2',
-    # JSON Web Token based authentication for Django REST framework
-    'djangorestframework-jwt==0.1.5',
+    'djangorestframework-jwt==1.0.2',
     'psycopg2==2.2.1',
     'requests==2.3.0',
     'django-fsm==1.6.0',
@@ -62,7 +61,7 @@ install_requires = [
 
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-rest-framework-jwt/archive/1be254ad098af00cc1a3c88249a5253e1f3e7ba7.zip#egg=djangorestframework-jwt-0.1.5',
+    'https://github.com/GetBlimp/django-rest-framework-jwt/archive/b6b42b967c3584b426446df1f72149b7a07fd520.zip#egg=djangorestframework-jwt-1.0.2',
 
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
 

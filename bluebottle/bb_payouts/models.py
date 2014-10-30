@@ -24,7 +24,6 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_donation_mo
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
 
-
 class InvoiceReferenceMixin(models.Model):
     """
     Mixin for generating an invoice reference.
@@ -170,7 +169,7 @@ class PayoutLogBase(models.Model):
         verbose_name_plural = _('state changes')
         abstract = True
 
-        ordering = ['-date']
+        ordering = ['-created']
         get_latest_by = 'date'
 
     STATUS_CHOICES = (
@@ -179,7 +178,7 @@ class PayoutLogBase(models.Model):
         (StatusDefinition.SETTLED, _("Settled"))
     )
 
-    date = CreationDateTimeField(_("date"))
+    created = CreationDateTimeField(_("date"))
 
     old_status = models.CharField(
         _("old status"), max_length=20, choices=STATUS_CHOICES,

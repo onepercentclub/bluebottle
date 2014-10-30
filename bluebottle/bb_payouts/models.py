@@ -170,7 +170,7 @@ class PayoutLogBase(models.Model):
         abstract = True
 
         ordering = ['-created']
-        get_latest_by = 'date'
+        get_latest_by = 'created'
 
     STATUS_CHOICES = (
         (StatusDefinition.NEW, _("New")),
@@ -193,7 +193,7 @@ class PayoutLogBase(models.Model):
         return _(
             u'Status change of \'%(payout)s\' on %(date)s from %(old_status)s to %(new_status)s' % {
                 'payout': unicode(self.payout),
-                'date': self.date.strftime('%d-%m-%Y'),
+                'created': self.date.strftime('%d-%m-%Y'),
                 'old_status': self.old_status,
                 'new_status': self.new_status,
             }

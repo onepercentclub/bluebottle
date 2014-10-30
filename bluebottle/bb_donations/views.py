@@ -130,7 +130,7 @@ class ManageDonationList(generics.ListCreateAPIView):
 
         status = self.request.QUERY_PARAMS.get('status', None)
         if status == 'success':
-            queryset = queryset.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.PAID])
+            queryset = queryset.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
         elif status:
             filter_kwargs['order__status'] = status
 

@@ -27,7 +27,7 @@ class PayoutLogBase(admin.TabularInline):
     extra = 0
     max_num = 0
     can_delete = False
-    fields = ['date', 'old_status', 'new_status']
+    fields = ['created', 'old_status', 'new_status']
     readonly_fields = fields
 
 
@@ -131,7 +131,8 @@ class PayoutAdmin(admin.ModelAdmin):
         lambda obj: obj.project,
         'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'], MODEL_MAP['project']['class'].lower()),
         view_args=lambda obj: (obj.project.id, ),
-        short_description=_('project')
+        short_description=_('project'),
+        truncate=50
     )
 
     # Link to organization

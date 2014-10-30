@@ -11,7 +11,7 @@ App.MockIdealController = App.StandardPaymentMethodController.extend({
                 'priority': 1
             }
         ]);
-        this.set('model', App.MockIdeal.create());
+        this.set('model', App.MockiDeal.create());
     }
 
 });

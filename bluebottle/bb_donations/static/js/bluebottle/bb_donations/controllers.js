@@ -17,11 +17,11 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
     },
 
 	willOpen: function() {
-        this.container.lookup('controller:modalContainer').set('type', 'donation-small');
+        this.container.lookup('controller:modalContainer').set('type', 'big-modal donation-small');
     },
 
     willClose: function() {
-        this.container.lookup('controller:modalContainer').set('type', 'donation');
+        this.container.lookup('controller:modalContainer').set('type', 'big-modal donation');
     },
 
     cleanCommas: function() {

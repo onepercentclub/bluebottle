@@ -1,0 +1,159 @@
+.share-menu {
+    position: absolute;
+    right: 0;
+    min-width: 177px;
+    max-width: 187px;
+    max-height: 30px;
+    overflow: hidden;
+    @include transition(all .2s ease-in-out);
+
+    .share-link {
+        position: relative;
+        float: right;
+        background: rgba(255,255,255, 0);
+        min-width: 106px;
+        padding: 6px 5px;
+        line-height: 18px;
+        font-size: 15px;
+        color: $color-secondary;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: inherit;
+        border-radius: 8px 8px 0 0;
+        @include transition(all .2s ease-in-out);
+
+        &:before {
+            position: absolute;
+            top: 9px;
+            left: 9px;                    
+            content: '';
+            width: 13px;
+            height: 13px;
+            background: image-url("img/icons/icon-share-social-link.svg") no-repeat;
+        }
+
+        &:after {
+            position: absolute;
+            top: 13px;
+            right: 13px;                    
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: image-url("img/icons/icon-dropdown.svg") no-repeat;
+            @include transform(rotate(0deg));
+            @include transition(all .2s ease-in-out);
+        }
+    }
+
+    &:hover {
+        max-height: 300px;
+        //overflow: visible;
+
+        .share-link {
+            background: rgba(255,255,255, 1);
+
+            &:after {
+                top: 8px;
+                @include transform(rotate(-180deg));
+            }
+        }
+
+        #share {
+            display: block;
+            @include animation(fadeIn .2s ease-in-out);
+        }
+    }
+
+    #share {
+        width: 100%;
+        background: white;
+        border-radius: 8px 0 8px 8px;
+        padding: 10px;
+        @include animation(fadeOut .2s ease-in-out);
+        @include animation-fill-mode(forwards);
+        //display: none;
+
+        li {
+
+            a {
+                position: relative;
+                padding-left: 30px;
+                font-size: 13px;
+                line-height: 25px;
+                font-family: Helvetica;
+                color: #3C3C3C;
+                @include transition(all .2s ease-in-out);
+
+                &:before {
+                    position: absolute;
+                    top: 13px;
+                    left: 9px;                    
+                    content: '';
+                    @include transition(all .1s ease-in-out);
+                }
+            }
+
+            &:hover {
+                a {
+                    color: $color-secondary;
+
+                    &:before {
+                        top: 13px;
+                        left: 5px;
+                    }
+                }
+            }
+
+            &.facebook {
+                a {
+                    &:before {
+                        width: 13px;
+                        height: 13px;
+                        background: image-url("img/icons/icon-share-social-facebook.svg") no-repeat;
+                    }
+                }
+
+            }
+
+            &.twitter {
+                a {
+                    &:before {
+                        width: 13px;
+                        height: 13px;
+                        background: image-url("img/icons/icon-share-social-twitter.svg") no-repeat;
+                    }
+                }
+            }
+
+            &.linkedin {
+                a {
+                    &:before {
+                        width: 13px;
+                        height: 13px;
+                        background: image-url("img/icons/icon-share-social-linkedin.svg") no-repeat;
+                    }
+                }
+            }
+
+            &.embed {
+                a {
+                    &:before {
+                        width: 13px;
+                        height: 13px;
+                        background: image-url("img/icons/icon-share-social-embed.svg") no-repeat;
+                    }
+                }
+            }
+
+            &.copy {
+                a {
+                    &:before {
+                        width: 13px;
+                        height: 13px;
+                        background: image-url("img/icons/icon-share-social-copy.svg") no-repeat;
+                    }
+                }
+            }
+        }
+    }
+}

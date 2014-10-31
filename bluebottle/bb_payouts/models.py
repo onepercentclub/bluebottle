@@ -191,9 +191,9 @@ class PayoutLogBase(models.Model):
 
     def __unicode__(self):
         return _(
-            u'Status change of \'%(payout)s\' on %(date)s from %(old_status)s to %(new_status)s' % {
+            u'Status change of \'%(payout)s\' on %(created)s from %(old_status)s to %(new_status)s' % {
                 'payout': unicode(self.payout),
-                'created': self.date.strftime('%d-%m-%Y'),
+                'created': self.created.strftime('%d-%m-%Y'),
                 'old_status': self.old_status,
                 'new_status': self.new_status,
             }
@@ -212,8 +212,7 @@ class BaseProjectPayout(PayoutBase):
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 
-    payout_rule = models.CharField(_("Payout rule"), max_length=20, choices=PayoutRules.choices,
-                                   help_text=_("The payout rule for this project."))
+    payout_rule = models.CharField(_("Payout rule"), max_length=20,  help_text=_("The payout rule for this project."))
 
     amount_raised = MoneyField(_("amount raised"),
                                help_text=_('Amount raised when Payout was created or last recalculated.'))

@@ -10,6 +10,16 @@ from bluebottle.payments.models import Payment, Transaction
 from bluebottle.payments_logger.models import PaymentLogEntry
 
 
+payment_method_icon_mapping = {
+    'ideal': 'images/payments_docdata/icons/icon-ideal.svg',
+    'direct_debit': 'images/payments_docdata/icons/icon-direct-debit.png',
+    'sepa_direct_debit': 'images/payments_docdata/icons/icon-direct-debit.png',
+    'mastercard': 'images/payments_docdata/icons/icon-mastercard.svg',
+    'visa': 'images/payments_docdata/icons/icon-visa.svg',
+    'system': 'images/payments_docdata/icons/icon-docdata.png'
+}
+
+
 class DocdataPayment(Payment):
 
     merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
@@ -44,6 +54,16 @@ class DocdataPayment(Payment):
     address = models.CharField(max_length=200, default='')
     postal_code = models.CharField(max_length=20, default='')
     city = models.CharField(max_length=200, default='')
+
+    def get_method_name(self):
+        return self.default_pm
+
+    def get_method_icon(self):
+        if self.get_method_name().lower() in payment_method_icon_mapping:
+            return payment_method_icon_mapping[self.get_method_name().lower()]
+        else:
+            return payment_method_icon_mapping['system']
+
 
     def get_fee(self):
         if not hasattr(settings, 'DOCDATA_FEES'):

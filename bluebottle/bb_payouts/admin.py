@@ -17,6 +17,7 @@ from .models import ProjectPayoutLog, OrganizationPayoutLog
 
 from .admin_filters import HasIBANPayoutFilter
 from .admin_utils import link_to
+from django import forms
 
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
@@ -39,9 +40,16 @@ class OrganizationPayoutLogInline(PayoutLogBase):
     model = OrganizationPayoutLog
 
 
-class PayoutAdmin(admin.ModelAdmin):
-    model = PROJECT_PAYOUT_MODEL
+class ProjectPayoutForm(forms.ModelForm):
+    payout_rule = forms.ChoiceField(choices=PROJECT_PAYOUT_MODEL.PayoutRules.choices)
 
+    class Meta:
+        model = PROJECT_PAYOUT_MODEL
+
+
+class ProjectPayoutAdmin(admin.ModelAdmin):
+    model = PROJECT_PAYOUT_MODEL
+    form = ProjectPayoutForm
     inlines = (PayoutLogInline, )
 
     search_fields = [
@@ -52,24 +60,16 @@ class PayoutAdmin(admin.ModelAdmin):
     date_hierarchy = 'updated'
     can_delete = False
 
-    list_filter = [
-        'status', 'payout_rule', HasIBANPayoutFilter
-    ]
+    list_filter = ['status', 'payout_rule']
 
     actions = ['recalculate_amounts']
 
-    list_display = [
-        'payout', 'status', 'admin_project', 'amount_payable',
-        'payout_rule', 'admin_has_iban', 'created_date', 'submitted_date', 'completed_date'
-    ]
+    list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
+                    'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
 
-    list_display_links = [
-        'payout',
-    ]
+    list_display_links = ['payout']
 
-    readonly_fields = [
-        'admin_project', 'admin_organization', 'created', 'updated',
-    ]
+    readonly_fields = ['admin_project', 'admin_organization', 'created', 'updated']
 
     fieldsets = (
         (None, {
@@ -177,7 +177,11 @@ class PayoutAdmin(admin.ModelAdmin):
 
     recalculate_amounts.short_description = _("Recalculate amounts for new payouts.")
 
-admin.site.register(PROJECT_PAYOUT_MODEL, PayoutAdmin)
+    def rule(self, obj):
+        return dict(PROJECT_PAYOUT_MODEL.PayoutRules.choices)[obj.payout_rule]
+
+
+admin.site.register(PROJECT_PAYOUT_MODEL, ProjectPayoutAdmin)
 
 
 class OrganizationPayoutAdmin(admin.ModelAdmin):

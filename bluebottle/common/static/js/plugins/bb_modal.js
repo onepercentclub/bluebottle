@@ -303,7 +303,7 @@ BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
     
     template: Ember.Handlebars.compile([
         '<div class="modal-fullscreen-background is-active">',
-            '<div {{bindAttr class=":big-modal type: :modal-fullscreen-container"}}>',
+            '<div {{bindAttr class="type: :modal-fullscreen-container"}}>',
                 '<div id="card">',
                     '<div class="front">',
                         '<div class="modal-fullscreen-item">{{outlet "modalFront"}}</div>',

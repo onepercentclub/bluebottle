@@ -5,7 +5,7 @@ from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from django.contrib.sites.models import get_current_site
 import gateway
 
-from bluebottle.payments_docdata.models import DocdataTransaction
+from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
 from django.utils.http import urlencode
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -57,7 +57,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         return self.STATUS_MAPPING.get(external_payment_status)
 
     def create_payment(self):
-        payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
+        if self.order_payment.payment_method == 'docdataDirectdebit':
+            payment = DocdataDirectdebitPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
+        else:
+            payment = DocdataPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
+
         payment.total_gross_amount = self.order_payment.amount * 100
 
         if payment.default_pm == 'paypal':
@@ -123,14 +127,23 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         #FIXME: get rid of these testing
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-
         client = gateway.DocdataClient(testing_mode)
 
-        return_url_base = get_current_host()
-        client_language = 'en'
 
-        integration_data = self.order_payment.integration_data
+        if self.order_payment.payment_method == 'docdataDirectdebit':
+            try:
+                reply = client.start_remote_payment(
+                    order_key=self.payment.payment_cluster_key,
+                    payment=self.payment,
+                    payment_method='SEPA_DIRECT_DEBIT'
+                )
+                return {'type': 'success'}
+            except DocdataPaymentException as i:
+                raise PaymentException(i)
+        else:
 
+            return_url_base = get_current_host()
+            client_language = 'en'
         try:
             url = client.get_payment_menu_url(
                 order_key=self.payment.payment_cluster_key,
@@ -141,19 +154,31 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         except DocdataPaymentException as i:
             raise PaymentException(i)
 
+            integration_data = self.order_payment.integration_data
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True
         if self.payment.default_pm == 'paypal_express_checkout':
             default_act = True
 
-        params = {
-             'default_pm': self.payment.default_pm,
-             'ideal_issuer_id': self.payment.ideal_issuer_id,
-             'default_act': default_act
-        }
-        url += '&' + urlencode(params)
-        return {'type': 'redirect', 'method': 'get', 'url': url}
+            url = client.get_payment_menu_url(
+                order_key=self.payment.payment_cluster_key,
+                order_id=self.order_payment.order_id,
+                return_url=return_url_base,
+                client_language=client_language,
+            )
+
+            default_act = False
+            if self.payment.ideal_issuer_id:
+                default_act = True
+
+            params = {
+                 'default_pm': self.payment.default_pm,
+                 'ideal_issuer_id': self.payment.ideal_issuer_id,
+                 'default_act': default_act
+            }
+            url += '&' + urlencode(params)
+            return {'type': 'redirect', 'method': 'get', 'url': url}
 
     def check_payment_status(self):
         response = self._fetch_status()
@@ -177,8 +202,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.save()
 
         # FIXME: Saving transactions fails...
-        # for transaction in response.payment:
-        #     self._store_payment_transaction(transaction)
+        for transaction in response.payment:
+            self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)

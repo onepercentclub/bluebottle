@@ -1,9 +1,19 @@
 {% load bb_ember i18n static %}
 
 {% tplhandlebars "docdataDirectdebit" %}
-    <p>
-        <img src="{% static 'images/docdata/docdata.png' %}" alt="Docdata"  />
-        <br/>
-        You're about to pay with direct debit through Docdata.
-    </p>
+
+    <label>{% trans "IBAN" %}</label>
+    {{view Em.TextField valueBinding="iban" placeholder="NL11BANK0123456789"}}
+
+    <label>{% trans "Bic/swift" %}</label>
+    {{view Em.TextField valueBinding="bic" placeholder="BANKNL1A"}}
+
+    <label>{% trans "Account holder name" %}</label>
+    {{view Em.TextField valueBinding="account_name" placeholder="Account holder name"}}
+
+    <label>{% trans "Account holder city" %}</label>
+    {{view Em.TextField valueBinding="account_city" placeholder="Account holder city"}}
+    {{view Em.Checkbox checkedBinding="agree"}} Ok?
+
+
 {% endtplhandlebars %}

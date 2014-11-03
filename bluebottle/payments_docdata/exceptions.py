@@ -9,10 +9,10 @@ class DocdataPaymentException(PaymentException):
         self.error_list = error_list
 
     def __str__(self):
-        return '{0}'.format(self.message)
+        return self.message
 
     def __unicode__(self):
-        return str(self)
+        return self.message
 
 
 class DocdataPaymentStatusException(PaymentException):

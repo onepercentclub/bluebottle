@@ -6,6 +6,7 @@ which is Apache licensed, copyright (c) 2013 Diederik van der Boor
 
 """
 import logging
+import unicodedata
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
@@ -206,12 +207,65 @@ class DocdataClient(object):
 
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
+    def start_remote_payment(self, order_key, payment=None, payment_method='SEPA_DIRECT_DEBIT', **extra_args):
+        """
+        The start operation is used for starting a (web direct) payment on an order.
+        It does not need to be used if the merchant makes use of Docdata Payments web menu.
+
+        The web direct can be used for direct debit for example.
+        Standard payments (e.g. iDEAL, creditcard) all happen through the web menu
+        because implementing those locally requires certification by the credit card companies.
+        """
+        if not order_key:
+            raise DocdataPaymentException("Missing order_key!")
+
+        paymentRequestInput = self.client.factory.create('ns0:paymentRequestInput')
+
+        # We only need to set amount because of bug in suds library. Otherwise it defaults to order amount.
+        paymentAmount = self.client.factory.create('ns0:amount')
+        paymentAmount.value = str(int(payment.total_gross_amount))
+        paymentAmount._currency = 'EUR'
+        paymentRequestInput.paymentAmount = paymentAmount
+
+        if payment_method == 'SEPA_DIRECT_DEBIT':
+            paymentRequestInput.paymentMethod = 'SEPA_DIRECT_DEBIT'
+            PaymentInput = DirectDebitPayment(holder_name=self.convert_to_ascii(payment.account_name),
+                                              holder_city=self.convert_to_ascii(payment.account_city),
+                                              holder_country_code='NL',
+                                              bic=payment.bic, iban=payment.iban)
+
+            paymentRequestInput.directDebitPaymentInput = PaymentInput.to_xml(self.client.factory)
+
+        if payment_method == 'MASTERCARD':
+            paymentRequestInput.paymentMethod = 'MASTERCARD'
+            PaymentInput = MasterCardPayment(credit_card_number=None,
+                                             expiry_date=None,
+                                             cvc2=None,
+                                             card_holder=None,
+                                             email_address=None)
+
+        # Execute start payment request.
+        reply = self.client.service.start(self.merchant, order_key, paymentRequestInput)
+
+        if hasattr(reply, 'startSuccess'):
+            return str(reply['startSuccess']['paymentId'])
+        elif hasattr(reply, 'startError'):
+            error = reply['startError']['error']
+            error_message = "{0} {1}".format(error['_code'], error['value'])
+            logger.error(error_message)
+            raise DocdataPaymentException(error['value'])
+
+        else:
+            error_message = 'Received unknown reply from DocData. WebDirect payment not created.'
+            logger.error(error_message)
+            raise DocdataPaymentException(error_message)
+
     def status(self, order_key):
         """
         Request the status of of order and it's payments.
         """
         if not order_key:
-            raise Exception("Missing order_key!")
+            raise DocdataPaymentException("Missing order_key!")
 
         reply = self.client.service.status(
             self.merchant,
@@ -262,6 +316,12 @@ class DocdataClient(object):
         else:
             return 'https://secure.docdatapayments.com/ps/menu?' + urlencode(args)
 
+    def convert_to_ascii(self, value):
+        """ Normalize / convert unicode characters to ascii equivalents. """
+        if isinstance(value, unicode):
+            return unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+        else:
+            return value
 
 class CreateReply(object):
     """

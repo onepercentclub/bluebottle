@@ -21,6 +21,13 @@ DOCDATA_PAYMENT_METHODS = (
         'id': 'docdata-paypal',
         'profile': 'paypal',
         'name': 'Paypal',
+        'supports_recurring': False,
+    },
+    {
+        'provider': 'docdata',
+        'id': 'docdata-directdebit',
+        'profile': 'directdebit',
+        'name': 'Direct Debit',
         'supports_recurring': True,
     }
 )

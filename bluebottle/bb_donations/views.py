@@ -13,22 +13,28 @@ DONATION_MODEL = get_donation_model()
 logger = logging.getLogger(__name__)
 
 
-class DonationList(generics.ListAPIView):
+class ValidDonationsMixin(object):
+    """
+    Filter query set on "valid" donations.
+    """
+    def get_queryset(self):
+        queryset = super(ValidDonationsMixin, self).get_queryset()
+        queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
+        return queryset
+
+class DonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
-    # FIXME: Filter on donations that are viewable (pending & paid)
 
 
-class DonationDetail(generics.RetrieveAPIView):
+class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
-    # FIXME: Filter on donations that are viewable (pending & paid)
 
 
-class ProjectDonationList(generics.ListAPIView):
+class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
-    # FIXME: Filter on donations that are viewable (pending & paid)
 
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()
@@ -55,21 +61,17 @@ class ProjectDonationList(generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
-
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")
-        queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
-
         return queryset
 
 
-class ProjectDonationDetail(generics.RetrieveAPIView):
+class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
-    # FIXME: Filter on donations that are viewable (pending & paid)
 
 
-class MyProjectDonationList(generics.ListAPIView):
+class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'default')
 
@@ -86,12 +88,10 @@ class MyProjectDonationList(generics.ListAPIView):
 
         filter_kwargs['project'] = project
         queryset = queryset.filter(**filter_kwargs).order_by('-created')
-        queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
-
         return queryset
 
 
-class MyFundraiserDonationList(generics.ListAPIView):
+class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'default')
 
@@ -108,8 +108,6 @@ class MyFundraiserDonationList(generics.ListAPIView):
 
         filter_kwargs['fundraiser'] = fundraiser
         queryset = queryset.filter(**filter_kwargs).order_by('-created')
-        queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
-
         return queryset
 
 

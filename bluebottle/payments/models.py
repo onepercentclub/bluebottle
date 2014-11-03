@@ -48,6 +48,20 @@ class Payment(PolymorphicModel):
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
 
+    @property
+    def method_name(self):
+        return self.get_method_name()
+
+    def get_method_name(self):
+        return 'unknown'
+
+    @property
+    def method_icon(self):
+        return self.get_method_icon()
+
+    def get_method_icon(self):
+        return 'images/payments/icons/icon-payment.svg'
+
     def get_fee(self):
         if not isinstance(self, Payment):
             raise PaymentException("get_fee() not implemented for {0}".format(self.__class__.__name__))
@@ -170,6 +184,7 @@ class OrderPayment(models.Model, FSMTransition):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.full_clean()
         super(OrderPayment, self).save(force_insert, force_update, using, update_fields)
+
 
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')

@@ -4,6 +4,21 @@ from bluebottle.payments_logger.models import PaymentLogEntry
 import re
 
 
+class PaymentLogEntryInline(admin.TabularInline):
+    model = PaymentLogEntry
+    readonly_fields = ('timestamp', 'message', 'level')
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+    ordering = ('-timestamp', )
+
+    def has_add_permission(self, request):
+        return False
+
+    class Media:
+        css = {"all": ("css/admin/hide_admin_original.css",)}
+
+
 class PaymentLogEntryAdmin(admin.ModelAdmin):
     # List view.
     list_display = ('timestamp', 'payment_link', 'level', 'message', 'related_payment_method', 'link_to_order_payment')

@@ -16,8 +16,10 @@
             </div>
 
             <div class="l-half">
-                <article class="project-info">
+                <div class="fundraiser-share">
                     {{view App.SocialShareView}}
+                </div>
+                <article class="project-info">
                     {{#if isOwner}}
                         <ul class="owner-settings">
                             <li class="owner-settings-dropdown"><span class="flaticon solid settings-2"></span>
@@ -63,8 +65,7 @@
                             {{#ifExpired deadline}}
                                 <strong>{% trans "deadline passed" %}</strong>
                             {{else}}
-                                <a href='#' {{ action 'addDonation' this.project this }} class="btn btn-primary btn-iconed">
-                                    <span class="flaticon solid wallet-1"></span>
+                                <a href='#' {{ action 'addDonation' this.project this }} class="btn btn-primary">
                                     {% trans "Support" %} {{owner.first_name}}
                                 </a>
                             {{/ifExpired}}

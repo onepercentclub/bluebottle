@@ -1,3 +1,4 @@
+from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from django.core.urlresolvers import reverse
 from bluebottle.payments.models import Payment
 from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebitPayment
@@ -8,7 +9,9 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
     model = DocdataPayment
 
-    readonly_fields = ('order_payment_link', 'payment_cluster_id', 'payment_cluster_key',
+    inlines = (PaymentLogEntryInline, )
+
+    readonly_fields = ('order_payment_link', 'payment_cluster_link', 'payment_cluster_key',
                        'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency',
                        'total_registered', 'total_shopper_pending',
                        'total_acquirer_pending', 'total_acquirer_approved',
@@ -23,6 +26,13 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
 
     order_payment_link.allow_tags = True
 
+
+    def payment_cluster_link(selfself, obj):
+        url = 'https://backoffice.docdatapayments.com/ps/com.tripledeal.paymentservice.backoffice.MerchantReportPayoutTransaction'
+        return '{1} <a href="{0}" target="docdata">[Docdata Backoffice]</a>'.format(url, obj.payment_cluster_id)
+
+    payment_cluster_link.allow_tags = True
+    
 
 class DocdataDirectdebitPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment

@@ -17,11 +17,11 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
     },
 
 	willOpen: function() {
-        this.container.lookup('controller:modalContainer').set('type', 'donation-small');
+        this.container.lookup('controller:modalContainer').set('type', 'big-modal donation-small');
     },
 
     willClose: function() {
-        this.container.lookup('controller:modalContainer').set('type', 'donation');
+        this.container.lookup('controller:modalContainer').set('type', 'big-modal donation');
     },
 
     cleanCommas: function() {
@@ -219,3 +219,26 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
 });
 
 
+App.MyDonationListController = Em.ArrayController.extend({
+    page: 1,
+    canLoadMore: function(){
+        if (this.get('length') < this.get('meta.total')){
+            return true;
+        }
+        return false;
+    }.property('length', 'meta.total'),
+
+    actions: {
+        loadMore: function(){
+            var _this = this;
+            if (this.get('canLoadMore')) {
+                this.incrementProperty('page');
+                App.MyDonation.find({status: 'success', page: this.get('page')}).then(function(items){
+                    _this.pushObjects(items.toArray());
+                });
+
+            }
+        }
+    }
+
+});

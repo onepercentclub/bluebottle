@@ -1,13 +1,16 @@
-from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.bb_payouts.admin_utils import link_to
+from django.contrib.admin.templatetags.admin_static import static
+from bluebottle.utils.model_dispatcher import get_donation_model, get_model_mapping
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 
 DONATION_MODEL = get_donation_model()
+MODEL_MAP = get_model_mapping()
 
 
 class DonationAdmin(admin.ModelAdmin):
     date_hierarchy = 'updated'
-    list_display = ('updated', 'project', 'user', 'user_full_name', 'amount', 'related_payment_method', 'status')
+    list_display = ('updated', 'admin_project', 'fundraiser', 'user', 'user_full_name', 'amount', 'related_payment_method', 'status')
     list_filter = ('order__status', )
     ordering = ('-updated', )
     raw_id_fields = ('project', 'fundraiser')
@@ -28,22 +31,13 @@ class DonationAdmin(admin.ModelAdmin):
 
     def related_payment_method(self, obj):
         order_payment = obj.order.get_latest_order_payment()
-        provider_and_method = order_payment.payment_method
-        split_list = [x for x in re.split(r'([A-Z][a-z]*)', provider_and_method) if x]
-
-        method = '?'
-        if len(split_list) > 0:
-            provider = split_list[0]
-        else:
+        if not order_payment or not order_payment.payment:
             return '?'
-        if len(split_list) > 1:
-            method = split_list[1]
-        return '{0} - {1}'.format(provider.capitalize(), method)
+        icon = static(order_payment.payment.method_icon)
+        return '<img src="{0}" height="16px" title="{1}" />'.format(icon, order_payment.payment.method_name)
 
-    user_full_name.short_description = 'Employee name'
-    user.short_description = 'Employee email address'
-    related_payment_method.short_description = 'Payment Provider and Method'
-
+    related_payment_method.short_description = 'Payment method'
+    related_payment_method.allow_tags = True
 
     def order_link(self, obj):
         object = obj.order
@@ -51,6 +45,17 @@ class DonationAdmin(admin.ModelAdmin):
         return "<a href='{0}'>Order: {1}</a>".format(str(url), obj.id)
 
     order_link.allow_tags = True
+
+    # Link to project
+    admin_project = link_to(
+        lambda obj: obj.project,
+        'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'], MODEL_MAP['project']['class'].lower()),
+        view_args=lambda obj: (obj.project.id, ),
+        short_description='project',
+        truncate=50
+    )
+
+
 
 admin.site.register(DONATION_MODEL, DonationAdmin)
 

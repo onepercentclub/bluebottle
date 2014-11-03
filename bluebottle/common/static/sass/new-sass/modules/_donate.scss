@@ -1,5 +1,6 @@
 $color-primary: #5DC0ED;
 $modal-profile-border: #f5f4f6;
+$font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
 
 .donation.modal-fullscreen-container {
     .modal-flash-message.success {
@@ -11,11 +12,12 @@ $modal-profile-border: #f5f4f6;
     background: #F5F4F6;
     padding: 20px;
     border-radius: 8px;
+    font-family: $font-family-body;
     @include placeholder-color($color-primary);
 
     .btn-donate {
         position: relative;
-        font-family: $font-family-heavy;
+        font-family: $font-family-body;
         font-size: $font-size-large;
         line-height: $base-line-height;
         padding: $base-padding/2 $base-padding;
@@ -38,6 +40,7 @@ $modal-profile-border: #f5f4f6;
     .donation-input {
         height: 57px;
         padding: 5px 5px 5px 35px;
+        font-family: inherit;
         font-size: 28px;
         font-weight: bold;
         line-height: 34px;
@@ -81,6 +84,7 @@ $modal-profile-border: #f5f4f6;
     min-height: 350px;
     padding-top: 45px;
     background: #E4EDE9;
+    font-family: $font-family-body;
     @include border-radius(5px);
 
     .backdrop {

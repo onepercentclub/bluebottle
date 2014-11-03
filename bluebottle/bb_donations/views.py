@@ -115,27 +115,21 @@ class ManageDonationList(generics.ListCreateAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
     permission_classes = (IsOrderCreator, OrderIsNew)
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super(ManageDonationList, self).get_queryset()
 
         filter_kwargs = {}
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
-        if project_slug:
-            try:
-                project = PROJECT_MODEL.objects.get(slug=project_slug)
-            except PROJECT_MODEL.DoesNotExist:
-                raise Http404(u"No project found matching the query")
-
-            filter_kwargs['project'] = project
-
-        user_id = self.request.QUERY_PARAMS.get('owner', None)
+        user_id = self.request.user.id
         if user_id:
-            filter_kwargs['owner__pk'] = user_id
+            filter_kwargs['order__user__pk'] = user_id
 
         status = self.request.QUERY_PARAMS.get('status', None)
-        if status:
+        if status == 'success':
+            queryset = queryset.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        elif status:
             filter_kwargs['order__status'] = status
 
         return queryset.filter(**filter_kwargs).order_by('-created', 'order__status')

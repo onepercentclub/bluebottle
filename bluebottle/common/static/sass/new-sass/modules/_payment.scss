@@ -69,7 +69,11 @@ $font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
                     background-size: 22px;
                 }
             }
-
+            &.directdebit {
+                &:before {
+                    background: image-url("icons/icon-directdebit-modal.svg") transparent no-repeat 0 14px;
+                }
+            }
 
             &.is-active {
                 background: #F5F4F6;
@@ -137,7 +141,18 @@ $font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
                     background-position: 100% 50%;
                 }
             }
+
+            &.directdebit-list {
+                .row {
+                    margin-bottom: 5px;
+                }
+
+                #bicswift {
+                    font-size: 12px;
+                }
+            }
         }
+
 
         span {
             font-size: 15px;

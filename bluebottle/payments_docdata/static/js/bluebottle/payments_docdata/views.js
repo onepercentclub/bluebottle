@@ -27,3 +27,20 @@ App.DocdataCreditcardSelectView = Em.Select.extend({
     optionLabelPath: "content.name",
     prompt: gettext("Select your credit card")
 });
+
+App.DocdataDirectdebitView = Em.View.extend({
+    templateName: 'docdataDirectdebit',
+
+    didInsertElement: function() {
+        var accountNumber = this.$().find('#accountnumber'),
+            bic = this.$().find('#bicswift');
+
+        $(accountnumber).on('keyup', function() {
+            if ($(accountnumber).val() === '') {
+                bic.removeAttr('disabled');
+            } else {
+                bic.attr('disabled', 'disabled');
+            }
+        });
+    }
+})

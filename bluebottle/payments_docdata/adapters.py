@@ -129,7 +129,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
         client = gateway.DocdataClient(testing_mode)
 
-
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:
                 reply = client.start_remote_payment(
@@ -154,31 +153,31 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         except DocdataPaymentException as i:
             raise PaymentException(i)
 
-            integration_data = self.order_payment.integration_data
+        integration_data = self.order_payment.integration_data
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True
         if self.payment.default_pm == 'paypal_express_checkout':
             default_act = True
 
-            url = client.get_payment_menu_url(
-                order_key=self.payment.payment_cluster_key,
-                order_id=self.order_payment.order_id,
-                return_url=return_url_base,
-                client_language=client_language,
-            )
+        url = client.get_payment_menu_url(
+            order_key=self.payment.payment_cluster_key,
+            order_id=self.order_payment.order_id,
+            return_url=return_url_base,
+            client_language=client_language,
+        )
 
-            default_act = False
-            if self.payment.ideal_issuer_id:
-                default_act = True
+        default_act = False
+        if self.payment.ideal_issuer_id:
+            default_act = True
 
-            params = {
-                 'default_pm': self.payment.default_pm,
-                 'ideal_issuer_id': self.payment.ideal_issuer_id,
-                 'default_act': default_act
-            }
-            url += '&' + urlencode(params)
-            return {'type': 'redirect', 'method': 'get', 'url': url}
+        params = {
+             'default_pm': self.payment.default_pm,
+             'ideal_issuer_id': self.payment.ideal_issuer_id,
+             'default_act': default_act
+        }
+        url += '&' + urlencode(params)
+        return {'type': 'redirect', 'method': 'get', 'url': url}
 
     def check_payment_status(self):
         response = self._fetch_status()

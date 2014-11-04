@@ -201,8 +201,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.save()
 
         # FIXME: Saving transactions fails...
-        for transaction in response.payment:
-            self._store_payment_transaction(transaction)
+        #for transaction in response.payment:
+        #    self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)

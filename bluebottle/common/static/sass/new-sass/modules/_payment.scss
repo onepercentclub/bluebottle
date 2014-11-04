@@ -145,6 +145,14 @@ $font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
             &.directdebit-list {
                 .row {
                     margin-bottom: 5px;
+
+                    .col12, .col8 {
+                        @include transition(all .2s ease-in-out);
+                    }
+                }
+
+                .bic-col {
+                    display: none;
                 }
 
                 #bicswift {

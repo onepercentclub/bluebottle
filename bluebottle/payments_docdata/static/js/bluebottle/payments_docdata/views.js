@@ -33,7 +33,6 @@ App.DocdataDirectdebitView = Em.View.extend({
 
     didInsertElement: function() {
         var accountNumber = this.$().find('#accountnumber');
-        //$('.bic-col').css({'display': 'none'});
         accountNumber.on('keyup', function(){
             var accountNumberVal = accountNumber.val(),
                 bic = $('.bic-col'),

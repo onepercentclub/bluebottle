@@ -32,14 +32,28 @@ App.DocdataDirectdebitView = Em.View.extend({
     templateName: 'docdataDirectdebit',
 
     didInsertElement: function() {
-        var accountNumber = this.$().find('#accountnumber'),
-            bic = this.$().find('#bicswift');
-
-        $(accountnumber).on('keyup', function() {
-            if ($(accountnumber).val() === '') {
-                bic.removeAttr('disabled');
-            } else {
-                bic.attr('disabled', 'disabled');
+        var accountNumber = this.$().find('#accountnumber');
+        //$('.bic-col').css({'display': 'none'});
+        accountNumber.on('keyup', function(){
+            var accountNumberVal = accountNumber.val(),
+                bic = $('.bic-col'),
+                iban = $('.iban-col');
+            if (accountNumberVal.length >= 2) {
+                if (accountNumberVal.indexOf('NL') > - 1) {
+                    bic.hide({
+                        duration: 200,
+                        specialEasing: 'fadeout',
+                        complete: function() {
+                            iban.attr('class', 'col12 iban-col');
+                        }
+                    });
+                } else {
+                    iban.attr('class', 'col8 iban-col');
+                    bic.show({
+                        duration: 300,
+                        specialEasing: 'fadein'
+                    });
+                }
             }
         });
     }

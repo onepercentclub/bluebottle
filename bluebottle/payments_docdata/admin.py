@@ -12,8 +12,8 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
     inlines = (PaymentLogEntryInline, )
 
     readonly_fields = ('order_payment_link', 'payment_cluster_link', 'payment_cluster_key',
-                       'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency',
-                        'customer_id', 'email', 'first_name', 'last_name', 'address', 'postal_code', 'city')
+                       'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency', 'ip_address',
+                        'customer_id', 'email', 'first_name', 'last_name', 'address', 'postal_code', 'city', 'country',)
 
     fields = ('status', ) + readonly_fields
 

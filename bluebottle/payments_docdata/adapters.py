@@ -96,8 +96,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 user_data['country'] = 'NL'
             user_data['house_number'] = 1
 
-        import ipdb; ipdb.set_trace()
-
         user_data['company'] = ''
         user_data['kvk_nummer'] = ''
         user_data['vat_number'] = ''

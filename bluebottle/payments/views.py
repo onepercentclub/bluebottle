@@ -62,6 +62,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
             service = PaymentService(obj)
             service.start_payment()
         except PaymentException as error:
+            print error
             raise ParseError(detail=str(error))
     
     def get_queryset(self):

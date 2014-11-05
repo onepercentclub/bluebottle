@@ -17,6 +17,7 @@ App.DocdataDirectdebit = App.DocdataPayment.extend({
     iban: '',
     bic: '',
     account_name: '',
+    account_city: 'Unknown',
     agree: false
 });
 

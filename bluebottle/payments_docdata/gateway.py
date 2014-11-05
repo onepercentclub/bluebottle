@@ -174,6 +174,9 @@ class DocdataClient(object):
 
         while not done:
             merchant_order_reference = "{0}-{1}".format(payment_id, t)
+
+            #import ipdb;ipdb.set_trace()
+
             reply = self.client.service.create(
                 merchant=merchant.to_xml(self.client.factory),
                 merchantOrderReference=merchant_order_reference,

@@ -2,7 +2,6 @@ import logging
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
-from django.contrib.sites.models import get_current_site
 import gateway
 
 from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
@@ -11,7 +10,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.utils.utils import StatusDefinition, get_current_host
+from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
 from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
@@ -53,6 +52,60 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     def __init__(self, *args, **kwargs):
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
+    def get_user_data(self):
+        user = self.order_payment.order.user
+        ip_address = get_client_ip()
+
+        if user:
+            user_data = {
+                'id': user.id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'ip_address': ip_address,
+            }
+        else:
+            user_data = {
+                'id': 1,
+                'first_name': 'Nomen',
+                'last_name': 'Nescio',
+                'email': settings.CONTACT_EMAIL,
+                'ip_address': ip_address
+            }
+
+
+        if user and hasattr(user, 'address'):
+            user_data['street'] = user.address.line1
+            street = user.address.line1.split(' ')
+            if int(street[-1]):
+                user_data['house_number'] = street[-1]
+            else:
+                user_data['house_number'] = 1
+
+            user_data['postal_code'] = user.address.postal_code
+            user_data['city'] = user.address.city
+            user_data['country'] = user.address.country.alpha2_code
+        else:
+            user_data['postal_code'] = 'Unknown'
+            user_data['street'] = 'Unknown'
+            user_data['city'] = 'Unknown'
+            country = get_country_code_by_ip(ip_address)
+            if country:
+                user_data['country'] = country
+            else:
+                user_data['country'] = 'NL'
+            user_data['house_number'] = 1
+
+        import ipdb; ipdb.set_trace()
+
+        user_data['company'] = ''
+        user_data['kvk_nummer'] = ''
+        user_data['vat_number'] = ''
+        user_data['house_number_addition'] = ''
+        user_data['state'] = ''
+        return user_data
+
+
     def get_status_mapping(self, external_payment_status):
         return self.STATUS_MAPPING.get(external_payment_status)
 
@@ -88,16 +141,16 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             date_of_birth=None,
             phone_number=None,
             mobile_phone_number=None,
-            ipAddress=None)
+            ipAddress=user['ip_address'])
 
         address = gateway.Address(
-            street=u'Unknown',
-            house_number='1',
-            house_number_addition=u'',
-            postal_code='Unknown',
-            city=u'Unknown',
-            state=u'',
-            country_code='NL',
+            street=user['street'],
+            house_number=user['house_number'],
+            house_number_addition=user['house_number_addition'],
+            postal_code=user['postal_code'],
+            city=user['city'],
+            state=user['state'],
+            country_code=user['country'],
         )
 
         bill_to = gateway.Destination(name=name, address=address)

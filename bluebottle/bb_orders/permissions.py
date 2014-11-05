@@ -58,17 +58,28 @@ class IsOrderCreator(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Allow non modifying actions
-        if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
+        if request.method in permissions.SAFE_METHODS:
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
         if not view.model == ORDER_MODEL:
             order = self._get_order_from_request(request)
             if order:
-                return order.user == request.user
+                if request.user.is_authenticated():
+                    # Permission is only granted if the order user is the logged in user.
+                    return order.user == request.user
+
+                # Case 2: Anonymous user.
+                else:
+                    # For an anonymous user we grant access if the new order id is the same as the payment order id.
+                    order_id = request.session.get('new_order_id')
+                    if order_id:
+                        return order_id == order.id
+                    return False
             else:
                 return False
         return True
+
 
 class OrderIsNew(permissions.BasePermission):
     """

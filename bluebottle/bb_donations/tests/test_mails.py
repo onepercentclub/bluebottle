@@ -41,6 +41,9 @@ class DonationEmailTests(BluebottleTestCase):
     def test_mail_new_donation_after_successful(self):
         """ Testing if the e-mail is sent """
 
+        # cleaning outbox
+        mail.outbox = []
+
         self.order.locked()
         self.order.succeeded()
 

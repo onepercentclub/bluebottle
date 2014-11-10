@@ -12,7 +12,7 @@ ORDER_MODEL = get_order_model()
 
 class VoucherPayment(Payment):
 
-    voucher = models.ForeignKey('payments_voucher.Voucher',  verbose_name=_("Voucher"))
+    voucher = models.OneToOneField('payments_voucher.Voucher',  verbose_name=_("Voucher"), related_name='payment')
 
     class Meta:
         ordering = ('-created', '-updated')

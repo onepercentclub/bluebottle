@@ -1,21 +1,33 @@
+from django.contrib import admin
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from django.core.urlresolvers import reverse
 from bluebottle.payments.models import Payment
-from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebitPayment
+from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebitPayment, DocdataTransaction
 from polymorphic.admin import PolymorphicChildModelAdmin
+
+
+class DocdataTransactionInline(admin.TabularInline):
+  model = DocdataTransaction
+  readonly_fields = ('status', 'created', 'updated', 'docdata_id', 'payment_method', 'authorization_status', 'authorization_amount')
+  fields = readonly_fields
+  can_delete = False
+
+  def has_add_permission(self, request):
+    return False
+
+  class Media:
+          css = {"all": ("css/admin/hide_admin_original.css",)}  
 
 
 class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
     model = DocdataPayment
 
-    inlines = (PaymentLogEntryInline, )
+    inlines = (PaymentLogEntryInline, DocdataTransactionInline)
 
     readonly_fields = ('order_payment_link', 'payment_cluster_link', 'payment_cluster_key',
-                       'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency',
-                       'total_registered', 'total_shopper_pending',
-                       'total_acquirer_pending', 'total_acquirer_approved',
-                       'total_captured', 'total_refunded', 'total_charged_back')
+                       'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency', 'ip_address',
+                        'customer_id', 'email', 'first_name', 'last_name', 'address', 'postal_code', 'city', 'country',)
 
     fields = ('status', ) + readonly_fields
 
@@ -33,6 +45,7 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
 
     payment_cluster_link.allow_tags = True
     
+
 
 class DocdataDirectdebitPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment

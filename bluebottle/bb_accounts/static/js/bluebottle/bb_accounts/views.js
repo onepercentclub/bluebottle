@@ -3,14 +3,7 @@
 */
 
 App.SignupView = App.FormView.extend({
-    submitAction: 'signup',
-
-    firstName: gettext("First name"),
-    surname: gettext("Surname"),
-    emailText: gettext("Email address"),
-    reenterEmail: gettext("Re-enter email address"),
-    passwordText: gettext("Password")
-
+    submitAction: 'signup'
 });
 
 App.UserModalView = App.FormView.extend({
@@ -18,27 +11,18 @@ App.UserModalView = App.FormView.extend({
 });
 
 App.LoginView = App.FormView.extend({
-    templateName: 'login',
-
-    placeholderText: gettext("Email address"),
-    passwordText: gettext("Password"),
+    submitAction: 'login',
 
     next: function() {
         return  String(window.location);
-    }.property(),
-
-    submitAction: 'login'
+    }.property()
 });
 
 App.PasswordResetView = App.FormView.extend({
-    submitAction: 'resetPassword',
-
-    newPasswordText: gettext('Choose New Password'),
-    confirmPasswordText: gettext('Confirm New Password')
+    submitAction: 'resetPassword'
 });
 
 App.PasswordRequestView = App.FormView.extend({
-    placeholderText: gettext("Email address"),
     submitAction: 'requestReset'
 });
 

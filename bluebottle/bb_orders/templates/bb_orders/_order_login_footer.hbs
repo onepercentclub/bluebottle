@@ -1,0 +1,12 @@
+{% load bb_ember i18n %}
+
+{% tplhandlebars "_order_login_footer" %}
+    <div class="modal-fullscreen-footer">
+        <span class="modal-btn-signup" href="#">
+            {% trans "Don’t have an account?" %}
+            <a {{action "modalFlip" "orderSignup" }}>
+                {% trans "Sign up here" %}
+            </a>
+        </span>
+    </div>
+{% endtplhandlebars %}

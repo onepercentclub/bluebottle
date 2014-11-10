@@ -2,9 +2,9 @@
 
 
 {% tplhandlebars "_standard_login_form" %}
-    {{input valueBinding='email' classBinding="errorList.email.length:error" type="text" name="username" maxlength="254" placeholder=view.placeholderText}}
+    {{input valueBinding='email' classBinding="errorList.email.length:error" type="text" name="username" maxlength="254" placeholder=App.translatables.placeholders.email}}
     <div class="password">
-        {{input valueBinding="password" classBinding="errorList.password.length:error" name="password" type="password" placeholder=view.passwordText}}
+        {{input valueBinding="password" classBinding="errorList.password.length:error" name="password" type="password" placeholder=App.translatables.placeholders.password}}
         <div class="tooltip-holder">
             <span {{ action 'passwordRequest' }} class="questionmark">?</span>
             <span class="modal-btn-signup" href="#">

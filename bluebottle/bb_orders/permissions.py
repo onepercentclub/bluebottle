@@ -29,14 +29,21 @@ class IsOrderCreator(permissions.BasePermission):
         else:
             order = obj.order
 
+        # Permission is granted if: 
+        #   1) the order user is the logged in user
+        #   2) the order has no user but the current
+        #      order in the session has the same order_id as the order being 
+        #      accessed. This will happen if the order was created anonymously
+        #      and then the user logged in / signed up.
+
         # Case 1: Authenticated user.
         if request.user.is_authenticated():
-            # Permission is only granted if the order user is the logged in user.
-            return order.user == request.user
+            if order.user == request.user:
+                return True
+            return False
 
         # Case 2: Anonymous user.
         else:
-            # For an anonymous user we grant access if the new order id is the same as the payment order id.
             order_id = request.session.get('new_order_id')
             if order_id:
                 return order_id == order.id
@@ -65,9 +72,16 @@ class IsOrderCreator(permissions.BasePermission):
         if not view.model == ORDER_MODEL:
             order = self._get_order_from_request(request)
             if order:
-                return order.user == request.user
+                # Allow action if order belongs to user or if the user is anonymous
+                # and the current order in the session is the same as this order
+                if request.user.is_authenticated():
+                    return order.user == request.user
+                elif order.pk == request.session.get('new_order_id'):
+                    return True
+                return False
             else:
                 return False
+
         return True
 
 class OrderIsNew(permissions.BasePermission):

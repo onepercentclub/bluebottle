@@ -134,8 +134,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     // shown the sign in / up modal then they should transition to the requests route
                     _this.send('loadNextTransition', null);
 
-                    // Close the modal
-                    _this.send('close');
+
+                    _this._handleSignupSuccess();
                 }, function () {
                     _this.set('isBusy', false);
 
@@ -341,6 +341,11 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         }
     }.observes('error'),
 
+    _handleLoginSuccess: function () {
+        // Close the modal
+        this.send('close');
+    },
+
     actions: {
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
@@ -373,8 +378,8 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');
-                // Close the modal
-                _this.send('close');
+
+                _this._handleLoginSuccess();
 
             }, function (error) {
                 _this.set('isBusy', false);

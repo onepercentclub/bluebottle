@@ -19,9 +19,6 @@ from bluebottle.utils.utils import get_country_by_ip
 
 
 class PaymentMethodList(APIView):
-    #serializer_class = OrderPaymentMethodSerializer
-    permission_classes = (LoggedInUser,)
-
     def get(self, request, *args, **kwargs):
         ip = get_ip(request)
         if ip == '127.0.0.1':
@@ -38,8 +35,7 @@ class PaymentMethodList(APIView):
 
 
 class PaymentMethodDetail(RetrieveAPIView):
-    permission_classes = (LoggedInUser,)
-
+    pass
 
 class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
     model = OrderPayment

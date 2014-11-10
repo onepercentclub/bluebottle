@@ -104,14 +104,16 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         client = gateway.DocdataClient(testing_mode)
 
+        info_text = _("Bluebottle donation %(payment_id)s") % {'payment_id': self.order_payment.id}
+
         response = client.create(
             merchant=merchant,
             payment_id=self.order_payment.id,
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,
-            description=_("Bluebottle donation"),
-            receiptText=_("Bluebottle donation"),
+            description=info_text,
+            receiptText=info_text,
             includeCosts=False,
             profile=settings.DOCDATA_SETTINGS['profile'],
             days_to_pay=settings.DOCDATA_SETTINGS['days_to_pay'],

@@ -22,6 +22,7 @@ class ValidDonationsMixin(object):
         queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
         return queryset
 
+
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')

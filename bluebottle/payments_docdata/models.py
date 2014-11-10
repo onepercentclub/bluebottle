@@ -54,6 +54,7 @@ class DocdataPayment(Payment):
     address = models.CharField(max_length=200, default='')
     postal_code = models.CharField(max_length=20, default='')
     city = models.CharField(max_length=200, default='')
+    ip_address = models.CharField(max_length=200, default='')
 
     def get_method_name(self):
         return self.default_pm

@@ -19,6 +19,7 @@ from bluebottle.utils.utils import get_country_by_ip
 
 
 class PaymentMethodList(APIView):
+
     def get(self, request, *args, **kwargs):
         ip = get_ip(request)
         if ip == '127.0.0.1':
@@ -37,6 +38,7 @@ class PaymentMethodList(APIView):
 class PaymentMethodDetail(RetrieveAPIView):
     pass
 
+
 class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer
@@ -44,7 +46,6 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
 
     def pre_save(self, obj):
         obj.amount = obj.order.total
-
 
 
 class ManageOrderPaymentList(ListCreateAPIView):
@@ -61,6 +62,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
             service = PaymentService(obj)
             service.start_payment()
         except PaymentException as error:
+            print error
             raise ParseError(detail=str(error))
     
     def get_queryset(self):

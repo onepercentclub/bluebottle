@@ -38,9 +38,7 @@ class IsOrderCreator(permissions.BasePermission):
 
         # Case 1: Authenticated user.
         if request.user.is_authenticated():
-            if order.user == request.user:
-                return True
-            return False
+            return order.user == request.user
 
         # Case 2: Anonymous user.
         else:
@@ -74,15 +72,15 @@ class IsOrderCreator(permissions.BasePermission):
             if order:
                 # Allow action if order belongs to user or if the user is anonymous
                 # and the current order in the session is the same as this order
-                if request.user.is_authenticated():
-                    return order.user == request.user
-                elif order.pk == request.session.get('new_order_id'):
-                    return True
+                order_id = request.session.get('new_order_id')
+                if order_id:
+                    return order_id == order.id
                 return False
             else:
                 return False
 
         return True
+
 
 class OrderIsNew(permissions.BasePermission):
     """

@@ -7,6 +7,7 @@ from bluebottle.payments.exception import PaymentAdminException
 from bluebottle.payments_docdata.admin import DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin
 from bluebottle.payments_docdata.models import DocdataPayment
 from bluebottle.payments_mock.admin import MockPaymentAdmin
+from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
 from bluebottle.payments_mock.models import MockPayment
 
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin

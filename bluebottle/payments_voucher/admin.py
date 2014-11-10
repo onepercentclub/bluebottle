@@ -36,5 +36,11 @@ class VoucherAdmin(admin.ModelAdmin):
     fields = readonly_fields + ('sender', 'receiver', 'status', 'amount', 'currency', 'code', 'sender_email',
                                 'receiver_email', 'receiver_name', 'sender_name', 'message')
 
+    def view_order(self, obj):
+        url = reverse('admin:%s_%s_change' % (obj.order._meta.app_label, obj.order._meta.module_name), args=[obj.order.id])
+        return "<a href='%s'>View Order</a>" % (str(url))
+
+    view_order.allow_tags = True
+
 admin.site.register(Voucher, VoucherAdmin)
 

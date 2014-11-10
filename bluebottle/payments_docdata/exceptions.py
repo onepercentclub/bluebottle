@@ -8,12 +8,6 @@ class DocdataPaymentException(PaymentException):
         self.message = message
         self.error_list = error_list
 
-    def __str__(self):
-        return self.message
-
-    def __unicode__(self):
-        return self.message
-
 
 class DocdataPaymentStatusException(PaymentException):
     """ Thrown when unknown payment statuses are received. """

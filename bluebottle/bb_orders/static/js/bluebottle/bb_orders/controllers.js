@@ -1,11 +1,3 @@
-/*
-  Small mixin for handling a successful donation - controllers using this mixin
-  should also include the SaveDonationMixin.
-*/
-App.DonationSuccessMixin = Em.Mixin.create({
-});
-
-
 App.OrderController = Em.ObjectController.extend();
 
 App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, App.DonationSuccessMixin, {

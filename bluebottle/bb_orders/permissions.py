@@ -74,9 +74,10 @@ class IsOrderCreator(permissions.BasePermission):
             if order:
                 # Allow action if order belongs to user or if the user is anonymous
                 # and the current order in the session is the same as this order
-                order_id = request.session.get('new_order_id')
-                if order_id:
-                    return order_id == order.id
+                if request.user.is_authenticated():
+                    return order.user == request.user
+                elif order.pk == request.session.get('new_order_id'):
+                    return True
                 return False
             else:
                 return False

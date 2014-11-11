@@ -332,3 +332,50 @@ App.GoTo = Ember.Mixin.create({
         }
     }
 });
+
+
+/* 
+    Mixin used to save the current donation - used when the user:
+        1) donates and is already authenticated
+        2) when the user donates as guest
+        3) when user logs in after selecting donation amount
+        4) when user signs up after selecting donation amount 
+
+    Mix this into the controller as needed.
+*/
+App.SaveDonationMixin = Em.Mixin.create({
+    needs: ['donation', 'order'],
+
+    _saveDonation: function () {
+        var _this = this,
+            donation = this.get('controllers.donation.model'),
+            order = donation.get('order');
+
+        // If the donation is unchanged then move on to the payments modal.
+        if (!donation.get('isDirty')) {
+          var payment = App.MyOrderPayment.createRecord({order: order});
+          
+          this.send('modalSlideLeft', 'orderPayment', payment);
+        }
+
+        // Set is loading property until success or error response
+        _this.set('isBusy', true);
+
+        donation.save().then(
+          // Success
+          function() {
+              var payment = App.MyOrderPayment.createRecord({order: order});
+              _this.send('modalSlideLeft', 'orderPayment', payment);
+          },
+          // Failure
+          function(){
+               _this.send('modalError');
+               
+              // Handle error message here!
+              _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
+
+              throw new Em.error('Saving Donation failed!');
+          }
+        );
+    }
+});

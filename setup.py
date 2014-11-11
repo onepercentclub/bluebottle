@@ -38,6 +38,7 @@ install_requires = [
     'django-tinymce==1.5.1b2',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.5.1',
+    'django-dynamic-fixture==1.8.0',
     'djangorestframework==2.3.12',
     'dkimpy==0.5.4',
     'html5lib==0.95',

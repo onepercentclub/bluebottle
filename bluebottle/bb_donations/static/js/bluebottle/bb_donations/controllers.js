@@ -1,4 +1,4 @@
-App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
+App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, App.SaveDonationMixin, {
     requiredFields: ['amount' ],
     fieldsToWatch: ['amount' ],
     defaultAmounts: [50, 75, 100],
@@ -61,32 +61,11 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
                 return false;
             }
 
-            // If the donation is unchanged then move on to the payments modal.
-            if (!donation.get('isDirty')) {
-                var payment = App.MyOrderPayment.createRecord({order: order});
-                
-                this.send('modalSlide', 'orderPayment', payment);
+            if (this.get('currentUser.isAuthenticated')) {
+                _this._saveDonation();
+            } else {
+                _this.send('modalSlideLeft', 'orderSignup');
             }
-
-            // Set is loading property until success or error response
-            _this.set('isBusy', true);
-
-            donation.save().then(
-                // Success
-                function() {
-                    var payment = App.MyOrderPayment.createRecord({order: order});
-                    _this.send('modalSlide', 'orderPayment', payment);
-                },
-                // Failure
-                function(){
-                     _this.send('modalError');
-                     
-                    // Handle error message here!
-                    _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
-
-                    throw new Em.error('Saving Donation failed!');
-                }
-            );
         }
     }
 });

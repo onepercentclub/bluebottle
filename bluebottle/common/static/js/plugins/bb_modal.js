@@ -20,6 +20,15 @@ BB.ModalControllerMixin = Em.Mixin.create({
 BB.ModalMixin = Em.Mixin.create({
     actions: {
         modalWillTransition: function(name, side, context) {
+            // If the side is not defined then use the current displayed side
+            if (! side || typeof side == 'undefined') {
+                // The higher index is for the visible side.
+                var frontIndex = parseInt($('#card .front').css('z-index')),
+                    backIndex = parseInt($('#card .back').css('z-index'));
+
+                side = frontIndex > backIndex ? 'modalFront' : 'modalBack';
+            }
+
             // Handle any cleanup for the previously set content for the modal
             var modalContainer = this.controllerFor('modalContainer'),
                 previousController = modalContainer.get('currentController');
@@ -167,24 +176,31 @@ BB.ModalMixin = Em.Mixin.create({
             });
         },
 
-        modalFlip: function(name, context) {
+        modalContent: function (name, context) {
             var controller = this.controllerFor(name);
 
             if (Em.typeOf(context) != 'undefined')
-                controller.set('model', context);
+                controller.set('model', context);  
 
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack', context);
-
-            // add class flipped and reset default state
-            this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
+            this.send('modalWillTransition', name, null, context);
         },
 
-        modalFlipBack: function(name, context) {
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront', context);
+        modalFlip: function (name, context) {
+            var controller = this.controllerFor(name);
 
-            $('#card').removeClass('flipped');
+            if (Em.typeOf(context) != 'undefined')
+                controller.set('model', context);            
+
+            if ($('#card').hasClass('flipped')) {
+                $('#card').removeClass('flipped');
+                modalSide = 'modalFront';
+            } else {
+                this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
+                modalSide = 'modalBack';
+            }
+
+            // Handle any cleanup for the previously set content for the modal
+            this.send('modalWillTransition', name, modalSide, context);
         },
 
         modalSlide: function (name, context) {

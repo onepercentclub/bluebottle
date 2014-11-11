@@ -1,0 +1,9 @@
+{% load i18n bb_ember %}
+
+
+{% tplhandlebars "_matched_login_header" %}
+    <div class="modal-fullscreen-header">
+        <span {{action "close"}} class="modal-fullscreen-close"></span>
+        <h4>{%trans "Hello, is it me you're looking for"%}</h4>
+    </div>
+{% endtplhandlebars %}

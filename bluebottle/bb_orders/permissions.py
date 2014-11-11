@@ -30,15 +30,17 @@ class IsOrderCreator(permissions.BasePermission):
             order = obj.order
 
         # Permission is granted if: 
-        #   1) the order user is the logged in user
-        #   2) the order has no user but the current
-        #      order in the session has the same order_id as the order being 
-        #      accessed. This will happen if the order was created anonymously
-        #      and then the user logged in / signed up.
+        #   * the order user is the logged in user
+        #   * the order has no user but the current
+        #     order in the session has the same order_id as the order being 
+        #     accessed. This will happen if the order was created anonymously
+        #     and then the user logged in / signed up.
 
         # Case 1: Authenticated user.
         if request.user.is_authenticated():
-            return order.user == request.user
+            # Does the order match the current user, or do they have an order 
+            # in the session which matches this order?
+            return (order.user == request.user or order.pk == request.session.get('new_order_id'))
 
         # Case 2: Anonymous user.
         else:

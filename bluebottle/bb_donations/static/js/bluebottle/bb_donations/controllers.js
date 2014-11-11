@@ -64,7 +64,7 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
             if (this.get('currentUser.isAuthenticated')) {
                 _this._saveDonation();
             } else {
-                _this.send('modalSlide', 'orderSignup');
+                _this.send('modalSlideLeft', 'orderSignup');
             }
         }
     }

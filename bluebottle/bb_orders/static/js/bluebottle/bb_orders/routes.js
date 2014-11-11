@@ -16,9 +16,8 @@ App.OrderRoute = Em.Route.extend({
     },
 
     redirect: function(model) {
-        var _this = this;
-        
-        var donation = model.get('donations').objectAt(0);
+        var _this = this,
+            donation = model.get('donations').objectAt(0);
             status = _this.get('status'),
             fundraiser = donation.get('fundraiser'),
             project = donation.get('project'),
@@ -27,7 +26,9 @@ App.OrderRoute = Em.Route.extend({
         _this.transitionTo(donationTarget.get('modelType'), donationTarget).promise.then(function () {
             switch (status) {
                 case 'success':
-                    if (donation.get('anonymous')){
+                    // If the donation is anonymous or there is no current user
+                    // then only show the thank you toast.
+                    if (donation.get('anonymous') || !_this.get('currentUser.isAuthenticated')) {
                         _this.send('setFlash', gettext("Thank you for supporting this project"));
                     } else {
                         _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
@@ -48,7 +49,12 @@ App.OrderRoute = Em.Route.extend({
                     setTimeout(function () {
                         _this._checkOrderStatus(model).then(function () {
                             _this.send('clearFlash');
-                            _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+
+                            if (donation.get('anonymous') || !_this.get('currentUser.isAuthenticated')) {
+                                _this.send('setFlash', gettext("Thank you for supporting this project"));
+                            } else {
+                                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+                            }
                         });
                     }, 2000);
 

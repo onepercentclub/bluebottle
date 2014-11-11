@@ -80,6 +80,22 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         }
     }.observes('error'),
 
+    _handleSignupSuccess: function () {
+        // Close the modal
+        this.send('close');
+    },
+
+    _handleSignupConflict: function (failedUser) {
+        var conflict = failedUser.errors.conflict,
+            loginObject = App.UserLogin.create({
+                matchId: conflict.id,
+                matchType: conflict.type,
+                email: failedUser.get('email')
+            });
+
+        this.send('modalContent', 'login', loginObject);
+    },
+
     actions: {
         signup: function() {
             var _this = this,
@@ -151,14 +167,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 // login modal so the user can sign in.
                 // We set matchType = social / email so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
-                    var conflict = failedUser.errors.conflict,
-                        loginObject = App.UserLogin.create({
-                            matchId: conflict.id,
-                            matchType: conflict.type,
-                            email: failedUser.get('email')
-                        });
-
-                    _this.send('modalFlip', 'login', loginObject);
+                    _this._handleSignupConflict(failedUser);
                 } else {
                     _this.send('modalError');
                     // Handle error message here!

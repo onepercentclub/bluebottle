@@ -398,7 +398,7 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
 
 class TestUnauthenticatedDonationCreate(DonationApiTestCase):
     def setUp(self):
-        super(TestAnonymousDonationCreate, self).setUp()
+        super(TestUnauthenticatedDonationCreate, self).setUp()
 
         self.order_anon = OrderFactory.create()
 

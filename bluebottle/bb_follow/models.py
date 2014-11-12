@@ -2,9 +2,9 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
+from bluebottle.mail import send_mail
 from django.contrib.contenttypes.models import ContentType
 from bluebottle.utils.model_dispatcher import get_user_model
-from bluebottle.wallposts.models import WallPost, Reaction
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask
 from bluebottle.bb_donations.models import BaseDonation
@@ -34,6 +34,7 @@ def create_follow(sender, instance, created, **kwargs):
         Create a Follow object when a user follows a Project or Task. A user starts following a project/task when 
         he /she creates a WallPost or Reaction, or does a donation.
     """
+    from bluebottle.wallposts.models import WallPost, Reaction
 
     # A WallPost is created by user
     if created and isinstance(instance, WallPost):
@@ -90,3 +91,23 @@ def create_follow(sender, instance, created, **kwargs):
                 follow = Follow(user=user, followed_object=instance.project)
                 follow.save()    
        
+
+@receiver(post_save)
+def email_followers(sender, instance, created, **kwargs):
+    from bluebottle.wallposts.models import WallPost, Reaction
+
+    if isinstance(instance, WallPost):
+        content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
+        followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+
+        wallpost_text = instance.text
+        
+        for follower in followers:
+            email = follower.user.email
+            send_mail(
+                    template_name='wallpost_mail.mail',
+                    subject=_("Mail with the wallpost"),
+                    to=email,
+                    followed_object=follower.followed_object,
+                    link='NO LINK'
+                )

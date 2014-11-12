@@ -107,3 +107,8 @@ class FollowTests(BookingTestCase):
 		self.assertEqual(Follow.objects.all()[1].followed_object, self.project)
 		self.assertEqual(Follow.objects.all()[1].user, commenter)
 
+	def test_wallpost_mail(self):
+		""" Test that followers get an email when the email_followers option is selected """
+		pass
+		
+

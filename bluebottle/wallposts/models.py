@@ -40,6 +40,8 @@ class WallPost(PolymorphicModel):
     object_id = models.PositiveIntegerField(_('object ID'))
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    email_followers = models.BooleanField(default=False)
+
     # Manager
     objects = WallPostManager()
 

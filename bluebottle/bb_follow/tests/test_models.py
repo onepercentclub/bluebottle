@@ -5,8 +5,14 @@ from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import TextWallPostFactory
 from bluebottle.wallposts.models import Reaction
 from bluebottle.bb_follow.models import Follow
+from bluebottle.utils.model_dispatcher import get_model_class
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.utils.utils import StatusDefinition
 from utils.tests.utils import BookingTestCase
 
+
+DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
 class FollowTests(BookingTestCase):
@@ -76,7 +82,14 @@ class FollowTests(BookingTestCase):
 		self.assertEqual(Follow.objects.all()[1].user, commenter)
 
 	def test_create_follow_donation(self):
-		pass
+		self.assertEqual(Follow.objects.count(), 0)
+
+		order = OrderFactory.create(user=self.another_user, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order, amount=35, project=self.project)
+
+		self.assertEqual(Follow.objects.count(), 1)
+		self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
+		self.assertEqual(Follow.objects.all()[0].user, self.another_user)
 
 	def test_no_duplicate_follow(self):
 		self.assertEqual(Follow.objects.count(), 0)

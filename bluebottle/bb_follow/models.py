@@ -42,9 +42,12 @@ def create_follow(sender, instance, created, **kwargs):
         if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask):
             user = instance.author
             if user and instance.content_object:
+
+                content_type = ContentType.objects.get_for_model(instance.content_object)
+
                 try:
                     follow = Follow.objects.get(user=user,
-                                                object_id=instance.object_id,
+                                                object_id=instance.content_object.id,
                                                 content_type=instance.content_type)
                 except Follow.DoesNotExist:
                     follow = Follow(user=user, followed_object=instance.content_object)
@@ -56,10 +59,13 @@ def create_follow(sender, instance, created, **kwargs):
         if isinstance(instance.wallpost.content_object, BaseProject) or isinstance(instance.wallpost.content_object, BaseTask):
             user = instance.author
             if user and instance.wallpost.content_object:
+
+                content_type = ContentType.objects.get_for_model(instance.wallpost.content_object)
+
                 try:
                     follow = Follow.objects.get(user=user,
-                                                object_id=instance.wallpost.object_id,
-                                                content_type=instance.wallpost.content_type)
+                                                object_id=instance.wallpost.content_object.id,
+                                                content_type=content_type)
                 except Follow.DoesNotExist:
                     follow = Follow(user=user, followed_object=instance.wallpost.content_object)
                     follow.save()    
@@ -68,12 +74,15 @@ def create_follow(sender, instance, created, **kwargs):
     if created and isinstance(instance, BaseDonation):
         # Create a Follow to the specific Project or Task if a donation was made
         user = instance.user
+
+        content_type = ContentType.objects.get_for_model(instance.project)
+
         if user and instance.project:
-                try:
-                    follow = Follow.objects.get(user=user, 
-                                                object_id=instance.object_id,
-                                                content_type=instance.content_type)
-                except Follow.DoesNotExist:
-                    follow = Follow(user=user, followed_object=instance.project)
-                    follow.save()    
+            try:
+                follow = Follow.objects.get(user=user, 
+                                            object_id=instance.project.id,
+                                            content_type=content_type)
+            except Follow.DoesNotExist:
+                follow = Follow(user=user, followed_object=instance.project)
+                follow.save()    
        

@@ -1,6 +1,6 @@
 App.OrderController = Em.ObjectController.extend();
 
-App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, App.DonationSuccessMixin, {
+App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, {
     _handleSignupSuccess: function () {
         // Update the user on the order to the current user
         var _this = this,
@@ -34,7 +34,7 @@ App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, A
     }
 });
 
-App.OrderLoginController = App.LoginController.extend(App.SaveDonationMixin, App.DonationSuccessMixin, {
+App.OrderLoginController = App.LoginController.extend(App.SaveDonationMixin, {
     _handleLoginSuccess: function () {
         // Update the user on the order to the current user
         var _this = this,

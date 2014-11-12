@@ -74,10 +74,23 @@ class FollowTests(BookingTestCase):
 		# Make sure to inspect the second Follow object, this is the Follow object for the Reaction
 		self.assertEqual(Follow.objects.all()[1].followed_object, self.task)
 		self.assertEqual(Follow.objects.all()[1].user, commenter)
-		
+
 	def test_create_follow_donation(self):
 		pass
 
 	def test_no_duplicate_follow(self):
-		pass
+		self.assertEqual(Follow.objects.count(), 0)
+		commenter = BlueBottleUserFactory.create()
+
+		# Create a text WallPost for our dummy project
+		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user, text="test1")
+		self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
+
+		some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
+		some_reaction_2 = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla2")
+
+		self.assertEqual(Follow.objects.count(), 2)
+		# Make sure to inspect the second Follow object, this is the Follow object for the Reaction
+		self.assertEqual(Follow.objects.all()[1].followed_object, self.project)
+		self.assertEqual(Follow.objects.all()[1].user, commenter)
 

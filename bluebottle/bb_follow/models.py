@@ -42,22 +42,38 @@ def create_follow(sender, instance, created, **kwargs):
         if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask):
             user = instance.author
             if user and instance.content_object:
-                follow = Follow(user=user, followed_object=instance.content_object)
-                follow.save()        
+                try:
+                    follow = Follow.objects.get(user=user,
+                                                object_id=instance.object_id,
+                                                content_type=instance.content_type)
+                except Follow.DoesNotExist:
+                    follow = Follow(user=user, followed_object=instance.content_object)
+                    follow.save()        
 
     # A Reaction is created by user
-    if created and isinstance(instance, Reaction):
+    if isinstance(instance, Reaction):
         # Create a Follow to the specific Project or Task if a Reaction was created
         if isinstance(instance.wallpost.content_object, BaseProject) or isinstance(instance.wallpost.content_object, BaseTask):
             user = instance.author
             if user and instance.wallpost.content_object:
-                follow = Follow(user=user, followed_object=instance.wallpost.content_object)
-                follow.save() 
+                try:
+                    follow = Follow.objects.get(user=user,
+                                                object_id=instance.wallpost.object_id,
+                                                content_type=instance.wallpost.content_type)
+                except Follow.DoesNotExist:
+                    follow = Follow(user=user, followed_object=instance.wallpost.content_object)
+                    follow.save()    
 
     # A user does a donation
     if created and isinstance(instance, BaseDonation):
         # Create a Follow to the specific Project or Task if a donation was made
         user = instance.user
         if user and instance.project:
-            follow = Follow(user=user, followed_object=instance.project)    
-            follow.save()        
+                try:
+                    follow = Follow.objects.get(user=user, 
+                                                object_id=instance.object_id,
+                                                content_type=instance.content_type)
+                except Follow.DoesNotExist:
+                    follow = Follow(user=user, followed_object=instance.project)
+                    follow.save()    
+       

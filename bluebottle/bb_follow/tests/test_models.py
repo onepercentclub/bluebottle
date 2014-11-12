@@ -36,15 +36,45 @@ class FollowTests(BookingTestCase):
 		self.assertEqual(Follow.objects.all()[0].user, self.another_user)
 
 	def test_create_follow_reaction_project(self):
-		#Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
-		pass
+		self.assertEqual(Follow.objects.count(), 0)
+		commenter = BlueBottleUserFactory.create()
+
+		# Create a text WallPost for our dummy project
+		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user)
+		self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
+
+		some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
+
+		self.assertEqual(Follow.objects.count(), 2)
+		# Make sure to inspect the second Follow object, this is the Follow object for the Reaction
+		self.assertEqual(Follow.objects.all()[1].followed_object, self.project)
+		self.assertEqual(Follow.objects.all()[1].user, commenter)
 
 	def test_create_follow_wallpost_task(self):
-		pass
+		self.assertEqual(Follow.objects.count(), 0)
+
+		# Create a text WallPost for our dummy project
+		some_wallpost = TextWallPostFactory.create(content_object=self.task, author=self.another_user)
+
+		self.assertEqual(Follow.objects.count(), 1)
+		self.assertEqual(Follow.objects.all()[0].followed_object, self.task)
+		self.assertEqual(Follow.objects.all()[0].user, self.another_user)
 
 	def test_create_follow_reaction_task(self):
-		pass
+		self.assertEqual(Follow.objects.count(), 0)
+		commenter = BlueBottleUserFactory.create()
 
+		# Create a text WallPost for our dummy project
+		some_wallpost = TextWallPostFactory.create(content_object=self.task, author=self.another_user)
+		self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
+
+		some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
+
+		self.assertEqual(Follow.objects.count(), 2)
+		# Make sure to inspect the second Follow object, this is the Follow object for the Reaction
+		self.assertEqual(Follow.objects.all()[1].followed_object, self.task)
+		self.assertEqual(Follow.objects.all()[1].user, commenter)
+		
 	def test_create_follow_donation(self):
 		pass
 

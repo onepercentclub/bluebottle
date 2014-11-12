@@ -35,15 +35,24 @@ def create_follow(sender, instance, created, **kwargs):
         he /she creates a WallPost or Reaction, or does a donation.
     """
 
-    # A WallPost or Reaction is created by user
-    if created and (isinstance(instance, WallPost) or isinstance(instance, Reaction)):
+    # A WallPost is created by user
+    if created and isinstance(instance, WallPost):
 
-        # Create a Follow to the specific Project or Task if a WallPost or Reaction was created
+        # Create a Follow to the specific Project or Task if a WallPost was created
         if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask):
             user = instance.author
             if user and instance.content_object:
                 follow = Follow(user=user, followed_object=instance.content_object)
                 follow.save()        
+
+    # A Reaction is created by user
+    if created and isinstance(instance, Reaction):
+        # Create a Follow to the specific Project or Task if a Reaction was created
+        if isinstance(instance.wallpost.content_object, BaseProject) or isinstance(instance.wallpost.content_object, BaseTask):
+            user = instance.author
+            if user and instance.wallpost.content_object:
+                follow = Follow(user=user, followed_object=instance.wallpost.content_object)
+                follow.save() 
 
     # A user does a donation
     if created and isinstance(instance, BaseDonation):

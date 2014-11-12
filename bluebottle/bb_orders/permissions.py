@@ -68,25 +68,23 @@ class IsOrderCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
-        order = self._get_order_from_request(request)
-        if order:
+        if view.model == ORDER_MODEL:
             # Order must belong to the current user or have no user assigned (anonymous)
-            if order.user and order.user != request.user:
+            order_user = request.DATA.get('user', None)
+            if order_user and order_user != request.user.pk:
                 return False
-        else: # deny if no order present
-            return False
-
-        # This is for creating new objects that have a relation (fk) to Order.
-        if not view.model == ORDER_MODEL:            
-            # Allow action if order belongs to user or if the user is anonymous
-            # and the current order in the session is the same as this order
-            if request.user.is_authenticated():
-                return order.user == request.user
-            elif order.pk == request.session.get('new_order_id'):
-                return True
-            return False
-
-        return True
+            return True
+        else: # This is for creating new objects that have a relation (fk) to Order.
+            order = self._get_order_from_request(request)
+            if order:
+                # Allow action if order belongs to user or if the user is anonymous
+                # and the current order in the session is the same as this order
+                if request.user.is_authenticated():
+                    return order.user == request.user
+                elif order.pk == request.session.get('new_order_id'):
+                    return True
+            else: # deny if no order present
+                return False
 
 
 class OrderIsNew(permissions.BasePermission):

@@ -45,6 +45,7 @@ def create_follow(sender, instance, created, **kwargs):
 
                 content_type = ContentType.objects.get_for_model(instance.content_object)
 
+                # A Follow object should link the project / task to the user, not the wallpost and the user 
                 try:
                     follow = Follow.objects.get(user=user,
                                                 object_id=instance.content_object.id,
@@ -62,6 +63,7 @@ def create_follow(sender, instance, created, **kwargs):
 
                 content_type = ContentType.objects.get_for_model(instance.wallpost.content_object)
 
+                # A Follow object should link the project / task to the user, not the wallpost and the user 
                 try:
                     follow = Follow.objects.get(user=user,
                                                 object_id=instance.wallpost.content_object.id,
@@ -75,9 +77,11 @@ def create_follow(sender, instance, created, **kwargs):
         # Create a Follow to the specific Project or Task if a donation was made
         user = instance.user
 
-        content_type = ContentType.objects.get_for_model(instance.project)
-
         if user and instance.project:
+
+            content_type = ContentType.objects.get_for_model(instance.project)
+
+            # A Follow object should link the project to the user, not the donation and the user 
             try:
                 follow = Follow.objects.get(user=user, 
                                             object_id=instance.project.id,

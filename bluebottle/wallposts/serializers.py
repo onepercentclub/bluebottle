@@ -95,7 +95,7 @@ class WallPostSerializerBase(serializers.ModelSerializer):
     parent_id = WallPostParentIdField(source='object_id')
 
     class Meta:
-        fields = ('id', 'type', 'author', 'created', 'reactions', 'parent_type', 'parent_id')
+        fields = ('id', 'type', 'author', 'created', 'reactions', 'parent_type', 'parent_id', 'email_followers')
 
 
 class MediaWallPostPhotoSerializer(serializers.ModelSerializer):

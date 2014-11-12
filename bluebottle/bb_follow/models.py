@@ -106,8 +106,8 @@ def email_followers(sender, instance, created, **kwargs):
             email = follower.user.email
             send_mail(
                     template_name='wallpost_mail.mail',
-                    subject=_("Mail with the wallpost"),
-                    to=email,
+                    subject="Mail with the wallpost",
+                    to=follower.user,
                     followed_object=follower.followed_object,
                     link='NO LINK'
                 )

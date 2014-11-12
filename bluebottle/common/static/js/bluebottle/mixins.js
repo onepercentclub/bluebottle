@@ -374,7 +374,7 @@ App.SaveDonationMixin = Em.Mixin.create({
               // Handle error message here!
               _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model')));
 
-              throw new Em.error('Saving Donation failed!');
+              throw new Em.Logger.error('Saving Donation failed!');
           }
         );
     }

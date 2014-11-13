@@ -135,8 +135,8 @@ def email_followers(sender, instance, created, **kwargs):
 
             if isinstance(instance.content_object, BaseFundRaiser):
                 # Send update to all people who donated
-                donators = get_donation_model().objects.filter(project=content_type.project)
-                [mailers.add(donator) for donator in donators]             
+                donators = get_donation_model().objects.filter(project=instance.content_object.project)
+                [mailers.add(donator.order.user) for donator in donators]             
 
             wallpost_text = instance.text
 

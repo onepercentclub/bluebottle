@@ -214,7 +214,7 @@ class FollowTests(BookingTestCase):
 		task_member_2 = TaskMemberFactory(task=task)
 
 		mail.outbox = []
-		some_wallpost_2 = TextWallPostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
+		some_wallpost = TextWallPostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
 
 		mail_count = 0
 
@@ -232,6 +232,32 @@ class FollowTests(BookingTestCase):
 
 	def test_wallpost_mail_fundraiser(self):
 		""" Test that the relevant people get an email when the email_followers option is selected for a fundraiser """
-		pass
+		
+		fundraiser_person = BlueBottleUserFactory.create()
+		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
+
+		donator1 = BlueBottleUserFactory.create()
+		order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order, amount=35, project=self.project)
+
+		donator2 = BlueBottleUserFactory.create()
+		order2 = OrderFactory.create(user=donator2, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order2, amount=35, project=self.project)
+
+		some_wallpost = TextWallPostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test2", email_followers=True)
+
+		mail_count = 0
+
+		receivers = [donator1.email, donator2.email]
+
+		for email in mail.outbox:
+			if "Mail with the wallpost" in email.subject:
+				mail_count += 1
+				self.assertTrue(email.to[0] in receivers)
+				receivers.remove(email.to[0])
+
+		self.assertEqual(mail_count, 2)
+		self.assertEqual(receivers, [])
+
 
 

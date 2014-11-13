@@ -117,6 +117,7 @@ def email_followers(sender, instance, created, **kwargs):
 
             # Determine if this wallpost is on a Project page, Task page, or Fundraiser page.
             mailers = set() # Contains user objects
+            
             if isinstance(instance.content_object, BaseProject):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
                 tasks = instance.content_object.task_set.all()

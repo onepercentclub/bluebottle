@@ -169,6 +169,10 @@ class FollowTests(BookingTestCase):
             project=self.project
         )
 
+		# Add extra projects that should not get any email
+		project_owner = BlueBottleUserFactory.create()
+		project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+
 		commenter = BlueBottleUserFactory.create()
 		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test1")
 		some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
@@ -182,7 +186,7 @@ class FollowTests(BookingTestCase):
 
 		some_wallpost_2 = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test2", email_followers=True)
 
-		del mail.outbox[0]
+		del mail.outbox[0] # Delete the "X commented on your post" email
 
 		mail_count = 0
 

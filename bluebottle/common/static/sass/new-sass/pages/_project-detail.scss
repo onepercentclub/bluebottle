@@ -136,6 +136,18 @@
 
             }
         }
+
+        &.without {
+            height: 480px;
+
+            .project-background {
+                height: 480px;
+
+                .project-background-image {
+                    height: 482px;
+                }
+            }
+        }
     }
 }
 

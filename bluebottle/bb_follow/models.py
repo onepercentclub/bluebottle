@@ -4,10 +4,11 @@ from django.contrib.contenttypes import generic
 from django.dispatch import receiver
 from bluebottle.mail import send_mail
 from django.contrib.contenttypes.models import ContentType
-from bluebottle.utils.model_dispatcher import get_user_model
+from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_model, get_donation_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask
 from bluebottle.bb_donations.models import BaseDonation
+from bluebottle.bb_fundraisers.models import BaseFundRaiser
 
 USER_MODEL = get_user_model()
 
@@ -111,16 +112,39 @@ def email_followers(sender, instance, created, **kwargs):
 
     if isinstance(instance, WallPost):
         if instance.email_followers:
+
             content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
-            followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+
+            # Determine if this wallpost is on a Project page, Task page, or Fundraiser page.
+            mailers = set() # Contains user objects
+            if isinstance(instance.content_object, BaseProject):
+                # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
+                tasks = instance.content_object.task_set.all()
+                [mailers.add(task.author) for task in tasks]
+
+                fundraisers = get_fundraiser_model().objects.filter(project=instance.content_object)
+                [mailers.add(fundraiser.owner) for fundraiser in fundraisers]
+
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+                [mailers.add(follower.user) for follower in followers]
+
+            if isinstance(instance.content_object, BaseTask):
+                # Send update to all task members
+                task_members = instance.content_object.members.all()
+                [mailers.add(task_member.member) for task_member in task_members]
+
+            if isinstance(instance.content_object, BaseFundRaiser):
+                # Send update to all people who donated
+                donators = get_donation_model().objects.filter(project=content_type.project)
+                [mailers.add(donator) for donator in donators]             
 
             wallpost_text = instance.text
-            
-            for follower in followers:
+
+            for mailee in mailers:
                 send_mail(
                         template_name='wallpost_mail.mail',
                         subject="Mail with the wallpost",
-                        to=follower.user,
-                        followed_object=follower.followed_object,
+                        wallpost_text=wallpost_text,
+                        to=mailee,
                         link='NO LINK'
                     )

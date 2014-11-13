@@ -2,16 +2,16 @@ from django.test import TestCase
 from django.core import mail
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.wallposts import TextWallPostFactory
 from bluebottle.wallposts.models import Reaction
 from bluebottle.bb_follow.models import Follow
 from bluebottle.utils.model_dispatcher import get_model_class
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
 from bluebottle.utils.utils import StatusDefinition
 from utils.tests.utils import BookingTestCase
-
 
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
@@ -157,28 +157,81 @@ class FollowTests(BookingTestCase):
 		for email in mail.outbox:
 			self.assertTrue("Mail with the wallpost" not in email.subject)
 
-	def test_wallpost_mail(self):
-		""" Test that followers get an email when the email_followers option is selected """
-		self.assertEqual(len(mail.outbox), 0)
-		self.assertEqual(Follow.objects.count(), 0)
+	def test_wallpost_mail_project(self):
+		""" Test that the relevant people get an email when the email_followers option is selected for a project """
+
+		# On a project page, task owners, fundraisers, people who donated, and followers (people posting to wall), get a mail.
+
+		task_owner1 = BlueBottleUserFactory.create()
+
+		task = TaskFactory.create(
+            author=task_owner1,
+            project=self.project
+        )
+
 		commenter = BlueBottleUserFactory.create()
-		commenter2 = BlueBottleUserFactory.create()
-
-		# This creates a follower but doesn't send emails to them
-		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user, text="test1", email_followers=False)
-		# We create three followers.
+		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test1")
 		some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
-		some_reaction_2 = Reaction.objects.create(wallpost=some_wallpost, author=commenter2, text="bla2")
-		some_wallpost2 = TextWallPostFactory.create(content_object=self.project, author=self.another_user, text="test1", email_followers=True)
 
-		self.assertEqual(Follow.objects.count(), 3)
+		donator1 = BlueBottleUserFactory.create()
+		order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order, amount=35, project=self.project)
+
+		fundraiser_person = BlueBottleUserFactory.create()
+		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
+
+		some_wallpost_2 = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test2", email_followers=True)
+
+		del mail.outbox[0]
+
 		mail_count = 0
+
+		# People who should get an email: self.some_user, task_owner1, fundraiser_person, commenter, and donator1
+		receivers = [self.some_user.email, task_owner1.email, commenter.email, fundraiser_person.email, donator1.email]
+		for email in mail.outbox:
+			if "Mail with the wallpost" in email.subject:
+				mail_count += 1
+				self.assertTrue(email.to[0] in receivers)
+				receivers.remove(email.to[0])
+
+		self.assertEqual(mail_count, 5)
+		self.assertEqual(receivers, [])
+
+	def test_wallpost_mail_task(self):
+		""" Test that the relevant people get an email when the email_followers option is selected for a task """
+
+		project_owner = BlueBottleUserFactory.create()
+		project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+
+		task_owner1 = BlueBottleUserFactory.create()
+
+		task = TaskFactory.create(
+		    author=task_owner1,
+		    project=project2
+		)
+
+		task_member_1 = TaskMemberFactory(task=task)
+		task_member_2 = TaskMemberFactory(task=task)
+
+		mail.outbox = []
+		some_wallpost_2 = TextWallPostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
+
+		mail_count = 0
+
+		receivers = [task_member_1.member.email, task_member_2.member.email]
 
 		for email in mail.outbox:
 			if "Mail with the wallpost" in email.subject:
 				mail_count += 1
-				self.assertTrue(email.to[0] in [commenter.email, commenter2.email, self.another_user.email])
-		self.assertEqual(mail_count, Follow.objects.count())
+				self.assertTrue(email.to[0] in receivers)
+				receivers.remove(email.to[0])
 
-		
+		self.assertEqual(mail_count, 2)
+		self.assertEqual(receivers, [])
+
+
+	def test_wallpost_mail_fundraiser(self):
+		""" Test that the relevant people get an email when the email_followers option is selected for a fundraiser """
+		pass
+
 

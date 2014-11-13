@@ -200,6 +200,8 @@ class FollowTests(BookingTestCase):
 	def test_wallpost_mail_task(self):
 		""" Test that the relevant people get an email when the email_followers option is selected for a task """
 
+		# On a task page, only the task members get an email
+
 		project_owner = BlueBottleUserFactory.create()
 		project2 = ProjectFactory(owner=project_owner, status=self.phase1)
 
@@ -233,6 +235,8 @@ class FollowTests(BookingTestCase):
 	def test_wallpost_mail_fundraiser(self):
 		""" Test that the relevant people get an email when the email_followers option is selected for a fundraiser """
 		
+		# On a Fundraiser page, the supports (people who donated) get an email
+
 		fundraiser_person = BlueBottleUserFactory.create()
 		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
 

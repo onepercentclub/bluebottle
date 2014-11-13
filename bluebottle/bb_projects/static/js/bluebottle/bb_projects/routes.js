@@ -57,10 +57,19 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         var project_id = params.project_id.split('?')[0];
         var page =  App.Project.find(project_id);
         var route = this;
-        page.on('becameError', function() {
-            route.transitionTo('projectList');
-        });
         return page;
+    },
+
+    afterModel: function(model, transition) {
+        if (model.get('isStatusPlan')) {
+            this.transitionTo('projectList');
+        }
+    },
+
+    actions: {
+        error: function(error, transition) {
+            this.transitionTo('projectList');
+        }
     }
 });
 

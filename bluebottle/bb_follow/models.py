@@ -32,9 +32,9 @@ class Follow(models.Model):
 def create_follow(sender, instance, created, **kwargs):
     """ 
         Create a Follow object when a user follows a Project or Task. A user starts following a project/task when 
-        he /she creates a WallPost or Reaction, or does a donation.
+        he /she creates a WallPost or Reaction, or does a donation. Users cannot follow their own project or task.
     """
-    from bluebottle.wallposts.models import WallPost, Reaction
+    from bluebottle.wallposts.models import WallPost, Reaction # Imported inside the signal to prevent circular imports
 
     # A WallPost is created by user
     if created and isinstance(instance, WallPost):
@@ -52,8 +52,14 @@ def create_follow(sender, instance, created, **kwargs):
                                                 object_id=instance.content_object.id,
                                                 content_type=instance.content_type)
                 except Follow.DoesNotExist:
-                    follow = Follow(user=user, followed_object=instance.content_object)
-                    follow.save()        
+                    # Check that the project owner is not the user
+                    if isinstance(instance.content_object, BaseProject) and instance.content_object.owner != user:
+                        follow = Follow(user=user, followed_object=instance.content_object)
+                        follow.save()
+                    # Check that the task owner is not the user
+                    if isinstance(instance.content_object, BaseTask) and instance.content_object.author != user:
+                        follow = Follow(user=user, followed_object=instance.content_object)
+                        follow.save()            
 
     # A Reaction is created by user
     if isinstance(instance, Reaction):
@@ -70,8 +76,14 @@ def create_follow(sender, instance, created, **kwargs):
                                                 object_id=instance.wallpost.content_object.id,
                                                 content_type=content_type)
                 except Follow.DoesNotExist:
-                    follow = Follow(user=user, followed_object=instance.wallpost.content_object)
-                    follow.save()    
+                    # Check that a project owner is not the user
+                    if isinstance(instance.wallpost.content_object, BaseProject) and instance.wallpost.content_object.owner != user:
+                        follow = Follow(user=user, followed_object=instance.wallpost.content_object)
+                        follow.save()
+                    # Check that a task author is not the user
+                    if isinstance(instance.wallpost.content_object, BaseTask) and instance.wallpost.content_object.author != user:
+                        follow = Follow(user=user, followed_object=instance.wallpost.content_object)
+                        follow.save()      
 
     # A user does a donation
     if created and isinstance(instance, BaseDonation):
@@ -88,26 +100,27 @@ def create_follow(sender, instance, created, **kwargs):
                                             object_id=instance.project.id,
                                             content_type=content_type)
             except Follow.DoesNotExist:
-                follow = Follow(user=user, followed_object=instance.project)
-                follow.save()    
-       
+                if user != instance.project.owner:
+                    follow = Follow(user=user, followed_object=instance.project)
+                    follow.save()    
+
 
 @receiver(post_save)
 def email_followers(sender, instance, created, **kwargs):
     from bluebottle.wallposts.models import WallPost, Reaction
 
     if isinstance(instance, WallPost):
-        content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
-        followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+        if instance.email_followers:
+            content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
+            followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
 
-        wallpost_text = instance.text
-        
-        for follower in followers:
-            email = follower.user.email
-            send_mail(
-                    template_name='wallpost_mail.mail',
-                    subject="Mail with the wallpost",
-                    to=follower.user,
-                    followed_object=follower.followed_object,
-                    link='NO LINK'
-                )
+            wallpost_text = instance.text
+            
+            for follower in followers:
+                send_mail(
+                        template_name='wallpost_mail.mail',
+                        subject="Mail with the wallpost",
+                        to=follower.user,
+                        followed_object=follower.followed_object,
+                        link='NO LINK'
+                    )

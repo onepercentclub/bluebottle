@@ -10,7 +10,7 @@ App.WallRouteMixin = Em.Mixin.create({
         // Only reload wall-posts if switched to another project.
         var parentType = this.get('parentType');
         var parent = this.modelFor(parentType);
-        var parentId = parent.id;
+        var parentId = parent.get('id');
 
         var mediaWallPostNewController = this.controllerFor('mediaWallPostNew');
         var textWallPostNewController = this.controllerFor('textWallPostNew');

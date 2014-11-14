@@ -459,11 +459,8 @@ class SeleniumTestCase(LiveServerTestCase):
         return self.wait_for_not_element_css('.flash.is-active', 10)
 
     def close_modal(self):
-        # Close modal, if any.
-
-        elements = self.browser.find_by_css('.modal-fullscreen-close')
-        if elements:
-            elements.first.sendKeys(Keys.ESCAPE).perform()
+        # Close modal, if any
+        self.browser.find_by_css('body').type(Keys.ESCAPE)
 
     def is_visible(self, selector, timeout=10):
         return not self.wait_for_element_css(selector, timeout) is None

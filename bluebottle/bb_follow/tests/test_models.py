@@ -269,39 +269,46 @@ class FollowTests(BookingTestCase):
 		self.assertEqual(mail_count, 4)
 		self.assertEqual(receivers, [])
 
-	# def test_wallpost_mail_task(self):
-	# 	""" Test that the relevant people get an email when the email_followers option is selected for a task """
+	def test_wallpost_mail_task(self):
+		""" Test that the relevant people get an email when the email_followers option is selected for a task """
 
-	# 	# On a task page, only the task members get an email
+		# On a task page, the task members, task owners, get an email --> Followers
 
-	# 	project_owner = BlueBottleUserFactory.create()
-	# 	project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+		project_owner = BlueBottleUserFactory.create()
+		project2 = ProjectFactory(owner=project_owner, status=self.phase1)
 
-	# 	task_owner1 = BlueBottleUserFactory.create()
+		task_owner1 = BlueBottleUserFactory.create()
 
-	# 	task = TaskFactory.create(
-	# 	    author=task_owner1,
-	# 	    project=project2
-	# 	)
+		task = TaskFactory.create(
+		    author=task_owner1,
+		    project=project2
+		)
 
-	# 	task_member_1 = TaskMemberFactory(task=task)
-	# 	task_member_2 = TaskMemberFactory(task=task)
+		task_member_1 = TaskMemberFactory(task=task)
+		task_member_2 = TaskMemberFactory(task=task)
 
-	# 	mail.outbox = []
-	# 	some_wallpost = TextWallPostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
+		mail.outbox = []
 
-	# 	mail_count = 0
 
-	# 	receivers = [task_member_1.member.email, task_member_2.member.email]
+		self.assertEqual(Follow.objects.count(), 3)
+		for follower in Follow.objects.all():
+			if follower.user != task_owner1:
+				self.assertEqual(follower.followed_object, task)
 
-	# 	for email in mail.outbox:
-	# 		if "Mail with the wallpost" in email.subject:
-	# 			mail_count += 1
-	# 			self.assertTrue(email.to[0] in receivers)
-	# 			receivers.remove(email.to[0])
+		some_wallpost = TextWallPostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
 
-	# 	self.assertEqual(mail_count, 2)
-	# 	self.assertEqual(receivers, [])
+		mail_count = 0
+
+		receivers = [task_member_1.member.email, task_member_2.member.email]
+
+		for email in mail.outbox:
+			if "Mail with the wallpost" in email.subject:
+				mail_count += 1
+				self.assertTrue(email.to[0] in receivers)
+				receivers.remove(email.to[0])
+
+		self.assertEqual(mail_count, 2)
+		self.assertEqual(receivers, [])
 
 
 	# def test_wallpost_mail_fundraiser(self):

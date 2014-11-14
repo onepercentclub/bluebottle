@@ -196,8 +196,6 @@ def email_followers(sender, instance, created, **kwargs):
 
             wallpost_text = instance.text
 
-            print "Mailers", mailers
-
             for mailee in mailers:
                 send_mail(
                         template_name='wallpost_mail.mail',

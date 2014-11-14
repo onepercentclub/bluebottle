@@ -28,7 +28,7 @@ class FollowTests(TestCase):
 			{'sequence': 6, 'name': 'Closed', 'viewable': False}]
 
 	for phase in phase_data:
-	    ProjectPhaseFactory.create(**phase)
+		ProjectPhaseFactory.create(**phase)
 
 	self.some_user = BlueBottleUserFactory.create()
 	self.another_user = BlueBottleUserFactory.create()

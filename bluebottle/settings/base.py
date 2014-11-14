@@ -190,6 +190,8 @@ INSTALLED_APPS = (
     'bluebottle.payments_mock',
     'bluebottle.payments_logger',
 
+    'bluebottle.bb_follow',
+
     # Test Bb implementations
     'bluebottle.test',
 

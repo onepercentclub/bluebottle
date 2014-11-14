@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
@@ -6,7 +8,10 @@ from django.contrib.contenttypes import generic
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django.conf import settings
 
+
 from polymorphic import PolymorphicModel
+
+from bluebottle.bb_follow.models import Follow
 
 from .managers import ReactionManager, WallPostManager
 
@@ -39,6 +44,8 @@ class WallPost(PolymorphicModel):
     content_type = models.ForeignKey(ContentType, verbose_name=_('content type'), related_name="content_type_set_for_%(class)s")
     object_id = models.PositiveIntegerField(_('object ID'))
     content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    email_followers = models.BooleanField(default=False)
 
     # Manager
     objects = WallPostManager()
@@ -136,3 +143,4 @@ class Reaction(models.Model):
 #Import the signals for sending mails in case they are present
 if 'apps.tasks' in settings.INSTALLED_APPS and 'apps.projects' in settings.INSTALLED_APPS:
     import mails
+

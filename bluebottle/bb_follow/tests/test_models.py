@@ -359,43 +359,6 @@ class FollowTests(TestCase):
 		self.assertEqual(mail_count, 3)
 		self.assertEqual(receivers, [])
 
-	def test_wallpost_mail_fundraiser_no_mails(self):
-		""" Test that the relevant people are not receiving email because their campaign_notifications are false"""
-		
-		# On a Fundraiser page, people who posted to the wall and who donated get an email --> Followers
-		self.assertEqual(Follow.objects.count(), 0)
-
-		fundraiser_person = BlueBottleUserFactory.create(campaign_notifications=False)
-		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
-
-		donator1 = BlueBottleUserFactory.create(campaign_notifications=False)
-		order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
-		donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=None)
-
-		donator2 = BlueBottleUserFactory.create(campaign_notifications=False)
-		order2 = OrderFactory.create(user=donator2, status=StatusDefinition.CREATED)
-		donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=None)
-
-		commenter = BlueBottleUserFactory.create(campaign_notifications=False)
-		commenter_post = TextWallPostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter")
-
-		some_wallpost = TextWallPostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
-
-		mail_count = 0
-
-		self.assertEqual(Follow.objects.count(), 4)
-		for follower in Follow.objects.all():
-			follower.followed_object = self.project
-
-		# When the fundraiser sends an email to the followers he doesn't get one himself
-		receivers = []
-
-		for email in mail.outbox:
-			if "Mail with the wallpost" in email.subject:
-				mail_count += 1
-
-		self.assertEqual(mail_count, 0)
-		self.assertEqual(receivers, [])
 
 
 

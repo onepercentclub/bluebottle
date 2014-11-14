@@ -11,7 +11,6 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
 from bluebottle.utils.utils import StatusDefinition
-from utils.tests.utils import BookingTestCase
 
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 

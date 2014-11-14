@@ -212,10 +212,11 @@ def email_followers(sender, instance, created, **kwargs):
             wallpost_text = instance.text
 
             for mailee in mailers:
-                send_mail(
-                        template_name='wallpost_mail.mail',
-                        subject="Mail with the wallpost",
-                        wallpost_text=wallpost_text,
-                        to=mailee,
-                        link='NO LINK'
-                    )
+                if mailee.campaign_notifications:
+                    send_mail(
+                            template_name='wallpost_mail.mail',
+                            subject="Mail with the wallpost",
+                            wallpost_text=wallpost_text,
+                            to=mailee,
+                            link='NO LINK'
+                        )

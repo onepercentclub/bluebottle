@@ -143,7 +143,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     disable_token = models.CharField(max_length=32, blank=True, null=True)
 
-    campaign_notifications = models.BooleanField(_('campaign_notifications'), help_text=_('Campaign notifications'), default=False)
+    campaign_notifications = models.BooleanField(_('campaign_notifications'), help_text=_('Campaign notifications'), default=True)
 
     tags = TaggableManager(verbose_name=_("tags"), blank=True)
 

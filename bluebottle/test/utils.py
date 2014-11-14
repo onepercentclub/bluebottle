@@ -454,6 +454,9 @@ class SeleniumTestCase(LiveServerTestCase):
         except TimeoutException:
             return None
 
+    def wait_for_toast_to_disappear(self):
+        return self.wait_for_not_element_css('.flash.is-active', 10)
+
     def is_visible(self, selector, timeout=10):
         return not self.wait_for_element_css(selector, timeout) is None
 

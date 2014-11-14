@@ -20,25 +20,25 @@ class FollowTests(TestCase):
 
 	def setUp(self):
 
-	phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
-			{'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
-			{'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-			{'sequence': 4, 'name': 'Running', 'viewable': True},
-			{'sequence': 5, 'name': 'Realised', 'viewable': True},
-			{'sequence': 6, 'name': 'Closed', 'viewable': False}]
+		phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
+				{'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
+				{'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
+				{'sequence': 4, 'name': 'Running', 'viewable': True},
+				{'sequence': 5, 'name': 'Realised', 'viewable': True},
+				{'sequence': 6, 'name': 'Closed', 'viewable': False}]
 
-	for phase in phase_data:
-		ProjectPhaseFactory.create(**phase)
+		for phase in phase_data:
+			ProjectPhaseFactory.create(**phase)
 
-	self.some_user = BlueBottleUserFactory.create()
-	self.another_user = BlueBottleUserFactory.create()
-	self.phase1 = ProjectPhaseFactory.create(slug='realised') # Required model for bb_payouts signals 
-	self.project = ProjectFactory(owner=self.some_user, status=self.phase1)
+		self.some_user = BlueBottleUserFactory.create()
+		self.another_user = BlueBottleUserFactory.create()
+		self.phase1 = ProjectPhaseFactory.create(slug='realised') # Required model for bb_payouts signals 
+		self.project = ProjectFactory(owner=self.some_user, status=self.phase1)
 
-	self.task = TaskFactory.create(
-	    author=self.project.owner,
-	    project=self.project,
-	)
+		self.task = TaskFactory.create(
+		    author=self.project.owner,
+		    project=self.project,
+		)
 
 	def test_create_follow_wallpost_project(self):
 		""" Test that a Follow object is created between the user and the project when a wallpost is created """ 

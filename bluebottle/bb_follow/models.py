@@ -32,11 +32,21 @@ class Follow(models.Model):
 @receiver(post_save)
 def create_follow(sender, instance, created, **kwargs):
     """ 
-        Create a Follow object when a user follows a Project or Task. A user starts following a project/task when 
-        he /she creates a WallPost or Reaction, or does a donation. Users cannot follow their own project or task.
+        Create a Follow object when a user follows a Project or Task. This signal handler determines the type of object that is created
+        and creates the Follow object with the correct link between objects.
+
+        A user starts following a project/task when:
+            - user creates a WallPost on a project, task or fundraise wall, (user will follow, the project or task)
+            - user does a donation to a project (user will follow project)
+            - user applies for a task, i.e. a task member is created (user will follow task),
+            - user creates a task for a project (user will follow project),
+            - user creates a fundraiser for a project (user will follow project) 
+
+            Users do not follow their own project or task.
+
     """
     from bluebottle.wallposts.models import WallPost, Reaction # Imported inside the signal to prevent circular imports
-    follow = None
+
     # A WallPost is created by user
     if created and isinstance(instance, WallPost):
 
@@ -168,6 +178,11 @@ def create_follow(sender, instance, created, **kwargs):
 
 @receiver(post_save)
 def email_followers(sender, instance, created, **kwargs):
+    """ 
+        When a Wallpost is created, project owners, task owners and fundraiser owners can check a box wether to email their followers. This 
+        signal handler looksup the appropriate followers depending on the type of page (project, task, fundraiser). It then sends out an email
+        to those followers if they have campaign notifications enabled.
+    """
     from bluebottle.wallposts.models import WallPost
 
     if isinstance(instance, WallPost):
@@ -175,8 +190,8 @@ def email_followers(sender, instance, created, **kwargs):
 
             content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
 
-            # Determine if this wallpost is on a Project page, Task page, or Fundraiser page.
-            mailers = set() # Contains user objects
+            # Determine if this wallpost is on a Project page, Task page, or Fundraiser page. Required because of different Follow object lookup  
+            mailers = set() # Contains unique user objects
             
             if isinstance(instance.content_object, BaseProject):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)

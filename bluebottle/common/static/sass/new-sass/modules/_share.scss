@@ -1,8 +1,8 @@
 .share-menu {
     position: absolute;
-    right: 0;
+    right: -10px;
     min-width: 177px;
-    max-width: 187px;
+    max-width: 216px;
     max-height: 30px;
     overflow: hidden;
     @include transition(all .2s ease-in-out);
@@ -11,15 +11,16 @@
         position: relative;
         float: right;
         background: rgba(255,255,255, 0);
-        min-width: 106px;
+        width: 100%;
         padding: 6px 5px;
         line-height: 18px;
         font-size: 15px;
-        color: $color-secondary;
+        color: $white;
         font-weight: bold;
         text-align: center;
         text-decoration: inherit;
         border-radius: 8px 8px 0 0;
+        border-bottom: 1px solid $gray-border;
         @include transition(all .2s ease-in-out);
 
         &:before {
@@ -27,19 +28,19 @@
             top: 9px;
             left: 9px;                    
             content: '';
-            width: 13px;
-            height: 13px;
-            background: image-url("img/icons/icon-share-social-link.svg") no-repeat;
+            width: 17px;
+            height: 16px;   
+            background: image-url("img/icons/icon-share-icon-main.svg") no-repeat;
         }
 
         &:after {
             position: absolute;
-            top: 13px;
+            top: 15px;
             right: 13px;                    
             content: '';
             width: 10px;
             height: 10px;
-            background: image-url("img/icons/icon-dropdown.svg") no-repeat;
+            background: image-url("img/icons/icon-dropdown-detail.svg") no-repeat;
             @include transform(rotate(0deg));
             @include transition(all .2s ease-in-out);
         }
@@ -47,13 +48,21 @@
 
     &:hover {
         max-height: 300px;
+        border-radius: 8px;
+        @include single-box-shadow(rgba(0,0,0, .5), 0, 2px, 4px, 0);
         //overflow: visible;
 
         .share-link {
+            color: $color-secondary;
             background: rgba(255,255,255, 1);
+
+            &:before {
+                background: image-url("img/icons/icon-share-icon-main-active.svg") no-repeat;
+            }
 
             &:after {
                 top: 8px;
+                background: image-url("img/icons/icon-dropdown-detail-active.svg") no-repeat;
                 @include transform(rotate(-180deg));
             }
         }
@@ -65,10 +74,11 @@
     }
 
     #share {
+        margin-top: 20px;
         width: 100%;
         background: white;
         border-radius: 8px 0 8px 8px;
-        padding: 10px;
+        padding: 4px;
         @include animation(fadeOut .2s ease-in-out);
         @include animation-fill-mode(forwards);
         //display: none;
@@ -77,7 +87,7 @@
 
             a {
                 position: relative;
-                padding-left: 30px;
+                padding: .2em 1em .2em 30px;
                 font-size: 13px;
                 line-height: 25px;
                 font-family: Helvetica;
@@ -86,8 +96,8 @@
 
                 &:before {
                     position: absolute;
-                    top: 13px;
-                    left: 9px;                    
+                    top: 9px;
+                    left: 9px;
                     content: '';
                     @include transition(all .1s ease-in-out);
                 }
@@ -98,7 +108,7 @@
                     color: $color-secondary;
 
                     &:before {
-                        top: 13px;
+                        top: 9px;
                         left: 5px;
                     }
                 }

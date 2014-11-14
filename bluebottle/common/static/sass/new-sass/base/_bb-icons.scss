@@ -1,0 +1,24 @@
+.custom-icons {
+    position: relative;
+    display: inline-block;
+    width: 21px;
+    height: 20px;
+
+    &:before {
+        position: absolute;
+        right: 0;
+        top: 4px;
+        content: '';
+        width: 21px;
+        height: 20px;
+        background-repeat: no-repeat;
+    }
+
+    &.clock {
+        &:before {
+            background-image: image-url("img/icons/icon-clock-detail.svg");
+        }
+    }
+}
+
+    

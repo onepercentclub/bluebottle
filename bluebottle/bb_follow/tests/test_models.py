@@ -188,22 +188,39 @@ class FollowTests(BookingTestCase):
 
 		self.assertEqual(Follow.objects.count(), 0)
 
-	# def test_wallpost_no_mail(self):
-	# 	""" Test that followers don't get an email if email_followers is false. Email_followers boolean is false by default on wallpost model"""
-	# 	self.assertEqual(len(mail.outbox), 0)
-	# 	self.assertEqual(Follow.objects.count(), 0)
-	# 	commenter = BlueBottleUserFactory.create()
-	# 	commenter2 = BlueBottleUserFactory.create()
+	def test_wallpost_no_mail(self):
+		""" Test that followers don't get an email if email_followers is false. Email_followers boolean is false by default on wallpost model"""
+		self.assertEqual(len(mail.outbox), 0)
+		self.assertEqual(Follow.objects.count(), 0)
+		commenter = BlueBottleUserFactory.create()
+		commenter2 = BlueBottleUserFactory.create()
 
-	# 	# Create a text WallPost for our dummy project
-	# 	some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user, text="test1")
-	# 	some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
-	# 	some_reaction_2 = Reaction.objects.create(wallpost=some_wallpost, author=commenter2, text="bla2")
+		# Create follower by creating a donation
 
-	# 	self.assertEqual(Follow.objects.count(), 3)
-	# 	# Some other emails are sent, so we do not compare the mail count. Instead we look at the subject
-	# 	for email in mail.outbox:
-	# 		self.assertTrue("Mail with the wallpost" not in email.subject)
+		order = OrderFactory.create(user=self.another_user, status=StatusDefinition.CREATED)
+		# Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
+		donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=None)
+
+		# Create follower by creating a task owner
+
+		task_owner1 = BlueBottleUserFactory.create()
+
+		task = TaskFactory.create(
+		    author=task_owner1,
+		    project=self.project
+		)
+
+		# Verify we have two followers
+		self.assertEqual(Follow.objects.count(), 2)
+
+		# Create a text WallPost for our dummy project
+		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.project.owner, text="test1")
+
+		self.assertEqual(Follow.objects.count(), 2)
+		
+		# Some other emails are sent, so we do not compare the mail count. Instead we look at the subject
+		for email in mail.outbox:
+			self.assertTrue("Mail with the wallpost" not in email.subject)
 
 	# def test_wallpost_mail_project(self):
 	# 	""" Test that the relevant people get an email when the email_followers option is selected for a project """
@@ -309,9 +326,6 @@ class FollowTests(BookingTestCase):
 
 	# 	receivers = [donator1.email, donator2.email, commenter.email]
 
-	# 	print "Receivers", receivers
-	# 	print "Length", len(mail.outbox)
-	# 	import pdb;pdb.set_trace()
 	# 	for email in mail.outbox:
 	# 		if "Mail with the wallpost" in email.subject:
 	# 			mail_count += 1

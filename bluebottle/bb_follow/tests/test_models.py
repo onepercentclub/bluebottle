@@ -311,39 +311,45 @@ class FollowTests(BookingTestCase):
 		self.assertEqual(receivers, [])
 
 
-	# def test_wallpost_mail_fundraiser(self):
-	# 	""" Test that the relevant people get an email when the email_followers option is selected for a fundraiser """
+	def test_wallpost_mail_fundraiser(self):
+		""" Test that the relevant people get an email when the email_followers option is selected for a fundraiser """
 		
-	# 	# On a Fundraiser page, people who posted to the wall and who donated get an email --> Followers
+		# On a Fundraiser page, people who posted to the wall and who donated get an email --> Followers
+		self.assertEqual(Follow.objects.count(), 0)
 
-	# 	fundraiser_person = BlueBottleUserFactory.create()
-	# 	fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
+		fundraiser_person = BlueBottleUserFactory.create()
+		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
 
-	# 	donator1 = BlueBottleUserFactory.create()
-	# 	order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
-	# 	donation = DonationFactory(order=order, amount=35, project=self.project)
+		donator1 = BlueBottleUserFactory.create()
+		order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=None)
 
-	# 	donator2 = BlueBottleUserFactory.create()
-	# 	order2 = OrderFactory.create(user=donator2, status=StatusDefinition.CREATED)
-	# 	donation = DonationFactory(order=order2, amount=35, project=self.project)
+		donator2 = BlueBottleUserFactory.create()
+		order2 = OrderFactory.create(user=donator2, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=None)
 
-	# 	commenter = BlueBottleUserFactory.create()
-	# 	commenter_post = TextWallPostFactory.create(content_object=fundraiser, author=commenter, text="test1", email_followers=False)
+		commenter = BlueBottleUserFactory.create()
+		commenter_post = TextWallPostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter")
 
-	# 	some_wallpost = TextWallPostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test1", email_followers=True)
+		some_wallpost = TextWallPostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
 
-	# 	mail_count = 0
+		mail_count = 0
 
-	# 	receivers = [donator1.email, donator2.email, commenter.email]
+		self.assertEqual(Follow.objects.count(), 4)
+		for follower in Follow.objects.all():
+			follower.followed_object = self.project
 
-	# 	for email in mail.outbox:
-	# 		if "Mail with the wallpost" in email.subject:
-	# 			mail_count += 1
-	# 			self.assertTrue(email.to[0] in receivers)
-	# 			receivers.remove(email.to[0])
+		# When the fundraiser sends an email to the followers he doesn't get one himself
+		receivers = [donator1.email, donator2.email, commenter.email]
 
-	# 	self.assertEqual(mail_count, 3)
-	# 	self.assertEqual(receivers, [])
+		for email in mail.outbox:
+			if "Mail with the wallpost" in email.subject:
+				mail_count += 1
+				self.assertTrue(email.to[0] in receivers)
+				receivers.remove(email.to[0])
+
+		self.assertEqual(mail_count, 3)
+		self.assertEqual(receivers, [])
 
 
 

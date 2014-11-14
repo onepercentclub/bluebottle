@@ -180,18 +180,18 @@ def email_followers(sender, instance, created, **kwargs):
             
             if isinstance(instance.content_object, BaseProject):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
-                followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct()
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
 
             if isinstance(instance.content_object, BaseTask):
                 # Send update to all task members and to people who posted to the wall --> Follower
-                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
 
             if isinstance(instance.content_object, BaseFundRaiser):
                 # Send update to all people who donated or posted to the wall --> Followers
                 content_type = ContentType.objects.get_for_model(instance.content_object.project)
-                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]           
 
             wallpost_text = instance.text

@@ -101,7 +101,7 @@ class FollowTests(BookingTestCase):
 
 
 	def test_create_follow_create_task(self):
-		""" Test that a Follow is created if a user, that is not the owner, creates a task """
+		""" Test that a Follow is created if a user, that is not the owner, creates a task. User will follow project """
 		self.assertEqual(Follow.objects.count(), 0)
 
 		task_owner = BlueBottleUserFactory.create()
@@ -112,7 +112,7 @@ class FollowTests(BookingTestCase):
         )
 
 		self.assertEqual(Follow.objects.count(), 1)
-		self.assertEqual(Follow.objects.all()[0].followed_object, another_task)
+		self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
 		self.assertEqual(Follow.objects.all()[0].user, task_owner)
 
 		# Test that no follower is created when the task owner is also the project owner
@@ -217,54 +217,57 @@ class FollowTests(BookingTestCase):
 		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.project.owner, text="test1")
 
 		self.assertEqual(Follow.objects.count(), 2)
-		
+
 		# Some other emails are sent, so we do not compare the mail count. Instead we look at the subject
 		for email in mail.outbox:
 			self.assertTrue("Mail with the wallpost" not in email.subject)
 
-	# def test_wallpost_mail_project(self):
-	# 	""" Test that the relevant people get an email when the email_followers option is selected for a project """
+	def test_wallpost_mail_project(self):
+		""" Test that the relevant people get an email when the email_followers option is selected for a project """
 
-	# 	# On a project page, task owners, fundraisers, people who donated, and followers (people posting to wall), get a mail.
+		# On a project page, task owners, fundraisers, people who donated, and followers (people posting to wall), get a mail.
 
-	# 	task_owner1 = BlueBottleUserFactory.create()
+		# Create a follower by being a task owner
+		task_owner1 = BlueBottleUserFactory.create()
 
-	# 	task = TaskFactory.create(
- #            author=task_owner1,
- #            project=self.project
- #        )
+		task = TaskFactory.create(
+            author=task_owner1,
+            project=self.project
+        )
 
-	# 	# Add extra projects that should not get any email
-	# 	project_owner = BlueBottleUserFactory.create()
-	# 	project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+		# Add extra project and owner that should not get any email
+		project_owner = BlueBottleUserFactory.create()
+		project2 = ProjectFactory(owner=project_owner, status=self.phase1)
 
-	# 	commenter = BlueBottleUserFactory.create()
-	# 	some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test1")
-	# 	some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
+		# Create a follower that is someone who left a wallpost
+		commenter = BlueBottleUserFactory.create()
+		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=commenter, text="test1")
 
-	# 	donator1 = BlueBottleUserFactory.create()
-	# 	order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
-	# 	donation = DonationFactory(order=order, amount=35, project=self.project)
+		# Create a follower by donating
+		donator1 = BlueBottleUserFactory.create()
+		order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
+		donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=None)
 
-	# 	fundraiser_person = BlueBottleUserFactory.create()
-	# 	fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
+		# Create a follower by being a fundraiser for the project
+		fundraiser_person = BlueBottleUserFactory.create()
+		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
 
-	# 	some_wallpost_2 = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test2", email_followers=True)
+		self.assertEqual(Follow.objects.count(), 4)
 
-	# 	del mail.outbox[0] # Delete the "X commented on your post" email
+		# Project owner creates a wallpost and emails followers
+		some_wallpost_2 = TextWallPostFactory.create(content_object=self.project, author=self.project.owner, text="test2", email_followers=True)
 
-	# 	mail_count = 0
+		mail_count = 0
 
-	# 	# People who should get an email: self.some_user, task_owner1, fundraiser_person, commenter, and donator1
-	# 	receivers = [self.some_user.email, task_owner1.email, commenter.email, fundraiser_person.email, donator1.email]
-	# 	for email in mail.outbox:
-	# 		if "Mail with the wallpost" in email.subject:
-	# 			mail_count += 1
-	# 			self.assertTrue(email.to[0] in receivers)
-	# 			receivers.remove(email.to[0])
-
-	# 	self.assertEqual(mail_count, 5)
-	# 	self.assertEqual(receivers, [])
+		# People who should get an email: self.some_user, task_owner1, fundraiser_person, commenter, and donator1
+		receivers = [task_owner1.email, commenter.email, donator1.email, fundraiser_person.email]
+		for email in mail.outbox:
+			if "Mail with the wallpost" in email.subject:
+				mail_count += 1
+				self.assertTrue(email.to[0] in receivers)
+				receivers.remove(email.to[0])
+		self.assertEqual(mail_count, 4)
+		self.assertEqual(receivers, [])
 
 	# def test_wallpost_mail_task(self):
 	# 	""" Test that the relevant people get an email when the email_followers option is selected for a task """

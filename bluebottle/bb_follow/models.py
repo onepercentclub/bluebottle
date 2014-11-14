@@ -145,7 +145,7 @@ def create_follow(sender, instance, created, **kwargs):
                                             content_type=content_type)
             except Follow.DoesNotExist:
                 if user != instance.project.owner:
-                    follow = Follow(user=user, followed_object=instance)
+                    follow = Follow(user=user, followed_object=instance.project)
                     follow.save()
 
     # A user creates a fundraiser for a project
@@ -180,10 +180,7 @@ def email_followers(sender, instance, created, **kwargs):
             
             if isinstance(instance.content_object, BaseProject):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
-                fundraisers = get_fundraiser_model().objects.filter(project=instance.content_object)
-                [mailers.add(fundraiser.owner) for fundraiser in fundraisers]
-
-                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct()
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct()
                 [mailers.add(follower.user) for follower in followers]
 
             if isinstance(instance.content_object, BaseTask):
@@ -198,6 +195,8 @@ def email_followers(sender, instance, created, **kwargs):
                 [mailers.add(follower.user) for follower in followers]           
 
             wallpost_text = instance.text
+
+            print "Mailers", mailers
 
             for mailee in mailers:
                 send_mail(

@@ -103,6 +103,10 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 App.ProjectController = Em.ObjectController.extend({
     needs: ['projectIndex'],
 
+    backgroundStyle: function(){
+        return "background-image:url('" + this.get('image.large') + "');";
+    }.property('image.large'),
+
     isFundable: function(){
        return (this.get('status') == '5' && this.get('campaign.money_asked'));
     }.property('status'),

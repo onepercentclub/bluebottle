@@ -1,17 +1,45 @@
 from bluebottle.bb_payouts.admin_utils import link_to
+from bluebottle.utils.utils import StatusDefinition
+from django.contrib.admin.filters import SimpleListFilter
 from django.contrib.admin.templatetags.admin_static import static
-from bluebottle.utils.model_dispatcher import get_donation_model, get_model_mapping
+from bluebottle.utils.model_dispatcher import get_donation_model, get_model_mapping, get_order_model
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 
 DONATION_MODEL = get_donation_model()
+ORDER_MODEL = get_order_model()
 MODEL_MAP = get_model_mapping()
+
+# http://stackoverflow.com/a/16556771
+class DonationStatusFilter(SimpleListFilter):
+    title = _('Status')
+
+    parameter_name = 'status__exact'
+    default_status = 'pending_or_success'
+
+    def lookups(self, request, model_admin):
+        return (('all', _('All')), ('pending_or_success', _('Pending/Success')) ) + ORDER_MODEL.STATUS_CHOICES
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup if self.value() else lookup == self.default_status,
+                'query_string': cl.get_query_string({self.parameter_name: lookup}, []),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() in ORDER_MODEL.STATUS_CHOICES:
+            return queryset.filter(order__status=self.value())
+        elif self.value() is None or self.value() == 'pending_or_success':
+            return queryset.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
 
 
 class DonationAdmin(admin.ModelAdmin):
     date_hierarchy = 'updated'
     list_display = ('updated', 'admin_project', 'fundraiser', 'user', 'user_full_name', 'amount', 'related_payment_method', 'status')
-    list_filter = ('order__status', )
+    list_filter = (DonationStatusFilter, )
     ordering = ('-updated', )
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user')

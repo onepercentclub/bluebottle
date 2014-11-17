@@ -444,6 +444,24 @@ class SeleniumTestCase(LiveServerTestCase):
         except TimeoutException:
             return None
 
+    def wait_for_not_element_css(self, selector, timeout=30):
+        """
+        Wait for an element with this css to disappear.
+        """
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) == 0)
+        except TimeoutException:
+            return None
+
+    def wait_for_toast_to_disappear(self):
+        # Wait until the toast message disappears.
+        return self.wait_for_not_element_css('.flash.is-active', 10)
+
+    def close_modal(self):
+        # Close modal, if any
+        self.browser.find_by_css('body').type(Keys.ESCAPE)
+
     def is_visible(self, selector, timeout=10):
         return not self.wait_for_element_css(selector, timeout) is None
 

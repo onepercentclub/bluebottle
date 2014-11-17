@@ -62,7 +62,23 @@ class ProjectPayoutAdmin(admin.ModelAdmin):
 
     list_filter = ['status', 'payout_rule']
 
-    actions = ['recalculate_amounts']
+    actions = ['change_status_to_new', 'change_status_to_progress', 'change_status_to_settled',
+               'recalculate_amounts']
+
+    def change_status_to_new(self, request, queryset):
+        for payout in queryset.all():
+            payout.status = StatusDefinition.NEW
+            payout.save()
+
+    def change_status_to_progress(self, request, queryset):
+        for payout in queryset.all():
+            payout.status = StatusDefinition.IN_PROGRESS
+            payout.save()
+
+    def change_status_to_settled(self, request, queryset):
+        for payout in queryset.all():
+            payout.status = StatusDefinition.SETTLED
+            payout.save()
 
     list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
                     'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']

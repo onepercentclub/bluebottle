@@ -75,16 +75,32 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
 
         if user and hasattr(user, 'address'):
-            user_data['street'] = user.address.line1
+
+            if user.address.line1:
+                user_data['street'] = user.address.line1
+            else:
+                user_data['street'] = 'Unknown'
+
             street = user.address.line1.split(' ')
-            if int(street[-1]):
+            if street[-1] and int(street[-1]):
                 user_data['house_number'] = street[-1]
             else:
                 user_data['house_number'] = 1
 
-            user_data['postal_code'] = user.address.postal_code
-            user_data['city'] = user.address.city
-            user_data['country'] = user.address.country.alpha2_code
+            if user.address.postal_code:
+                user_data['postal_code'] = user.address.postal_code
+            else:
+                user_data['postal_code'] = 'Unknown'
+            if user.address.city:
+                user_data['city'] = user.address.city
+            else:
+                user_data['city'] = 'Unknown'
+            if user.address.country and hasattr(user.address.country, 'alpha2_code'):
+                user_data['country'] = user.address.country.alpha2_code
+            elif get_country_code_by_ip(ip_address):
+                user_data['country'] = get_country_code_by_ip(ip_address)
+            else:
+                user_data['country'] = 'NL'
         else:
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'

@@ -70,24 +70,6 @@ App.DonationController = Ember.ObjectController.extend(BB.ModalControllerMixin, 
     }
 });
 
-
-App.ProjectSupporterListController = Em.ArrayController.extend({
-    needs: ['project'],
-
-    model: function () {
-        return App.ProjectDonation.find({project: this.get('controllers.project.id')});
-    }.property('controllers.project.id'),
-
-    supportersLoaded: function(sender, key) {
-        if (this.get(key)) {
-            this.set('recentSupporters', this.get('model').toArray().splice(0, 10));
-        } else {
-            this.set('recentSupporters', null);
-        }
-    }.observes('model.isLoaded')
-});
-
-
 App.DonationSuccessController = Em.ObjectController.extend({});
 
 // DonationWallPostController extends the TextWallPostNewController as the main

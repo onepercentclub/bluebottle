@@ -37,13 +37,6 @@ class Address(models.Model):
     def __unicode__(self):
         return self.line1[:80]
 
-class TestAddress(Address):
-    """
-    A postal address.
-    """
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name="address")
-
-
 
 # Below is test-only stuff
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)

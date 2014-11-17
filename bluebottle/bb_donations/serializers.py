@@ -27,7 +27,7 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DONATION_MODEL
-        fields = ('id', 'project', 'fundraiser', 'user', 'created', 'anonymous')
+        fields = ('id', 'project', 'fundraiser', 'user', 'created', 'anonymous', 'amount')
 
 
 class DefaultDonationSerializer(PreviewDonationSerializer):

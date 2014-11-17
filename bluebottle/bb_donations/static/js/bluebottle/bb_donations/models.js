@@ -21,18 +21,15 @@ App.Donation = DS.Model.extend({
     fundraiser: DS.belongsTo('App.FundRaiser'),
     user: DS.belongsTo('App.UserPreview'),
     created: DS.attr('date'),
-    anonymous: DS.attr('boolean', {defaultValue: false})
+    anonymous: DS.attr('boolean', {defaultValue: false}),
+
+    time_since: function(){
+        return Globalize.format(this.get('created'), 'X');
+    }.property('created')
 });
 
-App.ProjectDonation = DS.Model.extend({
-    url: 'donations/project',
-
-    project: DS.belongsTo('App.Project'),
-    fundraiser: DS.belongsTo('App.FundRaiser'),
-
-    amount: DS.attr('number'),
-    created: DS.attr('date'),
-    user: DS.belongsTo('App.UserPreview')
+App.ProjectDonation = App.Donation.extend({
+    url: 'donations/project'
 });
 
 App.MyDonation = App.Donation.extend({

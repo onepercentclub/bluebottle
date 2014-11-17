@@ -7,5 +7,5 @@ class DocdataPaymentFactory(factory.DjangoModelFactory):
 
 
 class DocdataTransactionFactory(factory.DjangoModelFactory):
-	FACTORY_FOR = DocdataTransaction
+    FACTORY_FOR = DocdataTransaction
 

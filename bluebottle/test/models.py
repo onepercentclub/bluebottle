@@ -81,4 +81,4 @@ class TestAddress(Address):
     """
     A postal address.
     """
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name="address")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name="test_address")

@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory, BlueBottleAddressFactory
 from bluebottle.test.utils import FsmTestMixin
 
 from bluebottle.payments.services import PaymentService
@@ -172,6 +172,7 @@ class AdapterTestCase(TestCase):
         mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
 
         user = BlueBottleUserFactory()
+        address = BlueBottleAddressFactory(user=user)
         self.order = OrderFactory.create(user=user)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',
                                                         integration_data={'default_pm': 'ideal'})

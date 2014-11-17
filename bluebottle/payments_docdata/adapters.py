@@ -110,7 +110,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 user_data['country'] = country
             else:
                 user_data['country'] = 'NL'
-            user_data['house_number'] = 1
+            user_data['house_number'] = 'Unknown'
 
         user_data['company'] = ''
         user_data['kvk_number'] = ''

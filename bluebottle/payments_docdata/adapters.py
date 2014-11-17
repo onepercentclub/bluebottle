@@ -82,7 +82,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 user_data['street'] = 'Unknown'
 
             street = user.address.line1.split(' ')
-            if street[-1] and int(street[-1]):
+            if street[-1] and any(char.isdigit() for char in street[-1]):
                 user_data['house_number'] = street[-1]
             else:
                 user_data['house_number'] = 'Unknown'

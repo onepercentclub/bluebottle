@@ -1,0 +1,17 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/simple-project-supporters" %}
+    <ul>
+        {{#each supporter in limitedSupporters}}
+            <li>
+                <a class="member" {{action "show" supporter}} {{bind-attr data-title="supporter.full_name" }}>
+                    <span class="member-avatar">
+                        <img {{bind-attr src="supporter.getAvatar" alt="supporter.full_name"}} />
+                    </span>
+                </a>
+            </li>
+        {{/each}}
+    </ul>
+{% endtplhandlebars %}

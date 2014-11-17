@@ -175,12 +175,25 @@ class AdapterTestCase(TestCase):
         self.order = OrderFactory.create(user=user)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',
                                                         integration_data={'default_pm': 'ideal'})
-        
+
         self.service = PaymentService(order_payment=self.order_payment)
 
         user_data = self.service.adapter.get_user_data()
         self.assertEqual(user_data['id'], user.id)
-        #self.assertEqual(user_data['id'], user.id)
-        #self.assertEqual(user_data['id'], user.id)
+        self.assertEqual(user_data['first_name'], user.first_name)
+        self.assertEqual(user_data['last_name'], user.last_name)
+        self.assertEqual(user_data['email'], user.email)
+        self.assertEqual(user_data['ip_address'], None) #Ip is set to None during testing
 
+        self.assertEqual(user_data['street'], 'Unknown')
+        self.assertEqual(user_data['house_number'], 'Unknown')
+        self.assertEqual(user_data['postal_code'], 'Unknown')
+        self.assertEqual(user_data['city'], 'Unknown')
+        self.assertEqual(user_data['country'], 'NL')
+
+        self.assertEqual(user_data['company'], '')
+        self.assertEqual(user_data['kvk_number'], '')
+        self.assertEqual(user_data['vat_number'], '')
+        self.assertEqual(user_data['house_number_addition'], '')
+        self.assertEqual(user_data['state'], '')
 

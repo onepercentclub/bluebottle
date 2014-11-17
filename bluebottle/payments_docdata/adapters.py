@@ -85,7 +85,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             if street[-1] and int(street[-1]):
                 user_data['house_number'] = street[-1]
             else:
-                user_data['house_number'] = 1
+                user_data['house_number'] = 'Unknown'
 
             if user.address.postal_code:
                 user_data['postal_code'] = user.address.postal_code
@@ -113,7 +113,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             user_data['house_number'] = 1
 
         user_data['company'] = ''
-        user_data['kvk_nummer'] = ''
+        user_data['kvk_number'] = ''
         user_data['vat_number'] = ''
         user_data['house_number_addition'] = ''
         user_data['state'] = ''

@@ -80,11 +80,11 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
 
 
 App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
+    parentType: 'project',
 
     parentId: function(){
         return this.modelFor('project').get('id');
     }.property(),
-    parentType: 'project',
 
     setupController: function(controller, model) {
         this._super(controller, model);

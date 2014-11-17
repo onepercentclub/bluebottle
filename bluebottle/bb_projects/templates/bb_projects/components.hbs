@@ -1,0 +1,57 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/simple-project-supporters" %}
+    <ul>
+        {{#each supporter in limitedSupporters}}
+            <li>
+                <a class="member" {{action "show" supporter}} {{bind-attr data-title="supporter.full_name" }}>
+                    <span class="member-avatar">
+                        <img {{bind-attr src="supporter.getAvatar" alt="supporter.full_name"}} />
+                    </span>
+                </a>
+            </li>
+        {{/each}}
+    </ul>
+{% endtplhandlebars %}
+
+{% tplhandlebars "components/project-donations" %}
+    <ul>
+        {{#each donation in limitedDonations}}
+            <li style="padding-left: 0em;background: none;">
+                <div class="profile-header">
+                    <div class="profile-avatar" style="width: 45px;height: 45px;float: left;margin-right: 10px;">
+                        {{#if donation.user}}
+                            <a {{action "show" donation.user}}>
+                                <figure>
+                                    {{#if "donation.user.getAvatar"}}
+                                        <img {{bind-attr src="donation.user.getAvatar" alt=""}} style="border-radius: 2em;" />
+                                    {{/if}}
+                                </figure>
+                            </a>
+                        {{else}}
+                            <figure class="profile-anonymous">
+                                <img src="/static/assets/images/default-avatar.png"  alt="{% trans 'Guest' %}" style="border-radius: 2em;" />
+                            </figure>
+                        {{/if}}
+                    </div>
+            
+                    <div class="profile-meta">
+                        {{#if donation.user}}
+                            <span>
+                                <a {{action "show" donation.user}}>{{donation.user.full_name}}</a> donated <strong>&euro;{{donation.amount}}</strong>
+                            </span><br />
+                            <span class="subtext" style="font-size:0.9em; color:gray;">{{donation.time_since}}</span>
+                        {{else}}
+                            <span>
+                                {% trans "Anonymous" %} donated <strong>&euro;{{donation.amount}}</strong>
+                            </span><br />
+                            <span class="subtext" style="font-size:0.9em; color:gray;">{{donation.time_since}}</span>
+                        {{/if}}
+                    </div>
+                </div>
+            </li>
+        {{/each}}
+    </ul>
+{% endtplhandlebars %}

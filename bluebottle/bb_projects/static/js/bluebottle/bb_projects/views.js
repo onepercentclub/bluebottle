@@ -77,10 +77,6 @@ App.ProjectPlanView = Em.View.extend({
     }
 });
 
-App.ProjectIndexView = Em.View.extend({
-    templateName: 'project_wall'
-});
-
 /* Form Elements */
 
 App.ProjectPhaseSelectView = Em.Select.extend({

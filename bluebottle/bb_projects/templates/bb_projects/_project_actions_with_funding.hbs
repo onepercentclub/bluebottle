@@ -100,7 +100,7 @@
                 <div class="col4">
                     {{#if isSupportable}}
                         <div class="project-action">
-                            <a href='#' {{ action 'addDonation' this }} class="btn btn-primary"> {% trans "Support project" %}</a>
+                            <a href='#' {{action 'addDonation' this}} class="btn btn-primary"> {% trans "Support project" %}</a>
                             {{view 'App.MpesaDonateView' class="mpesa-donate" }}
                         </div>
                     {{/if}}
@@ -116,7 +116,7 @@
                                 <div class="row">
                                     <div class="col3">
                                         <figure class="photo">
-                                            <img {{bindAttr src="owner.getAvatar"}} />
+                                            <img {{bind-attr src="owner.getAvatar"}} />
                                         </figure>
                                     </div>
                                     <div class="col9">
@@ -129,7 +129,8 @@
                     </div>
                     <div class="col8">
                         <div class="project-member-supporters">
-                            {{render "projectSupporterList"}}
+                            <h4>{% trans "Latest Supporters" %}</h4>
+                            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
                         </div>
                     </div>
                 </div>

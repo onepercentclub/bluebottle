@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load static %}
 
-{% tplhandlebars "project_wall" %}
+{% tplhandlebars "project/index" %}
 
     <div class="l-section" id="wallposts">
         <section class="l-wrapper">
@@ -51,8 +51,12 @@
                     <section id="fundraiser-list">
                         {{render 'projectFundRaiserList'}}
                     </section>
-                {{/if}}
 
+                    <section>
+                        <h3>Supporters</h3>
+                        {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
+                    </section>
+                {{/if}}
                 <section id="task-list" {{bind-attr class="canDonate:normal:offset"}}>
                     {{#if isProjectOwner}}
                         <div class="task-action">

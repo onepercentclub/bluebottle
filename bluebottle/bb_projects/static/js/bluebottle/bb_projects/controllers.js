@@ -102,6 +102,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 
 App.ProjectController = Em.ObjectController.extend({
     needs: ['projectIndex'],
+    projectDonations: null,
 
     backgroundStyle: function(){
         return "background-image:url('" + this.get('image.large') + "');";
@@ -126,8 +127,49 @@ App.ProjectController = Em.ObjectController.extend({
             return (username == ownername);
         }
         return false;
-    }.property('model.owner', 'currentUser.username')
+    }.property('model.owner', 'currentUser.username'),
 
+    _loadDonations: function() {
+        var amount_asked = this.get('amount_asked'),
+            project_id = this.get('id'),
+            _this = this;
+
+        if ( 0) {
+            this.set('recentSupporters', null);
+            return
+        }
+        
+        App.ProjectDonation.find({project: project_id}).then(function (donations) {
+            _this.set('donations', donations);
+        });
+    }.observes('isLoaded'),
+
+    _setDonations: function () {
+        if (this.get('isLoaded')) {
+            this.set('projectDonations', App.ProjectDonation.find({project: this.get('id')}));
+        }
+    }.observes('isLoaded'),
+
+    supporters: function () {
+        if (this.get('projectDonations.isLoaded')) {
+            // return a unique list of supporters based on donations with users
+            return this.get('projectDonations').mapBy('user').filter(function(user) {return user}).uniq();
+        } else {
+            return null;
+        }
+    }.property('projectDonations.isLoaded'),
+
+    recentSupporters: function () {
+        if (this.get('supporters')) {
+            return this.get('supporters').splice(0, 10);
+        }
+    }.property('supporters.length'),
+
+    actions: {
+        showProfile: function (profile) {
+            this.send('openInBigBox', 'userModal', profile);
+        }
+    }
 });
 
 App.ProjectPlanController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.StaticMapMixin, {
@@ -164,6 +206,8 @@ App.ProjectIndexController = Em.ArrayController.extend({
     parentId: null,
     parentType: 'project',
     showingAll: null,
+    projectSupportersBinding: Ember.Binding.oneWay("controllers.project.supporters"),
+    projectDonationsBinding: Ember.Binding.oneWay("controllers.project.projectDonations"),
 
     isProjectOwner: function(){
         return this.get('controllers.project.owner.username') == this.get('currentUser.username');
@@ -206,12 +250,12 @@ App.ProjectIndexController = Em.ArrayController.extend({
         });
     }.property('tasks.@each.isUnavailable'),
 
-    resetShowingAll: function() {
+    resetShowingAll: function () {
         this.set("showingAll", false);
     }.observes('parentId'),
-    
+
     actions: {
-        showMore: function() {
+        showMore: function () {
             var controller = this;
             var page = this.incrementProperty('page');
             var parent_id = this.get('parentId');
@@ -220,11 +264,17 @@ App.ProjectIndexController = Em.ArrayController.extend({
                 controller.get('model').pushObjects(items.toArray());
             });
         },
-        showActiveTasks: function() {
+        
+        showActiveTasks: function () {
             this.set("showingAll", false);
         },
-        showAllTasks: function() {
+
+        showAllTasks: function () {
             this.set("showingAll", true);
+        },
+
+        showProfile: function (profile) {
+            this.send('openInBigBox', 'userModal', profile);
         }
     }
 });

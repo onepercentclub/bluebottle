@@ -164,7 +164,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         self.assertEqual(log.level, 'WARNING')
 
 
-class AdapterGetUserDataTestCase(TestCase):
+class AdapterTestCase(TestCase):
     def setUp(self):
         pass
 

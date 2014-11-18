@@ -75,16 +75,32 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
 
         if user and hasattr(user, 'address'):
-            user_data['street'] = user.address.line1
-            street = user.address.line1.split(' ')
-            if int(street[-1]):
-                user_data['house_number'] = street[-1]
-            else:
-                user_data['house_number'] = 1
 
-            user_data['postal_code'] = user.address.postal_code
-            user_data['city'] = user.address.city
-            user_data['country'] = user.address.country.alpha2_code
+            street = user.address.line1.split(' ')
+            if street[-1] and any(char.isdigit() for char in street[-1]):
+                user_data['house_number'] = street.pop(-1)
+                user_data['street'] = ' '.join(street)
+            else:
+                user_data['house_number'] = 'Unknown'
+                if user.address.line1:
+                    user_data['street'] = user.address.line1
+                else:
+                    user_data['street'] = 'Unknown'
+
+            if user.address.postal_code:
+                user_data['postal_code'] = user.address.postal_code
+            else:
+                user_data['postal_code'] = 'Unknown'
+            if user.address.city:
+                user_data['city'] = user.address.city
+            else:
+                user_data['city'] = 'Unknown'
+            if user.address.country and hasattr(user.address.country, 'alpha2_code'):
+                user_data['country'] = user.address.country.alpha2_code
+            elif get_country_code_by_ip(ip_address):
+                user_data['country'] = get_country_code_by_ip(ip_address)
+            else:
+                user_data['country'] = 'NL'
         else:
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'
@@ -94,10 +110,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 user_data['country'] = country
             else:
                 user_data['country'] = 'NL'
-            user_data['house_number'] = 1
+            user_data['house_number'] = 'Unknown'
 
         user_data['company'] = ''
-        user_data['kvk_nummer'] = ''
+        user_data['kvk_number'] = ''
         user_data['vat_number'] = ''
         user_data['house_number_addition'] = ''
         user_data['state'] = ''

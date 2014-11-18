@@ -74,11 +74,18 @@ def get_client_ip(request=None):
     if not request:
         request = ThreadLocal.get_current_request()
 
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    try:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    except AttributeError:
+        x_forwarded_for = None
+
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
     else:
-        ip = request.META.get('REMOTE_ADDR')
+        try:
+            ip = request.META.get('REMOTE_ADDR')
+        except AttributeError:
+            ip = None
     return ip
 
 

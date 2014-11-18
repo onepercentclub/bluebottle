@@ -300,12 +300,12 @@ class SeleniumTestCase(LiveServerTestCase):
             url = sauce_url % (username, access_key)
 
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
-                                     wait_time=10, desired_capabilities=caps)
+                                     wait_time=30, desired_capabilities=caps)
         else:
-            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
+            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=30)
 
-        cls.browser.driver.implicitly_wait(10)
-        cls.browser.driver.set_page_load_timeout(10)
+        cls.browser.driver.implicitly_wait(30)
+        cls.browser.driver.set_page_load_timeout(30)
 
         super(SeleniumTestCase, cls).setUpClass()
 

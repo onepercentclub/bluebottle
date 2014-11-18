@@ -18,6 +18,7 @@
                 background-size: cover;
                 background-position: 50% 50%;
                 @include filter(blur(10px));
+                filter: url(#projectBlur);
                 @include opacity(.4);
                 @include transform(scale(1.05));
             }
@@ -37,6 +38,7 @@
         }
 
         .project-image {
+            width: 100%;
             float: right;
             margin-top: 17px;
 
@@ -92,6 +94,7 @@
                     float: right;
                     margin-top: 8px;
                     text-transform: none;
+                    @include custom-icon(clock, 21px, 20px, 4px, image-url("img/icons/icon-clock-detail.svg"));
                 }
             }
         }

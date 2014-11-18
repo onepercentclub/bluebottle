@@ -333,20 +333,25 @@ class SeleniumTestCase(LiveServerTestCase):
         """
         self.visit_homepage()
 
-        # Find the link to the signup button page and click it.
-        self.browser.find_link_by_itext('log in').first.click()
+        if not self.browser.find_by_css('.nav-signup-login'):
+            self.logout()
 
-        # Validate that we are on the intended page.
-        if not self.browser.is_text_present('LOG IN', wait_time=10):
-            return False
+        # Find the link to the signup button page and click it.
+        self.scroll_to_and_click_by_css('.nav-signup-login a')
+        self.wait_for_element_css('.modal-fullscreen-content')
 
         # Fill in details.
-        self.browser.fill('username', username)
-        self.browser.fill('password', password)
+        self.browser.find_by_css('input[name=username]').first.fill(username)
+        self.browser.find_by_css('input[type=password]').first.fill(password)
 
-        self.browser.find_by_value('Login').first.click()
+        self.wait_for_element_css("a[name=login]")
+        self.scroll_to_and_click_by_css("a[name=login]")
 
-        return self.browser.is_text_present('PROFILE', wait_time=10)
+        return self.wait_for_element_css(".nav-member")
+
+    def logout(self):
+        self.visit_path("/logout")
+        return self.wait_for_element_css('.nav-signup-login a')
 
     def visit_path(self, path, lang_code=None):
         """

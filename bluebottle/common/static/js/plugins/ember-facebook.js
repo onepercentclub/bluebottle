@@ -87,11 +87,15 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
 
 Ember.FBView = Ember.View.extend({
-   classNameBindings: [':btn', ':btn-facebook', ':btn-iconed', ':fb-login-button', 'isBusy:is-loading'],
-   attributeBindings: ['data-scope','data-size'],
+    classNameBindings: [':btn', ':btn-facebook', ':btn-iconed', ':fb-login-button', 'isBusy:is-loading'],
+    attributeBindings: ['data-scope','data-size'],
 
     click: function(e){
-        var _this = this;
+        var _this = this,
+            controller = this.get('controller');
+            
+        FBApp.set('callingController', controller);
+
         _this.set('isBusy', true);
         FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {

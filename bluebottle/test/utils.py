@@ -323,7 +323,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
         super(SeleniumTestCase, self)._post_teardown()
 
-    def login(self, username, password):
+    def login(self, username, password, wait_time=30):
         """
         Perform login operation on the website.
 
@@ -344,10 +344,10 @@ class SeleniumTestCase(LiveServerTestCase):
         self.browser.find_by_css('input[name=username]').first.fill(username)
         self.browser.find_by_css('input[type=password]').first.fill(password)
 
-        self.wait_for_element_css("a[name=login]")
+        self.wait_for_element_css("a[name=login]", timeout=wait_time)
         self.scroll_to_and_click_by_css("a[name=login]")
 
-        return self.wait_for_element_css(".nav-member")
+        return self.wait_for_element_css('.nav-member', timeout=wait_time)
 
     def logout(self):
         self.visit_path("/logout")

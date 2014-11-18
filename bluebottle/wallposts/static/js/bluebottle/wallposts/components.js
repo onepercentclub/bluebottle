@@ -3,8 +3,12 @@
  *
  */
 
- App.BbWallpostNewComponent = Ember.Component.extend({
-    didInsertElement: function() {
-        
+App.BbTextWallpostNewComponent = Ember.Component.extend({
+    actions: {
+        submit: function() {
+            this.sendAction("submit");
+        }
     }
- });
+});
+
+App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend();

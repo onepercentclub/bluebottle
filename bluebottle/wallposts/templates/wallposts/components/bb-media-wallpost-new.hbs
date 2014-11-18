@@ -1,8 +1,9 @@
-{% load bb_ember %}
+{% load templatetag_handlebars %}
 {% load i18n %}
 {% load static %}
 
-{% tplhandlebars "components/bb-wallpost_new" %}
+
+{% tplhandlebars "components/bb-media-wallpost-new" %}
 
     <div class="wallpost-action">
         <div class="wallpost-header">
@@ -24,6 +25,10 @@
             {{#if errors.text }}
                 <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
             {{/if}}
+
+            <button class="btn btn-primary btn-save" {{action 'saveWallPost' target='controller'}}>{% trans "Post" %}</button>
+
+            <button class="btn btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
         </div>
     </div>
 

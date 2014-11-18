@@ -347,7 +347,7 @@ class SeleniumTestCase(LiveServerTestCase):
         self.wait_for_element_css("a[name=login]", timeout=wait_time)
         self.scroll_to_and_click_by_css("a[name=login]")
 
-        return self.wait_for_element_css('.nav-member', timeout=wait_time)
+        return self.wait_for_element_css(".nav-member", timeout=wait_time)
 
     def logout(self):
         self.visit_path("/logout")

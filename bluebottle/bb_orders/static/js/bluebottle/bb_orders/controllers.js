@@ -6,7 +6,7 @@ App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, {
         var _this = this,
             donation = this.get('controllers.donation.model'),
             order = donation.get('order');
-
+        
         App.UserPreview.find(this.get('currentUser.id_for_ember')).then(function (user) {
             order.set('user', user).send('becomeDirty');
             order.save().then(function (order) {
@@ -40,7 +40,6 @@ App.OrderLoginController = App.LoginController.extend(App.SaveDonationMixin, {
         var _this = this,
             donation = this.get('controllers.donation.model'),
             order = donation.get('order');
-
 
         App.UserPreview.find(this.get('currentUser.id_for_ember')).then(function (user) {
             order.set('user', user).send('becomeDirty');

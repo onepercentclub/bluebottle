@@ -4,7 +4,7 @@
  */
 
  App.BbWallpostNewComponent = Ember.Component.extend({
-    didInsertElment: function() {
-        debugger;
+    didInsertElement: function() {
+        
     }
  });

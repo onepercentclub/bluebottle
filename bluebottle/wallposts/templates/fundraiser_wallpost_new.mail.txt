@@ -11,6 +11,5 @@ Don't wait any longer and check it out:
 
 {{ site }}{{ link }}
 
-1%Club
 {% endblocktrans %}
 {% endblock %}

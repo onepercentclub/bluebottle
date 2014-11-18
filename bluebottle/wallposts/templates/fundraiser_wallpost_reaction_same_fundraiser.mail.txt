@@ -10,6 +10,5 @@ Hi {{ receiver_name }},
 Read the comment here:
 {{ site }}{{ link }}
 
-1%Club
 {% endblocktrans %}
 {% endblock %}

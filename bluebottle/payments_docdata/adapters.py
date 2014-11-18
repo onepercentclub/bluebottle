@@ -76,16 +76,16 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         if user and hasattr(user, 'address'):
 
-            if user.address.line1:
-                user_data['street'] = user.address.line1
-            else:
-                user_data['street'] = 'Unknown'
-
             street = user.address.line1.split(' ')
             if street[-1] and any(char.isdigit() for char in street[-1]):
-                user_data['house_number'] = street[-1]
+                user_data['house_number'] = street.pop(-1)
+                user_data['street'] = ' '.join(street)
             else:
                 user_data['house_number'] = 'Unknown'
+                if user.address.line1:
+                    user_data['street'] = user.address.line1
+                else:
+                    user_data['street'] = 'Unknown'
 
             if user.address.postal_code:
                 user_data['postal_code'] = user.address.postal_code

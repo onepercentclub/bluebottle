@@ -206,7 +206,7 @@ class AdapterGetUserDataTestCase(TestCase):
         user = BlueBottleUserFactory()
         holland = CountryFactory(name='Netherlands', alpha2_code='NL')
 
-        address = BlueBottleAddressFactory(user=user, line_1='Dam 1a', line_2='', city='Amsterdam',
+        address = BlueBottleAddressFactory(user=user, line1='Dam 1a', line2='Bovenste bel', city='Amsterdam',
                                            postal_code='1000AA', country=holland)
 
         self.order = OrderFactory.create(user=user)

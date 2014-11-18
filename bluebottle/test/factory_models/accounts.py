@@ -1,7 +1,6 @@
 import factory
 
 from django.contrib.auth import get_user_model
-from bluebottle.test.models import TestAddress
 
 BB_USER_MODEL = get_user_model()
 
@@ -16,7 +15,3 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     last_name = factory.Sequence(lambda l: u'user_{0}'.format(l))
     is_active = True
 
-
-class BlueBottleAddressFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TestAddress
-    user = factory.SubFactory(BlueBottleUserFactory)

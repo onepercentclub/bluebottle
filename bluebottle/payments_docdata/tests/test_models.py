@@ -1,3 +1,4 @@
+from bluebottle.test.factory_models.addresses import BlueBottleAddressFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from django.test import TestCase
 from django.test import Client
@@ -5,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory, BlueBottleAddressFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import FsmTestMixin
 
 from bluebottle.payments.services import PaymentService

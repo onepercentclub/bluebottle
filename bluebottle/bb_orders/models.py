@@ -40,6 +40,8 @@ class BaseOrder(models.Model, FSMTransition):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
 
+    order_type = models.CharField(max_length='100', default='single', null=True, blank=True)
+
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     confirmed = models.DateTimeField(_("Confirmed"), blank=True, editable=False, null=True)
@@ -70,7 +72,7 @@ class BaseOrder(models.Model, FSMTransition):
     def update_total(self, save=True):
         DONATION_MODEL = get_donation_model()
         donations = DONATION_MODEL.objects.filter(order=self)
-        self.total = donations.aggregate(Sum('amount'))['amount__sum']
+        self.total = donations.aggregate(Sum('amount'))['amount__sum'] or 0
         if save:
             self.save()
 

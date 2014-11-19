@@ -19,7 +19,10 @@ def update_order_amount(sender, instance, **kwargs):
 
 @receiver(post_delete, weak=False, sender=DONATION_MODEL, dispatch_uid='donation_model')
 def update_order_amount(sender, instance, **kwargs):
-    instance.order.update_total()
+    # If we're deleting order and donations do nothing.
+    # If we're just deleting a donation then we should update the order total.
+    if hasattr(instance, 'order'):
+        instance.order.update_total()
 
 
 @receiver(post_transition, sender=OrderPayment)

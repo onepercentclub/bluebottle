@@ -11,7 +11,7 @@ DONATION_MODEL = get_donation_model()
 ORDER_MODEL = get_order_model()
 MODEL_MAP = get_model_mapping()
 
-# http://stackoverflow.com/a/16556771
+
 class DonationStatusFilter(SimpleListFilter):
     title = _('Status')
 

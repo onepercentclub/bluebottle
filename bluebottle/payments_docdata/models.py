@@ -65,7 +65,6 @@ class DocdataPayment(Payment):
         else:
             return payment_method_icon_mapping['system']
 
-
     def get_fee(self):
         if not hasattr(settings, 'DOCDATA_FEES'):
             raise PaymentException("Missing fee DOCDATA_FEES")
@@ -151,5 +150,3 @@ class DocdataDirectdebitPayment(Payment):
     iban = models.CharField(max_length=35)  # max_length from DocData
     bic = models.CharField(max_length=35)  # max_length from DocData
     agree = models.BooleanField(default=False)
-
-

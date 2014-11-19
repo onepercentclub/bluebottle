@@ -47,6 +47,10 @@ App.SimpleProjectSupportersComponent = Ember.Component.extend({
         return this.get('supporters').splice(0, limit);
     }.property('limit', 'supporters.length'),
 
+    amountSupporters: function() {
+        return this.get('supporters');
+    }.property('supporters.length'),
+
     actions: {
         show: function(profile) {
             this.sendAction('showProfile', profile);

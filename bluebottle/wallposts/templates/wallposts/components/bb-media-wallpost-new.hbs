@@ -4,32 +4,32 @@
 
 
 {% tplhandlebars "components/bb-media-wallpost-new" %}
-
-    <div class="wallpost-action">
-        <div class="wallpost-header">
-            <div class="row">
-                <div class="col7">
-                    <a class="status-update" href=""><span class="custom-icons update"></span>{% trans "Update status" %}</a>
-                </div>
-                <div class="col5">
-                    <ul>
-                        <li class="add-photo" href=""><a href=""><span class="custom-icons add-photo"></span>{% trans "Add photo's" %}</a></li>
-                        <li class="add-video" href=""><a href=""><span class="custom-icons add-video"></span>{% trans "Add an video" %}</a></li>
-                    </ul>
+    {{#with wallpost}}
+        <div class="wallpost-action">
+            <div class="wallpost-header">
+                <div class="row">
+                    <div class="col7">
+                        <a class="status-update" href=""><span class="custom-icons update"></span>{% trans "Update status" %}</a>
+                    </div>
+                    <div class="col5">
+                        <ul>
+                            <li class="add-photo" href=""><a href=""><span class="custom-icons add-photo"></span>{% trans "Add photo's" %}</a></li>
+                            <li class="add-video" href=""><a href=""><span class="custom-icons add-video"></span>{% trans "Add an video" %}</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
+            <div class="wallpost-form">
+                {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
+
+                {{#if errors.text }}
+                    <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
+                {{/if}}
+
+                <button class="btn btn-primary btn-save" {{action 'submit'}}>{% trans "Post" %}</button>
+
+                <button class="btn btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
+            </div>
         </div>
-        <div class="wallpost-form">
-            {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
-
-            {{#if errors.text }}
-                <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
-            {{/if}}
-
-            <button class="btn btn-primary btn-save" {{action 'saveWallPost' target='controller'}}>{% trans "Post" %}</button>
-
-            <button class="btn btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
-        </div>
-    </div>
-
+    {{/with}}
 {% endtplhandlebars %}

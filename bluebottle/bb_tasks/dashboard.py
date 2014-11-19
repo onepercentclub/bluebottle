@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from admin_tools.dashboard.modules import DashboardModule
 from bluebottle.utils.model_dispatcher import get_task_model
 from django.utils.translation import ugettext_lazy as _
@@ -31,10 +32,11 @@ class RealizedTaskModule(TaskModule):
     Custom class to display realized tasks that have taskmembers that are not realized. These are the tasks
     whereby the owner must still confirm that task members completed the tasks.
     """
+    order_by = "-created"
     def init_with_context(self, context):
         try:
-            qs = TASK_MODEL.objects.filter(status='realized').exclude(members__status__in=['realized']).distinct().order_by(self.order_by)
-        except:
+            qs = TASK_MODEL.objects.filter(status=TASK_MODEL.TaskStatuses.realized).exclude(members__status__in=[TASK_MODEL.TaskStatuses.realized]).distinct().order_by(self.order_by)
+        except Exception as e:
             qs = []
 
         self.children = qs[:self.limit]

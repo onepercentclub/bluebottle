@@ -338,7 +338,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
         # Find the link to the signup button page and click it.
         self.scroll_to_and_click_by_css('.nav-signup-login a')
-        self.wait_for_element_css('.modal-fullscreen-content')
+        self.wait_for_element_css('input[name=username]')
 
         # Fill in details.
         self.browser.find_by_css('input[name=username]').first.fill(username)
@@ -347,11 +347,14 @@ class SeleniumTestCase(LiveServerTestCase):
         self.wait_for_element_css("a[name=login]", timeout=wait_time)
         self.scroll_to_and_click_by_css("a[name=login]")
 
+        # Wait for modal animation to complete
+        self.wait_for_not_element_css('.modal-fullscreen-background')
+
         return self.wait_for_element_css(".nav-member", timeout=wait_time)
 
     def logout(self):
         self.visit_path("/logout")
-        return self.wait_for_element_css('.nav-signup-login a')
+        return self.wait_for_element_css('.nav-signup-login')
 
     def visit_path(self, path, lang_code=None):
         """

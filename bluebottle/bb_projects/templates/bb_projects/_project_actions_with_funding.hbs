@@ -2,11 +2,9 @@
 
 
 {% tplhandlebars "_project_actions_with_funding" %}
-            <div class="row">
-                <div class="col8">
-                    
+            <div class="project-bar">
+                <article>
                     <div class="project-status">
-
                         <div class="project-fund">
                             {{#if isCheetahProject}}
                                 <div class="cheetah-project-progress">
@@ -90,21 +88,18 @@
                                     {{/unless}}
                                 </div>
                             {{/if}}
-
                         </div>
-                        
                     </div>
+                </article>
 
-                </div>
-
-                <div class="col4">
+                <aside>
                     {{#if isSupportable}}
                         <div class="project-action">
                             <a href='#' {{action 'addDonation' this}} class="btn btn-primary"> {% trans "Support project" %}</a>
                             {{view 'App.MpesaDonateView' class="mpesa-donate" }}
                         </div>
                     {{/if}}
-                </div>
+                </aside>
             </div>
         </section>
         <div id="project-members">

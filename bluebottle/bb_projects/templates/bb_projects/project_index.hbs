@@ -22,9 +22,9 @@
                         </div>
                         {{#if currentUser.isAuthenticated }}
                             {{#if canAddMediaWallPost}}
-                                {{ render "mediaWallPostNew" parentId=parentId}}
+                                {{render "mediaWallPostNew" parentId=parentId}}
                             {{else}}
-                                {{bb-wallpost_new}}
+                                {{render "textWallPostNew" parentId=parentId}}
                             {{/if}}
                         {{/if}}
 

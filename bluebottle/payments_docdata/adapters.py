@@ -59,8 +59,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if user:
             user_data = {
                 'id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
+                'first_name': user.first_name or 'Unknown',
+                'last_name': user.last_name or 'Unknown',
                 'email': user.email,
                 'ip_address': ip_address,
             }

@@ -84,7 +84,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
     raw_id_fields = ('member', 'task')
-    list_filter = ('status', )
+    list_filter = ('status', 'created')
     list_display = ('get_member_email', 'task', 'status', 'updated')
 
     readonly_fields = ('updated',)

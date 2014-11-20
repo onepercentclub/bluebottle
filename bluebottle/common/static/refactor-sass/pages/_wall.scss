@@ -1,0 +1,12 @@
+#wall {
+	@include outer-container;
+	clear: both;
+}
+
+#wallposts {
+	@include span-columns(7);
+}
+
+#sidebar {
+	@include span-columns(5);
+}

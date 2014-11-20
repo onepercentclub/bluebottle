@@ -54,6 +54,11 @@
                             <section id="fundraiser-list">
                                 {{render 'projectFundRaiserList'}}
                             </section>
+
+                            <section>
+                                <h3>Supporters</h3>
+                                {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
+                            </section>
                         {{/if}}
 
                         <section id="task-list" {{bind-attr class="canDonate:normal:offset"}}>

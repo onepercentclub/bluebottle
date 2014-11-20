@@ -1,22 +1,6 @@
-
-/*
-a, a:visited {
-	color: $color-sec;
-	@include transition(color 0.2s ease-out);
-
-	&:focus {
-
-	}
-
-	&:hover {
-		color: $color-sec-shadow;
-	}
-}
-*/
-
-
 // global wallposts & comments
 .m-wallpost, .m-comment {
+
     position: relative;
 
 	.user-avatar {
@@ -37,7 +21,7 @@ a, a:visited {
 
 	    margin-top: 10px;
 
-	    color: $color-sec;
+	    color: $color-sec !important;
 	}
 	.timestamp {
 	    font-size: 16px;
@@ -86,6 +70,7 @@ a, a:visited {
         padding: 0;
 
         list-style-type: none;
+        
         .cover img {
             display: block;
 
@@ -96,15 +81,19 @@ a, a:visited {
             background-color: $color-grey-back;
         }
         .cover {
-            padding-right: 10px;
+            margin: 0;
+            padding: 0 10px 0 0;
+            background-image: none;
+
         }
         .photo {
             display: block;
             float: left;
-
+            margin: 10px 0 0 0;
+            padding: 0 10px 0 0;
+            background-image: none;
             width: 20%;
-            margin-top: 10px;
-            padding-right: 10px;
+
             img {
                 display: block;
 

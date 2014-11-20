@@ -1,6 +1,12 @@
 #wall {
-	@include outer-container;
 	clear: both;
+	background-color: $color-grey-back;
+	padding-top: 30px;
+	padding-bottom: 30px;
+	
+	.l-wrapper {
+		@include outer-container;
+	}
 }
 
 #wallposts {
@@ -9,4 +15,5 @@
 
 #sidebar {
 	@include span-columns(5);
+	padding-left: 5%;
 }

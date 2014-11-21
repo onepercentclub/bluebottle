@@ -1,8 +1,8 @@
 .wallpost-action {
     width: 100%;
-    background: $white;
+    background: $gray-border;
     border-radius: 4px;
-    border: solid 1px $gray-border;
+    border: solid 1px $gray-comment-border;
 
     // reset ul list
     ul {
@@ -14,67 +14,131 @@
             margin: 0;
             background: none;
             float: left;
-            margin-left: 31px;
             font-size: 13px;
         }
     }
 
     .wallpost-header {
-        padding: 10px;
-        border-bottom: solid 1px $gray-border;
+        border-radius: 4px 4px 0 0;
+        padding: 10px 20px;
+        border-bottom: solid 1px $gray-comment-border;
+        background: $white;
 
         .status-update {
-            font-weight: bold;
-            @include custom-icon(update, 21px, 21px, 4px, image-url("img/icons/wallpost/icon-update-status.svg"));
-
-            a {
-                color: $color-secondary;
-            }
+            @include custom-icon(update, 21px, 21px, 4px, url("/static/assets/images/img/icons/wallpost/icon-update-status.svg"));
 
             .custom-icons {
                 margin-right: 10px;
             }
         }
 
-        .add-photo {
-            font-weight: bold;
-            @include custom-icon(add-photo, 13px, 12px, 0, image-url("img/icons/wallpost/icon-add-photo.svg"));
+        .wallpost-header-action {
+            text-align: right;
 
-            a {
-                color: $color-secondary;
+            ul {
+                width: 100%;
             }
 
-            .custom-icons {
-                margin-right: 5px;
+            li {
+                font-weight: bold;
+                float: left;
+                margin-left: 31px;
+
+                .custom-icons {
+                    margin-right: 5px;
+                }
+
+                &.add-photo {
+                    float: right;
+                    @include custom-icon(add-photo, 13px, 12px, 0, url("/static/assets/images/img/icons/wallpost/icon-add-photo.svg"));
+                }
+
+                &.add-video {
+                    float: right;
+                    @include custom-icon(add-video, 13px, 12px, 0, url("/static/assets/images/img/icons/wallpost/icon-add-video.svg"));
+                }
+
+                .add-media {
+                    color: red;
+                }
             }
-        }
 
-        .add-video {
-            font-weight: bold;
-            @include custom-icon(add-video, 13px, 12px, 0, image-url("img/icons/wallpost/icon-add-video.svg"));
-
-            a {
-                color: $color-secondary;
-            }
-
-            .custom-icons {
-                margin-right: 5px;
+            .status-update {
+                margin-left: 0;
+                margin-right: 31px;
+                    
+                    a {
+                        font-weight: bold;
+                    color: $color-secondary;
+                    }
             }
         }
     }
 
     .wallpost-form {
         padding: 10px;
+        background: $white;
+        margin-bottom: -24px;
+        border-radius: 0 0 4px 4px;
+        @include transition(all .2s $ease-in-out-cubic);
 
         .wallpost-update {
             height: 40px;
+            padding-left: 20px;
             border: none;
             -webkit-box-shadow: none;
-            @include transition(all .2s ease-in-out);
+            @include transition(all .2s $ease-in-out-cubic);
+        }
 
-            &:focus {
-                height: 80px;
+        .btn-link {
+            font-size: 16px;
+            text-transform: none;
+        }
+
+        #wallpost-video {
+            padding-left: 20px;
+            border: none;
+            -webkit-box-shadow: none;
+        }
+    }
+
+    .wallpost-footer {
+        display: inline-block;
+        overflow: hidden;
+        max-height: 0;
+        width: 100%;
+        padding: 0;
+        border-top: none;
+        @include transition(all .2s $ease-in-out-cubic);
+
+        .wallpost-footer-action {
+            float: right;
+            width: 40%;
+            @include opacity(0);
+            @include transition(all .2s $ease-in-out-cubic);
+        }
+    }
+
+    &.is-active {
+        margin-bottom: 0;
+
+        .wallpost-form {
+            margin-bottom: 0;
+            border-radius: 0;
+
+            .wallpost-update {
+                //height: 80px;
+            }
+        }
+        .wallpost-footer {
+            max-height: 100px;
+            padding: 10px 10px 5px 10px;
+            border-top: solid 1px $gray-comment-border;
+
+            .wallpost-footer-action {
+                @include opacity(1);
             }
         }
     }
 }
+

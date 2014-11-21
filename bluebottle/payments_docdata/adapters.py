@@ -41,7 +41,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # Is this mapping correct?
         'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
         'PAID':                           StatusDefinition.SETTLED, 
-        'CANCELLED':                      StatusDefinition.CANCELLED,
+        'CANCELED':                       StatusDefinition.CANCELLED, # Docdata responds with 'CANCELED'
         'CHARGED_BACK':                   StatusDefinition.CHARGED_BACK,
         'CONFIRMED_PAID':                 StatusDefinition.PAID,
         'CONFIRMED_CHARGEDBACK':          StatusDefinition.CHARGED_BACK,

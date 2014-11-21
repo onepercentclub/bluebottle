@@ -1,7 +1,11 @@
 App.OrderController = Em.ObjectController.extend();
 
-App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, {
-    _handleSignupSuccess: function () {
+/*
+ Mixin to be used by the login and signup controllers to handle
+ assigning the current user to the current order.
+ */
+App.OrderAssignUserMixin = Em.Mixin.create({
+    _assignUser: function () {
         // Update the user on the order to the current user
         var _this = this,
             donation = this.get('controllers.donation.model'),
@@ -9,11 +13,20 @@ App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, {
         
         App.UserPreview.find(this.get('currentUser.id_for_ember')).then(function (user) {
             order.set('user', user).send('becomeDirty');
-            order.save().then(function (order) {
+            order.save().then(function (savedOrder) {
                 // Save the current donation after successful signup
-                _this._saveDonation();
+                _this._saveDonation().then(function () {
+                    // Reload the order to fetch the embedded donations
+                    savedOrder.reload();
+                });
             });
         });
+    }
+})
+
+App.OrderSignupController = App.SignupController.extend(App.OrderAssignUserMixin, App.SaveDonationMixin, {
+    _handleSignupSuccess: function () {
+        this._assignUser();
     },
 
     _handleSignupConflict: function (failedUser) {
@@ -34,19 +47,8 @@ App.OrderSignupController = App.SignupController.extend(App.SaveDonationMixin, {
     }
 });
 
-App.OrderLoginController = App.LoginController.extend(App.SaveDonationMixin, {
+App.OrderLoginController = App.LoginController.extend(App.OrderAssignUserMixin, App.SaveDonationMixin, {
     _handleLoginSuccess: function () {
-        // Update the user on the order to the current user
-        var _this = this,
-            donation = this.get('controllers.donation.model'),
-            order = donation.get('order');
-
-        App.UserPreview.find(this.get('currentUser.id_for_ember')).then(function (user) {
-            order.set('user', user).send('becomeDirty');
-            order.save().then(function (order) {
-                // Save the current donation after successful signup
-                _this._saveDonation();
-            });
-        });
+        this._assignUser();
     }
 });

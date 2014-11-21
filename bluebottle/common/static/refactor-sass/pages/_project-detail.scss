@@ -115,7 +115,7 @@
                     float: right;
                     margin-top: 8px;
                     text-transform: none;
-                    @include custom-icon(clock, 21px, 20px, 4px, url("/static/assets/images/img/icons/icon-clock-detail.svg"));
+                    @include add-icon(clock, 21px, 20px, 4px, url("/static/assets/images/img/icons/icon-clock-detail.svg"));
                 }
             }
         }

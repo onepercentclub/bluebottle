@@ -56,7 +56,9 @@
                         <label class="error">{{this}}</label>
                     {{/each}}
                     {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="comment-input"}}
-                    <button class="button submit" type="submit">Post</button>
+                    <footer>
+                        <button class="button submit" type="submit">Post</button>
+                    </footer>
             </fieldset>
         </form>
     {{else}}

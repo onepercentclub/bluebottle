@@ -46,22 +46,22 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
     },
 
     showWallpostOptions: function() {
-        var wallpost = this.$().find('.wallpost-action');
+        var wallpost = this.$().find('.wallpost-update');
         wallpost.addClass('is-active');
     },
 
     hideWallpostOptions: function() {
-        var wallpost = this.$().find('.wallpost-action');
+        var wallpost = this.$().find('.wallpost-update');
         wallpost.removeClass('is-active');
     },
 
     tab: function(li){
-        var el = this.$('.wallpost-action');
+        var el = this.$('.wallpost-update');
         return el.find('.tab:eq(' + li.index() + ')');
     },
 
     click: function(e){
-        var el = this.$('.wallpost-action'),
+        var el = this.$('.wallpost-update'),
             li = $(e.target).parent(),
             tab = Ember.get(this, 'tab');
 

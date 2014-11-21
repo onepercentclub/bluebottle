@@ -2,17 +2,29 @@
 // SET YOUR EDITOR TO USING TABS AND TAB SIZE OF 4 FOR PROPER ALIGNMENT
 // OF THE VARIABLES BELOW
 
-// Grays
-// --------------------------------
+// Jhon                                                       
+// --------------------------------   
 
+// greys
+$black                 : #000 !default;
+$gray-darkest          : #222 !default;
+$gray-darker           : #444 !default;
 $gray-dark             : #666 !default;
 $gray                  : #999 !default;
 $gray-light            : #ccc !default;
 $gray-lighter          : #e9e9e9 !default;
 $white                 : #fff !default;                         
 
-$color-primary         : #0896ff !default; // light blue
-$color-secondary       : #003580 !default; // dark blue
+// colors
+$color-primary : #0896ff !default;
+$color-secondary : #00c051 !default;
+
+$color-error : #b84040 !default;
+$color-success : #5da423 !default;
+$color-deselect: #bfbfbf !default;
+
+$gray-border : #f2f2f2;
+$gray-comment-border: #d8d8d8;
 
 $color-success         : #5da423 !default;
 $color-deselect        : #bfbfbf !default;
@@ -35,7 +47,7 @@ $color-grey            : #999 !default; //usually for text
 $color-grey-medium     : #d8d8d8 !default; // borders for box
 $color-grey-light      : #ededed !default; // outside borders for box
 $color-grey-lightest   : #f8f7f8 !default; // box background grey
-$color-grey-back       : #f8f7f8 !default; // background grey
+$color-grey-back       : #F6F5F7 !default; // background grey
 
 // errors
 $color-error           : #CA4040 !default;

@@ -101,7 +101,7 @@
     padding: 0; // todo: change global list
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
-    background-color: $color-grey-light;
+    background-color: $color-grey-lightest;
     background-image: none; // todo: change global list
 
     .comment-header {
@@ -194,7 +194,7 @@
         margin: -1px -1px 0 -1px;
     }
 
-    .submit {
+    footer {
         position: absolute;
         right: 3px;
         bottom: 4px;
@@ -203,7 +203,7 @@
 
 // todo: make global
 .signin {
-    padding: 15px 20px 15px 20px;
+    padding: 7px 20px 10px 20px;
     border-top: 1px solid $color-grey-medium;
     background-color: $color-grey-light;
 

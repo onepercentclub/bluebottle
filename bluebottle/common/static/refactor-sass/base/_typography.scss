@@ -40,17 +40,27 @@ h1, h2, h3, h4, h5, h6 {
 // Todo: change to .btn
 // -------------------------
 
+form {
+
+    label.error {
+        display: none;
+    }
+}
+
 form.error {
 
+    label.error {
+        display: block;
+    }
 }
 
 label.error {
-    background-color: $color-error-back;
-    color: $color-error;
-    border: 1px solid $color-error;
+    margin: 0;
     padding: 5px 20px;
     text-align: center;
-    margin: 0;
+    color: $color-error;
+    border: 1px solid $color-error;
+    background-color: $color-error-back;
 }
 
 button, .button {
@@ -58,9 +68,10 @@ button, .button {
     font-family: $font-family-header;
     font-weight: 700;
     position: relative;
+    top: 1px;
     display: inline-block;
-    min-width: 75px;
-    padding: 0.3em 1em calc(0.3em + 1px) 1em;
+    min-width: 85px;
+    padding: .3em 1em calc(.3em + 1px) 1em;
     -webkit-transform: scale(1);
     vertical-align: center;
     text-transform: inherit;
@@ -71,20 +82,22 @@ button, .button {
     box-shadow: 0 -1px 0 0 $color-sec-shadow inset;
     // fix for chrome animation bug
     -webkit-backface-visibility: hidden;
-    top: 1px;
 
     &:hover {
-        box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
-        padding-bottom: calc(0.3em + 2px);
         top: 0;
+        margin-bottom: -1px;
+        padding-bottom: calc(.3em + 2px);
+        box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
     }
 
     &:active {
+        top: 2px;
+        margin-bottom: 1px;
+        padding: .3em 1em .3em 1em;
         color: $color-sec !important;
         background: $color-sec-shadow !important;
         //box-shadow: 0 1px 0 0 $color-black inset;
         box-shadow: none;
-        padding: 0.3em 1em calc(0.3em) 1em;
 
         span {
             background: transparent !important; // TODO: Reset old flaticon
@@ -94,5 +107,26 @@ button, .button {
     &:focus {
         outline: none;
         // box-shadow: 0 0 3px 0px lighten($color-sec, 10%);
+    }
+
+    &.action-cancel {
+        @include transition(box-shadow .1s ease-out);
+        font-weight: normal;
+        margin-top: 1px;
+        color: $color-grey !important;
+        background-color: $color-grey-lightest;
+        box-shadow: 0 0 0 1px $color-grey-medium inset;
+        padding: .3em 1em .3em 1em;
+
+        &:hover {
+            margin-top: 2px;
+            padding: .3em 1em .3em 1em;
+            box-shadow: 0 0 0 1px $color-grey inset;
+        }
+
+        &:active {
+            color: $color-grey-medium !important;
+            background-color: $color-grey !important;
+        }
     }
 }

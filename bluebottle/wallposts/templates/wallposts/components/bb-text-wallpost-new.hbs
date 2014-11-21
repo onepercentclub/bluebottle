@@ -7,14 +7,14 @@
     {{#with wallpost}}
         <div class="wallpost-update">
             <header class="wallpost-update-header">
-                <strong class="wallpost-update-title">{% trans "Update status" %}</strong>
+                <strong class="wallpost-update-title">{% trans "Write a comment" %}</strong>
             </header>
             <div class="wallpost-update-form">
                 {{#if errors.text }}
                     <div class="errors">{{#each errors.text }}<p class="error">{{this}}</p>{{/each}}</div>
                 {{/if}}
 
-                {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update-post" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
+                {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update-post" classBinding="errors.text.length:error" placeholder="Leave a comment on the wall"}}
 
             </div>
             <footer class="wallpost-update-footer">

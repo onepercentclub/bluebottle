@@ -5,19 +5,22 @@
 
 {% tplhandlebars "components/bb-media-wallpost-new" %}
     {{#with wallpost}}
-        <div class="wallpost-action">
-            <header class="wallpost-header">
-                <div class="wallpost-header-action">
-                    <ul>
-                        <li class="status-update"><a><span class="custom-icons update"></span>{% trans "Update status" %}</a></li>
-                        <li class="add-video"><a class="add-media"><span class="custom-icons add-video"></span>{% trans "Add an video" %}</a></li>
-                        <li class="add-photo"><a class="add-media"><span class="custom-icons add-photo"></span>{% trans "Add photo's" %}</a></li>
-                    </ul>
-                </div>
+        <div class="wallpost-update">
+            <header class="wallpost-update-header">
+                <strong class="wallpost-update-title">{% trans "Write an update" %}</strong>
+
+                <ul class="wallpost-header-action">
+                    <li class="add-video"><a class="add-media"><span class="custom-icons add-video"></span>{% trans "Add an video" %}</a></li>
+                    <li class="add-photo"><a class="add-media"><span class="custom-icons add-photo"></span>{% trans "Add photo's" %}</a></li>
+                </ul>
             </header>
-            <div class="wallpost-form">
+            <div class="wallpost-update-form">
+                {{#if errors.text }}
+                    <div class="errors">{{#each errors.text }}<p class="error">{{this}}</p>{{/each}}</div>
+                {{/if}}
+
                 <div class="tab">
-                    {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
+                    {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update-post" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
                 </div>
                 <div class="tab vid">
                     {{input valueBinding="video_url" placeholder="Youtube or Vimeo url" id="wallpost-video" name="wallpost-video" classBinding="errors.video_url.length:error"}}
@@ -26,19 +29,15 @@
                     {{bb-upload-multiple-images uploadFilesBinding="uploadFiles" multiple="multiple" removeFile="removeFile" addFile="addFile" accept="image/*"}}
                 </div>
 
-                {{#if errors.text }}
-                    <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
-                {{/if}}
-
             </div>
-            <footer class="wallpost-footer">
-                <div class="wallpost-footer-action">
-                    <div class="btn-group">
-                        <button class="btn btn-comment btn-save" {{action 'submit'}}>{% trans "Post" %}</button>
-                        <button class="btn btn-comment-inactive btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
-                    </div>
+            <footer class="wallpost-update-footer">
+                <div class="wallpost-update-actions">
+                    <button class="button action-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
+                    <button class="button action-submit" {{action 'submit'}}>{% trans "Post" %}</button>
                 </div>
             </footer>
         </div>
     {{/with}}
+
+
 {% endtplhandlebars %}

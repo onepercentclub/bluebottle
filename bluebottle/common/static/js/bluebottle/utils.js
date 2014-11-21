@@ -528,47 +528,6 @@ App.UploadFile = Ember.TextField.extend({
 });
 
 
-App.UploadMultipleFiles = Ember.TextField.extend({
-    type: 'file',
-    attributeBindings: ['name', 'accept', 'multiple'],
-
-    didInsertElement: function(){
-        // Or maybe try: https://github.com/francois2metz/html5-formdata.
-        var view = this.$();
-        if (Em.isNone(File)) {
-            $.getScript('//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js').done(
-                function(){
-                    $.getScript('/static/assets/js/polyfills/FileReader/jquery.FileReader.min.js').done(
-                        function(){
-                            view.fileReader({filereader: '/static/assets/js/polyfills/FileReader/filereader.swf'});
-                        }
-                    );
-                }
-            );
-        }
-    },
-
-    contentBinding: 'parentView.controller.content',
-
-    change: function(e) {
-        var controller = this.get('parentView.controller');
-        var files = e.target.files;
-        for (var i = 0; i < files.length; i++) {
-            var reader = new FileReader();
-            var file = files[i];
-            reader.readAsDataURL(file);
-
-            // Replace src of the preview..
-            var view = this;
-            view.$().parents('form').find('.preview').attr('src', '/static/assets/images/loading.gif');
-            reader.onload = function(e) {
-                view.$().parents('form').find('.preview').attr('src', e.target.result);
-            }
-            controller.addFile(file);
-        }
-    }
-});
-
 App.UploadedImageView = App.UploadFile.extend({
     attributeBindings: ['name', 'accept'],
     type: 'file',

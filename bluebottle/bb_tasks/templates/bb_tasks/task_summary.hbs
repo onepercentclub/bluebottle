@@ -6,11 +6,11 @@
 
 	<li class="activity-item">
 		{{#link-to "task" this}}
-			<strong class="task-title">{{title}}</strong><br />
+			<strong class="task-title">{{title}}</strong>
 			<span class="task-meta">
-				<span class="task-people">{{membersCount}} {% trans "people assigned" %}</span>
-				<span class="task-time">{{time_needed}} {% trans "Hour(s)" %}</span>
-				<div class="task-deadline">{{localize deadline formatting="X"}}</div>
+				<span class="task-people"><em>{{membersCount}}</em> {% trans "assigned" %}</span>
+				<span class="task-time"><em>{{time_needed}}</em> {% trans "hour" %}</span>
+				<span class="task-deadline"><em>{{localize deadline formatting="X"}}</em></span>
 			</span>
 			<span class="task-status task-open">{% trans "Open" %}</span>
 		{{/link-to}}

@@ -36,7 +36,7 @@
 			{{/if}}
 			
 	        {{#if photos.length}}
-	            <ul class="photos">
+	            <ul class="photo-viewer">
 					<li class="cover">
 						<a {{bindAttr href="coverPhoto.photo.full"}} title="photo">
 							<img {{bindAttr src="coverPhoto.photo.full"}}>
@@ -76,11 +76,11 @@
 	        {% endcomment %}
 	    </div>
 		
-		{{#if reactions }}
+	
 	    <ul class="comments">
 	        {{render "wallPostReactionList" reactions}}
 	    </ul>
-	    {{/if}}
+	 
 
 	</article>
 

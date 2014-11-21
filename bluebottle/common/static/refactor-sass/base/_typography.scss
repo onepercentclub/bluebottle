@@ -2,9 +2,7 @@ body {
     font-family: $font-family-base;
     font-size: $font-size-base;
     line-height: $line-height-base;
-
     color: $color-text;
-
     -webkit-font-smoothing: antialiased;
             font-smoothing: antialiased;
     text-rendering: optimizelegibility;
@@ -22,13 +20,11 @@ small {
     font-size: 12px;
 }
 
-strong,
-b {
+strong, b {
     font-weight: 700;
 }
 
-em,
-i {
+em, i {
     font-style: italic;
 }
 
@@ -38,4 +34,48 @@ cite {
 
 h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
+}
+
+// button
+// Todo: change to .btn
+// -------------------------
+
+.button {
+    //@include transition(all, .1s ease-in-out);
+    font-family: $font-family-header;
+    font-weight: 700;
+    position: relative;
+    display: inline-block;
+    min-width: 75px;
+    padding: 0.5em 1em calc(0.5em + 1px) 1em;
+    -webkit-transform: scale(1);
+    vertical-align: center;
+    text-transform: inherit;
+    color: $color-real-white;
+    border: none;
+    border-radius: $radius-large;
+    background: $color-sec;
+    box-shadow: 0 -1px 0 0 $color-sec-shadow inset;
+    // fix for chrome animation bug
+    -webkit-backface-visibility: hidden;
+
+    &:hover {
+        box-shadow: 0 -1px 0 0 $color-sec-shadow inset;
+        padding-bottom: calc(0.5em + 2px);
+    }
+
+    &:active {
+        color: $color-grey !important;
+        background: $color-grey-light !important;
+        box-shadow: 0 2px 0 0 $color-grey-medium inset;
+        padding: 0.5em 1em 0.5em 1em;
+
+        span {
+            background: transparent !important; // TODO: Reset old flaticon
+        }
+    }
+
+    &:focus {
+        outline: none;
+    }
 }

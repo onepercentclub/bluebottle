@@ -129,21 +129,6 @@ App.ProjectController = Em.ObjectController.extend({
         return false;
     }.property('model.owner', 'currentUser.username'),
 
-    _loadDonations: function() {
-        var amount_asked = this.get('amount_asked'),
-            project_id = this.get('id'),
-            _this = this;
-
-        if ( 0) {
-            this.set('recentSupporters', null);
-            return
-        }
-        
-        App.ProjectDonation.find({project: project_id}).then(function (donations) {
-            _this.set('donations', donations);
-        });
-    }.observes('isLoaded'),
-
     _setDonations: function () {
         if (this.get('isLoaded')) {
             this.set('projectDonations', App.ProjectDonation.find({project: this.get('id')}));

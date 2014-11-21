@@ -43,6 +43,19 @@ App.BbUploadImageComponent = App.BbFormFieldComponent.extend({
     buttonLabel: 'Upload image'
 });
 
+
+App.BbUploadMultipleImagesComponent = Ember.Component.extend({
+    actions: {
+        addFile: function(file){
+            this.sendAction('addFile', file);
+        },
+        removeFile: function(file){
+            this.sendAction('removeFile', file);
+        }
+    }
+});
+
+
 App.BbUploadImageAreaComponent = App.BbFormFieldComponent.extend({
     accept: 'image/*',
     buttonLabel: 'Upload image',
@@ -173,5 +186,4 @@ App.BbVideoMainComponent = Em.Component.extend({
         });
     }
 });
-
 

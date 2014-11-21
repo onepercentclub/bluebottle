@@ -21,8 +21,6 @@ $white                 : #fff !default;
 $color-primary         : #0896ff !default; // light blue
 $color-secondary       : #003580 !default; // dark blue
 
-$color-error           : #F4C5C5 !default;
-$color-error-back	   : #CA4040 !default;
 $color-success         : #5da423 !default;
 $color-deselect        : #bfbfbf !default;
 $gray-border           : #f2f2f2;
@@ -46,6 +44,10 @@ $color-grey-light      : #ededed !default; // outside borders for box
 $color-grey-lightest   : #f8f7f8 !default; // box background grey
 $color-grey-back       : #f8f7f8 !default; // background grey
 
+// errors
+$color-error           : #CA4040 !default;
+$color-error-back	   : #F4C5C5 !default;
+
 // real white & black (try avoiding these)
 $color-real-black      : #000 !default;
 $color-real-white      : #fff !default;
@@ -59,7 +61,7 @@ $color-text            : $color-black;
 $color-text-on-dark    : $color-white;
 
 // forms
-$color-form-placeholder: #bababa !default;
+$color-placeholder	   : #bababa !default;
 
 // corners
 $radius-small          : 2px !default;

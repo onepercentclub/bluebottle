@@ -177,17 +177,27 @@
         padding: 10px 20px 10px 50px;
         border: none;
         box-shadow: none;
+
+        @include placeholder {
+            color: $color-placeholder;
+        }
+
+        &:focus {
+            @include placeholder {
+                color: $color-grey-light;
+            }
+        }
     }
 
     label {
-        width: 100%;
-        background: red;
+        width: calc(100% + 2px);
+        margin: -1px -1px 0 -1px;
     }
 
     .submit {
         position: absolute;
-        right: 5px;
-        bottom: 5px;
+        right: 3px;
+        bottom: 4px;
     }
 }
 

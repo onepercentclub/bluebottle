@@ -40,39 +40,51 @@ h1, h2, h3, h4, h5, h6 {
 // Todo: change to .btn
 // -------------------------
 
-.error {
-    
+form.error {
+
 }
 
-.button {
-    //@include transition(all, .1s ease-in-out);
+label.error {
+    background-color: $color-error-back;
+    color: $color-error;
+    border: 1px solid $color-error;
+    padding: 5px 20px;
+    text-align: center;
+    margin: 0;
+}
+
+button, .button {
+    //@include transition(padding 0.1s ease-in-out);
     font-family: $font-family-header;
     font-weight: 700;
     position: relative;
     display: inline-block;
     min-width: 75px;
-    padding: 0.5em 1em calc(0.5em + 1px) 1em;
+    padding: 0.3em 1em calc(0.3em + 1px) 1em;
     -webkit-transform: scale(1);
     vertical-align: center;
     text-transform: inherit;
-    color: $color-real-white;
+    color: $color-real-white !important;
     border: none;
     border-radius: $radius-large;
     background: $color-sec;
     box-shadow: 0 -1px 0 0 $color-sec-shadow inset;
     // fix for chrome animation bug
     -webkit-backface-visibility: hidden;
+    top: 1px;
 
     &:hover {
         box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
-        padding-bottom: calc(0.5em + 2px);
+        padding-bottom: calc(0.3em + 2px);
+        top: 0;
     }
 
     &:active {
-        color: $color-grey-medium !important;
-        background: $color-grey !important;
-        box-shadow: 0 1px 0 0 $color-black inset;
-        padding: 0.5em 1em calc(0.5em - 1px) 1em;
+        color: $color-sec !important;
+        background: $color-sec-shadow !important;
+        //box-shadow: 0 1px 0 0 $color-black inset;
+        box-shadow: none;
+        padding: 0.3em 1em calc(0.3em) 1em;
 
         span {
             background: transparent !important; // TODO: Reset old flaticon
@@ -81,5 +93,6 @@ h1, h2, h3, h4, h5, h6 {
 
     &:focus {
         outline: none;
+        // box-shadow: 0 0 3px 0px lighten($color-sec, 10%);
     }
 }

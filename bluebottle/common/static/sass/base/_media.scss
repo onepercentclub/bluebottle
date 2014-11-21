@@ -33,39 +33,3 @@ object, embed, iframe {
     width: 100% !important;
     height: 100% !important;
 }
-
-
-// Photo viewer (currently wallpost only)
-// -------------------------
-
-.photo-viewer {
-    @include clear;
-    margin: 0;
-    padding: 0;
-
-    li {
-        @include resetlist;
-        @include grid(8,0,1);
-        overflow: hidden;
-        margin-bottom: $base-margin;
-        
-        img {
-            border: 1px solid $media-photo-viewer-image-border-color;
-        }
-        
-        &:hover img {
-            border-color: $media-photo-viewer-image-hover-border-color;
-        }
-        
-        &.more {
-            display: block;
-            @include grid(8,0,0);
-            background-color: $media-photo-viewer-more-bg-color;
-            
-            a {
-                display: block;
-                color: $media-photo-viewer-more-color;
-            }
-        }
-    }
-}

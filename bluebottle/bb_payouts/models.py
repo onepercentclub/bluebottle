@@ -122,7 +122,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
         assert self.pk
 
         try:
-            latest_state_change = self.project_payout_logs.latest()
+            latest_state_change = self.payout_logs.latest()
             return latest_state_change.new_status
 
         except ObjectDoesNotExist:
@@ -138,7 +138,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
 
         if old_status != self.status:
             # Create log entry
-            log_entry = self.project_payout_logs.model(
+            log_entry = self.payout_logs.model(
                 payout=self,
                 old_status=old_status, new_status=self.status
             )
@@ -353,7 +353,7 @@ class BaseProjectPayout(PayoutBase):
 
 
 class ProjectPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='project_payout_logs')
+    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='payout_logs')
 
 
 class BaseOrganizationPayout(PayoutBase):
@@ -455,10 +455,10 @@ class BaseOrganizationPayout(PayoutBase):
 
         # Do a silly trick by filtering the date the donation became paid
         # (the only place where the Docdata closed/paid status is matched).
-        # payments = payments.order_by('order__completed')
+        # payments = payments.order_by('order__closed')
         payments = payments.filter(
-            completed__gte=date_timezone_aware(self.start_date),
-            completed__lte=date_timezone_aware(self.end_date)
+            closed__gte=date_timezone_aware(self.start_date),
+            closed__lte=date_timezone_aware(self.end_date)
         )
 
         # Make sure this does not create additional objects
@@ -601,7 +601,7 @@ class BaseOrganizationPayout(PayoutBase):
 
 
 class OrganizationPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='organization_payout_logs')
+    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='payout_logs')
 
 
 # Connect signals after defining models

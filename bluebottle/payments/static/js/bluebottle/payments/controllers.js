@@ -61,7 +61,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     _setFirstPaymentMethod: function () {
         if (this.get('methods.length') && !this.get('currentPaymentMethod') && !this.get('payment_method')) {
-            this.set('currentPaymentMethod', this.get('methods').objectAt(0));
+            this.set('currentPaymentMethod', this.get('methods.firstObject'));
         }
     }.observes('methods.length'),
 
@@ -81,7 +81,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
         }
         if (meta.type == 'success') {
             // Refresh project and donations
-            var donation = this.get('order.donations').objectAt(0);
+            var donation = this.get('order.donations.firstObject');
             // TODO: Refresh FundRaiser if it's a FundRaisser
             // TODO: Refresh donation list
             donation.get('project.getProject').reload();
@@ -152,7 +152,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
             // Slide back to the donation modal - keeping the current donation.
             // Currently the there is only one donation associated with each order
             // so grab the first donation item.
-            var donation = this.get('model.order.donations').objectAt(0);
+            var donation = this.get('model.order.donations.firstObject');
             this.send('modalSlide', 'donation', donation);
         },
 
@@ -195,7 +195,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
                         // Load the success modal. Since all models are already
                         // loaded in Ember here, we should just be able
                         // to get the first donation of the order here
-                        var donation = order.get('donations').objectAt(0);
+                        var donation = order.get('donations.firstObject');
                         _this.send('modalSlide', 'donationSuccess', donation);
                     } else {
                         // Process the authorization action to determine next

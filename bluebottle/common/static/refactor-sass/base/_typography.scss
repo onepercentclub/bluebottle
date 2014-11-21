@@ -40,6 +40,10 @@ h1, h2, h3, h4, h5, h6 {
 // Todo: change to .btn
 // -------------------------
 
+.error {
+    
+}
+
 .button {
     //@include transition(all, .1s ease-in-out);
     font-family: $font-family-header;
@@ -60,15 +64,15 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-backface-visibility: hidden;
 
     &:hover {
-        box-shadow: 0 -1px 0 0 $color-sec-shadow inset;
+        box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
         padding-bottom: calc(0.5em + 2px);
     }
 
     &:active {
-        color: $color-grey !important;
-        background: $color-grey-light !important;
-        box-shadow: 0 2px 0 0 $color-grey-medium inset;
-        padding: 0.5em 1em 0.5em 1em;
+        color: $color-grey-medium !important;
+        background: $color-grey !important;
+        box-shadow: 0 1px 0 0 $color-black inset;
+        padding: 0.5em 1em calc(0.5em - 1px) 1em;
 
         span {
             background: transparent !important; // TODO: Reset old flaticon

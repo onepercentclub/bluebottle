@@ -1,0 +1,89 @@
+.activity {
+    font-size: 13px;
+    line-height: 1.5em;
+    color: $color-grey;
+    a {
+        color: $color-grey !important;
+    }
+
+	.activity-title {
+	    font-family: $font-family-base !important;
+	    font-size: 18px !important;
+	    font-weight: bold !important;
+	    color: $color-grey !important;
+	}
+
+	.activity-list {
+		margin: 0;
+		padding: 0;
+	}
+
+	.activity-footer {
+		margin-top: 15px;
+	}
+
+	.activity-action {
+		display: block;
+		padding-left: 55px;
+
+		strong {
+			color: $color-pri;
+		}
+
+		&:hover, &:active {
+			
+		}
+	}
+}
+
+#fundraiser-list {
+	
+	.activity-header {
+	    border-bottom: 1px solid $color-grey-medium;
+	}
+
+	.activity-item {
+	    @include clearfix;
+	    margin-top: 15px;
+	    padding: 0;
+	    background-image: none;
+
+	    p {
+	        margin: 0 0 5px 0;
+	    }
+
+	    .user-avatar {
+	        float: left;
+	        margin: 0 20px 10px 0;
+	        padding: 0;
+
+	        img {
+	            width: 35px;
+	            height: 35px;
+
+	            border-radius: 50%;
+	        }
+	    }
+
+	    .project-fund-amount-slider {
+	    	width: 70%;
+	        background-color: $color-real-white;
+			border: none;
+
+	        .slider-progress {
+	            height: 5px;
+	        }
+	    }
+	}
+
+}
+
+#task-list {
+	background: none;
+
+	.task-item {
+		border: 1px solid $color-grey-medium;
+		background-color: $color-real-white;
+	}
+
+}

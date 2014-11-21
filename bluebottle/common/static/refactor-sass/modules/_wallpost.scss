@@ -1,0 +1,231 @@
+// global wallposts & comments
+.m-wallpost, .m-comment {
+
+    position: relative;
+
+	.user-avatar {
+	    float: left;
+	    margin: 0 20px 10px 0;
+	    padding: 0;
+
+	    img {
+	        background-color: $color-grey-back;
+	    }
+	}
+	.user-name {
+	    font-family: $font-family-header;
+	    font-size: 18px;
+	    font-weight: 700;
+
+	    display: block;
+
+	    margin-top: 10px;
+
+	    color: $color-sec !important;
+	}
+	.timestamp {
+	    font-size: 16px;
+
+	    color: $color-grey;
+	}
+	.owner-actions {
+	    position: absolute;
+        top: 2px;
+        right: 20px;
+	}
+}
+
+// wallpost
+.m-wallpost {
+    font-size: 15px;
+    line-height: 1.5em;
+
+    margin: 0 0 30px 0;
+
+    border: 1px solid $color-grey-medium;
+    border-radius: $radius-medium;
+    background-color: $color-real-white;
+
+    .wallpost-header {
+        padding: 20px 20px 0 20px;
+	}
+
+	.user-avatar {
+	    img {
+	        width: 70px;
+	        height: 70px;
+	    }
+	}
+    .wallpost-body {
+        clear: both;
+
+        padding: 0 20px 20px 20px;
+
+        @include break-all-words;
+    }
+    .photos {
+        overflow: hidden;
+
+        margin: 0 -10px 0 0;
+        padding: 0;
+
+        list-style-type: none;
+        
+        .cover img {
+            display: block;
+
+            width: 100%;
+            height: auto;
+            margin-top: 10px;
+
+            background-color: $color-grey-back;
+        }
+        .cover {
+            margin: 0;
+            padding: 0 10px 0 0;
+            background-image: none;
+
+        }
+        .photo {
+            display: block;
+            float: left;
+            margin: 10px 0 0 0;
+            padding: 0 10px 0 0;
+            background-image: none;
+            width: 20%;
+
+            img {
+                display: block;
+
+                width: 100%;
+                height: auto;
+
+                background-color: $color-grey-back;
+            }
+        }
+    }
+}
+
+// comments
+.m-comment {
+    font-size: 15px;
+    line-height: 1.5em;
+    margin: 0 0 30px 0;
+    padding: 0; // todo: change global list
+    background-image: none; // todo: change global list
+
+    border: 1px solid $color-grey-medium;
+    border-radius: $radius-medium;
+    background-color: $color-grey-light;
+
+    .comment-header {
+        padding: 20px 20px 0 20px;
+    }
+    .user-name {
+        font-size: 15px;
+        display: inline;
+    }
+    .timestamp {
+        font-size: 15px;
+    }
+    .comment-body {
+        overflow: hidden;
+
+        padding: 0 20px 5px 0;
+
+        @include break-all-words;
+    }
+
+	.user-avatar img {
+		width: 50px;
+		height: 50px;
+	}
+	
+	// nested comments
+    .m-comment {
+		padding-left: 20px;
+
+    	.user-avatar img {
+			width: 30px;
+			height: 30px;
+		}
+    }
+}
+
+// comments list 
+.comments {	
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+
+    .m-comment {
+
+        border-width: 1px 0 0 0;
+        border-style: solid;
+        border-color: $color-grey-medium;
+        border-radius: 0;
+        margin: 0;
+    }
+}
+
+// post comment (reply)
+.m-comment-form {
+    // todo: move to (global) forms
+
+    border-top: 1px solid $color-grey-medium;
+
+    form,
+    fieldset {
+        margin: 0;
+        padding: 0;
+        position: relative;
+        border: 0;
+    }
+    textarea {
+        //border-top: 1px solid $color-grey-medium;
+        font-family: $font-family-base;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        padding: 10px 20px 10px 50px;
+        height: calc(1.5em + 20px);
+        line-height: 1.5em;
+
+        border: none;
+        box-shadow: none;
+
+        @include border-bottom-radius(4px);
+    }
+    label {
+        display: none;
+    }
+    .submit {
+        right: 5px;
+        bottom: 5px;
+        position: absolute;
+    }
+}
+
+// todo: make global
+.signin {
+    padding: 15px 20px 15px 20px;
+
+    border-top: 1px solid $color-grey-medium;
+    background-color: $color-grey-light;
+
+    p {
+        margin: 0;
+    }
+}
+
+// global user actions {
+
+.owner-actions li {
+    margin: 0;
+    padding: 0;
+    background-image: none;
+
+    ul {
+        display: none;
+    }
+}

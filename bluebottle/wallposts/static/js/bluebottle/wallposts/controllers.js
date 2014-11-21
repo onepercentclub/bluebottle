@@ -66,7 +66,7 @@ App.TextWallPostNewController = Em.ObjectController.extend({
     _wallPostSuccess: function (record) {
         var _this = this,
             list = _this.get('wallPostList');
-        
+
         list.unshiftObject(record);
         Ember.run.next(function() {
             _this.createNewWallPost();
@@ -79,12 +79,12 @@ App.TextWallPostNewController = Em.ObjectController.extend({
 
     actions: {
         saveWallPost: function() {
-            var controller = this,
+            var _this = this,
                 parent_type = this.get('parentType'),
                 parent_id = this.get('parentId'),
                 wallPost = this.get('model');
 
-            controller._hideWallPostMessage();
+            _this._hideWallPostMessage();
 
             if (parent_type && parent_id) {
                 wallPost.set('parent_id', parent_id);
@@ -93,26 +93,10 @@ App.TextWallPostNewController = Em.ObjectController.extend({
             wallPost.set('type', 'text');
 
             wallPost.save().then(function (record) {
-                controller._wallPostSuccess(record);
+                _this._wallPostSuccess(record);
             }, function (record) {
-                controller.set('errors', record.get('errors'));
+                _this.set('errors', record.get('errors'));
             });
-        },
-        
-        showImages: function(event) {
-            $(".photos-tab").addClass("active");
-            $(".video-tab").removeClass("active");
-
-            $(".video-container").hide();
-            $(".photos-container").show();
-        },
-        
-        showVideo: function() {
-            $(".photos-tab").removeClass("active");
-            $(".video-tab").addClass("active");
-
-            $(".video-container").show();
-            $(".photos-container").hide();
         }
     }
 });
@@ -121,7 +105,7 @@ App.TextWallPostNewController = Em.ObjectController.extend({
 App.MediaWallPostNewController = App.TextWallPostNewController.extend({
 
     // This a temporary container for App.Photo records until they are connected after this wall-post is saved.
-    files: Em.A(),
+    uploadFiles: Em.A(),
 
     createNewWallPost: function() {
         // Make sure we keep parent id/type
@@ -136,44 +120,59 @@ App.MediaWallPostNewController = App.TextWallPostNewController.extend({
 
     _wallPostSuccess: function (record) {
         var _this = this;
-        
         Ember.run.next(function() {
-            if (_this.get('files').length) {
+            if (_this.get('uploadFiles').length) {
                 // Connect all photos to this wallpost.
                 var reload = true;
-                _this.get('files').forEach(function(photo){
+                _this.get('uploadFiles').forEach(function(photo){
                     photo.set('mediawallpost', record);
                     photo.save();
                 });
                 // Empty this.files so we can use it again.
-                _this.set('files', Em.A());
+                _this.set('uploadFiles', Em.A());
             }
             var list = _this.get('wallPostList');
             list.unshiftObject(record);
             _this.createNewWallPost()
         });
     },
+    actions: {
+        addFile: function(file) {
+            var store = this.get('store');
+            var photo = store.createRecord(App.WallPostPhoto);
+            // Connect the file to it. DRF2 Adapter will sort this out.
+            photo.set('photo', file);
+            photo.save();
+            var controller = this;
+            // Store the photo in this.files. We need to connect it to the wallpost later.
+            photo.on('didCreate', function(record){
+                controller.get('uploadFiles').pushObject(photo);
+            });
+        },
 
-    addFile: function(file) {
-        var store = this.get('store');
-        var photo = store.createRecord(App.WallPostPhoto);
-        // Connect the file to it. DRF2 Adapter will sort this out.
-        photo.set('photo', file);
-        photo.save();
-        var controller = this;
-        // Store the photo in this.files. We need to connect it to the wallpost later.
-        photo.on('didCreate', function(record){
-            controller.get('files').pushObject(photo);
-        });
-    },
+        removeFile: function(photo) {
+            photo.deleteRecord();
+            photo.save();
+            // Remove it from temporary array too.
+            this.get('uploadFiles').removeObject(photo);
+        },
 
-    removePhoto: function(photo) {
-        photo.deleteRecord();
-        photo.save();
-        // Remove it from temporary array too.
-        this.get('files').removeObject(photo);
+        showImages: function(event) {
+            $(".photos-tab").addClass("active");
+            $(".video-tab").removeClass("active");
+
+            $(".video-container").hide();
+            $(".photos-container").show();
+        },
+
+        showVideo: function() {
+            $(".photos-tab").removeClass("active");
+            $(".video-tab").addClass("active");
+
+            $(".video-container").show();
+            $(".photos-container").hide();
+        }
     }
-
 });
 
 

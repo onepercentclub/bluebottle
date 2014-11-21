@@ -25,5 +25,52 @@ $color-success                                             : #5da423 !default;
 $color-deselect                                            : #bfbfbf !default;
 
 $gray-border                                               : #f2f2f2;
-
 $gray-comment-border: #d8d8d8;
+
+
+/**
+ * global variables for bluebottle, matching design of onepercent
+ */
+
+// global colors
+$color-pri: #ff619a;
+$color-pri-shadow: #b42a5c;
+$color-sec: #00c051;
+$color-sec-shadow: #00963f;
+$color-error: #b84040;
+$color-success: $color-sec;
+$color-black: #4a4a4a;
+$color-white: #f8f7f8;
+$color-grey: #999; //usually for text
+$color-grey-medium: #d8d8d8; // borders for box
+$color-grey-light: #ededed; // outside borders for box
+$color-grey-lightest: #f8f7f8; // box background grey
+$color-grey-back: #f8f7f8; // background grey
+
+// real white & black (try avoiding these)
+$color-real-black: #000;
+$color-real-white: #fff;
+
+// text
+$font-family-base: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$font-family-header: 'L Futura W01', 'Helvetica Neue', Helvetica, Arial, sans-serif; // fonts.com: 400, 700, 900
+$font-size-base: 16px !default;
+$line-height-base: 1.5em !default;
+$color-text: $color-black;
+$color-text-on-dark: $color-white;
+
+// forms
+$color-form-placeholder: #bababa;
+
+// corners
+$radius-small: 2px;
+$radius-medium: 4px;
+$radius-big: 8px;
+
+// buttons
+
+// component: modal
+
+// component: wallpost
+
+// component detail-header

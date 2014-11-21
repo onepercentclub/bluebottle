@@ -14,7 +14,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'Order.order_type'
         db.add_column(MODEL_MAP['order']['table'], 'order_type',
-                      self.gf('django.db.models.fields.CharField')(default='single', max_length='100', null=True, blank=True),
+                      self.gf('django.db.models.fields.CharField')(default='one-off', max_length='100', null=True, blank=True),
                       keep_default=False)
 
 

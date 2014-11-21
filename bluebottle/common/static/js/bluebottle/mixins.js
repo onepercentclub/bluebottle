@@ -361,7 +361,7 @@ App.SaveDonationMixin = Em.Mixin.create({
         // Set is loading property until success or error response
         _this.set('isBusy', true);
 
-        donation.save().then(
+        return donation.save().then(
           // Success
           function() {
               var payment = App.MyOrderPayment.createRecord({order: order});

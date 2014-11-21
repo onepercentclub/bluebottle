@@ -78,6 +78,16 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
     }
 });
 
-App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend();
+App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
+    actions: {
+        addFile: function(file){
+            this.sendAction('addFile', file);
+        },
+        removeFile: function(file){
+            this.sendAction('removeFile', file);
+        }
+    }
+
+});
 
 

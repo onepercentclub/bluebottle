@@ -274,3 +274,45 @@ App.CustomDatePicker = App.DatePicker.extend({
         }
     }
 });
+
+
+App.UploadMultipleFilesInput = Ember.TextField.extend({
+    type: 'file',
+    attributeBindings: ['name', 'accept', 'multiple'],
+
+    didInsertElement: function(){
+        // Or maybe try: https://github.com/francois2metz/html5-formdata.
+        var view = this.$();
+        if (Em.isNone(File)) {
+            $.getScript('//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js').done(
+                function(){
+                    $.getScript('/static/assets/js/polyfills/FileReader/jquery.FileReader.min.js').done(
+                        function(){
+                            view.fileReader({filereader: '/static/assets/js/polyfills/FileReader/filereader.swf'});
+                        }
+                    );
+                }
+            );
+        }
+    },
+
+    //contentBinding: 'parentView.parentView.controller.content',
+
+    change: function(e) {
+        //var controller = this.get('parentView.parentView.controller');
+        var files = e.target.files;
+        for (var i = 0; i < files.length; i++) {
+            var reader = new FileReader(),
+                file = files[i],
+                _this = this;
+            reader.readAsDataURL(file);
+
+            _this.$().parents('form').find('.preview').attr('src', '/static/assets/images/loading.gif');
+            reader.onload = function(e) {
+                _this.$().parents('form').find('.preview').attr('src', e.target.result);
+            };
+            _this.get('parentView').send('addFile', file);
+        }
+    }
+});
+

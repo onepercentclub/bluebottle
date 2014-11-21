@@ -13,4 +13,5 @@ App.Order = DS.Model.extend({
 App.MyOrder = App.Order.extend({
     url: 'orders/my',
     donations: DS.hasMany('App.MyDonation'),
+    user: DS.belongsTo('App.UserPreview')
 });

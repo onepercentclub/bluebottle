@@ -62,7 +62,8 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
     def get(self, request, *args, **kwargs):
         order = self.get_object()
 
-        if order.status != StatusDefinition.SUCCESS:
+        # Only check the status with the PSP if the order is locked or pending
+        if order.status in [StatusDefinition.LOCKED, StatusDefinition.PENDING]:
             self.check_status_psp(order)
         return super(ManageOrderDetail, self).get(request, *args, **kwargs)
 

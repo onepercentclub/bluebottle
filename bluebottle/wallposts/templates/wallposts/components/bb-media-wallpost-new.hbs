@@ -10,8 +10,13 @@
                 <strong class="wallpost-update-title">{% trans "Write an update" %}</strong>
 
                 <ul class="wallpost-header-action">
-                    <li class="add-video"><a class="add-media"><span class="custom-icons add-video"></span>{% trans "Add an video" %}</a></li>
-                    <li class="add-photo"><a class="add-media"><span class="custom-icons add-photo"></span>{% trans "Add photo's" %}</a></li>
+                    <li class="add-video"><a class="add-media">{% trans "Add an video" %}</a></li>
+                    <li class="add-photo">
+                        <a class="btn-upload">
+                            {{!-- {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*"}} --}}
+                            {% trans "Add photo's" %}
+                        </a>
+                    </li>
                 </ul>
             </header>
             <div class="wallpost-update-form">
@@ -19,14 +24,14 @@
                     <div class="errors">{{#each errors.text }}<p class="error">{{this}}</p>{{/each}}</div>
                 {{/if}}
 
-                <div class="tab">
-                    {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update-post" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
-                </div>
-                <div class="tab vid">
-                    {{input valueBinding="video_url" placeholder="Youtube or Vimeo url" id="wallpost-video" name="wallpost-video" classBinding="errors.video_url.length:error"}}
-                </div>
-                <div class="tab photo">
+                {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update-post" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
+
+                <div class="photo">
                     {{bb-upload-multiple-images uploadFilesBinding="uploadFiles" multiple="multiple" removeFile="removeFile" addFile="addFile" accept="image/*"}}
+                </div>
+                
+                <div class="vid">   
+                    {{input valueBinding="video_url" placeholder="Youtube or Vimeo url" id="wallpost-video" name="wallpost-video" classBinding="errors.video_url.length:error"}}
                 </div>
 
             </div>

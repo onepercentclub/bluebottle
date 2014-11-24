@@ -9,14 +9,19 @@
     .wallpost-update-header {
         padding: 10px 20px;
         border-bottom: solid 1px $color-grey-medium;
+        @include outer-container;
+        @include clearfix;
 
         .wallpost-update-title {
-            @include add-icon(update, 21px, 21px, 10px, url('/static/assets/images/img/icons/wallpost/icon-update-status.svg'));
             color: $color-sec;
+            @include span-columns(6);
+            @include add-icon(update, 21px, 21px, 10px, url('/static/assets/images/img/icons/wallpost/icon-update-status.svg'));
         }
 
-        .wallpost-update-header-action {
+        .wallpost-header-action {
             text-align: right;
+            font-size: 13px;
+            @include span-columns(6);
 
             ul {
                 width: 100%;
@@ -32,12 +37,12 @@
                 }
 
                 &.add-photo {
-                    @include add-icon(add-photo, 13px, 12px, 0, url('/static/assets/images/img/icons/wallpost/icon-add-photo.svg'));
+                    @include add-icon(add-photo, 13px, 12px, 5px, url('/static/assets/images/img/icons/wallpost/icon-add-photo.svg'));
                     float: right;
                 }
 
                 &.add-video {
-                    @include add-icon(add-video, 13px, 12px, 0, url('/static/assets/images/img/icons/wallpost/icon-add-video.svg'));
+                    @include add-icon(add-video, 13px, 12px, 5px, url('/static/assets/images/img/icons/wallpost/icon-add-video.svg'));
                     float: right;
                 }
 
@@ -82,9 +87,41 @@
         }
 
         #wallpost-video {
-            padding-left: 20px;
+            padding-left: 0;
             border: none;
             -webkit-box-shadow: none;
+        }
+
+        .btn-upload {
+            float: left;
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border: dashed 1px $gray-comment-border;
+            display: block;
+            @include transition(all .2s ease-in-out);
+
+            &:after {
+                position: absolute;
+                right: 0;
+                left: 0;
+                margin: 20px auto;
+                content: '+';
+                width: 15px;
+                height: 15px;
+                text-align: center;
+                font-weight: bold;
+                color: $gray-comment-border;
+                @include transition(all .2s ease-in-out);
+            }
+
+            &:hover {
+                border-color: $color-secondary;;
+
+                &:after {
+                    color: $color-secondary;
+                }
+            }
         }
     }
 
@@ -104,14 +141,65 @@
     }
 
     &.is-active {
-  
-        .wallpost-update-post {
-            height: 80px;
-        }
 
         .wallpost-update-footer {
             height: 50px;
             border-top: solid 1px $color-grey-medium;
+        }
+    }
+
+    .photo {
+        max-height: 0;
+        overflow: hidden;
+        @include transition(max-height .2s ease-in-out);
+
+        &.is-active {
+            display: inline-block;
+            max-height: 100px;
+            padding: 0 20px 0 20px;
+        }
+    }
+
+    .vid {
+        width: 94%;
+        margin: auto;
+        max-height: 0;
+        overflow: hidden;
+        @include transition(max-height .2s ease-in-out);
+
+        input {
+            font-size: 14px;
+        }
+
+        &.is-active {
+            margin-bottom: 20px;
+            border-bottom: dashed 1px #d8d8d8;
+            max-height: 100px;
+        }
+    }
+
+    .form-wallpost-photos {
+        display: inline-block;
+        float: left;
+        width: auto;
+        @include outer-container;
+
+        .form-wallpost-photo {
+            position: relative;
+            float: left;
+            width: 70px;
+            height: 70px;
+            margin: 0 9.9999px 0 0;
+
+            .manage-delete {
+                position: absolute;
+                top: 4px;
+                right: 6px;
+            }
+
+            .is-loading-small {
+                position: absolute;
+            }
         }
     }
 }

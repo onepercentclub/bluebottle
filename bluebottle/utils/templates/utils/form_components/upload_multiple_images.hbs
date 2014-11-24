@@ -20,12 +20,11 @@
                 {{/if}}
             </li>
         {{/each}}
+        
+        <a class="btn-upload">
+            {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*"}}
+        </a>
     </ul>
 
-    <a class="btn-link btn-upload btn-iconed">
-        <span class="flaticon stroke add-document-1"></span>
-        {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*"}}
-        {% trans "Add image(s)" %}
-    </a>
 
 {% endtplhandlebars %}

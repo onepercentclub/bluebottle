@@ -194,7 +194,7 @@ App.MyDonationListController = Em.ArrayController.extend({
             var _this = this;
             if (this.get('canLoadMore')) {
                 this.incrementProperty('page');
-                App.MyDonation.find({status: 'success', page: this.get('page')}).then(function(items){
+                App.MyDonation.find({status: ['success', 'pending'], page: this.get('page')}).then(function(items){
                     _this.pushObjects(items.toArray());
                 });
 

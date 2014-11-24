@@ -42,7 +42,7 @@ class DonationAdmin(admin.ModelAdmin):
     list_filter = (DonationStatusFilter, )
     ordering = ('-updated', )
     raw_id_fields = ('project', 'fundraiser')
-    readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user')
+    readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user_link', 'project_link', 'fundraiser_link')
     fields = readonly_fields + ('amount', 'project', 'fundraiser')
     search_fields = ('order__user__first_name', 'order__user__last_name', 'order__user__email', 'project__title')
 
@@ -73,6 +73,27 @@ class DonationAdmin(admin.ModelAdmin):
         return "<a href='{0}'>Order: {1}</a>".format(str(url), obj.id)
 
     order_link.allow_tags = True
+
+    def user_link(self, obj):
+        user = obj.order.user
+        url = reverse('admin:{0}_{1}_change'.format(user._meta.app_label, user._meta.module_name), args=[user.id])
+        return "<a href='{0}'>{1}</a>".format(str(url), user)
+
+    user_link.allow_tags = True
+
+    def project_link(self, obj):
+        project = obj.project
+        url = reverse('admin:{0}_{1}_change'.format(project._meta.app_label, project._meta.module_name), args=[project.id])
+        return "<a href='{0}'>{1}</a>".format(str(url), project)
+
+    project_link.allow_tags = True
+
+    def fundraiser_link(self, obj):
+        fundraiser = obj.fundraiser
+        url = reverse('admin:{0}_{1}_change'.format(fundraiser._meta.app_label, fundraiser._meta.module_name), args=[fundraiser.id])
+        return "<a href='{0}'>{1}</a>".format(str(url), fundraiser)
+
+    fundraiser_link.allow_tags = True
 
     # Link to project
     admin_project = link_to(

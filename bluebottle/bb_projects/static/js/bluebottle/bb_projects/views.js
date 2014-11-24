@@ -154,6 +154,12 @@ App.MyProjectMediaView = Em.View.extend({
 App.MyProjectOrganisationView = Em.View.extend({
     templateName: 'my_project_organisation',
 
+    actions: {
+        addFile: function (file) {
+            this.get('controller').send('addFile', file);
+        }
+    },
+
     focusNameField: function () {
         // If there is already a focused element then don't 
         // auto focus the first one

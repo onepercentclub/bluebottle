@@ -69,14 +69,14 @@
             padding-left: 10%;
                 min-height: 180px;
                 max-height: 236px;
-                @include calc(min-height, 321 / 16 * 9px');
-                @include calc(max-height, 421 / 16 * 9px');
+                @include calc(min-height, 321 / 16 * 9px);
+                @include calc(max-height, 421 / 16 * 9px);
 
             iframe {
                 min-height: 180px;
                 max-height: 236px;
-                @include calc(min-height, 321 / 16 * 9px');
-                @include calc(max-height, 421 / 16 * 9px');
+                @include calc(min-height, 321 / 16 * 9px);
+                @include calc(max-height, 421 / 16 * 9px);
             }
         }
 

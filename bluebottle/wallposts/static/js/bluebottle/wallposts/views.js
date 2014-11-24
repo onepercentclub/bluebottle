@@ -8,7 +8,7 @@ App.WallView = Em.View.extend({
 });
 
 App.WallPostView = Em.View.extend({
-
+    tagName: '',
     templateName: 'wallPost',
 
     didInsertElement: function(){

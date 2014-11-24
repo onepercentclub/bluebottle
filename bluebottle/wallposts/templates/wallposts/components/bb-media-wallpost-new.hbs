@@ -5,31 +5,44 @@
 
 {% tplhandlebars "components/bb-media-wallpost-new" %}
     {{#with wallpost}}
-        <div class="wallpost-action">
-            <div class="wallpost-header">
-                <div class="row">
-                    <div class="col7">
-                        <a class="status-update" href=""><span class="custom-icons update"></span>{% trans "Update status" %}</a>
-                    </div>
-                    <div class="col5">
-                        <ul>
-                            <li class="add-photo" href=""><a href=""><span class="custom-icons add-photo"></span>{% trans "Add photo's" %}</a></li>
-                            <li class="add-video" href=""><a href=""><span class="custom-icons add-video"></span>{% trans "Add an video" %}</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="wallpost-form">
-                {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
+        <div class="wallpost-update">
+            <header class="wallpost-update-header">
+                <strong class="wallpost-update-title">{% trans "Write an update" %}</strong>
 
+                <ul class="wallpost-header-action">
+                    <li class="add-video"><a class="add-media">{% trans "Add an video" %}</a></li>
+                    <li class="add-photo">
+                        <a class="btn-upload">
+                            {{!-- {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*"}} --}}
+                            {% trans "Add photo's" %}
+                        </a>
+                    </li>
+                </ul>
+            </header>
+            <div class="wallpost-update-form">
                 {{#if errors.text }}
-                    <div class="errors">{{#each errors.text }}<p>{{this}}</p>{{/each}}</div>
+                    <div class="errors">{{#each errors.text }}<p class="error">{{this}}</p>{{/each}}</div>
                 {{/if}}
 
-                <button class="btn btn-primary btn-save" {{action 'submit'}}>{% trans "Post" %}</button>
+                {{view Ember.TextArea valueBinding="text" name="wallpost-update" class="wallpost-update-post" classBinding="errors.text.length:error" placeholder="share an update with your comment"}}
 
-                <button class="btn btn-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
+                <div class="photo">
+                    {{bb-upload-multiple-images uploadFilesBinding="uploadFiles" multiple="multiple" removeFile="removeFile" addFile="addFile" accept="image/*"}}
+                </div>
+                
+                <div class="vid">   
+                    {{input valueBinding="video_url" placeholder="Youtube or Vimeo url" id="wallpost-video" name="wallpost-video" classBinding="errors.video_url.length:error"}}
+                </div>
+
             </div>
+            <footer class="wallpost-update-footer">
+                <div class="wallpost-update-actions">
+                    <button class="button action-cancel" {{action 'toggleForm' target='view'}}>{% trans "Cancel" %}</button>
+                    <button class="button action-submit" {{action 'submit'}}>{% trans "Post" %}</button>
+                </div>
+            </footer>
         </div>
     {{/with}}
+
+
 {% endtplhandlebars %}

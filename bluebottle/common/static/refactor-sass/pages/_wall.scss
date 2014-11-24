@@ -1,0 +1,19 @@
+#wall {
+	clear: both;
+	background-color: $color-grey-back;
+	padding-top: 30px;
+	padding-bottom: 30px;
+	
+	.l-wrapper {
+		@include outer-container;
+	}
+}
+
+#wallposts {
+	@include span-columns(7);
+}
+
+#sidebar {
+	@include span-columns(5);
+	padding-left: 5%;
+}

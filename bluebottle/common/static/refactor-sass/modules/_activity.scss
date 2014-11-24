@@ -1,0 +1,167 @@
+.activity {
+    font-size: 13px;
+    line-height: 1.5em;
+    margin-bottom: 30px;
+    color: $color-grey;
+
+    a {
+    	@include transition(color 0.16s ease-out);
+        display: block;
+        color: $color-grey !important;
+
+        &:hover, &:active {
+            color: $color-text !important;
+			
+			.user-name {
+				color: $color-sec !important;
+			}	
+
+            .timestamp {
+            	color: $color-grey !important;
+            }
+        }
+    }
+
+    .activity-title {
+        font-family: $font-family-base !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        color: $color-grey !important;
+    }
+
+    .activity-list {
+        margin: 0;
+        padding: 0;
+    }
+
+    .activity-item {
+        @include clearfix;
+        margin: 15px 0;
+        padding: 0;
+        background-image: none;
+
+        p {
+            margin: 0 0 5px 0;
+        }
+
+        .user-avatar {
+            float: left;
+            margin: 0 20px 10px 0;
+            padding: 0;
+
+            img {
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+            }
+        }
+    }
+
+    .activity-footer {
+        margin-top: 15px;
+    }
+
+    .activity-action {
+        display: block;
+        padding-left: 55px;
+
+        strong {
+            color: $color-pri;
+        }
+
+        &:hover, &:active {
+        }
+    }
+}
+
+#fundraiser-list {
+
+    .progress-bar {
+        position: relative;
+        top: 5px;
+
+        .project-fund-amount-slider {
+            width: 70%;
+            border: none;
+            background-color: $color-real-white;
+
+            .slider-progress {
+                height: 5px;
+                padding: 0;
+            }
+        }
+    }
+}
+
+#task-list {
+    background: none;
+
+    .activity-item {
+        margin: 5px 0;
+    }
+
+    // todo: refactor with classnames
+    a {
+        position: relative;
+        display: block;
+        height: 70px;
+        padding: 10px 85px 10px 15px;
+        border: 1px solid $color-grey-medium;
+        border-radius: $radius-medium;
+        background-color: $color-real-white;
+
+        .task-title {
+            font-size: 15px;
+            line-height: 1.1em;
+            display: block;
+            overflow: hidden;
+            height: 2.2em;
+            margin: 0;
+            text-overflow: ellipsis;
+            color: $color-text;
+        }
+
+        .task-meta {
+
+            em {
+                font-style: normal;
+            }
+
+            span {
+                display: inline;
+                margin-right: 10px;
+            }
+        }
+
+        .task-status {
+            @include border-right-radius($radius-medium);
+            font-weight: bold;
+            font-style: normal;
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            display: block;
+            width: 70px;
+            height: 70px;
+            padding-top: 40px;
+            text-align: center;
+            text-transform: uppercase;
+            color: $color-text-on-dark;
+            background-color: $color-sec;
+        }
+    }
+}
+
+#fundraiser-list, #supporter-list {
+
+    .activity-header {
+        border-bottom: 1px solid $color-grey-medium;
+    }
+}
+
+#supporter-list {
+
+    .user-name {
+        color: $color-sec;
+    }
+}

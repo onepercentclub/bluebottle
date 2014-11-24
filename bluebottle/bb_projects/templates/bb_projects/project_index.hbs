@@ -4,94 +4,151 @@
 
 {% tplhandlebars "project/index" %}
 
-    <div class="l-section" id="wallposts">
-        <section class="l-wrapper">
-            <div class="row">
-                <div class="col7">
-                    <div class="wallposts-list">
-                        <div class="wallpost-title">
-                            <h3>{% trans "Project Wall" %}</h3>
-                            <small class="latest-update">
-                                {% trans 'Latest update'%}: 
-                                {{#if firstObject.created}}
-                                    {{ localize firstObject.created formatting="X"}}
-                                {{else}}
-                                    {% trans 'no post yet, be the first:)'%}
-                                {{/if}}
-                            </small>
-                        </div>
-                        {{#if currentUser.isAuthenticated }}
-                            {{#if canAddMediaWallPost}}
-                                {{render "mediaWallPostNew" parentId=parentId}}
-                            {{else}}
-                                {{render "textWallPostNew" parentId=parentId}}
-                            {{/if}}
+    <div class="l-section" id="wall">
+        <div class="l-wrapper">
+
+            <section id="wallposts">
+                {{#if currentUser.isAuthenticated }}
+                    {{#if canAddMediaWallPost}}
+                        {{render "mediaWallPostNew" parentId=parentId}}
+                    {{else}}
+                        {{render "textWallPostNew" parentId=parentId}}
+                    {{/if}}
+                {{/if}}
+
+                {{#each item in controller itemController="wallPost"}}
+                    {{#if item.isLoaded}}
+                        {{#if item.isSystemWallPost}}
+                            {{view "App.SystemWallPostView"}}
+                        {{else}}
+                            {{view "App.MediaWallPostView"}}
                         {{/if}}
+                    {{/if}}
+                {{/each}}
 
-                        {{#each item in controller itemController="wallPost"}}
-                            {{#if item.isLoaded}}
-                                {{#if item.isSystemWallPost}}
-                                    {{view "App.SystemWallPostView"}}
-                                {{else}}
-                                    {{view "App.MediaWallPostView"}}
-                                {{/if}}
-                            {{/if}}
-                        {{/each}}
+                {{#if canLoadMore}}
+                    <a {{action "showMore"}} class="btn-link btn-more">
+                        <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
+                    </a>
+                {{/if}}
 
-                        {{#if canLoadMore}}
-                            <a {{action "showMore"}} class="btn-link btn-more">
-                                <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
-                            </a>
-                        {{/if}}
+            </section>
 
+
+            <section id="sidebar">
+                
+                {{!-- Todo: only show block when there are fundraisers OR the campaign is still running --}}
+                {{#if controllers.project.amount_asked}}
+                    <div id="fundraiser-list">
+                        {{render 'projectFundRaiserList'}}
                     </div>
-                </div>
+                {{/if}}
 
 
-                <div class="col5">
-                    <div class="wallposts-important" id="activity">
-                        {{#if controllers.project.amount_asked}}
-                            <section id="fundraiser-list">
-                                {{render 'projectFundRaiserList'}}
-                            </section>
+                {{!-- Todo: only show block when there are tasks OR when you are project owner --}}
+                <div id="task-list">
+                    <div class="activity">
 
-                            <section>
-                                <h3>Supporters</h3>
-                                {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
-                            </section>
-                        {{/if}}
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                        </header>
 
-                        <section id="task-list" {{bind-attr class="canDonate:normal:offset"}}>
-                            {{#if isProjectOwner}}
-                                <div class="task-action">
-                                    {{#link-to 'taskNew' controllers.project.id class="btn btn-modest"}}
-                                        <span class="flaticon stroke work-1"></span>
-                                        {% trans 'Create task' %}
-                                    {{/link-to}}
-                                </div>
-                            {{/if}}
-                            
+                        <ul class="activity-list">
+
                             {{#if availableTasks}}
-                                <div class="task-list-wrapper task-list-open">
-                                    <h3>{% trans "Open tasks" %}</h3>
-                                    {{#each availableTasks}}
-                                        {{view App.TaskSummaryView contentBinding='this'}}
-                                    {{/each}}
-                                </div>
+                                {{#each availableTasks}}
+                                    {{view App.TaskSummaryView contentBinding='this'}}
+                                {{/each}}
                             {{/if}}
                         
                             {{#if unavailableTasks}}
-                                <div class="task-list-wrapper task-list-closed">
-                                    <h3>{% trans "In progress & closed tasks" %}</h3>
-                                    {{#each unavailableTasks}}
-                                        {{view App.TaskSummaryView contentBinding='this'}}
-                                    {{/each}}
-                                </div>
+                                {{#each unavailableTasks}}
+                                    {{view App.TaskSummaryView contentBinding='this'}}
+                                {{/each}}
                             {{/if}}
-                        </section>
+
+                        </ul>
+
+                        {{#if isProjectOwner}}
+                            <footer class="activity-footer">
+                                {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
+                                    <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                    {% trans "Why not ask your community to help out?" %}
+                                {{/linkTo}}
+                            </footer>
+                        {{/if}}
+
                     </div>
                 </div>
-        </section>
+                
+
+                {{!-- Todo: only show block when there are supporters --}}
+                <div id="supporter-list">
+                    <div class="activity">
+
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Supporters" %}</h2>
+                        </header>
+
+                        <ul class="activity-list">
+                            <li class="activity-item">
+                                <a href="#">
+                                    <figure class="user-avatar">
+                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
+                                    </figure>
+                                    <span class="activity-body">
+                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
+                                        <abbr class="timestamp">2 days ago</abbr>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="activity-item">
+                                <a href="#">
+                                    <figure class="user-avatar">
+                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
+                                    </figure>
+                                    <span class="activity-body">
+                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
+                                        <abbr class="timestamp">2 days ago</abbr>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="activity-item">
+                                <a href="#">
+                                    <figure class="user-avatar">
+                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
+                                    </figure>
+                                    <span class="activity-body">
+                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
+                                        <abbr class="timestamp">2 days ago</abbr>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="activity-item">
+                                <a href="#">
+                                    <figure class="user-avatar">
+                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
+                                    </figure>
+                                    <span class="activity-body">
+                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
+                                        <abbr class="timestamp">2 days ago</abbr>
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <footer class="activity-footer">
+                            <a href="#" class="activity-action">
+                                <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
+                                {% trans "And get your name on the wall!" %}
+                            </a>
+                        </footer>
+                       
+                    </div>
+                </div>
+
+            </section>
+        </div>
     </div>
 
 {% endtplhandlebars %}

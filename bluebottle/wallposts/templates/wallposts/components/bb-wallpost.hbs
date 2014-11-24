@@ -1,0 +1,64 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "wallPost" %}
+
+	<article class="m-wallpost">
+
+	    <header class="wallpost-header">
+	        <figure class="user-avatar">
+	        	<img {{bindAttr src="author.getAvatar" alt="author.full_name"}} />
+	        </figure>
+
+	        <a {{action openInBigBox "userModal" author}} class="user-name">
+	            <strong>{{author.full_name}}</strong>
+	        </a>
+
+	        <abbr class="timestamp">{{ localize created formatting="X" }}</abbr>
+			
+			{{#if isAuthor}}
+	        <div class="owner-actions">
+	            <!--<a href="#" {{ action "editWallPost" this target="view" }} class="edit">Edit</a>-->
+	            <ul>
+	            	<li><a href="#" {{ action "deleteReaction" this target="view" }} class="delete">Delete</a></li>
+	            </ul>
+	        </div>
+	        {{/if}}
+	    </header>
+
+	    <div class="wallpost-body">
+	    	{{#if title}}<p><strong>{{title}}{{/if}}</strong></p>
+	    	{{{text}}}
+	        
+			{{#if video_html}}
+			    <div class="video">{{{video_html}}}</div>
+			{{/if}}
+			
+	        {{#if photos.length}}
+	            <ul class="photo-viewer">
+					<li class="cover">
+						<a {{bindAttr href="coverPhoto.photo.full"}} title="photo">
+							<img {{bindAttr src="coverPhoto.photo.full"}}>
+						</a>
+					</li>
+					{{#each photo in otherPhotos}}
+	                    <li class="photo">
+							<a {{bindAttr href="photo.photo.full"}} title="photo">
+								<img {{bindAttr src="photo.photo.small"}} alt="Photo" />
+							</a>
+						</li>
+	                {{/each}}
+	            </ul>
+	        {{/if}}
+	    </div>
+		
+	
+	    <ul class="comments">
+	        {{render "wallPostReactionList" reactions}}
+	    </ul>
+	 
+
+	</article>
+
+{% endtplhandlebars %}

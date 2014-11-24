@@ -1,0 +1,225 @@
+// global wallposts & comments
+.m-wallpost, .m-comment {
+    position: relative;
+    clear: both;
+
+    .user-avatar {
+        float: left;
+        margin: 0 20px 10px 0;
+        padding: 0;
+
+        img {
+            background-color: $color-grey-back;
+        }
+    }
+
+    .user-name {
+        font-family: $font-family-header;
+        font-size: 18px;
+        font-weight: 700;
+        display: block;
+        margin-top: 10px;
+        color: $color-sec !important;
+    }
+
+    .timestamp {
+        font-size: 16px;
+        color: $color-grey;
+    }
+
+    .owner-actions {
+        position: absolute;
+        top: 2px;
+        right: 20px;
+    }
+}
+
+// wallpost
+.m-wallpost {
+    font-size: 15px;
+    line-height: 1.5em;
+    margin: 0 0 30px 0;
+    border: 1px solid $color-grey-medium;
+    border-radius: $radius-medium;
+    background-color: $color-real-white;
+
+    .wallpost-header {
+        padding: 20px 20px 0 20px;
+    }
+
+    .user-avatar {
+
+        img {
+            width: 70px;
+            height: 70px;
+        }
+    }
+
+    .wallpost-body {
+        @include break-all-words;
+        clear: both;
+        padding: 0 20px 20px 20px;
+    }
+}
+
+
+// photos
+.photo-viewer {
+    overflow: hidden;
+    margin: 0 -10px 0 0;
+    padding: 0;
+    list-style-type: none;
+
+    .cover, .photo {
+        display: block;
+        margin: 10px 0 0 0;
+        padding: 0 10px 0 0;
+        width: 100%;
+    }
+
+    .photo {
+        display: block;
+        float: left;
+        width: 20%;
+        margin: 10px 0 0 0;
+        padding: 0 10px 0 0;
+        background-image: none;
+    }
+
+    img {
+        width: 100%;
+        height: auto;
+        background-color: $color-grey-back;
+    }
+}
+
+// comments
+.m-comment {
+    font-size: 15px;
+    line-height: 1.5em;
+    margin: 0 0 30px 0;
+    padding: 0; // todo: change global list
+    border: 1px solid $color-grey-medium;
+    border-radius: $radius-medium;
+    background-color: $color-grey-lightest;
+    background-image: none; // todo: change global list
+
+    .comment-header {
+        padding: 20px 20px 0 20px;
+    }
+
+    .user-name {
+        font-size: 15px;
+        display: inline;
+    }
+
+    .timestamp {
+        font-size: 15px;
+    }
+
+    .comment-body {
+        @include break-all-words;
+        overflow: hidden;
+        padding: 0 20px 5px 0;
+    }
+
+    .user-avatar img {
+        width: 50px;
+        height: 50px;
+    }
+    // nested comments
+    .m-comment {
+        padding-left: 20px;
+
+        .user-avatar img {
+            width: 30px;
+            height: 30px;
+        }
+    }
+}
+
+// comments list 
+.comments {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+
+    .m-comment {
+        margin: 0;
+        border-width: 1px 0 0 0;
+        border-style: solid;
+        border-color: $color-grey-medium;
+        border-radius: 0;
+    }
+}
+
+// post comment (reply)
+.m-comment-form {
+    // todo: move to (global) forms
+    border-top: 1px solid $color-grey-medium;
+
+    form, fieldset {
+        position: relative;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    textarea {
+        @include border-bottom-radius(4px);
+        //border-top: 1px solid $color-grey-medium;
+        font-family: $font-family-base;
+        line-height: 1.5em;
+        width: 100%;
+        height: calc(1.5em + 20px);
+        margin: 0;
+        padding: 0;
+        padding: 10px 20px 10px 50px;
+        border: none;
+        box-shadow: none;
+
+        @include placeholder {
+            color: $color-placeholder;
+        }
+
+        &:focus {
+            @include placeholder {
+                color: $color-grey-light;
+            }
+        }
+    }
+
+    label {
+        width: calc(100% + 2px);
+        margin: -1px -1px 0 -1px;
+    }
+
+    footer {
+        position: absolute;
+        right: 3px;
+        bottom: 4px;
+    }
+}
+
+// todo: make global
+.signin {
+    padding: 7px 20px 10px 20px;
+    border-top: 1px solid $color-grey-medium;
+    background-color: $color-grey-light;
+
+    p {
+        margin: 0;
+    }
+}
+
+// todo: global actions in dropwdown {
+
+.owner-actions li {
+    margin: 0;
+    padding: 0;
+    background-image: none;
+
+    ul {
+        display: none;
+    }
+}

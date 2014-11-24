@@ -1,0 +1,71 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "wallpost_reaction" %}
+
+    <li class="m-comment">
+        
+        <header class="comment-header">
+            <figure class="user-avatar">
+                <img {{ bindAttr src="author.getAvatar" }} {{ bindAttr alt="author.full_name" }}/>
+            </figure>
+
+            <a {{action openInBigBox "userModal" author}} class="user-name">
+                <strong>{{ author.full_name }}</strong>
+            </a>
+
+            <abbr class="timestamp">{{ localize created formatting="X" }}</abbr>
+
+            {{#if isAuthor}}
+            <ul class="owner-actions">
+                <!--<a href="#" {{ action "editWallPost" this target="view" }} class="edit">Edit</a>-->
+                <li>Dropdown
+                    <ul>
+                        <li><a href="#" {{ action "deleteWallPost" this target="view" }} class="delete">Delete</a></li>
+                    </ul>
+                </li>
+            </ul>
+            {{/if}}
+
+        </header>
+
+        <div class="comment-body">
+            {{{ text }}}
+        </div>  
+    </li> 
+
+{% endtplhandlebars %}
+
+
+{% tplhandlebars "wallpost_reaction_list" %}
+    
+    {{#if model.length}}
+        <ul class="comments">
+            {{#each controller itemController="wallPostReaction"}}
+                {{view "App.WallPostReactionView" content=this}}
+            {{/each}}
+        </ul>
+    {{/if}}
+	
+    {{#if currentUser.isAuthenticated }}
+    <footer>
+        <form class="m-comment-form">
+            <fieldset {{bindAttr class="errors.text.length:error"}}>
+                    {{#each errors.text}}
+                        <label class="error">{{this}}</label>
+                    {{/each}}
+                    {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="comment-input"}}
+                    <footer>
+                        <button class="button submit" type="submit">Post</button>
+                    </footer>
+            </fieldset>
+        </form>
+    {{else}}
+        <div class="signin">
+            {% trans "Please" %} <a class="button" {{action openInBox "login"}}>{% trans "Sign in" %}</a> {% trans "to post a comment" %}.
+        </div>
+    {{/if}}
+    </footer>
+
+{% endtplhandlebars %}

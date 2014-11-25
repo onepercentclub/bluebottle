@@ -36,16 +36,12 @@ App.MyDonation = App.Donation.extend({
     url: 'donations/my',
 
     order: DS.belongsTo('App.MyOrder'),
-    amount: DS.attr('number'),
     completed: DS.attr('date'),
-    defaultAmount: 25,
+    amount: DS.attr('number', {defaultValue: 25}),
 
     validAmount: function () {
         var amount = this.get('amount');
-        if (!amount) {
-            //if no amount set the default amount
-            this.set('amount', this.get('defaultAmount'));
-        } else if (amount < 5) {
+        if (amount < 5) {
             return false;
         }
         return true;

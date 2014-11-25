@@ -18,12 +18,14 @@
 	        <abbr class="timestamp">{{ localize created formatting="X" }}</abbr>
 			
 			{{#if isAuthor}}
-	        <div class="owner-actions">
-	            <!--<a href="#" {{ action "editWallPost" this target="view" }} class="edit">Edit</a>-->
-	            <ul>
-	            	<li><a href="#" {{ action "deleteReaction" this target="view" }} class="delete">Delete</a></li>
-	            </ul>
-	        </div>
+	        <ul class="owner-actions">
+                <li class="actions-dropdown"><em>Actions</em>
+                    <ul>
+                    {{!-- <li><a href="#" {{ action "editWallPost" this target="view" }} class="action-edit">{% trans "Edit" %}</a></li> --}}
+                        <li><a href="#" {{ action "deleteWallPost" this target="view" }} class="action-delete">{% trans "Delete" %}</a></li>
+                    </ul>
+                </li>
+            </ul>
 	        {{/if}}
 	    </header>
 

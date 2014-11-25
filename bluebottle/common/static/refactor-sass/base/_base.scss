@@ -1,51 +1,217 @@
-label {      
+label {
+
     &.modal-checkbox {
-        cursor: pointer;
-        display: block;
         font-size: 13px;
-        color: #9F9F9F;
-                
+        display: block;
+        cursor: pointer;
+        color: #9f9f9f;
+
         span {
+            line-height: 2em;
             display: inline-block;
             width: 17px;
             height: 16px;
-            line-height: 2em;
-            cursor: pointer;
             margin: 0 0 -3px 0;
+            cursor: pointer;
         }
 
-        input[type="checkbox"],
-        input[type="radio"] {
-                display: none;
+        input[type='checkbox'], input[type='radio'] {
+            display: none;
         }
 
-        input[type="checkbox"] + span {
-            background: image-url("icons/icon-checkbox.svg") transparent no-repeat;
+        input[type='checkbox'] + span {
+            background: image-url('icons/icon-checkbox.svg') transparent no-repeat;
         }
 
-        input[type="radio"] + span {
-
+        input[type='radio'] + span {
         }
 
-        input[type="checkbox"]:checked + span {
-            background: image-url("icons/icon-checkbox-checked.svg") transparent no-repeat;
-            
+        input[type='checkbox']:checked + span {
+            background: image-url('icons/icon-checkbox-checked.svg') transparent no-repeat;
         }
 
-        input[type="radio"]:checked + span {
+        input[type='radio']:checked + span {
         }
     }
 }
 
-// btn groups
-.btn-group {
-    width: 100%;
+// forms & buttons
+form {
 
-    .btn {
-        width: 47%;
+    label.error {
+        display: none;
+    }
+}
 
-        &:last-of-type {
-            margin-right: 3%;
+form.error {
+
+    label.error {
+        display: block;
+    }
+}
+
+label.error {
+    margin: 0;
+    padding: 5px 20px;
+    text-align: center;
+    color: $color-error;
+    border: 1px solid $color-error;
+    background-color: $color-error-back;
+}
+
+button, .button {
+    //@include transition(padding 0.1s ease-in-out);
+    font-family: $font-family-header;
+    font-weight: 700;
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    min-width: 85px;
+    padding: .3em 1em calc(.3em + 1px) 1em;
+    -webkit-transform: scale(1);
+    vertical-align: center;
+    text-transform: inherit;
+    color: $color-real-white !important;
+    border: none;
+    border-radius: $radius-large;
+    background: $color-sec;
+    box-shadow: 0 -1px 0 0 $color-sec-shadow inset;
+    // fix for chrome animation bug
+    -webkit-backface-visibility: hidden;
+
+    &:hover {
+        top: 0;
+        margin-bottom: -1px;
+        padding-bottom: calc(.3em + 2px);
+        box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
+    }
+
+    &:active {
+        top: 2px;
+        margin-bottom: 1px;
+        padding: .3em 1em .3em 1em;
+        color: $color-sec !important;
+        background: $color-sec-shadow !important;
+        //box-shadow: 0 1px 0 0 $color-black inset;
+        box-shadow: none;
+
+        span {
+            background: transparent !important; // TODO: Reset old flaticon
+        }
+    }
+
+    &:focus {
+        outline: none;
+        // box-shadow: 0 0 3px 0px lighten($color-sec, 10%);
+    }
+
+    &.action-cancel {
+        @include transition(box-shadow .1s ease-out);
+        font-weight: normal;
+        margin-top: 1px;
+        padding: .3em 1em .3em 1em;
+        color: $color-grey !important;
+        background-color: $color-grey-lightest;
+        box-shadow: 0 0 0 1px $color-grey-medium inset;
+
+        &:hover {
+            margin-top: 2px;
+            padding: .3em 1em .3em 1em;
+            box-shadow: 0 0 0 1px $color-grey inset;
+        }
+
+        &:active {
+            color: $color-grey-medium !important;
+            background-color: $color-grey !important;
         }
     }
 }
+
+
+// edit/delete dropdown
+.owner-actions {
+    font-size: 13px;
+    line-height: 1em;
+    position: relative;
+    color: $color-grey;
+
+    li {
+        margin: 0;
+        padding: 0;
+        background-image: none;
+    }
+
+    ul {
+        display: none;
+    }
+
+    .actions-dropdown {
+
+        em {
+            @include hide-text;
+            @include add-icon(dropdown, 10px, 12px, 0, url('/static/assets/images/img/icons/owner-actions/icon-action-dropdown.svg'));
+            position: relative;
+            z-index: 10;
+            display: block;
+            float: right;
+            width: 32px;
+            height: 22px;
+            margin: 0;
+            padding: 0;
+            cursor: pointer;
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: transparent;
+            background-position: 50% 50%;
+        }
+
+        &:hover {
+
+            em {
+                @include border-top-radius($radius-large);
+                border-color: $color-grey-medium;
+                background-color: $color-real-white;
+            }
+
+            ul {
+                display: block;
+            }
+        }
+    }
+
+    ul {
+        position: absolute;
+        z-index: 9;
+        top: 21px;
+        right: 0;
+        width: 80px;
+        margin: 0;
+        padding: 0;
+        border: 1px solid $color-grey-medium;
+        border-radius: $radius-large 0 $radius-large $radius-large;
+        background-color: $color-real-white;
+
+        li {
+            padding: 6px 10px;
+        }
+
+        a {
+            display: block;
+            color: $color-grey !important;
+
+            &:hover {
+                color: $color-text !important;
+            }
+        }
+
+        .action-delete {
+            @include add-icon(delete, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/icon-action-delete.svg'));
+        }
+
+        .action-edit {
+            @include add-icon(edit, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/icon-action-edit.svg'));
+        }
+    }
+    //}
+}
+

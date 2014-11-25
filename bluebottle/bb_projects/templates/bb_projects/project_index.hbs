@@ -10,10 +10,10 @@
             <section id="wallposts">
                 {{#if currentUser.isAuthenticated }}
                     {{#if canAddMediaWallPost}}
-                        {{bb-media-wallpost-new wallpost=controller addFile="addFile" removeFile="removeFile"
-                                parentType="project" wallpostList=controller.model parentId=controllers.project.id}}
+                        {{bb-media-wallpost-new addFile="addFile" removeFile="removeFile" wallpostList=controller.model
+                                parentType="project" parentId=controllers.project.id}}
                     {{else}}
-                        {{bb-text-wallpost-new wallpost=controller parentType="project" parentId=controllers.project.id
+                        {{bb-text-wallpost-new parentType="project" parentId=controllers.project.id
                                 wallpostList=controller.model}}
                     {{/if}}
                 {{/if}}

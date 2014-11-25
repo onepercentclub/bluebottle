@@ -304,7 +304,7 @@ class SeleniumTestCase(LiveServerTestCase):
         else:
             cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=30)
 
-        cls.browser.driver.implicitly_wait(30)
+        cls.browser.driver.implicitly_wait(2)
         cls.browser.driver.set_page_load_timeout(30)
 
         super(SeleniumTestCase, cls).setUpClass()

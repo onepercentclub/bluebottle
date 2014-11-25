@@ -6,23 +6,19 @@
 
 App.BbTextWallpostNewComponent = Ember.Component.extend({
     /**
-     * This is the base class for a wall-post form.
+     * This is the base component for a wall-post form.
      *
-     * To use it extend it and add:
-     * - Extend 'needs' to have parent object and wall-post list controllers.
-     * - Overwrite 'parentId' to return the id of the parent object.
-     * - Overwrite 'wallpostList' to return the array (model) that holds the wall-post list.
-     * - Define a 'type'
-     *
-     * Look at App.ProjectTextWallPostNewController for example
      */
+    tagName: 'form',
+    elementId: 'wallpost-form',
+
 
     init: function() {
         this._super();
-        this.createNewWallPost();
+        this.createNewWallpost();
     },
 
-    createNewWallPost: function() {
+    createNewWallpost: function() {
         // Make sure we keep parent id/type
         var parentType = this.get('parentType');
         var parentId = this.get('parentId');
@@ -39,7 +35,7 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
 
         list.unshiftObject(record);
         Ember.run.next(function() {
-            _this.createNewWallPost();
+            _this.createNewWallpost();
         });
     },
 
@@ -72,8 +68,8 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
 
     actions: {
         clearForm: function(){
-            this.createNewWallPost();
-            this._hideWallpostMessage();
+            this.createNewWallpost();
+            this.hideWallpostOptions();
         },
         saveWallpost: function() {
             var _this = this,
@@ -102,7 +98,7 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
 
     uploadFiles: Em.A(),
 
-    createNewWallPost: function() {
+    createNewWallpost: function() {
         // Make sure we keep parent id/type
         var parentType = this.get('parentType');
         var parentId = this.get('parentId');
@@ -128,7 +124,7 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
             }
             var list = _this.get('wallpostList');
             list.unshiftObject(record);
-            _this.createNewWallPost()
+            _this.createNewWallpost()
         });
     },
 
@@ -180,7 +176,7 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
                 parent_id = this.get('parentId'),
                 wallpost = this.get('wallpost');
 
-            _this._hideWallPostMessage();
+            _this._hideWallpostMessage();
 
             if (parent_type && parent_id) {
                 wallpost.set('parent_id', parent_id);
@@ -195,7 +191,8 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
             });
         },
         clearForm: function(){
-            this.createNewWallPost();
+            this.hideWallpostOptions();
+            this.createNewWallpost();
         },
         addFile: function(file) {
             var photo = App.WallPostPhoto.createRecord();
@@ -253,7 +250,27 @@ App.BbWallpostComponent = Em.Component.extend({
         editWallPost: function() {
             console.log("edit");
         }
-    }
+    },
+    didInsertElement: function(){
+        var view = this;
+        view.$().hide();
+        // Give it some time to really render...
+        // Hack to make sure photo viewer works for new wallposts
+        Em.run.next(function(){
+
+            // slideDown has weird behaviour on Task Wall with post not appearing.
+            // view.$().slideDown(500);
+            view.$().fadeIn(500);
+
+            view.$('.photo-viewer a').colorbox({
+                rel: this.toString(),
+                next: '<span class="flaticon solid right-2"></span>',
+                previous: '<span class="flaticon solid left-2"></span>',
+                close: 'x'
+            });
+        });
+    },
+
 
 });
 

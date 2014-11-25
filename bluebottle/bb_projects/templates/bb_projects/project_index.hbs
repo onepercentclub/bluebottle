@@ -84,61 +84,17 @@
 
                 {{!-- Todo: only show block when there are supporters --}}
                 <div id="supporter-list">
+
                     <div class="activity">
 
                         <header class="activity-header">
                             <h2 class="activity-title">{% trans "Supporters" %}</h2>
                         </header>
 
-                        <ul class="activity-list">
-                            <li class="activity-item">
-                                <a href="#">
-                                    <figure class="user-avatar">
-                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
-                                    </figure>
-                                    <span class="activity-body">
-                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
-                                        <abbr class="timestamp">2 days ago</abbr>
-                                    </span>
-                                </a>
-                            </li>
-                            <li class="activity-item">
-                                <a href="#">
-                                    <figure class="user-avatar">
-                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
-                                    </figure>
-                                    <span class="activity-body">
-                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
-                                        <abbr class="timestamp">2 days ago</abbr>
-                                    </span>
-                                </a>
-                            </li>
-                            <li class="activity-item">
-                                <a href="#">
-                                    <figure class="user-avatar">
-                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
-                                    </figure>
-                                    <span class="activity-body">
-                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
-                                        <abbr class="timestamp">2 days ago</abbr>
-                                    </span>
-                                </a>
-                            </li>
-                            <li class="activity-item">
-                                <a href="#">
-                                    <figure class="user-avatar">
-                                        <img src="http://placehold.it/70/70" alt="Frans Twisk" />
-                                    </figure>
-                                    <span class="activity-body">
-                                        <strong class="user-name">Frans Twisk</strong> {% trans "donated" %} <strong>&euro; 25,-</strong><br />
-                                        <abbr class="timestamp">2 days ago</abbr>
-                                    </span>
-                                </a>
-                            </li>
-                        </ul>
+                        {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
 
                         <footer class="activity-footer">
-                            <a href="#" class="activity-action">
+                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
                                 <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>

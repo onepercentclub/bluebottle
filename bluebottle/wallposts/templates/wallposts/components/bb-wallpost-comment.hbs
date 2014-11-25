@@ -1,0 +1,38 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "components/bb-wallpost-comment" %}
+
+    <li class="m-comment">
+
+        <header class="comment-header">
+            <figure class="user-avatar">
+                <img {{ bindAttr src="comment.author.getAvatar" alt="comment.author.full_name" }}/>
+            </figure>
+
+            <a {{action openInBigBox "userModal" comment.author}} class="user-name">
+                <strong>{{ comment.author.full_name }}</strong>
+            </a>
+
+            <abbr class="timestamp">{{ localize comment.created formatting="X" }}</abbr>
+
+            {{#if comment.isAuthor}}
+                <ul class="owner-actions">
+                    <li>
+                        <ul>
+                            <li><a {{ action "deleteWallPost" comment }} class="delete">Delete</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            {{/if}}
+
+        </header>
+
+        <div class="comment-body">
+            {{{ comment.text }}}
+        </div>
+    </li>
+
+{% endtplhandlebars %}

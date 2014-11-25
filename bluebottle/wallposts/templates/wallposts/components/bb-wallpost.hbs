@@ -30,9 +30,10 @@
 	    </header>
 
 	    <div class="wallpost-body">
-	    	{{#if post.title}}<p><strong>{{post.title}}{{/if}}</strong></p>
-	    	{{{post.text}}}
-	        
+	    	{{#if post.title}}
+				<p><strong>{{post.title}}</strong></p>
+			{{/if}}
+			{{{post.text}}}
 			{{#if post.video_html}}
 			    <div class="video">{{{post.video_html}}}</div>
 			{{/if}}
@@ -57,7 +58,7 @@
 		
 	
 	    <ul class="comments">
-	        {{render "wallPostReactionList" post.reactions}}
+			{{bb-wallpost-comment-list comments=post.reactions}}
 	    </ul>
 	 
 

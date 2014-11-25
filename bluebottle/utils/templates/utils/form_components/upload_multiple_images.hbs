@@ -10,7 +10,6 @@
                 {{#if photo.errors}}
                     <span class="message is-error">{% trans "Error" %}</span>
                 {{else}}
-
                     {{#if photo.photo.small}}
                         <img {{bindAttr src="photo.photo.small"}} />
                         <a {{action "removeFile" photo}} class="manage-delete"><span class="flaticon solid x-2"></span></a>

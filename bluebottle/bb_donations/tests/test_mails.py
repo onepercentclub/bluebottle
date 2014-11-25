@@ -35,18 +35,8 @@ class TestDonationEmails(BluebottleTestCase):
             fundraiser=None
         )
 
-    # def test_mail_new_donation_after_successful(self):
-    #     """ Testing if the e-mail is sent """
-
-    #     self.order.locked()
-    #     self.order.succeeded()
-
-    #     self.assertEqual(len(mail.outbox), 1, 'it\'s actually {0}'.format(len(mail.outbox)))
-    #     m = mail.outbox.pop(0)
-    #     self.assertEqual(m.subject, 'You received a new donation')
-
     def test_mail_project_owner_and_supporter_successful_donation(self):
-        """ Test that an email is sent to the project owner after a succesful donation """
+        """ Test that an email is sent to the project owner and project supporter after a succesful donation """
         # Clear the email folder
         mail.outbox = []
 
@@ -63,8 +53,8 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Test email to supporter
         self.assertEqual(mail.outbox[1].to[0], self.user.email)
+        # TODO: Test the email content
         # self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-
 
 
     def test_mail_fundraiser_successful_donation(self):

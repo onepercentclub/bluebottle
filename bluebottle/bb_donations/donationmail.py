@@ -34,10 +34,9 @@ def successful_donation_fundraiser_mail(instance):
     msg.send()
 
 
-
 def new_oneoff_donation(instance):
     """
-    Send project owner a mail if a new "one off" donation is done. We consider a donation done if the status is pending.
+    Send project owner and project supporter a mail if a new "one off" donation is done. We consider a donation done if the status is pending.
     """
     donation = instance
 

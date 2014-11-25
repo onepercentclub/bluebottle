@@ -21,9 +21,9 @@
                 {{#each post in controller}}
                     {{#if post.isLoaded}}
                         {{#if post.isSystemWallPost}}
-                            {{bb-system-wallpost post=post}}
+                            {{bb-system-wallpost post=post currentUser=currentUser}}
                         {{else}}
-                            {{bb-wallpost post=post}}
+                            {{bb-wallpost post=post currentUser=currentUser}}
                         {{/if}}
                     {{/if}}
                 {{/each}}

@@ -16,14 +16,14 @@
     <footer>
         {{#if currentUser.isAuthenticated }}
             <form class="m-comment-form">
-                <fieldset {{bindAttr class="errors.text.length:error"}}>
-                        {{#each errors.text}}
-                            <label class="error">{{this}}</label>
-                        {{/each}}
-                        {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="comment-input"}}
-                        <footer>
-                            <button class="button submit" type="submit">Post</button>
-                        </footer>
+                <fieldset {{bindAttr class="newReaction.errors.text.length:error"}}>
+                    {{#each newReaction.errors.text}}
+                        <label class="error">{{this}}</label>
+                    {{/each}}
+                    {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="comment-input"}}
+                    <footer>
+                        <button {{action 'addReaction'}} class="button submit" type="submit">Post</button>
+                    </footer>
                 </fieldset>
             </form>
         {{else}}

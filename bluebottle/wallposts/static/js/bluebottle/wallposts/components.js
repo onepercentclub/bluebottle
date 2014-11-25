@@ -278,15 +278,14 @@ App.BbWallpostComponent = Em.Component.extend({
 App.WallpostCommentComponent = Em.Component.extend(App.IsAuthorMixin, {});
 
 
-App.BbWallpostReactionListComponent = Em.Component.extend({
+App.BbWallpostCommentListComponent = Em.Component.extend({
     init: function() {
         this._super();
         this.createNewReaction();
     },
 
     createNewReaction: function() {
-        var store = this.get('store');
-        var reaction =  store.createRecord(App.WallPostReaction);
+        var reaction =  App.WallPostReaction.createRecord();
         var name = this.get('currentUser.full_name');
         var values = {'name': name};
         var placeholder_unformatted = gettext("Hey %(name)s, you can leave a comment");
@@ -295,22 +294,24 @@ App.BbWallpostReactionListComponent = Em.Component.extend({
         this.set('newReaction', reaction);
     },
 
-    addReaction: function() {
-        var reaction = this.get('newReaction');
-        // Set the wallpost that this reaction is related to.
-        reaction.set('wallpost', this.get('target.post'));
-        reaction.set('created', new Date());
-        var controller = this;
-        reaction.on('didCreate', function(record) {
-            controller.createNewReaction();
-            // remove is-selected from all input roms
-            $('form.is-selected').removeClass('is-selected');
-        });
-        reaction.on('becameInvalid', function(record) {
-            controller.createNewReaction();
-            controller.set('errors', record.get('errors'));
-            record.deleteRecord();
-        });
-        reaction.save();
+    actions: {
+        addReaction: function () {
+            var reaction = this.get('newReaction');
+            // Set the wallpost that this reaction is related to.
+            reaction.set('wallpost', this.get('post'));
+            reaction.set('created', new Date());
+            var controller = this;
+            reaction.on('didCreate', function (record) {
+                controller.createNewReaction();
+                // remove is-selected from all input roms
+                $('form.is-selected').removeClass('is-selected');
+            });
+            reaction.on('becameInvalid', function (record) {
+                controller.createNewReaction();
+                controller.set('errors', record.get('errors'));
+                record.deleteRecord();
+            });
+            reaction.save();
+        }
     }
 });

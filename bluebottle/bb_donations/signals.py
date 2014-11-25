@@ -13,6 +13,7 @@ def _order_status_changed(sender, instance, **kwargs):
     - Update amount on project when order is in an ending status.
     - Get the status from the Order and Send an Email.
     """
+
     if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING, StatusDefinition.FAILED]:
         for donation in instance.donations.all():
             donation.project.update_amounts()

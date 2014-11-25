@@ -7,7 +7,6 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import get_template
-from bluebottle.utils.model_dispatcher import get_donation_model
 
 
 def successful_donation_fundraiser_mail(instance):

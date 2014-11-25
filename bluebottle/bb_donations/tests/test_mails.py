@@ -1,5 +1,4 @@
 from django.core import mail
-from django.test import TestCase
 from django.utils.translation import ugettext as _
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -8,10 +7,6 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
-
-DONATION_MODEL = get_donation_model()
-ORDER_MODEL = get_order_model()
 
 
 class TestDonationEmails(BluebottleTestCase):

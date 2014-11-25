@@ -37,7 +37,6 @@
 
             <section id="sidebar">
                 
-                {{!-- Todo: only show block when there are fundraisers OR the campaign is still running --}}
                 {{#if controllers.project.amount_asked}}
                     <div id="fundraiser-list">
                         {{render 'projectFundRaiserList'}}
@@ -45,42 +44,63 @@
                 {{/if}}
 
 
-                {{!-- Todo: only show block when there are tasks OR when you are project owner --}}
-                <div id="task-list">
-                    <div class="activity">
+                {{#if tasks}}
+                    <div id="task-list">
+                        <div class="activity">
 
-                        <header class="activity-header">
-                            <h2 class="activity-title">{% trans "Tasks" %}</h2>
-                        </header>
 
-                        <ul class="activity-list">
+                            <header class="activity-header">
+                                <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                            </header>
 
-                            {{#if availableTasks}}
-                                {{#each availableTasks}}
-                                    {{view App.TaskSummaryView contentBinding='this'}}
-                                {{/each}}
+                            <ul class="activity-list">
+
+                                {{#if availableTasks}}
+                                    {{#each availableTasks}}
+                                        {{view App.TaskSummaryView contentBinding='this'}}
+                                    {{/each}}
+                                {{/if}}
+
+                                {{#if unavailableTasks}}
+                                    {{#each unavailableTasks}}
+                                        {{view App.TaskSummaryView contentBinding='this'}}
+                                    {{/each}}
+                                {{/if}}
+
+                            </ul>
+
+                            {{#if isProjectOwner}}
+                                <footer class="activity-footer">
+                                    {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
+                                        <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                        {% trans "Why not ask your community to help out?" %}
+                                    {{/linkTo}}
+                                </footer>
                             {{/if}}
-                        
-                            {{#if unavailableTasks}}
-                                {{#each unavailableTasks}}
-                                    {{view App.TaskSummaryView contentBinding='this'}}
-                                {{/each}}
-                            {{/if}}
 
-                        </ul>
-
-                        {{#if isProjectOwner}}
-                            <footer class="activity-footer">
-                                {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
-                                    <strong>{% trans "Create a task" %} &raquo;</strong><br />
-                                    {% trans "Why not ask your community to help out?" %}
-                                {{/linkTo}}
-                            </footer>
-                        {{/if}}
-
+                        </div>
                     </div>
-                </div>
-                
+                {{else}}
+                    {{#if isProjectOwner}}
+                        {{#if controllers.project.isStatusCampaign}}
+                            <div id="task-list">
+                                <div class="activity">
+                                    <header class="activity-header">
+                                        <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                                    </header>
+
+                                    <footer class="activity-footer">
+                                        {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
+                                            <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                            {% trans "Why not ask your community to help out?" %}
+                                        {{/linkTo}}
+                                    </footer>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{/if}}
+
+                {{/if}}
 
                 {{!-- Todo: only show block when there are supporters --}}
                 <div id="supporter-list">

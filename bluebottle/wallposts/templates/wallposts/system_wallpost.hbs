@@ -26,9 +26,9 @@
 
             <div class="wallpost-meta">
                 {{#if author}}
-                <h4 class="wallpost-author">{{author.full_name}}</h4>
+                    <h4 class="wallpost-author">{{author.full_name}}</h4>
                 {{else}}
-                <h4 class="wallpost-author">{% trans "Someone" %}</h4>
+                    <h4 class="wallpost-author">{% trans "Someone" %}</h4>
                 {{/if}}
                 {{#if created}}
                     <span class="wallpost-timestamp">{{ localize created formatting="X" }}</span>

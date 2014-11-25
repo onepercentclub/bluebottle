@@ -77,3 +77,25 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
 });
 
 
+App.BbWallpostComponent = Em.Component.extend({
+    // Don't show Fundraiser (title/link) on FundRaiser page.
+    showFundRaiser: function(){
+        if (this.get('parent_type') == 'fundraiser') {
+            return false;
+        }
+        // Show FundRaiser if any.
+        return this.get('fundraiser');
+    }.property('fundraiser', 'parent_type'),
+
+    newReaction: function(){
+        var transaction = this.get('store').transaction();
+        return transaction.createRecord(App.WallPostReaction, {'wallpost': this.get('model')});
+    }.property('model'),
+
+    actions: {
+        editWallPost: function() {
+            console.log("edit");
+        }
+    }
+
+});

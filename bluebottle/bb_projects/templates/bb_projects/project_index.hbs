@@ -16,12 +16,12 @@
                     {{/if}}
                 {{/if}}
 
-                {{#each item in controller itemController="wallPost"}}
-                    {{#if item.isLoaded}}
-                        {{#if item.isSystemWallPost}}
-                            {{view "App.SystemWallPostView"}}
+                {{#each post in controller}}
+                    {{#if post.isLoaded}}
+                        {{#if post.isSystemWallPost}}
+                            {{bb-system-wallpost post=post}}
                         {{else}}
-                            {{view "App.MediaWallPostView"}}
+                            {{bb-wallpost post=post}}
                         {{/if}}
                     {{/if}}
                 {{/each}}

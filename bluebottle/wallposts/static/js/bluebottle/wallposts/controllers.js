@@ -262,7 +262,7 @@ App.WallPostReactionListController = Em.ArrayController.extend({
     addReaction: function() {
         var reaction = this.get('newReaction');
         // Set the wallpost that this reaction is related to.
-        reaction.set('wallpost', this.get('target.model'));
+        reaction.set('wallpost', this.get('target.post'));
         reaction.set('created', new Date());
         var controller = this;
         reaction.on('didCreate', function(record) {

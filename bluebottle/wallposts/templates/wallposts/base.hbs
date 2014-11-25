@@ -2,8 +2,9 @@
 {% load i18n %}
 {% load static %}
 
+
 {% comment %}
-{% include 'wallposts/system_wallpost.hbs' %}
+    {% include 'wallposts/system_wallpost.hbs' %}
     {% include 'wallposts/wall.hbs' %}
     {% include 'wallposts/reactions.hbs' %}
     {% include 'wallposts/wallpost.hbs' %}
@@ -16,5 +17,6 @@
 {# refaktored components #}
 {% include 'wallposts/components/bb-comments.hbs' %}
 {% include 'wallposts/components/bb-wallpost.hbs' %}
+{% include 'wallposts/components/bb-system-wallpost.hbs' %}
 {% include 'wallposts/components/bb-media-wallpost-new.hbs' %}
 {% include 'wallposts/components/bb-text-wallpost-new.hbs' %}

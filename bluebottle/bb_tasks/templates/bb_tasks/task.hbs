@@ -187,12 +187,19 @@
         </div>
     </div>
 
-    <div class="l-section" id="wallposts">
-        <section class="l-wrapper">
+
+    <div class="l-section" id="wall">
+        <div class="l-wrapper">
+            <section id="wallposts">
             {{bb-wallpost-list parentId=id parentType='task' currentUser=currentUser
                 canAddMediaWallpost=isOwner}}
+            </section>
+
+
+            <section id="sidebar">
             {{render 'taskActivity' model}}
-        </section>
+            </section>
+        </div>
     </div>
 
 

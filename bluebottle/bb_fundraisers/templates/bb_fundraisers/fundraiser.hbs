@@ -116,15 +116,17 @@
        </section>
     </div>
 
-
-    <div class="l-section" id="wallposts">
-        <section class="l-wrapper">
-
-            <div class="wallposts-list">
+    <div class="l-section" id="wall">
+        <div class="l-wrapper">
+            <section id="wallposts">
                 {{bb-wallpost-list parentId=id parentType='fund raiser' currentUser=currentUser
                     canAddMediaWallpost=isOwner}}
-            </div>
-        </section>
+            </section>
+
+
+            <section id="sidebar">
+            </section>
+        </div>
     </div>
 
 {% endtplhandlebars %}

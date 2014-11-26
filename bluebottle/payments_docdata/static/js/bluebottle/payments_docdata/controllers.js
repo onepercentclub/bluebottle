@@ -1,4 +1,9 @@
 App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
+    cardTypes:  [
+        {'id':'amex', 'name': 'American Express'},
+        {'id':'visa', 'name': 'Visa Card'},
+        {'id':'mastercard', 'name': 'Master Card'},
+    ],
     requiredFields: ['default_pm'],
     errorDefinitions: [
         {
@@ -8,7 +13,7 @@ App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
                 'priority': 1
         }
     ],
-
+    promptText: gettext("Select your credit card"), 
 
     init: function() {
         this._super();
@@ -19,6 +24,14 @@ App.DocdataCreditcardController = App.StandardPaymentMethodController.extend({
         this.set('model', App.DocdataCreditcard.create({
             default_pm: ''
         }));
+    },
+
+    actions: {
+        selectCardType: function (cardType) {
+            if ($.inArray(cardType, this.get('cardTypes')) > -1) {
+                this.set('model.default_pm', cardType.id);
+            }
+        }
     }
 });
 

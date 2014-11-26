@@ -1,5 +1,5 @@
 App.OrderPaymentController = Em.ObjectController.extend({
-    needs: ['application', 'projectDonationList', 'fundRaiserDonationList'],
+    needs: ['application', 'projectDonationList', 'fundraiserDonationList'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
     validationErrorsBinding: 'paymentMethodController.validationErrors',
@@ -82,7 +82,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
         if (meta.type == 'success') {
             // Refresh project and donations
             var donation = this.get('order.donations.firstObject');
-            // TODO: Refresh FundRaiser if it's a FundRaisser
+            // TODO: Refresh Fundraiser if it's a FundRaisser
             // TODO: Refresh donation list
             donation.get('project.getProject').reload();
 
@@ -232,43 +232,38 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
-
+    cardTypes: ['amex', 'mastercard', 'visa'],
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
-
-    init: function () {
-        this._super();
-
-        this.set('errorDefinitions', [
-            {
-                'property': 'cardOwner',
-                'validateProperty': 'cardOwner.length',
-                'message': gettext('Card Owner can\'t be left empty'),
-                'priority': 2
-            },
-            {
-                'property': 'cardNumber',
-                'validateProperty': 'validCreditcard',
-                'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
-                'priority': 1
-            },
-            {
-                'property': 'expirationMonth',
-                'validateProperty': /^1[02]$|^0[1-9]$/,
-                'message': gettext('The expiration month is not valid'),
-                'priority': 3
-            },
-            {
-                'property': 'expirationYear',
-                'validateProperty': /^[1-9]\d{1}$/,
-                'message': gettext('The expiration year is not valid'),
-                'priority': 4
-            },
-            {
-                'property': 'cvcCode',
-                'validateProperty': /^\d{3}$/,
-                'message': gettext('The CVC is not valid'),
-                'priority': 5
-            }
-        ]);
-    }
+    errorDefinitions: [
+        {
+            'property': 'cardOwner',
+            'validateProperty': 'cardOwner.length',
+            'message': gettext('Card Owner can\'t be left empty'),
+            'priority': 2
+        },
+        {
+            'property': 'cardNumber',
+            'validateProperty': 'validCreditcard',
+            'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
+            'priority': 1
+        },
+        {
+            'property': 'expirationMonth',
+            'validateProperty': /^1[02]$|^0[1-9]$/,
+            'message': gettext('The expiration month is not valid'),
+            'priority': 3
+        },
+        {
+            'property': 'expirationYear',
+            'validateProperty': /^[1-9]\d{1}$/,
+            'message': gettext('The expiration year is not valid'),
+            'priority': 4
+        },
+        {
+            'property': 'cvcCode',
+            'validateProperty': /^\d{3}$/,
+            'message': gettext('The CVC is not valid'),
+            'priority': 5
+        }
+    ]
 });

@@ -75,6 +75,23 @@ App.OrderRoute = Em.Route.extend({
         });
     },
 
+    _handleSuccess: function (donation) {
+        this.send('clearFlash');
+
+        // If the donation is anonymous or there is no current user
+        // then only show the thank you toast.
+        if (donation.get('anonymous') || !this.get('currentUser.isAuthenticated')) {
+            if (donation.get('fundraiser')) {
+                flashMessage = gettext("Thank you for supporting this fundraiser");
+            } else {
+                flashMessage = gettext("Thank you for supporting this project");
+            }
+            this.send('setFlash', flashMessage);
+        } else {
+            this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+        }
+    },
+
     redirect: function(model) {
         var _this = this,
             order = model,
@@ -87,13 +104,8 @@ App.OrderRoute = Em.Route.extend({
         _this.transitionTo(donationTarget.get('modelType'), donationTarget).promise.then(function () {
             switch (status) {
                 case 'success':
-                    // If the donation is anonymous or there is no current user
-                    // then only show the thank you toast.
-                    if (donation.get('anonymous') || !_this.get('currentUser.isAuthenticated')) {
-                        _this.send('setFlash', gettext("Thank you for supporting this project"));
-                    } else {
-                        _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
-                    }
+                    _this._handleSuccess(donation);
+
                     break;
 
                 case 'pending':
@@ -109,13 +121,7 @@ App.OrderRoute = Em.Route.extend({
                     //        causing the toast to only show briefly.
                     setTimeout(function () {
                         _this._checkOrderStatus(order).then(function () {
-                            _this.send('clearFlash');
-
-                            if (donation.get('anonymous') || !_this.get('currentUser.isAuthenticated')) {
-                                _this.send('setFlash', gettext("Thank you for supporting this project"));
-                            } else {
-                                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
-                            }
+                            _this._handleSuccess(donation);
                         });
                     }, 2000);
 

@@ -1,6 +1,6 @@
 {% load i18n bb_ember static %}
 
-{% tplhandlebars "fundRaiser/index" %}
+{% tplhandlebars "fundraiser/index" %}
 
     <div class="l-section" id="wallposts">
         <section class="l-wrapper">
@@ -8,9 +8,9 @@
             <div class="wallposts-list">
 
                 {{#if isOwner}}
-                	{{ render "fundRaiserMediaWallPostNew" }}
+                	{{ render "fundraiserMediaWallPostNew" }}
                 {{else}}
-                	{{ render "fundRaiserTextWallPostNew" }}
+                	{{ render "fundraiserTextWallPostNew" }}
                 {{/if}}
 
     	        {{#each item in controller itemController="wallPost"}}

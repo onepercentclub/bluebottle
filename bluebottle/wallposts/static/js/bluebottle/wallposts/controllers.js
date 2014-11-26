@@ -1,11 +1,11 @@
 
 App.WallPostController = Em.ObjectController.extend(App.IsAuthorMixin, {
-    // Don't show Fundraiser (title/link) on FundRaiser page.
-    showFundRaiser: function(){
+    // Don't show Fundraiser (title/link) on Fundraiser page.
+    showFundraiser: function(){
         if (this.get('parent_type') == 'fundraiser') {
             return false;
         }
-        // Show FundRaiser if any.
+        // Show Fundraiser if any.
         return this.get('fundraiser');
     }.property('fundraiser', 'parent_type'),
 
@@ -216,23 +216,23 @@ App.ProjectTextWallPostNewController = App.TextWallPostNewController.extend(App.
 App.ProjectMediaWallPostNewController = App.MediaWallPostNewController.extend(App.ProjectWallPostMixin, {});
 
 
-/* FundRaiser WallPosts */
+/* Fundraiser WallPosts */
 
-App.FundRaiserWallPostMixin = Em.Mixin.create({
+App.FundraiserWallPostMixin = Em.Mixin.create({
 
-    needs: ['fundRaiser', 'fundRaiserIndex'],
+    needs: ['fundraiser', 'fundraiserIndex'],
     type: 'fundraiser',
     parentType: 'fundraiser',
 
     parentId: function(){
-        return this.get('controllers.fundRaiser.model.id');
-    }.property('controllers.fundRaiser.model.id'),
+        return this.get('controllers.fundraiser.model.id');
+    }.property('controllers.fundraiser.model.id'),
 
     wallPostList: function(){
         return this.get('controllers.fundRaiserIndex.model');
     }.property('controllers.fundRaiserIndex.model')
 });
 
-App.FundRaiserTextWallPostNewController = App.TextWallPostNewController.extend(App.FundRaiserWallPostMixin, {});
-App.FundRaiserMediaWallPostNewController = App.MediaWallPostNewController.extend(App.FundRaiserWallPostMixin, {});
+App.FundraiserTextWallPostNewController = App.TextWallPostNewController.extend(App.FundraiserWallPostMixin, {});
+App.FundraiserMediaWallPostNewController = App.MediaWallPostNewController.extend(App.FundraiserWallPostMixin, {});
 

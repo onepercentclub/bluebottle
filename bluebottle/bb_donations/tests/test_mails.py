@@ -48,8 +48,8 @@ class TestDonationEmails(BluebottleTestCase):
             fundraiser=self.fundraiser_project
         )
 
-    def test_mail_project_owner_and_supporter_successful_donation(self):
-        """ Test that an email is sent to the project owner and project supporter after a succesful donation """
+    def test_mail_project_owner_successful_donation(self):
+        """ Test that an email is sent to the project owner after a succesful donation """
         # Clear the email folder
         mail.outbox = []
 
@@ -57,17 +57,12 @@ class TestDonationEmails(BluebottleTestCase):
         self.order.locked()
         self.order.succeeded()
 
-        # No fundraiser so two mails should be sent: one to the owner and one to the supporter
-        self.assertEqual(len(mail.outbox), 2)
+        # No fundraiser so one mail should be sent: one to the owner
+        self.assertEqual(len(mail.outbox), 1)
 
         # Test email to owner
         self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
         self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-
-        # Test email to supporter
-        self.assertEqual(mail.outbox[1].to[0], self.user.email)
-        # TODO: Test the email content
-        # self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
 
 
     def test_mail_fundraiser_successful_donation(self):
@@ -80,8 +75,8 @@ class TestDonationEmails(BluebottleTestCase):
         self.fund_order.locked()
         self.fund_order.succeeded()
 
-        # Withfundraiser so three mails should be sent: one to the owner, one to the supporter, one to fundraiser
-        self.assertEqual(len(mail.outbox), 3)
+        # With fundraiser so two mails should be sent: one to the owner and one to fundraiser
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], self.fund_owner.email)
 
 

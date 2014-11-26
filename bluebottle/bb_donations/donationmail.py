@@ -62,7 +62,7 @@ def new_oneoff_donation(instance):
     """
     donation = instance
 
-    # Only process the donation if it is of type "one off".
+    # Only process "one-off" type donations
     if donation.order.order_type != "one-off":
         return
 

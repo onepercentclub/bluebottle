@@ -103,6 +103,8 @@ class TestDonationEmails(BluebottleTestCase):
         # With fundraiser so two mails should be sent: one to the owner and one to fundraiser
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], self.fund_owner.email)
+        self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
+        self.assertTrue("EUR {0}".format(self.fund_donation.amount) in mail.outbox[0].body)
 
 
 

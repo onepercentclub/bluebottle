@@ -1,4 +1,3 @@
-from apps.mail import send_mail
 from django.dispatch.dispatcher import receiver
 from django.core.mail import EmailMultiAlternatives
 from django.db.models.signals import pre_save
@@ -7,7 +6,31 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import get_template
+from django.utils import translation
 
+
+def send_mail(template_name, subject, to, **kwargs):
+    if hasattr(to, 'primary_language') and to.primary_language:
+        translation.activate(to.primary_language)
+
+    kwargs.update({
+        'receiver': to,
+        'site': 'https://{0}'.format(Site.objects.get_current().domain)
+    })
+
+    context = Context(kwargs)
+    subject = unicode(subject)  # Unlazy the translatable string subject within activated language.
+
+    text_content = get_template('{0}.txt'.format(template_name)).render(context)
+    html_content = get_template('{0}.html'.format(template_name)).render(context)
+
+    if hasattr(to, 'primary_language') and to.primary_language:
+        translation.deactivate()
+
+    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[to.email])
+    msg.attach_alternative(html_content, "text/html")
+
+    return msg.send()
 
 def successful_donation_fundraiser_mail(instance):
 
@@ -49,7 +72,7 @@ def new_oneoff_donation(instance):
     if donation.project.owner.email:
         # Send email to the project owner.
         send_mail(
-            template_name='new_oneoff_donation.mail',
+            template_name='bb_donations/new_oneoff_donation.mail',
             subject=_('You received a new donation'),
             to=donation.project.owner,
             amount=donation.amount,
@@ -60,8 +83,17 @@ def new_oneoff_donation(instance):
     if donation.order.user.email:
         # Send email to the project supporter
         send_mail(
-            template_name="new_oneoff_donation.mail",
+            template_name="bb_donations/new_oneoff_donation.mail",
             subject=_("You supported {0}".format(donation.project.title)),
             to=donation.order.user,
             link=project_url
         )
+
+    # if donation.fundraiser:
+    #     # Send email to the project supporter
+    #     send_mail(
+    #         template_name="bb_donations/new_oneoff_donation.mail",
+    #         subject=_('You received a new donation'),
+    #         to=donation.fundraiser.owner,
+    #         link=project_url
+    #     )        

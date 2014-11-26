@@ -1,5 +1,5 @@
 from django_fsm.signals import post_transition
-from bluebottle.bb_donations.donationmail import successful_donation_fundraiser_mail, new_oneoff_donation
+from bluebottle.bb_donations.donationmail import new_oneoff_donation, successful_donation_fundraiser_mail
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.utils.utils import StatusDefinition
 from django.dispatch.dispatcher import receiver

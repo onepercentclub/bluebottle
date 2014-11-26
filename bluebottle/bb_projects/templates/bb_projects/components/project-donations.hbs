@@ -7,8 +7,8 @@
     <ul class="activity-list">
         {{#each donation in limitedDonations}}
             <li class="activity-item">
-                <a {{action "show" donation.user}}>
-                    {{#if donation.user}}
+                {{#if donation.user}}
+                    <a {{action "show" donation.user}}>
                         <figure class="user-avatar">
                             {{#if "donation.user.getAvatar"}}
                                 <img {{bind-attr src="donation.user.getAvatar"}} style="border-radius: 2em;" />
@@ -18,16 +18,16 @@
                             <strong class="user-name">{{donation.user.full_name}}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong><br />
                             <abbr class="timestamp">{{localize donation.created formatting='X'}}</abbr>
                         </span>
-                    {{else}}
-                        <figure class="user-avatar">
-                            <img src="/static/assets/images/default-avatar.png"  alt="{% trans 'Guest' %}" style="border-radius: 2em;" />
-                        </figure>
-                        <span class="activity-body">
-                            <strong class="user-name">{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong><br />
-                            <abbr class="timestamp">{{localize donation.created formatting='X'}}</abbr>
-                        </span>
-                    {{/if}}
-                </a>
+                    </a>
+                {{else}}
+                    <figure class="user-avatar">
+                        <img src="/static/assets/images/default-avatar.png"  alt="{% trans 'Guest' %}" style="border-radius: 2em;" />
+                    </figure>
+                    <span class="activity-body">
+                        <strong class="user-name">{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong><br />
+                        <abbr class="timestamp">{{localize donation.created formatting='X'}}</abbr>
+                    </span>
+                {{/if}}
             </li>
         {{/each}}
     </ul>

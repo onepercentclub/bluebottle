@@ -1,4 +1,4 @@
-App.FundRaiserIsOwner = Em.Mixin.create({
+App.FundraiserIsOwner = Em.Mixin.create({
     isOwner: function() {
         var username = this.get('currentUser.username');
         var ownername = this.get('model.owner.username');
@@ -10,12 +10,19 @@ App.FundRaiserIsOwner = Em.Mixin.create({
 });
 
 
-App.FundRaiserController = Em.ObjectController.extend(App.FundRaiserIsOwner, {
-    needs: ['project']
+App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
+    needs: ['project'],
+
+    _setDonations: function () {
+        debugger
+        if (this.get('isLoaded')) {
+            this.set('fundraiserDonations', App.ProjectDonation.find({fundraiser: this.get('id')}));
+        }
+    }.observes('isLoaded'),
 });
 
 
-App.FundRaiserNewController = Em.ObjectController.extend(App.Editable, App.FundRaiserIsOwner, {
+App.FundraiserNewController = Em.ObjectController.extend(App.Editable, App.FundraiserIsOwner, {
     needs: ['project'],
     actions: {
         updateRecordOnServer: function(){
@@ -28,11 +35,11 @@ App.FundRaiserNewController = Em.ObjectController.extend(App.Editable, App.FundR
             });
 
             model.one('didCreate', function(record){
-                controller.transitionToRoute('fundRaiser', record);
+                controller.transitionToRoute('fundraiser', record);
             });
 
             model.one('didUpdate', function(record) {
-                controller.transitionToRoute('fundRaiser', record);
+                controller.transitionToRoute('fundraiser', record);
             });
 
             model.save();
@@ -41,7 +48,7 @@ App.FundRaiserNewController = Em.ObjectController.extend(App.Editable, App.FundR
 });
 
 
-App.FundRaiserEditController = App.FundRaiserNewController.extend({
+App.FundraiserEditController = App.FundraiserNewController.extend({
     actions: {
         updateRecordOnServer: function(){
             var controller = this;
@@ -53,11 +60,11 @@ App.FundRaiserEditController = App.FundRaiserNewController.extend({
             });
 
             model.one('didCreate', function(record){
-                controller.transitionToRoute('fundRaiser', record);
+                controller.transitionToRoute('fundraiser', record);
             });
 
             model.one('didUpdate', function(record) {
-                controller.transitionToRoute('fundRaiser', record);
+                controller.transitionToRoute('fundraiser', record);
             });
 
             model.save();
@@ -65,22 +72,22 @@ App.FundRaiserEditController = App.FundRaiserNewController.extend({
     }});
 
 
-App.ProjectFundRaiserAllController = Em.ArrayController.extend({
+App.ProjectFundraiserAllController = Em.ArrayController.extend({
     actions: {
         showFundraiser: function(fundraiser){
             $('.modal-close').click();
-            this.transitionToRoute('fundRaiser', fundraiser);
+            this.transitionToRoute('fundraiser', fundraiser);
         }
     }
 });
 
 
 
-App.ProjectFundRaiserListController = Em.ArrayController.extend({
-    needs: ['project', 'projectFundRaiserAll'],
+App.ProjectFundraiserListController = Em.ArrayController.extend({
+    needs: ['project', 'projectFundraiserAll'],
 
     fundraisers: function () {
-        return App.FundRaiser.find({project: this.get('controllers.project.id')});
+        return App.Fundraiser.find({project: this.get('controllers.project.id')});
     }.property('controllers.project.id'),
     
 	fundraisersLoaded: function(sender, key) {
@@ -94,11 +101,11 @@ App.ProjectFundRaiserListController = Em.ArrayController.extend({
     actions: {
         showAllFundraisers: function(project){
             // Get the controller or create one
-            var controller = this.get('controllers.projectFundRaiserAll');
-            controller.set('model', App.FundRaiser.find({project: project.get('id'), page_size: 200}));
+            var controller = this.get('controllers.projectFundraiserAll');
+            controller.set('model', App.Fundraiser.find({project: project.get('id'), page_size: 200}));
 
             // Get the view. This should be defined.
-            var view = App.ProjectFundRaiserAllView.create();
+            var view = App.ProjectFundraiserAllView.create();
             view.set('controller', controller);
 
             var modalPaneTemplate = ['<div class="modal-wrapper"><a class="modal-close" rel="close">&times;</a>{{view view.bodyViewClass}}</div>'].join("\n");
@@ -116,34 +123,34 @@ App.ProjectFundRaiserListController = Em.ArrayController.extend({
 });
 
 
-App.FundRaiserDonationListController = Em.ObjectController.extend({});
+App.FundraiserDonationListController = Em.ObjectController.extend({});
 
 
-App.FundRaiserSupporterListController = Em.ArrayController.extend({
-    needs: ['fundRaiser'],
+App.FundraiserSupporterListController = Em.ArrayController.extend({
+    needs: ['fundraiser'],
 
     supporters: function(){
-        //var project_id = this.get('controllers.fundRaiser.project.id')
-        var fundraiser_id = this.get('controllers.fundRaiser.id')
+        //var project_id = this.get('controllers.fundraiser.project.id')
+        var fundraiser_id = this.get('controllers.fundraiser.id')
         return App.ProjectDonation.find({fundraiser: fundraiser_id});
-    }.property('controllers.fundRaiser.id')
+    }.property('controllers.fundraiser.id')
 
 
 });
 
-App.FundRaiserIndexController = Em.ArrayController.extend({
-    needs: ['fundRaiser'],
+App.FundraiserIndexController = Em.ArrayController.extend({
+    needs: ['fundraiser'],
     perPage: 5,
     page: 1,
 
     isOwner: function(){
         var userName = this.get('currentUser.username');
-        var ownerName = this.get('controllers.fundRaiser.owner.username');
+        var ownerName = this.get('controllers.fundraiser.owner.username');
         if (userName) {
             return (userName == ownerName);
         }
         return false;
-    }.property('controllers.fundRaiser.owner', 'controllers.fundRaiser.owner.username'),
+    }.property('controllers.fundraiser.owner', 'controllers.fundraiser.owner.username'),
 
     remainingItemCount: function(){
         if (this.get('meta.total')) {
@@ -161,7 +168,7 @@ App.FundRaiserIndexController = Em.ArrayController.extend({
         showMore: function() {
             var controller = this;
             var page = this.incrementProperty('page');
-            var id = this.get('controllers.fundRaiser.model.id');
+            var id = this.get('controllers.fundraiser.model.id');
             App.WallPost.find({'parent_type': 'fund raiser', 'parent_id': id, page: page}).then(function(items){
                 controller.get('model').pushObjects(items.toArray());
             });
@@ -170,4 +177,4 @@ App.FundRaiserIndexController = Em.ArrayController.extend({
 });
 
 
-App.MyFundRaiserListController = Em.ArrayController.extend({});
+App.MyFundraiserListController = Em.ArrayController.extend({});

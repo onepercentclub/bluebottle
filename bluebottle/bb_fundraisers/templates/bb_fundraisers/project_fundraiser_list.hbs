@@ -12,13 +12,13 @@
 
             <ul class="activity-list">
                 {{#each fundraiser in controller}}
-                    {{render "projectFundRaiser" fundraiser}}
+                    {{render "projectFundraiser" fundraiser}}
                 {{/each}}
             </ul>
 
             {{#if controllers.project.isStatusCampaign}}
                 <footer class="activity-footer">
-                    {{#linkTo 'fundRaiserNew' controllers.project.id class='activity-action' }}
+                    {{#linkTo 'fundraiserNew' controllers.project.id class='activity-action' }}
                         <strong>{% trans "Start your own fundraiser" %} &raquo;</strong><br />
                         {% trans "Throw a party or run a marathon to raise funds" %}
                     {{/linkTo}}
@@ -31,7 +31,7 @@
                 </header>
 
                 <footer class="activity-footer">
-                    {{#linkTo 'fundRaiserNew' controllers.project.id class='activity-action' }}
+                    {{#linkTo 'fundraiserNew' controllers.project.id class='activity-action' }}
                         <strong>{% trans "Be the first to fundraise" %} &raquo;</strong><br />
                         {% trans "Throw a party or run a marathon to raise funds" %}
                     {{/linkTo}}

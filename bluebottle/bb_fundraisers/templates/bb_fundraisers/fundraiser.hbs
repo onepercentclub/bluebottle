@@ -1,6 +1,6 @@
 {% load i18n bb_ember static %}
 
-{% tplhandlebars "fundRaiser" %}
+{% tplhandlebars "fundraiser" %}
 
     <div class="l-section detail" id="fundraiser-detail">
         <section class="l-wrapper">
@@ -24,8 +24,8 @@
                         <ul class="owner-settings">
                             <li class="owner-settings-dropdown"><span class="flaticon solid settings-2"></span>
                                 <ul class="owner-settings-dropdown-menu">
-                                    <li>{{#linkTo 'fundRaiserEdit' id}}{% trans "Edit Fundraiser" %}{{/linkTo}}</li>
-                                    <li>{{#linkTo 'fundRaiserDonationList' id}}{% trans "View Donations" %}{{/linkTo}}</li>
+                                    <li>{{#linkTo 'fundraiserEdit' id}}{% trans "Edit Fundraiser" %}{{/linkTo}}</li>
+                                    <li>{{#linkTo 'fundraiserDonationList' id}}{% trans "View Donations" %}{{/linkTo}}</li>
                                 </ul>
                             </li>
                         </ul>
@@ -109,7 +109,7 @@
 
                 <ul class="member-list">
                     <li class="project-member-supporters">
-                        {{render "fundRaiserSupporterList"}}
+                        {{project-donations class="project-supporters" donations=fundraiserDonations limit=10 showProfile="showProfile"}}
                     </li>
                 </ul>
             </div>

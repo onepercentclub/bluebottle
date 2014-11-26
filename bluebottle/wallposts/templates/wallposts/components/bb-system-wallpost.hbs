@@ -1,0 +1,50 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-system-wallpost" %}
+
+	<article class="m-wallpost">
+
+	    <header class="wallpost-header">
+	        <figure class="user-avatar">
+                {{#if author}}
+    	        	<img {{bindAttr src="post.author.getAvatar" alt="post.author.full_name"}} />
+                {{else}}
+                    <img src="{% get_static_prefix %}/images/default-avatar.png" alt="someone" />
+                {{/if}}
+
+	        </figure>
+
+            {{#if post.author}}
+	            <a {{action openInBigBox "userModal" post.author}} class="user-name">
+                    <strong>{{post.author.full_name}}</strong>
+    	        </a> {% trans "made a donation" %}
+            {{else}}
+                <strong>{% trans "Someone" %}</strong> {% trans "made a donation" %}
+            {{/if}}
+
+	        <abbr class="timestamp">{{ localize post.created formatting="X" }}</abbr>
+
+			{{#if isAuthor}}
+                <div class="owner-actions">
+                    <ul>
+                        <li><a href="#" {{ action "deleteReaction" post target="view" }} class="delete">Delete</a></li>
+                    </ul>
+                </div>
+	        {{/if}}
+	    </header>
+
+	    <div class="wallpost-body">
+
+	    </div>
+
+
+	    <ul class="comments">
+			{{bb-wallpost-comment-list comments=post.reactions currentUser=currentUser}}
+	    </ul>
+
+
+	</article>
+
+{% endtplhandlebars %}

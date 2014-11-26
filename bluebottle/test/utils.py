@@ -447,12 +447,19 @@ class SeleniumTestCase(LiveServerTestCase):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-
             return element
         except TimeoutException:
             return None
 
-    def wait_for_not_element_css(self, selector, timeout=30):
+    def wait_for_element_css_index(self, selector, index=0, timeout=30):
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) > index)
+            return self.browser.driver.find_elements(By.CSS_SELECTOR, selector)[index]
+        except TimeoutException:
+            return None
+
+    def wait_for_not_element_css(self, selector, timeout=5):
         """
         Wait for an element with this css to disappear.
         """

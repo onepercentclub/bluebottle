@@ -10,18 +10,20 @@
             <section id="wallposts">
                 {{#if currentUser.isAuthenticated }}
                     {{#if canAddMediaWallPost}}
-                        {{render "mediaWallPostNew" parentId=parentId}}
+                        {{bb-media-wallpost-new addFile="addFile" removeFile="removeFile" wallpostList=controller.model
+                                parentType="project" parentId=controllers.project.id}}
                     {{else}}
-                        {{render "textWallPostNew" parentId=parentId}}
+                        {{bb-text-wallpost-new parentType="project" parentId=controllers.project.id
+                                wallpostList=controller.model}}
                     {{/if}}
                 {{/if}}
 
-                {{#each item in controller itemController="wallPost"}}
-                    {{#if item.isLoaded}}
-                        {{#if item.isSystemWallPost}}
-                            {{view "App.SystemWallPostView"}}
+                {{#each post in controller}}
+                    {{#if post.isLoaded}}
+                        {{#if post.isSystemWallPost}}
+                            {{bb-system-wallpost post=post currentUser=currentUser}}
                         {{else}}
-                            {{view "App.MediaWallPostView"}}
+                            {{bb-wallpost post=post currentUser=currentUser}}
                         {{/if}}
                     {{/if}}
                 {{/each}}

@@ -49,8 +49,8 @@ def successful_donation_fundraiser_mail(instance):
     subject = _('You received a new donation')
     translation.activate(receiver.primary_language)
     translation.deactivate()
-    text_content = get_template('new_oneoff_donation_fundraiser.mail.txt').render(context)
-    html_content = get_template('new_oneoff_donation_fundraiser.mail.html').render(context)
+    text_content = get_template('bb_donations/mails/new_oneoff_donation_fundraiser.mail.txt').render(context)
+    html_content = get_template('bb_donations/mails/new_oneoff_donation_fundraiser.mail.html').render(context)
     msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
@@ -58,7 +58,7 @@ def successful_donation_fundraiser_mail(instance):
 
 def new_oneoff_donation(instance):
     """
-    Send project owner and project supporter a mail if a new "one off" donation is done. We consider a donation done if the status is pending.
+    Send project owner a mail if a new "one off" donation is done. We consider a donation done if the status is pending.
     """
     donation = instance
 
@@ -72,7 +72,7 @@ def new_oneoff_donation(instance):
     if donation.project.owner.email:
         # Send email to the project owner.
         send_mail(
-            template_name='bb_donations/new_oneoff_donation.mail',
+            template_name='bb_donations/mails/new_oneoff_donation.mail',
             subject=_('You received a new donation'),
             to=donation.project.owner,
             amount=donation.amount,

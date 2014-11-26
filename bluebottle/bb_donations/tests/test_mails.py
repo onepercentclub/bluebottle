@@ -63,7 +63,7 @@ class TestDonationEmails(BluebottleTestCase):
         # Test email to owner
         self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
         self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-
+        self.assertTrue("EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
 
     def test_mail_fundraiser_successful_donation(self):
         "Test that an email is sent to the fundraiser after a succesful donation"

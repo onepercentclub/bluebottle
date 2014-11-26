@@ -66,7 +66,6 @@ def new_oneoff_donation(instance):
     # if donation.order.order_type != :
     #     return
 
-
     project_url = '/go/projects/{0}'.format(donation.project.slug)
 
     if donation.project.owner.email:

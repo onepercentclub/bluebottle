@@ -189,7 +189,8 @@
 
     <div class="l-section" id="wallposts">
         <section class="l-wrapper">
-            {{render 'taskIndex'}}
+            {{bb-wallpost-list parentId=id parentType='task' currentUser=currentUser
+                canAddMediaWallpost=isOwner}}
             {{render 'taskActivity' model}}
         </section>
     </div>

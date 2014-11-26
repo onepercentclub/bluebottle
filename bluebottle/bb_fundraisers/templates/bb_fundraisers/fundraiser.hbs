@@ -116,6 +116,15 @@
        </section>
     </div>
 
-    {{ outlet }}
+
+    <div class="l-section" id="wallposts">
+        <section class="l-wrapper">
+
+            <div class="wallposts-list">
+                {{bb-wallpost-list parentId=id parentType='fund raiser' currentUser=currentUser
+                    canAddMediaWallpost=isOwner}}
+            </div>
+        </section>
+    </div>
 
 {% endtplhandlebars %}

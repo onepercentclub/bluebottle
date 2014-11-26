@@ -23,8 +23,19 @@ class TestDonationEmails(BluebottleTestCase):
             user=self.user,
         )
 
+        self.recurring_order = OrderFactory.create(
+            user=self.user,
+            order_type="recurring"
+        )
+
         self.donation = DonationFactory.create(
             order=self.order,
+            project=self.some_project,
+            fundraiser=None
+        )
+
+        self.recurring_donation = DonationFactory.create(
+            order=self.recurring_order,
             project=self.some_project,
             fundraiser=None
         )
@@ -64,6 +75,20 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
         self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
         self.assertTrue("EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
+
+
+    def test_mail_no_mail_not_one_off(self):
+        """ Test that no email is sent when its not a one-off donation"""
+        # Clear the email folder
+        mail.outbox = []
+
+        # Prepare the order
+        self.recurring_order.locked()
+        self.recurring_order.succeeded()
+
+        # No mail because its not a one-off donation
+        self.assertEqual(len(mail.outbox), 0)
+
 
     def test_mail_fundraiser_successful_donation(self):
         "Test that an email is sent to the fundraiser after a succesful donation"

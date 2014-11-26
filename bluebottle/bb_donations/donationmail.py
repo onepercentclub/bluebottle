@@ -63,8 +63,8 @@ def new_oneoff_donation(instance):
     donation = instance
 
     # Only process the donation if it is of type "one off".
-    # if donation.order.order_type != :
-    #     return
+    if donation.order.order_type != "one-off":
+        return
 
     project_url = '/go/projects/{0}'.format(donation.project.slug)
 

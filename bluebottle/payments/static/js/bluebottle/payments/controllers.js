@@ -232,43 +232,38 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
-
+    cardTypes: ['amex', 'mastercard', 'visa'],
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
-
-    init: function () {
-        this._super();
-
-        this.set('errorDefinitions', [
-            {
-                'property': 'cardOwner',
-                'validateProperty': 'cardOwner.length',
-                'message': gettext('Card Owner can\'t be left empty'),
-                'priority': 2
-            },
-            {
-                'property': 'cardNumber',
-                'validateProperty': 'validCreditcard',
-                'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
-                'priority': 1
-            },
-            {
-                'property': 'expirationMonth',
-                'validateProperty': /^1[02]$|^0[1-9]$/,
-                'message': gettext('The expiration month is not valid'),
-                'priority': 3
-            },
-            {
-                'property': 'expirationYear',
-                'validateProperty': /^[1-9]\d{1}$/,
-                'message': gettext('The expiration year is not valid'),
-                'priority': 4
-            },
-            {
-                'property': 'cvcCode',
-                'validateProperty': /^\d{3}$/,
-                'message': gettext('The CVC is not valid'),
-                'priority': 5
-            }
-        ]);
-    }
+    errorDefinitions: [
+        {
+            'property': 'cardOwner',
+            'validateProperty': 'cardOwner.length',
+            'message': gettext('Card Owner can\'t be left empty'),
+            'priority': 2
+        },
+        {
+            'property': 'cardNumber',
+            'validateProperty': 'validCreditcard',
+            'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
+            'priority': 1
+        },
+        {
+            'property': 'expirationMonth',
+            'validateProperty': /^1[02]$|^0[1-9]$/,
+            'message': gettext('The expiration month is not valid'),
+            'priority': 3
+        },
+        {
+            'property': 'expirationYear',
+            'validateProperty': /^[1-9]\d{1}$/,
+            'message': gettext('The expiration year is not valid'),
+            'priority': 4
+        },
+        {
+            'property': 'cvcCode',
+            'validateProperty': /^\d{3}$/,
+            'message': gettext('The CVC is not valid'),
+            'priority': 5
+        }
+    ]
 });

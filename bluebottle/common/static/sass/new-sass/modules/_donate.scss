@@ -1,5 +1,7 @@
-$color-primary: #5DC0ED;
-$modal-profile-border: #f5f4f6;
+
+$donate-amount-btn-back: #C8C8CA !default; //  darken($modal-item-background, 15%)
+$donate-amount-btn-hover: #B8B8BA !default; // #b7b2bc
+$modal-profile-border: #f5f4f6 !default;
 $font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
 
 .donation.modal-fullscreen-container {
@@ -22,7 +24,7 @@ $font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
         line-height: $base-line-height;
         padding: $base-padding/2 $base-padding;
         display: inline-block;
-        background-color: darken($modal-item-background, 15%);
+        background-color: $donate-amount-btn-back;
         color: $button-color; 
         text-decoration: none;
         text-transform: uppercase;
@@ -33,7 +35,7 @@ $font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
         @include transition(background-color, ease-in-out .2s);
 
         &:hover {
-            background-color: #b7b2bc;
+            background-color: $donate-amount-btn-hover;
         }
     }
 

@@ -7,24 +7,25 @@
     {{#if currentUser.isAuthenticated }}
         {{#if canAddMediaWallpost}}
             {{bb-media-wallpost-new parentType=parentType parentId=parentId wallpostList=posts
-                    addFile="addFile" removeFile="removeFile"}}
+                    addFile='addFile' removeFile='removeFile' addWallpost='addWallpost'}}
         {{else}}
-            {{bb-text-wallpost-new parentType=parentType parentId=parentId wallpostList=posts}}
+            {{bb-text-wallpost-new parentType=parentType parentId=parentId wallpostList=posts
+                     addWallpost='addWallpost'}}
         {{/if}}
     {{/if}}
 
     {{#each post in posts}}
         {{#if post.isLoaded}}
             {{#if post.isSystemWallPost}}
-                {{bb-system-wallpost post=post currentUser=currentUser}}
+                {{bb-system-wallpost post=post currentUser=currentUser removeWallpost='removeWallpost'}}
             {{else}}
-                {{bb-wallpost post=post currentUser=currentUser}}
+                {{bb-wallpost post=post currentUser=currentUser removeWallpost='removeWallpost'}}
             {{/if}}
         {{/if}}
     {{/each}}
 
     {{#if canLoadMore}}
-        <a {{action "showMore"}} class="btn-link btn-more">
+        <a {{action "showMoreWallposts"}} class="btn-link btn-more">
             <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
         </a>
     {{/if}}

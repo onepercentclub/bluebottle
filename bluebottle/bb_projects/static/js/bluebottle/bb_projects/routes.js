@@ -50,7 +50,9 @@ App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.
 });
 
 
-App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
+App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+    parentType: 'project',
+
     model: function(params) {
         // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.

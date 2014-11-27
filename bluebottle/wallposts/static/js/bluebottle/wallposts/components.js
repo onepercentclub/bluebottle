@@ -22,26 +22,15 @@ App.BbWallpostListComponent = Ember.Component.extend({
 
     canAddMediaWallpost: false,
 
-    init: function() {
-        var _this = this,
-            parentType = this.get('parentType'),
-            parentId = this.get('parentId');
-        this._super();
-        App.WallPost.find({'parent_type': parentType, 'parent_id': parentId}).then(function(posts){
-            _this.set('posts', posts);
-            _this.set('meta', posts.get('meta'));
-        });
-    },
-
     actions: {
-        showMore: function(){
-            var _this = this,
-                parentType = this.get('parentType'),
-                parentId = this.get('parentId');
-            var page = this.incrementProperty('page');
-            App.WallPost.find({'parent_type': parentType, 'parent_id': parentId, 'page': page}).then(function(posts){
-                _this.get('posts').addObjects(posts);
-            });
+        showMoreWallposts: function(){
+            this.sendAction('showMoreWallposts');
+        },
+        addWallpost: function(wallpost){
+            this.sendAction('addWallpost', wallpost);
+        },
+        removeWallpost: function(wallpost){
+            this.sendAction('removeWallpost', wallpost);
         }
     }
 });
@@ -62,14 +51,15 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
     },
 
     createNewWallpost: function() {
-        // Make sure we keep parent id/type
+
         var parentType = this.get('parentType');
         var parentId = this.get('parentId');
 
-        this.set('wallpost', App.TextWallPost.createRecord());
-
-        this.set('parentType', parentType);
-        this.set('parentId', parentId);
+        this.set('wallpost', App.TextWallPost.createRecord({
+            type: 'text',
+            parent_type: parentType,
+            parent_id: parentId
+        }));
     },
 
     _wallpostSuccess: function (record) {
@@ -116,23 +106,17 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
         },
         saveWallpost: function() {
             var _this = this,
-                parent_type = this.get('parentType'),
-                parent_id = this.get('parentId'),
                 wallpost = this.get('wallpost');
 
             _this._hideWallpostMessage();
 
-            if (parent_type && parent_id) {
-                wallpost.set('parent_id', parent_id);
-                wallpost.set('parent_type', parent_type);
-            }
-            wallpost.set('type', 'text');
-
-            wallpost.save().then(function (record) {
+            wallpost.on('didCreate', function(record){
                 _this._wallpostSuccess(record);
-            }, function (record) {
+            });
+            wallpost.on('becameError', function(record){
                 _this.set('errors', record.get('errors'));
             });
+            this.sendAction('addWallpost', wallpost);
         }
     }
 });

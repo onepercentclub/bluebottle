@@ -12,7 +12,13 @@
         <span class="donor-name">{{currentUser.full_name}}</span>
         <h4>{% trans "Thanks for your support" %}</h4>
         <div class="top-icon"><img {{bindAttr src="currentUser.getAvatar"}} /></div>
-        {{render 'donationWallPost'}}
+
+        {{#if fundraiser}}
+            {{bb-modal-text-wallpost-new parentType='fundraiser' parentId=fundraiser.id}}
+        {{else}}
+            {{bb-modal-text-wallpost-new parentType='project' close="close" parentId=project.id}}
+        {{/if}}
+
     </div>
 
 {% endtplhandlebars %}

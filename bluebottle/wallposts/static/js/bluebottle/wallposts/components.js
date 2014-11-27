@@ -137,6 +137,53 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
     }
 });
 
+App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
+    _wallpostSuccess: function (record) {
+        var list = this.get('wallpostList');
+
+        // Close modal
+        this.sendAction('close');
+
+        // Add new wallpost to list (if one was specified).
+        if (list) list.unshiftObject(record);
+    },
+    _hideWallpostMEssage: function (){
+        this.$(".wallpost-message-area").hide();
+    },
+    textLengthMax: 140,
+    textLength: function(){
+        return this.get('wallpost.text').length;
+    }.property('wallpost.text'),
+
+    actions: {
+        clearForm: function(){
+            this.createNewWallpost();
+            this.hideWallpostOptions();
+        },
+        saveWallpost: function() {
+            var _this = this,
+                parent_type = this.get('parentType'),
+                parent_id = this.get('parentId'),
+                wallpost = this.get('wallpost');
+
+            _this._hideWallpostMessage();
+
+            if (parent_type && parent_id) {
+                wallpost.set('parent_id', parent_id);
+                wallpost.set('parent_type', parent_type);
+            }
+            wallpost.set('type', 'text');
+
+            wallpost.save().then(function (record) {
+                _this._wallpostSuccess(record);
+            }, function (record) {
+                _this.set('errors', record.get('errors'));
+            });
+        }
+    }
+
+});
+
 App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
 
     uploadFiles: Em.A(),

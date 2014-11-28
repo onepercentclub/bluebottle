@@ -18,10 +18,14 @@ module Sass::Script::Functions
     col1 = col1.value
     col2 = col2.value
 
-    path = '../bluebottle/bluebottle/common/static/refactor-sass/images/'
+    path = '/images/'
 
-    root = options[:filesystem_importer].new(".").to_s
+    # root = options[:filesystem_importer].new(".").to_s
+    root = File.dirname(__FILE__).to_s
+
     real_path = File.expand_path(File.join(root, path, file))
+
+    raise real_path
 
     svgStr = data(real_path)
 

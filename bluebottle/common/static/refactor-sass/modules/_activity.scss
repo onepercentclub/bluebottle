@@ -5,19 +5,19 @@
     color: $color-grey;
 
     a {
-    	@include transition(color 0.16s ease-out);
         display: block;
         color: $color-grey !important;
+        @include transition(color .16s ease-out);
 
         &:hover, &:active {
             color: $color-text !important;
-			
-			.user-name {
-				color: $color-sec !important;
-			}	
+
+            .user-name {
+                color: $color-sec !important;
+            }
 
             .timestamp {
-            	color: $color-grey !important;
+                color: $color-grey !important;
             }
         }
     }
@@ -27,6 +27,9 @@
         font-size: 18px !important;
         font-weight: bold !important;
         color: $color-grey !important;
+        padding-bottom: 4px;
+        text-indent: 40px;
+        background-position: 4px 9px;
     }
 
     .activity-list {
@@ -35,10 +38,10 @@
     }
 
     .activity-item {
-        @include clearfix;
         margin: 15px 0;
         padding: 0;
         background-image: none;
+        @include clearfix;
 
         p {
             margin: 0 0 5px 0;
@@ -64,6 +67,7 @@
     .activity-action {
         display: block;
         padding-left: 55px;
+        @include svg-icon('sidebar/icon-sidebar-add.svg');
 
         strong {
             color: $color-pri;
@@ -99,9 +103,8 @@
     .activity-item {
         margin: 5px 0;
     }
-
     // todo: refactor with classnames
-    a {
+    .activity-item a {
         position: relative;
         display: block;
         height: 70px;
@@ -134,7 +137,6 @@
         }
 
         .task-status {
-            @include border-right-radius($radius-medium);
             font-weight: bold;
             font-style: normal;
             position: absolute;
@@ -148,18 +150,39 @@
             text-transform: uppercase;
             color: $color-text-on-dark;
             background-color: $color-sec;
+            @include border-right-radius($radius-medium);
         }
     }
 }
 
-#fundraiser-list, #supporter-list {
+#fundraiser-list {
 
     .activity-header {
         border-bottom: 1px solid $color-grey-medium;
     }
+
+    .activity-title {
+        @include svg-icon('sidebar/icon-fundraisers.svg');
+    }
+}
+
+#task-list {
+
+    .activity-title {
+        @include svg-icon('sidebar/icon-tasks.svg');
+    }
+
 }
 
 #supporter-list {
+    
+    .activity-header {
+        border-bottom: 1px solid $color-grey-medium;
+    }
+
+    .activity-title {
+        @include svg-icon('sidebar/icon-supporters.svg');
+    }
 
     .user-name {
         color: $color-sec;

@@ -121,23 +121,25 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
             video = this.$().find('#wallpost-video'),
             photo = this.$().find('#wallpost-photo');
 
-        $('.add-photo a').on('click', function() {
-            $(this).parent('li').toggleClass('is-active');
-            $('.photo').toggleClass('is-active');
+        $('.wallpost-update .action-add-photo').on('click', function() {
+            $(this).toggleClass('is-active');
+            $('.wallpost-photos').toggleClass('is-active');
         });
 
-        $('.add-video a').on('click', function() {
-            $(this).parent('li').toggleClass('is-active');
-            $('.vid').toggleClass('is-active');
+        $('.wallpost-update .action-add-video').on('click', function() {
+            $(this).toggleClass('is-active');
+            $('.wallpost-video').toggleClass('is-active');
         });
 
-        textArea.on('keyup', function() {
-            if (textArea.val().length > 0) {
-                _this.showWallpostOptions();
-            } else {
-                _this.hideWallpostOptions();
-            }
+        textArea.on('focus', function() {
+            _this.showWallpostOptions();
         });
+
+        $('.wallpost-update .action-cancel').on('click', function() {
+            // TODO: Reset textareas and linked images?
+            _this.hideWallpostOptions();
+        });
+
 
         photo.on('change', function() {
             if (photo.val() === '') {

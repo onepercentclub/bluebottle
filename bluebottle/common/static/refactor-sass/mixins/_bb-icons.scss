@@ -1,6 +1,0 @@
-@mixin add-icon($elm, $w, $h, $o, $lnk) {
-    background-repeat: no-repeat;
-    background-size: $w $h;
-    background-image: $lnk;
-    padding-left: $w + $o;
-}

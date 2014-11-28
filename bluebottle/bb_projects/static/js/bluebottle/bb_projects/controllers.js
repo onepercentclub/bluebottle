@@ -169,7 +169,7 @@ App.ProjectController = Em.ObjectController.extend({
         return totalPages > this.get('page');
     }.property('perPage', 'page', 'meta.total'),
 
-    canAddMediaWallPost: function() {
+    canAddMediaWallpost: function() {
         var username = this.get('currentUser.username');
         var ownername = this.get('model.owner.username');
         if (username) {

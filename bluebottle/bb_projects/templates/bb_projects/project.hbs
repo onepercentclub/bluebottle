@@ -45,10 +45,7 @@
     <div class="l-section" id="wall">
         <div class="l-wrapper">
             <section id="wallposts">
-                {{bb-wallpost-list parentId=id parentType='project'
-                        posts=wallpostList total=wallpostTotal page=wallpostPage
-                        showMoreWallposts='showMoreWallposts' addWallpost='addWallpost' removeWallpost='removeWallpost'
-                        currentUser=currentUser canAddMediaWallpost=canAddMediaWallPost}}
+                {{partial 'wallposts'}}
             </section>
 
 

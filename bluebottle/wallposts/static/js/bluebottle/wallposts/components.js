@@ -3,39 +3,6 @@
  *
  */
 
-App.BbWallpostListComponent = Ember.Component.extend({
-
-    meta: {},
-
-    page: 1,
-    total: function(){
-        return this.get('meta.total');
-    }.property('meta'),
-
-    remainingItemCount: function(){
-        return this.get('total') - 5 * this.get('page');
-    }.property('total', 'page'),
-
-    canLoadMore: function(){
-        return this.get('remainingItemCount') > 0;
-    }.property('remainingItemCount'),
-
-    canAddMediaWallpost: false,
-
-    actions: {
-        showMoreWallposts: function(){
-            this.sendAction('showMoreWallposts');
-        },
-        addWallpost: function(wallpost){
-            this.sendAction('addWallpost', wallpost);
-        },
-        removeWallpost: function(wallpost){
-            this.sendAction('removeWallpost', wallpost);
-        }
-    }
-});
-
-
 App.BbTextWallpostNewComponent = Ember.Component.extend({
     /**
      * This is the base component for a wall-post form.
@@ -44,32 +11,10 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
     tagName: 'form',
     elementId: 'wallpost-form',
 
-
-    init: function() {
-        this._super();
-        this.createNewWallpost();
+    _wallpostSuccess: function(){
     },
 
-    createNewWallpost: function() {
-
-        var parentType = this.get('parentType');
-        var parentId = this.get('parentId');
-
-        this.set('wallpost', App.TextWallPost.createRecord({
-            type: 'text',
-            parent_type: parentType,
-            parent_id: parentId
-        }));
-    },
-
-    _wallpostSuccess: function (record) {
-        var _this = this,
-            list = _this.get('wallpostList');
-
-        list.unshiftObject(record);
-        Ember.run.next(function() {
-            _this.createNewWallpost();
-        });
+    _wallpostError: function(){
     },
 
     _hideWallpostMessage: function() {
@@ -114,7 +59,7 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
                 _this._wallpostSuccess(record);
             });
             wallpost.on('becameError', function(record){
-                _this.set('errors', record.get('errors'));
+                _this._wallpostError(record);
             });
             this.sendAction('addWallpost', wallpost);
         }
@@ -123,13 +68,8 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
 
 App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
     _wallpostSuccess: function (record) {
-        var list = this.get('wallpostList');
-
         // Close modal
         this.sendAction('close');
-
-        // Add new wallpost to list (if one was specified).
-        if (list) list.unshiftObject(record);
     },
     _hideWallpostMEssage: function (){
         this.$(".wallpost-message-area").hide();
@@ -137,70 +77,11 @@ App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
     textLengthMax: 140,
     textLength: function(){
         return this.get('wallpost.text').length;
-    }.property('wallpost.text'),
-
-    actions: {
-        clearForm: function(){
-            this.createNewWallpost();
-            this.hideWallpostOptions();
-        },
-        saveWallpost: function() {
-            var _this = this,
-                parent_type = this.get('parentType'),
-                parent_id = this.get('parentId'),
-                wallpost = this.get('wallpost');
-
-            _this._hideWallpostMessage();
-
-            if (parent_type && parent_id) {
-                wallpost.set('parent_id', parent_id);
-                wallpost.set('parent_type', parent_type);
-            }
-            wallpost.set('type', 'text');
-
-            wallpost.save().then(function (record) {
-                _this._wallpostSuccess(record);
-            }, function (record) {
-                _this.set('errors', record.get('errors'));
-            });
-        }
-    }
+    }.property('wallpost.text')
 
 });
 
 App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
-
-    uploadFiles: Em.A(),
-
-    createNewWallpost: function() {
-        // Make sure we keep parent id/type
-        var parentType = this.get('parentType');
-        var parentId = this.get('parentId');
-
-        this.set('wallpost', App.MediaWallPost.createRecord());
-
-        this.set('parentType', parentType);
-        this.set('parentId', parentId);
-    },
-
-    _wallpostSuccess: function (record) {
-        var _this = this;
-        Ember.run.next(function() {
-            if (_this.get('uploadFiles').length) {
-                // Connect all photos to this wallpost.
-                var reload = true;
-                _this.get('uploadFiles').forEach(function(photo){
-                    photo.set('mediawallpost', record);
-                    photo.save();
-                });
-                // Empty this.files so we can use it again.
-                _this.set('uploadFiles', Em.A());
-            }
-            var list = _this.get('wallpostList');
-            list.unshiftObject(record);
-            _this.createNewWallpost()
-        });
-    },
 
     didInsertElement: function() {
         var _this = this,
@@ -246,44 +127,29 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
     actions: {
         saveWallpost: function() {
             var _this = this,
-                parent_type = this.get('parentType'),
-                parent_id = this.get('parentId'),
                 wallpost = this.get('wallpost');
 
             _this._hideWallpostMessage();
 
-            if (parent_type && parent_id) {
-                wallpost.set('parent_id', parent_id);
-                wallpost.set('parent_type', parent_type);
-            }
-            wallpost.set('type', 'text');
-
-            wallpost.save().then(function (record) {
+            wallpost.on('didCreate', function(record){
                 _this._wallpostSuccess(record);
-            }, function (record) {
-                _this.set('errors', record.get('errors'));
             });
+            wallpost.on('becameError', function(record){
+                _this._wallpostError(record);
+            });
+            this.sendAction('addWallpost', wallpost);
         },
         clearForm: function(){
             this.hideWallpostOptions();
             this.createNewWallpost();
         },
         addFile: function(file) {
-            var photo = App.WallPostPhoto.createRecord();
-            photo.set('photo', file);
-            photo.save();
-            var _this = this;
-            // Store the photo in this.files. We need to connect it to the wallpost later.
-            photo.on('didCreate', function(record){
-                _this.get('uploadFiles').pushObject(photo);
-            });
+            console.log('add in element')
+            this.sendAction('addFile', file);
         },
 
-        removeFile: function(photo) {
-            photo.deleteRecord();
-            photo.save();
-            // Remove it from temporary array too.
-            this.get('uploadFiles').removeObject(photo);
+        removeFile: function(file) {
+            this.sendAction('removeFile', file);
         },
 
         showImages: function(event) {
@@ -321,8 +187,14 @@ App.BbWallpostComponent = Em.Component.extend({
     }.property('model'),
 
     actions: {
-        editWallPost: function() {
-            console.log("edit");
+        removeWallpost: function(wallpost) {
+            this.sendAction('removeWallpost', wallpost);
+        },
+        removeWallpostComment: function(comment) {
+            this.sendAction('removeWallpostComment', comment);
+        },
+        addWallpostComment: function(comment) {
+            this.sendAction('addWallpostComment', comment);
         }
     },
     didInsertElement: function(){
@@ -343,9 +215,7 @@ App.BbWallpostComponent = Em.Component.extend({
                 close: 'x'
             });
         });
-    },
-
-
+    }
 });
 
 
@@ -370,6 +240,7 @@ App.BbWallpostCommentListComponent = Em.Component.extend({
 
     actions: {
         addReaction: function () {
+
             var reaction = this.get('newReaction');
             // Set the wallpost that this reaction is related to.
             reaction.set('wallpost', this.get('post'));
@@ -386,6 +257,9 @@ App.BbWallpostCommentListComponent = Em.Component.extend({
                 record.deleteRecord();
             });
             reaction.save();
+        },
+        removeComment: function(comment){
+
         }
     }
 });

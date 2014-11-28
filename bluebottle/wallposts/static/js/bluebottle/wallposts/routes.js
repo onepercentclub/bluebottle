@@ -12,8 +12,7 @@ App.WallRouteMixin = Em.Mixin.create({
 
         // Only reload wall-posts if switched to another page.
         var parentType = this.get('parentType');
-        var parent = this.modelFor(parentType);
-        var parentId = parent.id;
+        var parentId = model.get('id');
 
         // Initiate wallposts
         if (this.get('parentId') != parentId || this.get('parentType') != parentType){

@@ -19,10 +19,12 @@ App.Router.map(function() {
 /**
  * Fundraiser Routes
  */
-App.FundraiserRoute = Em.Route.extend(App.ScrollToTop, {
+App.FundraiserRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+
+    parentType: 'fund raiser',
+
     model: function(params) {
-        // Crap hack because Ember somehow doesn't strip queryparams.
-        // FIXME: Find out this -should- work.
+        // Crap hack because this Ember version doesn't strip queryparams.
         var fundraiser_id = params.fundraiser_id.split('?')[0];
         return App.Fundraiser.find(fundraiser_id);
     }

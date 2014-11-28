@@ -36,7 +36,9 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
 });
 
 
-App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
+App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+
+    parentType: 'task',
 
     model: function(params) {
         return App.Task.find(params.task_id);

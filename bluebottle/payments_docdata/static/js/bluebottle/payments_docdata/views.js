@@ -16,18 +16,6 @@ App.DocdataIdealBankSelectView = Em.Select.extend({
     prompt: gettext("Select your bank")
 });
 
-
-App.DocdataCreditcardSelectView = Em.Select.extend({
-    content:  [
-        {'id':'amex', 'name': 'American Express'},
-        {'id':'visa', 'name': 'Visa Card'},
-        {'id':'mastercard', 'name': 'Master Card'},
-    ],
-    optionValuePath: "content.id",
-    optionLabelPath: "content.name",
-    prompt: gettext("Select your credit card")
-});
-
 App.DocdataDirectdebitView = Em.View.extend({
     templateName: 'docdataDirectdebit',
 

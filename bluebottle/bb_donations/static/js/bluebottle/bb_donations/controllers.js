@@ -76,7 +76,7 @@ App.DonationSuccessController = Em.ObjectController.extend({});
 // functionality of the controller is to allow the user to post the the
 // project/fundraiser wall.
 App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalControllerMixin, {
-    needs: ['donationSuccess', 'projectIndex', 'fundRaiserIndex'],
+    needs: ['donationSuccess', 'projectIndex', 'fundraiserIndex'],
 
     parentType: function(){
         if (this.get('controllers.donationSuccess.fundraiser')) return 'fundraiser';
@@ -152,7 +152,6 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
 
         // Close modal
         this.send('close');
-        this.send('setFlash', gettext("Thanks for your message!"));
     },
 
     targetType: function () {
@@ -166,7 +165,7 @@ App.DonationWallPostController = App.TextWallPostNewController.extend(BB.ModalCo
         var parentType = this.get('parentType');
         
         if (!parentType) return null;
-        var indexType = parentType.match(/project/) ? 'controllers.projectIndex.model' : 'controllers.fundRaiserIndex.model';
+        var indexType = parentType.match(/project/) ? 'controllers.projectIndex.model' : 'controllers.fundraiserIndex.model';
 
         return this.get(indexType);
     }.property('parentType'),

@@ -13,6 +13,15 @@
         <h4>{% trans "Thanks for your support" %}</h4>
         <div class="top-icon"><img {{bindAttr src="currentUser.getAvatar"}} /></div>
         {{render 'donationWallPost'}}
+
+        <div class="donation-share">
+            <p>{% trans "Be sure to share this campaign with your network" %}</p>
+            <ul>
+                <li><a href="#">Facebook</a></li>
+                <li><a href="#">Twitter</a></li>
+            </ul>
+        </div>
+        
     </div>
 
 {% endtplhandlebars %}

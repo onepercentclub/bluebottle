@@ -3,129 +3,126 @@
 {% load static %}
 
 {% tplhandlebars "project/index" %}
+<div id="l-wall">
+    <div id="wall">
+        <section id="wallposts">
+            {{#if currentUser.isAuthenticated }}
+                {{#if canAddMediaWallPost}}
+                    {{render "mediaWallPostNew" parentId=parentId}}
+                {{else}}
+                    {{render "textWallPostNew" parentId=parentId}}
+                {{/if}}
+            {{/if}}
 
-    <div class="l-section" id="wall">
-        <div class="l-wrapper">
-
-            <section id="wallposts">
-                {{#if currentUser.isAuthenticated }}
-                    {{#if canAddMediaWallPost}}
-                        {{render "mediaWallPostNew" parentId=parentId}}
+            {{#each item in controller itemController="wallPost"}}
+                {{#if item.isLoaded}}
+                    {{#if item.isSystemWallPost}}
+                        {{view "App.SystemWallPostView"}}
                     {{else}}
-                        {{render "textWallPostNew" parentId=parentId}}
+                        {{view "App.MediaWallPostView"}}
                     {{/if}}
                 {{/if}}
+            {{/each}}
 
-                {{#each item in controller itemController="wallPost"}}
-                    {{#if item.isLoaded}}
-                        {{#if item.isSystemWallPost}}
-                            {{view "App.SystemWallPostView"}}
-                        {{else}}
-                            {{view "App.MediaWallPostView"}}
+            {{#if canLoadMore}}
+                <a {{action "showMore"}} class="btn-link btn-more">
+                    <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
+                </a>
+            {{/if}}
+
+        </section>
+
+
+        <section id="sidebar">
+            
+            {{#if controllers.project.amount_asked}}
+                <div id="fundraiser-list">
+                    {{render 'projectFundRaiserList'}}
+                </div>
+            {{/if}}
+
+
+            {{#if tasks}}
+                <div id="task-list">
+                    <div class="activity">
+
+
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                        </header>
+
+                        <ul class="activity-list">
+
+                            {{#if availableTasks}}
+                                {{#each availableTasks}}
+                                    {{view App.TaskSummaryView contentBinding='this'}}
+                                {{/each}}
+                            {{/if}}
+
+                            {{#if unavailableTasks}}
+                                {{#each unavailableTasks}}
+                                    {{view App.TaskSummaryView contentBinding='this'}}
+                                {{/each}}
+                            {{/if}}
+
+                        </ul>
+
+                        {{#if isProjectOwner}}
+                            <footer class="activity-footer">
+                                {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
+                                    <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                    {% trans "Why not ask your community to help out?" %}
+                                {{/linkTo}}
+                            </footer>
                         {{/if}}
-                    {{/if}}
-                {{/each}}
 
-                {{#if canLoadMore}}
-                    <a {{action "showMore"}} class="btn-link btn-more">
-                        <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
-                    </a>
-                {{/if}}
-
-            </section>
-
-
-            <section id="sidebar">
-                
-                {{#if controllers.project.amount_asked}}
-                    <div id="fundraiser-list">
-                        {{render 'projectFundRaiserList'}}
                     </div>
-                {{/if}}
+                </div>
+            {{else}}
+                {{#if isProjectOwner}}
+                    {{#if controllers.project.isStatusCampaign}}
+                        <div id="task-list">
+                            <div class="activity">
+                                <header class="activity-header">
+                                    <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                                </header>
 
-
-                {{#if tasks}}
-                    <div id="task-list">
-                        <div class="activity">
-
-
-                            <header class="activity-header">
-                                <h2 class="activity-title">{% trans "Tasks" %}</h2>
-                            </header>
-
-                            <ul class="activity-list">
-
-                                {{#if availableTasks}}
-                                    {{#each availableTasks}}
-                                        {{view App.TaskSummaryView contentBinding='this'}}
-                                    {{/each}}
-                                {{/if}}
-
-                                {{#if unavailableTasks}}
-                                    {{#each unavailableTasks}}
-                                        {{view App.TaskSummaryView contentBinding='this'}}
-                                    {{/each}}
-                                {{/if}}
-
-                            </ul>
-
-                            {{#if isProjectOwner}}
                                 <footer class="activity-footer">
                                     {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
                                         <strong>{% trans "Create a task" %} &raquo;</strong><br />
                                         {% trans "Why not ask your community to help out?" %}
                                     {{/linkTo}}
                                 </footer>
-                            {{/if}}
-
-                        </div>
-                    </div>
-                {{else}}
-                    {{#if isProjectOwner}}
-                        {{#if controllers.project.isStatusCampaign}}
-                            <div id="task-list">
-                                <div class="activity">
-                                    <header class="activity-header">
-                                        <h2 class="activity-title">{% trans "Tasks" %}</h2>
-                                    </header>
-
-                                    <footer class="activity-footer">
-                                        {{#linkTo 'taskNew' controllers.project.id class='activity-action' }}
-                                            <strong>{% trans "Create a task" %} &raquo;</strong><br />
-                                            {% trans "Why not ask your community to help out?" %}
-                                        {{/linkTo}}
-                                    </footer>
-                                </div>
                             </div>
-                        {{/if}}
+                        </div>
                     {{/if}}
-
                 {{/if}}
 
-                {{!-- Todo: only show block when there are supporters --}}
-                <div id="supporter-list">
+            {{/if}}
 
-                    <div class="activity">
+            {{!-- Todo: only show block when there are supporters --}}
+            <div id="supporter-list">
 
-                        <header class="activity-header">
-                            <h2 class="activity-title">{% trans "Supporters" %}</h2>
-                        </header>
+                <div class="activity">
 
-                        {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
+                    <header class="activity-header">
+                        <h2 class="activity-title">{% trans "Supporters" %}</h2>
+                    </header>
 
-                        <footer class="activity-footer">
-                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
-                                <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
-                                {% trans "And get your name on the wall!" %}
-                            </a>
-                        </footer>
-                       
-                    </div>
+                    {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
+
+                    <footer class="activity-footer">
+                        <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                            <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
+                            {% trans "And get your name on the wall!" %}
+                        </a>
+                    </footer>
+                   
                 </div>
+            </div>
 
-            </section>
-        </div>
+        </section>
     </div>
-
+</div>
 {% endtplhandlebars %}
 

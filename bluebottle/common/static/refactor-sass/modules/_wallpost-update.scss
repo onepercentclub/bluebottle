@@ -15,7 +15,9 @@
         .wallpost-update-title {
             color: $color-sec;
             @include span-columns(6);
-            @include add-icon(update, 21px, 21px, 10px, url('/static/assets/images/img/icons/wallpost/icon-update-status.svg'));
+            @include svg-icon('wallposts/icon-update-status.svg');
+            text-indent: 31px;
+            background-position: 0 50%;
         }
 
         .wallpost-header-action {
@@ -37,12 +39,14 @@
                 }
 
                 &.add-photo {
-                    @include add-icon(add-photo, 13px, 12px, 5px, url('/static/assets/images/img/icons/wallpost/icon-add-photo.svg'));
+                    @include svg-icon('wallposts/icon-add-photo.svg');
+                    text-indent: 18px;
                     float: right;
                 }
 
                 &.add-video {
-                    @include add-icon(add-video, 13px, 12px, 5px, url('/static/assets/images/img/icons/wallpost/icon-add-video.svg'));
+                    @include svg-icon('wallposts/icon-add-video.svg');
+                    text-indent: 18px;
                     float: right;
                 }
 

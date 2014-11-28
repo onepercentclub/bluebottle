@@ -1,3 +1,4 @@
+// never let text flow out of a box
 @mixin break-all-words {
 -ms-word-break: break-all;
 
@@ -10,4 +11,58 @@
 -webkit-hyphens: auto;
    -moz-hyphens: auto;
         hyphens: auto;
+}
+
+// opacity (for possible fallbacks)
+@mixin opacity($val) {
+    opacity: $val;
+}
+
+// border-radius (for possible fallbacks)
+@mixin border-radius($val) {
+    border-radius: $val;
+}
+
+// depraced, use svg-icon
+@mixin add-icon($elm, $w, $h, $o, $lnk) {
+    background-repeat: no-repeat;
+    background-size: $w $h;
+    background-image: $lnk;
+    padding-left: $w + $o;
+}
+
+// add inline svg with possibility to replace color1 (c1) with color2
+@mixin svg-icon($f, $c1:"", $c2:"") {
+	background-image: inline_svg($f, $c1, $c2);
+	background-repeat: no-repeat;
+	// TODO: background-size: (automate this?)
+	// TODO: png fallback
+}
+
+// not used but might come in handy
+@function str-replace($string, $old, $new: "", $case-sensitive: true) {
+
+    @if type-of($string) != string or type-of($old) != string or type-of($new) != string {
+        @warn "One of the 3 arguments is not a string.";
+        @return $string;
+    }
+        
+    @if str-index($new, $old) != 0 {
+        @warn "The string to be replaced is contained in the new string. Infinite recursion avoided.";
+        @return $string;
+    }
+        
+    $index: if(not $case-sensitive, str-index(to-lower-case($string), to-lower-case($old)), str-index($string, $old));
+  
+    @if $index > 0 and $new != $old {
+        $new-string: quote(str-slice($string, 1, $index - 1));
+        @for $i from $index through str-length($string) {
+            @if $i < $index or $i >= $index + str-length($old) {
+                $new-string: $new-string + str-slice($string, $i, $i);
+            }
+        }
+        @return quote(str-replace(str-insert($new-string, $new, $index), $old, $new, $case-sensitive));
+    }
+
+    @return $string;
 }

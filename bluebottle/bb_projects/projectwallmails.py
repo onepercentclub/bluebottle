@@ -19,16 +19,16 @@ class ProjectWallObserver(WallPostObserver):
 
         # Implement 1a: send email to Object owner, if Wallpost author is not the Object owner.
         if self.author != project_owner:
-            # send_mail(
-            #     template_name='project_wallpost_new.mail',
-            #     subject=_('%(author)s has left a message on your project page.') % {'author': self.author.get_short_name()},
-            #     to=project_owner,
-            #
-            #     project=project,
-            #     link='/go/projects/{0}'.format(project.slug),
-            #     author=self.author,
-            #     receiver=project_owner
-            # )
+            send_mail(
+                template_name='project_wallpost_new.mail',
+                subject=_('%(author)s has left a message on your project page.') % {'author': self.author.get_short_name()},
+                to=project_owner,
+
+                project=project,
+                link='/go/projects/{0}'.format(project.slug),
+                author=self.author,
+                receiver=project_owner
+            )
             pass
 
 

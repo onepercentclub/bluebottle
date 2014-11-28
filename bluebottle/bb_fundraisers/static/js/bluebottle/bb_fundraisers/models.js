@@ -1,8 +1,8 @@
-App.Adapter.map('App.FundRaiser', {
+App.Adapter.map('App.Fundraiser', {
     owner: {embedded: 'load'}
 });
 
-App.FundRaiser = DS.Model.extend({
+App.Fundraiser = DS.Model.extend({
     url: 'fundraisers',
 
     project: DS.belongsTo('App.ProjectPreview'),

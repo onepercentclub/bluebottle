@@ -35,12 +35,12 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
     },
 
     showWallpostOptions: function() {
-        var wallpost = this.$().find('.wallpost-update');
+        var wallpost = this.$('.wallpost-update');
         wallpost.addClass('is-active');
     },
 
     hideWallpostOptions: function() {
-        var wallpost = this.$().find('.wallpost-update');
+        var wallpost = this.$('.wallpost-update');
         wallpost.removeClass('is-active');
     },
 
@@ -67,6 +67,9 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
 });
 
 App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
+
+    needs: ['project', 'fundraiser'],
+
     _wallpostSuccess: function (record) {
         // Close modal
         this.sendAction('close');
@@ -74,11 +77,40 @@ App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
     _hideWallpostMEssage: function (){
         this.$(".wallpost-message-area").hide();
     },
+
+    init: function() {
+        this._super();
+        this.createNewWallpost();
+    },
+
+    createNewWallpost: function() {
+        // Make sure we keep parent id/type
+        var parentType = this.get('parentType');
+        var parentId = this.get('parentId');
+
+        this.set('wallpost', App.TextWallPost.createRecord({
+            parent_type: parentType,
+            parent_id: parentId,
+            type: 'text'
+        }));
+    },
+
     textLengthMax: 140,
     textLength: function(){
         return this.get('wallpost.text').length;
-    }.property('wallpost.text')
+    }.property('wallpost.text'),
 
+    actions: {
+        addWallpost: function () {
+            var _this = this
+                parent_type = this.get('parentType'),
+                parent_id = this.get('parentId'),
+                wallpost = this.get('wallpost');
+
+            _this.sendAction('close');
+            _this.sendAction('addWallpost', wallpost);
+        }
+    }
 });
 
 App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
@@ -194,6 +226,7 @@ App.BbWallpostComponent = Em.Component.extend({
             this.sendAction('removeWallpostComment', comment);
         },
         addWallpostComment: function(comment) {
+            console.log('wp')
             this.sendAction('addWallpostComment', comment);
         }
     },
@@ -225,40 +258,40 @@ App.WallpostCommentComponent = Em.Component.extend(App.IsAuthorMixin, {});
 App.BbWallpostCommentListComponent = Em.Component.extend({
     init: function() {
         this._super();
-        this.createNewReaction();
+        this.createNewComment();
     },
 
-    createNewReaction: function() {
-        var reaction =  App.WallPostReaction.createRecord();
+    createNewComment: function() {
+        var comment =  App.WallPostReaction.createRecord();
         var name = this.get('currentUser.full_name');
         var values = {'name': name};
         var placeholder_unformatted = gettext("Hey %(name)s, you can leave a comment");
         var formatted_placeholder = interpolate(placeholder_unformatted, values, true);
-        reaction.set('placeholder', formatted_placeholder);
-        this.set('newReaction', reaction);
+        comment.set('placeholder', formatted_placeholder);
+        this.set('newComment', comment);
     },
 
     actions: {
-        addReaction: function () {
-
-            var reaction = this.get('newReaction');
-            // Set the wallpost that this reaction is related to.
-            reaction.set('wallpost', this.get('post'));
-            reaction.set('created', new Date());
+        addWallpostComment: function () {
+            console.log('comment')
+            var _this = this,
+                comment = this.get('newComment');
+            // Set the wallpost that this comment is related to.
+            comment.set('wallpost', this.get('post'));
+            comment.set('created', new Date());
             var controller = this;
-            reaction.on('didCreate', function (record) {
-                controller.createNewReaction();
-                // remove is-selected from all input roms
-                $('form.is-selected').removeClass('is-selected');
+            comment.on('didCreate', function (record) {
+                // Successfully saved comment
+                // remove is-selected from input form
+                _this.$('form.is-selected').removeClass('is-selected');
+                _this.createNewComment();
             });
-            reaction.on('becameInvalid', function (record) {
-                controller.createNewReaction();
-                controller.set('errors', record.get('errors'));
-                record.deleteRecord();
+            comment.on('becameInvalid', function (record) {
+                // Error saving Comment
             });
-            reaction.save();
+            _this.sendAction('addWallpostComment', comment);
         },
-        removeComment: function(comment){
+        removeWallpostComment: function(comment){
 
         }
     }

@@ -3,9 +3,9 @@
 {% tplhandlebars "donation_success" %}
     <div id="donation-success" class="modal-fullscreen-content">
         {{#if view.supported}}
-                {{bb-backdrop bgImage=project.image.large}}
-            {{else}}
-                {{bb-backdrop-fallback bgImage=project.image.large}}
+            {{bb-backdrop bgImage=project.image.large}}
+        {{else}}
+            {{bb-backdrop-fallback bgImage=project.image.large}}
         {{/if}}
         
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
@@ -14,9 +14,9 @@
         <div class="top-icon"><img {{bindAttr src="currentUser.getAvatar"}} /></div>
 
         {{#if fundraiser}}
-            {{bb-modal-text-wallpost-new parentType='fundraiser' parentId=fundraiser.id}}
+            {{bb-modal-text-wallpost-new parentType='fundraiser' close="close" parentId=fundraiser.id addWallpost='addWallpost'}}
         {{else}}
-            {{bb-modal-text-wallpost-new parentType='project' close="close" parentId=project.id}}
+            {{bb-modal-text-wallpost-new parentType='project' close="close" parentId=project.id addWallpost='addWallpost'}}
         {{/if}}
 
     </div>

@@ -8,7 +8,7 @@
     {{#if comments.length}}
         <ul class="comments">
             {{#each comment in comments}}
-                {{bb-wallpost-comment comment=comment}}
+                {{bb-wallpost-comment comment=comment currentUser=currentUser removeComment='removeComment'}}
             {{/each}}
         </ul>
     {{/if}}
@@ -20,9 +20,9 @@
                     {{#each newReaction.errors.text}}
                         <label class="error">{{this}}</label>
                     {{/each}}
-                    {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newReaction.text name="reaction" class="comment-input"}}
+                    {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newComment.text name="reaction" class="comment-input"}}
                     <footer>
-                        <button {{action 'addReaction'}} class="button submit" type="submit">Post</button>
+                        <button {{action 'addWallpostComment'}} class="button submit" type="submit">Post</button>
                     </footer>
                 </fieldset>
             </form>

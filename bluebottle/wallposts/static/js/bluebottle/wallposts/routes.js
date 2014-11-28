@@ -116,6 +116,9 @@ App.WallRouteMixin = Em.Mixin.create({
             file.save();
             // Remove it from temporary array too.
             controller.get('wallpostFiles').removeObject(file);
+        },
+        addWallpostComment: function(comment) {
+            comment.save();
         }
     }
 });

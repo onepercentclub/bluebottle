@@ -20,11 +20,7 @@
 
             {{#if comment.isAuthor}}
                 <ul class="owner-actions">
-                    <li>
-                        <ul>
-                            <li><a {{ action "deleteWallPost" comment }} class="delete">Delete</a></li>
-                        </ul>
-                    </li>
+                    <li><a {{ action "deleteWallPost" comment }} class="delete">Delete</a></li>
                 </ul>
             {{/if}}
 

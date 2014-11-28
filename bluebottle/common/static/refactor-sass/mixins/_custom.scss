@@ -1,3 +1,8 @@
+// Convert variables to a string
+@function to-string($value) {
+    @return inspect($value);
+}
+
 // never let text flow out of a box
 @mixin break-all-words {
 -ms-word-break: break-all;
@@ -32,8 +37,8 @@
 }
 
 // add inline svg with possibility to replace color1 (c1) with color2
-@mixin svg-icon($f, $c1:"", $c2:"") {
-	background-image: inline_svg($f, $c1, $c2);
+@mixin svg-icon($f, $c1:#ffffff, $c2:#ffffff) {
+	background-image: inline_svg($f, to-string($c1), to-string($c2));
 	background-repeat: no-repeat;
 	// TODO: background-size: (automate this?)
 	// TODO: png fallback

@@ -44,6 +44,7 @@
     background-color: $color-real-white;
 
     .wallpost-header {
+        @include clearfix;
         padding: 20px 20px 0 20px;
     }
 
@@ -58,6 +59,10 @@
         @include break-all-words;
         clear: both;
         padding: 0 20px 20px 20px;
+
+        p:last-of-type {
+            margin-bottom: 0;
+        }
     }
 }
 

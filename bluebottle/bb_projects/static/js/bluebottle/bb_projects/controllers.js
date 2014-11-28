@@ -149,7 +149,7 @@ App.ProjectController = Em.ObjectController.extend({
         }
     }.property('supporters.length'),
 
-        projectSupportersBinding: Ember.Binding.oneWay("supporters"),
+    projectSupportersBinding: Ember.Binding.oneWay("supporters"),
     projectDonationsBinding: Ember.Binding.oneWay("projectDonations"),
 
 

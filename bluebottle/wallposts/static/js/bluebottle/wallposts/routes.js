@@ -8,6 +8,7 @@ App.WallRouteMixin = Em.Mixin.create({
     }.property('controller.wallpostPage', 'controller.wallpostTotal'),
 
     setupController: function(controller, model) {
+        var _this = this;
         this._super(controller, model);
 
         // Only reload wall-posts if switched to another page.
@@ -24,6 +25,7 @@ App.WallRouteMixin = Em.Mixin.create({
                 controller.set('wallpostPage', 1);
                 controller.set('wallpostList', posts);
                 controller.set('wallpostFiles', Em.A());
+                controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
             });
             this._createNewWallposts();
         }
@@ -63,11 +65,14 @@ App.WallRouteMixin = Em.Mixin.create({
 
     actions: {
         showMoreWallposts: function(){
-            var parentType = this.get('parentType'),
+            var _this = this,
+                parentType = this.get('parentType'),
                 parentId = this.get('controller.model.id'),
-                wallpostPage = controller.incrementProperty('wallpostPage'),
                 controller = this.get('controller'),
+                wallpostPage = controller.incrementProperty('wallpostPage'),
                 store = this.get('store');
+
+            controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
 
             store.find('wallPost', {'parent_type': parentType, 'parent_id': parentId, 'page': wallpostPage}).then(function(posts){
                 controller.set('wallpostTotal', posts.get('meta.total'));

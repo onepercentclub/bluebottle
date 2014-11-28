@@ -29,7 +29,6 @@ class ProjectWallObserver(WallPostObserver):
                 author=self.author,
                 receiver=project_owner
             )
-            pass
 
 
 class ProjectReactionObserver(ReactionObserver):

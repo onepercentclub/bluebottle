@@ -25,9 +25,9 @@
         {{/if}}
     {{/each}}
 
-    {{#if canLoadMore}}
+    {{#if wallpostRemaining}}
         <a {{action "showMoreWallposts"}} class="btn-link btn-more">
-            <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{remainingItemCount}} {% trans "more" %}</small>
+            <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{wallpostRemaining}} {% trans "more" %}</small>
         </a>
     {{/if}}
 

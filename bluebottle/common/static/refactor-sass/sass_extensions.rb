@@ -25,8 +25,6 @@ module Sass::Script::Functions
 
     real_path = File.expand_path(File.join(root, path, file))
 
-    raise real_path
-
     svgStr = data(real_path)
 
     svgStr = svgStr.strip.gsub(/>\s+</, "><")

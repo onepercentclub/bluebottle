@@ -95,7 +95,7 @@
 
     <div class="project-action">
         {{#if isSupportable}}
-            <a {{action 'addDonation' this}} class="button button-big"> {% trans "Support project" %}</a>
+            <a {{action 'addDonation' this}} data-action-type="donate" class="button button-big"> {% trans "Support project" %}</a>
             {{view 'App.MpesaDonateView' class="mpesa-donate" }}
         {{/if}}
     </div>

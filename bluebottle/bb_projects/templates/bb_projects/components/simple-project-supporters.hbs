@@ -6,10 +6,10 @@
     <ul>
         {{#each supporter in limitedSupporters}}
             <li>
-                <a class="member" {{action "show" supporter}} {{bind-attr data-title="supporter.full_name" }}>
-                    <span class="member-avatar">
+                <a class="user" {{action "show" supporter}} {{bind-attr data-title="supporter.full_name" }}>
+                    <figure class="user-avatar">
                         <img {{bind-attr src="supporter.getAvatar" alt="supporter.full_name"}} />
-                    </span>
+                    </figure>
                 </a>
             </li>
         {{/each}}

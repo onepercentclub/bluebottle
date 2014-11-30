@@ -1,0 +1,286 @@
+// TODO: make generic?
+
+.project-fund-amount-slider {
+    border-radius: 1em;
+    display: block;
+    overflow: hidden;
+    background-color: $color-real-white;
+    
+    .slider-progress {
+        position: relative;
+        display: block;
+        @include border-left-radius(1em);
+        background-color: $color-sec;
+        color: $color-sec;
+        text-align: right;
+        white-space: nowrap;
+        line-height: 1em;
+        height: 1em;
+        
+        .slider {
+            padding: 0 0.5em;
+            font-style: normal;
+        }
+
+        .slider-percentage {
+            visibility: hidden;
+        }
+    }
+}
+
+
+
+#project-detail-header {
+    position: relative;
+    height: 670px;
+    color: $color-text-on-dark;
+    top: -96px; // header height
+    padding-top: 96px; // header height
+    margin-bottom: -96px;
+    
+    .project-background {
+        position: absolute;
+        overflow: hidden;
+        width: 100%;
+        top: 0;
+        height: 670px;
+        z-index: -1;
+        background-color: $color-real-black;
+        
+        .project-background-image {
+            width: 100%;
+            height: 680px;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: 50% 50%;
+            @include filter(blur(8px));
+            filter: url(#projectBlur);
+            @include opacity(.5);
+            @include transform(scale(1.05));
+        }
+    }
+
+    .project-header {
+        position: relative;
+        padding-top: 40px;
+        @include outer-container;
+
+        .project-info {
+            @include span-columns(7);
+
+            .project-meta {
+                color: $color-sec;
+            }
+
+            .project-location {
+                @include svg-icon('project-detail-header/icon-location.svg');
+                padding-left: 20px;
+                margin-right: 30px;
+                background-position: 0 40%;
+            }
+
+            .project-category {
+                @include svg-icon('project-detail-header/icon-category.svg');
+                padding-left: 20px;
+                background-position: 0 40%;
+            }
+
+            .project-title {
+                display: inline-block;
+                width: 100%;
+                text-transform: none;
+                font-size: 32px !important;
+                line-height: 1.4em;
+                font-weight: 900 !important;
+                margin-bottom: 10px;
+                color: $color-text-on-dark;
+                font-family: $font-family-header !important;
+            }
+
+            .project-description {
+                overflow: hidden;
+                max-height: 102px;
+                line-height: 1.5em;
+            }
+
+            .project-more {
+                color: $color-sec;
+            }
+        }
+
+        .project-media {
+            @include span-columns(4.5);
+            @include shift(0.5);
+        }
+
+        .project-share {
+            top: -5px;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            height: 30px;
+            padding: 0;
+            z-index: 199;
+        }
+
+        .project-image {
+            //min-width: 360px;
+            width: 100%;
+            min-height: 180px;
+            max-height: 236px;
+            color: $color-text-on-dark;
+            @include calc(min-height, 330 / 16 * 9px);
+            @include calc(max-height, 430 / 16 * 9px);
+
+            iframe {
+                min-height: 180px;
+                max-height: 236px;
+                @include calc(min-height, 330 / 16 * 9px);
+                @include calc(max-height, 430 / 16 * 9px);
+            }
+        }
+    }
+
+    #project-bar {
+        @include outer-container;
+        margin-top: 32px;
+
+        .project-status {
+            @include span-columns(7);
+            margin-top: 8px;
+            font-size: 18px;
+
+            .project-fund {
+
+                .project-fund-amount-slider {
+                    background-color: rgba($color-grey-medium, .15)
+                }
+
+                .project-fund-amount {
+                    margin-top: 8px; 
+                    float: left;
+                    color: $color-text-on-dark !important;
+                    text-transform: none !important;
+
+                    .amount-donated {
+                        font-size: 24px
+                    }
+
+                    .amount-asked {
+                        font-weight: bold;
+                        @include opacity(0.6);
+                        font-style: normal;
+                    }
+                }
+
+                .project-days-left {
+                    float: right;
+                    margin-top: 12px;
+                    text-indent: 24px;
+                    @include opacity(0.6);
+                    @include svg-icon('project-detail-header/icon-deadline.svg');
+                    color: $color-text-on-dark !important;
+                    text-transform: none !important;
+                }
+            }
+        }
+
+        .project-action {
+            @include span-columns(4.5);
+            @include shift(0.5);
+
+            .button {
+                width: 100%;
+            }
+        }
+    }
+
+    &.without {
+        height: 480px;
+
+        .project-background {
+            height: 480px;
+
+            .project-background-image {
+                height: 482px;
+            }
+        }
+    }
+
+    #l-project-users {
+        clear: both;
+        position: absolute;
+        bottom: 0px;
+        padding: 17px 0 24px 0;
+        width: 100%;
+        background: rgba($color-grey-medium , 0.15);
+    }
+
+    #project-users {
+        @include outer-container;
+
+        .project-initiator {
+            @include span-columns(4);
+            
+            .user {
+                text-decoration: none;
+                margin-top: 5px;
+            }
+
+            .user-avatar {
+                height: 72px;
+                width: 72px;
+                float: left;
+                margin-right: 14px;
+                border: 1px solid $color-grey-lightest;
+                @include border-radius($radius-small);
+            }
+
+            .user-name {
+                text-transform: none;
+                color: $color-text-on-dark;
+
+                em {
+                    font-weight: bold;
+                    font-style: normal;
+                    color: $color-sec !important;
+                    text-decoration: underline !important;
+                }
+            }
+        }
+
+        .project-supporters {
+            @include span-columns(8);
+            text-align: right;
+
+            strong {
+                
+                em {
+                    font-weight: normal;
+                    font-style: normal;
+                    @include opacity(0.6);
+                }
+
+            }
+
+            ul {
+                margin: 4px 0 0 0;
+
+
+                li {
+                    display: block;
+                    float: right;
+                    padding: 0;
+                    margin: 0 0 0 1px;
+                    background-image: none;
+                    
+                    .user, img {
+                        display: inline-block;
+                        width: 44px;
+                        height: 44px;
+                    }
+                }                    
+            }
+        }
+    }
+}

@@ -195,16 +195,6 @@ App.ProjectController = Em.ObjectController.extend({
     }.observes('parentId'),
 
     actions: {
-        showMore: function () {
-            var controller = this;
-            var page = this.incrementProperty('page');
-            var parent_id = this.get('parentId');
-            var parent_type = this.get('parentType');
-            App.WallPost.find({'parent_type': parent_type, 'parent_id': parent_id, page: page}).then(function(items){
-                controller.get('model').pushObjects(items.toArray());
-            });
-        },
-
         showActiveTasks: function () {
             this.set("showingAll", false);
         },

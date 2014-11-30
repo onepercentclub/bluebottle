@@ -4,30 +4,57 @@
 
 {% tplhandlebars "task_member" %}
 
-    {{# if motivation}}
-        <p>
-            <strong>{{member.short_name}} {% trans "said:" %}</strong><br />
-            <blockquote>{{ motivation }}</blockquote>
-        </p>
-    {{/if}}
+    <li class="activity-item">
+        <figure class="user-avatar">
+            <a {{action openInBigBox "userModal" member}} class="member">
+                <img {{bindAttr src="member.getAvatar" alt="member.full_name" }} />
+            </a>
+        </figure>
+        <span class="activity-body">
+            <strong class="user-name">{{member.full_name}}</strong> <strong>{{statusLabel}}</strong><br />
+            <div class="text">
+                {{#if motivation}}
+                    <strong>{% trans "Motivation" %}:</strong> {{motivation}}
+                {{/if}}
+            </div>
 
-    {{#view Em.RadioButtonGroup class="radio-select four" name="status" selectedValueBinding="status"}}
-        <label for="status_applied" class="radio">
-            {{view view.RadioButton value="applied" id="status_applied"}}
-            <span>{% trans "Applied" %}</span>
-        </label>
-        <label for="status_accepted" class="radio">
-            {{view view.RadioButton value="accepted" id="status_accepted"}}
-            <span>{% trans "Start" %}</span>
-        </label>
-        <label for="status_rejected" class="radio">
-            {{view view.RadioButton value="rejected" id="status_rejected"}}
-            <span>{% trans "Reject" %}</span>
-        </label>
-        <label for="status_realised" class="radio">
-            {{view view.RadioButton value="realized" id="status_realised"}}
-            <span>{% trans "Realised" %}</span>
-        </label>
-    {{/view}}
+            {{#if canWithdraw }}
+                <div class="wallpost-buttons">
+                    <a class="btn wallpost-action-decline withdraw" {{action 'withdrawTaskMember' this}}>
+                        {% trans "Withdraw" %}
+                    </a>
+                </div>
+            {{/if}}
+
+
+            {{#if isStatusApplied}}
+                {{#if canEditStatus }}
+                <div class="wallpost-buttons">
+                    <a class="btn wallpost-action-accept" {{action 'editTaskMember' this}}>
+                        {% trans "Accept" %}
+                    </a>
+                    <span class="status">{% trans "Application pending..." %}</span>
+                </div>
+                {{/if}}
+            {{else}}
+                <div class="wallpost-buttons">
+                {{#if confirmation }}
+                     <a class="btn wallpost-action-decline confirm" {{action 'confirmMember' this}}>
+                        {% trans "Confirm" %}
+                    </a>
+                    <a class=" dnc" {{action 'didNotComplete' this}}>
+                        {% trans "Did not complete" %}
+                    </a>
+                {{ else }}
+                    {{#if canEditStatus}}
+                        <a class="btn wallpost-action-decline" {{action 'editTaskMember' this}}>
+                            {% trans "Edit status" %}
+                        </a>
+                    {{/if}}
+                {{/if}}
+                </div>
+            {{/if}}
+        </span>
+    </li>
 
 {% endtplhandlebars %}

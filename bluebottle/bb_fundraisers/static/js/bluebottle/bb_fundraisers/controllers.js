@@ -18,6 +18,29 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
             this.set('fundraiserDonations', App.ProjectDonation.find({fundraiser: this.get('id')}));
         }
     }.observes('isLoaded'),
+
+    supporters: function () {
+        if (this.get('fundraiserDonations.isLoaded')) {
+            // return a unique list of supporters based on donations with users
+            return this.get('fundraiserDonations').mapBy('user').filter(function(user) {return user}).uniq();
+        } else {
+            return null;
+        }
+    }.property('fundraiserDonations.isLoaded'),
+
+    recentSupporters: function () {
+        if (this.get('supporters')) {
+            return this.get('supporters').splice(0, 10);
+        }
+    }.property('supporters.length'),
+
+    actions: {
+        showProfile: function (profile) {
+            this.send('openInBigBox', 'userModal', profile);
+        }
+    }
+
+
 });
 
 

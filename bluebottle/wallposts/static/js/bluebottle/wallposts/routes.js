@@ -4,7 +4,9 @@ App.WallRouteMixin = Em.Mixin.create({
     parentType: '',
 
     wallpostRemaining: function(){
-        return this.get('controller.wallpostTotal') - 5 * this.get('controller.wallpostPage');
+        var remaining = this.get('controller.wallpostTotal') - 5 * this.get('controller.wallpostPage');
+        if (remaining < 0) return 0;
+        return remaining;
     }.property('controller.wallpostPage', 'controller.wallpostTotal'),
 
     setupController: function(controller, model) {
@@ -99,7 +101,8 @@ App.WallRouteMixin = Em.Mixin.create({
             return wallpost.save();
         },
         removeWallpost: function(wallpost){
-            return wallpost.delete();
+            wallpost.deleteRecord();
+            wallpost.save();
         },
         addWallpostFile: function(file) {
             var _this = this,
@@ -122,6 +125,10 @@ App.WallRouteMixin = Em.Mixin.create({
             controller.get('wallpostFiles').removeObject(file);
         },
         addWallpostComment: function(comment) {
+            comment.save();
+        },
+        removeWallpostComment: function(comment) {
+            comment.deleteRecord();
             comment.save();
         }
     }

@@ -17,7 +17,7 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
         if (this.get('isLoaded')) {
             this.set('fundraiserDonations', App.ProjectDonation.find({fundraiser: this.get('id')}));
         }
-    }.observes('isLoaded'),
+    }.observes('isLoaded')
 });
 
 

@@ -18,9 +18,9 @@
 
             <abbr class="timestamp">{{ localize comment.created formatting="X" }}</abbr>
 
-            {{#if comment.isAuthor}}
+            {{#if isAuthor}}
                 <ul class="owner-actions">
-                    <li><a {{ action "deleteWallPost" comment }} class="delete">Delete</a></li>
+                    <li><a {{ action "removeWallpostComment" comment }} class="delete">{% trans "Delete" %}</a></li>
                 </ul>
             {{/if}}
 

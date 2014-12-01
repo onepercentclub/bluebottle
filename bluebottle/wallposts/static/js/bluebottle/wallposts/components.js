@@ -159,26 +159,7 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
     },
 
     actions: {
-        saveWallpost: function() {
-            var _this = this,
-                wallpost = this.get('wallpost');
-
-            _this._hideWallpostMessage();
-
-            wallpost.on('didCreate', function(record){
-                _this._wallpostSuccess(record);
-            });
-            wallpost.on('becameError', function(record){
-                _this._wallpostError(record);
-            });
-            this.sendAction('addWallpost', wallpost);
-        },
-        clearForm: function(){
-            this.hideWallpostOptions();
-            this.createNewWallpost();
-        },
         addFile: function(file) {
-            console.log('add in element')
             this.sendAction('addFile', file);
         },
 
@@ -228,7 +209,6 @@ App.BbWallpostComponent = Em.Component.extend({
             this.sendAction('removeWallpostComment', comment);
         },
         addWallpostComment: function(comment) {
-            console.log('wp')
             this.sendAction('addWallpostComment', comment);
         }
     },
@@ -254,7 +234,22 @@ App.BbWallpostComponent = Em.Component.extend({
 });
 
 
-App.WallpostCommentComponent = Em.Component.extend(App.IsAuthorMixin, {});
+App.BbWallpostCommentComponent = Em.Component.extend({
+    isAuthor: function () {
+        var username = this.get('currentUser.username');
+        var authorname = this.get('comment.author.username');
+        if (username) {
+            return (username == authorname);
+        }
+        return false;
+    }.property('comment.author.username', 'currentUser.username'),
+
+    actions: {
+        removeWallpostComment: function (comment) {
+            this.sendAction('removeWallpostComment', comment);
+        }
+    }
+});
 
 
 App.BbWallpostCommentListComponent = Em.Component.extend({
@@ -275,7 +270,6 @@ App.BbWallpostCommentListComponent = Em.Component.extend({
 
     actions: {
         addWallpostComment: function () {
-            console.log('comment')
             var _this = this,
                 comment = this.get('newComment');
             // Set the wallpost that this comment is related to.

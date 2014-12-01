@@ -158,6 +158,7 @@
         border-style: solid;
         border-color: $color-grey-medium;
         border-radius: 0;
+        @include border-bottom-radius($radius-medium);
     }
 }
 
@@ -193,10 +194,27 @@
         margin: -1px -1px 0 -1px;
     }
 
-    footer {
-        position: absolute;
-        right: 3px;
-        bottom: 4px;
+    .comment-form-footer {
+        @include clearfix;
+        @include transition(height .2s $ease-in-out-cubic);
+        height: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: $color-grey-lightest;
+        @include border-bottom-radius($radius-medium);
+        
+        .comment-form-actions {
+            float: right;
+            padding: 7px;
+        }
+    }
+
+    &.is-active {
+
+        .comment-form-footer {
+            height: 50px;
+            border-top: solid 1px $color-grey-medium;
+        }
     }
 }
 

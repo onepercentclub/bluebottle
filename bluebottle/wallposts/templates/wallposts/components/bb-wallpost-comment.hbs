@@ -20,8 +20,12 @@
 
             {{#if isAuthor}}
                 <ul class="owner-actions">
-                    <li><a {{ action "removeWallpostComment" comment }} class="delete">{% trans "Delete" %}</a></li>
-                </ul>
+					<li class="actions-dropdown"><em>Actions</em>
+						<ul>
+                            <li><a {{ action "removeWallpostComment" comment }} class="delete">{% trans "Delete" %}</a></li>
+						</ul>
+					</li>
+				</ul>
             {{/if}}
 
         </header>

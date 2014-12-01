@@ -187,23 +187,33 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
 
 
 App.BbWallpostComponent = Em.Component.extend({
-    // Don't show Fundraiser (title/link) on FundRaiser page.
-    showFundRaiser: function(){
-        if (this.get('parent_type') == 'fundraiser') {
-            return false;
+    isAuthor: function () {
+        var username = this.get('currentUser.username');
+        var authorname = this.get('wallpost.author.username');
+        if (username) {
+            return (username == authorname);
         }
-        // Show FundRaiser if any.
-        return this.get('fundraiser');
-    }.property('fundraiser', 'parent_type'),
-
-    newReaction: function(){
-        var transaction = this.get('store').transaction();
-        return transaction.createRecord(App.WallPostReaction, {'wallpost': this.get('model')});
-    }.property('model'),
+        return false;
+    }.property('wallpost.author.username', 'currentUser.username'),
 
     actions: {
         removeWallpost: function(wallpost) {
-            this.sendAction('removeWallpost', wallpost);
+            var _this = this,
+                wallpost = this.get('wallpost');
+            Bootstrap.ModalPane.popup({
+                heading: gettext("Really?"),
+                message: gettext("Are you sure you want to delete this post?"),
+                primary: gettext("Yes"),
+                secondary: gettext("Cancel"),
+                callback: function(opts, e) {
+                    e.preventDefault();
+                    if (opts.primary) {
+                        _this.$().fadeOut(500, function () {
+                           _this.sendAction('removeWallpost', wallpost);
+                        });
+                    }
+                }
+            });
         },
         removeWallpostComment: function(comment) {
             this.sendAction('removeWallpostComment', comment);
@@ -246,7 +256,22 @@ App.BbWallpostCommentComponent = Em.Component.extend({
 
     actions: {
         removeWallpostComment: function (comment) {
-            this.sendAction('removeWallpostComment', comment);
+            var _this = this,
+                comment = this.get('comment');
+            Bootstrap.ModalPane.popup({
+                heading: gettext("Really?"),
+                message: gettext("Are you sure you want to delete this comment?"),
+                primary: gettext("Yes"),
+                secondary: gettext("Cancel"),
+                callback: function(opts, e) {
+                    e.preventDefault();
+                    if (opts.primary) {
+                        _this.$().fadeOut(500, function () {
+                            _this.sendAction('removeWallpostComment', comment);
+                        });
+                    }
+                }
+            });
         }
     }
 });
@@ -273,7 +298,7 @@ App.BbWallpostCommentListComponent = Em.Component.extend({
             var _this = this,
                 comment = this.get('newComment');
             // Set the wallpost that this comment is related to.
-            comment.set('wallpost', this.get('post'));
+            comment.set('wallpost', this.get('wallpost'));
             comment.set('created', new Date());
             var controller = this;
             comment.on('didCreate', function (record) {
@@ -288,7 +313,7 @@ App.BbWallpostCommentListComponent = Em.Component.extend({
             _this.sendAction('addWallpostComment', comment);
         },
         removeWallpostComment: function(comment){
-
+            this.sendAction('removeWallpostComment', comment);
         }
     }
 });

@@ -99,7 +99,8 @@ App.WallRouteMixin = Em.Mixin.create({
             return wallpost.save();
         },
         removeWallpost: function(wallpost){
-            return wallpost.delete();
+            wallpost.deleteRecord();
+            wallpost.save();
         },
         addWallpostFile: function(file) {
             var _this = this,
@@ -122,6 +123,10 @@ App.WallRouteMixin = Em.Mixin.create({
             controller.get('wallpostFiles').removeObject(file);
         },
         addWallpostComment: function(comment) {
+            comment.save();
+        },
+        removeWallpostComment: function(comment) {
+            comment.deleteRecord();
             comment.save();
         }
     }

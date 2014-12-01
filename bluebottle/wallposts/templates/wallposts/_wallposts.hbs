@@ -13,13 +13,13 @@
         {{/if}}
     {{/if}}
 
-    {{#each post in wallpostList}}
-        {{#if post.isLoaded}}
-            {{#if post.isSystemWallPost}}
-                {{bb-system-wallpost post=post currentUser=currentUser removeWallpost='removeWallpost'
+    {{#each wallpost in wallpostList}}
+        {{#if wallpost.isLoaded}}
+            {{#if wallpost.isSystemWallPost}}
+                {{bb-system-wallpost wallpost=wallpost currentUser=currentUser removeWallpost='removeWallpost'
                     addComment='addComment' removeComment='removeComment'}}
             {{else}}
-                {{bb-wallpost post=post currentUser=currentUser removeWallpost='removeWallpost'
+                {{bb-wallpost wallpost=wallpost currentUser=currentUser removeWallpost='removeWallpost'
                     addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment'}}
             {{/if}}
         {{/if}}

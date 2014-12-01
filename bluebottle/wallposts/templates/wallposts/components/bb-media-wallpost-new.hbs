@@ -10,9 +10,13 @@
                 <strong class="wallpost-update-title">{% trans "Write an update" %}</strong>
 
                 <ul class="wallpost-header-action">
-                    <li><a class="action-add-video">{% trans "Add an video" %}</a></li>
                     <li>
-                        <a class="action-add-photo">
+                        <a class="action-add-video" data-action-type="show-video-input">
+                            {% trans "Add an video" %}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="action-add-photo" data-action-type="show-photo-upload">
                             {{!-- {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*"}} --}}
                             {% trans "Add photo's" %}
                         </a>

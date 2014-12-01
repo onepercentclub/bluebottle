@@ -4,7 +4,9 @@ App.WallRouteMixin = Em.Mixin.create({
     parentType: '',
 
     wallpostRemaining: function(){
-        return this.get('controller.wallpostTotal') - 5 * this.get('controller.wallpostPage');
+        var remaining = this.get('controller.wallpostTotal') - 5 * this.get('controller.wallpostPage');
+        if (remaining < 0) return 0;
+        return remaining;
     }.property('controller.wallpostPage', 'controller.wallpostTotal'),
 
     setupController: function(controller, model) {

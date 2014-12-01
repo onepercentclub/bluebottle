@@ -10,7 +10,7 @@ label {
             line-height: 2em;
             display: inline-block;
             width: 17px;
-            height: 16px;
+            height: 18px;
             margin: 0 0 -3px 0;
             cursor: pointer;
         }
@@ -20,14 +20,14 @@ label {
         }
 
         input[type='checkbox'] + span {
-            background: image-url('icons/icon-checkbox.svg') transparent no-repeat;
+            @include svg-icon('forms/icon-checkbox.svg');
         }
 
         input[type='radio'] + span {
         }
 
         input[type='checkbox']:checked + span {
-            background: image-url('icons/icon-checkbox-checked.svg') transparent no-repeat;
+            @include svg-icon('forms/icon-checkbox-checked.svg');
         }
 
         input[type='radio']:checked + span {
@@ -189,7 +189,8 @@ button, .button {
 
         em {
             @include hide-text;
-            @include add-icon(dropdown, 10px, 12px, 0, url('/static/assets/images/img/icons/owner-actions/icon-action-dropdown.svg'));
+            //@include add-icon(dropdown, 10px, 12px, 0, url('/static/assets/images/img/icons/owner-actions/'));
+            @include svg-icon('owner-actions/icon-action-dropdown.svg');
             position: relative;
             z-index: 10;
             display: block;
@@ -245,11 +246,15 @@ button, .button {
         }
 
         .action-delete {
-            @include add-icon(delete, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/icon-action-delete.svg'));
+            //@include add-icon(delete, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/'));
+            @include svg-icon('owner-actions/icon-action-delete.svg');
+            background-position: 0 0;
         }
 
         .action-edit {
-            @include add-icon(edit, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/icon-action-edit.svg'));
+            //@include add-icon(edit, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/'));
+            @include svg-icon('owner-actions/icon-action-edit.svg');
+            background-position: 0 0;
         }
     }
     //}

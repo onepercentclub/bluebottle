@@ -4,7 +4,7 @@
 
 {% tplhandlebars "components/bb-system-wallpost" %}
 
-	<article class="m-wallpost">
+	<article class="m-wallpost m-wallpost-system">
 
 	    <header class="wallpost-header">
 	        <figure class="user-avatar">
@@ -19,31 +19,17 @@
             {{#if post.author}}
 	            <a {{action openInBigBox "userModal" post.author}} class="user-name">
                     <strong>{{post.author.full_name}}</strong>
-    	        </a> {% trans "made a donation" %}
+                </a> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong>
             {{else}}
-                <strong>{% trans "Someone" %}</strong> {% trans "made a donation" %}
+            <strong>{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong>
             {{/if}}
 
 	        <abbr class="timestamp">{{ localize post.created formatting="X" }}</abbr>
-
-			{{#if isAuthor}}
-                <div class="owner-actions">
-                    <ul>
-                        <li><a href="#" {{ action "deleteReaction" post target="view" }} class="delete">Delete</a></li>
-                    </ul>
-                </div>
-	        {{/if}}
 	    </header>
-
-	    <div class="wallpost-body">
-
-	    </div>
-
 
 	    <ul class="comments">
 			{{bb-wallpost-comment-list comments=post.reactions post=post currentUser=currentUser}}
 	    </ul>
-
 
 	</article>
 

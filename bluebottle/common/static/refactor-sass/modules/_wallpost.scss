@@ -66,6 +66,39 @@
     }
 }
 
+.m-wallpost-system {
+    background-color: $color-grey-lightest;
+    color: $color-grey;
+
+    .wallpost-header {
+        padding-top: 10px;
+    }
+
+    .user-name {
+        font-size: 15px;
+        display: inline;
+        line-height: 1.7em;
+        font-family: $font-family-base;
+    }
+
+    .timestamp {
+        float: right;
+        font-size: 13px;
+    }
+
+    em {
+        font-style: normal;
+    }
+
+    .user-avatar {
+        
+        img {
+            width: 25px;
+            height: 25px;
+        }
+    }
+}
+
 
 // photos
 .photo-viewer {
@@ -102,6 +135,7 @@
     font-size: 15px;
     line-height: 1.5em;
     margin: 0 0 30px 0;
+    color: $color-text;
     padding: 0; // TODO: change global list
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
@@ -118,6 +152,7 @@
     }
 
     .timestamp {
+        float: none;
         font-size: 15px;
     }
 

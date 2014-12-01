@@ -61,9 +61,10 @@
     }
 
     .project-header {
+        @include outer-container;
+        padding: 0 $grid-padding;
         position: relative;
         padding-top: 40px;
-        @include outer-container;
 
         .project-info {
             @include span-columns(7);
@@ -74,9 +75,10 @@
 
             .project-location {
                 @include svg-icon('project-detail-header/icon-location.svg');
-                padding-left: 20px;
+                padding: 0 0 0 20px !important;
                 margin-right: 30px;
                 background-position: 0 40%;
+                font-family: $font-family-base !important;
             }
 
             .project-category {
@@ -143,6 +145,7 @@
 
     #project-bar {
         @include outer-container;
+        padding: 0 $grid-padding;
         margin-top: 32px;
 
         .project-status {
@@ -218,6 +221,7 @@
 
     #project-users {
         @include outer-container;
+        padding: 0 $grid-padding;
 
         .project-initiator {
             @include span-columns(4);

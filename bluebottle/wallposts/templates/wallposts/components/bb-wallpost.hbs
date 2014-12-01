@@ -3,9 +3,8 @@
 {% load static %}
 
 {% tplhandlebars "wallPost" %}
-
-	<article class="m-wallpost">
-
+	
+	<article {{bind-attr class="isInitiator:is-initiator :m-wallpost"}}>
 	    <header class="wallpost-header">
 	        <figure class="user-avatar">
 	        	<img {{bindAttr src="author.getAvatar" alt="author.full_name"}} />

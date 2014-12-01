@@ -12,6 +12,10 @@
                 {{else}}
                     {{render "textWallPostNew" parentId=parentId}}
                 {{/if}}
+            {{else}}
+                <div class="signin">
+                    {% trans "Please" %} <a class="button" {{action openInBox "login"}}>{% trans "Sign in" %}</a> {% trans "to post comments" %}.
+                </div>
             {{/if}}
 
             {{#each item in controller itemController="wallPost"}}

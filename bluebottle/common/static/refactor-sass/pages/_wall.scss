@@ -4,9 +4,9 @@
 }
 
 #wall {
-	padding-top: 30px;
-	padding-bottom: 30px;
 	@include outer-container;
+	padding: 30px $grid-padding;
+	
 }
 
 #wallposts {

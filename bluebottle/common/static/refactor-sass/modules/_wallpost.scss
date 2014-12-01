@@ -42,7 +42,7 @@
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
     background-color: $color-real-white;
-
+ 
     .wallpost-header {
         @include clearfix;
         padding: 20px 20px 0 20px;
@@ -203,8 +203,9 @@
 // TODO: make global
 .signin {
     padding: 7px 20px 10px 20px;
-    border-top: 1px solid $color-grey-medium;
-    background-color: $color-grey-light;
+    border: 1px solid $color-grey-medium;
+    //background-color: $color-grey-light;
+    margin-bottom: 30px;
 
     p {
         margin: 0;

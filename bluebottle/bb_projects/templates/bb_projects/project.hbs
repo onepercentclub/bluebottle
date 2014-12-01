@@ -36,6 +36,106 @@
         </section>
         {{partial '_project_actions'}}
     </div>
-    {{outlet}}
+
+
+    <div id="l-wall">
+        <div id="wall">
+            <section id="wallposts">
+                {{partial 'wallposts'}}
+            </section>
+
+
+            <section id="sidebar">
+
+                {{#if amount_asked}}
+                    <div id="fundraiser-list">
+                        {{render 'projectFundraiserList'}}
+                    </div>
+                {{/if}}
+
+
+                {{#if tasks}}
+                    <div id="task-list">
+                        <div class="activity">
+                            <header class="activity-header">
+                                <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                            </header>
+
+                            <ul class="activity-list">
+
+                                {{#if availableTasks}}
+                                    {{#each availableTasks}}
+                                        {{view App.TaskSummaryView contentBinding='this'}}
+                                    {{/each}}
+                                {{/if}}
+
+                                {{#if unavailableTasks}}
+                                    {{#each unavailableTasks}}
+                                        {{view App.TaskSummaryView contentBinding='this'}}
+                                    {{/each}}
+                                {{/if}}
+
+                            </ul>
+
+                            {{#if isProjectOwner}}
+                                <footer class="activity-footer">
+                                    {{#linkTo 'taskNew' id class='activity-action' }}
+                                        <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                        {% trans "Why not ask your community to help out?" %}
+                                    {{/linkTo}}
+                                </footer>
+                            {{/if}}
+
+                        </div>
+                    </div>
+                {{else}}
+                    {{#if isProjectOwner}}
+                        {{#if isStatusCampaign}}
+                            <div id="task-list">
+                                <div class="activity">
+                                    <header class="activity-header">
+                                        <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                                    </header>
+
+                                    <footer class="activity-footer">
+                                        {{#linkTo 'taskNew' id class='activity-action' }}
+                                            <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                            {% trans "Why not ask your community to help out?" %}
+                                        {{/linkTo}}
+                                    </footer>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{/if}}
+
+                {{/if}}
+
+                {{!-- Todo: only show block when there are supporters --}}
+                <div id="supporter-list">
+
+                    <div class="activity">
+
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Supporters" %}</h2>
+                        </header>
+
+                        {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
+
+                        <footer class="activity-footer">
+                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                                <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
+                                {% trans "And get your name on the wall!" %}
+                            </a>
+                        </footer>
+
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
+
 </div>
+
 {% endtplhandlebars %}
+

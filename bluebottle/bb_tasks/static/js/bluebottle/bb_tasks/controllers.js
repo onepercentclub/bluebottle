@@ -153,6 +153,15 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         return isMember;
     }.property('members.@each.member.username', 'currentUser.username'),
 
+    isOwner: function() {
+        var username = this.get('currentUser.username');
+        var ownername = this.get('author.username');
+        if (username) {
+            return (username == ownername);
+        }
+        return false;
+    }.property('author', 'currentUser.username'),
+
     canUpload: function(){
         return (this.get('isMember') || this.get('isAuthor'));
     }.property('isMember', 'isAuthor'),
@@ -179,44 +188,6 @@ App.TaskActivityController = App.TaskController.extend({
         }
         return false;
     }.property('controllers.task.author', 'currentUser.username'),
-
-});
-
-App.TaskIndexController = Em.ArrayController.extend({
-    needs: ['task'],
-    perPage: 5,
-    page: 1,
-    remainingItemCount: function(){
-        if (this.get('meta.total')) {
-            return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
-        }
-        return 0;
-    }.property('page', 'perPage', 'meta.total'),
-
-    canLoadMore: function(){
-        var totalPages = Math.ceil(this.get('meta.total') / this.get('perPage'));
-        return totalPages > this.get('page');
-    }.property('perPage', 'page', 'meta.total'),
-
-    actions: {
-        showMore: function() {
-            var controller = this;
-            var page = this.incrementProperty('page');
-            var id = this.get('controllers.task.model.id');
-            App.WallPost.find({'parent_type': 'task', 'parent_id': id, page: page}).then(function(items){
-                controller.get('model').pushObjects(items.toArray());
-            });
-        }
-    },
-
-    canAddMediaWallPost: function() {
-        var username = this.get('currentUser.username');
-        var ownername = this.get('controllers.task.model.author.username');
-        if (username) {
-            return (username == ownername);
-        }
-        return false;
-    }.property('controllers.task.model.author', 'currentUser.username')
 
 });
 

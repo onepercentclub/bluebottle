@@ -18,11 +18,6 @@ App.TaskSummaryView = Em.View.extend({
 App.ProjectTaskListView = Em.View.extend(App.ScrollInView, {});
 
 
-App.TaskIndexView = Em.View.extend({
-    templateName: 'wall'
-});
-
-
 App.TaskMenuView = Em.View.extend({
     templateName: 'task_menu',
     tagName: 'form'

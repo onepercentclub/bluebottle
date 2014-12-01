@@ -1,0 +1,34 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "_wallposts" %}
+
+    {{#if currentUser.isAuthenticated }}
+        {{#if canAddMediaWallpost}}
+            {{bb-media-wallpost-new wallpostBinding='newMediaWallpost'  wallpostFilesBinding='wallpostFiles'
+                    addFile='addWallpostFile' removeFile='removeWallpostFile' addWallpost='addWallpost'}}
+        {{else}}
+            {{bb-text-wallpost-new  wallpostBinding='newTextWallpost' addWallpost='addWallpost'}}
+        {{/if}}
+    {{/if}}
+
+    {{#each post in wallpostList}}
+        {{#if post.isLoaded}}
+            {{#if post.isSystemWallPost}}
+                {{bb-system-wallpost post=post currentUser=currentUser removeWallpost='removeWallpost'
+                    addComment='addComment' removeComment='removeComment'}}
+            {{else}}
+                {{bb-wallpost post=post currentUser=currentUser removeWallpost='removeWallpost'
+                    addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment'}}
+            {{/if}}
+        {{/if}}
+    {{/each}}
+
+    {{#if wallpostRemaining}}
+        <a {{action "showMoreWallposts"}} class="btn-link btn-more">
+            <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{wallpostRemaining}} {% trans "more" %}</small>
+        </a>
+    {{/if}}
+
+{% endtplhandlebars %}

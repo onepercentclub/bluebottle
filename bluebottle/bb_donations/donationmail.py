@@ -37,13 +37,21 @@ def new_oneoff_donation(instance):
     project_url = '/go/projects/{0}'.format(donation.project.slug)
 
     if donation.project.owner.email:
+
+        if donation.anonymous:
+            donor_name = 'Anonymous'
+        elif donation.order.user:
+            donor_name = donation.order.user.first_name
+        else:
+            donor_name = 'Guest'
+
         # Send email to the project owner.
         send_mail(
             template_name='bb_donations/mails/new_oneoff_donation.mail',
             subject=_('You received a new donation'),
             to=donation.project.owner,
             amount=donation.amount,
-            donor_name=donation.order.user.first_name,
+            donor_name=donor_name,
             link=project_url,
         )
 

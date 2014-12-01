@@ -187,11 +187,18 @@
         </div>
     </div>
 
-    <div class="l-section" id="wallposts">
-        <section class="l-wrapper">
-            {{render 'taskIndex'}}
-            {{render 'taskActivity' model}}
-        </section>
+
+    <div class="l-section" id="wall">
+        <div class="l-wrapper">
+            <section id="wallposts">
+                {{partial 'wallposts'}}
+            </section>
+
+
+            <section id="sidebar">
+                {{render 'taskActivity' model}}
+            </section>
+        </div>
     </div>
 
 

@@ -5,9 +5,7 @@ App.Router.map(function(){
 
     // route disabled for now, let the backend handle the hours spent
     // this.resource('myTaskList', {path: '/my/tasks'});
-    this.resource('task', {path: '/tasks/:task_id'}, function(){
-
-    });
+    this.resource('task', {path: '/tasks/:task_id'});
     this.resource('taskEdit', {path: '/tasks/:task_id/edit'});
     this.resource('projectTask', {path: '/:task_id'}, function(){});
     this.resource('taskNew', {path: '/tasks/new/:project_id'});
@@ -38,7 +36,9 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
 });
 
 
-App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
+App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+
+    parentType: 'task',
 
     model: function(params) {
         return App.Task.find(params.task_id);
@@ -157,14 +157,6 @@ App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.Tra
             });
         });
     }
-});
-
-
-App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
-    parentId: function(){
-        return this.modelFor('task').get('id');
-    }.property(),
-    parentType: 'task'
 });
 
 

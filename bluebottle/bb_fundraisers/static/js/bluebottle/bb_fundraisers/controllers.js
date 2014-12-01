@@ -18,6 +18,29 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
             this.set('fundraiserDonations', App.ProjectDonation.find({fundraiser: this.get('id')}));
         }
     }.observes('isLoaded'),
+
+    supporters: function () {
+        if (this.get('fundraiserDonations.isLoaded')) {
+            // return a unique list of supporters based on donations with users
+            return this.get('fundraiserDonations').mapBy('user').filter(function(user) {return user}).uniq();
+        } else {
+            return null;
+        }
+    }.property('fundraiserDonations.isLoaded'),
+
+    recentSupporters: function () {
+        if (this.get('supporters')) {
+            return this.get('supporters').splice(0, 10);
+        }
+    }.property('supporters.length'),
+
+    actions: {
+        showProfile: function (profile) {
+            this.send('openInBigBox', 'userModal', profile);
+        }
+    }
+
+
 });
 
 
@@ -135,44 +158,6 @@ App.FundraiserSupporterListController = Em.ArrayController.extend({
     }.property('controllers.fundraiser.id')
 
 
-});
-
-App.FundraiserIndexController = Em.ArrayController.extend({
-    needs: ['fundraiser'],
-    perPage: 5,
-    page: 1,
-
-    isOwner: function(){
-        var userName = this.get('currentUser.username');
-        var ownerName = this.get('controllers.fundraiser.owner.username');
-        if (userName) {
-            return (userName == ownerName);
-        }
-        return false;
-    }.property('controllers.fundraiser.owner', 'controllers.fundraiser.owner.username'),
-
-    remainingItemCount: function(){
-        if (this.get('meta.total')) {
-            return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
-        }
-        return 0;
-    }.property('page', 'perPage', 'meta.total'),
-
-    canLoadMore: function(){
-        var totalPages = Math.ceil(this.get('meta.total') / this.get('perPage'));
-        return totalPages > this.get('page');
-    }.property('perPage', 'page', 'meta.total'),
-
-    actions: {
-        showMore: function() {
-            var controller = this;
-            var page = this.incrementProperty('page');
-            var id = this.get('controllers.fundraiser.model.id');
-            App.WallPost.find({'parent_type': 'fund raiser', 'parent_id': id, page: page}).then(function(items){
-                controller.get('model').pushObjects(items.toArray());
-            });
-        }
-    }
 });
 
 

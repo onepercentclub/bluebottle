@@ -109,13 +109,45 @@
 
                 <ul class="member-list">
                     <li class="project-member-supporters">
-                        {{project-donations class="project-supporters" donations=fundraiserDonations limit=10 showProfile="showProfile"}}
+                        {{simple-project-supporters class="project-supporters" supporters=recentSupporters limit=10 showProfile="showProfile"}}
                     </li>
                 </ul>
             </div>
        </section>
     </div>
 
-    {{ outlet }}
+    <div class="l-section" id="wall">
+        <div class="l-wrapper">
+            <section id="wallposts">
+                {{partial 'wallposts'}}
+            </section>
+
+
+            <section id="sidebar">
+
+                    {{!-- Todo: only show block when there are supporters --}}
+                <div id="supporter-list">
+
+                    <div class="activity">
+
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Supporters" %}</h2>
+                        </header>
+
+                        {{project-donations class="project-supporters" donations=fundraiserDonations limit=10 showProfile="showProfile"}}
+
+                        <footer class="activity-footer">
+                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                                <strong>{% trans "Support this fundraiser" %} &raquo;</strong><br />
+                                {% trans "And get your name on the wall!" %}
+                            </a>
+                        </footer>
+
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
 
 {% endtplhandlebars %}

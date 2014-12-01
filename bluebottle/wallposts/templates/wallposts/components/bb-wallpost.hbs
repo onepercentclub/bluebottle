@@ -2,19 +2,19 @@
 {% load i18n %}
 {% load static %}
 
-{% tplhandlebars "wallPost" %}
-	
-	<article {{bind-attr class="isInitiator:is-initiator :m-wallpost"}}>
+{% tplhandlebars "components/bb-wallpost" %}
+
+	<article class="m-wallpost">
 	    <header class="wallpost-header">
 	        <figure class="user-avatar">
-	        	<img {{bindAttr src="author.getAvatar" alt="author.full_name"}} />
+	        	<img {{bindAttr src="post.author.getAvatar" alt="post.author.full_name"}} />
 	        </figure>
 
-	        <a {{action openInBigBox "userModal" author}} class="user-name">
-	            <strong>{{author.full_name}}</strong>
+	        <a {{action openInBigBox "userModal" post.author}} class="user-name">
+	            <strong>{{post.author.full_name}}</strong>
 	        </a>
 
-	        <abbr class="timestamp">{{ localize created formatting="X" }}</abbr>
+	        <abbr class="timestamp">{{ localize post.created formatting="X" }}</abbr>
 			
 			{{#if isAuthor}}
 	        <ul class="owner-actions">
@@ -29,21 +29,22 @@
 	    </header>
 
 	    <div class="wallpost-body">
-	    	{{#if title}}<p><strong>{{title}}{{/if}}</strong></p>
-	    	{{{text}}}
-	        
-			{{#if video_html}}
-			    <div class="video">{{{video_html}}}</div>
+	    	{{#if post.title}}
+				<p><strong>{{post.title}}</strong></p>
+			{{/if}}
+			{{{post.text}}}
+			{{#if post.video_html}}
+			    <div class="video">{{{post.video_html}}}</div>
 			{{/if}}
 			
-	        {{#if photos.length}}
+	        {{#if post.photos.length}}
 	            <ul class="photo-viewer">
 					<li class="cover">
-						<a {{bindAttr href="coverPhoto.photo.full"}} title="photo">
-							<img {{bindAttr src="coverPhoto.photo.full"}}>
+						<a {{bindAttr href="post.coverPhoto.photo.full"}} title="photo">
+							<img {{bindAttr src="post.coverPhoto.photo.full"}}>
 						</a>
 					</li>
-					{{#each photo in otherPhotos}}
+					{{#each photo in post.otherPhotos}}
 	                    <li class="photo">
 							<a {{bindAttr href="photo.photo.full"}} title="photo">
 								<img {{bindAttr src="photo.photo.small"}} alt="Photo" />
@@ -56,7 +57,8 @@
 		
 	
 	    <ul class="comments">
-	        {{render "wallPostReactionList" reactions}}
+			{{bb-wallpost-comment-list comments=post.reactions post=post currentUser=currentUser
+					addWallpostComment=addWallpostComment removeWallpostComment=removeWallpostComment}}
 	    </ul>
 	 
 

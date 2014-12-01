@@ -16,4 +16,5 @@
 #sidebar {
 	@include span-columns(4.5);
 	@include shift(0.5);
+	float: right;
 }

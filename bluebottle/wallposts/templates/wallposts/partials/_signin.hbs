@@ -1,0 +1,11 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "_signin" %}
+
+<div class="signin">
+    {% trans "Please" %} <a class="button" {{action openInBox "login"}}>{% trans "Sign in" %}</a> {% trans "to post a comment" %}.
+</div>
+
+{% endtplhandlebars %}

@@ -184,7 +184,7 @@
         @include svg-icon('sidebar/icon-supporters.svg');
     }
 
-    .user-name {
+    a .user-name {
         color: $color-sec;
     }
 }

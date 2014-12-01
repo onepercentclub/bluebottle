@@ -11,6 +11,8 @@
         {{else}}
             {{bb-text-wallpost-new  wallpostBinding='newTextWallpost' addWallpost='addWallpost'}}
         {{/if}}
+    {{else}}
+        {{partial 'signin'}}
     {{/if}}
 
     {{#each wallpost in wallpostList}}

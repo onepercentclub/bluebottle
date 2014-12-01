@@ -13,24 +13,20 @@
         </ul>
     {{/if}}
 
+    {{#if currentUser.isAuthenticated }}
     <footer>
-        {{#if currentUser.isAuthenticated }}
-            <form class="m-comment-form">
-                <fieldset {{bindAttr class="newReaction.errors.text.length:error"}}>
-                    {{#each newReaction.errors.text}}
-                        <label class="error">{{this}}</label>
-                    {{/each}}
-                    {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newComment.text name="reaction" class="comment-input"}}
-                    <footer>
-                        <button {{action 'addWallpostComment'}} class="button submit" type="submit">Post</button>
-                    </footer>
-                </fieldset>
-            </form>
-        {{else}}
-            <div class="signin">
-                {% trans "Please" %} <a class="button" {{action openInBox "login"}}>{% trans "Sign in" %}</a> {% trans "to post a comment" %}.
-            </div>
-        {{/if}}
+        <form class="m-comment-form">
+            <fieldset {{bindAttr class="newReaction.errors.text.length:error"}}>
+                {{#each newReaction.errors.text}}
+                    <label class="error">{{this}}</label>
+                {{/each}}
+                {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newComment.text name="reaction" class="comment-input"}}
+                <footer>
+                    <button {{action 'addWallpostComment'}} class="button submit" type="submit">Post</button>
+                </footer>
+            </fieldset>
+        </form>
     </footer>
+    {{/if}}
 
 {% endtplhandlebars %}

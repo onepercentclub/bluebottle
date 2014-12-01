@@ -285,7 +285,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['taskIndex', 'projectIndex'],
+
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
@@ -310,6 +310,7 @@ App.TaskNewController = Em.ObjectController.extend({
 
 
 App.TaskEditController = App.TaskNewController.extend({
+
     updateTask: function(event){
         var controller = this;
         var task = this.get('content');

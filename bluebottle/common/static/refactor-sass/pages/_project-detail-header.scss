@@ -28,6 +28,21 @@
     }
 }
 
+#project-detail {
+    margin-bottom: -30px; // TODO: Quickfix to remove whitespace on bottom
+    
+    // global layout wrapper
+    // TODO: move to global
+    .l-wrapper {
+        width: auto;
+        height: auto;
+        min-width: inherit;
+        @include outer-container;
+        padding-left: $grid-padding;
+        padding-right: $grid-padding;
+    }
+}
+
 #project-detail-header {
     position: relative;
     height: 670px;
@@ -53,14 +68,12 @@
             background-position: 50% 50%;
             @include filter(blur(8px));
             filter: url(#projectBlur);
-            @include opacity(.5);
+            @include opacity(.4);
             @include transform(scale(1.05));
         }
     }
 
     .project-header {
-        @include outer-container;
-        padding: 0 $grid-padding;
         position: relative;
         padding-top: 40px;
 
@@ -169,8 +182,6 @@
     }
 
     #project-bar {
-        @include outer-container;
-        padding: 0 $grid-padding;
         margin-top: 32px;
 
         .project-status {
@@ -224,18 +235,13 @@
         }
     }
 
-    #l-project-users {
+    #project-users {
         clear: both;
         position: absolute;
         bottom: 0px;
         padding: 17px 0 24px 0;
         width: 100%;
         background: rgba($color-grey-medium , 0.15);
-    }
-
-    #project-users {
-        @include outer-container;
-        padding: 0 $grid-padding;
 
         .project-initiator {
             @include span-columns(4);

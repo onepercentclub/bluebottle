@@ -1,15 +1,12 @@
-{% load bb_ember %}
-{% load i18n %}
-{% load static %}
+{% load i18n bb_ember static %}
 
 {% tplhandlebars "task" %}
-
 <div id="project-detail">
     <div id="project-detail-header" {{bindAttr class=":task-detail"}}>
         <div class="project-background">
             <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
         </div>
-        <section class="project-header">
+        <section class="project-header l-wrapper">
             <article class="project-info">
                 <div class="project-meta">
                     {{!-- <span class="project-location">{{country.name}}</span>
@@ -85,8 +82,8 @@
         </section>
 
         {{!-- {{partial '_project_actions'}} --}}
-        <div id="l-project-users">
-            <section id="project-users">
+        <section id="project-users">
+            <div class="l-wrapper">
                 <div class="project-initiator">
                     <a {{action 'openInBigBox' 'userModal' author }} class="user">
                         <figure class="user-avatar">
@@ -107,7 +104,7 @@
                     {{else}}
                         {{#if isApplicable}}
                           {{#ifExpired deadline }}
-                            Todo: deadline passed
+                            {{!-- Todo: deadline passed --}}
                           {{ else }}
                             <a {{action applyForTask this }} class="button button-big">
                                 {% trans "Apply for task" %}
@@ -116,13 +113,12 @@
                         {{/if}}
                     {{/if}}
                 </div>
-
-            </section>
-        </div>
+            </div>
+        </section>
     </div>
 
-    <div id="l-wall">
-        <div id="wall">
+    <div id="wall">
+        <div class="l-wrapper">
 
             <section id="wallposts">
                 {{partial 'wallposts'}}
@@ -133,7 +129,6 @@
             </section>
         </div>
     </div>
-
 </div>
 
 {% endtplhandlebars %}

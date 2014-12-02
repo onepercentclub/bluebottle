@@ -1,12 +1,8 @@
-#l-wall {
+#wall {
 	clear: both;
 	background-color: $color-grey-back;
-}
-
-#wall {
-	@include outer-container;
-	padding: 30px $grid-padding;
-	
+	padding-top: 30px;
+	padding-bottom: 50px;
 }
 
 #wallposts {

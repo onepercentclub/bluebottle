@@ -1,6 +1,4 @@
-{% load bb_ember %}
-{% load i18n %}
-{% load static %}
+{% load i18n bb_ember static %}
 
 {% tplhandlebars "project" %}
 <div id="project-detail">
@@ -8,7 +6,7 @@
         <div class="project-background">
             <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
         </div>
-        <section class="project-header">
+        <section class="project-header l-wrapper">
             <article class="project-info">
                 <div class="project-meta">
                     <span class="project-location">{{country.name}}</span>
@@ -37,9 +35,8 @@
         {{partial '_project_actions'}}
     </div>
 
-
-    <div id="l-wall">
-        <div id="wall">
+    <div id="wall">
+        <div class="l-wrapper">
 
             <section id="wallposts">
                 {{partial 'wallposts'}}
@@ -130,9 +127,9 @@
                 </div>
 
             </section>
+            
         </div>
     </div>
-
 </div>
 
 {% endtplhandlebars %}

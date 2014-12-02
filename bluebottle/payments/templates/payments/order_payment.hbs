@@ -7,7 +7,7 @@
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
         <h4>{% blocktrans %}Select your method of payment{% endblocktrans %}</h4>
         {{#each donation in order.donations}}
-            <big>{% trans "You're about to support"%} {{order.donations.firstObject.project.title}} {% trans 'with'%} &euro; {{donation.amount}}. {% trans 'Good job!'%}</big>
+            <big>{% trans "You're about to support"%} {{order.donations.firstObject.project.title}} {% trans 'with'%} &euro;&nbsp;{{donation.amount}}. {% trans 'Good job!'%}</big>
         {{/each}}
         
         <div class="row">

@@ -3,7 +3,19 @@
  *
  */
 
-App.BbTextWallpostNewComponent = Ember.Component.extend({
+App.FormControls = Ember.Mixin.create({
+    showWallpostOptions: function(elm) {
+        var element = this.$(elm);
+        element.addClass('is-active');
+    },
+
+    hideWallpostOptions: function(elm) {
+        var element = this.$(elm);
+        element.removeClass('is-active');
+    }
+});
+
+App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
     /**
      * This is the base component for a wall-post form.
      *
@@ -26,23 +38,13 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
             textArea = this.$().find('textarea');
 
         textArea.on('focus', function() {
-            _this.showWallpostOptions();
+            _this.showWallpostOptions('.wallpost-update');
         });
-    },
-
-    showWallpostOptions: function() {
-        var wallpost = this.$('.wallpost-update');
-        wallpost.addClass('is-active');
-    },
-
-    hideWallpostOptions: function() {
-        var wallpost = this.$('.wallpost-update');
-        wallpost.removeClass('is-active');
     },
 
     actions: {
         clearForm: function(){
-            this.hideWallpostOptions();
+            this.hideWallpostOptions('.wallpost-update');
         },
         saveWallpost: function() {
             var _this = this,
@@ -128,28 +130,28 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
         });
 
         textArea.on('focus', function() {
-            _this.showWallpostOptions();
+            _this.showWallpostOptions('.wallpost-update');
         });
 
         $('.wallpost-update .action-cancel').on('click', function() {
             // TODO: Reset textareas and linked images?
-            _this.hideWallpostOptions();
+            _this.hideWallpostOptions('.wallpost-update');
         });
 
 
         photo.on('change', function() {
             if (photo.val() === '') {
-                _this.hideWallpostOptions();
+                _this.hideWallpostOptions('.wallpost-update');
             } else {
-                _this.showWallpostOptions();
+                _this.showWallpostOptions('.wallpost-update');
             }
         });
 
         video.on('keyup', function() {
             if (video.val() === '') {
-                _this.hideWallpostOptions();
+                _this.hideWallpostOptions('.wallpost-update');
             } else {
-                _this.showWallpostOptions();
+                _this.showWallpostOptions('.wallpost-update');
             }
         });
     },
@@ -273,10 +275,28 @@ App.BbWallpostCommentComponent = Em.Component.extend({
 });
 
 
-App.BbWallpostCommentListComponent = Em.Component.extend({
+App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
     init: function() {
         this._super();
         this.createNewComment();
+    },
+
+    didInsertElement: function() {
+        var textArea = this.$().find('textarea'),
+            _this = this;
+
+        textArea.on('focus', function() {
+            _this.showWallpostOptions('.m-comment-form');
+        });
+
+        textArea.on('blur', function() {
+            _this.hideWallpostOptions('.m-comment-form');
+        });
+
+        $('.m-comment-form .action-cancel').on('click', function() {
+            // TODO: Reset textareas and linked images?
+            _this.hideWallpostOptions('.m-comment-form');
+        });
     },
 
     createNewComment: function() {

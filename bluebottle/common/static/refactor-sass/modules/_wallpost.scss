@@ -243,7 +243,8 @@
         border: none;
         box-shadow: none;
         @include svg-icon('wallposts/icon-comment-write.svg');
-        background-position: 20px 50%;
+        background-position: 20px 12px;
+        @include transition(all .2s $ease-in-out-cubic);
     }
 
     label {
@@ -270,6 +271,7 @@
 
         textarea {
             @include border-radius(0);
+            height: calc(5.5em + 20px);
         }
 
         .comment-form-footer {

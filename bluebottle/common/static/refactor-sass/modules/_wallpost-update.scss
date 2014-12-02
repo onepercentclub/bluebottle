@@ -1,5 +1,7 @@
 .wallpost-update {
     width: 100%;
+    position: relative;
+    top: 5px;
     margin-bottom: 30px;
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
@@ -89,12 +91,6 @@
             box-shadow: none;
             @include border-bottom-radius($radius-medium);
         }
-
-        // .btn-link {
-        //     font-size: 16px;
-        //     text-transform: none;
-        // }
-            
 
         #wallpost-video {
             padding-left: 0;
@@ -230,7 +226,7 @@
     }
 
     &.is-active {
-
+        
         .wallpost-update-footer {
             height: 50px;
             border-top: solid 1px $color-grey-medium;

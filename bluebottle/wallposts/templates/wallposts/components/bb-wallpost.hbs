@@ -4,64 +4,64 @@
 
 {% tplhandlebars "components/bb-wallpost" %}
 
-	<article class="m-wallpost">
-	    <header class="wallpost-header">
-	        <figure class="user-avatar">
-	        	<img {{bindAttr src="post.author.getAvatar" alt="post.author.full_name"}} />
-	        </figure>
+    <article class="m-wallpost">
 
-	        <a {{action openInBigBox "userModal" post.author}} class="user-name">
-	            <strong>{{post.author.full_name}}</strong>
-	        </a>
+        <header class="wallpost-header">
+            <figure class="user-avatar">
+                <img {{bindAttr src="wallpost.author.getAvatar" alt="wallpost.author.full_name"}} />
+            </figure>
 
-	        <abbr class="timestamp">{{ localize post.created formatting="X" }}</abbr>
-			
-			{{#if isAuthor}}
-	        <ul class="owner-actions">
-                <li class="actions-dropdown"><em>Actions</em>
-                    <ul>
-                    {{!-- <li><a href="#" {{ action "editWallPost" this target="view" }} class="action-edit">{% trans "Edit" %}</a></li> --}}
-                        <li><a href="#" {{ action "deleteWallPost" this target="view" }} class="action-delete">{% trans "Delete" %}</a></li>
-                    </ul>
-                </li>
-            </ul>
-	        {{/if}}
-	    </header>
+            <a {{action openInBigBox "userModal" wallpost.author}} class="user-name">
+                <strong>{{wallpost.author.full_name}}</strong>
+            </a>
 
-	    <div class="wallpost-body">
-	    	{{#if post.title}}
-				<p><strong>{{post.title}}</strong></p>
-			{{/if}}
-			{{{post.text}}}
-			{{#if post.video_html}}
-			    <div class="video">{{{post.video_html}}}</div>
-			{{/if}}
-			
-	        {{#if post.photos.length}}
-	            <ul class="photo-viewer">
-					<li class="cover">
-						<a {{bindAttr href="post.coverPhoto.photo.full"}} title="photo">
-							<img {{bindAttr src="post.coverPhoto.photo.full"}}>
-						</a>
-					</li>
-					{{#each photo in post.otherPhotos}}
-	                    <li class="photo">
-							<a {{bindAttr href="photo.photo.full"}} title="photo">
-								<img {{bindAttr src="photo.photo.small"}} alt="Photo" />
-							</a>
-						</li>
-	                {{/each}}
-	            </ul>
-	        {{/if}}
-	    </div>
-		
-	
-	    <ul class="comments">
-			{{bb-wallpost-comment-list comments=post.reactions post=post currentUser=currentUser
-					addWallpostComment=addWallpostComment removeWallpostComment=removeWallpostComment}}
-	    </ul>
-	 
+            <abbr class="timestamp">{{ localize wallpost.created formatting="X" }}</abbr>
 
-	</article>
+            {{#if isAuthor}}
+                <ul class="owner-actions">
+                    <li class="actions-dropdown"><strong>Actions</strong>
+                        <ul>
+                            <li><a href="#" {{action "removeWallpost" wallpost}} class="action-delete">{% trans "Delete" %}</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            {{/if}}
+        </header>
+
+        <div class="wallpost-body">
+            {{#if wallpost.title}}
+                <p><strong>{{wallpost.title}}</strong></p>
+            {{/if}}
+            {{{wallpost.text}}}
+            {{#if wallpost.video_html}}
+                <div class="video">{{{wallpost.video_html}}}</div>
+            {{/if}}
+
+            {{#if wallpost.photos.length}}
+                <ul class="photo-viewer">
+                    <li class="cover">
+                        <a {{bindAttr href="wallpost.coverPhoto.photo.full"}} title="photo">
+                            <img {{bindAttr src="wallpost.coverPhoto.photo.full"}}>
+                        </a>
+                    </li>
+                    {{#each photo in wallpost.otherPhotos}}
+                        <li class="photo">
+                            <a {{bindAttr href="photo.photo.full"}} title="photo">
+                                <img {{bindAttr src="photo.photo.small"}} alt="Photo"/>
+                            </a>
+                        </li>
+                    {{/each}}
+                </ul>
+            {{/if}}
+        </div>
+
+
+        <ul class="comments">
+            {{bb-wallpost-comment-list comments=wallpost.reactions wallpost=wallpost currentUser=currentUser
+            addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment'}}
+        </ul>
+
+
+    </article>
 
 {% endtplhandlebars %}

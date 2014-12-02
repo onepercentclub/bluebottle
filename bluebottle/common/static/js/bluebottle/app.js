@@ -133,6 +133,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         // Inject currentUser into all controllers and routes
         application.inject('controller', 'currentUser', 'controller:currentUser');
         application.inject('route', 'currentUser', 'controller:currentUser');
+        application.inject('component', 'currentUser', 'controller:currentUser');
     },
 
     initSelectViews: function() {

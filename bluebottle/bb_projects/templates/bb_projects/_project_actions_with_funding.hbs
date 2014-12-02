@@ -70,24 +70,13 @@
                     </em>
                 </p>
             {{/if}}
-            {{!-- {{#if isStatusCampaign}}
-                <div class="project-days-left">
-                    {{#ifExpired deadline}}
-                        {% trans "Deadline passed" %}
-                    {{else}}
-                        {{daysToGo}} {% trans "days left" %}
-                    {{/ifExpired}}
-                </div>
-            {{else}}
-                <div class="project-days-left">
-                    {{#unless isPhasePlanNew}}
-                        {% trans "Deadline passed" %}
-                    {{/unless}}
-                </div>
-            {{/if}} --}}
             {{#if isSupportable}}
                 <div class="project-days-left">
                     {{daysToGo}} {% trans "days left" %}
+                </div>
+            {{else}}
+                <div class="project-days-left">
+                    {% trans "Deadline passed" %}
                 </div>
             {{/if}}
         </div>
@@ -115,7 +104,7 @@
             </a>
         </div>
         <div class="project-supporters">
-            <strong>32 <em>{% trans "Supporters" %}</em></strong>
+            <strong>{{supporters.length}} <em>{% trans "Supporters" %}</em></strong>
             {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
         </div>
     </section>

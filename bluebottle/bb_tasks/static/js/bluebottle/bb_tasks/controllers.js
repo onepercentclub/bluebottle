@@ -172,7 +172,11 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
     notAcceptedMembers: function() {
       return this.get('model').get('members').filterBy('isStatusAccepted', false);
-    }.property('members.@each.member.isStatusAccepted')
+    }.property('members.@each.member.isStatusAccepted'),
+
+    backgroundStyle: function(){
+        return "background-image:url('" + this.get('project.image.large') + "');";
+    }.property('project.image.large')
 
 });
 
@@ -258,6 +262,17 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property('status'),
 
     actions: {
+
+        declineMember: function( member){
+            member.set('status', 'rejected');
+            member.save()
+        },
+
+        acceptMember: function( member){
+            member.set('status', 'accepted');
+            member.save()
+        },
+
         confirmMember: function( member){
             member.set('status', 'realized');
             member.save()
@@ -285,7 +300,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['taskIndex', 'projectIndex'],
+
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
@@ -310,6 +325,7 @@ App.TaskNewController = Em.ObjectController.extend({
 
 
 App.TaskEditController = App.TaskNewController.extend({
+
     updateTask: function(event){
         var controller = this;
         var task = this.get('content');

@@ -74,6 +74,11 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
         });
 
         return promise;
+    },
+    setupController: function(controller, model){
+        this._super(controller, model);
+        var parentId = model.get('id');
+        controller.set('tasks',App.Task.find({project: parentId}));
     }
 });
 

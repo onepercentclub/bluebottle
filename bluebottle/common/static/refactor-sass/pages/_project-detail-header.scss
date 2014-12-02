@@ -64,11 +64,28 @@
         position: relative;
         padding-top: 40px;
 
+
+
         .project-info {
             @include span-columns(7);
 
             .project-meta {
                 color: $color-sec;
+
+                .project-status {
+                    background-color: $color-sec;
+                    color: $color-white;
+                    text-transform: uppercase;
+                    padding: 6px 6px;
+                    @include border-radius($radius-medium);
+                    font-size: 13px;
+                    font-weight: bold;
+                    margin-right: 16px;
+                }
+
+                .project-campaign {
+                    color: $color-sec;
+                }
             }
 
             .project-location {

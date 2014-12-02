@@ -14,8 +14,8 @@
                 <div class="project-meta">
                     {{!-- <span class="project-location">{{country.name}}</span>
                     <span class="project-category">{{theme.name}}</span> --}}
-                    <span class="task-status">{{statusLabel}} {% trans "Task for" %}</span>
-                    <span class="task-project">{{#link-to 'project' project}}{{project.title}}{{/link-to}}</span>
+                    <span class="project-status">{{statusLabel}} {% trans "Task for" %}</span>
+                    <span class="project-campaign">{{#link-to 'project' project}}{{project.title}}{{/link-to}}</span>
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">
@@ -30,14 +30,6 @@
                 </p>
             </article>
             <aside class="project-media">
-
-                {{#if canEdit}}
-                <div class="task-owner-actions">
-                    {{#link-to 'taskEdit' model}}
-                        {% trans 'Edit Task' %}
-                    {{/link-to}}
-                </div>
-                {{/if}}
 
                 <div class="project-share">
                     {{view App.SocialShareView}}
@@ -85,6 +77,15 @@
             </aside>
 
         </section>
+
+{{!--         {{#if canEdit}}
+        <div class="task-owner-actions">
+            {{#link-to 'taskEdit' model}}
+                {% trans 'Edit Task' %}
+            {{/link-to}}
+        </div>
+        {{/if}} --}}
+
 
         {{!-- {{partial '_project_actions'}} --}}
         <div id="l-project-users">

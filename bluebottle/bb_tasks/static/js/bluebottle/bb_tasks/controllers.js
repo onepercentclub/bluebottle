@@ -262,6 +262,17 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property('status'),
 
     actions: {
+
+        declineMember: function( member){
+            member.set('status', 'rejected');
+            member.save()
+        },
+
+        acceptMember: function( member){
+            member.set('status', 'accepted');
+            member.save()
+        },
+
         confirmMember: function( member){
             member.set('status', 'realized');
             member.save()

@@ -100,7 +100,7 @@ button, .button {
     &:hover {
         top: 0;
         margin-bottom: -1px;
-        padding-bottom: calc(.3em + 2px);
+        padding-bottom: calc(.3em + 1px);
         box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
     }
 
@@ -162,6 +162,9 @@ button, .button {
         }
 
         &:active {
+            top: 2px;
+            margin-top: -1px;
+            padding-top: calc(.3em + 1px);
             color: $color-grey-medium !important;
             background-color: $color-grey !important;
         }

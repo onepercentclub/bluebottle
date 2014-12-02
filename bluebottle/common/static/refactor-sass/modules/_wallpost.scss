@@ -33,6 +33,17 @@
         top: 2px;
         right: 20px;
     }
+
+    .wallpost-body, .comment-body {
+
+        a {
+            color: $color-sec !important;
+
+            &:hover, &:active {
+                text-decoration: underline !important;
+            }
+        }
+    }
 }
 
 // wallpost

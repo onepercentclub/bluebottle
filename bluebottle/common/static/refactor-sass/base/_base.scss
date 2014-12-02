@@ -131,12 +131,13 @@ button, .button {
         &:hover {
             top: 0;
             box-shadow: 0 -4px 0 0 $color-pri-shadow inset;
-            padding-bottom: calc(.6em + 2px);
+            padding-bottom: calc(.6em + 4px);
         }
 
         &:active {
             top: 4px;
-            padding-top: 0.5em;
+            padding-top: calc(.5em + 2px);
+            padding-bottom: calc(.6em - 2px);
             color: $color-pri !important;
             background-color: $color-pri-shadow !important;
         }

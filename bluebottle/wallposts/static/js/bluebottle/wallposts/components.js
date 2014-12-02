@@ -62,6 +62,7 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
 });
 
 App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
+    elementId: 'wallpost-success-form',
 
     needs: ['project', 'fundraiser'],
 

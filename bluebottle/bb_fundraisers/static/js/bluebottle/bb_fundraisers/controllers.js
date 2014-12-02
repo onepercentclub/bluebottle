@@ -13,6 +13,10 @@ App.FundraiserIsOwner = Em.Mixin.create({
 App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
     needs: ['project'],
 
+    backgroundStyle: function(){
+        return "background-image:url('" + this.get('project.image') + "');";
+    }.property('project.image'),
+
     _setDonations: function () {
         if (this.get('isLoaded')) {
             this.set('fundraiserDonations', App.ProjectDonation.find({fundraiser: this.get('id')}));

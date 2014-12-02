@@ -61,7 +61,7 @@
                     </p>
 
                 {{else}}
-                    <div class="campaign-fund-amount-slider">
+                    <div {{bindAttr class=":project-fund-amount-slider is_funded:is-funded"}}>
                         {{bb-progressbar targetValue=amount_asked currentValue=amount_donated}}
                     </div>
                     <p class="project-fund-amount">
@@ -71,20 +71,23 @@
                         </em>
                     </p>
                 {{/if}}
-                {{#if isSupportable}}
-                    <div class="project-days-left">
-                        {{daysToGo}} {% trans "days left" %}
-                    </div>
+                <div class="project-days-left">
+                {{#if overDeadline}}
+                    {% trans "Deadline passed" %}
                 {{else}}
-                    <div class="project-days-left">
-                        {% trans "Deadline passed" %}
-                    </div>
+                    {{daysToGo}} {% trans "days left" %}
                 {{/if}}
+                </div>
             </div>
         </div>
 
         <div class="project-action">
-            {{#if isSupportable}}
+            {{#if overDeadline}}
+                <div class="project-closed">
+                    <strong>{% trans "Campaign" %} {{#if is_funded}}{% trans "fully funded and" %} {{/if}}{% trans "closed" %}</strong><br />
+                    {{localize deadline formatting="X"}}
+                </div>
+            {{else}}
                 <a {{action 'addDonation' this}} data-action-type="donate" class="button button-big"> {% trans "Support project" %}</a>
                 {{view 'App.MpesaDonateView' class="mpesa-donate" }}
             {{/if}}

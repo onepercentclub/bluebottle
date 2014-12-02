@@ -192,7 +192,12 @@
             .project-fund {
 
                 .project-fund-amount-slider {
-                    background-color: rgba($color-grey-medium, .15)
+                    background-color: rgba($color-grey-medium, .15);
+
+                    &.is-funded .slider-progress {
+                        color: $color-pri;
+                        background-color: $color-pri;
+                    }
                 }
 
                 .project-fund-amount {
@@ -232,6 +237,15 @@
 
         .button {
             width: 100%;
+        }
+
+        .project-closed {
+            @include border-radius($radius-large);
+            border: 1px solid rgba($color-white, 0.6);
+            padding: .3em 1em .3em 1em;
+            color: $color-text-on-dark;
+            text-align: center;
+            @include opacity(0.6);
         }
     }
 
@@ -323,13 +337,13 @@
 
     // Task detail specific
     &.task-detail {
-        height: 500px;
+        height: 520px;
 
         .project-background {
-            height: 500px;
+            height: 520px;
 
             .project-background-image {
-                height: 502px;
+                height: 522px;
             }
         }
 

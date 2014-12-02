@@ -1,17 +1,18 @@
 {% load i18n bb_ember static %}
 
 {% tplhandlebars "fundraiser" %}
-
-    <div class="l-section detail" id="fundraiser-detail">
-        <div id="project-detail-header" class="l-section">
+<div id="project-detail">
+    <div id="project-detail-header" {{bindAttr class=":fundraiser-detail"}}>
         <div class="project-background">
             <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
         </div>
-        <section class="project-header">
+        <section class="project-header l-wrapper">
             <article class="project-info">
                 <div class="project-meta">
-                    <span class="project-location">{{country.name}}</span>
-                    <span class="project-category">{{theme.name}}</span>
+                    {{!-- <span class="project-location">{{country.name}}</span>
+                    <span class="project-category">{{theme.name}}</span> --}}
+                    <span class="project-status">{% trans "Fundraiser for" %}</span>
+                    <span class="project-campaign">{{#link-to 'project' project}}{{project.title}}{{/link-to}}</span>
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">
@@ -37,38 +38,38 @@
         </section>
         {{partial '_fundraiser_actions'}}
     </div>
-    </div>
 
-    <div class="l-section" id="wall">
-        <section id="wallposts">
-            {{partial 'wallposts'}}
-        </section>
+    <div id="wall">
+        <div class="l-wrapper">
 
+            <section id="wallposts">
+                {{partial 'wallposts'}}
+            </section>
 
-        <section id="sidebar">
-
+            <section id="sidebar">
                 {{!-- Todo: only show block when there are supporters --}}
-            <div id="supporter-list">
+                <div id="supporter-list">
 
-                <div class="activity">
+                    <div class="activity">
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Supporters" %}</h2>
+                        </header>
 
-                    <header class="activity-header">
-                        <h2 class="activity-title">{% trans "Supporters" %}</h2>
-                    </header>
+                        {{project-donations class="project-supporters" donations=fundraiserDonations limit=10 showProfile="showProfile"}}
 
-                    {{project-donations class="project-supporters" donations=fundraiserDonations limit=10 showProfile="showProfile"}}
+                        <footer class="activity-footer">
+                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                                <strong>{% trans "Support this fundraiser" %} &raquo;</strong><br />
+                                {% trans "And get your name on the wall!" %}
+                            </a>
+                        </footer>
 
-                    <footer class="activity-footer">
-                        <a {{action 'addDonation' controllers.project}}  class="activity-action">
-                            <strong>{% trans "Support this fundraiser" %} &raquo;</strong><br />
-                            {% trans "And get your name on the wall!" %}
-                        </a>
-                    </footer>
-
+                    </div>
                 </div>
-            </div>
 
-        </section>
+            </section>
+        </div>
     </div>
+</div>
 
 {% endtplhandlebars %}

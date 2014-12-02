@@ -32,6 +32,11 @@ App.Fundraiser = DS.Model.extend({
         return this.get('amount_needed') <= 0;
     }.property('amount_needed'),
 
+    overDeadline: function() {
+        var now = new Date();
+        return now > this.get("deadline");
+    }.property('deadline'),
+
     daysToGo: function(){
         var now = new Date();
         var microseconds = this.get('deadline').getTime() - now.getTime();

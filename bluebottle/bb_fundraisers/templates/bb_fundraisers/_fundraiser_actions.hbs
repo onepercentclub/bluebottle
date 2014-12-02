@@ -2,31 +2,44 @@
 
 {% tplhandlebars "_fundraiser_actions" %}
 <section id="project-bar">
-    <div class="project-status">
-        <div class="project-fund">
-            <div class="campaign-fund-amount-slider">
-                {{bb-progressbar targetValue=amount currentValue=amount_donated}}
-            </div>
-            <p class="project-fund-amount">
-                <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
-                <em class="amount-asked">
-                    {% trans "of" %} <strong>&euro; {{localize amount}}</strong> {% trans "raised" %}
-                </em>
-            </p>
-            <div class="project-days-left">
-                {{daysToGo}} {% trans "days left" %}
+    <div class="l-wrapper">
+        <div class="project-status">
+            <div class="project-fund">
+                <div class="project-fund-amount-slider is_funded::is-funded">
+                    {{bb-progressbar targetValue=amount currentValue=amount_donated}}
+                </div>
+                <p class="project-fund-amount">
+                    <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
+                    <em class="amount-asked">
+                        {% trans "of" %} <strong>&euro; {{localize amount}}</strong> {% trans "raised" %}
+                    </em>
+                </p>
+                <div class="project-days-left">
+                {{#if overDeadline}}
+                    {% trans "Deadline passed" %}
+                {{else}}
+                    {{daysToGo}} {% trans "days left" %}
+                {{/if}}
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="project-action">
-        <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="button button-big"> {% trans "Support" %} {{owner.full_name}}</a>
-        {{view 'App.MpesaDonateView' class="mpesa-donate" }}
+        <div class="project-action">
+            {{#if overDeadline}}
+                <div class="project-closed">
+                    <strong>{% trans "Fundraiser" %} {{#if is_funded}}{% trans "fully funded and" %} {{/if}}{% trans "closed" %}</strong><br /> 
+                    {{localize deadline formatting="X"}}
+                </div>
+            {{else}}
+                <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="button button-big"> {% trans "Support" %} {{owner.full_name}}</a>
+                {{view 'App.MpesaDonateView' class="mpesa-donate" }}
+            {{/if}}
+        </div>
     </div>
 </section>
 
-<div id="l-project-users">
-    <section id="project-users">
+<section id="project-users">
+    <div class="l-wrapper">
         <div class="project-initiator">
             <a {{action 'openInBigBox' 'userModal' owner }} class="user">
                 <figure class="user-avatar">
@@ -42,7 +55,7 @@
             <strong>32 <em>{% trans "Supporters" %}</em></strong>
             {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
         </div>
-    </section>
-</div>
+    </div>
+</section>
 
 {% endtplhandlebars %}

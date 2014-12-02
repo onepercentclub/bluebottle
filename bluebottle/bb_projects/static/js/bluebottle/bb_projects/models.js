@@ -66,6 +66,7 @@ App.Project = DS.Model.extend({
     amount_asked: DS.attr('number'),
     amount_donated: DS.attr('number'),
     amount_needed: DS.attr('number'),
+    deadline: DS.attr('date'),
 
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
@@ -94,6 +95,10 @@ App.Project = DS.Model.extend({
     isStatusCompleted: Em.computed.equal('phaseNum', 5),
 
     isStatusStopped: Em.computed.gt('phaseNum', 6),
+
+    is_funded: function() {
+        return this.get('amount_needed') <= 0;
+    }.property('amount_needed'),
 
     isSupportable: function () {
         var now = new Date();

@@ -107,7 +107,9 @@
     }
 
     .user-avatar {
-        
+        position: relative;
+        left: -2px;
+
         img {
             width: 25px;
             height: 25px;

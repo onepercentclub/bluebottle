@@ -20,6 +20,7 @@
         display: block;
         margin-top: 10px;
         color: $color-sec !important;
+        text-transform: capitalize; // TODO: make global
     }
 
     .timestamp {
@@ -59,6 +60,10 @@
         @include break-all-words;
         clear: both;
         padding: 0 20px 20px 20px;
+
+        &:first-letter {
+            text-transform: uppercase;
+        }
 
         p:last-of-type {
             margin-bottom: 0;
@@ -160,6 +165,10 @@
         @include break-all-words;
         overflow: hidden;
         padding: 0 20px 5px 0;
+
+        &:first-letter {
+            text-transform: uppercase;
+        }
     }
 
     .user-avatar {
@@ -210,7 +219,7 @@
     }
 
     textarea {
-        @include border-bottom-radius(4px);
+        @include border-bottom-radius($radius-medium);
         font-family: $font-family-base;
         line-height: 1.5em;
         width: 100%;
@@ -245,6 +254,10 @@
     }
 
     &.is-active {
+
+        textarea {
+            @include border-radius(0);
+        }
 
         .comment-form-footer {
             height: 50px;

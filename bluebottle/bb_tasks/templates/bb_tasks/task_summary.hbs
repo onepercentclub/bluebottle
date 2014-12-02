@@ -12,7 +12,19 @@
 				<span class="task-time"><em>{{time_needed}}</em> {% trans "hour" %}</span>
 				<span class="task-deadline"><em>{{localize deadline formatting="X"}}</em></span>
 			</span>
-			<span class="task-status task-open">{% trans "Open" %}</span>
+			{{#if isStatusOpen}}
+			    <span class="task-status task-open">{% trans "Open" %}</span>
+			{{/if}}
+			{{#if isStatusInProgress}}
+			    <span class="task-status task-running">{% trans "Running" %}</span>
+			{{/if}}
+			{{#if isStatusClosed}}
+			    <span class="task-status task-closed">{% trans "Closed" %}</span>
+			{{/if}}
+			{{#if isStatusRealized}}
+			    <span class="task-status task-done">{% trans "Done" %}</span>
+			{{/if}}
+			
 		{{/link-to}}
 	</li>
 

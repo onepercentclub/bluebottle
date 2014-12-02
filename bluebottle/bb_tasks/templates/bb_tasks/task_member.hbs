@@ -6,51 +6,50 @@
 
     <li class="activity-item">
         <figure class="user-avatar">
-            <a {{action openInBigBox "userModal" member}} class="member">
+            <a {{action openInBigBox "userModal" member}}>
                 <img {{bindAttr src="member.getAvatar" alt="member.full_name" }} />
             </a>
         </figure>
         <span class="activity-body">
-            <strong class="user-name">{{member.full_name}}</strong>
-            {{statusLabel}}<br />
-            <div class="text">
-                {{#if motivation}}
-                    <strong>{% trans "Motivation" %}:</strong> {{motivation}}
-                {{/if}}
-            </div>
-
-            <div class="activity-item-action">
+            <a {{action openInBigBox "userModal" member}} class="user-name"><strong>{{member.full_name}}</strong></a> {{statusLabel}}
+            
+            <div class="activity-item-actions">
                 {{#if canWithdraw }}
-                    <a class="" {{action 'withdrawTaskMember' this}}>
+                    <a class="button" {{action 'withdrawTaskMember' this}}>
                         {% trans "Withdraw" %}
                     </a>
                 {{/if}}
 
-
                 {{#if isStatusApplied}}
                     {{#if canEditStatus }}
-                        <a class="" {{action 'editTaskMember' this}}>
+                        <a class="button" {{action 'editTaskMember' this}}>
                             {% trans "Accept" %}
                         </a>
-                        <span class="status">{% trans "Application pending..." %}</span>
+                        <span class="activity-item-status">{% trans "Application pending..." %}</span>
                     {{/if}}
                 {{else}}
                     {{#if confirmation }}
-                         <a class="" {{action 'confirmMember' this}}>
+                         <a class="button" {{action 'confirmMember' this}}>
                             {% trans "Confirm" %}
                         </a>
-                        <a class="" {{action 'didNotComplete' this}}>
+                        <a class="button" {{action 'didNotComplete' this}}>
                             {% trans "Did not complete" %}
                         </a>
                     {{ else }}
                         {{#if canEditStatus}}
-                            <a class="" {{action 'editTaskMember' this}}>
+                            <a class="button" {{action 'editTaskMember' this}}>
                                 {% trans "Edit status" %}
                             </a>
                         {{/if}}
                     {{/if}}
                 {{/if}}
             </div>
+
+            {{#if motivation}}
+            <p class=""><strong>{% trans "Motivation" %}:</strong> {{motivation}}</p>
+            {{/if}}
+
+            
         </span>
     </li>
 

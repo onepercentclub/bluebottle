@@ -23,6 +23,11 @@
     opacity: $val;
 }
 
+// box-shadow (for possible fallbacks)
+@mixin box-shadow($val) {
+    box-shadow: $val;
+}
+
 // border-radius (for possible fallbacks)
 @mixin border-radius($val) {
     border-radius: $val;

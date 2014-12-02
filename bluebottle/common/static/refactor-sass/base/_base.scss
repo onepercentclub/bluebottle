@@ -75,11 +75,11 @@ label.error {
 
 button, .button {
     //@include transition(padding 0.1s ease-in-out);
-    font-family: $font-family-header;
+    font-family: $font-family-base;
     font-weight: 700;
     position: relative;
     top: 1px;
-    display: inline-block;
+    display: inline-block !important;
     min-width: 85px;
     padding: .3em 1em .3em 1em;
     padding-top: calc(.3em + 1px);
@@ -119,6 +119,7 @@ button, .button {
     }
 
     &.button-big {
+        font-family: $font-family-header;
         top: 2px;
         font-size: 20px;
         font-weight: 900;
@@ -187,9 +188,8 @@ button, .button {
 
     .actions-dropdown {
 
-        em {
+        strong {
             @include hide-text;
-            //@include add-icon(dropdown, 10px, 12px, 0, url('/static/assets/images/img/icons/owner-actions/'));
             @include svg-icon('owner-actions/icon-action-dropdown.svg');
             position: relative;
             z-index: 10;
@@ -232,11 +232,8 @@ button, .button {
         border-radius: $radius-large 0 $radius-large $radius-large;
         background-color: $color-real-white;
 
-        li {
-            padding: 6px 10px;
-        }
-
         a {
+            padding: 8px 10px;
             display: block;
             color: $color-grey !important;
 
@@ -246,15 +243,15 @@ button, .button {
         }
 
         .action-delete {
-            //@include add-icon(delete, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/'));
             @include svg-icon('owner-actions/icon-action-delete.svg');
-            background-position: 0 0;
+            background-position: 7px 50%;
+            text-indent: 15px;
         }
 
         .action-edit {
-            //@include add-icon(edit, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/'));
             @include svg-icon('owner-actions/icon-action-edit.svg');
-            background-position: 0 0;
+            background-position: 7px 50%;
+            text-indent: 15px;
         }
     }
     //}

@@ -6,11 +6,11 @@
 
     a {
         display: block;
-        color: $color-grey !important;
+        color: $color-grey;
         @include transition(color .16s ease-out);
 
         &:hover, &:active {
-            color: $color-text !important;
+            color: $color-text;
 
             .user-name {
                 color: $color-sec !important;
@@ -58,6 +58,22 @@
                 border-radius: 50%;
             }
         }
+
+        .activity-body {
+            clear: both;
+            overflow: hidden;
+        }
+
+        .activity-item-actions {
+            float: right;
+            text-align: right;
+
+            .button {
+                //margin: 6px 0;
+            }
+        }
+
+
     }
 
     .activity-footer {
@@ -112,6 +128,7 @@
         border: 1px solid $color-grey-medium;
         border-radius: $radius-medium;
         background-color: $color-real-white;
+        @include transition(border 0.1s ease-out);
 
         .task-title {
             font-size: 15px;
@@ -122,6 +139,10 @@
             margin: 0;
             text-overflow: ellipsis;
             color: $color-text;
+
+            &:first-letter {
+                text-transform: uppercase;
+            }
         }
 
         .task-meta {
@@ -145,12 +166,46 @@
             display: block;
             width: 70px;
             height: 70px;
-            padding-top: 40px;
+            padding-top: 45px;
             text-align: center;
             text-transform: uppercase;
             color: $color-text-on-dark;
             background-color: $color-sec;
             @include border-right-radius($radius-medium);
+            background-position: 50% 33%;
+            
+            @include transition(background-color 0.1s ease-out);
+
+            &.task-open {
+                background-color: $color-sec;
+                @include svg-icon('sidebar/icon-task-open.svg');
+            }
+
+            &.task-running {
+                background-color: $color-sec;
+                @include svg-icon('sidebar/icon-task-open.svg');
+            }
+
+            &.task-closed {
+                background-color: $color-grey-medium;
+                @include svg-icon('sidebar/icon-task-done.svg');
+            }
+
+            &.task-done {
+                background-color: $color-grey-medium;
+                @include svg-icon('sidebar/icon-task-done.svg');
+            }
+        }
+
+        &:hover, &:active {
+            border-color: $color-grey;
+
+            .task-status {
+                @include hide-text;
+                background-color: $color-grey;
+                @include svg-icon('sidebar/icon-arrow-right.svg');
+                background-position: 50% 50%;
+            }
         }
     }
 }
@@ -174,7 +229,7 @@
 
 }
 
-#supporter-list {
+#supporter-list, #task-user-list {
     
     .activity-header {
         border-bottom: 1px solid $color-grey-medium;
@@ -184,7 +239,8 @@
         @include svg-icon('sidebar/icon-supporters.svg');
     }
 
-    a .user-name {
-        color: $color-sec;
+    a .user-name, a.user-name {
+        display: inline-block;
+        color: $color-sec !important;
     }
 }

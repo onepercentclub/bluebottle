@@ -90,12 +90,6 @@
             @include border-bottom-radius($radius-medium);
         }
 
-        // .btn-link {
-        //     font-size: 16px;
-        //     text-transform: none;
-        // }
-            
-
         #wallpost-video {
             padding-left: 0;
             border: none;
@@ -230,7 +224,7 @@
     }
 
     &.is-active {
-
+        
         .wallpost-update-footer {
             height: 50px;
             border-top: solid 1px $color-grey-medium;

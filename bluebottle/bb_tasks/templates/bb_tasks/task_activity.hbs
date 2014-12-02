@@ -5,24 +5,26 @@
 {% tplhandlebars "taskActivity" %}
 
     {{#if members}}
-        <div class="activity">
+        <div id="task-user-list">
+            <div class="activity">
 
-            <header class="activity-header">
-                <h2 class="activity-title">{% trans "Task members" %}</h2>
-            </header>
+                <header class="activity-header">
+                    <h2 class="activity-title">{% trans "Task members" %}</h2>
+                </header>
 
-            <ul class="activity-list">
-                {{#each members}}
-                    {{render "taskMember" this}}
-                {{/each}}
-            </ul>
-            {{#if isApplicable}}
-                <footer class="activity-footer">
-                    <a {{action applyForTask this }} class="activity-action">
-                        <strong>{% trans "Apply for task" %}</strong>
-                    </a>
-                </footer>
-            {{/if}}
+                <ul class="activity-list">
+                    {{#each members}}
+                        {{render "taskMember" this}}
+                    {{/each}}
+                </ul>
+                {{#if isApplicable}}
+                    <footer class="activity-footer">
+                        <a {{action applyForTask this }} class="activity-action">
+                            <strong>{% trans "Apply for task" %}</strong>
+                        </a>
+                    </footer>
+                {{/if}}
+            </div>
         </div>
     {{/if}}
 

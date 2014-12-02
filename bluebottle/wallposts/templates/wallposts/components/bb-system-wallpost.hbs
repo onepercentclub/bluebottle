@@ -19,9 +19,9 @@
             {{#if wallpost.author}}
                 <a {{action openInBigBox "userModal" wallpost.author}} class="user-name">
                     <strong>{{wallpost.author.full_name}}</strong>
-                </a> {% trans "made a donation" %}
+                </a> {% trans "donated" %} <strong>&euro;&nbsp;{{localize donation.amount}}</strong>
             {{else}}
-            <strong>{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong>
+            <strong>{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro;&nbsp;{{localize donation.amount}}</strong>
             {{/if}}
 
             <abbr class="timestamp">{{ localize wallpost.created formatting="X" }}</abbr>
@@ -34,9 +34,6 @@
                 </div>
             {{/if}}
         </header>
-
-        <div class="wallpost-body">
-        </div>
 
         <ul class="comments">
             {{bb-wallpost-comment-list comments=post.reactions wallpost=wallpost currentUser=currentUser

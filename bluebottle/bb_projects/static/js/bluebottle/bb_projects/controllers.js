@@ -178,10 +178,6 @@ App.ProjectController = Em.ObjectController.extend({
         return false;
     }.property('model.owner', 'currentUser.username'),
 
-    tasks: function(){
-        return App.Task.find({project: this.get('id')});
-    }.property('id'),
-
     availableTasks: function () {
         return this.get('tasks').filter(function(task) {
             return task.get("isAvailable");

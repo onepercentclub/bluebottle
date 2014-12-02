@@ -44,6 +44,12 @@ BB.ModalMixin = Em.Mixin.create({
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
 
+                if (newController.containerClass) {
+                     modalContainer.set('type', newController.containerClass);
+                } else {
+                    modalContainer.set('type', modalContainer.get('defaultType'));
+                }
+
                 // Setup the modal content and set the model if passed
                 if (Em.typeOf(context) != 'undefined')
                     newController.set('model', context);
@@ -80,10 +86,12 @@ BB.ModalMixin = Em.Mixin.create({
             // Setup the modal container
             var modalContainer = this.controllerFor('modalContainer');
 
-            if (Em.isEmpty(type))
+            if (Em.isEmpty(type)) {
                 modalContainer.set('type', 'normal');
-            else
+            } else {
                 modalContainer.set('type', type);
+                modalContainer.set('defaultType', type);
+            }
 
             this.render('modalContainer', {
                 into: 'application',
@@ -291,7 +299,8 @@ BB.ModalMixin = Em.Mixin.create({
 
 BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     currentController: null,
-    type: null
+    type: null,
+    defaultType: null
 });
 
 BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{

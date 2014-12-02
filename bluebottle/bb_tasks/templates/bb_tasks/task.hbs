@@ -30,7 +30,13 @@
                 </p>
             </article>
             <aside class="project-media">
-
+                {{#if canEdit}}
+                    <div class="project-owner-actions">
+                        {{#link-to 'taskEdit' model}}
+                            {% trans 'Edit Task' %}
+                        {{/link-to}}
+                    </div>
+                {{/if}}
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>
@@ -77,15 +83,6 @@
             </aside>
 
         </section>
-
-{{!--         {{#if canEdit}}
-        <div class="task-owner-actions">
-            {{#link-to 'taskEdit' model}}
-                {% trans 'Edit Task' %}
-            {{/link-to}}
-        </div>
-        {{/if}} --}}
-
 
         {{!-- {{partial '_project_actions'}} --}}
         <div id="l-project-users">

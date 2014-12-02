@@ -64,8 +64,6 @@
         position: relative;
         padding-top: 40px;
 
-
-
         .project-info {
             @include span-columns(7);
 
@@ -132,6 +130,11 @@
         .project-media {
             @include span-columns(4.5);
             @include shift(0.5);
+            @include clearfix;
+        }
+
+        .project-owner-actions {
+            float: left;
         }
 
         .project-share {
@@ -143,9 +146,11 @@
             z-index: 199;
             margin-bottom: 5px;
             text-align: right;
+            float: right;
         }
 
         .project-image {
+            clear: both;
             //min-width: 360px;
             width: 100%;
             min-height: 180px;
@@ -323,6 +328,7 @@
         }
 
         .task-meta {
+            clear: both;
             margin: 0;
             padding: 0;
             list-style-type: none;

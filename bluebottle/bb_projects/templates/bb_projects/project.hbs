@@ -4,7 +4,7 @@
 
 {% tplhandlebars "project" %}
 <div id="project-detail">
-    <div id="project-detail-header" {{bindAttr class=":l-section amount_asked::without"}}>
+    <div id="project-detail-header" {{bindAttr class=":campaign-detail amount_asked::without"}}>
         <div class="project-background">
             <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
         </div>
@@ -40,10 +40,10 @@
 
     <div id="l-wall">
         <div id="wall">
+
             <section id="wallposts">
                 {{partial 'wallposts'}}
             </section>
-
 
             <section id="sidebar">
 
@@ -111,7 +111,6 @@
 
                 {{!-- Todo: only show block when there are supporters --}}
                 <div id="supporter-list">
-
                     <div class="activity">
 
                         <header class="activity-header">

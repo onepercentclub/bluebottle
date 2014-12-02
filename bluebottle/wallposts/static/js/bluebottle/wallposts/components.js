@@ -25,12 +25,8 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
         var _this = this, 
             textArea = this.$().find('textarea');
 
-        textArea.on('keyup', function() {
-            if (textArea.val().length > 0) {
-                _this.showWallpostOptions();
-            } else {
-                _this.hideWallpostOptions();
-            }
+        textArea.on('focus', function() {
+            _this.showWallpostOptions();
         });
     },
 
@@ -46,7 +42,6 @@ App.BbTextWallpostNewComponent = Ember.Component.extend({
 
     actions: {
         clearForm: function(){
-            this.createNewWallpost();
             this.hideWallpostOptions();
         },
         saveWallpost: function() {

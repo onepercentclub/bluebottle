@@ -276,6 +276,11 @@ App.BbWallpostCommentComponent = Em.Component.extend({
 
 
 App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
+    firstName: function() {
+        var firstName = this.get('currentUser.first_name');
+        return 'Leave a comment, ' + firstName;
+    }.property(),
+
     init: function() {
         this._super();
         this.createNewComment();

@@ -16,6 +16,15 @@
                 <p class="project-description">{{pitch}} <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a></p>
             </article>
             <aside class="project-media">
+
+                {{#if isProjectOwner}}
+                    <div class="project-owner-actions">
+                        {{#link-to "myProject" id}}
+                            {% trans 'Edit' %} {% trans 'Campaign' %}
+                        {{/link-to}}
+                    </div>
+                {{/if}}
+                
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>

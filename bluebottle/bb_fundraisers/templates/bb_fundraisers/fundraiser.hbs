@@ -11,8 +11,9 @@
                 <div class="project-meta">
                     {{!-- <span class="project-location">{{country.name}}</span>
                     <span class="project-category">{{theme.name}}</span> --}}
-                    <span class="project-status">{% trans "Fundraiser for" %}</span>
-                    <span class="project-campaign">{{#link-to 'project' project}}{{project.title}}{{/link-to}}</span>
+                    {{#link-to 'project' project class="project-breadcrumb"}}
+                        <span class="project-status">{% trans "Fundraiser for" %} </span><span class="project-campaign">{{project.title}}</span>
+                    {{/link-to}}
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">
@@ -20,6 +21,14 @@
                 </p>
             </article>
             <aside class="project-media">
+                
+                {{!-- {{#if isOwner}}
+                    <div class="project-owner-actions">
+                        {{#linkTo 'fundRaiserEdit' id}}{% trans "Edit Fundraiser" %}{{/linkTo}}
+                        {{#linkTo 'fundRaiserDonationList' id}}{% trans "View Donations" %}{{/linkTo}}
+                    </div>
+                {{/if}} --}}
+
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>

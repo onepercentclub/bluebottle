@@ -1,15 +1,28 @@
 App.DonationView = App.FormView.extend({
     amount: gettext('Amount'),
 
-  keyDown: function(e){
-      var input = this.$().find('.donation-input'),
+    isNumberInput: function(e) {
+      return (e.keyCode >= 48 && e.keyCode <= 57);
+    },
+
+    isBackspace: function(e) {
+      return e.keyCode == 8;
+    },
+
+    keyDown: function(e){
+        // Only allow users to enter numbers and use the backspace. This prevents illegal input such as chars or non-round amounts.
+        if (!this.isNumberInput(e) && !this.isBackspace(e)){
+            return false;
+        }
+
+        var input = this.$().find('.donation-input'),
         inputVal = input.val();
-      
-      if (inputVal.length > 4) {
-        $(input).addClass('is-long');
-      } else if (inputVal.length <= 4) {
-        $(input).removeClass('is-long');
-      }
+
+        if (inputVal.length > 4) {
+            $(input).addClass('is-long');
+        } else if (inputVal.length <= 4) {
+            $(input).removeClass('is-long');
+        }
     } 
 });
 

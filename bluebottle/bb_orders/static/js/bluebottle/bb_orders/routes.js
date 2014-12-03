@@ -111,7 +111,6 @@ App.OrderRoute = Em.Route.extend({
                 case 'pending':
                     _this.send('closeModal');
 
-
                     // Display flash message until payment no longer pending
                     _this.send('setFlash', gettext('Processing payment'), 'is-loading', false);
 

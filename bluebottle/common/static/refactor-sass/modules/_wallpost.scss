@@ -3,6 +3,10 @@
     position: relative;
     clear: both;
 
+    a {
+        text-decoration: none;
+    }
+
     .user-avatar {
         float: left;
         margin: 0 20px 10px 0;
@@ -20,7 +24,7 @@
         display: block;
         margin-top: 10px;
         color: $color-sec !important;
-        text-transform: capitalize; // TODO: make global
+        text-transform: capitalize;
     }
 
     .timestamp {

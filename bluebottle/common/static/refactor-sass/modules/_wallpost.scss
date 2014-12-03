@@ -47,6 +47,10 @@
                 text-decoration: underline !important;
             }
         }
+
+        p:last-of-type {
+            margin-bottom: 0;
+        }
     }
 }
 
@@ -181,7 +185,7 @@
     .comment-body {
         @include break-all-words;
         overflow: hidden;
-        padding: 0 20px 5px 0;
+        padding: 0 20px 20px 0;
 
         &:first-letter {
             text-transform: uppercase;

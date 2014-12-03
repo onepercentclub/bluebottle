@@ -55,11 +55,48 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
 App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
     requiredFields: ['iban', 'bic', 'account_name', 'account_city', 'agree'],
+    didChange: false,
+    
+    accountNamePlaceholder: function() {
+        return gettext("Your account name");
+    }.property(),
+
+    errorDefinitions: [
+        {
+            'property': 'account_name',
+            'validateProperty': 'account_name.length',
+            'message': gettext('Please fill in your account name'),
+            'priority': 1
+        },
+        {
+            'property': 'iban',
+            'validateProperty': 'iban.length',
+            'message': gettext('Please fill in your IBAN number'),
+            'priority': 2
+        },
+        {
+            'property': 'bic',
+            'validateProperty': 'bic.length',
+            'message': gettext('Please fill in your BIC/SWIFT code'),
+            'priority': 3
+        },
+        {
+            'property': 'agree',
+            'validateProperty': 'agree',
+            'message': gettext('Please agree to the amount being withdrawn from your account'),
+            'priority': 4
+        }
+    ],
+
+    _fieldChanged: function() {
+        this.set('didChange', true);
+    }.observes('iban', 'bic', 'account_name', 'agree'),
 
     bicHelp: function(){
         var bic = '',
             iban = this.get('iban').toUpperCase(),
             bank = iban.substring(4,8);
+
         // Iban to upper
         this.set('iban', iban);
         // Lookup Bic based on Iban

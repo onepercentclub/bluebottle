@@ -90,6 +90,12 @@ App.OrderPaymentController = Em.ObjectController.extend({
         }
     },
 
+    _paymentMethodChanged: function() {
+        if (this.get('paymentMethodController.didChange') && ! this.get('isValid')) {
+            this.get('model').transitionTo('loaded.created.uncommitted');
+        }
+    }.observes('paymentMethodController.didChange'),
+
     // Process the data associated with the current payment method
     _setIntegrationData: function () {
         var paymentMethodController = this.get('paymentMethodController');
@@ -160,10 +166,15 @@ App.OrderPaymentController = Em.ObjectController.extend({
             var _this = this,
                 payment = this.get('model');
 
+
             // check for validation errors generated in the current payment method controller
             // This call will set the 'validationErrors' property on the payment methods 
             // controller.
             this.get('paymentMethodController').clientSideValidationErrors();
+
+            // Set the property to false so that if the save below fails then user changes to
+            // the paymentMethod data will trigger the _paymentMethodChanged in this controller.
+            this.set('paymentMethodController.didChange', false);
 
             // Check client side errors - there is a binding between validationErrors on the 
             // PaymentController and the PaymentMethodController.

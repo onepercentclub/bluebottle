@@ -5,7 +5,7 @@
         <div class="row">
             <div class="col12">
                 <label><strong>{% trans "Your name (as on bank account)" %}</strong></label>
-                {{view Em.TextField valueBinding="account_name"}}
+                {{view Em.TextField valueBinding="account_name" placeholderBinding="accountNamePlaceholder"}}
             </div>
         </div>
         <div class="row iban-check">

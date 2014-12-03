@@ -51,14 +51,15 @@ App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
             var _this = this,
                 wallpost = this.get('wallpost');
 
-            _this._hideWallpostMessage();
-
             wallpost.on('didCreate', function(record){
                 _this._wallpostSuccess(record);
             });
             wallpost.on('becameError', function(record){
                 _this._wallpostError(record);
             });
+
+            _this.hideWallpostOptions('.wallpost-update');
+
             this.sendAction('addWallpost', wallpost);
         }
     }
@@ -299,12 +300,7 @@ App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
             _this.showWallpostOptions('.m-comment-form');
         });
 
-        textArea.on('blur', function() {
-            _this.hideWallpostOptions('.m-comment-form');
-        });
-
         $('.m-comment-form .action-cancel').on('click', function() {
-            // TODO: Reset textareas and linked images?
             _this.hideWallpostOptions('.m-comment-form');
         });
     },
@@ -336,6 +332,7 @@ App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
             comment.on('becameInvalid', function (record) {
                 // Error saving Comment
             });
+            _this.hideWallpostOptions('.m-comment-form');
             _this.sendAction('addWallpostComment', comment);
         },
         removeWallpostComment: function(comment){

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class DocdataPaymentAdapter(BasePaymentAdapter):
 
-    MODEL_CLASS = DocdataPayment
+    MODEL_CLASSES = [DocdataPayment, DocdataDirectdebitPayment]
 
     # Payment methods specified by DocData. They should map to the payment methods we specify in our settings file so we can map
     # payment methods of Docdata to our own definitions of payment methods

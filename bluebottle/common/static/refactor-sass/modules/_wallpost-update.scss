@@ -1,5 +1,7 @@
 .wallpost-update {
     width: 100%;
+    position: relative;
+    top: 1px;
     margin-bottom: 30px;
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
@@ -89,12 +91,6 @@
             box-shadow: none;
             @include border-bottom-radius($radius-medium);
         }
-
-        // .btn-link {
-        //     font-size: 16px;
-        //     text-transform: none;
-        // }
-            
 
         #wallpost-video {
             padding-left: 0;
@@ -230,6 +226,11 @@
     }
 
     &.is-active {
+        
+        .wallpost-update-post {
+            @include border-radius(0);
+            height: calc(5.5em + 20px);
+        }
 
         .wallpost-update-footer {
             height: 50px;
@@ -238,3 +239,11 @@
     }
 }
 
+// TODO: make global
+.signin {
+    padding: 7px 20px 10px 20px;
+    
+    p {
+        margin: 0;
+    }
+}

@@ -3,11 +3,11 @@
 
 {% tplhandlebars "project_fundraiser" %}
     <li class="activity-item">
-        {{#link-to "fundraiser" fundraiser classNames='member'}}
+        {{#link-to "fundraiser" fundraiser classNames='item-link'}}
             <figure class="user-avatar">
                 <img {{bindAttr src="image.square" alt="owner.first_name" }} />
             </figure>
-            <span class="activity-body">
+            <span class="item-body">
             <strong class="user-name">{{owner.first_name}}</strong> {% trans "raised" %} <strong>&euro; {{amount_donated}},-</strong> {% trans "so far" %}<br />
                 {{!-- TODO: different text and design when fundraiser reached target or deadline --}}
                 <span class="progress-bar">

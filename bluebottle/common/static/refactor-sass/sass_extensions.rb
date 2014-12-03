@@ -31,9 +31,10 @@ module Sass::Script::Functions
     
     svgStr.sub! col1, col2
 
-    # data = [svgStr].flatten.pack("m0") # base64
-    data = svgStr.gsub(/#/, "%23") # raw
-    preData = %q(url\('data:image/svg+xml;utf8,)
+    data = [svgStr].flatten.pack("m0") # base64
+    # data = svgStr.gsub(/#/, "%23") # raw
+    # preData = %q(url\('data:image/svg+xml;charset=UTF-8,)
+    preData = %q(url\('data:image/svg+xml;charset=utf-8;base64,)
     postData = %q('\));
 
     Sass::Script::String.new(preData + data + postData);

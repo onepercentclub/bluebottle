@@ -8,13 +8,13 @@
         {{#each donation in limitedDonations}}
             <li class="activity-item">
                 {{#if donation.user}}
-                    <a {{action "show" donation.user}}>
+                    <a {{action "show" donation.user}} class="item-link">
                         <figure class="user-avatar">
                             {{#if "donation.user.getAvatar"}}
                                 <img {{bind-attr src="donation.user.getAvatar"}} style="border-radius: 2em;" />
                             {{/if}}
                         </figure>
-                        <span class="activity-body">
+                        <span class="item-body">
                             <strong class="user-name">{{donation.user.full_name}}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong><br />
                             <abbr class="timestamp">{{localize donation.created formatting='X'}}</abbr>
                         </span>
@@ -23,8 +23,8 @@
                     <figure class="user-avatar">
                         <img src="/static/assets/images/default-avatar.png"  alt="{% trans 'Guest' %}" style="border-radius: 2em;" />
                     </figure>
-                    <span class="activity-body">
-                        <strong class="user-name">{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong><br />
+                    <span class="item-body">
+                        <strong class="user-name user-guest">{% trans "Guest" %}</strong> {% trans "donated" %} <strong>&euro; {{localize donation.amount}}</strong><br />
                         <abbr class="timestamp">{{localize donation.created formatting='X'}}</abbr>
                     </span>
                 {{/if}}

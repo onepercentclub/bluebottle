@@ -28,41 +28,51 @@
     }
 }
 
-
+#project-detail {
+    margin-bottom: -30px; // TODO: Quickfix to remove whitespace on bottom
+    
+    // global layout wrapper
+    // TODO: move to global
+    .l-wrapper {
+        @include outer-container;
+        padding-left: $grid-padding;
+        padding-right: $grid-padding;
+        min-width: 960px;
+    }
+}
 
 #project-detail-header {
     position: relative;
-    height: 670px;
+    min-height: 670px;
     color: $color-text-on-dark;
     top: -96px; // header height
     padding-top: 96px; // header height
+    padding-bottom: 130px; // footer height
     margin-bottom: -96px;
-    
+
     .project-background {
         position: absolute;
         overflow: hidden;
         width: 100%;
+        height: 100%;
         top: 0;
-        height: 670px;
         z-index: -1;
         background-color: $color-real-black;
         
         .project-background-image {
             width: 100%;
-            height: 680px;
+            height: 100%;
             background-repeat: no-repeat;
             background-size: cover;
             background-position: 50% 50%;
             @include filter(blur(8px));
             filter: url(#projectBlur);
-            @include opacity(.5);
+            @include opacity(.4);
             @include transform(scale(1.05));
         }
     }
 
     .project-header {
-        @include outer-container;
-        padding: 0 $grid-padding;
         position: relative;
         padding-top: 40px;
 
@@ -71,6 +81,66 @@
 
             .project-meta {
                 color: $color-sec;
+                
+                .project-breadcrumb {
+                    width: 90%;
+                    display: inline-block;
+                    vertical-align: bottom;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    line-height: 25px;
+                    text-decoration: none;
+
+                    .project-status {
+                        position: relative;
+                        display: inline-block;
+                        background-color: $color-sec;
+                        color: $color-white;
+                        text-transform: uppercase;
+                        padding: 0 2px 0 10px;
+                        @include border-left-radius($radius-medium);
+                        font-size: 13px;
+                        height: 26px;
+                        font-weight: bold;
+                        margin-right: 25px;
+
+                        &:after {
+                            left: 100%;
+                            top: 50%;
+                            border: solid transparent;
+                            content: " ";
+                            height: 0;
+                            width: 0;
+                            position: absolute;
+                            pointer-events: none;
+                            border-color: transparent;
+                            border-left-color: $color-sec;
+                            border-width: 13px;
+                            margin-top: -13px;
+                        }
+                    }
+
+                    .project-campaign {
+                        color: $color-sec;
+                        vertical-align: middle;
+                    }
+
+                    &:hover {
+
+                        .project-status {
+                            background-color: $color-pri;
+
+                            &:after {
+                                border-left-color: $color-pri;
+                            }
+                        }
+
+                        .project-campaign {
+                            color: $color-pri;
+                        }
+                    }
+                }
             }
 
             .project-location {
@@ -97,6 +167,10 @@
                 margin-bottom: 10px;
                 color: $color-text-on-dark;
                 font-family: $font-family-header !important;
+
+                &:first-letter {
+                    text-transform: uppercase;
+                }
             }
 
             .project-description {
@@ -113,19 +187,27 @@
         .project-media {
             @include span-columns(4.5);
             @include shift(0.5);
+            @include clearfix;
+        }
+
+        .project-owner-actions {
+            float: left;
         }
 
         .project-share {
             top: -5px;
+            right: -5px;
             position: relative;
-            display: inline-block;
-            width: 100%;
-            height: 30px;
+            display: block;
             padding: 0;
             z-index: 199;
+            margin-bottom: 5px;
+            text-align: right;
+            float: right;
         }
 
         .project-image {
+            clear: both;
             //min-width: 360px;
             width: 100%;
             min-height: 180px;
@@ -144,8 +226,6 @@
     }
 
     #project-bar {
-        @include outer-container;
-        padding: 0 $grid-padding;
         margin-top: 32px;
 
         .project-status {
@@ -156,7 +236,12 @@
             .project-fund {
 
                 .project-fund-amount-slider {
-                    background-color: rgba($color-grey-medium, .15)
+                    background-color: rgba($color-grey-medium, .15);
+
+                    &.is-funded .slider-progress {
+                        color: $color-pri;
+                        background-color: $color-pri;
+                    }
                 }
 
                 .project-fund-amount {
@@ -170,7 +255,7 @@
                     }
 
                     .amount-asked {
-                        font-weight: bold;
+                        font-weight: normal;
                         @include opacity(0.6);
                         font-style: normal;
                     }
@@ -178,50 +263,49 @@
 
                 .project-days-left {
                     float: right;
-                    margin-top: 12px;
-                    text-indent: 24px;
+                    margin-top: 10px;
+                    text-indent: 30px;
                     @include opacity(0.6);
                     @include svg-icon('project-detail-header/icon-deadline.svg');
+                    background-position: 0 2px;
                     color: $color-text-on-dark !important;
                     text-transform: none !important;
                 }
             }
         }
+    }
 
-        .project-action {
-            @include span-columns(4.5);
-            @include shift(0.5);
+    .project-action {
+        @include span-columns(4.5);
+        @include shift(0.5);
+        float: right !important;
 
-            .button {
-                width: 100%;
+        .button {
+            width: 100%;
+        }
+
+        .project-closed {
+            font-size: 15px;
+            @include border-radius($radius-large);
+            border: 1px solid rgba($color-white, 0.6);
+            padding: .3em 1em .3em 1em;
+            color: $color-text-on-dark;
+            text-align: center;
+            @include opacity(0.6);
+
+            strong {
+                font-size: 16px;
             }
         }
     }
 
-    &.without {
-        height: 480px;
-
-        .project-background {
-            height: 480px;
-
-            .project-background-image {
-                height: 482px;
-            }
-        }
-    }
-
-    #l-project-users {
+    #project-users {
         clear: both;
         position: absolute;
         bottom: 0px;
         padding: 17px 0 24px 0;
         width: 100%;
         background: rgba($color-grey-medium , 0.15);
-    }
-
-    #project-users {
-        @include outer-container;
-        padding: 0 $grid-padding;
 
         .project-initiator {
             @include span-columns(4);
@@ -229,6 +313,14 @@
             .user {
                 text-decoration: none;
                 margin-top: 5px;
+
+                &:hover, &:active {
+
+                    em {
+                        color: $color-pri !important;
+                    }
+                }
+
             }
 
             .user-avatar {
@@ -285,6 +377,83 @@
                     }
                 }                    
             }
+        }
+    }
+    
+    // Campaign without funding
+    &.without {
+        height: 480px;
+
+        .project-background {
+            height: 480px;
+
+            .project-background-image {
+                height: 482px;
+            }
+        }
+    }
+
+    // Fundraiser detail specific
+    &.fundraiser-detail {
+
+        .project-status {
+            @include svg-icon('sidebar/icon-fundraisers.svg', #999, #ffffff);
+            background-size: 14px;
+            background-position: 7px 50%;
+            text-indent: 18px;
+        }
+    }
+
+    // Task detail specific
+    &.task-detail {
+        min-height: 520px;
+        
+        .project-status {
+            @include svg-icon('sidebar/icon-tasks.svg', #999, #ffffff);
+            background-size: 16px;
+            background-position: 5px 50%;
+            text-indent: 18px;
+        }
+
+        .task-meta {
+            clear: both;
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+            @include opacity(0.6);
+            border-top: 1px solid rgba($color-white, 0.6);
+
+            li {
+                background-image: none;
+                line-height: 30px;
+                background-position: 6px 50%;
+                text-indent: 14px;
+                font-weight: bold;
+
+                &:first-letter {
+                    text-transform: uppercase;
+                }
+
+                &.task-location {
+                    @include svg-icon('tasks/icon-task-location.svg');
+                }
+
+                &.task-time {
+                    @include svg-icon('tasks/icon-task-time.svg');
+                }
+
+                &.task-deadline {
+                    @include svg-icon('tasks/icon-task-deadline.svg');
+                }
+
+                &.task-users {
+                    @include svg-icon('tasks/icon-task-users.svg');
+                }
+            }
+        }
+        
+        .project-action {
+            margin-top: 10px;
         }
     }
 }

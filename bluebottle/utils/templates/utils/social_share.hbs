@@ -5,15 +5,16 @@
 
 {% tplhandlebars "social_share" %}
 
-    <div class="share-menu">
-        <a class="share-link">{% trans 'Share this campaign'%}</a>
-        <ul id="share">
-            <li class="facebook"><a {{action shareOnFacebook target="view"}}>{% trans "Share on Facebook" %}</a></li>
-            <li class="twitter"><a {{action shareOnTwitter target="view"}}>{% trans "Share on Twitter" %}</a></li>
-            <!--<li class="linkedin"><a {{action shareLinkedIn target="view"}}>{% trans 'Share on Linkedin'%}</a></li>-->
-            <!--<li class="embed"><a {{action shareEmbedded target="view"}}>{% trans 'Embed on your site'%}</a></li>-->
-            <!--<li class="copy"><a {{action copyLink target="view"}}>{% trans 'Copy link'%}</a></li>-->
-        </ul>
-    </div>
+    <ul class="share-action">
+        <li class="actions-dropdown"><strong>{% trans 'Share this campaign'%}</strong>
+            <ul>
+                <li><a {{action shareOnFacebook target="view"}} class="action-facebook">{% trans "Share on Facebook" %}</a></li>
+                <li><a {{action shareOnTwitter target="view"}} class="action-twitter">{% trans "Share on Twitter" %}</a></li>
+                {{!-- <li><a {{action shareLinkedIn target="view"}} class="action-linkedin">{% trans 'Share on Linkedin'%}</a></li>
+                <li><a {{action shareEmbedded target="view"}} class="action-embed">{% trans 'Embed on your site'%}</a></li>
+                <li><a {{action copyLink target="view"}} class="action-copy">{% trans 'Copy link'%}</a></li> --}}
+            </ul>
+        </li>
+    </ul>
 
 {% endtplhandlebars %}

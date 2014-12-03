@@ -14,15 +14,18 @@
     {{/if}}
 
     {{#if currentUser.isAuthenticated }}
-    <footer>
+    <footer class="comment-footer">
         <form class="m-comment-form">
             <fieldset {{bindAttr class="newReaction.errors.text.length:error"}}>
                 {{#each newReaction.errors.text}}
                     <label class="error">{{this}}</label>
                 {{/each}}
                 {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newComment.text name="reaction" class="comment-input"}}
-                <footer>
-                    <button {{action 'addWallpostComment'}} class="button submit" type="submit">Post</button>
+                <footer class="comment-form-footer">
+                    <div class="comment-form-actions">
+                        <button class="button action-cancel" {{action 'clearForm' target='view'}}>{% trans "Cancel" %}</button>
+                        <button class="button action-submit" {{action 'addWallpostComment'}}>{% trans "Post" %}</button>
+                    </div>
                 </footer>
             </fieldset>
         </form>

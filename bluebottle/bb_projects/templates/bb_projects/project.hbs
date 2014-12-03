@@ -1,14 +1,12 @@
-{% load bb_ember %}
-{% load i18n %}
-{% load static %}
+{% load i18n bb_ember static %}
 
 {% tplhandlebars "project" %}
 <div id="project-detail">
-    <div id="project-detail-header" {{bindAttr class=":l-section amount_asked::without"}}>
+    <div id="project-detail-header" {{bindAttr class=":campaign-detail amount_asked::without"}}>
         <div class="project-background">
             <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
         </div>
-        <section class="project-header">
+        <section class="project-header l-wrapper">
             <article class="project-info">
                 <div class="project-meta">
                     <span class="project-location">{{country.name}}</span>
@@ -18,6 +16,15 @@
                 <p class="project-description">{{pitch}} <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a></p>
             </article>
             <aside class="project-media">
+
+                {{#if isProjectOwner}}
+                    <div class="project-owner-actions">
+                        {{#link-to "myProject" id}}
+                            {% trans 'Edit' %} {% trans 'Campaign' %}
+                        {{/link-to}}
+                    </div>
+                {{/if}}
+                
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>
@@ -37,13 +44,12 @@
         {{partial '_project_actions'}}
     </div>
 
+    <div id="wall">
+        <div class="l-wrapper">
 
-    <div id="l-wall">
-        <div id="wall">
             <section id="wallposts">
                 {{partial 'wallposts'}}
             </section>
-
 
             <section id="sidebar">
 
@@ -109,9 +115,8 @@
 
                 {{/if}}
 
-                {{!-- Todo: only show block when there are supporters --}}
+                {{#if projectDonations}}
                 <div id="supporter-list">
-
                     <div class="activity">
 
                         <header class="activity-header">
@@ -119,21 +124,24 @@
                         </header>
 
                         {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
-
+                        
+                        {{#if isStatusCampaign}}
                         <footer class="activity-footer">
-                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                            <a {{action 'addDonation' this}} data-action-type="donate" class="activity-action">
                                 <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>
                         </footer>
+                        {{/if}}
 
                     </div>
                 </div>
+                {{/if}}
 
             </section>
+            
         </div>
     </div>
-
 </div>
 
 {% endtplhandlebars %}

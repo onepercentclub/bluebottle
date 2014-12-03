@@ -23,18 +23,23 @@
     opacity: $val;
 }
 
+// box-shadow (for possible fallbacks)
+@mixin box-shadow($val) {
+    box-shadow: $val;
+}
+
 // border-radius (for possible fallbacks)
 @mixin border-radius($val) {
     border-radius: $val;
 }
 
 // depraced, use svg-icon
-@mixin add-icon($elm, $w, $h, $o, $lnk) {
-    background-repeat: no-repeat;
-    background-size: $w $h;
-    background-image: $lnk;
-    padding-left: $w + $o;
-}
+// @mixin add-icon($elm, $w, $h, $o, $lnk) {
+//     background-repeat: no-repeat;
+//     background-size: $w $h;
+//     background-image: $lnk;
+//     padding-left: $w + $o;
+// }
 
 // add inline svg with possibility to replace color1 (c1) with color2
 @mixin svg-icon($f, $c1:#ffffff, $c2:#ffffff) {

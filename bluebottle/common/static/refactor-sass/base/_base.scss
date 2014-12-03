@@ -10,7 +10,7 @@ label {
             line-height: 2em;
             display: inline-block;
             width: 17px;
-            height: 16px;
+            height: 18px;
             margin: 0 0 -3px 0;
             cursor: pointer;
         }
@@ -20,14 +20,14 @@ label {
         }
 
         input[type='checkbox'] + span {
-            background: image-url('icons/icon-checkbox.svg') transparent no-repeat;
+            @include svg-icon('forms/icon-checkbox.svg');
         }
 
         input[type='radio'] + span {
         }
 
         input[type='checkbox']:checked + span {
-            background: image-url('icons/icon-checkbox-checked.svg') transparent no-repeat;
+            @include svg-icon('forms/icon-checkbox-checked.svg');
         }
 
         input[type='radio']:checked + span {
@@ -75,11 +75,11 @@ label.error {
 
 button, .button {
     //@include transition(padding 0.1s ease-in-out);
-    font-family: $font-family-header;
+    font-family: $font-family-base;
     font-weight: 700;
     position: relative;
     top: 1px;
-    display: inline-block;
+    display: inline-block !important;
     min-width: 85px;
     padding: .3em 1em .3em 1em;
     padding-top: calc(.3em + 1px);
@@ -100,25 +100,21 @@ button, .button {
     &:hover {
         top: 0;
         margin-bottom: -1px;
-        padding-bottom: calc(.3em + 2px);
+        padding-bottom: calc(.3em + 1px);
         box-shadow: 0 -2px 0 0 $color-sec-shadow inset;
     }
 
     &:active {
         top: 2px;
-        margin-bottom: 1px;
-        padding: .3em 1em .3em 1em;
-        color: $color-sec !important;
-        background-color: $color-sec-shadow !important;
-        //box-shadow: 0 1px 0 0 $color-black inset;
-        box-shadow: none;
-
-        span {
-            background: transparent !important; // TODO: Reset old flaticon
-        }
+        margin-bottom: 0;
+        padding-bottom: .3em;
+        color: $color-grey !important;
+        background-color: $color-grey-dark !important;
+        box-shadow: 0 2px 0 0 $color-real-black inset;
     }
 
     &.button-big {
+        font-family: $font-family-header;
         top: 2px;
         font-size: 20px;
         font-weight: 900;
@@ -130,14 +126,14 @@ button, .button {
         &:hover {
             top: 0;
             box-shadow: 0 -4px 0 0 $color-pri-shadow inset;
-            padding-bottom: calc(.6em + 2px);
+            padding-bottom: calc(.6em + 4px);
         }
 
         &:active {
             top: 4px;
-            padding-top: 0.5em;
-            color: $color-pri !important;
-            background-color: $color-pri-shadow !important;
+            padding-top: calc(.5em + 1px);
+            padding-bottom: .6em;
+            box-shadow: 0 1px 0 0 $color-real-black inset;
         }
     }
 
@@ -161,6 +157,9 @@ button, .button {
         }
 
         &:active {
+            top: 2px;
+            margin-top: -1px;
+            padding-top: calc(.3em + 1px);
             color: $color-grey-medium !important;
             background-color: $color-grey !important;
         }
@@ -187,9 +186,9 @@ button, .button {
 
     .actions-dropdown {
 
-        em {
+        strong {
             @include hide-text;
-            @include add-icon(dropdown, 10px, 12px, 0, url('/static/assets/images/img/icons/owner-actions/icon-action-dropdown.svg'));
+            @include svg-icon('owner-actions/icon-action-dropdown.svg');
             position: relative;
             z-index: 10;
             display: block;
@@ -231,11 +230,8 @@ button, .button {
         border-radius: $radius-large 0 $radius-large $radius-large;
         background-color: $color-real-white;
 
-        li {
-            padding: 6px 10px;
-        }
-
         a {
+            padding: 8px 10px;
             display: block;
             color: $color-grey !important;
 
@@ -245,11 +241,15 @@ button, .button {
         }
 
         .action-delete {
-            @include add-icon(delete, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/icon-action-delete.svg'));
+            @include svg-icon('owner-actions/icon-action-delete.svg');
+            background-position: 7px 50%;
+            text-indent: 15px;
         }
 
         .action-edit {
-            @include add-icon(edit, 10px, 12px, 5px, url('/static/assets/images/img/icons/owner-actions/icon-action-edit.svg'));
+            @include svg-icon('owner-actions/icon-action-edit.svg');
+            background-position: 7px 50%;
+            text-indent: 15px;
         }
     }
     //}

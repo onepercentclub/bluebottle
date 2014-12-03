@@ -4,14 +4,14 @@
 
 {% tplhandlebars "components/bb-system-wallpost" %}
 
-    <article class="m-wallpost">
+	<article class="m-wallpost m-wallpost-system">
 
         <header class="wallpost-header">
             <figure class="user-avatar">
-                {{#if author}}
+                {{#if wallpost.author}}
                     <img {{bindAttr src="wallpost.author.getAvatar" alt="wallpost.author.full_name"}} />
                 {{else}}
-                    <img src="{% get_static_prefix %}/images/default-avatar.png" alt="someone"/>
+                    <img src="{% get_static_prefix %}/images/default-avatar.png" alt="Guest"/>
                 {{/if}}
 
             </figure>
@@ -21,22 +21,11 @@
                     <strong>{{wallpost.author.full_name}}</strong>
                 </a> {% trans "made a donation" %}
             {{else}}
-                <strong>{% trans "Someone" %}</strong> {% trans "made a donation" %}
+            <strong>{% trans "Guest" %}</strong> {% trans "made a donation" %}
             {{/if}}
 
             <abbr class="timestamp">{{ localize wallpost.created formatting="X" }}</abbr>
-
-            {{#if isAuthor}}
-                <div class="owner-actions">
-                    <ul>
-                        <li><a href="#" {{action "deleteReaction" wallpost}} class="delete">Delete</a></li>
-                    </ul>
-                </div>
-            {{/if}}
         </header>
-
-        <div class="wallpost-body">
-        </div>
 
         <ul class="comments">
             {{bb-wallpost-comment-list comments=post.reactions wallpost=wallpost currentUser=currentUser

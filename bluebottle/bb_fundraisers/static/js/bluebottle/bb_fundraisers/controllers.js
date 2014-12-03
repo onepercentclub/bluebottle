@@ -13,6 +13,10 @@ App.FundraiserIsOwner = Em.Mixin.create({
 App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
     needs: ['project'],
 
+    backgroundStyle: function(){
+        return "background-image:url('" + this.get('project.image') + "');";
+    }.property('project.image'),
+
     _setDonations: function () {
         if (this.get('isLoaded')) {
             this.set('fundraiserDonations', App.ProjectDonation.find({fundraiser: this.get('id')}));
@@ -30,7 +34,7 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
 
     recentSupporters: function () {
         if (this.get('supporters')) {
-            return this.get('supporters').splice(0, 10);
+            return this.get('supporters').splice(0, 13);
         }
     }.property('supporters.length'),
 

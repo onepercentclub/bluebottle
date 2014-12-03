@@ -3,106 +3,100 @@
 
 {% tplhandlebars "_project_actions_with_funding" %}
 <section id="project-bar">
-    <div class="project-status">
-        <div class="project-fund">
-            {{#if isCheetahProject}}
-                <div class="cheetah-project-progress">
-                    {{#if isStatusCampaign}}
-                        {{#ifExpired deadline}}
-                            <div class="cheetah-funded">
-                                <div class="cheetah-funded-text">
-                                    {% blocktrans%}
-                                        <span><strong>At 30%</strong> it will be Cheetah Funded</span>
-                                    {% endblocktrans %}
+    <div class="l-wrapper">
+        <div class="project-status">
+            <div class="project-fund">
+                {{#if isCheetahProject}}
+                    <div class="cheetah-project-progress">
+                        {{#if isStatusCampaign}}
+                            {{#ifExpired deadline}}
+                                <div class="cheetah-funded">
+                                    <div class="cheetah-funded-text">
+                                        {% blocktrans%}
+                                            <span><strong>At 30%</strong> it will be Cheetah Funded</span>
+                                        {% endblocktrans %}
+                                    </div>
+                                    <i class="cheetah-funded-dot"></i>
                                 </div>
-                                <i class="cheetah-funded-dot"></i>
-                            </div>
-                            <div class="expired">
+                                <div class="expired">
+                                    {{cheetah-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider"}}
+                                </div>
+                            {{else}}
+                                <div class="cheetah-funded">
+                                    <div class="cheetah-funded-text">
+                                        {% blocktrans%}
+                                            <span><strong>At 30%</strong> it will be Cheetah Funded</span>
+                                        {% endblocktrans %}
+                                    </div>
+                                    <i class="cheetah-funded-dot"></i>
+                                </div>
                                 {{cheetah-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider"}}
-                            </div>
+                            {{/ifExpired}}
                         {{else}}
-                            <div class="cheetah-funded">
-                                <div class="cheetah-funded-text">
-                                    {% blocktrans%}
-                                        <span><strong>At 30%</strong> it will be Cheetah Funded</span>
-                                    {% endblocktrans %}
+                            {{#if isStatusCompleted}}
+                                <div class="cheetah-fully-funded">
+                                    {{bb-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider "}}
                                 </div>
-                                <i class="cheetah-funded-dot"></i>
-                            </div>
-                            {{cheetah-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider"}}
-                        {{/ifExpired}}
-                    {{else}}
-                        {{#if isStatusCompleted}}
-                            <div class="cheetah-fully-funded">
-                                {{bb-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider "}}
-                            </div>
-                        {{else}}
-                            <div class="cheetah-funded">
-                                <div class="cheetah-funded-text">
-                                    {% blocktrans%}
-                                        <span><strong>At 30%</strong> it will be Cheetah Funded</span>
-                                    {% endblocktrans %}
+                            {{else}}
+                                <div class="cheetah-funded">
+                                    <div class="cheetah-funded-text">
+                                        {% blocktrans%}
+                                            <span><strong>At 30%</strong> it will be Cheetah Funded</span>
+                                        {% endblocktrans %}
+                                    </div>
+                                    <i class="cheetah-funded-dot"></i>
                                 </div>
-                                <i class="cheetah-funded-dot"></i>
-                            </div>
-                            <div class="expired">
-                                {{cheetah-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider"}}
-                            </div>
+                                <div class="expired">
+                                    {{cheetah-progressbar targetValue=amount_asked currentValue=amount_donated class="campaign-fund-amount-slider"}}
+                                </div>
+                            {{/if}}
                         {{/if}}
-                    {{/if}}
 
-                </div>
-                <p class="project-fund-amount">
-                    <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
-                    <em class="amount-asked">
-                        {% trans "of" %} <strong>&euro; {{localize amount_asked}}</strong> {% trans "raised" %}
-                    </em>
-                </p>
+                    </div>
+                    <p class="project-fund-amount">
+                        <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
+                        <em class="amount-asked">
+                            {% trans "of" %} <strong>&euro; {{localize amount_asked}}</strong> {% trans "raised" %}
+                        </em>
+                    </p>
 
+                {{else}}
+                    <div {{bindAttr class=":project-fund-amount-slider is_funded:is-funded"}}>
+                        {{bb-progressbar targetValue=amount_asked currentValue=amount_donated}}
+                    </div>
+                    <p class="project-fund-amount">
+                        <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
+                        <em class="amount-asked">
+                            {% trans "of" %} <strong>&euro; {{localize amount_asked}}</strong> {% trans "raised" %}
+                        </em>
+                    </p>
+                {{/if}}
+                <div class="project-days-left">
+                {{#if overDeadline}}
+                    {% trans "Deadline passed" %}
+                {{else}}
+                    <strong>{{daysToGo}}</strong> {% trans "days left" %}
+                {{/if}}
+                </div>
+            </div>
+        </div>
+
+        <div class="project-action">
+            {{#if isStatusCampaign}}
+                <a {{action 'addDonation' this}} data-action-type="donate" class="button button-big"> {% trans "Support project" %}</a>
+                {{view 'App.MpesaDonateView' class="mpesa-donate" }}
             {{else}}
-                <div class="campaign-fund-amount-slider">
-                    {{bb-progressbar targetValue=amount_asked currentValue=amount_donated}}
-                </div>
-                <p class="project-fund-amount">
-                    <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
-                    <em class="amount-asked">
-                        {% trans "of" %} <strong>&euro; {{localize amount_asked}}</strong> {% trans "raised" %}
-                    </em>
-                </p>
-            {{/if}}
-            {{!-- {{#if isStatusCampaign}}
-                <div class="project-days-left">
-                    {{#ifExpired deadline}}
-                        {% trans "Deadline passed" %}
-                    {{else}}
-                        {{daysToGo}} {% trans "days left" %}
-                    {{/ifExpired}}
-                </div>
-            {{else}}
-                <div class="project-days-left">
-                    {{#unless isPhasePlanNew}}
-                        {% trans "Deadline passed" %}
-                    {{/unless}}
-                </div>
-            {{/if}} --}}
-            {{#if isSupportable}}
-                <div class="project-days-left">
-                    {{daysToGo}} {% trans "days left" %}
+                <div class="project-closed">
+                    <strong>{% trans "Campaign" %} {{#if is_funded}}{% trans "fully funded and" %} {{/if}}{% trans "closed" %}</strong><br />
+                    {{localize deadline formatting="X"}}
                 </div>
             {{/if}}
         </div>
     </div>
-
-    <div class="project-action">
-        {{#if isSupportable}}
-            <a {{action 'addDonation' this}} data-action-type="donate" class="button button-big"> {% trans "Support project" %}</a>
-            {{view 'App.MpesaDonateView' class="mpesa-donate" }}
-        {{/if}}
-    </div>
 </section>
 
-<div id="l-project-users">
-    <section id="project-users">
+<section id="project-users">
+    <div class="l-wrapper">
         <div class="project-initiator">
             <a {{action 'openInBigBox' 'userModal' owner }} class="user">
                 <figure class="user-avatar">
@@ -115,10 +109,10 @@
             </a>
         </div>
         <div class="project-supporters">
-            <strong>32 <em>{% trans "Supporters" %}</em></strong>
-            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
+            <strong>{{supporters.length}} <em>{% trans "Supporters" %}</em></strong>
+            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=13}}
         </div>
-    </section>
-</div>
+    </div>
+</section>
 
 {% endtplhandlebars %}

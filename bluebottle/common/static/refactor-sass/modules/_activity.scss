@@ -1,35 +1,53 @@
 .activity {
     font-size: 13px;
     line-height: 1.5em;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     color: $color-grey;
+    
+    .user-name {
+        font-weight: bold;
+    }
+
+    a.user-name {
+        color: $color-sec;
+    }
 
     a {
-        display: block;
-        color: $color-grey !important;
-        @include transition(color .16s ease-out);
+        text-decoration: none;
+        color: $color-grey;
+
+        .user-name {
+            color: $color-sec;
+        }
 
         &:hover, &:active {
-            color: $color-text !important;
-
-            .user-name {
-                color: $color-sec !important;
+            color: $color-text;
+                
+            .timestamp {
+                color: $color-grey;
             }
 
-            .timestamp {
-                color: $color-grey !important;
+            .user-name {
+                color: $color-text;
             }
         }
     }
 
+    .activity-header {
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
     .activity-title {
-        font-family: $font-family-base !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        color: $color-grey !important;
-        padding-bottom: 4px;
+        font-family: $font-family-base;
+        font-size: 18px;
+        line-height: 1.5em;
+        font-weight: bold;
+        color: $color-grey;
+        padding-bottom: 10px;
         text-indent: 40px;
-        background-position: 4px 9px;
+        background-position: 4px 4px;
+        text-transform: none;
     }
 
     .activity-list {
@@ -43,8 +61,13 @@
         background-image: none;
         @include clearfix;
 
+        .item-link {
+            display: block;
+            @include transition(color .16s ease-out);
+        }
+
         p {
-            margin: 0 0 5px 0;
+            margin: 5px 0 5px 0;
         }
 
         .user-avatar {
@@ -57,6 +80,34 @@
                 height: 35px;
                 border-radius: 50%;
             }
+        }
+
+        .item-body {
+            overflow: hidden;
+            padding-bottom: 5px;
+        }
+
+        .action-edit {
+            width: 14px;
+            height: 14px;
+            @include hide-text;
+            @include svg-icon('sidebar/icon-edit.svg', #9F9F9F, $color-grey);
+
+            &:hover, &:active {
+                @include svg-icon('sidebar/icon-edit.svg', #9F9F9F, $color-black);
+            }
+        }
+
+        .item-actions {
+
+            .action-status {
+                color: $color-text;
+                font-weight: bold;
+            }
+        }
+        
+        .action-edit {
+            float: right;
         }
     }
 
@@ -97,12 +148,17 @@
     }
 }
 
-#task-list {
+#task-list, #files-list {
     background: none;
+    
+    .activity-header {
+        margin-bottom: 0px;
+    }
 
     .activity-item {
-        margin: 5px 0;
+        margin: 0 0 8px 0;
     }
+
     // todo: refactor with classnames
     .activity-item a {
         position: relative;
@@ -112,8 +168,9 @@
         border: 1px solid $color-grey-medium;
         border-radius: $radius-medium;
         background-color: $color-real-white;
+        @include transition(border 0.1s ease-out);
 
-        .task-title {
+        .item-title {
             font-size: 15px;
             line-height: 1.1em;
             display: block;
@@ -122,9 +179,13 @@
             margin: 0;
             text-overflow: ellipsis;
             color: $color-text;
+
+            &:first-letter {
+                text-transform: uppercase;
+            }
         }
 
-        .task-meta {
+        .item-meta {
 
             em {
                 font-style: normal;
@@ -136,7 +197,7 @@
             }
         }
 
-        .task-status {
+        .item-status {
             font-weight: bold;
             font-style: normal;
             position: absolute;
@@ -145,12 +206,59 @@
             display: block;
             width: 70px;
             height: 70px;
-            padding-top: 40px;
+            padding-top: 45px;
             text-align: center;
             text-transform: uppercase;
             color: $color-text-on-dark;
             background-color: $color-sec;
             @include border-right-radius($radius-medium);
+            background-position: 50% 33%;
+            
+            @include transition(background-color 0.1s ease-out);
+
+            &.task-open {
+                background-color: $color-sec;
+                @include svg-icon('sidebar/icon-task-open.svg');
+            }
+
+            &.task-running {
+                background-color: $color-sec;
+                @include svg-icon('sidebar/icon-task-open.svg');
+            }
+
+            &.task-closed {
+                background-color: $color-grey-medium;
+                @include svg-icon('sidebar/icon-task-done.svg');
+            }
+
+            &.task-done {
+                background-color: $color-grey-medium;
+                @include svg-icon('sidebar/icon-task-done.svg');
+            }
+
+            &.file-download {
+                @include hide-text;
+                background-color: $color-grey-medium;
+                @include svg-icon('sidebar/icon-download.svg');
+                background-position: 50% 50%;
+            }
+        }
+
+        &:hover, &:active {
+            border-color: $color-grey;
+
+            .item-status {
+                @include hide-text;
+                background-color: $color-grey;
+                @include svg-icon('sidebar/icon-arrow-right.svg');
+                background-position: 50% 50%;
+            }
+
+            .file-download {
+                @include svg-icon('sidebar/icon-download.svg');
+                background-position: 50% 52%;
+            }
+
         }
     }
 }
@@ -174,7 +282,7 @@
 
 }
 
-#supporter-list {
+#supporter-list, #task-user-list {
     
     .activity-header {
         border-bottom: 1px solid $color-grey-medium;
@@ -183,8 +291,11 @@
     .activity-title {
         @include svg-icon('sidebar/icon-supporters.svg');
     }
+}
 
-    a .user-name {
-        color: $color-sec;
+#files-list {
+
+    .activity-title {
+        @include svg-icon('sidebar/icon-files.svg');
     }
 }

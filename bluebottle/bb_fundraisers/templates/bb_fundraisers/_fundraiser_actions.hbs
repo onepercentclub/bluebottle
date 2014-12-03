@@ -31,7 +31,7 @@
                     {{localize deadline formatting="X"}}
                 </div>
             {{else}}
-                <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="button button-big"> {% trans "Support" %} {{owner.full_name}}</a>
+                <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="button button-big"> {% trans "Support" %} {{owner.first_name}}</a>
                 {{view 'App.MpesaDonateView' class="mpesa-donate" }}
             {{/if}}
         </div>

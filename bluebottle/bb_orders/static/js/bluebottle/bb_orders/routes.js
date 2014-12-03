@@ -77,7 +77,7 @@ App.OrderRoute = Em.Route.extend({
 
     _handleSuccess: function (donation) {
         this.send('clearFlash');
-
+        
         // If the donation is anonymous or there is no current user
         // then only show the thank you toast.
         if (donation.get('anonymous') || !this.get('currentUser.isAuthenticated')) {
@@ -96,7 +96,7 @@ App.OrderRoute = Em.Route.extend({
         var _this = this,
             order = model,
             donation = order.get('donations.firstObject');
-            status = _this.get('status'),
+            status = order.get('status'),
             fundraiser = donation.get('fundraiser'),
             project = donation.get('project'),
             donationTarget = fundraiser ? fundraiser : project;
@@ -109,6 +109,9 @@ App.OrderRoute = Em.Route.extend({
                     break;
 
                 case 'pending':
+                    _this.send('closeModal');
+
+
                     // Display flash message until payment no longer pending
                     _this.send('setFlash', gettext('Processing payment'), 'is-loading', false);
 

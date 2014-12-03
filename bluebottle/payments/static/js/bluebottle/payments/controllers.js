@@ -197,22 +197,24 @@ App.OrderPaymentController = Em.ObjectController.extend({
                     // Reload the order to receive any backend updates to the
                     // order status
                     var order = payment.get('order');
-                    order.reload();
-                    // Proceed to the next step based on the status of the payment
-                    // 1) Payment status is 'success'
-                    // 2) Payment status is 'in_progress'
+                    order.reload().then(function(reloadedOrder) {
+                        // Proceed to the next step based on the status of the payment
+                        // 1) Payment status is 'success'
+                        // 2) Payment status is 'in_progress'
 
-                    // FIXME: For testing purposes we will direct the user to
-                    //        the success modal for creditcard payments and to
-                    //        the mock service provider for all others.
-                    if (order.get('status') == 'success') {
-                        // Redirect to the order route.
-                        _this.transitionToRoute('order', order.get('id'));
-                    } else {
-                        // Process the authorization action to determine next
-                        // step in payment process.
-                        _this._processAuthorizationAction();
-                    }                },
+                        // FIXME: For testing purposes we will direct the user to
+                        //        the success modal for creditcard payments and to
+                        //        the mock service provider for all others.
+                        if (reloadedOrder.get('status') == 'success' || reloadedOrder.get('status') == 'pending') {
+                            // Redirect to the order route.
+                            _this.transitionToRoute('order', reloadedOrder);
+                        } else {
+                            // Process the authorization action to determine next
+                            // step in payment process.
+                            _this._processAuthorizationAction();
+                        }
+                    });
+                },
                 // Failure
                 function (payment) {
                     _this.set('isBusy', false);

@@ -16,12 +16,60 @@ App.DonationView = App.FormView.extend({
 App.DonationSuccessView = Em.View.extend({
     templateName: 'donation_success',
     supported: true,
+    dialogW: 626,
+    dialogH: 436,
 
     didInsertElement: function() {
         if(!document.createElement('svg').getAttributeNS) {
             this.setProperties({
                 supported: false
             });
+        }
+    },
+
+    actions: {
+        shareOnFacebook: function() {
+            debugger;
+            // context is the model object defined in the associated controller/route
+            var meta_data = this.get('context.meta_data'),
+                tracker = this.get('controller.tracker'),
+                controller = this.get('controller');
+            
+            if(meta_data && meta_data.url){
+                var currentLink = encodeURIComponent(meta_data.url);
+            } else {
+                console.log('meta data not found');
+                var currentLink = encodeURIComponent(location.href);
+            }
+
+            if (tracker) {
+                tracker.trackEvent("Share", {project: controller.get('model.title'), network: "Facebook"});
+                tracker.peopleIncrement('facebook_shares');
+            }
+
+            this.showDialog('https://www.facebook.com/sharer/sharer.php?u=', currentLink, 'facebook');
+        },
+
+        shareOnTwitter: function() {
+            var meta_data = this.get('context.meta_data'),
+                // status: e.g. Women first in Botswana {{URL}} via @1percentclub'
+                tracker = this.get('controller.tracker'),
+                controller = this.get('controller');
+                
+            if(meta_data.url){
+                var currentLink = encodeURIComponent(meta_data.url);
+            } else {
+                var currentLink = encodeURIComponent(location.href);
+            }
+
+            var status = meta_data.tweet.replace('{URL}', currentLink);
+
+            if (tracker) {
+                tracker.trackEvent("Share", {project: controller.get('model.title'), network: 'Twitter' });
+                tracker.peopleIncrement('twitter_shares');
+            }
+
+            this.showDialog('https://twitter.com/home?status=', status, 'twitter');
         }
     }
 });

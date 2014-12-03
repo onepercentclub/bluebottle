@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.admin.views.main import ChangeList
+from django.db.models.aggregates import Sum
 from .models import Language
 import csv
 from django.http import HttpResponse
@@ -48,3 +50,13 @@ def export_as_csv_action(description="Export selected objects as CSV file",
         return response
     export_as_csv.short_description = description
     return export_as_csv
+
+
+class TotalAmountAdminChangeList(ChangeList):
+
+    def get_results(self, *args, **kwargs):
+        total_column = self.model_admin.total_column or 'amount'
+        self.model_admin.change_list_template = 'utils/admin/change_list.html'
+        super(TotalAmountAdminChangeList, self).get_results(*args, **kwargs)
+        q = self.result_list.aggregate(total=Sum(total_column))
+        self.total = q['total']

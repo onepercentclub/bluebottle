@@ -1,10 +1,13 @@
 from bluebottle.bb_payouts.admin_utils import link_to
+from bluebottle.utils.admin import export_as_csv_action, TotalAmountAdminChangeList
 from bluebottle.utils.utils import StatusDefinition
 from django.contrib.admin.filters import SimpleListFilter
 from django.contrib.admin.templatetags.admin_static import static
 from bluebottle.utils.model_dispatcher import get_donation_model, get_model_mapping, get_order_model
 from django.contrib import admin
+from django.contrib.admin.views.main import ChangeList
 from django.core.urlresolvers import reverse
+from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext_lazy as _
 
 DONATION_MODEL = get_donation_model()
@@ -30,21 +33,31 @@ class DonationStatusFilter(SimpleListFilter):
             }
 
     def queryset(self, request, queryset):
-        if self.value() in ORDER_MODEL.STATUS_CHOICES:
-            return queryset.filter(order__status=self.value())
-        elif self.value() is None or self.value() == 'pending_or_success':
+        if self.value() is None or self.value() == 'pending_or_success':
             return queryset.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        elif self.value() != 'all':
+            return queryset.filter(order__status=self.value())
+        return queryset
 
 
 class DonationAdmin(admin.ModelAdmin):
-    date_hierarchy = 'updated'
-    list_display = ('updated', 'admin_project', 'fundraiser', 'user', 'user_full_name', 'amount', 'related_payment_method', 'status')
-    list_filter = (DonationStatusFilter, )
-    ordering = ('-updated', )
+    date_hierarchy = 'created'
+    list_display = ('created', 'completed', 'admin_project', 'fundraiser', 'user', 'user_full_name', 'amount',
+                    'related_payment_method', 'order_type', 'status')
+    list_filter = (DonationStatusFilter, 'order__order_type')
+    ordering = ('-created',  )
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user_link', 'project_link', 'fundraiser_link')
     fields = readonly_fields + ('amount', 'project', 'fundraiser')
     search_fields = ('order__user__first_name', 'order__user__last_name', 'order__user__email', 'project__title')
+
+    export_fields = ['project', 'order__user', 'amount', 'created', 'updated', 'completed', 'order__status',
+                     'order__order_type']
+    actions = (export_as_csv_action(fields=export_fields), )
+
+    def get_changelist(self, request):
+        self.total_column = 'amount'
+        return TotalAmountAdminChangeList
 
     def user_full_name(self, obj):
         if obj.order.user:
@@ -95,6 +108,10 @@ class DonationAdmin(admin.ModelAdmin):
 
     fundraiser_link.allow_tags = True
 
+    def order_type(self, obj):
+        return obj.order.order_type
+
+
     # Link to project
     admin_project = link_to(
         lambda obj: obj.project,
@@ -103,7 +120,6 @@ class DonationAdmin(admin.ModelAdmin):
         short_description='project',
         truncate=50
     )
-
 
 
 admin.site.register(DONATION_MODEL, DonationAdmin)

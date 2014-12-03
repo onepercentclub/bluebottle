@@ -106,7 +106,7 @@
 
                 {{/if}}
 
-                {{!-- Todo: only show block when there are supporters --}}
+                {{#if projectDonations}}
                 <div id="supporter-list">
                     <div class="activity">
 
@@ -116,17 +116,18 @@
 
                         {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
                         
-                        {{#unless overDeadline}}
+                        {{#if isStatusCampaign}}
                         <footer class="activity-footer">
                             <a {{action 'addDonation' controllers.project}}  class="activity-action">
                                 <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>
                         </footer>
-                        {{/unless}}
+                        {{/if}}
 
                     </div>
                 </div>
+                {{/if}}
 
             </section>
             

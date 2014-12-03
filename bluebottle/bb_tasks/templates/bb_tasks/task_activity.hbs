@@ -17,18 +17,11 @@
                         {{render "taskMember" this}}
                     {{/each}}
                 </ul>
-{{!--                 {{#if isApplicable}}
-                    <footer class="activity-footer">
-                        <a {{action applyForTask this }} class="activity-action">
-                            <strong>{% trans "Apply for task" %}</strong>
-                        </a>
-                    </footer>
-                {{/if}} --}}
             </div>
         </div>
     {{/if}}
 
-    
+    {{#if files}}
     <div id="files-list">
         <div class="activity">
 
@@ -67,5 +60,24 @@
             {{/if}}
         </div>
     </div>
+    {{else}}
+        {{#if controllers.task.canUpload}}
+            <div id="files-list">
+                <div class="activity">
+
+                    <header class="activity-header">
+                        <h2 class="activity-title">{% trans "Files" %}</h2>
+                    </header>
+                    
+                    <footer class="activity-footer">
+                        <a {{action 'uploadFile' this}} class='activity-action' >
+                            <strong>{% trans "Upload a new file" %} &raquo;</strong><br />
+                            {% trans "Share documents of files with your supporters" %}
+                        </a>
+                    </footer>
+                </div>
+            </div>
+        {{/if}}
+    {{/if}}
 
 {% endtplhandlebars %}

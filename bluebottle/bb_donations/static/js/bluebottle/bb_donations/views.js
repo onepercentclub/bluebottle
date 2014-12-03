@@ -10,6 +10,7 @@ App.DonationView = App.FormView.extend({
   },
 
   keyDown: function(e){
+      // Only allow users to enter numbers and use the backspace. This prevents illegal input such as chars or non-round amounts.
       if (!this.isNumberInput(e) && !this.isBackspace(e)){
         return false;
       }

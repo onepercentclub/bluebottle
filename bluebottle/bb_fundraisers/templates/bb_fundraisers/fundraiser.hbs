@@ -45,9 +45,9 @@
             <section id="wallposts">
                 {{partial 'wallposts'}}
             </section>
-
+            
+            {{!-- {{#if fundraiserDonations}} --}}
             <section id="sidebar">
-                {{!-- Todo: only show block when there are supporters --}}
                 <div id="supporter-list">
 
                     <div class="activity">
@@ -59,7 +59,7 @@
                         
                         {{#unless overDeadline}}
                         <footer class="activity-footer">
-                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                            <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="activity-action">
                                 <strong>{% trans "Support this fundraiser" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>
@@ -68,8 +68,8 @@
 
                     </div>
                 </div>
-
             </section>
+            {{!-- {{/if}} --}}
         </div>
     </div>
 </div>

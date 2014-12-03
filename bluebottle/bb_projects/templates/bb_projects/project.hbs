@@ -118,7 +118,7 @@
                         
                         {{#if isStatusCampaign}}
                         <footer class="activity-footer">
-                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                            <a {{action 'addDonation' this}} data-action-type="donate" class="activity-action">
                                 <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>

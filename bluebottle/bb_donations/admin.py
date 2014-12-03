@@ -40,11 +40,39 @@ class DonationStatusFilter(SimpleListFilter):
         return queryset
 
 
+class DonationUserFilter(SimpleListFilter):
+    title = _('User type')
+
+    parameter_name = 'user_type'
+    default_status = 'all'
+
+    def lookups(self, request, model_admin):
+        return (('all', _('All')), ('member', _('Member')),
+                ('anonymous', _('Anonymous')), ('guest', _('Guest')) )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup if self.value() else lookup == self.default_status,
+                'query_string': cl.get_query_string({self.parameter_name: lookup}, []),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'member':
+            return queryset.filter(anonymous=False, order__user__isnull=False)
+        elif self.value() == 'anonymous':
+            return queryset.filter(anonymous=True)
+        elif self.value() == 'guest':
+            return queryset.filter(order__user__isnull=True)
+        return queryset
+
+
 class DonationAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     list_display = ('created', 'completed', 'admin_project', 'fundraiser', 'user', 'user_full_name', 'amount',
                     'related_payment_method', 'order_type', 'status')
-    list_filter = (DonationStatusFilter, 'order__order_type', 'anonymous')
+    list_filter = (DonationStatusFilter, 'order__order_type', DonationUserFilter)
     ordering = ('-created',  )
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user_link', 'project_link', 'fundraiser_link')

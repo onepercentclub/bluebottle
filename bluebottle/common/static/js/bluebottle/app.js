@@ -670,24 +670,25 @@ App.EventMixin = Em.Mixin.create({
     $('#content').bind('hover', closeMenu);
   },
 
-  showHideReadmore: function() {
-    var description = $('#project-detail-header .project-description'),
-        projectMore = $('.project-more'),
-        readMore = $('.project-more.read-more');
-
-    if (!description) return;
-
-    if (description.height() > 92) {
-        projectMore.show();
-        
-        readMore.on('click', function() {
-            description.toggleClass('is-active');
-            //readMore.html(gettext('Read less.'));
-        });
-    } else {
-        projectMore.hide();
-    }
-  }
+  // Always dhow 'showMore'
+  //showHideReadmore: function() {
+  //  var description = $('#project-detail-header .project-description'),
+  //      projectMore = $('.project-more'),
+  //      readMore = $('.project-more.read-more');
+  //
+  //  if (!description) return;
+  //
+  //  if (description.height() > 92) {
+  //      projectMore.show();
+  //
+  //      readMore.on('click', function() {
+  //          description.toggleClass('is-active');
+  //          //readMore.html(gettext('Read less.'));
+  //      });
+  //  } else {
+  //      projectMore.hide();
+  //  }
+  //}
 });
 
 

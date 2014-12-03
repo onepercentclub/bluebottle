@@ -46,7 +46,10 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     willClose: function () {
         var currentPaymentMethodController = this.get('paymentMethodController');
-        if (currentPaymentMethodController) currentPaymentMethodController.clearValidations();
+        if (currentPaymentMethodController) {
+            currentPaymentMethodController.clearValidations();
+            currentPaymentMethodController._clearModel();
+        }
     },
 
     didError: function () {
@@ -233,6 +236,7 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
     requiredFields: [],
     errorDefinitions: [],
     isBusy: null,
+    _clearModel: Em.K,
 
     getIntegrationData: function() {
         return this.get('model');

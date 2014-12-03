@@ -61,6 +61,14 @@ App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
         return gettext("Your account name");
     }.property(),
 
+    _clearModel: function() {
+        var user = this.get('currentUser');
+        this.set('model', App.DocdataDirectdebit.create());
+        if (user) {
+            this.set('model.account_name', user.get('full_name'));
+        }
+    },
+
     errorDefinitions: [
         {
             'property': 'account_name',
@@ -136,12 +144,9 @@ App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
     }.observes('iban'),
 
     init: function () {
-        var user = this.get('currentUser');
-        this.set('model', App.DocdataDirectdebit.create());
-        if (user) {
-            this.set('model.account_name', user.get('full_name'));
-        }
         this._super();
+
+        this._clearModel();
     }
 });
 

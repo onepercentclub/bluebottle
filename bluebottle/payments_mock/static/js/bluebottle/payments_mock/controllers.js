@@ -3,6 +3,7 @@ App.MockIdealController = App.StandardPaymentMethodController.extend({
 
     init: function() {
         this._super();
+        
         this.set('errorDefinitions', [
             {
                 'property': 'issuerId',

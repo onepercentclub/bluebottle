@@ -46,6 +46,7 @@ App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
         clearForm: function(){
             this.hideWallpostOptions('.wallpost-update');
         },
+
         saveWallpost: function() {
             var _this = this,
                 wallpost = this.get('wallpost');
@@ -107,6 +108,10 @@ App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
 
             _this.sendAction('close');
             _this.sendAction('addWallpost', wallpost);
+        },
+
+        close: function() {
+            this.sendAction('close');
         }
     }
 });

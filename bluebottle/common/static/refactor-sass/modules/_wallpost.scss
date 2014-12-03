@@ -3,6 +3,10 @@
     position: relative;
     clear: both;
 
+    a {
+        text-decoration: none;
+    }
+
     .user-avatar {
         float: left;
         margin: 0 20px 10px 0;
@@ -20,7 +24,7 @@
         display: block;
         margin-top: 10px;
         color: $color-sec !important;
-        text-transform: capitalize; // TODO: make global
+        text-transform: capitalize;
     }
 
     .timestamp {
@@ -42,6 +46,10 @@
             &:hover, &:active {
                 text-decoration: underline !important;
             }
+        }
+
+        p:last-of-type {
+            margin-bottom: 0;
         }
     }
 }
@@ -177,7 +185,7 @@
     .comment-body {
         @include break-all-words;
         overflow: hidden;
-        padding: 0 20px 5px 0;
+        padding: 0 20px 20px 0;
 
         &:first-letter {
             text-transform: uppercase;
@@ -278,17 +286,5 @@
             height: 50px;
             border-top: solid 1px $color-grey-medium;
         }
-    }
-}
-
-// TODO: make global
-.signin {
-    padding: 7px 20px 10px 20px;
-    border: 1px solid $color-grey-medium;
-    //background-color: $color-grey-light;
-    margin-bottom: 30px;
-
-    p {
-        margin: 0;
     }
 }

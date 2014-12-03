@@ -16,6 +16,15 @@
                 <p class="project-description">{{pitch}} <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a></p>
             </article>
             <aside class="project-media">
+
+                {{#if isProjectOwner}}
+                    <div class="project-owner-actions">
+                        {{#link-to "myProject" id}}
+                            {% trans 'Edit' %} {% trans 'Campaign' %}
+                        {{/link-to}}
+                    </div>
+                {{/if}}
+                
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>
@@ -106,7 +115,7 @@
 
                 {{/if}}
 
-                {{!-- Todo: only show block when there are supporters --}}
+                {{#if projectDonations}}
                 <div id="supporter-list">
                     <div class="activity">
 
@@ -116,17 +125,18 @@
 
                         {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
                         
-                        {{#unless overDeadline}}
+                        {{#if isStatusCampaign}}
                         <footer class="activity-footer">
-                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                            <a {{action 'addDonation' this}} data-action-type="donate" class="activity-action">
                                 <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>
                         </footer>
-                        {{/unless}}
+                        {{/if}}
 
                     </div>
                 </div>
+                {{/if}}
 
             </section>
             

@@ -18,7 +18,7 @@
                 {{#if overDeadline}}
                     {% trans "Deadline passed" %}
                 {{else}}
-                    {{daysToGo}} {% trans "days left" %}
+                    <strong>{{daysToGo}}</strong> {% trans "days left" %}
                 {{/if}}
                 </div>
             </div>
@@ -52,8 +52,8 @@
             </a>
         </div>
         <div class="project-supporters">
-            <strong>32 <em>{% trans "Supporters" %}</em></strong>
-            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
+            <strong>{{fundraiserDonations.length}} <em>{% trans "Supporters" %}</em></strong>
+            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=13}}
         </div>
     </div>
 </section>

@@ -35,7 +35,7 @@
 
     .activity-header {
         overflow: hidden;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
     .activity-title {
@@ -150,9 +150,13 @@
 
 #task-list, #files-list {
     background: none;
+    
+    .activity-header {
+        margin-bottom: 0px;
+    }
 
     .activity-item {
-        margin: 5px 0;
+        margin: 0 0 8px 0;
     }
 
     // todo: refactor with classnames

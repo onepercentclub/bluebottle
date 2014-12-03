@@ -40,7 +40,7 @@ class BaseOrder(models.Model, FSMTransition):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
 
-    order_type = models.CharField(max_length='100', default='one-off', null=True, blank=True)
+    order_type = models.CharField(max_length='100', default='one-off')
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))

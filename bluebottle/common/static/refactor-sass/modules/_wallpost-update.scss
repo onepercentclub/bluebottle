@@ -227,6 +227,11 @@
 
     &.is-active {
         
+        .wallpost-update-post {
+            @include border-radius(0);
+            height: calc(5.5em + 20px);
+        }
+
         .wallpost-update-footer {
             height: 50px;
             border-top: solid 1px $color-grey-medium;

@@ -5,17 +5,49 @@
     color: $color-grey;
     
     .user-name {
-        color: $color-grey !important;
+        font-weight: bold;
+    }
+
+    a.user-name {
+        color: $color-sec;
+    }
+
+    a {
+        text-decoration: none;
+        color: $color-grey;
+
+        .user-name {
+            color: $color-sec;
+        }
+
+        &:hover, &:active {
+            color: $color-text;
+                
+            .timestamp {
+                color: $color-grey;
+            }
+
+            .user-name {
+                color: $color-text;
+            }
+        }
+    }
+
+    .activity-header {
+        overflow: hidden;
+        margin-bottom: 20px;
     }
 
     .activity-title {
-        font-family: $font-family-base !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        color: $color-grey !important;
-        padding-bottom: 4px;
+        font-family: $font-family-base;
+        font-size: 18px;
+        line-height: 1.5em;
+        font-weight: bold;
+        color: $color-grey;
+        padding-bottom: 10px;
         text-indent: 40px;
-        background-position: 4px 9px;
+        background-position: 4px 4px;
+        text-transform: none;
     }
 
     .activity-list {
@@ -31,20 +63,7 @@
 
         .item-link {
             display: block;
-            color: $color-grey !important;
             @include transition(color .16s ease-out);
-            
-            strong {
-                color: $color-grey !important;
-            }
-
-            .timestamp {
-                color: $color-grey !important;
-            }
-        }
-        
-        .item-link .user-name, a.user-name,  {
-            color: $color-sec !important;
         }
 
         p {

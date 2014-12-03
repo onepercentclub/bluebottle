@@ -106,16 +106,10 @@ button, .button {
 
     &:active {
         top: 2px;
-        margin-bottom: 1px;
-        padding: .3em 1em .3em 1em;
-        color: $color-sec !important;
-        background-color: $color-sec-shadow !important;
-        //box-shadow: 0 1px 0 0 $color-black inset;
-        box-shadow: none;
-
-        span {
-            background: transparent !important; // TODO: Reset old flaticon
-        }
+        padding-bottom: .3em;
+        color: $color-grey !important;
+        background-color: $color-grey-dark !important;
+        box-shadow: 0 2px 0 0 $color-real-black inset;
     }
 
     &.button-big {
@@ -131,14 +125,14 @@ button, .button {
         &:hover {
             top: 0;
             box-shadow: 0 -4px 0 0 $color-pri-shadow inset;
-            padding-bottom: calc(.6em + 2px);
+            padding-bottom: calc(.6em + 4px);
         }
 
         &:active {
             top: 4px;
-            padding-top: 0.5em;
-            color: $color-pri !important;
-            background-color: $color-pri-shadow !important;
+            padding-top: calc(.5em + 1px);
+            padding-bottom: .6em;
+            box-shadow: 0 1px 0 0 $color-real-black inset;
         }
     }
 

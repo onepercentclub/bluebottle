@@ -9,7 +9,7 @@ from .models import MockPayment
 
 
 class MockPaymentAdapter(BasePaymentAdapter):
-    MODEL_CLASS = MockPayment
+    MODEL_CLASSES = [MockPayment]
 
     def create_payment(self):
         """
@@ -27,7 +27,7 @@ class MockPaymentAdapter(BasePaymentAdapter):
             raise PaymentException("Last name too long: '{0}'".format(user_data["last_name"]))
 
         # Now just create the payment.
-        payment = self.MODEL_CLASS(order_payment=self.order_payment)
+        payment = self.MODEL_CLASSES[0](order_payment=self.order_payment)
         payment.save()
         return payment
 

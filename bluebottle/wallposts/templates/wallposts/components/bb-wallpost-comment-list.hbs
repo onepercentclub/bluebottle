@@ -20,7 +20,7 @@
                 {{#each newReaction.errors.text}}
                     <label class="error">{{this}}</label>
                 {{/each}}
-                {{view "Em.TextArea" placeholderBinding=newReaction.placeholder valueBinding=newComment.text name="reaction" class="comment-input"}}
+                {{view "Em.TextArea" placeholderBinding=firstName valueBinding=newComment.text name="reaction" class="comment-input"}}
                 <footer class="comment-form-footer">
                     <div class="comment-form-actions">
                         <button class="button action-cancel" {{action 'clearForm' target='view'}}>{% trans "Cancel" %}</button>

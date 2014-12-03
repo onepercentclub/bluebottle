@@ -300,7 +300,7 @@ App.ScrollInView = Em.Mixin.create({
 App.ScrollToTop = Em.Mixin.create({
     afterModel: function(){
         this._super();
-        $("html, body").animate({ scrollTop: 0 }, 600);
+        $("html, body").animate({ scrollTop: 0 }, 0);
     }
 });
 

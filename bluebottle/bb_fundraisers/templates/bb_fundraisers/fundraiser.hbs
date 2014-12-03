@@ -11,15 +11,18 @@
                 <div class="project-meta">
                     {{!-- <span class="project-location">{{country.name}}</span>
                     <span class="project-category">{{theme.name}}</span> --}}
-                    <span class="project-status">{% trans "Fundraiser for" %}</span>
-                    <span class="project-campaign">{{#link-to 'project' project}}{{project.title}}{{/link-to}}</span>
+                    {{#link-to 'project' project class="project-breadcrumb"}}
+                        <span class="project-status">{% trans "Fundraiser for" %} </span><span class="project-campaign">{{project.title}}</span>
+                    {{/link-to}}
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">
-                    {{description}} <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                    {{description}}
                 </p>
+                <a class="project-more read-more">{% trans "Read full project plan" %}</a>
             </article>
             <aside class="project-media">
+
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>
@@ -45,9 +48,8 @@
             <section id="wallposts">
                 {{partial 'wallposts'}}
             </section>
-
+            
             <section id="sidebar">
-                {{!-- Todo: only show block when there are supporters --}}
                 <div id="supporter-list">
 
                     <div class="activity">
@@ -59,7 +61,7 @@
                         
                         {{#unless overDeadline}}
                         <footer class="activity-footer">
-                            <a {{action 'addDonation' controllers.project}}  class="activity-action">
+                            <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="activity-action">
                                 <strong>{% trans "Support this fundraiser" %} &raquo;</strong><br />
                                 {% trans "And get your name on the wall!" %}
                             </a>
@@ -68,8 +70,8 @@
 
                     </div>
                 </div>
-
             </section>
+            
         </div>
     </div>
 </div>

@@ -47,7 +47,7 @@
     color: $color-text-on-dark;
     top: -96px; // header height
     padding-top: 96px; // header height
-    padding-bottom: 120px; // footer height
+    padding-bottom: 130px; // footer height
     margin-bottom: -96px;
 
     .project-background {
@@ -81,20 +81,65 @@
 
             .project-meta {
                 color: $color-sec;
+                
+                .project-breadcrumb {
+                    width: 90%;
+                    display: inline-block;
+                    vertical-align: bottom;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    line-height: 25px;
+                    text-decoration: none;
 
-                .project-status {
-                    background-color: $color-sec;
-                    color: $color-white;
-                    text-transform: uppercase;
-                    padding: 6px 6px;
-                    @include border-radius($radius-medium);
-                    font-size: 13px;
-                    font-weight: bold;
-                    margin-right: 16px;
-                }
+                    .project-status {
+                        position: relative;
+                        display: inline-block;
+                        background-color: $color-sec;
+                        color: $color-white;
+                        text-transform: uppercase;
+                        padding: 0 2px 0 10px;
+                        @include border-left-radius($radius-medium);
+                        font-size: 13px;
+                        height: 26px;
+                        font-weight: bold;
+                        margin-right: 25px;
 
-                .project-campaign {
-                    color: $color-sec;
+                        &:after {
+                            left: 100%;
+                            top: 50%;
+                            border: solid transparent;
+                            content: " ";
+                            height: 0;
+                            width: 0;
+                            position: absolute;
+                            pointer-events: none;
+                            border-color: transparent;
+                            border-left-color: $color-sec;
+                            border-width: 13px;
+                            margin-top: -13px;
+                        }
+                    }
+
+                    .project-campaign {
+                        color: $color-sec;
+                        vertical-align: middle;
+                    }
+
+                    &:hover {
+
+                        .project-status {
+                            background-color: $color-pri;
+
+                            &:after {
+                                border-left-color: $color-pri;
+                            }
+                        }
+
+                        .project-campaign {
+                            color: $color-pri;
+                        }
+                    }
                 }
             }
 
@@ -129,13 +174,33 @@
             }
 
             .project-description {
+                position: relative;
                 overflow: hidden;
+                //white-space: nowrap;
+                text-overflow: ellipsis;
                 max-height: 102px;
                 line-height: 1.5em;
+                display: -webkit-box;
+                -webkit-line-clamp: 4;
+                -webkit-box-orient: vertical;
+                @include transition(all .2s);
+
+                &.is-active {
+                    max-height: 310px;
+                    display: block;
+                }
             }
 
             .project-more {
+                position: relative;
+                bottom: 15px;
+                left: 0;
                 color: $color-sec;
+
+                &:active {
+                    top: inherit;
+                    color: $color-pri;
+                }
             }
         }
 
@@ -210,7 +275,7 @@
                     }
 
                     .amount-asked {
-                        font-weight: bold;
+                        font-weight: normal;
                         @include opacity(0.6);
                         font-style: normal;
                     }
@@ -218,10 +283,11 @@
 
                 .project-days-left {
                     float: right;
-                    margin-top: 12px;
-                    text-indent: 24px;
+                    margin-top: 10px;
+                    text-indent: 30px;
                     @include opacity(0.6);
                     @include svg-icon('project-detail-header/icon-deadline.svg');
+                    background-position: 0 2px;
                     color: $color-text-on-dark !important;
                     text-transform: none !important;
                 }
@@ -239,12 +305,17 @@
         }
 
         .project-closed {
+            font-size: 15px;
             @include border-radius($radius-large);
             border: 1px solid rgba($color-white, 0.6);
             padding: .3em 1em .3em 1em;
             color: $color-text-on-dark;
             text-align: center;
             @include opacity(0.6);
+
+            strong {
+                font-size: 16px;
+            }
         }
     }
 
@@ -342,9 +413,27 @@
         }
     }
 
+    // Fundraiser detail specific
+    &.fundraiser-detail {
+
+        .project-status {
+            @include svg-icon('sidebar/icon-fundraisers.svg', #999, #ffffff);
+            background-size: 14px;
+            background-position: 7px 50%;
+            text-indent: 18px;
+        }
+    }
+
     // Task detail specific
     &.task-detail {
         min-height: 520px;
+        
+        .project-status {
+            @include svg-icon('sidebar/icon-tasks.svg', #999, #ffffff);
+            background-size: 16px;
+            background-position: 5px 50%;
+            text-indent: 18px;
+        }
 
         .task-meta {
             clear: both;

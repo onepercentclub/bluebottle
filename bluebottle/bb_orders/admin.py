@@ -1,5 +1,6 @@
 from bluebottle.bb_donations.admin import DonationInline
 from bluebottle.payments.admin import OrderPaymentInline
+from bluebottle.utils.admin import TotalAmountAdminChangeList
 from bluebottle.utils.utils import StatusDefinition
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
@@ -37,6 +38,7 @@ class OrderStatusFilter(SimpleListFilter):
 
 class BaseOrderAdmin(admin.ModelAdmin):
     model = get_order_model()
+    date_hierarchy = 'created'
     list_filter = (OrderStatusFilter, 'order_type')
     list_display = ('created', 'confirmed', 'completed', 'order_type', 'user', 'status', 'total')
 
@@ -46,6 +48,11 @@ class BaseOrderAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('user', )
     readonly_fields = ('status', 'total', 'created', 'confirmed', 'completed', 'order_type')
+
+    def get_changelist(self, request):
+        self.total_column = 'total'
+        return TotalAmountAdminChangeList
+
 
 admin.site.register(ORDER_MODEL, BaseOrderAdmin)
 

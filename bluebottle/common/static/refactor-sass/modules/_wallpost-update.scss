@@ -1,7 +1,7 @@
 .wallpost-update {
     width: 100%;
     position: relative;
-    top: 5px;
+    top: 1px;
     margin-bottom: 30px;
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
@@ -239,3 +239,11 @@
     }
 }
 
+// TODO: make global
+.signin {
+    padding: 7px 20px 10px 20px;
+    
+    p {
+        margin: 0;
+    }
+}

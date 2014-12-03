@@ -11,8 +11,9 @@
                 <div class="project-meta">
                     {{!-- <span class="project-location">{{country.name}}</span>
                     <span class="project-category">{{theme.name}}</span> --}}
-                    <span class="project-status">{{statusLabel}} {% trans "Task for" %}</span>
-                    <span class="project-campaign">{{#link-to 'project' project}}{{project.title}}{{/link-to}}</span>
+                    {{#link-to 'project' project class="project-breadcrumb"}}
+                        <span class="project-status">{{statusLabel}} {% trans "Task for" %} </span><span class="project-campaign">{{project.title}}</span>
+                    {{/link-to}}
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">
@@ -23,8 +24,8 @@
                     {{#if end_goal}}
                         <br/><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}
                     {{/if}}
-                    <a {{action toggleDesc "projectPlan" this}} class="project-more">{% trans "Read more" %}</a>
                 </p>
+                <a class="project-more read-more">{% trans "Read more" %}</a>
             </article>
             <aside class="project-media">
                 {{#if canEdit}}

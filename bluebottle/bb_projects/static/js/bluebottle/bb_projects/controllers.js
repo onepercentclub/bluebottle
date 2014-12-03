@@ -145,7 +145,7 @@ App.ProjectController = Em.ObjectController.extend({
 
     recentSupporters: function () {
         if (this.get('supporters')) {
-            return this.get('supporters').splice(0, 10);
+            return this.get('supporters').splice(0, 13);
         }
     }.property('supporters.length'),
 

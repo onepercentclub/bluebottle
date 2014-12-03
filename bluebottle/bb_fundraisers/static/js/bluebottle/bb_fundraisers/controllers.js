@@ -34,7 +34,7 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
 
     recentSupporters: function () {
         if (this.get('supporters')) {
-            return this.get('supporters').splice(0, 10);
+            return this.get('supporters').splice(0, 13);
         }
     }.property('supporters.length'),
 

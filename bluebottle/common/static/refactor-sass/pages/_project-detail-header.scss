@@ -92,7 +92,7 @@
                     line-height: 25px;
                     text-decoration: none;
 
-                    .project-status {
+                    .project-linked {
                         position: relative;
                         display: inline-block;
                         background-color: $color-sec;
@@ -416,7 +416,7 @@
     // Fundraiser detail specific
     &.fundraiser-detail {
 
-        .project-status {
+        .project-linked {
             @include svg-icon('sidebar/icon-fundraisers.svg', #999, #ffffff);
             background-size: 14px;
             background-position: 7px 50%;
@@ -428,7 +428,7 @@
     &.task-detail {
         min-height: 520px;
         
-        .project-status {
+        .project-linked {
             @include svg-icon('sidebar/icon-tasks.svg', #999, #ffffff);
             background-size: 16px;
             background-position: 5px 50%;

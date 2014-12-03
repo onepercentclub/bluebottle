@@ -285,7 +285,9 @@
 .signin {
     padding: 7px 20px 10px 20px;
     border: 1px solid $color-grey-medium;
-    //background-color: $color-grey-light;
+    background-color: $color-grey-lightest;
+    border-radius: $radius-medium;
+
     margin-bottom: 30px;
 
     p {

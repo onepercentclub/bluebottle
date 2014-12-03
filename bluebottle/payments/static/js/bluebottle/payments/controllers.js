@@ -192,11 +192,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
                     //        the success modal for creditcard payments and to
                     //        the mock service provider for all others.
                     if (order.get('status') == 'success') {
-                        // Load the success modal. Since all models are already
-                        // loaded in Ember here, we should just be able
-                        // to get the first donation of the order here
-                        var donation = order.get('donations.firstObject');
-                        _this.send('modalSlide', 'donationSuccess', donation);
+                        // Redirect to the order route.
+                        _this.transitionToRoute('order', order.get('id'));
                     } else {
                         // Process the authorization action to determine next
                         // step in payment process.

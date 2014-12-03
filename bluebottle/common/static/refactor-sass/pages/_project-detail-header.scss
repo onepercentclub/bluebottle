@@ -47,7 +47,7 @@
     color: $color-text-on-dark;
     top: -96px; // header height
     padding-top: 96px; // header height
-    padding-bottom: 120px; // footer height
+    padding-bottom: 130px; // footer height
     margin-bottom: -96px;
 
     .project-background {
@@ -255,7 +255,7 @@
                     }
 
                     .amount-asked {
-                        font-weight: bold;
+                        font-weight: normal;
                         @include opacity(0.6);
                         font-style: normal;
                     }
@@ -263,10 +263,11 @@
 
                 .project-days-left {
                     float: right;
-                    margin-top: 12px;
-                    text-indent: 24px;
+                    margin-top: 10px;
+                    text-indent: 30px;
                     @include opacity(0.6);
                     @include svg-icon('project-detail-header/icon-deadline.svg');
+                    background-position: 0 2px;
                     color: $color-text-on-dark !important;
                     text-transform: none !important;
                 }

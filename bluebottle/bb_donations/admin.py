@@ -44,7 +44,7 @@ class DonationAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     list_display = ('created', 'completed', 'admin_project', 'fundraiser', 'user', 'user_full_name', 'amount',
                     'related_payment_method', 'order_type', 'status')
-    list_filter = (DonationStatusFilter, 'order__order_type')
+    list_filter = (DonationStatusFilter, 'order__order_type', 'anonymous')
     ordering = ('-created',  )
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'created', 'updated', 'completed', 'status', 'user_link', 'project_link', 'fundraiser_link')
@@ -60,9 +60,11 @@ class DonationAdmin(admin.ModelAdmin):
         return TotalAmountAdminChangeList
 
     def user_full_name(self, obj):
+        if obj.anonymous:
+            return '-anonymous-'
         if obj.order.user:
             return obj.order.user.full_name
-        return '?'
+        return '-guest-'
 
     def user(self, obj):
         return obj.user

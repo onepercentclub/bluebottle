@@ -667,17 +667,17 @@ App.EventMixin = Em.Mixin.create({
     };
 
     $('.mobile-nav-btn').bind('click', toggleMenu);
-    $('#content').bind('hover', closeMenu);
+    //$('#content').bind('hover', closeMenu);
   },
 
   // Always dhow 'showMore'
-  //showHideReadmore: function() {
-  //  var description = $('#project-detail-header .project-description'),
-  //      projectMore = $('.project-more'),
-  //      readMore = $('.project-more.read-more');
-  //
-  //  if (!description) return;
-  //
+  showHideReadmore: function() {
+    var description = $('#project-detail-header .project-description'),
+        projectMore = $('.project-more'),
+        readMore = $('.project-more.read-more');
+
+    if (!description) return;
+
   //  if (description.height() > 92) {
   //      projectMore.show();
   //
@@ -688,7 +688,7 @@ App.EventMixin = Em.Mixin.create({
   //  } else {
   //      projectMore.hide();
   //  }
-  //}
+  }
 });
 
 

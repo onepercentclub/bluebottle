@@ -11,7 +11,7 @@
                 <img {{bindAttr src="wallpost.author.getAvatar" alt="wallpost.author.full_name"}} />
             </figure>
 
-            <a {{action openInBigBox "userModal" wallpost.author}} class="user-name">
+            <a {{action viewProfilePreview "userModal" wallpost.author}} class="user-name">
                 <strong>{{wallpost.author.full_name}}</strong>
             </a>
 
@@ -58,7 +58,7 @@
 
         <ul class="comments">
             {{bb-wallpost-comment-list comments=wallpost.reactions wallpost=wallpost currentUser=currentUser
-            addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment'}}
+            addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' viewProfilePreview='viewProfilePreview'}}
         </ul>
 
 

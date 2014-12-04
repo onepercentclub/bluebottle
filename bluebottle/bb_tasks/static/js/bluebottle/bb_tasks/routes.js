@@ -52,11 +52,16 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
 
     actions: {
         applyForTask: function() {
-            var route = this;
-            var store = route.get('store');
-            var taskMember = store.createRecord(App.TaskMember);
-            var task = this.modelFor('task');
-            var view = App.TaskMemberApplyView.create();
+            if (! this.get('currentUser.username')) {
+                this.send('openInBox', 'login');
+                return;
+            }
+
+            var route = this,
+                store = route.get('store'),
+                taskMember = store.createRecord(App.TaskMember),
+                task = this.modelFor('task'),
+                view = App.TaskMemberApplyView.create();
 
 			if (!this.controllerFor('task').get('isMember')){
 				Bootstrap.ModalPane.popup({

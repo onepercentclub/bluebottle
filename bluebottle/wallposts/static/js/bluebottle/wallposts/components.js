@@ -290,6 +290,13 @@ App.BbWallpostCommentComponent = Em.Component.extend({
     }
 });
 
+App.BbSystemWallpostComponent = Em.Component.extend({
+    actions: {
+        showProfile: function(profile) {
+            this.sendAction('showProfile', profile);
+        }
+    }
+})
 
 App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
     firstName: function() {

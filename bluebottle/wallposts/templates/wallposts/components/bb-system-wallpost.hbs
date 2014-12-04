@@ -7,17 +7,18 @@
 	<article class="m-wallpost m-wallpost-system">
 
         <header class="wallpost-header">
-            <figure class="user-avatar">
-                {{#if wallpost.author}}
+            {{#if wallpost.author}}
+                <figure {{action "showProfile" wallpost.author}} class="user-avatar">
                     <img {{bindAttr src="wallpost.author.getAvatar" alt="wallpost.author.full_name"}} />
-                {{else}}
+                </figure>
+            {{else}}
+                <figure class="user-avatar">
                     <img src="{% get_static_prefix %}/images/default-avatar.png" alt="Guest"/>
-                {{/if}}
-
-            </figure>
+                </figure>
+            {{/if}}
 
             {{#if wallpost.author}}
-                <a {{action openInBigBox "userModal" wallpost.author}} class="user-name">
+                <a {{action "showProfile" wallpost.author}} class="user-name">
                     <strong>{{wallpost.author.full_name}}</strong>
                 </a> {% trans "made a donation" %}
             {{else}}

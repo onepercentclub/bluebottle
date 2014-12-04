@@ -667,9 +667,10 @@ App.EventMixin = Em.Mixin.create({
     };
 
     $('.mobile-nav-btn').bind('click', toggleMenu);
-    $('#content').bind('hover', closeMenu);
+    //$('#content').bind('hover', closeMenu);
   },
 
+  // Always dhow 'showMore'
   showHideReadmore: function() {
     var description = $('#project-detail-header .project-description'),
         projectMore = $('.project-more'),
@@ -677,16 +678,16 @@ App.EventMixin = Em.Mixin.create({
 
     if (!description) return;
 
-    if (description.height() > 92) {
-        projectMore.show();
-        
-        readMore.on('click', function() {
-            description.toggleClass('is-active');
-            //readMore.html(gettext('Read less.'));
-        });
-    } else {
-        projectMore.hide();
-    }
+  //  if (description.height() > 92) {
+  //      projectMore.show();
+  //
+  //      readMore.on('click', function() {
+  //          description.toggleClass('is-active');
+  //          //readMore.html(gettext('Read less.'));
+  //      });
+  //  } else {
+  //      projectMore.hide();
+  //  }
   }
 });
 

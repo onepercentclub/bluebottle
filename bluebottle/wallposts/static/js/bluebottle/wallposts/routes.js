@@ -2,20 +2,22 @@ App.WallRouteMixin = Em.Mixin.create({
 
     parentId: '',
     parentType: '',
+    wallpostPage: null,
+    wallpostTotal: null,
 
     wallpostRemaining: function(){
-        var remaining = this.get('controller.wallpostTotal') - 5 * this.get('controller.wallpostPage');
+        var remaining = this.get('wallpostTotal') - 5 * this.get('wallpostPage');
         if (remaining < 0) return 0;
         return remaining;
-    }.property('controller.wallpostPage', 'controller.wallpostTotal'),
+    }.property('wallpostPage', 'wallpostTotal'),
 
     setupController: function(controller, model) {
-        var _this = this;
         this._super(controller, model);
 
         // Only reload wall-posts if switched to another page.
-        var parentType = this.get('parentType');
-        var parentId = model.get('id');
+        var _this = this,
+            parentType = this.get('parentType'),
+            parentId = model.get('id');
 
         // Initiate wallposts
         if (this.get('parentId') != parentId || this.get('parentType') != parentType){
@@ -23,8 +25,8 @@ App.WallRouteMixin = Em.Mixin.create({
             this.set('parentType', parentType);
             var store = this.get('store');
             store.find('wallPost', {'parent_type': parentType, 'parent_id': parentId}).then(function(posts){
-                controller.set('wallpostTotal', posts.get('meta.total'));
-                controller.set('wallpostPage', 1);
+                _this.set('wallpostTotal', posts.get('meta.total'));
+                _this.set('wallpostPage', 1);
                 controller.set('wallpostList', posts);
                 controller.set('wallpostFiles', Em.A());
                 controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
@@ -71,13 +73,12 @@ App.WallRouteMixin = Em.Mixin.create({
                 parentType = this.get('parentType'),
                 parentId = this.get('controller.model.id'),
                 controller = this.get('controller'),
-                wallpostPage = controller.incrementProperty('wallpostPage'),
+                wallpostPage = _this.incrementProperty('wallpostPage'),
                 store = this.get('store');
 
             controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
 
             store.find('wallPost', {'parent_type': parentType, 'parent_id': parentId, 'page': wallpostPage}).then(function(posts){
-                controller.set('wallpostTotal', posts.get('meta.total'));
                 controller.get('wallpostList').addObjects(posts);
             });
         },

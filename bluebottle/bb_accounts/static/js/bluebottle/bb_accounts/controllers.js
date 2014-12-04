@@ -9,6 +9,10 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     containerClass: 'normal',
 
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'normal signup');
+    },
+
     init: function() {
         this._super();
 
@@ -285,6 +289,10 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
     requiredFields: ['email', 'password'],
+
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'normal signin');
+    },
 
     init: function () {
         this._super();

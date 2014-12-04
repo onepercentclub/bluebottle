@@ -10,7 +10,6 @@ App.OrderAssignUserMixin = Em.Mixin.create({
         var _this = this,
             donation = this.get('controllers.donation.model'),
             order = donation.get('order');
-        
         App.UserPreview.find(this.get('currentUser.id_for_ember')).then(function (user) {
             order.set('user', user).send('becomeDirty');
             order.save().then(function (savedOrder) {

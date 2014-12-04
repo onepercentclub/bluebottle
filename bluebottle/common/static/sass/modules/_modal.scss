@@ -505,8 +505,17 @@ $gray-border-hover                                         : #9F9F9F;
 				z-index: 4;
 			}
 		}
+
       &.flipped-alt {
             @include transform(rotateY(-180deg));
+
+            .front {
+				z-index: 0;
+			}
+
+			.back {
+				z-index: 4;
+			}
       }
 	}
 

@@ -8,7 +8,7 @@
     {{#if comments.length}}
         <ul class="comments">
             {{#each comment in comments}}
-                {{bb-wallpost-comment comment=comment currentUser=currentUser removeWallpostComment='removeWallpostComment'}}
+                {{bb-wallpost-comment comment=comment currentUser=currentUser removeWallpostComment='removeWallpostComment' viewProfilePreview='viewProfilePreview'}}
             {{/each}}
         </ul>
     {{/if}}

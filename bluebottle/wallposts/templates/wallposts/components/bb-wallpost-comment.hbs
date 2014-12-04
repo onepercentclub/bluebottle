@@ -12,7 +12,7 @@
                 <img {{ bindAttr src="comment.author.getAvatar" alt="comment.author.full_name" }}/>
             </figure>
 
-            <a {{action openInBigBox "userModal" comment.author}} class="user-name">
+            <a {{action viewProfilePreview "userModal" comment.author}} class="user-name">
                 <strong>{{ comment.author.full_name }}</strong>
             </a>
 

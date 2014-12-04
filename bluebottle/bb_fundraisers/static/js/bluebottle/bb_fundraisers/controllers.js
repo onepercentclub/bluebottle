@@ -38,6 +38,14 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
         }
     }.property('supporters.length'),
 
+    canAddMediaWallpost: function(){
+        return this.get('isOwner');
+    }.property('isOwner'),
+
+    isOwner: function(){
+        return (this.get('owner.username') == this.get('currentUser.username'));
+    }.property('owner.username', 'currentUser.username'),
+
     actions: {
         showProfile: function (profile) {
             this.send('openInBigBox', 'userModal', profile);

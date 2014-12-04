@@ -126,7 +126,8 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
         var _this = this,
             textArea = this.$().find('textarea'),
             video = this.$().find('#wallpost-video'),
-            photo = this.$().find('#wallpost-photo');
+            photo = this.$().find('#wallpost-photo'),
+            photos = this.$().find('.upload-photos');
 
         $('.wallpost-update .action-add-photo').on('click', function() {
             $(this).toggleClass('is-active');
@@ -147,11 +148,16 @@ App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
             _this.hideWallpostOptions('.wallpost-update');
         });
 
-
         photo.on('change', function() {
             if (photo.val() === '') {
                 _this.hideWallpostOptions('.wallpost-update');
             } else {
+                _this.showWallpostOptions('.wallpost-update');
+            }
+        });
+
+        photos.on('change', function() {
+            if ($(this).length > 0 ) {
                 _this.showWallpostOptions('.wallpost-update');
             }
         });

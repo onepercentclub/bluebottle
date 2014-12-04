@@ -8,11 +8,11 @@
     <li class="m-comment">
 
         <header class="comment-header">
-            <figure class="user-avatar">
+            <figure {{action showProfile comment.author}} class="user-avatar">
                 <img {{ bindAttr src="comment.author.getAvatar" alt="comment.author.full_name" }}/>
             </figure>
 
-            <a {{action openInBigBox "userModal" comment.author}} class="user-name">
+            <a {{action showProfile comment.author}} class="user-name">
                 <strong>{{ comment.author.full_name }}</strong>
             </a>
 

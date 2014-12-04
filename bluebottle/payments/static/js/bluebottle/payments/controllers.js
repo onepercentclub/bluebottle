@@ -162,7 +162,8 @@ App.OrderPaymentController = Em.ObjectController.extend({
             // Currently the there is only one donation associated with each order
             // so grab the first donation item.
             var donation = this.get('model.order.donations.firstObject');
-            this.send('modalSlide', 'donation', donation);
+            
+            this.send('modalSlideRight', 'donation', donation);
         },
 
         nextStep: function () {

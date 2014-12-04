@@ -385,7 +385,6 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                     tracker.identify(user.get('id_for_ember'));
                     tracker.trackEvent("Login", {"type": "regular"});
                 }
-
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');

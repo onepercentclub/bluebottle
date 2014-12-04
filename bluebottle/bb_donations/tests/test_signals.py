@@ -1,41 +1,54 @@
 from django.test import TestCase
 from bluebottle.test.utils import InitProjectDataMixin
-from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.wallposts.models import SystemWallPost
 
 
-PROJECT_MODEL = get_project_model()
+class TestDonationSignals(InitProjectDataMixin, TestCase):
 
+    def setUp(self):
+        super(TestDonationSignals, self).setUp()
 
-class TestDonationSignals(InitProjectDataMixin, BluebottleTestCase):
+        self.user1 = BlueBottleUserFactory.create()
+        self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
-	def setUp(self):
-		super(TestDonationSignals, self).setUp()
-
-		self.user1 = BlueBottleUserFactory.create()
-		#self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
-
-        self.project1 = ProjectFactory.create(amount_asked=5000)
         self.init_projects()
+        self.project1 = ProjectFactory.create(amount_asked=5000)
         self.project1.set_status('campaign')
         self.order = OrderFactory.create(user=self.user1)
-        self.donation = DonationFactory(order=self.order, amount=35)
+        self.donation = DonationFactory(order=self.order, amount=35, fundraiser=None, project=self.project1)
 
 
-	def test_system_wallpost_project_after_donation(self):
-		self.assertEqual(SystemWallpost.objects.count(), 0)
+    def test_system_wallpost_project_after_donation(self):
+        """ Test that a SystemWallPost is created for the project wall when a user does a succesful donation """
+        self.assertEqual(SystemWallPost.objects.count(), 0)
 
-		# Set the order to success
         self.order.locked()
         self.order.succeeded()
-        self.assertEqual(SystemWallpost.objects.count(), 1)
+
+        self.assertEqual(SystemWallPost.objects.count(), 1)
+        self.assertEqual(SystemWallPost.objects.all()[0].content_object, self.project1)
 
 
-	def test_system_wallpost_fundraiser_after_donation(self):
-		pass
+    def test_system_wallpost_fundraiser_after_donation(self):
+        """ Test that a SystemWallPost is created for the project and fundraiser wall when a user does a succesful donation """
+        self.assertEqual(SystemWallPost.objects.count(), 0)
+
+        order = OrderFactory.create(user=self.user1)
+        fundraiser = FundRaiserFactory(project=self.project1)
+        donation2 = DonationFactory(order=order, amount=35, project=self.project1, fundraiser=fundraiser)
+
+        order.locked()
+        order.succeeded()
+
+        self.assertEqual(SystemWallPost.objects.count(), 2)
+        self.assertEqual(SystemWallPost.objects.all()[1].content_object, fundraiser)
+
+
+
+

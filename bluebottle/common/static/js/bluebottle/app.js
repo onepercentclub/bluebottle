@@ -672,20 +672,19 @@ App.EventMixin = Em.Mixin.create({
 
   showHideReadmore: function() {
     var description = $('#project-detail-header .project-description'),
-        projectMore = $('.project-more'),
         readMore = $('.project-more.read-more');
 
     if (!description) return;
 
     if (description.height() > 92) {
-        projectMore.show();
+        readMore.show();
         
         readMore.on('click', function() {
             description.toggleClass('is-active');
             //readMore.html(gettext('Read less.'));
         });
     } else {
-        projectMore.hide();
+        readMore.hide();
     }
   }
 });

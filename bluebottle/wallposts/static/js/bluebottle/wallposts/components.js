@@ -43,6 +43,9 @@ App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
     },
 
     actions: {
+        close: function() {
+            this.sendAction('close');
+        },
         clearForm: function(){
             this.hideWallpostOptions('.wallpost-update');
         },
@@ -224,6 +227,9 @@ App.BbWallpostComponent = Em.Component.extend({
         },
         addWallpostComment: function(comment) {
             this.sendAction('addWallpostComment', comment);
+        },
+        showProfile: function(profile) {
+            this.sendAction('showProfile', profile);
         }
     },
     didInsertElement: function(){
@@ -276,6 +282,10 @@ App.BbWallpostCommentComponent = Em.Component.extend({
                     }
                 }
             });
+        },
+
+        showProfile: function(profile) {
+            this.sendAction('showProfile', profile);
         }
     }
 });
@@ -337,6 +347,9 @@ App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
         },
         removeWallpostComment: function(comment){
             this.sendAction('removeWallpostComment', comment);
+        },
+        showProfile: function(profile) {
+            this.sendAction('showProfile', profile);
         }
     }
 });

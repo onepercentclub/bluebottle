@@ -14,7 +14,7 @@
             {{/if}}
 
             {{view Ember.TextArea valueBinding="wallpost.text" name="wallpost-update" class="wallpost-update-post"
-                classBinding="wallpost.errors.text.length:error" placeholder="Leave a comment for this campaign"}}
+                classBinding="wallpost.errors.text.length:error" placeholderBinding="translatables.leaveCommentText"}}
 
         </div>
         <footer class="wallpost-update-footer">

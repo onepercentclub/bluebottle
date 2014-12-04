@@ -9,6 +9,10 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
 
     containerClass: 'normal',
 
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'normal signup');
+    },
+
     init: function() {
         this._super();
 
@@ -286,6 +290,10 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
     loginTitle: gettext('Log in to <Bluebottle Project>'),
     requiredFields: ['email', 'password'],
 
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'normal signin');
+    },
+
     init: function () {
         this._super();
 
@@ -385,6 +393,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                     tracker.identify(user.get('id_for_ember'));
                     tracker.trackEvent("Login", {"type": "regular"});
                 }
+
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');

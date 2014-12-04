@@ -163,7 +163,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
             // so grab the first donation item.
             var donation = this.get('model.order.donations.firstObject');
             
-            this.send('modalSlideRight', 'donation', donation);
+            this.send('modalSlide', 'donation', donation);
         },
 
         nextStep: function () {

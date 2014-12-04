@@ -236,8 +236,7 @@ BB.ModalMixin = Em.Mixin.create({
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalBack', context);
             if ($('#card').hasClass('flipped')) {
-                $('#card').removeClass('flipped');
-                $('#card').addClass('flipped-alt');
+                $('#card').addClass('flipped');
             } else {
                 this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             }

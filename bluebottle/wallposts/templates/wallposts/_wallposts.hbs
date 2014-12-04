@@ -18,11 +18,11 @@
     {{#each wallpost in wallpostList}}
         {{#if wallpost.isLoaded}}
             {{#if wallpost.isSystemWallPost}}
-                {{bb-system-wallpost wallpost=wallpost currentUser=currentUser removeWallpost='removeWallpost'
-                    addComment='addComment' removeComment='removeComment' showProfile='showProfile'}}
+                {{bb-system-wallpost wallpost=wallpost removeWallpost='removeWallpost'
+                    addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile' currentUser=currentUser}}
             {{else}}
-                {{bb-wallpost wallpost=wallpost currentUser=currentUser removeWallpost='removeWallpost'
-                    addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile'}}
+                {{bb-wallpost wallpost=wallpost removeWallpost='removeWallpost'
+                    addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile' currentUser=currentUser}}
             {{/if}}
         {{/if}}
     {{/each}}

@@ -290,7 +290,7 @@ App.BbWallpostCommentComponent = Em.Component.extend({
     }
 });
 
-App.BbSystemWallpostComponent = Em.Component.extend({
+App.BbSystemWallpostComponent = App.BbWallpostComponent.extend({
     actions: {
         showProfile: function(profile) {
             this.sendAction('showProfile', profile);

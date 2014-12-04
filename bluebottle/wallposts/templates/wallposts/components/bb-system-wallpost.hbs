@@ -29,8 +29,8 @@
         </header>
 
         <ul class="comments">
-            {{bb-wallpost-comment-list comments=post.reactions wallpost=wallpost currentUser=currentUser
-            addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment'}}
+            {{bb-wallpost-comment-list comments=wallpost.reactions wallpost=wallpost currentUser=currentUser
+            addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile'}}
         </ul>
 
     </article>

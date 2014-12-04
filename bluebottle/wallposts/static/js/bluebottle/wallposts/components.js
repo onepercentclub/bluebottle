@@ -23,6 +23,10 @@ App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
     tagName: 'form',
     elementId: 'wallpost-form',
 
+    translatables: {
+        leaveCommentText: gettext('Leave a comment for this campaign')
+    },
+
     _wallpostSuccess: function(){
     },
 
@@ -70,8 +74,11 @@ App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
 
 App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
     elementId: 'wallpost-success-form',
-
     needs: ['project', 'fundraiser'],
+
+    translatables: {
+        shoutoutText: gettext('Give a shout-out to the campaigner!')
+    },
 
     _wallpostSuccess: function (record) {
         // Close modal
@@ -121,6 +128,10 @@ App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
 });
 
 App.BbMediaWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
+    translatables: {
+        shareText: gettext('Share an update with your supporters'),
+        videoText: gettext('Youtube or Vimeo url')
+    },
 
     didInsertElement: function() {
         var _this = this,
@@ -307,7 +318,7 @@ App.BbSystemWallpostComponent = App.BbWallpostComponent.extend({
 App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
     firstName: function() {
         var firstName = this.get('currentUser.first_name');
-        return 'Leave a comment, ' + firstName;
+        return gettext('Leave a comment, ') + firstName;
     }.property(),
 
     init: function() {

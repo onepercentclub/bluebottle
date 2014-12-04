@@ -206,6 +206,9 @@ App.OrderPaymentController = Em.ObjectController.extend({
                         //        the success modal for creditcard payments and to
                         //        the mock service provider for all others.
                         if (reloadedOrder.get('status') == 'success' || reloadedOrder.get('status') == 'pending') {
+                            // Close modal as the payment process here has ended.
+                            _this.send('closeModal');
+
                             // Redirect to the order route.
                             _this.transitionToRoute('order', reloadedOrder);
                         } else {

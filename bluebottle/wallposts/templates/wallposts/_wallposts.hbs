@@ -19,10 +19,10 @@
         {{#if wallpost.isLoaded}}
             {{#if wallpost.isSystemWallPost}}
                 {{bb-system-wallpost wallpost=wallpost currentUser=currentUser removeWallpost='removeWallpost'
-                    addComment='addComment' removeComment='removeComment' openInBox='openInBox'}}
+                    addComment='addComment' removeComment='removeComment' showProfile='showProfile'}}
             {{else}}
                 {{bb-wallpost wallpost=wallpost currentUser=currentUser removeWallpost='removeWallpost'
-                    addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' openInBox='openInBox'}}
+                    addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile'}}
             {{/if}}
         {{/if}}
     {{/each}}

@@ -55,7 +55,6 @@ App.DocdataIdealController = App.StandardPaymentMethodController.extend({
 
 App.DocdataDirectdebitController = App.StandardPaymentMethodController.extend({
     requiredFields: ['iban', 'bic', 'account_name', 'account_city', 'agree'],
-    didChange: false,
     
     accountNamePlaceholder: function() {
         return gettext("Your account name");

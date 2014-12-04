@@ -239,6 +239,7 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
     errorDefinitions: [],
     isBusy: null,
     _clearModel: Em.K,
+    didChange: false,
 
     getIntegrationData: function() {
         return this.get('model');

@@ -18,7 +18,7 @@
             </article>
             <aside class="project-media">
 
-                {{#if isProjectOwner}}
+                {{#if canEdit}}
                     <div class="project-owner-actions">
                         {{#link-to "myProject" id}}
                             {% trans 'Edit' %} {% trans 'Campaign' %}

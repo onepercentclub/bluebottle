@@ -21,6 +21,7 @@ def successful_donation_fundraiser_mail(instance):
         subject=_('You received a new donation'),
         to=receiver,
         link=fundraiser_link,
+        first_name=receiver.first_name
     )
 
 
@@ -53,6 +54,8 @@ def new_oneoff_donation(instance):
             amount=donation.amount,
             donor_name=donor_name,
             link=project_url,
+            first_name=donation.project.owner.first_name
+
         )
 
     # TODO: This is the logic for sending mail to a supporter once he/she has donated.

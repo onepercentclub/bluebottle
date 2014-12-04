@@ -1,6 +1,6 @@
 {% load i18n %}
 {% blocktrans with amount=amount donor_name=donor_name site=site link=link %}
-Hello,
+Hello {{first_name}},
 
 You just received a EUR {{ amount }} donation from {{ donor_name }}!
 

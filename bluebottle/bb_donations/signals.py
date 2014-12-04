@@ -1,5 +1,6 @@
 from django.dispatch.dispatcher import receiver
 from django_fsm.signals import post_transition
+from django.contrib.auth.models import AnonymousUser
 from bluebottle.bb_donations.donationmail import new_oneoff_donation, successful_donation_fundraiser_mail
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.utils.utils import StatusDefinition
@@ -19,11 +20,17 @@ def _order_status_changed(sender, instance, **kwargs):
         for donation in instance.donations.all():
             donation.project.update_amounts()
 
-            # Create Wallpost on project wall
+
+            if not donation.anonymous:
+               author = donation.order.user
+            else:
+                author = None
+                
+            #Create Wallpost on project wall
             post = SystemWallPost()
             post.content_object = donation.project
             post.related_object = donation
-            post.author = donation.order.user
+            post.author = author
             post.ip = '127.0.0.1'
             post.save()
 
@@ -32,7 +39,7 @@ def _order_status_changed(sender, instance, **kwargs):
                 fr_post = SystemWallPost()
                 fr_post.content_object = donation.fundraiser
                 fr_post.related_object = donation
-                fr_post.author = donation.order.user
+                fr_post.author = author
                 fr_post.ip = '127.0.0.1'
                 fr_post.save()
                 

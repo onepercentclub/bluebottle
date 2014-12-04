@@ -33,6 +33,7 @@ class TestDonationSignals(InitProjectDataMixin, TestCase):
 
         self.assertEqual(SystemWallPost.objects.count(), 1)
         self.assertEqual(SystemWallPost.objects.all()[0].content_object, self.project1)
+        self.assertEqual(SystemWallPost.objects.all()[0].author, self.order.user)
 
 
     def test_system_wallpost_fundraiser_after_donation(self):
@@ -48,7 +49,19 @@ class TestDonationSignals(InitProjectDataMixin, TestCase):
 
         self.assertEqual(SystemWallPost.objects.count(), 2)
         self.assertEqual(SystemWallPost.objects.all()[1].content_object, fundraiser)
+        self.assertEqual(SystemWallPost.objects.all()[1].author, order.user)
 
+    def test_anonymous_donation_no_author_on_wallpost(self):
+        """ Test that a SystemWallPost is created without an author when a donation is anonymous"""
+        self.assertEqual(SystemWallPost.objects.count(), 0)
 
+        order = OrderFactory.create(user=self.user1)
+        donation2 = DonationFactory(order=order, amount=35, project=self.project1, fundraiser=None, anonymous=True)
+
+        order.locked()
+        order.succeeded()
+
+        self.assertEqual(SystemWallPost.objects.count(), 1)
+        self.assertEqual(SystemWallPost.objects.all()[0].author, None)
 
 

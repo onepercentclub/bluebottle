@@ -109,23 +109,7 @@ App.OrderRoute = Em.Route.extend({
                     break;
 
                 case 'pending':
-                    _this.send('closeModal');
-
-                    // Display flash message until payment no longer pending
-                    _this.send('setFlash', gettext('Processing payment'), 'is-loading', false);
-
-                    // Check the status of the order and then clear 
-                    // the flash message when the check resolves
-
-                    // FIXME: Temporary for testing purposes we add
-                    //        a timeout before checking order as the 
-                    //        mock api will return a 'success' immediately
-                    //        causing the toast to only show briefly.
-                    setTimeout(function () {
-                        _this._checkOrderStatus(order).then(function () {
-                            _this._handleSuccess(donation);
-                        });
-                    }, 2000);
+                    _this._handleSuccess(donation);
 
                     break;
 

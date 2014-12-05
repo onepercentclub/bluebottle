@@ -66,7 +66,6 @@
             background-size: cover;
             background-position: 50% 50%;
             @include filter(blur(8px));
-            filter: url(#projectBlur);
             @include opacity(.4);
             @include transform(scale(1.05));
         }

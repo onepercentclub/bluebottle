@@ -2,7 +2,7 @@ App.DonationView = App.FormView.extend({
     amount: gettext('Amount'),
 
     isNumberInput: function(e) {
-      return (e.keyCode >= 48 && e.keyCode <= 57);
+      return (e.keyCode >= 48 && e.keyCode <= 57 || e.keyCode >= 96 && e.keyCode <= 105);
     },
 
     isBackspace: function(e) {

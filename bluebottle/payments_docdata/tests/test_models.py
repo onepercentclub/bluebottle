@@ -78,7 +78,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
                                                        total_gross_amount=100)
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='VISA')
         c = Client()
-        merchant_order_id = "{0}-1".format(order.id)
+        merchant_order_id = "{0}-1".format(order_payment.id)
         resp = c.get(reverse('docdata-payment-status-update', kwargs={'merchant_order_id': merchant_order_id}))
 
         self.assertEqual(resp.status_code, 200)
@@ -107,7 +107,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
 
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='VISA')
         c = Client()
-        merchant_order_id = "{0}-1".format(order.id)
+        merchant_order_id = "{0}-1".format(order_payment.id)
         resp = c.get(reverse('docdata-payment-status-update', kwargs={'merchant_order_id': merchant_order_id}))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content, 'success')
@@ -146,7 +146,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
 
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='BLABLABLA')
         c = Client()
-        merchant_order_id = "{0}-1".format(order.id)
+        merchant_order_id = "{0}-1".format(order_payment.id)
         resp = c.get(reverse('docdata-payment-status-update', kwargs={'merchant_order_id': merchant_order_id}))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content, 'success')

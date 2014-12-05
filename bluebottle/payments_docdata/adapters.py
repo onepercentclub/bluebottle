@@ -212,7 +212,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         #FIXME: get rid of these testing
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
         client = gateway.DocdataClient(testing_mode)
-        client_language = get_language().upper()
+        client_language = get_language()
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:

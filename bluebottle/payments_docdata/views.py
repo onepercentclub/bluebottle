@@ -42,6 +42,7 @@ class PaymentStatusUpdateView(View):
 
         # Get the docdata transactions
         try:
+            payment = Payment.objects.get(order_payment=order_payment)
             transaction = DocdataTransaction.objects.get(payment=payment)
     
             # Map Docdata payment method naming to our naming convention

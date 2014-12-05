@@ -100,6 +100,7 @@
     }
 
     .user-name {
+
         font-size: 15px;
         display: inline;
         line-height: 1.7em;
@@ -118,6 +119,7 @@
     .user-avatar {
         position: relative;
         left: -2px;
+        margin-right: 13px;
 
         img {
             width: 25px;
@@ -248,7 +250,7 @@
         height: calc(1.5em + 20px);
         margin: 0;
         padding: 0;
-        padding: 10px 20px 10px 50px;
+        padding: 10px 20px 10px 58px;
         border: none;
         box-shadow: none;
         @include svg-icon('wallposts/icon-comment-write.svg');

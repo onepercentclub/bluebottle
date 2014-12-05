@@ -23,6 +23,13 @@ App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
     tagName: 'form',
     elementId: 'wallpost-form',
 
+    formTitle: function () {
+        var parentType = this.get('parentType');
+
+        if (parentType == 'fundraiser') return gettext('Leave a message on the fundraiser wall');
+            else return gettext('Leave a message on the project wall');
+    }.property(),
+
     translatables: {
         leaveCommentText: gettext('Leave a comment for this campaign')
     },

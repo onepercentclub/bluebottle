@@ -14,7 +14,7 @@
         <div class="top-icon"><img {{bindAttr src="currentUser.getAvatar"}} /></div>
 
         {{#if fundraiser}}
-            {{bb-modal-text-wallpost-new parentType='fund raiser' close="closeModal" parentId=fundraiser.id addWallpost='addWallpost'}}
+            {{bb-modal-text-wallpost-new parentType='fundraiser' close="closeModal" parentId=fundraiser.id addWallpost='addWallpost'}}
         {{else}}
             {{bb-modal-text-wallpost-new parentType='project' close="closeModal" parentId=project.id addWallpost='addWallpost'}}
         {{/if}}

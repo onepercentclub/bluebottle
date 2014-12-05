@@ -340,7 +340,6 @@
                         color: $color-pri !important;
                     }
                 }
-
             }
 
             .user-avatar {
@@ -394,6 +393,13 @@
                         display: inline-block;
                         width: 44px;
                         height: 44px;
+                        @include border-radius(1px);
+                    }
+
+                    &:hover {
+                        position: relative;
+                        top: -1px;
+
                     }
                 }                    
             }

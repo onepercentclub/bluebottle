@@ -78,7 +78,8 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
                                                        total_gross_amount=100)
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='VISA')
         c = Client()
-        resp = c.get(reverse('docdata-payment-status-update', kwargs={'payment_cluster_id': docdata_payment.payment_cluster_id}))
+        merchant_order_id = "{0}-1".format(order.id)
+        resp = c.get(reverse('docdata-payment-status-update', kwargs={'merchant_order_id': merchant_order_id}))
 
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content, 'success')
@@ -106,7 +107,8 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
 
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='VISA')
         c = Client()
-        resp = c.get(reverse('docdata-payment-status-update', kwargs={'payment_cluster_id': docdata_payment.payment_cluster_id}))
+        merchant_order_id = "{0}-1".format(order.id)
+        resp = c.get(reverse('docdata-payment-status-update', kwargs={'merchant_order_id': merchant_order_id}))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content, 'success')
 
@@ -141,9 +143,11 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
                                                        payment_cluster_id='1236',
                                                        total_gross_amount=100)
 
+
         docdata_transaction = DocdataTransactionFactory.create(payment=docdata_payment, payment_method='BLABLABLA')
         c = Client()
-        resp = c.get(reverse('docdata-payment-status-update', kwargs={'payment_cluster_id': docdata_payment.payment_cluster_id}))
+        merchant_order_id = "{0}-1".format(order.id)
+        resp = c.get(reverse('docdata-payment-status-update', kwargs={'merchant_order_id': merchant_order_id}))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content, 'success')
 

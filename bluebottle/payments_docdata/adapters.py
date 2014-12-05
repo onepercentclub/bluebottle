@@ -285,12 +285,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_captured = totals.totalCaptured
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
-
-            message = "Status for OrderPayment {0} form {1} changed to {2}.".format(self.order_payment.id,
-                                                                                    self.payment.status, status)
-            log = PaymentLogEntry.objects.create(payment=self.payment, level='INFO', message=message)
-            log.save()
-
             self.payment.status = status
             self.payment.save()
 

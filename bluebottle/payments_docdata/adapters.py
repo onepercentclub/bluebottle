@@ -2,6 +2,7 @@ import logging
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
 import gateway
 
 from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
@@ -281,8 +282,15 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
 
+            if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
+                status = StatusDefinition.PAID
+
             self.payment.status = status
             self.payment.save()
+
+        message = "Status updated to {0}".format(status)
+        logger.log(self.payment, 'INFO', message)
+
 
         # FIXME: Saving transactions fails...
         #for transaction in response.payment:

@@ -300,14 +300,18 @@ class DocdataClient(object):
 
         :param extra_args: Additional URL arguments, e.g. default_pm=IDEAL, ideal_issuer_id=0021, default_act='true'
         """
+
+        # We should not use the 'go' link. When we get redirected back from docdata the redirects app, at that point, 
+        # has no notion of the language of the user and defaults to english. This breaks in Safari. However, we do not
+        # need the 'redirects' app here because we know the language and we can generate the exact link.  
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
             'merchant_name': settings.DOCDATA_MERCHANT_NAME,
-            'return_url_success': "{0}/go/orders/{1}/success".format(return_url, order_id),
-            'return_url_pending': "{0}/go/orders/{1}/pending".format(return_url, order_id),
-            'return_url_canceled': "{0}/go/orders/{1}/cancelled".format(return_url, order_id),
-            'return_url_error': "{0}/go/orders/{1}/error".format(return_url, order_id),
+            'return_url_success': "{0}/{1}/#!/orders/{2}/success".format(return_url, client_language, order_id),
+            'return_url_pending': "{0}/{1}/#!/orders/{2}/pending".format(return_url, client_language, order_id),
+            'return_url_canceled': "{0}/{1}/#!/orders/{2}/cancelled".format(return_url, client_language, order_id),
+            'return_url_error': "{0}/{1}/orders/{2}/error".format(return_url, client_language, order_id),
             'client_language': (client_language or get_language()).upper()
         }
         args.update(extra_url_args)

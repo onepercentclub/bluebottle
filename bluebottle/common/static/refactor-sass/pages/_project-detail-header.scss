@@ -43,7 +43,7 @@
 
 #project-detail-header {
     position: relative;
-    min-height: 670px;
+    //min-height: 670px;
     color: $color-text-on-dark;
     top: -96px; // header height
     padding-top: 96px; // header height
@@ -176,7 +176,6 @@
             .project-description {
                 position: relative;
                 overflow: hidden;
-                //white-space: nowrap;
                 text-overflow: ellipsis;
                 max-height: 102px;
                 line-height: 1.5em;
@@ -186,15 +185,12 @@
                 @include transition(all .2s);
 
                 &.is-active {
-                    max-height: 310px;
+                    max-height: 350px;
                     display: block;
                 }
             }
 
             .project-more {
-                position: relative;
-                bottom: 15px;
-                left: 0;
                 color: $color-sec;
 
                 &:active {
@@ -228,25 +224,35 @@
 
         .project-image {
             clear: both;
-            //min-width: 360px;
             width: 100%;
             min-height: 180px;
             max-height: 236px;
             color: $color-text-on-dark;
-            @include calc(min-height, 330 / 16 * 9px);
-            @include calc(max-height, 430 / 16 * 9px);
 
-            iframe {
-                min-height: 180px;
-                max-height: 236px;
-                @include calc(min-height, 330 / 16 * 9px);
-                @include calc(max-height, 430 / 16 * 9px);
+            object, embed, iframe {
+                width: 100% !important;
+            }
+
+            position: relative;
+            padding-bottom: 56.25%; // 16:9
+     
+            iframe, 
+            iframe,
+            object, 
+            object,
+            embed, 
+            embed {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: 100% !important;
             }
         }
     }
 
     #project-bar {
-        margin-top: 32px;
+        margin-top: 35px;
 
         .project-status {
             @include span-columns(7);
@@ -432,7 +438,7 @@
 
     // Task detail specific
     &.task-detail {
-        min-height: 520px;
+        //min-height: 520px;
         
         .project-linked {
             @include svg-icon('sidebar/icon-tasks.svg', #999, #ffffff);
@@ -451,7 +457,7 @@
 
             li {
                 background-image: none;
-                line-height: 30px;
+                line-height: 34px;
                 background-position: 6px 50%;
                 text-indent: 14px;
                 font-weight: bold;

@@ -208,7 +208,7 @@ button, .button {
 
         &:hover {
 
-            em {
+            strong {
                 @include border-top-radius($radius-large);
                 border-color: $color-grey-medium;
                 background-color: $color-real-white;

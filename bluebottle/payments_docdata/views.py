@@ -32,10 +32,10 @@ class PaymentStatusUpdateView(View):
     def get(self, request, **kwargs):
         merchant_order_id = kwargs['merchant_order_id']
         try:
-            order_id = merchant_order_id.split('-')[0]
-            payment = OrderPayment.objects.get(order_id=order_id)
+            payment_id = merchant_order_id.split('-')[0]
+            payment = OrderPayment.objects.get(pk=payment_id)
         except OrderPayment.DoesNotExist:
-            raise Exception("Couldn't find OrderPayment with order id: {0}".format(order_id))
+            raise Exception("Couldn't find OrderPayment with pk: {0}".format(payment_id))
 
         service = PaymentService(order_payment)
         service.check_payment_status()

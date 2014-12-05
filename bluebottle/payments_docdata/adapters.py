@@ -2,6 +2,7 @@ import logging
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.payments_logger.models import PaymentLogEntry
 import gateway
 
 from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
@@ -40,12 +41,12 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # Is this mapping correct?
         'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # Is this mapping correct?
         'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
-        'PAID':                           StatusDefinition.SETTLED, 
+        'PAID':                           StatusDefinition.SETTLED,
         'CANCELED':                       StatusDefinition.CANCELLED, # Docdata responds with 'CANCELED'
         'CHARGED_BACK':                   StatusDefinition.CHARGED_BACK,
-        'CONFIRMED_PAID':                 StatusDefinition.PAID,
+        'CONFIRMED_PAID':                 StatusDefinition.SETTLED,
         'CONFIRMED_CHARGEDBACK':          StatusDefinition.CHARGED_BACK,
-        'CLOSED_SUCCESS':                 StatusDefinition.PAID,
+        'CLOSED_SUCCESS':                 StatusDefinition.SETTLED,
         'CLOSED_CANCELLED':               StatusDefinition.CANCELLED,
     }
 
@@ -271,8 +272,12 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             return None
 
         status = self.get_status_mapping(response.payment[0].authorization.status)
+
+        totals = response.approximateTotals
+        if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
+            status = StatusDefinition.SETTLED
+
         if self.payment.status <> status:
-            totals = response.approximateTotals
             self.payment.total_registered = totals.totalRegistered
             self.payment.total_shopper_pending = totals.totalShopperPending
             self.payment.total_acquirer_pending = totals.totalAcquirerPending
@@ -281,14 +286,15 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
 
-            if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
-                status = StatusDefinition.PAID
+            message = "Status for OrderPayment {0} form {1} changed to {2}.".format(self.order_payment.id, self.payment.status, status)
+            log = PaymentLogEntry.objects.create(payment=self.payment, level='INFO', message=message)
+            log.save()
 
             self.payment.status = status
             self.payment.save()
 
         # FIXME: Saving transactions fails...
-        #for transaction in response.payment:
+        # for transaction in response.payment:
         #    self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
@@ -301,6 +307,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             dd_transaction.capture_status = transaction.authorization.capture[0].status
             dd_transaction.capture_amount = transaction.authorization.capture[0].amount.value
             dd_transaction.capture_currency = transaction.authorization.capture[0].amount._currency
+
         dd_transaction.save()
 
     def _fetch_status(self):

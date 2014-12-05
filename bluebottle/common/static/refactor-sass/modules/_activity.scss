@@ -134,9 +134,10 @@
     .progress-bar {
         position: relative;
         top: 5px;
+        display: block;
+        margin-right: 30%;
 
         .project-fund-amount-slider {
-            width: 70%;
             border: none;
             background-color: $color-real-white;
 

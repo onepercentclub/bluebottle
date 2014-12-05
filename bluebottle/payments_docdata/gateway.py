@@ -302,7 +302,8 @@ class DocdataClient(object):
         """
 
         # We should not use the 'go' link. When we get redirected back from docdata the redirects app, at that point, 
-        # has no notion of the language of the user and defaults to english. This breaks in Safari.  
+        # has no notion of the language of the user and defaults to english. This breaks in Safari. However, we do not
+        # need the 'redirects' app here because we know the language and we can generate the exact link.  
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,

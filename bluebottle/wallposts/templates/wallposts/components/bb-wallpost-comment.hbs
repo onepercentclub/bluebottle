@@ -12,9 +12,7 @@
                 <img {{ bindAttr src="comment.author.getAvatar" alt="comment.author.full_name" }}/>
             </figure>
 
-            <a {{action showProfile comment.author}} class="user-name">
-                <strong>{{ comment.author.full_name }}</strong>
-            </a>
+            <a {{action showProfile comment.author}} class="user-name"><strong>{{ comment.author.full_name }}</strong></a>&nbsp;
 
             <abbr class="timestamp">{{ localize comment.created formatting="X" }}</abbr>
 

@@ -203,7 +203,6 @@ class PayoutTestCase(BluebottleTestCase):
 
         # Set status of donation to failed
         self.donation.order.failed()
-        self.donation.order.save()
 
         # Fetch payout
         payout = ProjectPayout.objects.all()[0]

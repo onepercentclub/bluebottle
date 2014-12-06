@@ -74,7 +74,7 @@ class DocdataPayment(Payment):
         if not fees['payment_methods']:
             raise PaymentException("Missing fee 'payment_methods'")
         transaction_fee = fees['transaction']
-        pm = self.default_pm
+        pm = self.default_pm.lower()
         if not fees['payment_methods'][pm]:
             raise PaymentException("Missing fee {0}".format(pm))
         pm_fee = fees['payment_methods'][pm]

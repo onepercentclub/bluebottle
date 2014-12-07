@@ -127,6 +127,10 @@
         &:hover, &:active {
         }
     }
+
+    &.activity-hide {
+        display: none;
+    }
 }
 
 #fundraiser-list {

@@ -3,7 +3,7 @@
 
 {% tplhandlebars "project_fundraiser_list" %}
     
-    <div class="activity">
+    <div {{bindAttr class=":activity controllers.project.isStatusCampaign::activity-hide" }}>
 
         {{#if fundraisers.length}}
             <header class="activity-header">

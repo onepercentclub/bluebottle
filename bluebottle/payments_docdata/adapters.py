@@ -1,15 +1,15 @@
 import logging
-
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 from bluebottle.payments_logger.models import PaymentLogEntry
 import gateway
 
-from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
 from django.utils.http import urlencode
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language
 
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
 from .models import DocdataPayment
@@ -213,6 +213,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         #FIXME: get rid of these testing
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
         client = gateway.DocdataClient(testing_mode)
+        client_language = get_language()
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:
@@ -225,9 +226,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             except DocdataPaymentException as i:
                 raise PaymentException(i)
         else:
-
             return_url_base = get_current_host()
-            client_language = 'en'
         try:
             url = client.get_payment_menu_url(
                 order_key=self.payment.payment_cluster_key,
@@ -285,12 +284,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_captured = totals.totalCaptured
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
-
-            message = "Status for OrderPayment {0} form {1} changed to {2}.".format(self.order_payment.id,
-                                                                                    self.payment.status, status)
-            log = PaymentLogEntry.objects.create(payment=self.payment, level='INFO', message=message)
-            log.save()
-
             self.payment.status = status
             self.payment.save()
 

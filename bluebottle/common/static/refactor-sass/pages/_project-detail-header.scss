@@ -229,13 +229,14 @@
             max-height: 236px;
             color: $color-text-on-dark;
 
-            object, embed, iframe {
+            object, embed, iframe, img {
                 width: 100% !important;
             }
 
             position: relative;
             padding-bottom: 56.25%; // 16:9
-     
+            
+            img,
             iframe, 
             iframe,
             object, 

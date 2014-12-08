@@ -1,0 +1,18 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "docdataCreditcard" %}
+    <form>
+        <h6>{% trans 'Select your creditcard type'%}</h6>
+        {% blocktrans %} 
+            We'll redirect you through our payment service provider where you can finish your donation securely.
+        {% endblocktrans%}
+        {{partial docdata_creditcard_select}}
+        <div class="card-holder">
+            {{#each type in cardTypes}}
+                <div class="card-item">
+                    <div {{action selectCardType type}} {{bind-attr class=":icon-card type.id:"}}></div>
+                </div>
+            {{/each}}
+        </div>
+    </form>
+{% endtplhandlebars %}

@@ -1,75 +1,149 @@
-{% load bb_ember %}
-{% load i18n %}
-{% load static %}
+{% load i18n bb_ember static %}
 
 {% tplhandlebars "project" %}
-
 <div id="project-detail">
-    <div class="l-section detail project-detail-main">
-        <section class="l-wrapper">
-
-            {{# if video_html }}
-            <figure class="project-image">
-                {{{ video_html }}}
-            </figure>
-            {{ else }}
-            <figure class="project-image">
-                <img {{bindAttr src="image.large"}} width="100%" alt="Photo" />
-            </figure>
-            {{/if}}
-
+    <div id="project-detail-header" {{bindAttr class=":campaign-detail amount_asked::without"}}>
+        <div class="project-background">
+            <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
+        </div>
+        <section class="project-header l-wrapper">
             <article class="project-info">
                 <div class="project-meta">
-					{{!--}}
-					<span class="project-deadline"><span class="flaticon stroke time-1"></span> {{daysToGo}}</span>
-					{{--}}
-                    <span class="project-location"><span class="flaticon solid location-pin-1"></span> {{country.name}}</span>
-                    <span class="project-theme"><span class="flaticon solid tag-2"></span> {{theme.name}}</span>
-                    {{# if isProjectOwner }}
-                        <span class="project-edit">{{#link-to "myProject" id}}<span class="flaticon solid settings-1"></span>{% trans 'Edit' %}{{/link-to}}</span>
-                    {{/if}}
+                    <span class="project-location">{{country.name}}</span>
+                    <span class="project-category">{{theme.name}}</span>
                 </div>
-				
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">{{pitch}}</p>
-				<p class="project-plan-link">
-					<span class="flaticon solid book-4"></span>
-					&nbsp;
-					<a {{action openInScalableBox "projectPlan" this}}>{% trans "Read full project plan" %}</a>
-				</p>
+                <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
             </article>
+            <aside class="project-media">
+
+                {{#if canEdit}}
+                    <div class="project-owner-actions">
+                        {{#link-to "myProject" id}}
+                            {% trans 'Edit' %} {% trans 'Campaign' %}
+                        {{/link-to}}
+                    </div>
+                {{/if}}
+                
+                <div class="project-share">
+                    {{view App.SocialShareView}}
+                </div>
+                {{#if video_html}}
+                    <figure class="project-image">
+                        <span {{bindAttr class="partner.id:"}}></span>
+                        {{{ video_html }}}
+                    </figure>
+                {{else}}
+                    <figure class="project-image">
+                        <span {{bindAttr class="partner.id:"}}></span>
+                        <img {{bindAttr src="image.large"}} width="100%" alt="Photo" />
+                    </figure>
+                {{/if}}
+            </aside>
         </section>
-	</div>
-	
-    <div class="l-section detail" id="project-members">
-        <section class="l-wrapper">
-		
-		    <ul class="member-list">
-		        <li class="member-initiator">
-		            <ul>
-		                <li>
-		                    <a {{action 'openInBigBox' 'userModal' owner }} class="member">
-		                        <figure class="member-avatar"><img {{bindAttr src="owner.getAvatar"}} /></figure>
-		                        <h4>{% trans "Initiator" %}</h4>
-		                        <strong class="member-name">{{owner.full_name}}</strong>
-		                    </a>
-		                </li>
-		            </ul>
-		        </li>
-			</ul>
-			{{#if deadline}}
-				<div class="project-deadline">
-					<span class="flaticon solid stopwatch-1"></span>
-					<span class="text">
-						{{daysToGoText daysToGo}}
-					</span>
-				</div>
-			{{/if}}
-		</section>
+        {{partial '_project_actions'}}
     </div>
 
-    {{outlet}}
-	
+    <div id="wall">
+        <div class="l-wrapper">
+
+            <section id="wallposts">
+                {{partial 'wallposts'}}
+            </section>
+
+            <section id="sidebar">
+
+                {{#if amount_asked}}
+                    <div id="fundraiser-list">
+                        {{render 'projectFundraiserList'}}
+                    </div>
+                {{/if}}
+
+                {{#if tasks}}
+                    <div id="task-list">
+                        <div class="activity">
+                            <header class="activity-header">
+                                <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                            </header>
+
+                            <ul class="activity-list">
+
+                                {{#if availableTasks}}
+                                    {{#each availableTasks}}
+                                        {{view App.TaskSummaryView contentBinding='this'}}
+                                    {{/each}}
+                                {{/if}}
+
+                                {{#if unavailableTasks}}
+                                    {{#each unavailableTasks}}
+                                        {{view App.TaskSummaryView contentBinding='this'}}
+                                    {{/each}}
+                                {{/if}}
+
+                            </ul>
+
+                            {{#if isProjectOwner}}
+                                <footer class="activity-footer">
+                                    {{#linkTo 'taskNew' id class='activity-action' }}
+                                        <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                        {% trans "Why not ask your community to help out?" %}
+                                    {{/linkTo}}
+                                </footer>
+                            {{/if}}
+
+                        </div>
+                    </div>
+                {{else}}
+                    {{#if isProjectOwner}}
+                        {{#if isStatusCampaign}}
+                            <div id="task-list">
+                                <div class="activity">
+                                    <header class="activity-header">
+                                        <h2 class="activity-title">{% trans "Tasks" %}</h2>
+                                    </header>
+
+                                    <footer class="activity-footer">
+                                        {{#linkTo 'taskNew' id class='activity-action' }}
+                                            <strong>{% trans "Create a task" %} &raquo;</strong><br />
+                                            {% trans "Why not ask your community to help out?" %}
+                                        {{/linkTo}}
+                                    </footer>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{/if}}
+
+                {{/if}}
+
+                {{#if projectDonations}}
+                <div id="supporter-list">
+                    <div class="activity">
+
+                        <header class="activity-header">
+                            <h2 class="activity-title">{% trans "Supporters" %}</h2>
+                        </header>
+
+                        {{project-donations class="project-supporters" donations=projectDonations limit=10 showProfile="showProfile"}}
+                        
+                        {{#if isStatusCampaign}}
+                        <footer class="activity-footer">
+                            <a {{action 'addDonation' this}} data-action-type="donate" class="activity-action">
+                                <strong>{% trans "Support this campaign" %} &raquo;</strong><br />
+                                {% trans "And get your name on the wall!" %}
+                            </a>
+                        </footer>
+                        {{/if}}
+
+                    </div>
+                </div>
+                {{/if}}
+
+            </section>
+            
+        </div>
+    </div>
 </div>
 
 {% endtplhandlebars %}
+

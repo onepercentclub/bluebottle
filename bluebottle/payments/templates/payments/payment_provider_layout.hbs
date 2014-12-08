@@ -1,0 +1,8 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "payment_provider_layout" %}
+    <li {{bindAttr class="view.isSelected:is-active view.content.profile"}} {{action 'selectedPaymentMethod' view.content}}>
+        <label >{{view.content.name}}</label>
+    </li>
+{% endtplhandlebars %}

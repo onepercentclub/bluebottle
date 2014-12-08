@@ -1,0 +1,12 @@
+{% load bb_ember i18n %}
+
+{% tplhandlebars "order_login" %}
+    {{#if userMatch}}
+        {{partial "matched_order_login_header"}}
+        {{partial "matched_login_content"}}
+    {{else}}
+        {{partial "standard_order_login_content"}}
+    {{/if}}
+
+    {{partial "order_login_footer"}}
+{% endtplhandlebars %}

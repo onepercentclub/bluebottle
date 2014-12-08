@@ -10,10 +10,10 @@ from rest_framework import generics
 
 from bluebottle.utils.utils import get_client_ip
 
-from bluebottle.utils.utils import get_organization_model, get_organizationdocument_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationdocument_model, get_organizationmember_model
+
 from .permissions import IsOrganizationMember
 from .serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
-
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()

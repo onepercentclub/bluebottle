@@ -52,7 +52,34 @@ App.TaskMember = DS.Model.extend({
     }.property('status'),
     isAccepted: function(){
         return (this.get('isStatusAccepted') || this.get('isStatusRealized'));
+    }.property('status'),
+
+    // Return individual labels here so they're added to translations.
+    statusLabel: function(){
+        var status = this.get('status');
+        switch (status) {
+            case 'applied':
+                return gettext('applied for');
+                break;
+            case 'rejected':
+                return gettext('is rejected for');
+                break;
+            case 'accepted':
+                return gettext('is working on');
+                break;
+            case 'realized':
+                return gettext('realised');
+                break;
+            case 'stopped':
+                return gettext('stopped working on');
+                break;
+            default:
+                Em.Logger.error('Task status not found: ' + status);
+                return status;
+        }
+
     }.property('status')
+
 
 });
 
@@ -67,7 +94,7 @@ App.MyTaskMember = App.TaskMember.extend({
 App.TaskFile = DS.Model.extend({
     url: 'bb_tasks/files',
 
-    author: DS.belongsTo('App.User'),
+    author: DS.belongsTo('App.UserPreview'),
     title: DS.attr('string'),
     created: DS.attr('date'),
     file: DS.attr('file'),
@@ -137,12 +164,12 @@ App.Task = DS.Model.extend({
     }.property('isAvailable'),
 
     membersCount: function() {
-		    return this.get('members.length')
+        return this.get('members.length')
     }.property("members.length"),
     
-	  hasMoreThanOneMember: function() {
+	hasMoreThanOneMember: function() {
         return this.get('membersCount') > 1
-	  }.property('membersCount'),
+    }.property('membersCount'),
     
     hasMembers: function() {
         return this.get('members.length') > 0;

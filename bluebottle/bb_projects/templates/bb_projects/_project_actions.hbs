@@ -1,0 +1,10 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "_project_actions" %}
+    {{#if amount_asked}}
+        {{partial '_project_actions_with_funding'}}
+    {{else}}
+        {{partial '_project_actions_without_funding'}}
+    {{/if}}
+{% endtplhandlebars %}

@@ -10,7 +10,7 @@ Hello {{ receiver_name }},
 As motivation {{ sender_name }} wrote:
 {{ motivation }}
 
-Be sure to follow this up a.s.a.p.!
+You can now accept or reject this member, he or she will receive an email when you have confirmed the status of the participant.
 
 Go to the task: {{ site }}{{ link }}.
 

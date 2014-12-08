@@ -283,7 +283,7 @@ class ImageSerializer(serializers.ImageField):
             large = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x450', crop=self.crop))
             full = settings.MEDIA_URL + unicode(get_thumbnail(value, '1200x900'))
             small = settings.MEDIA_URL + unicode(get_thumbnail(value, '400x380', crop=self.crop))
-            square = settings.MEDIA_URL + unicode(get_thumbnail(value, '120x120', crop=self.crop, colorspace="GRAY"))
+            square = settings.MEDIA_URL + unicode(get_thumbnail(value, '120x120', crop=self.crop))
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
@@ -396,3 +396,9 @@ class TaggableSerializerMixin(object):
                 self.tag_list = json.loads(self.tag_list)
             for tag in self.tag_list:
                 tags.add(tag['id'])
+
+
+class ObjectFieldSerializer(serializers.CharField):
+
+    def from_native(self, value):
+        return json.dumps(value)

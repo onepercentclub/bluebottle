@@ -1,0 +1,13 @@
+[
+    {
+        "pk": 1,
+        "model": "redirects.redirect",
+        "fields": {
+            "fallback_redirect": false,
+            "nr_times_visited": 0,
+            "regular_expression": true,
+            "new_path": "/#!/$1",
+            "old_path": "/go/(.*)"
+        }
+    }
+]

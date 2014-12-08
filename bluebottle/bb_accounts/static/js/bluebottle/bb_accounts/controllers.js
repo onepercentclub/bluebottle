@@ -5,6 +5,13 @@
 App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     createAttempt: false,
     requiredFields: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
+    fieldsToWatch: ['password.length', 'email', 'emailConfirmation', 'first_name', 'last_name'],
+
+    containerClass: 'normal',
+
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'normal signup');
+    },
 
     init: function() {
         this._super();
@@ -79,6 +86,22 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         }
     }.observes('error'),
 
+    _handleSignupSuccess: function () {
+        // Close the modal
+        this.send('close');
+    },
+
+    _handleSignupConflict: function (failedUser) {
+        var conflict = failedUser.errors.conflict,
+            loginObject = App.UserLogin.create({
+                matchId: conflict.id,
+                matchType: conflict.type,
+                email: failedUser.get('email')
+            });
+
+        this.send('modalContent', 'login', loginObject);
+    },
+
     actions: {
         signup: function() {
             var _this = this,
@@ -96,7 +119,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response
@@ -133,8 +156,8 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                     // shown the sign in / up modal then they should transition to the requests route
                     _this.send('loadNextTransition', null);
 
-                    // Close the modal
-                    _this.send('close');
+
+                    _this._handleSignupSuccess();
                 }, function () {
                     _this.set('isBusy', false);
 
@@ -150,14 +173,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 // login modal so the user can sign in.
                 // We set matchType = social / email so the login controller can notify the user.
                 if (failedUser.errors.conflict) {
-                    var conflict = failedUser.errors.conflict,
-                        loginObject = App.UserLogin.create({
-                            matchId: conflict.id,
-                            matchType: conflict.type,
-                            email: failedUser.get('email')
-                        });
-
-                    _this.send('modalFlip', 'login', loginObject);
+                    _this._handleSignupConflict(failedUser);
                 } else {
                     _this.send('modalError');
                     // Handle error message here!
@@ -187,19 +203,21 @@ App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixi
 
 
 App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
-    timeAvailableList: function() {
+    timeAvailableList: (function() {
         var list = Em.A();
-        list.addObject(Em.Object.create({ name: '- - - - - - - - - - - - - - - - - -', value: ''}));
-        list.addObject(Em.Object.create({ name: gettext('1-4 hours per week'), value: '1-4_hours_week' }));
-        list.addObject(Em.Object.create({ name: gettext('5-8 hours per week'), value: '5-8_hours_week' }));
-        list.addObject(Em.Object.create({ name: gettext('9-16 hours per week'), value: '9-16_hours_week' }));
-        list.addObject(Em.Object.create({ name: gettext('1-4 hours per month'), value: '1-4_hours_month' }));
-        list.addObject(Em.Object.create({ name: gettext('5-8 hours per month'), value: '5-8_hours_month' }));
-        list.addObject(Em.Object.create({ name: gettext('9-16 hours per month'), value: '9-16_hours_month' }));
-        list.addObject(Em.Object.create({ name: gettext('I have all the time in the world. Bring it on!'), value: 'lots_of_time' }));
-        list.addObject(Em.Object.create({ name: gettext('It depends on the content of the tasks. Challenge me!'), value: 'depends' }));
+        list.addObject({ name: '- - - - - - - - - - - - - - - - - -', value: ''});
+        list.addObject({ name: gettext('1-4 hours per week'), value: '1-4_hours_week' });
+        list.addObject({ name: gettext('5-8 hours per week'), value: '5-8_hours_week' });
+        list.addObject({ name: gettext('9-16 hours per week'), value: '9-16_hours_week' });
+        list.addObject({ name: gettext('1-4 hours per month'), value: '1-4_hours_month' });
+        list.addObject({ name: gettext('5-8 hours per month'), value: '5-8_hours_month' });
+        list.addObject({ name: gettext('9-16 hours per month'), value: '9-16_hours_month' });
+        list.addObject({ name: gettext('I have all the time in the world. Bring it on!'), value: 'lots_of_time' });
+        list.addObject({ name: gettext('It depends on the content of the tasks. Challenge me!'), value: 'depends' });
         return list;
-    }.property(),
+    }).property(),
+
+    label: gettext("Time available")
 });
 
 
@@ -258,12 +276,23 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
         }
 
         this.set('model', App.User.find(id));
-    }.observes('model')
+    }.observes('model'),
+
+    actions: {
+        viewProfile: function () {
+            this.send('close');
+            this.transitionToRoute('viewProfile', this);
+        }
+    }
 });
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
     requiredFields: ['email', 'password'],
+
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'normal signin');
+    },
 
     init: function () {
         this._super();
@@ -331,18 +360,15 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         }
     }.observes('error'),
 
+    _handleLoginSuccess: function () {
+        // Close the modal
+        this.send('close');
+    },
+
     actions: {
         login: function () {
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
-
-            if (Em.isEmpty(this.get('email')) && Em.isEmpty(this.get('password'))){
-                this.set('notEmpty', false);
-            }
-
-            if (!Em.isEmpty(this.get('email')) || !Em.isEmpty(this.get('password'))){
-                this.set('notEmpty', true);
-            }
 
             // Enable the validation of errors on fields only after pressing the signup button
             _this.enableValidation();
@@ -353,7 +379,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response
@@ -371,8 +397,8 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');
-                // Close the modal
-                _this.send('close');
+
+                _this._handleLoginSuccess();
 
             }, function (error) {
                 _this.set('isBusy', false);
@@ -450,20 +476,12 @@ App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerVali
             // Check client side errors
             if (_this.get('validationErrors')) {
                 this.send('modalError');
-                return false
+                return false;
             }
 
             // Set is loading property until success or error response
             _this.set('isBusy', true);
 
-
-            // Early out if the input is empty
-            if (Em.isEmpty(this.get('email'))) {
-                this.send('modalError');
-                return
-            }
-
-            this.set('isBusy', true);
             this.set('error', null);
 
             return Ember.RSVP.Promise(function (resolve, reject) {
@@ -499,6 +517,7 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     resetPasswordTitle : gettext('Make it one to remember'),
     successMessage: gettext('We\'ve updated your password, you\'re all set!'),
     requiredFields: ['new_password1','new_password2'],
+    fieldsToWatch: ['new_password2'],
 
     init: function() {
         this._super();
@@ -520,15 +539,16 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     },
 
     _clearModel: function () {
-        this.set('content', Em.Object.create());
+        this.set('model', null);
+    },
+
+    willOpen: function () {
+        this.set('validationEnabled', true);
     },
 
     willClose: function () {
         this._clearModel();
-
-        // Clear the notifications
-        this.set('validationErrors', null);
-        this.set('error', null);
+        this.set('validationEnabled', false);
     },
 
     didError: function () {
@@ -542,8 +562,8 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
     }.observes('error'),
 
     // pass the to the fieldStrength function the field we want to evaluate
-    passwordStrength: function(){
-        return this.fieldStrength(this.get('new_password1'))
+    passwordStrength: function() {
+        return this.fieldStrength(this.get('new_password1'));
     }.property('new_password1.length'),
 
     actions: {
@@ -560,15 +580,9 @@ App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMi
             // Ignoring API errors here, we are passing ignoreApiErrors=true
             _this.set('validationErrors', _this.validateErrors(_this.errorDefinitions, _this.get('model'), true));
 
-            if (Em.isEmpty(this.get('new_password1')) && Em.isEmpty(this.get('new_password2'))){
-                this.set('notEmpty', false);
-            } else {
-                this.set('notEmpty', true);
-            }
-
             // Check client side errors
             if (_this.get('validationErrors')) {
-                return false
+                return false;
             }
 
             this.set('isBusy', true);

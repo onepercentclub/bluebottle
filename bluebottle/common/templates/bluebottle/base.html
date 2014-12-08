@@ -36,14 +36,14 @@
 
     {# Stylesheets #}
     {% compress css %}
-        {% block screen_css %}
-            <link rel="stylesheet" href="{% static 'css/screen.css' %}" media="screen" />
-            <link rel="stylesheet" href="{% static 'css/vendor/redactor.css' %}" media="screen" />
-            <!--[if IE]>
-            <link rel="stylesheet" href="{% static 'css/ie.css' %}" media="screen" />
-            <![endif]-->
-        {% endblock screen_css %}
+        <link rel="stylesheet" href="{% static 'css/screen.css' %}" media="screen" />
+        <link rel="stylesheet" href="{% static 'css/vendor/redactor.css' %}" media="screen" />
     {% endcompress %}
+
+    <link rel="stylesheet" href="{% static 'css/screen-refactor.css' %}" media="screen" />
+    <!--[if IE]>
+        <link rel="stylesheet" href="{% static 'css/ie.css' %}" media="screen" />
+    <![endif]-->
 
     {# Scripts #}
     <!-- avoid hardcoding these urls -->
@@ -57,6 +57,7 @@
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
         var FACEBOOK_AUTH_ID = '{{ FACEBOOK_AUTH_ID }}';
         var MIXPANEL_KEY = '{{ MIXPANEL }}';
+
     </script>
 
     {% if RAVEN_DSN %}
@@ -83,13 +84,26 @@
         <script type="text/javascript" src="{% static 'js/vendor/handlebars-1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-v1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-v0.14.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'js/vendor/zeroclipboard/ZeroClipboard.js' %}"></script>
+
         <script type="text/javascript" src="{% static 'js/plugins/ember-facebook.js' %}"></script>
+
+        <script type="text/javascript">
+            ZeroClipboard.config({moviePath: STATIC_URL + '/js/vendor/zeroclipboard/ZeroClipboard.swf'});
+
+        </script>
+
     {% endcompress %}
 
     {% compress js %}
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-drf2-adapter.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-meta.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/globalize.js' %}"></script>
+
+        {% if DEBUG %}
+            <script type="text/javascript" src="{% static 'js/plugins/apiary-adapter.js' %}"></script>
+        {% endif %}
 
         {# Other libs #}
         {% with 'jsi18n/'|add:LANGUAGE_CODE|add:'/djangojs.js' as i18n_static %}
@@ -134,8 +148,10 @@
             <script type="text/javascript" src="{% static 'js/bluebottle/app.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/auth_jwt.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/utils.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/translatables.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/components.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/views.js' %}"></script>
 
             {#  Tracking modules #}
@@ -143,7 +159,6 @@
               <script src="{% static 'js/vendor/mixpanel.js' %}"></script>
               <script type="text/javascript" src="{% static 'js/bluebottle/bb_mixpanel.js' %}"></script>
             {%  endif  %}
-
 
             {% for app in bb_apps %}
                 {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}
@@ -183,21 +198,19 @@
 <body id="body">
     <!-- Scripts -->
     <div id="fb-root"></div>
-
-
-
-  {% block google_analytics %}
-        <script type="text/javascript">
-          var _gaq = _gaq || [];
-            {% if ANALYTICS_CODE %}
-                _gaq.push(['_setAccount', '{{  ANALYTICS_CODE }}']);
-                _gaq.push(['_trackPageview']);
-                (function()
-                { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
-                )();
-            {%  endif %}
-        </script>
-  {% endblock %}
+    {% block google_analytics %}
+          <script type="text/javascript">
+            var _gaq = _gaq || [];
+              {% if ANALYTICS_CODE %}
+                  _gaq.push(['_setAccount', '{{  ANALYTICS_CODE }}']);
+                  _gaq.push(['_trackPageview']);
+                  (function()
+                  { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); }
+                  )();
+              {%  endif %}
+          </script>
+    {% endblock %}
+    
   
     <!--[if lte IE 9]>
         <script type="text/javascript" src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>

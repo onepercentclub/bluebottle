@@ -46,7 +46,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     fixedFieldsMessage: gettext('That\'s better'),
 
     // In your controller define fieldsToWatch (a list of fields you want to watch)
-    // you will be able to use then: errorsFixed and blockSubmit
+    // you will be able to use then: errorsFixed and blockingErrors
     // errorsFixed: true if there were errors which are now fixed
     errorsFixed: false,
 
@@ -57,14 +57,28 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // set to true to enable it
     validationEnabled: false,
 
+    // The highest priority property validation error based on the priorty set 
+    // in the errorDefinitions property
+    validationErrors: null,
+
     // used in validateErrors function
     errorDictionaryFields: ['property', 'validateProperty', 'message', 'priority'],
+
+    // List of all validation errors
+    errorList: null,
+
+    // True if any validated property has an error
+    allError: null,
 
     // set validationEnable to true, this has to be called from the controller to enable the validation
     // I use it since we want to be in control when to start the validation, for example just after
     // pressing a submit button
     enableValidation: function() {
-        this.set('validationEnabled', true)
+        this.set('validationEnabled', true);
+    },
+
+    disableValidation: function() {
+        this.set('validationEnabled', false);
     },
 
     // set the strength of the field, use this in the template
@@ -123,11 +137,13 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         for (var key in resultErrors){
             // capitalize the first letter of the key add the related error and set it to the first error
             // TODO: I add the key to the message since when a field is required the error message doesn't say which one.
-            firstError.set('error', (key.charAt(0).toUpperCase() + key.slice(1)) + ": " +resultErrors[key])
-            return firstError
+            firstError.set('error', (key.charAt(0).toUpperCase() + key.slice(1)) + ": " +resultErrors[key]);
+            return firstError;
         }
     },
 
+    // In the init function of your controller define a errorDefinitions array of dict like
+    // following:
     //[{
     // 'property': propertyValue,
     // 'validateProperty': validateProperty,
@@ -135,6 +151,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     // 'priority': priorityNumber
     // },
     // ...,]
+    // validateProperty has to be in the model
     _clientSideErrors: function(arrayOfDict, model) {
         // array check otherwise throw error
         if (!Em.isArray(arrayOfDict))
@@ -151,19 +168,27 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             if(Em.compare(Object.keys(dict).sort(), _this.errorDictionaryFields.sort()) < 0)
                 throw new Error('Expected a dictionary with correct keys');
 
+            var valid;
+            if (typeof dict.validateProperty.test == 'function') {
+                // match property by regex match on model property
+                valid = dict.validateProperty.test(model.get(dict.property));
+            } else {
+                // match property by a validation property on the model
+                valid = !!model.get(dict.validateProperty);
+            }
             // evaluate the property, if it's not valid
-            if (!model.get(dict.validateProperty)) {
-                errorList[dict.property] = dict['message']
+            if (!valid) {
+                errorList[dict.property] = dict.message;
                 // set the error only if the priority is higher than the current one
                 // maybe check also for the same property name
                 if (!currentErrorPriority || currentErrorPriority > dict.priority ) {
-                    currentErrorPriority = dict.priority
+                    currentErrorPriority = dict.priority;
 
                     // if there were no currentErrors
                     if (!currentValidationError)
                         currentValidationError = Em.Object.create();
 
-                    currentValidationError.set('error', dict['message'])
+                    currentValidationError.set('error', dict.message);
                 }
             }
 
@@ -172,12 +197,12 @@ App.ControllerValidationMixin = Ember.Mixin.create({
         this.set("errorList", errorList);
         this._allErrors(errorList);
         
-        return currentValidationError
+        return currentValidationError;
     },
 
     _allErrors: function(errorList) {
         var _this = this;
-        var errors = Ember.makeArray(this.get('errorDefinitions'));
+        var errors = Ember.makeArray(_this.get('errorDefinitions'));
 
         var allFieldErrors = true;
         for (var i=0; i < errors.length;i++){
@@ -185,36 +210,47 @@ App.ControllerValidationMixin = Ember.Mixin.create({
                 allFieldErrors = false;
             }
         }
-        this.set('allError', allFieldErrors);
+        _this.set('allError', allFieldErrors);
     },
 
+    // if validation is enabled:
+    // validate API errors if ignoreApiErrors != true
+    // otherwise returns the client side validation
     validateErrors: function(arrayOfDict, model, ignoreApiErrors) {
         if (!this.get('validationEnabled'))
-            return null
+            return null;
 
         // API errors
         if (!ignoreApiErrors && model.get('errors')){
-            return this._apiErrors(model.get('errors'))
+            return this._apiErrors(model.get('errors'));
         }
         // client side validation
-        return this._clientSideErrors(arrayOfDict, model)
+        return this._clientSideErrors(arrayOfDict, model);
+    },
+
+    // Set the validationErrors property on the based on client-side validations 
+    clientSideValidationErrors: function () {
+        // Enable the validation of errors
+        this.enableValidation();
+
+        // Ignoring API errors here, we are passing ignoreApiErrors=true
+        return this._checkErrors(true);
     },
 
     // If you are not doing live validation with "fieldsToWatch" then this function can be called
     // manually to set both client and server side validation errors. This would be done automatically
     // using an observer on fieldsToWatch.
-    processValidationErrors: function(arrayOfDict, model){
+    processValidationErrors: function(arrayOfDict, model, ignoreApiErrors) {
         this._checkErrors();
-        this.set('validationErrors', this.validateErrors(arrayOfDict, model));
+        this.set('validationErrors', this.validateErrors(arrayOfDict, model, ignoreApiErrors));
     },
 
     // At runtime observers are attached to this function
     // it calls the validateAndCheck function
-    _checkErrors: function() {
+    _checkErrors: function(ignoreApiErrors) {
         // Check if there were previous errors which are now fixed
-
-        if (this.get('validationErrors')) {
-            if (this._validateAndCheck()) {
+        if (this.get('validationEnabled')) {
+            if (this._validateAndCheck(ignoreApiErrors)) {
                 this.set('errorsFixed', true)
             }else {
                 this.set('errorsFixed', false)
@@ -223,27 +259,35 @@ App.ControllerValidationMixin = Ember.Mixin.create({
     },
 
     // return true if there are no errors
-    _validateAndCheck: function() {
+    _validateAndCheck: function(ignoreApiErrors) {
         // run the validateErrors and set the errors in validationErrors
-        this._validate();
-        return !this.get('validationErrors')
+        this._validate(ignoreApiErrors);
+        return !this.get('validationErrors');
     },
 
     // run the validateErrors and set the errors in validationErrors
-    _validate: function() {
-        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), true));
+    _validate: function(ignoreApiErrors) {
+        this.set('validationErrors', this.validateErrors(this.get('errorDefinitions'), this.get('model'), ignoreApiErrors));
+        Em.run.sync();
     },
 
     // set blockingErrors to true if there are fields which aren't fulfilled
     // at runtime observers are attached to this function
     _requiredFieldsChecker: function() {
-        var _this = this
-        _this.set('blockingErrors', false)
+        var _this = this;
+        _this.set('blockingErrors', false);
         _this.get('requiredFields').forEach(function(field){
             if (!_this.get(field)){
-                _this.set('blockingErrors', true)
+                _this.set('blockingErrors', true);
             }
-        })
+        });
+    },
+
+    clearValidations: function () {
+        this.set('errorsFixed', true);
+        this.set('validationErrors', null);
+        this.set('isBusy', false);
+        Em.run.sync();
     },
 
     // Dynamically assign observerFields to a function f
@@ -253,7 +297,7 @@ App.ControllerValidationMixin = Ember.Mixin.create({
             // dynamically assign observer fields to _checkErrors function
             // [http://stackoverflow.com/questions/13186618/how-to-dynamically-add-observer-methods-to-an-ember-js-object]
             this.get(observerFields).forEach(function(field) {
-                Ember.addObserver(this, field, this, f)
+                Ember.addObserver(this, field, this, f);
             }, this);
         }
     },
@@ -484,47 +528,6 @@ App.UploadFile = Ember.TextField.extend({
 });
 
 
-App.UploadMultipleFiles = Ember.TextField.extend({
-    type: 'file',
-    attributeBindings: ['name', 'accept', 'multiple'],
-
-    didInsertElement: function(){
-        // Or maybe try: https://github.com/francois2metz/html5-formdata.
-        var view = this.$();
-        if (Em.isNone(File)) {
-            $.getScript('//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js').done(
-                function(){
-                    $.getScript('/static/assets/js/polyfills/FileReader/jquery.FileReader.min.js').done(
-                        function(){
-                            view.fileReader({filereader: '/static/assets/js/polyfills/FileReader/filereader.swf'});
-                        }
-                    );
-                }
-            );
-        }
-    },
-
-    contentBinding: 'parentView.controller.content',
-
-    change: function(e) {
-        var controller = this.get('parentView.controller');
-        var files = e.target.files;
-        for (var i = 0; i < files.length; i++) {
-            var reader = new FileReader();
-            var file = files[i];
-            reader.readAsDataURL(file);
-
-            // Replace src of the preview..
-            var view = this;
-            view.$().parents('form').find('.preview').attr('src', '/static/assets/images/loading.gif');
-            reader.onload = function(e) {
-                view.$().parents('form').find('.preview').attr('src', e.target.result);
-            }
-            controller.addFile(file);
-        }
-    }
-});
-
 App.UploadedImageView = App.UploadFile.extend({
     attributeBindings: ['name', 'accept'],
     type: 'file',
@@ -620,8 +623,11 @@ App.MapPicker = Em.View.extend({
         this.geocoder = new google.maps.Geocoder();
         var view = this;
         var point = new google.maps.LatLng(52.3747157,4.8986167);
+
         var latitude = view.get('latitude');
         var longitude = view.get('longitude');
+
+        // Centre on pointer if lat/long are set.
         if (latitude && longitude){
             point = new google.maps.LatLng(latitude, longitude);
         }
@@ -635,7 +641,12 @@ App.MapPicker = Em.View.extend({
             }
         };
         view.map = new google.maps.Map(this.$('.map-picker').get(0), mapOptions);
-        view.placeMarker(point);
+
+        // Drop a pin if lat long are already set.
+        if (latitude && longitude){
+            view.placeMarker(point);
+        }
+
         google.maps.event.addListener(view.map, 'click', function(e) {
             var loc = {};
             view.set('latitude', e.latLng.lat().toString());

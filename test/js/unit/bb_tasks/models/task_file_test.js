@@ -21,7 +21,7 @@ pavlov.specify("Task File model unit tests", function() {
                 assert(taskFile.url).equals('bb_tasks/files');
                 assert(taskFile.get('title')).equals('Death Star Blueprints');
                 assert(taskFile.get('file')).equals('deathstar.pdf');
-                assert(taskFile.get('author') instanceof App.User).isTrue();
+                assert(taskFile.get('author') instanceof App.UserPreview).isTrue();
                 assert(taskFile.get('task') instanceof App.Task).isTrue();
             });
         });

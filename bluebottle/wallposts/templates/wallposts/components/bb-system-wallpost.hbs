@@ -1,0 +1,39 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-system-wallpost" %}
+
+	<article class="m-wallpost m-wallpost-system">
+
+        <header class="wallpost-header">
+            {{#if wallpost.author}}
+                <figure {{action "showProfile" wallpost.author}} class="user-avatar">
+                    <img {{bindAttr src="wallpost.author.getAvatar" alt="wallpost.author.full_name"}} />
+                </figure>
+            {{else}}
+                <figure class="user-avatar">
+                    <img src="{% get_static_prefix %}/images/default-avatar.png" alt="Guest"/>
+                </figure>
+            {{/if}}
+
+            
+            {{#if wallpost.author}}
+                <a {{action "showProfile" wallpost.author}} class="user-name">
+                    <strong>{{wallpost.author.full_name}}</strong>
+                </a> {% trans "made a donation" %}
+            {{else}}
+            <strong>{% trans "Guest" %}</strong> {% trans "made a donation" %}
+            {{/if}}
+
+            <abbr class="timestamp">{{ localize wallpost.created formatting="X" }}</abbr>
+        </header>
+
+        <ul class="comments">
+            {{bb-wallpost-comment-list comments=wallpost.reactions wallpost=wallpost currentUser=currentUser
+            addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile'}}
+        </ul>
+
+    </article>
+
+{% endtplhandlebars %}

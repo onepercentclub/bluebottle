@@ -2,56 +2,82 @@
 {% load i18n %}
 {% load static %}
 
-
 {% tplhandlebars "taskActivity" %}
-    <div class="wallposts-important">
-        <h3>{% trans "Files" %}</h3>
-        
-        <div class="task-files">
-            <ul>    
-                {{#each files}}
-                    {{#if id}}
-                        <li>
-                            <span class="task-file-filename">
-                                <span class="flaticon stroke document-1"></span> 
-                                <a {{bindAttr href="this.file.url"}}>
-                                    {{#if this.title}}
-                                        {{this.title}}
-                                    {{else}}
-                                        {{this.file.name}}
-                                    {{/if}}
-                                </a>
-                            </span>
-                            <span class="task-file-author">by 
-                                {{#link-to "viewProfile" author}}
-                                    {{author.full_name}}
-                                {{/link-to}}
-                            </span> 
-                            <span class="task-file-created">
-                                {{localize created formatting="X"}}
-                            </span>
-                        </li>
-                    {{/if}}
-                {{/each}}
-            <ul>
+
+    {{#if members}}
+        <div id="task-user-list">
+            <div class="activity">
+
+                <header class="activity-header">
+                    <h2 class="activity-title">{% trans "Task members" %}</h2>
+                </header>
+
+                <ul class="activity-list">
+                    {{#each members}}
+                        {{render "taskMember" this}}
+                    {{/each}}
+                </ul>
+            </div>
         </div>
-        
-        {{#if controllers.task.canUpload}}
-        <span class="task-file-upload">
-            <span class="flaticon solid plus-2"></span>
-            <a {{action 'uploadFile' this}}>
-                {% trans "Add file" %}
-            </a>
-        </span>
-        {{/if}}
+    {{/if}}
 
-        {{#if members}}
-        <h3>{% trans "Task members" %}</h3>
-        <div class="task-pending-requests">
-        {{#each members}}
-            {{render "taskMember" this}}
-        {{/each}}
-        {{/if}}
+    {{#if files}}
+    <div id="files-list">
+        <div class="activity">
 
+            <header class="activity-header">
+                <h2 class="activity-title">{% trans "Files" %}</h2>
+            </header>
+
+            <ul class="activity-list">
+                {{#each files}}
+                    <li class="activity-item">
+                        <a {{bindAttr href="this.file.url"}} class="item-link">
+                            <strong class="item-title">
+                                {{#if this.title}}
+                                    {{this.title}}
+                                {{else}}
+                                    {{this.file.name}}
+                                {{/if}}
+                            </strong>
+                            <span class="item-meta">
+                                <span class="item-author">{{author.full_name}}</span>
+                                <span class="item-created">{{localize created formatting="X"}}</span>
+                            </span>
+                            <span class="item-status file-download">{% trans "Download" %}</span>
+                        </a>
+                    </li>
+                {{/each}}
+            </ul>
+
+            {{#if controllers.task.canUpload}}
+                <footer class="activity-footer">
+                    <a {{action 'uploadFile' this}} class='activity-action' >
+                        <strong>{% trans "Upload a new file" %} &raquo;</strong><br />
+                        {% trans "Share documents of files with your supporters" %}
+                    </a>
+                </footer>
+            {{/if}}
+        </div>
     </div>
+    {{else}}
+        {{#if controllers.task.canUpload}}
+            <div id="files-list">
+                <div class="activity">
+
+                    <header class="activity-header">
+                        <h2 class="activity-title">{% trans "Files" %}</h2>
+                    </header>
+                    
+                    <footer class="activity-footer">
+                        <a {{action 'uploadFile' this}} class='activity-action' >
+                            <strong>{% trans "Upload a new file" %} &raquo;</strong><br />
+                            {% trans "Share documents of files with your supporters" %}
+                        </a>
+                    </footer>
+                </div>
+            </div>
+        {{/if}}
+    {{/if}}
+
 {% endtplhandlebars %}

@@ -6,13 +6,14 @@ from rest_framework import serializers
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
 
 from .models import (
     WallPost, SystemWallPost, MediaWallPost, TextWallPost, MediaWallPostPhoto,
     Reaction)
 
 PROJECT_MODEL = get_project_model()
+FUNDRAISER_MODEL = get_fundraiser_model()
 
 
 class WallPostListSerializer(serializers.Field):
@@ -61,6 +62,8 @@ class WallPostContentTypeField(serializers.SlugRelatedField):
     def from_native(self, data):
         if data == 'project':
             data = ContentType.objects.get_for_model(PROJECT_MODEL).model
+        if data == 'fund raiser':
+            data = ContentType.objects.get_for_model(FUNDRAISER_MODEL).model
         return super(WallPostContentTypeField, self).from_native(data)
 
 
@@ -117,7 +120,7 @@ class MediaWallPostSerializer(WallPostSerializerBase):
 
     class Meta:
         model = MediaWallPost
-        fields = WallPostSerializerBase.Meta.fields + ('title', 'text', 'video_html', 'video_url', 'photos')
+        fields = WallPostSerializerBase.Meta.fields + ('text', 'video_html', 'video_url', 'photos')
 
 
 class TextWallPostSerializer(WallPostSerializerBase):
@@ -145,12 +148,12 @@ class SystemWallPostSerializer(WallPostSerializerBase):
     """
     type = WallPostTypeField(type='system')
     text = ContentTextField()
-    related_type = serializers.CharField(source='related_type.model')
-    related_object = WallPostRelatedField(source='related_object')
+    # related_type = serializers.CharField(source='related_type.model')
+    # related_object = WallPostRelatedField(source='related_object')
 
     class Meta:
         model = TextWallPost
-        fields = WallPostSerializerBase.Meta.fields + ('text', 'related_type', 'related_object')
+        fields = WallPostSerializerBase.Meta.fields + ('text', )
 
 
 class WallPostSerializer(PolymorphicSerializer):

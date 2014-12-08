@@ -2,10 +2,10 @@ from rest_framework import serializers
 from django.utils.translation import ugettext as _
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, OEmbedField, TaggableSerializerMixin, TagSerializer)
+    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
 from bluebottle.geo.models import Country
 
-from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.serializers import CountrySerializer
@@ -78,7 +78,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'organization', 'description', 'owner',
                   'status', 'meta_data', 'image', 'country', 'theme', 'tags',
-                  'meta_data', 'language')
+                  'meta_data', 'language', 'amount_asked', 'amount_donated', 'amount_needed')
+
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
@@ -91,6 +92,8 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PROJECT_MODEL
+        fields = ('id', 'title', 'status', 'image', 'country', 'pitch', 'theme', 'owner',
+                  'amount_asked', 'amount_donated', 'amount_needed')
 
 
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):

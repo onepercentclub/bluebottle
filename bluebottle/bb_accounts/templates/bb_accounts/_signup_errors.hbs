@@ -8,11 +8,9 @@
         </div>
     {{else}}
         {{#if validationErrors}}
-            {{#unless allError}}
-                <div class="modal-flash-message error">
-                    {{validationErrors.error}}
-                </div>
-            {{/unless}}
+            <div class="modal-flash-message error">
+                {{validationErrors.error}}
+            </div>
         {{/if}}
     {{/if}}
 {% endtplhandlebars %}

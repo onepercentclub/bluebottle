@@ -4,6 +4,7 @@
 
     {% tplhandlebars "login" %}
         {{#if userMatch}}
+        	{{partial "matched_login_header"}}
             {{partial "matched_login_content"}}
         {{else}}
             {{partial "standard_login_content"}}

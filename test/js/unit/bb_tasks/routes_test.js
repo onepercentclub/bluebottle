@@ -11,7 +11,7 @@ pavlov.specify('Project Tasks Route Tests', function() {
 
         var route;
 
-        before(function () {
+        beforeEach(function () {
             Ember.run( function () {
                 route = App.ProjectTasksIndexRoute.create();
             });

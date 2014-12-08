@@ -2,14 +2,16 @@
 {% load i18n %}
 {% load static %}
 
-{% include 'wallposts/reactions.hbs' %}
+{% include 'wallposts/_wallposts.hbs' %}
 
-{% include 'wallposts/wall.hbs' %}
+{% include 'wallposts/partials/_signin.hbs' %}
 
-{% include 'wallposts/wallpost.hbs' %}
-{% include 'wallposts/text_wallpost_new.hbs' %}
-{% include 'wallposts/media_wallpost_new.hbs' %}
+{% include 'wallposts/components/bb-wallpost.hbs' %}
+{% include 'wallposts/components/bb-system-wallpost.hbs' %}
 
-{% include 'wallposts/system_wallpost.hbs' %}
-{% include 'wallposts/system_wallpost_voucher.hbs' %}
+{% include 'wallposts/components/bb-media-wallpost-new.hbs' %}
+{% include 'wallposts/components/bb-text-wallpost-new.hbs' %}
+{% include 'wallposts/components/bb-modal-text-wallpost-new.hbs' %}
 
+{% include 'wallposts/components/bb-wallpost-comment-list.hbs' %}
+{% include 'wallposts/components/bb-wallpost-comment.hbs' %}

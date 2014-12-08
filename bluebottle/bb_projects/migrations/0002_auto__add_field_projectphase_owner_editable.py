@@ -3,6 +3,7 @@ import datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
+from django.conf import settings
 
 
 class Migration(SchemaMigration):
@@ -20,7 +21,7 @@ class Migration(SchemaMigration):
 
 
     models = {
-        u'bb_projects.projectphase': {
+        u'{0}.projectphase'.format(settings.PROJECTS_PROJECT_MODEL.split('.')[0]): {
             'Meta': {'ordering': "['sequence']", 'object_name': 'ProjectPhase'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '400', 'blank': 'True'}),
@@ -32,7 +33,7 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '200'}),
             'viewable': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
         },
-        u'bb_projects.projecttheme': {
+        u'{0}.projecttheme'.format(settings.PROJECTS_PROJECT_MODEL.split('.')[0]): {
             'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),

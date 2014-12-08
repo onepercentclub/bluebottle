@@ -1,9 +1,7 @@
 
-$font-family-body					   					   : 'Neue Helvetica W01';
+$font-family-body					   					   : 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
 $gray-border                                               : #D8D8D8;
 $gray-border-hover                                         : #9F9F9F;
-$modal-background-color									   : rgba(#8A9993, .65);
-
 
 .modal-fullscreen-background {
 	position: fixed;
@@ -42,6 +40,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		border-color: $gray-border;
 		height: 45px;
 		box-shadow: none;
+		font-size: 14px;
 
 		&:hover {
 				border-color: $gray-border-hover;
@@ -53,18 +52,69 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		}
 	}
 
-.questionmark {
+	label {
+		
+		&.modal-checkbox {
+			cursor: pointer;
+			display: block;
+			font-size: 13px;
+			color: #9F9F9F;
+					
+			span {
+				display: inline-block;
+				width: 17px;
+				height: 17px;
+				line-height: 2em;
+				cursor: pointer;
+				margin: 0 0 -3px 0;
+			}
+
+			input[type="checkbox"],
+			input[type="radio"] {
+					display: none;
+			}
+
+			input[type="checkbox"] + span {
+				background: image-url("icons/icon-checkbox.svg") transparent no-repeat;
+			}
+
+			input[type="radio"] + span {
+
+			}
+
+			input[type="checkbox"]:checked + span {
+				background: image-url("icons/icon-checkbox-checked.svg") transparent no-repeat;
+				
+			}
+
+			input[type="radio"]:checked + span {
+			}
+		}
+	}
+
+.questionmark, .exclamationmark {
 	position: absolute;
 	vertical-align: middle;
 	display: inline-block;
+	cursor: pointer;
+	background-size: 20px;
+	@include hide-text();
+}
+
+.questionmark {
 	top: 30%;
 	right: 10px;
 	width: 21px;
 	height: 20px;
-	cursor: pointer;
-	background: image-url("img/icons/icon-form-question.svg") transparent no-repeat 0 0;
-	background-size: 20px;
-	@include hide-text();
+	background: image-url("icons/icon-form-question.svg") transparent no-repeat 0 0;
+}
+
+.exclamationmark {
+	top: 21%;
+	right: 10px;
+	width: 16px;
+	height: 16px;
+	background: image-url("icons/icon-form-exclamation.svg") transparent no-repeat 0 0!important;
 }
 
 	.password {
@@ -112,7 +162,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 		}
 	}
 
-	small, small a {
+	small, small a, big {
 		color: $gray-border-hover;
 	}
 }
@@ -126,13 +176,13 @@ $modal-background-color									   : rgba(#8A9993, .65);
 	@include opacity(0);
 	
 	.modal-fullscreen-item {
-		background-color: #F5F4F6;
+		background-color: $modal-item-background;
 		border-radius: 8px;
 		font-family: $font-family-body;
-		padding: 5px;
+		padding: 6px;
 		text-align: center;
 		@include transform-style(preserve-3d);
-		@include single-box-shadow(rgba(138,153,147,0.60), 0, 0, 15px, 10px, false);
+		@include single-box-shadow(rgba(0,00,0,0.55), 0, 0, 15px, 0, false);
 
 		&.is-shake {
 			@include animation(shakeModal .4s ease-in-out);
@@ -161,7 +211,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			background: white;
 			border-radius: 4px;
 			border: solid 1px #ccc;
-			padding: 20px 20px 20px 20px;
+			padding: 30px;
 
 			h4 {
 				font-size: 22px;
@@ -169,11 +219,19 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				text-transform: inherit;
 				font-weight: 700;
 				margin-bottom: 15px;
+				margin-top: 0;
 			}
+
+			big {
+				margin: -11px 0 31px 0;
+				display: block;
+				font-size: 15px;
+			}
+
 			.modal-flash-message {
 				box-model: content-box;
 				text-align: center;
-				margin: 15px -21px 0 -21px;
+				margin: 15px -31px 0 -31px;
 				padding: 10px 20px;
 				font-size: 13px;
 				line-height: 17px;
@@ -198,7 +256,7 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			}
 
 			.btn {
-				margin-top: 5px;
+				margin-top: 7px;
 				width: 100%;
 				border-radius: 8px;
 			}
@@ -232,16 +290,28 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			&.got-header {
 				border-radius: 0 0 8px 8px;
 			}
+
+			.donate-btn, .payment-btn {
+				min-width: 260px;
+				width: auto;
+				margin: 34px 0 15px;
+				margin-bottom: 0;
+				font-size: 18px;
+				font-weight: bold;
+			}
+
 		}
 
 		.modal-fullscreen-close {
 			position: absolute;
 			display: block;
 			top: 10px;
-			right: 10px;
+			right: 14px;
 			width: 20px;
 			height: 20px;
-			background: image-url("img/icons/icon-close-modal.svg") transparent no-repeat;
+			background-color: transparent;
+			background-repeat: no-repeat;
+			background-image: image-url("icons/icon-close-modal.svg");
 			background-position: 7px;
 			cursor: pointer;
 
@@ -254,12 +324,12 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			position: absolute;
 			display: block;
 			top: 10px;
-			left: 10px;
-			width: 20px;
+			left: 7px;
+			width: 30px;
 			height: 20px;
-			background: image-url("img/icons/icon-back-modal.svg") transparent no-repeat;
+			background: image-url("icons/icon-back-modal.svg") transparent no-repeat;
 			background-position: 7px;
-			background-size: 65%;
+			background-size: 55%;
 			cursor: pointer;
 
 			.modal-close-image {
@@ -307,6 +377,47 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			&.no-content {
 				padding: 0;
 			}
+
+			.modal-payment-provider {
+				font-size: 13px;
+				color: #9F9F9F;
+
+				span {
+					position: relative;
+					padding-left: 17px;
+
+					&:before {
+						position: absolute;
+						content: '';
+						left: 0;
+						top: 0;
+						width: 10px;
+						height: 13px;
+						background: image-url("icons/icon-lock.svg") transparent no-repeat;
+						background-size: 10px;
+					}
+				}
+
+				a {
+					color: #9F9F9F;
+					text-decoration: underline;
+				}
+			}
+		}
+
+		.modal-future-donation {
+			position: relative;
+			margin: auto;
+			padding-top: 30px;
+			width: 83%;
+			display: none;
+		}
+
+		.modal-facebook-password {
+			width: 300px;
+			margin: auto;
+			margin-top: 10px;
+			display: none;
 		}
 	}
 
@@ -332,11 +443,13 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			&.slide-in-left {
 				@include animation(slideInLeft .3s ease-out);
 				@include animation-fill-mode(forwards);
+				z-index: 1;
 			}
 
 			&.slide-out-left {
 				@include animation(slideOutLeft .2s ease-in);
 				@include animation-fill-mode(forwards);
+				z-index: 0;
 			}
 
 			&.scale-back {
@@ -362,11 +475,13 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			&.slide-in-right {
 				@include animation(slideInRight .3s ease-out);
 				@include animation-fill-mode(forwards);
+				z-index: 1;
 			}
 
 			&.slide-out-right {
 				@include animation(slideOutRight .2s ease-in);
 				@include animation-fill-mode(forwards);
+				z-index: 0;
 			}
 
 			&.scale-up {
@@ -390,16 +505,29 @@ $modal-background-color									   : rgba(#8A9993, .65);
 				z-index: 4;
 			}
 		}
+
       &.flipped-alt {
             @include transform(rotateY(-180deg));
+
+            .front {
+				z-index: 0;
+			}
+
+			.back {
+				z-index: 4;
+			}
       }
 	}
 
 	&.normal {
-		width: 350px;
+		width: 400px;
 
 		.modal-fullscreen-item {
-			width: 350px;
+			width: 400px;
+
+			.modal-fullscreen-content {
+				padding: 30px;
+			}
 		}
 	}
 
@@ -408,6 +536,15 @@ $modal-background-color									   : rgba(#8A9993, .65);
 
 		.modal-fullscreen-item {
 			width: 550px;
+			text-align: left;
+		}
+	}
+
+	&.x-large {
+		width: 750px;
+
+		.modal-fullscreen-item {
+			width: 750px;
 			text-align: left;
 		}
 	}
@@ -423,6 +560,33 @@ $modal-background-color									   : rgba(#8A9993, .65);
 			overflow: auto;
 			background: #e9e9e9;
 			text-align: left;
+		}
+	}
+
+	&.donation {
+		max-width: 600px;
+		@include transition(all .2s ease-in-out);
+	}
+
+	&.big-modal {
+		max-width: 600px;
+		@include transition(all .2s ease-in-out);
+
+		&.donation {
+			max-width: 600px;
+			@include transition(all .2s ease-in-out);
+		}
+
+		&.donation-small {
+			max-width: 500px;
+
+			.modal-fullscreen-item {
+				.modal-fullscreen-content {
+					.modal-flash-message {
+						margin: 34px -31px 0 -31px;
+					}
+				}
+			}
 		}
 	}
 	

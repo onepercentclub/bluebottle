@@ -1,6 +1,6 @@
 import factory
 
-from bluebottle.utils.utils import get_organization_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
 from .geo import CountryFactory
 from .accounts import BlueBottleUserFactory
 

@@ -1,7 +1,9 @@
+from bluebottle.bb_projects.fields import MoneyField
+from bluebottle.utils.utils import StatusDefinition
+from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from taggit.managers import TaggableManager
 from django.conf import settings
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.http import urlquote
@@ -11,9 +13,11 @@ from django.db.models import options
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from sorl.thumbnail import ImageField
-from bluebottle.utils.utils import get_project_phaselog_model
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
+from bluebottle.utils.model_dispatcher import get_project_phaselog_model
+
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
+
 
 class ProjectTheme(models.Model):
     """ Themes for Projects. """
@@ -122,23 +126,21 @@ class BaseProject(models.Model):
         help_text=_('Project organization'), related_name='organization', null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this project was created.'))
+    created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    pitch = models.TextField(
-        _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
+    pitch = models.TextField(_('pitch'), help_text=_('Pitch your smart idea in one sentence'), blank=True)
     status = models.ForeignKey('bb_projects.ProjectPhase')
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True)
     favorite = models.BooleanField(default=True)
-    tags = TaggableManager(blank=True, verbose_name=_('tags'),
-                           help_text=_('Add tags'))
+    tags = TaggableManager(blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
+
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
+
 
     # Extended Description
-    description = models.TextField(
-        _('why, what and how'), help_text=_('Blow us away with the details!'),
-        blank=True)
+    description = models.TextField(_('why, what and how'), help_text=_('Blow us away with the details!'), blank=True)
 
     # Media
     image = ImageField(
@@ -147,6 +149,23 @@ class BaseProject(models.Model):
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
+
+    # For convenience and performance we also store money donated and needed here.
+    amount_asked = MoneyField(default=0, null=True, blank=True)
+    amount_donated = MoneyField(default=0)
+    amount_needed = MoneyField(default=0)
+
+    @property
+    def is_realised(self):
+        return self.status == ProjectPhase.objects.get(slug='realised')
+
+    @property
+    def amount_pending(self):
+        return self.get_amount_total([StatusDefinition.PENDING])
+
+    @property
+    def amount_safe(self):
+        return self.get_amount_total([StatusDefinition.SUCCESS])
 
     _initial_status = None
 
@@ -182,15 +201,48 @@ class BaseProject(models.Model):
 
         # Only log project phase if the status has changed
         if self != None and previous_status != self.status:
-            project_phaselog_model = get_project_phaselog_model()
-            project_phaselog_model.objects.create(project=self, status=self.status)
+            get_project_phaselog_model().objects.create(project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):
-        """ Insert the hashbang, after the language string """
         url = "/#!/projects/{0}".format(self.slug)
-
         return url
+
+    def update_amounts(self, save=True):
+        """
+        Update amount_donated and amount_needed
+        """
+        self.amount_donated = self.get_amount_total([StatusDefinition.SUCCESS, StatusDefinition.PENDING])
+        self.amount_needed = self.amount_asked - self.amount_donated
+
+        if self.amount_needed < 0:
+            # Should never be less than zero
+            self.amount_needed = 0
+
+        if save:
+            self.save()
+
+    def get_amount_total(self, status_in=None):
+        """
+        Calculate the total (real time) amount of money for donations, filtered by status.
+        """
+
+        if self.amount_asked == 0:
+            # No money asked, return 0
+            return 0
+
+        donations = self.donation_set.all()
+
+        if status_in:
+            donations = donations.filter(order__status__in=status_in)
+
+        total = donations.aggregate(sum=Sum('amount'))
+
+        if not total['sum']:
+            # No donations, manually set amount to 0
+            return 0
+
+        return total['sum']
 
     # TODO: move to mixin
     def get_meta_title(self, **kwargs):
@@ -232,6 +284,11 @@ class BaseProject(models.Model):
     def viewable(self):
         return self.status.viewable
 
+    def set_status(self, phase_slug, save=True):
+        self.status = ProjectPhase.objects.get(slug=phase_slug)
+        if save:
+            self.save()
+
 
 class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
@@ -240,3 +297,6 @@ class BaseProjectPhaseLog(models.Model):
 
     class Meta():
         abstract = True
+
+
+from projectwallmails import *

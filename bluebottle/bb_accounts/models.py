@@ -11,6 +11,7 @@ from django.db.models import options as options
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.core import serializers
 
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -20,7 +21,7 @@ from bluebottle.bb_accounts.utils import valid_email
 
 from taggit.managers import TaggableManager
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer', 'current_user_serializer')
 
 
 # TODO: Make this generic for all user file uploads.
@@ -77,7 +78,7 @@ class BlueBottleUserManager(BaseUserManager):
         u.is_superuser = True
         u.save(using=self._db)
         return u
-        
+
 
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
@@ -113,8 +114,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     user_type = models.CharField(_('Member Type'), max_length=25, choices=UserType.choices, default=UserType.person)
 
     # Public Profile
-    first_name = models.CharField(_('first name'), max_length=30, blank=True)
-    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    first_name = models.CharField(_('first name'), max_length=100, blank=True)
+    last_name = models.CharField(_('last name'), max_length=100, blank=True)
     location = models.CharField(_('location'), max_length=100, blank=True)
     website = models.URLField(_('website'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
@@ -159,6 +160,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # specifying the serializer here allows us to leave the urls/views untouched while
         # modifying the serializer for the user model
         default_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
+        preview_serializer = 'bluebottle.bb_accounts.serializers.UserPreviewSerializer'
+        manage_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
+        current_user_serializer = 'bluebottle.bb_accounts.serializers.CurrentUserSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
@@ -233,6 +237,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
+    @property
     def full_name(self):
         return self.get_full_name()
 

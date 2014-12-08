@@ -9,15 +9,12 @@ from setuptools import setup, find_packages
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
-
 readme = read_file('README.rst')
 changes = ''
-#changes = read_file('CHANGES.rst')
-
 
 install_requires = [
     'Babel==1.3',
-#    'BeautifulSoup==3.2.1',
+    'bunch==1.0.1',
     'Django==1.5.5',
     'Pillow==2.3.0',
     'South==0.8.1',
@@ -29,7 +26,7 @@ install_requires = [
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
     'django-filter==0.6',
-    'django-fluent-contents==0.9a1',
+    'django-fluent-contents==0.9a1', # Version 1.0b1 and up breaks our code
     'django-iban==0.2.1',
     'django-localflavor==1.0',
     'django-registration==1.0',
@@ -39,41 +36,44 @@ install_requires = [
     'django-taggit-autocomplete-modified==0.1.0b4',
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
+    'django-uuidfield==0.5.0',
     'django-wysiwyg==0.5.1',
+    'django-dynamic-fixture==1.8.0',
     'djangorestframework==2.3.12',
     'dkimpy==0.5.4',
     'html5lib==0.95',
     'micawber==0.2.6',
     'mock==1.0.1',
+    'requests==2.3.0',
     'sorl-thumbnail==11.12',
-    'splinter==0.5.4',
+    'splinter==0.6.0',
     'transifex-client==0.9',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz==1.2',
     'beautifulsoup4==4.3.2',
-    # JSON Web Token based authentication for Django REST framework
-    'djangorestframework-jwt==0.1.5',
-    'psycopg2==2.2.1'
+    'djangorestframework-jwt==1.0.2',
+    'psycopg2==2.2.1',
+    'requests==2.3.0',
+    'django-fsm==1.6.0',
+    'suds-jurko==0.6',
+    'django-ipware==0.0.8',
+    'pygeoip==0.3.1'
 ]
 
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-rest-framework-jwt/archive/master.zip#egg=djangorestframework-jwt-0.1.5',
-
-    'https://bitbucket.org/onepercentclub/suds/get/afe727f50704.zip#egg=suds-jurko-0.4.1.jurko.5.-development-',
+    'https://github.com/GetBlimp/django-rest-framework-jwt/archive/b6b42b967c3584b426446df1f72149b7a07fd520.zip#egg=djangorestframework-jwt-1.0.2',
 
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
 
-    'https://github.com/onepercentclub/django-docdata/archive/120ae5b8a1da6152d43d4601edc8832268e05515.zip#egg=django-docdata-0.1',
-
     'https://bitbucket.org/sergei_maertens/django-admin-tools/get/c989fd1.zip#egg=django-admin-tools-0.5.1',
 ]
 
-# TODO: update
 tests_require = [
+    'South==0.8.1',
     'coverage==3.6',
     'django-nose',
     'django-admin-tools==0.5.1',
@@ -88,23 +88,20 @@ tests_require = [
     'django-taggit==0.10a1',
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.1b2',
+    'django-tools==0.25.0',
     'django-wysiwyg==0.5.1',
     'djangorestframework==2.3.12',
     'factory-boy==2.3.1',
     'micawber==0.2.6',
     'mock==1.0.1',
     'nose==1.3.4',
-    'pylint==0.28.0',
+    'pylint==1.1.0',
     'sauceclient==0.1.0',
     'selenium==2.43.0',
-    'South==0.8.1', # Functional testing libraries
     'sorl-thumbnail==11.12',
-    'splinter==0.5.4', # Functional testing libraries
-    'django-tools==0.25.0',
-    'django-loginas==0.1.3',
+    'splinter==0.6.0',
     'tdaemon==0.1.1',
 ]
-
 
 setup(
     name='bluebottle',
@@ -134,7 +131,4 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development',
     ],
-
-    # tests
-    test_suite='bluebottle.test.suite.BlueBottleTestSuite',
 )

@@ -1,7 +1,5 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
-from django.core.urlresolvers import reverse
-
 
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 from sorl.thumbnail.admin.compat import AdminImageMixin
@@ -100,6 +98,7 @@ class WallPostParentAdmin(PolymorphicParentModelAdmin):
 # Only the parent needs to be registered:
 admin.site.register(WallPost, WallPostParentAdmin)
 
+# So why you are also registering the child?
 admin.site.register(MediaWallPost, MediaWallPostAdmin)
 admin.site.register(TextWallPost, TextWallPostAdmin)
 admin.site.register(SystemWallPost, SystemWallPostAdmin)

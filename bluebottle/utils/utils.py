@@ -1,16 +1,93 @@
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.db.models import get_model
+import socket
+import os
 
-def get_client_ip(request):
+from django.conf import settings
+from django_fsm.db.fields import TransitionNotAllowed
+from django_tools.middlewares import ThreadLocal
+from django.core.urlresolvers import reverse
+from django.conf import settings
+
+import pygeoip
+import logging
+
+class StatusDefinition:
+    """
+    Various status definitions for FSM's
+    """
+    NEW = 'new'
+    IN_PROGRESS = 'in_progress'
+    PENDING = 'pending'
+    CREATED = 'created'
+    LOCKED = 'locked'
+    SUCCESS = 'success'
+    STARTED = 'started'
+    CANCELLED = 'cancelled'
+    AUTHORIZED = 'authorized'
+    SETTLED = 'settled'
+    CHARGED_BACK = 'charged_back'
+    REFUNDED = 'refunded'
+    PAID = 'paid'
+    FAILED = 'failed'
+    UNKNOWN = 'unknown'
+
+class FSMTransition:
+
+    """
+    Class mixin to add transition_to method for Django FSM
+    """
+    def transition_to(self, new_status):
+        # If the new_status is the same as then current then return early
+        if self.status == new_status:
+            return
+
+        # Lookup the available next transition - from Django FSM
+        available_transitions = self.get_available_status_transitions()
+
+        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(self.__class__.__name__, self.pk, self.status, new_status))
+
+        # Check that the new_status is in the available transitions - created with Django FSM decorator
+        try:
+            transition_method = [i[1] for i in available_transitions if i[0] == new_status].pop()
+        except IndexError:
+            # TODO: should we raise exception here?
+            raise TransitionNotAllowed(
+                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
+         
+        # Get the function method on the instance 
+        instance_method = getattr(self, transition_method.__name__)
+
+        # Call state transition method
+        try:
+            instance_method()
+        except Exception as e:
+            raise e
+
+    def refresh_from_db(self):
+        """Refreshes this instance from db"""
+        new_self = self.__class__.objects.get(pk=self.pk)
+        self.__dict__.update(new_self.__dict__)
+
+
+def get_client_ip(request=None):
     """ A utility method that returns the client IP for the given request. """
 
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if not request:
+        request = ThreadLocal.get_current_request()
+
+    try:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    except AttributeError:
+        x_forwarded_for = None
+
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
     else:
-        ip = request.META.get('REMOTE_ADDR')
+        try:
+            ip = request.META.get('REMOTE_ADDR')
+        except AttributeError:
+            ip = None
     return ip
+
 
 def set_author_editor_ip(request, obj):
     """ A utility method to set the author, editor and IP address on an object based on information in a request. """
@@ -40,184 +117,81 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-
-def get_task_model():
+def clean_for_hashtag(text):
     """
-    Returns the Task model that is active in this BlueBottle project.
+    Strip non alphanumeric charachters.
 
-    (Based on ``django.contrib.auth.get_user_model``)
+    Sometimes, text bits are made up of two parts, sepated by a slash. Split
+    those into two tags. Otherwise, join the parts separated by a space.
     """
+    tags = []
+    bits = text.split('/')
+    for bit in bits:
+        # keep the alphanumeric bits and capitalize the first letter
+        _bits = [_bit.title() for _bit in bit.split() if _bit.isalnum()]
+        tag = "".join(_bits)
+        tags.append(tag)
+
+    return " #".join(tags)
+
+
+def import_class(cl):
+    d = cl.rfind(".")
+    class_name = cl[d+1:len(cl)]
+    m = __import__(cl[0:d], globals(), locals(), [class_name])
+    return getattr(m, class_name)
+
+
+def get_current_host():
+    """
+    Get the current hostname with protocol
+    E.g. http://localhost:8000 or https://bluebottle.org
+    """
+    request = ThreadLocal.get_current_request()
+    if request.is_secure():
+        scheme = 'https'
+    else:
+        scheme = 'http'
+    return '{0}://{1}'.format(scheme, request.get_host())
+
+class InvalidIpError(Exception):
+    """ Custom exception for an invalid IP address """
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+def get_country_by_ip(ip_address=None):
+    """ 
+    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    the popular Maxmind's GeoIP C API
+    """
+    if not ip_address:
+        return None
+    
     try:
-        app_label, model_name = settings.TASKS_TASK_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "TASKS_TASK_MODEL must be of the form 'app_label.model_name'")
+        socket.inet_aton(ip_address)
+    except socket.error:
+        raise InvalidIpError("Invalid IP address")
 
-    task_model = get_model(app_label, model_name)
-    if task_model is None:
-        raise ImproperlyConfigured(
-            "TASKS_TASK_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.TASKS_TASK_MODEL))
+    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gi.country_name_by_addr(ip_address)
+    
 
-    return task_model
-
-def get_taskmember_model():
+def get_country_code_by_ip(ip_address=None):
     """
-    Returns the TaskMember model
+    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    the popular Maxmind's GeoIP C API
     """
-    try:
-        app_label, model_name = settings.TASKS_TASKMEMBER_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "TASKS_TASKMEMBER_MODEL must be of the form 'app_label.model_name'")
-
-    taskmember_model = get_model(app_label, model_name)
-    if taskmember_model is None:
-        raise ImproperlyConfigured(
-            "TASKS_TASKMEMBER_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.TASKS_TASKMEMBER_MODEL))
-
-    return taskmember_model
-
-def get_taskfile_model():
-    """
-    Returns the TaskFile model
-    """
-    try:
-        app_label, model_name = settings.TASKS_TASKFILE_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "TASKS_TASKFILE_MODEL must be of the form 'app_label.model_name'")
-
-    taskfile_model = get_model(app_label, model_name)
-    if taskfile_model is None:
-        raise ImproperlyConfigured(
-            "TASKS_TASKFILE_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.TASKS_TASKFILE_MODEL))
-
-    return taskfile_model
-
-def get_skill_model():
-    """
-    Returns the Skill model
-    """
-    try:
-        app_label, model_name = settings.TASKS_SKILL_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "TASKS_SKILL_MODEL must be of the form 'app_label.model_name'")
-
-    skill_model = get_model(app_label, model_name)
-    if skill_model is None:
-        raise ImproperlyConfigured(
-            "TASKS_SKILL_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.TASKS_SKILL_MODEL))
-
-    return skill_model
-
-def get_project_model():
-    """
-    Returns the Project model that is active in this BlueBottle project.
-
-    (Based on ``django.contrib.auth.get_user_model``)
-    """
+    if not ip_address:
+        return None
 
     try:
-        app_label, model_name = settings.PROJECTS_PROJECT_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "PROJECTS_PROJECT_MODEL must be of the form 'app_label.model_name'")
+        socket.inet_aton(ip_address)
+    except socket.error:
+        raise InvalidIpError("Invalid IP address")
 
-    project_model = get_model(app_label, model_name)
-    if project_model is None:
-        raise ImproperlyConfigured(
-            "PROJECTS_PROJECT_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.PROJECTS_PROJECT_MODEL))
-
-    return project_model
-
-
-def get_organization_model():
-    """
-    Returns the Organization model that is active in this BlueBottle project.
-
-    (Based on ``django.contrib.auth.get_user_model``)
-    """
-    try:
-        app_label, model_name = settings.ORGANIZATIONS_ORGANIZATION_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "ORGANIZATIONS_ORGANIZATION_MODEL must be of the form 'app_label.model_name'")
-
-    org_model = get_model(app_label, model_name)
-    if org_model is None:
-        raise ImproperlyConfigured(
-            "ORGANIZATIONS_ORGANIZATION_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.ORGANIZATIONS_ORGANIZATION_MODEL))
-
-    return org_model
-
-
-def get_organizationmember_model():
-    """
-    Returns the OrganizationMember models
-    """
-    try:
-        app_label, model_name = settings.ORGANIZATIONS_MEMBER_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "ORGANIZATIONS_MEMBER_MODEL must be of the form 'app_label.model_name'")
-
-    org_member_model = get_model(app_label, model_name)
-    if org_member_model is None:
-        raise ImproperlyConfigured(
-            "ORGANIZATIONS_MEMBER_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.ORGANIZATIONS_MEMBER_MODEL))
-
-    return org_member_model
-
-
-def get_organizationdocument_model():
-    """
-    Returns the Organization model that is active in this BlueBottle project.
-
-    (Based on ``django.contrib.auth.get_user_model``)
-    """
-    try:
-        app_label, model_name = settings.ORGANIZATIONS_DOCUMENT_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "ORGANIZATIONS_DOCUMENT_MODEL must be of the form 'app_label.model_name'")
-
-    org_document_model = get_model(app_label, model_name)
-    if org_document_model is None:
-        raise ImproperlyConfigured(
-            "ORGANIZATIONS_DOCUMENT_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.ORGANIZATIONS_DOCUMENT_MODEL))
-
-    return org_document_model
-
-
-def get_project_phaselog_model():
-    """
-    Returns the Project model that is active in this BlueBottle project.
-
-    (Based on ``django.contrib.auth.get_user_model``)
-    """
-
-    try:
-        app_label, model_name = settings.PROJECTS_PHASELOG_MODEL.split('.')
-    except ValueError:
-        raise ImproperlyConfigured(
-            "PROJECTS_PHASELOG_MODEL must be of the form 'app_label.model_name'")
-
-    project_phaselog_model = get_model(app_label, model_name)
-    if project_phaselog_model is None:
-        raise ImproperlyConfigured(
-            "PROJECTS_PHASELOG_MODEL refers to model '{0}' that has not been "
-            "installed".format(settings.PROJECTS_PHASELOG_MODEL))
-
-    return project_phaselog_model
-
-
-
+    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gi.country_code_by_name(ip_address)

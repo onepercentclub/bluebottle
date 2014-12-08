@@ -3,11 +3,17 @@ import time
 import urlparse
 import os
 import sys
+import json
+import requests
+import base64
+
+from bunch import bunchify
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings
+from django.test import TestCase
 
 from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
@@ -17,6 +23,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
@@ -215,7 +222,7 @@ class InitProjectDataMixin(object):
                       {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
                       {'id': 5, 'name': 'Campaign', 'viewable': True},
                       {'id': 7, 'name': 'Stopped', 'viewable': False},
-                      {'id': 8, 'name': 'Done - Complete', 'viewable': True},
+                      {'id': 8, 'name': 'Realised', 'viewable': True},
                       {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
 
         theme_data = [{'id': 1, 'name': 'Education'},
@@ -233,7 +240,7 @@ class InitProjectDataMixin(object):
 
         for language in language_data:
             LanguageFactory.create(**language)
-
+            
 
 RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
 
@@ -245,6 +252,15 @@ else:
     USERNAME = os.environ.get('SAUCE_USERNAME')
     ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
     sauce = SauceClient(USERNAME, ACCESS_KEY)
+
+
+
+@override_settings(DEBUG=True)
+class BluebottleTestCase(InitProjectDataMixin, TestCase):
+
+    def setUp(self):
+        self.init_projects()
+
 
 
 @override_settings(DEBUG=True)
@@ -284,10 +300,12 @@ class SeleniumTestCase(LiveServerTestCase):
             url = sauce_url % (username, access_key)
 
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
-                                     wait_time=10, desired_capabilities=caps)
-            cls.browser.driver.implicitly_wait(5)
+                                     wait_time=30, desired_capabilities=caps)
         else:
-            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
+            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=30)
+
+        cls.browser.driver.implicitly_wait(2)
+        cls.browser.driver.set_page_load_timeout(30)
 
         super(SeleniumTestCase, cls).setUpClass()
 
@@ -305,7 +323,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
         super(SeleniumTestCase, self)._post_teardown()
 
-    def login(self, username, password):
+    def login(self, username, password, wait_time=30):
         """
         Perform login operation on the website.
 
@@ -315,20 +333,28 @@ class SeleniumTestCase(LiveServerTestCase):
         """
         self.visit_homepage()
 
-        # Find the link to the signup button page and click it.
-        self.browser.find_link_by_itext('log in').first.click()
+        if not self.browser.find_by_css('.nav-signup-login'):
+            self.logout()
 
-        # Validate that we are on the intended page.
-        if not self.browser.is_text_present('LOG IN', wait_time=10):
-            return False
+        # Find the link to the signup button page and click it.
+        self.scroll_to_and_click_by_css('.nav-signup-login a')
+        self.wait_for_element_css('input[name=username]')
 
         # Fill in details.
-        self.browser.fill('username', username)
-        self.browser.fill('password', password)
+        self.browser.find_by_css('input[name=username]').first.fill(username)
+        self.browser.find_by_css('input[type=password]').first.fill(password)
 
-        self.browser.find_by_value('Login').first.click()
+        self.wait_for_element_css("a[name=login]", timeout=wait_time)
+        self.scroll_to_and_click_by_css("a[name=login]")
 
-        return self.browser.is_text_present('PROFILE', wait_time=10)
+        # Wait for modal animation to complete
+        self.wait_for_not_element_css('.modal-fullscreen-background')
+
+        return self.wait_for_element_css(".nav-member", timeout=wait_time)
+
+    def logout(self):
+        self.visit_path("/logout")
+        return self.wait_for_element_css('.nav-signup-login')
 
     def visit_path(self, path, lang_code=None):
         """
@@ -360,20 +386,30 @@ class SeleniumTestCase(LiveServerTestCase):
         
         self.visit_path('', lang_code)
 
-        # # Check if the homepage opened, and the dynamically loaded content appeared.
-        # # Remember that
+        # Check if the homepage opened, and the dynamically loaded content appeared.
         return self.browser.is_text_present('2013 Bluebottle', wait_time=10)
 
     def assertDatePicked(self):
-        # Pick a deadline next month
-        self.assertTrue(self.scroll_to_and_click_by_css(".hasDatepicker"))
+        # Focus input to make the date picker popup open
+        self.scroll_to_by_css(".hasDatepicker").send_keys(Keys.NULL)
 
         # Wait for date picker popup
         self.assertTrue(self.browser.is_element_present_by_css("#ui-datepicker-div"))
 
         # Click Next to get a date in the future
-        self.browser.find_by_css("[title=Next]").first.click()
-        self.assertTrue(self.browser.is_text_present("10"))
+        self.assert_css('[title=Next]')
+        
+        # store the current month
+        thisMonth = int(self.browser.find_by_css('.ui-datepicker-month option[selected]').value)
+        
+        # Click through to the next month
+        self.scroll_to_and_click_by_css('[title=Next]')
+
+        # Wait until the new month loads - 0 == January
+        nextMonth = (0 if thisMonth == 11 else thisMonth+1)
+        self.assert_css('.ui-datepicker-month option[value="{0}"][selected]'.format(nextMonth))
+
+        # Select the 10th day
         self.browser.find_link_by_text("10").first.click()
 
     def scroll_to_by_css(self, selector):
@@ -387,8 +423,8 @@ class SeleniumTestCase(LiveServerTestCase):
         return element
 
     def scroll_to_and_click_by_css(self, selector):
-        element = self.scroll_to_by_css(selector);
-        
+        element = self.scroll_to_by_css(selector)
+
         if element:
             element.click()
             return True
@@ -396,7 +432,7 @@ class SeleniumTestCase(LiveServerTestCase):
             return False
 
     def scroll_to_and_fill_by_css(self, selector, text):
-        element = self.scroll_to_by_css(selector);
+        element = self.scroll_to_by_css(selector)
 
         if element:
             element.send_keys(text)
@@ -404,14 +440,42 @@ class SeleniumTestCase(LiveServerTestCase):
         else:
             return False
             
-    def wait_for_element_css(self, selector, timeout=10):
+    # This function isn't very useful when the element is fading in with JS/CSS.
+    # It is probably better to use the assert_css function below which also takes a timeout but
+    # will not assert true until the element is fully visible, eg opacity is also 1.
+    def wait_for_element_css(self, selector, timeout=30):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-
             return element
         except TimeoutException:
             return None
+
+    def wait_for_element_css_index(self, selector, index=0, timeout=30):
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) > index)
+            return self.browser.driver.find_elements(By.CSS_SELECTOR, selector)[index]
+        except TimeoutException:
+            return None
+
+    def wait_for_not_element_css(self, selector, timeout=5):
+        """
+        Wait for an element with this css to disappear.
+        """
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) == 0)
+        except TimeoutException:
+            return None
+
+    def wait_for_toast_to_disappear(self):
+        # Wait until the toast message disappears.
+        return self.wait_for_not_element_css('.flash.is-active', 10)
+
+    def close_modal(self):
+        # Close modal, if any
+        self.browser.find_by_css('body').type(Keys.ESCAPE)
 
     def is_visible(self, selector, timeout=10):
         return not self.wait_for_element_css(selector, timeout) is None
@@ -421,3 +485,67 @@ class SeleniumTestCase(LiveServerTestCase):
 
     def assert_text(self, text, wait_time=10):
         return self.assertTrue(self.browser.is_text_present(text, wait_time=wait_time) )
+
+    def upload_screenshot(self):
+        client_id = os.environ.get('IMGUR_CLIENT_ID')
+        client_key = os.environ.get('IMGUR_CLIENT_SECRET')
+
+        if client_id and client_key:
+            client_auth = 'Client-ID {0}'.format(client_id)
+            headers = {'Authorization': client_auth}
+            url = 'https://api.imgur.com/3/upload.json'
+            filename = '/tmp/screenshot.png'
+
+            print 'Attempting to save screenshot...'
+            self.browser.driver.save_screenshot(filename)
+
+            response = requests.post(
+                url,
+                headers = headers,
+                data = {
+                    'key': client_key,
+                    'image': base64.b64encode(open(filename, 'rb').read()),
+                    'type': 'base64',
+                    'name': filename,
+                    'title': 'Travis Screenshot'
+                }
+            )
+
+            print 'Uploaded screenshot:'
+            data = json.loads(response.content)
+            print data['data']['link']
+            print response.content
+
+        else:
+            print 'Imgur API keys not found!'
+
+class FsmTestMixin(object):
+    def pass_method(self, transaction):
+        pass
+
+    def create_status_response(self, status='AUTHORIZED'):
+        return bunchify({
+            'payment': [{
+                'id': 123456789,
+                'amount': 1000,
+                'authorization': {'status': status}}
+            ],
+            'approximateTotals': {
+                'totalRegistered': 1000,
+                'totalShopperPending': 0,
+                'totalAcquirerPending': 0,
+                'totalAcquirerApproved': 0,
+                'totalCaptured': 0,
+                'totalRefunded': 0,
+                'totalChargedback': 0
+            }
+        })
+
+    def assert_status(self, instance, new_status):
+        try:
+            instance.refresh_from_db()
+        except AttributeError:
+            pass
+
+        self.assertEqual(instance.status, new_status,
+            '{0} should change to {1} not {2}'.format(instance.__class__.__name__, new_status, instance.status))

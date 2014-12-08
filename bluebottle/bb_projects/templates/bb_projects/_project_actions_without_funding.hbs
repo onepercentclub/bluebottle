@@ -1,0 +1,43 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "_project_actions_without_funding" %}
+            <div class="row">
+                <div class="col8">
+                    <div class="project-status">
+                    </div>
+                </div>
+                <div class="col4">
+
+                </div>
+            </div>
+        </section>
+        <div id="project-members">
+            <section class="l-wrapper">
+                <div class="row">
+                    <div class="col4">
+                        <div class="member-initiator">
+                            <a {{action 'openInBigBox' 'userModal' owner }} class="member">
+                                <div class="row">
+                                    <div class="col3">
+                                        <figure class="photo">
+                                            <img {{bindAttr src="owner.getAvatar"}} />
+                                        </figure>
+                                    </div>
+                                    <div class="col9">
+                                        <h4>{% trans "Campaigner" %}</h4>
+                                        <strong class="name">{{owner.full_name}}</strong>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col8">
+                        <div class="project-member-supporters">
+                            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+{% endtplhandlebars %}

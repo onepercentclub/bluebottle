@@ -54,13 +54,19 @@ App.Project = DS.Model.extend({
 
     // Location
     country: DS.belongsTo('App.Country'),
-    latitude: DS.attr('string', {defaultValue: 54}),
-    longitude: DS.attr('string', {defaultValue: 4}),
+    latitude: DS.attr('string'),
+    longitude: DS.attr('string'),
 
     // Media
     image: DS.attr('image'),
     video_url: DS.attr('string'),
     video_html: DS.attr('string'),
+
+    // Money
+    amount_asked: DS.attr('number'),
+    amount_donated: DS.attr('number'),
+    amount_needed: DS.attr('number'),
+    deadline: DS.attr('date'),
 
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
@@ -75,22 +81,30 @@ App.Project = DS.Model.extend({
         if (this.get('status') == null){
             return 1;
         }
-        return this.get('status').get('sequence');
-    }.property('phaseNum'),
+        return this.get('status.sequence');
+    }.property('status.sequence'),
 
-    isPhasePlan: Em.computed.lte('phaseNum', 5),
+    isStatusPlan: Em.computed.lt('phaseNum', 4),
 
-    isPhaseAct: Em.computed.equal('phaseNum', 9),
+    isStatusPlanNew: Em.computed.equal('phaseNum', 1),
 
-    isPhaseResults: Em.computed.equal('phaseNum', 8),
+    isStatusNeedsWork: Em.computed.equal('phaseNum', 3),
 
-    isPhaseCampaign: Em.computed.equal('phaseNum', 6),
+    isStatusCampaign: Em.computed.equal('phaseNum', 4),
 
-    isPhaseNeedsWork: Em.computed.equal('phaseNum', 3),
+    isStatusCompleted: Em.computed.equal('phaseNum', 5),
 
-    isPhasePlanNew: Em.computed.equal('phaseNum', 1),
+    isStatusStopped: Em.computed.gt('phaseNum', 6),
 
-    isPhaseSubmitted: Em.computed.equal('phaseNum', 2),
+    is_funded: function() {
+        return this.get('amount_needed') <= 0;
+    }.property('amount_needed'),
+
+    isSupportable: function () {
+        var now = new Date();
+        // Look if Project is in Capaign phase, asked for money and is bfeore deadline.
+        return this.get('isStatusCampaign') && this.get('amount_asked') && this.get('deadline') > now;
+    }.property('isStatusCampaign', 'deadline', 'amount_asked'),
 
     getProject: function(){
         return App.Project.find(this.get('id'));
@@ -188,8 +202,10 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
     
     requiredStoryFields: ['description', 'reach'],
-    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
-    friendlyFieldNames: null,
+    requiredPitchFields: ['validTitle', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    friendlyFieldNames: {
+        validTitle: gettext('Title')
+    },
 
     init: function () {
         this._super();
@@ -216,6 +232,11 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
         this._super();
     },
 
+    validTitle: function () {
+        // Valid title if it has a length and there are no api errors for the title.
+        return this.get('title.length') && !this.get('errors.title');
+    }.property('title.length', 'errors.title'),
+
     valid: function(){
         return (this.get('validStory') && this.get('validPitch'));
     }.property('validStory', 'validPitch'),
@@ -227,10 +248,10 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
         if (!this.get('status')) {
             return true;
         }
-        if (this.get('isPhasePlanNew')) {
+        if (this.get('isStatusPlanNew')) {
             return true;
         }
-        if (this.get('isPhaseNeedsWork')) {
+        if (this.get('isStatusNeedsWork')) {
             return true;
         }
         return false;

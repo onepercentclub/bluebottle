@@ -1,0 +1,33 @@
+{% load i18n bb_ember static %}
+
+
+{% tplhandlebars "my_donation_list" %}
+    <section class="l-wrapper">
+        <div class="l-full">
+
+            <header class="page-header">
+                <h1>{% trans "Donation History" %}</h1>
+            </header>
+
+            <table class="fund-history">
+                {{#each donation in controller}}
+                    <tr>
+                        <td class="donation-history-date">{{localize donation.created}}</td>
+                        <td class="donation-history-project">
+                            {{#link-to 'project' donation.project.id}}{{donation.project.title}}{{/link-to}}
+                        </td>
+                        <td class="donation-history-fundraiser">
+                            {{#if donation.fundraiser}}
+                                {{#link-to 'fundraiser' donation.fundraiser.id}}{{donation.fundraiser.title}}{{/link-to}}
+                            {{/if}}
+                        </td>
+                        <td class="donation-history-amount">&euro;{{ donation.amount }},-</td>
+                    </tr>
+                {{/each}}
+            </table>
+            {{#if canLoadMore}}
+                <a {{action "loadMore"}}>{% trans "Older donations" %}</a>
+            {{/if}}
+        </div>
+    </section>
+{% endtplhandlebars %}

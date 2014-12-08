@@ -2,19 +2,24 @@
 
 
 {% tplhandlebars "_standard_signup_form" %}
-    {{input valueBinding="first_name" placeholder=view.firstName
-        classBinding="errorList.first_name.length:error"}}
+    {{input valueBinding="first_name" placeholder=App.translatables.placeholders.firstName
+        name="first-name" classBinding="errorList.first_name.length:error"}}
 
-    {{input valueBinding="last_name" placeholder=view.surname
-        classBinding="errorList.last_name.length:error"}}
+    {{input valueBinding="last_name" placeholder=App.translatables.placeholders.lastName
+        name="last-name" classBinding="errorList.last_name.length:error"}}
     
-    {{input valueBinding="email" type="email" classBinding="errorList.email.length:error" placeholder=view.emailText}}
+    {{input valueBinding="email" type="email" classBinding="errorList.email.length:error" 
+        name="email" placeholder=App.translatables.placeholders.email}}
 
-    {{input valueBinding="emailConfirmation" type="email" classBinding="errorList.email.length:error" placeholder=view.reenterEmail}}
+    {{input valueBinding="emailConfirmation" type="email" classBinding="errorList.email.length:error" 
+        name="email-confirmation" placeholder=App.translatables.placeholders.reenterEmail}}
+
     <div class="password">
-        {{input valueBinding="password" type="password" classBinding="errorList.password.length:error" placeholder=view.passwordText}}
+        {{input valueBinding="password" type="password" classBinding="errorList.password.length:error" 
+            name="password" placeholder=App.translatables.placeholders.password}}
+
         <span {{bindAttr class=":password-strength passwordStrength.value:"}}>{{passwordStrength.label}}</span>
     </div>
 
-    <a {{action 'signup'}} {{bindAttr class=":btn isBusy:is-loading blockingErrors:is-inactive"}}>{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
+    <a {{action 'signup'}} {{bindAttr class=":btn isBusy:is-loading blockingErrors:is-inactive"}} name="signup">{% blocktrans %}Join Bluebottle Project{% endblocktrans %}</a>
 {% endtplhandlebars %}

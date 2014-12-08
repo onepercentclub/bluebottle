@@ -7,6 +7,7 @@ from mock import patch
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.models import TestBaseUser
 
+
 class BlueBottleUserManagerTestCase(TestCase):
     """
     Test case for the model manager of the abstract user model.

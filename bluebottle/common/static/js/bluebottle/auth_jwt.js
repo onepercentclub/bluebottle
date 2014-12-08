@@ -57,7 +57,7 @@ App.AuthJwt = {
             // In Ember Data < beta the App.CurrentUser gets stuck in the root.error
             // state so we need to force a transition here before trying to fetch the
             // user again.
-            currentUser = App.CurrentUser.find('current');
+            var currentUser = App.CurrentUser.find('current');
             if (currentUser.get('currentState.error.stateName') == 'root.error') {
                 currentUser.transitionTo('deleted.saved');
                 return App.CurrentUser.find('current').then( function (user) {
@@ -184,43 +184,77 @@ App.LogoutJwtMixin = Em.Mixin.create({
             delete localStorage['jwtToken'];
         },
         logout: function (redirect) {
-            var applicationController = this.controllerFor('application');
+            var _this = this,
+                applicationController = this.controllerFor('application');
+
             if (typeof redirect === 'undefined')
                 redirect = true;
 
-            // Clear the jwtToken references
-            this.send('clearJwtToken');
+            Ember.run.next(function() {
+                // Clear the jwtToken references
+                _this.send('clearJwtToken');
 
-            // Clear the current user details
-            applicationController.set('currentUser.model', null);
-            var currentUser = App.CurrentUser.find('current');
-            currentUser.transitionTo('deleted.saved');
+                function handleCurrentUser() {
+                    // Redirect to?? If the user is in a restricted route then 
+                    // they should be redirected to the home route. For now we 
+                    // always force them to the home
+                    if (redirect)
+                        _this.transitionTo('home');
+                }
 
-            // Redirect to?? If the user is in a restricted route then 
-            // they should be redirected to the home route. For now we 
-            // always force them to the home
-            if (redirect)
-                this.transitionTo('home');
+                // Clear the current user details
+                applicationController.set('currentUser.model', null);
+                App.CurrentUser.find('current').then(function (currentUser) {
+                    currentUser.store.unloadRecord(currentUser);
+                    handleCurrentUser();
+                }, function () {
+                    handleCurrentUser();
+                });
+            });
         }
-    },
+    }
 });
 
 /*
  Login With route to login using JWT
+
+ To add a next link (for deep linking) add a url encoded path after '?'
+ Eg: /login-with/<token>?%2fprojects will redirect to #!/projects after setting the jwt token.
+
+
+
  */
 
 App.Router.map(function() {
     this.resource('loginWith', {path: '/login-with/:token'});
+    this.resource('logout', {path: '/logout'});
+
 });
 
 App.LoginWithRoute = Em.Route.extend({
     beforeModel: function(transition) {
-        var _this = this;
-        transition.abort();
+        var _this = this,
+            params = transition.params.token.split('?'),
+            token = {token: params[0]},
+            next = params[1];
 
-        App.AuthJwt.processSuccessResponse(transition.params).then(function (user) {
+        transition.abort();
+        App.AuthJwt.processSuccessResponse(token).then(function (user) {
             _this.set('currentUser.model', user);
-            _this.transitionTo('/');
+            if (next) {
+                _this.transitionTo(decodeURIComponent(next));
+
+            } else {
+                _this.transitionTo('/');
+            }
         });
+    }
+});
+
+App.LogoutRoute = Em.Route.extend({
+    beforeModel: function(transition) {
+        transition.abort();
+        App.__container__.lookup('route:application').send('logout', '/');
+        this.transitionTo('/');
     }
 });

@@ -1,0 +1,17 @@
+{% load bb_ember i18n %}
+
+{% tplhandlebars "order_signup" %}
+    <div class="modal-fullscreen-content">
+    	<span {{action "modalSlideRight" "donation"}} class="modal-fullscreen-back"></span>
+        <span {{action "close"}} class="modal-fullscreen-close"></span>
+        <h4>{% trans 'Nice to meet you!' %}</h4>
+        {{partial "social_login_errors"}}
+        {{partial "social_logins"}}
+        {{partial "standard_signup_form"}}
+
+        <small>{% blocktrans with "{{action showPage 'terms-and-conditions' true}}" as link %}By signing up, you accept our <a {{link}}>terms of service</a>{% endblocktrans %}</small>
+        {{partial "signup_errors"}}
+    </div>
+
+    {{partial "order_signup_footer"}}
+{% endtplhandlebars %}

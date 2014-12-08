@@ -3,6 +3,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-ember-template-compiler');
   grunt.loadNpmTasks('grunt-hashres');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-bower-task'); 
   grunt.loadNpmTasks('grunt-contrib-uglify'); 
@@ -29,13 +30,22 @@ module.exports = function (grunt) {
         command: 'rm -f ./static/build/js/templates/**/*.handlebars ; python ./parse_templates.py -d ./static/build/js/templates'
       }
     },
+    concurrent: {
+        dev: {
+            tasks: ['watch:ember', 'karma:unit'],
+            options: {
+                logConcurrentOutput: true
+            }
+        }
+    },
     watch: {
-      scripts: {
-        files: ['apps/static/script/**/*.js', 'ember/static/script/templates/*.handlebars'],
-        tasks: ['dev'],
+      ember: {
+        files: ['Gruntfile.js', 'test/js/config/*.js', 'bluebottle/**/static/js/**/*.js', 'bluebottle/**/templates/**/*.hbs'],
+        tasks: ['build'],
         options: {
           interrupt: true,
-          debounceDelay: 250
+          debounceDelay: 250,
+          atBegin: true
         }
       },
       scss: {
@@ -64,6 +74,7 @@ module.exports = function (grunt) {
       },
       cleanup: {
         options: {
+          targetDir: 'static/build/js/components',
           cleanTargetDir: true,
           cleanBowerDir: true,
           install: false,
@@ -75,8 +86,7 @@ module.exports = function (grunt) {
       dist: {
         src: [
           'bluebottle/common/static/js/vendor/jquery-1.8.3.js',
-          'static/build/js/components/jquery-mockjax/jquery.mockjax.js',
-          'static/build/js/components/pavlov/pavlov.js',
+          'node_modules/jquery-mockjax/jquery.mockjax.js',
 
           // Vendor
           'bluebottle/common/static/js/vendor/handlebars-1.0.0.js',
@@ -91,33 +101,34 @@ module.exports = function (grunt) {
           'bluebottle/common/static/js/plugins/ember-facebook.js',
           'bluebottle/common/static/js/plugins/ember.hashbang.js',
           'bluebottle/common/static/js/plugins/bb_modal.js',
+          'bluebottle/common/static/js/plugins/apiary-adapter.js'
         ],
         dest: 'static/build/js/lib/deps.js'
       },
       test: {
         src: [
-          'static/build/js/components/jquery-mockjax/jquery.mockjax.js',
+          'node_modules/qunitjs/qunit/qunit.js',
           'static/build/js/components/pavlov/pavlov.js',
           'static/build/js/components/ember-data-factory/dist/ember-data-factory-0.0.1.js',
           // Sion
-          'static/build/js/components/sinon/lib/sinon.js',
-          'static/build/js/components/sinon/lib/sinon/match.js',
-          'static/build/js/components/sinon/lib/sinon/spy.js',
-          'static/build/js/components/sinon/lib/sinon/call.js',
-          'static/build/js/components/sinon/lib/sinon/behavior.js',
-          'static/build/js/components/sinon/lib/sinon/stub.js',
-          'static/build/js/components/sinon/lib/sinon/mock.js',
-          'static/build/js/components/sinon/lib/sinon/assert.js',
-          'static/build/js/components/sinon/lib/sinon/util/event.js',
-          'static/build/js/components/sinon/lib/sinon/util/fake_xml_http_request.js',
-          'static/build/js/components/sinon/lib/sinon/util/fake_timers.js',
-          'static/build/js/components/sinon/lib/sinon/util/fake_server.js',
-          'static/build/js/components/sinon/lib/sinon/util/fake_server_with_clock.js',
-          'static/build/js/components/sinon/lib/sinon/collection.js',
-          'static/build/js/components/sinon/lib/sinon/sandbox.js',
-          'static/build/js/components/sinon/lib/sinon/test.js',
-          'static/build/js/components/sinon/lib/sinon/test_case.js',
-          // 'static/build/js/components/sinon-qunit/lib/sinon-qunit.js'
+          'node_modules/sinon/lib/sinon.js',
+          'node_modules/sinon/lib/sinon/match.js',
+          'node_modules/sinon/lib/sinon/spy.js',
+          'node_modules/sinon/lib/sinon/call.js',
+          'node_modules/sinon/lib/sinon/behavior.js',
+          'node_modules/sinon/lib/sinon/stub.js',
+          'node_modules/sinon/lib/sinon/mock.js',
+          'node_modules/sinon/lib/sinon/assert.js',
+          'node_modules/sinon/lib/sinon/util/event.js',
+          'node_modules/sinon/lib/sinon/util/fake_xml_http_request.js',
+          'node_modules/sinon/lib/sinon/util/fake_timers.js',
+          'node_modules/sinon/lib/sinon/util/fake_server.js',
+          'node_modules/sinon/lib/sinon/util/fake_server_with_clock.js',
+          'node_modules/sinon/lib/sinon/collection.js',
+          'node_modules/sinon/lib/sinon/sandbox.js',
+          'node_modules/sinon/lib/sinon/test.js',
+          'node_modules/sinon/lib/sinon/test_case.js',
+          // 'node_modules/sinon-qunit/lib/sinon-qunit.js'
         ],
         dest: 'static/build/js/lib/test_deps.js'
       },
@@ -152,8 +163,8 @@ module.exports = function (grunt) {
           basePath: 'bluebottle/common/static',
           sassDir: 'sass',
           cssDir: 'css',
-          imagesDir: 'images',          
-          javascriptsDir: 'js',          
+          imagesDir: 'images',
+          javascriptsDir: 'js',
           outputStyle: 'compressed',
           relativeAssets: true,
           noLineComments: true,
@@ -168,8 +179,8 @@ module.exports = function (grunt) {
           basePath: 'bluebottle/common/static',
           sassDir: 'sass',
           cssDir: 'css',
-          imagesDir: 'images',          
-          javascriptsDir: 'js',          
+          imagesDir: 'images',
+          javascriptsDir: 'js',
           outputStyle: 'expanded',
           relativeAssets: true,
           noLineComments: false,
@@ -179,11 +190,10 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('default', ['dev', 'compass:dev']);
-  grunt.registerTask('build', ['bower:install', 'concat:dist', 'concat:test']);
-  // Add 'shell:parse_templates' and 'emberhandlebars' tasks to dev once it is working
+  grunt.registerTask('default', ['concurrent:dev']);
+  grunt.registerTask('build', ['bower:install', 'concat:dist', 'concat:test', 'shell:parse_templates']);
   grunt.registerTask('dev', ['build', 'karma:unit']);
   grunt.registerTask('travis', ['build', 'karma:ci']);
   grunt.registerTask('local', ['dev', 'watch']);
   grunt.registerTask('deploy', ['concat:dist', 'uglify:dist', 'hashres', 'compass:dist']);
-}
+};

@@ -144,7 +144,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         # Making the request without logging in...
         response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_manage_organizations_detail_user_restricted(self):
         """

@@ -45,10 +45,13 @@ $font-family-body										   : $font-family;
 $font-family-heavy                                         : 'Futura W02 Heavy', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-bold                                          : 'Futura W01 Bold', 'Trebuchet MS', Helvetica, Arial, sans-serif;
 $font-family-small                                         : 'Trebuchet MS', Helvetica, Arial, sans-serif;
+$font-family-body                                          : $font-family;
                                                                 
 $base-font-size                                            : 1em !default;
 $base-font-family                                          : $font-family !default;
 $base-line-height                                          : 1.5em !default;
+
+$gray-border                                               : #f2f2f2;
                                                                 
                                                                 
 // Scaffolding                                                  
@@ -109,7 +112,8 @@ $type-h3-color                                             : $color-heading !def
 $type-blockquote-border-color                              : $gray-lighter !default;
 $type-blockquote-small-color                               : $gray-light !default;
                                                                 
-// Buttons                                                      
+
+// Buttons
 // ----------------------------------                           
                                                                 
 $button-color                                              : $white !default;
@@ -346,6 +350,10 @@ $members-member-list-fundraisers-become-color              : $color-primary !def
 // Modals                                                       
 // ----------------------------------                           
                                                                 
+// Modals
+// ----------------------------------
+$modal-background-color						        	   : rgba(24,24,24, .60);
+$modal-item-background							           : #F5F4F6;
 $modal-backdrop-bg-color                                   : $black !default;
 $modal-backdrop-opacity                                    : 0.85 !default;
 $modal-bg-color                                            : $white !default;

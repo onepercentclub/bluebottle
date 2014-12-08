@@ -1,3 +1,10 @@
+if (DEBUG) {
+    Ember.RSVP.configure('onerror', function(e) {
+      console.log(e.message);
+      console.log(e.stack);
+    });
+}
+
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
@@ -126,6 +133,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         // Inject currentUser into all controllers and routes
         application.inject('controller', 'currentUser', 'controller:currentUser');
         application.inject('route', 'currentUser', 'controller:currentUser');
+        application.inject('component', 'currentUser', 'controller:currentUser');
     },
 
     initSelectViews: function() {
@@ -163,7 +171,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
                     return data.filter(function(item){
                         return item.get('viewable');
                     });
-                },
+                }.property()
             });
         });
 
@@ -240,28 +248,44 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
 /**
  * The Ember Data Adapter and Store configuration.
  */
+
+App.AdapterPlurals = {
+    "homepage": "homepage",
+
+    // My Orders
+    "orders/my": "orders/my",
+    "donations/my": "donations/my",
+    "donations/project": "donations/project",
+    'order_payments/my': 'order_payments/my',
+    'payments/payment_methods': 'payments/payment_methods',
+
+    // My Projects
+    "bb_projects/manage": "bb_projects/manage",
+    "bb_projects/plans/manage": "bb_projects/plans/manage",
+    "bb_projects/budgetlines/manage": "bb_projects/budgetlines/manage",
+
+    // Organizations
+    "bb_organizations/manage": "bb_organizations/manage",
+    "bb_organizations/documents/manage": "bb_organizations/documents/manage",
+
+    // User Settings / Options
+    "users/activate": "users/activate",
+    "users/passwordset": "users/passwordset",
+    "users/time_available": "users/time_available",
+    "contact/contact": "contact/contact",
+
+    // TODO: Are the plurals below still needed?
+    "bb_projects/wallposts/media": "bb_projects/wallposts/media",
+    "bb_projects/wallposts/text": "bb_projects/wallposts/text",
+    "bb_projects/campaigns/manage": "bb_projects/campaigns/manage",
+    "bb_projects/pitches/manage": "bb_projects/pitches/manage",
+    "bb_organizations/addresses/manage": "bb_organizations/addresses/manage",
+    "bb_projects/ambassadors/manage": "bb_projects/ambassadors/manage",
+};
+
 App.Adapter = DS.DRF2Adapter.extend({
     namespace: "api",
-
-    plurals: {
-        "bb_projects/manage": "bb_projects/manage",
-        "bb_projects/plans/manage": "bb_projects/plans/manage",
-        "bb_organizations/manage": "bb_organizations/manage",
-        "bb_organizations/documents/manage": "bb_organizations/documents/manage",
-        "bb_projects/budgetlines/manage": "bb_projects/budgetlines/manage",
-        "users/activate": "users/activate",
-        "users/passwordset": "users/passwordset",
-        "users/time_available": "users/time_available",
-        "homepage": "homepage",
-        "contact/contact": "contact/contact",
-        // TODO: Are the plurals below still needed?
-        "bb_projects/wallposts/media": "bb_projects/wallposts/media",
-        "bb_projects/wallposts/text": "bb_projects/wallposts/text",
-        "bb_projects/campaigns/manage": "bb_projects/campaigns/manage",
-        "bb_projects/pitches/manage": "bb_projects/pitches/manage",
-        "bb_organizations/addresses/manage": "bb_organizations/addresses/manage",
-        "bb_projects/ambassadors/manage": "bb_projects/ambassadors/manage",
-    }
+    plurals: App.AdapterPlurals
 });
 
 // Assigning plurals for model properties doesn't seem to work with extend, it does this way:
@@ -269,6 +293,47 @@ App.Adapter.configure("plurals", {
     "address": "addresses",
     "favourite_country" : "favourite_countries"
 });
+
+if (DEBUG && typeof Apiary == 'object') {
+    // If DEBUG then include the Apiary mock adapter
+    App.MockAdapter = Apiary.MockAdapter.reopen({
+        namespace: "api",
+        url: 'https://bluebottle.apiary-mock.com',
+        plurals: App.AdapterPlurals
+    });
+}
+
+// Embedded Model Mapping
+//
+// http://stackoverflow.com/questions/14320925/how-to-make-embedded-hasmany-relationships-work-with-ember-data/14324532#14324532
+// The two possible values of embedded are:
+//   load: The child records are embedded when loading, but should be saved as standalone records. In order
+//         for this to work, the child records must have an ID.
+//   always: The child records are embedded when loading, and are saved embedded in the same record. This,
+//           of course, affects the dirtiness of the records (if the child record changes, the adapter will
+//           mark the parent record as dirty).
+
+App.Store = DS.Store.extend({
+    adapter: 'App.Adapter'
+});
+
+App.ModelMetaMixin = Ember.Mixin.create({
+    meta_data: DS.attr('object'),
+    _modelProperty: 'content',
+
+    modelName: function() {
+        return String(this.constructor);
+    }.property('constructor'),
+
+    modelType: function() {
+        var name = this.get('modelName').split('.');
+        return Ember.String.camelize(name.pop());
+    }.property('modelName')
+});
+
+DS.Model.reopen(App.ModelMetaMixin, {});
+
+/* Application Controller */
 
 App.ApplicationController = Ember.Controller.extend({
 
@@ -289,25 +354,6 @@ App.ApplicationController = Ember.Controller.extend({
 
     // Override this to do something when the currentUser call in the initializer doesn't succeed
     missingCurrentUser: Em.K
-});
-
-// Embedded Model Mapping
-//
-// http://stackoverflow.com/questions/14320925/how-to-make-embedded-hasmany-relationships-work-with-ember-data/14324532#14324532
-// The two possible values of embedded are:
-//   load: The child records are embedded when loading, but should be saved as standalone records. In order
-//         for this to work, the child records must have an ID.
-//   always: The child records are embedded when loading, and are saved embedded in the same record. This,
-//           of course, affects the dirtiness of the records (if the child record changes, the adapter will
-//           mark the parent record as dirty).
-
-App.Store = DS.Store.extend({
-    adapter: 'App.Adapter'
-});
-
-
-DS.Model.reopen({
-    meta_data: DS.attr('object')
 });
 
 /* Routing */
@@ -333,9 +379,9 @@ App.Router.reopen({
       this._super(infos);
 
       /*
-       Clear queued (next) transition after any successful transition so the 
+       Clear queued (next) transition after any successful transition so the
        queued one does not run more than once.
-       */ 
+       */
       this.send('clearNextTransition');
   }
 });
@@ -358,7 +404,7 @@ App.Router.reopen({
             App.meta.trigger('reloadDataFromRoutes');
         });
 
-		// Track the page / route load
+        // Track the page / route load
         var url = this.get('url');
         if (window._gaq !== undefined) {
             Ember.run.next(function() {
@@ -400,8 +446,8 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             this.set('nextTransition', transition);
         },
         loadNextTransition: function (fallbackRoute) {
-            // If the applicationRoute has a nextTransition value then we run it as 
-            // it is probably the case that the user tried to access a restricted page and 
+            // If the applicationRoute has a nextTransition value then we run it as
+            // it is probably the case that the user tried to access a restricted page and
             // was prevented from doing it => user was presented with the sign up / in modal.
             // If there is no nextTransition then load the passed route if defined.
             var nextTransition = this.get('nextTransition');
@@ -480,7 +526,7 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
                 settings.save();
                 return true;
             });
-            
+
             return true;
         },
 
@@ -525,6 +571,27 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             } else {
                 go();
             }
+        },
+        addDonation: function (project, fundraiser) {
+            var _this = this,
+                controller = this.get('controller');
+
+            App.MyOrder.createRecord().save().then(
+                // Success
+                function(order) {
+                    var donation =  App.MyDonation.createRecord({
+                                        order: order, 
+                                        project: project, 
+                                        fundraiser: fundraiser
+                                    });
+
+                    controller.send('openInDynamic', 'donation', donation, 'modalFront');
+                },
+                // Failure
+                function(order) {
+                    throw new Em.error('Saving MyOrder failed!');
+                }
+            );
         }
     },
 
@@ -551,3 +618,110 @@ App.UserIndexRoute = Em.Route.extend({
         this.transitionTo('userProfile');
     }
 });
+App.EventMixin = Em.Mixin.create({
+
+  bindScrolling: function(opts) {
+    var onScroll, self = this;
+
+    onScroll = function() {
+      var scrollTop = $(this).scrollTop();
+      return self.scrolled(scrollTop);
+    };
+
+    $(window).bind('scroll', onScroll);
+    $(document).bind('touchmove', onScroll);
+  },
+
+  startStopScrolling: function(elm, nameClass) {
+    var lastScroll = 0,
+        st, startScroll;
+
+    startScroll = function() {
+        st = $(this).scrollTop();
+
+        if (st > lastScroll) {
+            $(elm).removeClass(nameClass);
+        } else {
+            $(elm).addClass(nameClass);
+        }
+
+        lastScroll = st;
+    };
+
+    $(window).bind('scroll', startScroll);
+    $(document).bind('touchmove', startScroll);
+  },
+
+  unbindScrolling: function () {
+    $(window).unbind('scroll');
+    $(document).unbind('touchmove');
+  },
+
+  bindMobileClick: function() {
+    toggleMenu = function() {
+      $('.mobile-nav-holder').toggleClass('is-active');
+    };
+
+    closeMenu = function(event) {
+      $('.mobile-nav-holder').removeClass('is-active');
+    };
+
+    $('.mobile-nav-btn').bind('click', toggleMenu);
+    $('#content').bind('hover', closeMenu);
+  },
+
+  showHideReadmore: function() {
+    var description = $('#project-detail-header .project-description'),
+        readMore = $('.project-more.read-more');
+
+    if (!description) return;
+
+    if (description.height() > 92) {
+        readMore.show();
+        
+        readMore.on('click', function() {
+            description.toggleClass('is-active');
+            //readMore.html(gettext('Read less.'));
+        });
+    } else {
+        readMore.hide();
+    }
+  }
+});
+
+
+App.ApplicationView = Em.View.reopen(App.EventMixin, {
+    setBindScrolling: function() {
+        this.bindScrolling();
+        this.startStopScrolling('#cheetah-header', 'is-active');
+    }.on('didInsertElement'),
+
+    setUnbindScrolling: function() {
+        this.unbindScrolling();
+    }.on('didInsertElement'),
+
+    setBindClick: function() {
+        this.bindMobileClick();
+    }.on('didInsertElement'),
+
+    setCheckHeightDec: function() {
+        this.showHideReadmore();
+    }.on('didInsertElement'),
+
+    scrolled: function(dist) {
+        top = $('#content').offset();
+        elm = top.screen.availTop;
+
+        if (dist <= 53) {
+            $('#header').removeClass('is-scrolled');
+            $('.nav-member-dropdown').removeClass('is-scrolled');
+            $('.mobile-nav-holder').removeClass('is-scrolled');
+            //$('#content').append('<div class="scrolled-area"></div>');
+        } else {
+            $('#header').addClass('is-scrolled');
+            $('.nav-member-dropdown').addClass('is-scrolled');
+            $('.mobile-nav-holder').addClass('is-scrolled');
+        }
+    }
+})
+

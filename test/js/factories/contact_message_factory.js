@@ -1,5 +1,5 @@
 Factory.define('contactMessage', {
-	name: 'Darth Vader',
-	email: 'darth@gmail.com',
-	message: 'Testing, testing'
+    name: 'Darth Vader',
+    email: 'darth@gmail.com',
+    message: 'Testing, testing'
 });

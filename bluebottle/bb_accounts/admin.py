@@ -6,6 +6,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.utils.admin import export_as_csv_action
 
 BB_USER_MODEL = get_user_model()
 
@@ -99,10 +100,14 @@ class BlueBottleUserAdmin(UserAdmin):
 
     readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
 
+    export_fields = getattr(settings, 'USER_EXPORT_FIELDS', ['username', 'email'])
+
+    actions = (export_as_csv_action(fields=export_fields), )
+
     form = BlueBottleUserChangeForm
     add_form = BlueBottleUserCreationForm
 
-    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser')
+    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter')
 
     list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)
@@ -112,5 +117,7 @@ class BlueBottleUserAdmin(UserAdmin):
 
     login_as_user.allow_tags = True
 
+
 if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
    admin.site.register(BB_USER_MODEL, BlueBottleUserAdmin)
+

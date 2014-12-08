@@ -1,0 +1,34 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "docdataDirectdebit" %}
+    <form class="directdebit-list">
+        <div class="row">
+            <div class="col12">
+                <label><strong>{% trans "Your name (as on bank account)" %}</strong></label>
+                {{view Em.TextField valueBinding="account_name" placeholderBinding="accountNamePlaceholder"}}
+            </div>
+        </div>
+        <div class="row iban-check">
+            <div class="col12 iban-col">
+                <label><strong>{% trans "Your IBAN number" %}</strong></label>
+                {{view Em.TextField valueBinding="iban" id="accountnumber" placeholder="NL11BANK0123456789"}}
+            </div>
+            <div class="col4 bic-col">
+                <label><strong>{% trans "BIC/Swift" %}</strong></label>
+                {{view Em.TextField valueBinding="bic" id="bicswift"}}
+            </div>
+        </div>
+        {{view Em.TextField valueBinding="account_city" type="hidden"}}
+        <div class="row">
+            <div class="col12">
+                <label for="agreeDirectDebitCheckbox" class="modal-checkbox">
+                    {{view Em.Checkbox checkedBinding="agree" id="agreeDirectDebitCheckbox"}}
+                    <span></span>
+                    {% blocktrans%}
+                        I agree with the above metioned amount to be withdrawn from my account via direct debit.
+                    {% endblocktrans%}
+                </label>
+            </div>
+        </div>
+    </form>
+{% endtplhandlebars %}

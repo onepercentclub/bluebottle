@@ -7,7 +7,7 @@ pavlov.specify("Organization model unit tests", function() {
       facebook: 'facebook.com/gpmu',
       twitter: '@gpmu',
       legalStatus: 'good'
-    }
+    };
 
     describe("Organization Model", function () {
         it("is a DS.Model", function() {
@@ -28,9 +28,9 @@ pavlov.specify("Organization model unit tests", function() {
         it("should have some properties", function () {
             build('organization', data).then(function(org) {
                 assert(org.url).equals('bb_organizations');
-                assert(org.get('name')).equals(data['name']);
-                assert(org.get('description')).equals(data['description']);
-                assert(org.get('legalStatus')).equals(data['legalStatus']);
+                assert(org.get('name')).equals(data.name);
+                assert(org.get('description')).equals(data.description);
+                assert(org.get('legalStatus')).equals(data.legalStatus);
             });
         });
 

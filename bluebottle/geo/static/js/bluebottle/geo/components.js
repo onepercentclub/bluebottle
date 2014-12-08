@@ -47,12 +47,17 @@ App.BbProjectMapComponent = Ember.Component.extend({
     },
 
     center: [52.3722499, 4.907800400000042],
+
     getCenter: function(){
         return new google.maps.LatLng(52.3722499, 4.907800400000042);
     }.property('center'),
+
     zoom_level:  3,
+
     map: null,
-	markers: [],
+
+    markers: [],
+
     info_box_template: '<div class="maps-infobox"><div class="project-description-container"><figure class="project-thumbnail"><img src="{{image}}" alt="{{title}}" /></figure><p class="project-title">{{#link-to "project" this}}{{title}}{{/link-to}}</p><p class="project-meta"><span class="location"><span class="flaticon solid location-pin-1"></span> {{location}}</span><span class="tags"><span class="flaticon solid tag-2"></span> {{theme_name}}</span></p></div><a href="/#!/projects/{{id}}">LINK</a></div>',
     active_info_window: null,
 
@@ -63,12 +68,12 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var view = this;
         this.geocoder = new google.maps.Geocoder();
         var view = this;
-        // var point = new google.maps.LatLng(22, 10);
+        var point = new google.maps.LatLng(22, 10);
         var MyMapType = new google.maps.StyledMapType(this.get("mapStyle"), {name: 'Grey'});
 
         var mapOptions = {
             zoom: 2,
-            // center: point,
+            center: point,
             scrollwheel: false,
             panControl: false,
             zoomControl: true,
@@ -90,7 +95,8 @@ App.BbProjectMapComponent = Ember.Component.extend({
         });
     },
     placeMarkers: function() {
-        var comp = this;
+        var comp = this,
+            map = comp.get('map');
         var bounds = new google.maps.LatLngBounds();
         var markers = [];
         App.ProjectPreview.find({page_size: 500}).then(function(records){
@@ -98,11 +104,15 @@ App.BbProjectMapComponent = Ember.Component.extend({
                 var marker = comp.placeMarker(project);
                 markers.push(marker);
                 bounds.extend(marker.position);
-                comp.get("map").fitBounds(bounds);
+                //map.fitBounds(bounds);
             });
-            var markerCluster = new MarkerClusterer(comp.get("map"), markers, comp.get('clusterOptions'));
+            var markerCluster = new MarkerClusterer(map, markers, comp.get('clusterOptions'));
         });
 
+    },
+
+    getProjectIcon: function(project){
+        return project.get('status.id') == 4 ?  this.get('icon1'): this.get('icon2');
     },
 
     placeMarker: function(project){
@@ -115,7 +125,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
         var template = Handlebars.compile(view.info_box_template);
         var title = project.get('title');
         if (title.length > 35) {
-            title =  title.substring(0, 32) + '&#8230;';
+            title =  title.substring(0, 32) + '...';
         }
         var data = {
             'id': project.get('id'),
@@ -147,15 +157,13 @@ App.BbProjectMapComponent = Ember.Component.extend({
 			position: latLng
 		});
 
-
-
         var marker = new google.maps.Marker({
 		    position: latLng,
 		    map: view.map,
 		    title: project.get('title'),
-		    icon: project.get('status.id') == 4 ?  this.get('icon1'): this.get('icon2')
+		    icon: view.getProjectIcon(project)
 	    });
-        		
+
 	    google.maps.event.addListener(marker, 'click', function() {
             this.get("map").panTo(marker.getPosition());
             if (view.active_info_window) {
@@ -170,7 +178,7 @@ App.BbProjectMapComponent = Ember.Component.extend({
     didInsertElement: function() {
         var view = this;
 	    this.initMap();
-        // To make sure 
+        // To make sure
         this.get('markers').forEach(function(marker){
             marker.setMap(null);
             view.get('markers').removeObject(marker);

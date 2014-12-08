@@ -28,7 +28,7 @@
 
                                     {% bb_component 'bb-text-field' label=_("Email") name='email' valueBinding='email' errorsBinding='errors.email' placeholder=_("example@my-domain.com") %}
 
-                                    {% bb_component 'bb-text-field' label=_("Message") name='message' valueBinding='message' errorsBinding='errors.message' rows="6" %}
+                                    {% bb_component 'bb-text-area' label=_("Message") name='message' valueBinding='message' errorsBinding='errors.message' rows="6" %}
                                 </ul>
                             </fieldset>
                             <button {{bindAttr class=":btn :btn-iconed :btn-primary :btn-submit"}} {{action updateRecordOnServer}}><span class="flaticon solid envelope-1"></span>{% trans "Send Message" %}</button>

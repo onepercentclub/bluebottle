@@ -18,11 +18,6 @@ App.TaskSummaryView = Em.View.extend({
 App.ProjectTaskListView = Em.View.extend(App.ScrollInView, {});
 
 
-App.TaskIndexView = Em.View.extend({
-    templateName: 'wall'
-});
-
-
 App.TaskMenuView = Em.View.extend({
     templateName: 'task_menu',
     tagName: 'form'
@@ -119,5 +114,5 @@ App.UsedSkillSelectView = App.SkillSelectView.extend();
 
 
 App.TaskMemberView = Ember.View.extend({
-    templateName: '_task_detail_member_partial'
+    templateName: 'task_member'
 });

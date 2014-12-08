@@ -24,7 +24,7 @@
 
                         {{# if project.deadline}}
                             {{!-- Only show datepicker after project deadline is fully loaded so we can set maxDate properly --}}
-                            {% bb_component 'bb-date-picker' name='deadline' label=_('Deadline') hint=_('You can only pick a date before the deadline of the project') minDate='0' maxDate='project.deadline' valueBinding='deadline' errors='errors.deadline' %}
+                            {% bb_component 'bb-date-picker' name='deadline' label=_('Deadline') placeholder=_('Date before which the task should be executed') hint=_('You can only pick a date before the deadline of the project') minDate='0' maxDate='project.deadline' valueBinding='deadline' errors='errors.deadline' %}
                         {{/if}}
 
                         {% bb_component 'bb-text-field' name='location' label=_('Location') valueBinding='location' errors='errors.location' placeholder=_('Can this be done online or on location?') %}

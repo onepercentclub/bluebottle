@@ -8,14 +8,11 @@ Dear {{receiver_name}},
 Yeah, with your help the task {{ task.title}} from the {{task.project.title}} is realised.
 
 What a great job you did! You’ve contributed to a happier and healthier destination!
-Share your story on the Cares platform; go to the project you’ve participated in and post your story on the wall. Pictures are worth a 1000 words, so add those lovely images, if you have them.
+Share your story on the <Bluebottle Project> platform; go to the project you’ve participated in and post your story on the wall. Pictures are worth a 1000 words, so add those lovely images, if you have them.
 
-Please, let us know what you think about the project and the Cares platform and fill in the [evaluation].
-
-Thanks again and we hope to see you back on Booking Cares soon… Have a look at the task list for the currently open tasks at Booking Cares.
+Thanks again and we hope to see you back on <Bluebottle Project> soon… Have a look at the task list for the currently open tasks at <Bluebottle Project>.
 
 Warm regards,
 
-Marianne | Booking Cares Manager
 {% endblocktrans %}
 {% endblock %}

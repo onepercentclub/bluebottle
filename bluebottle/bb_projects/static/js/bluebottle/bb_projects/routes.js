@@ -7,10 +7,7 @@ App.Router.map(function(){
         this.route('search');
     });
 
-    this.resource('project', {path: '/projects/:project_id'}, function() {
-        this.resource('projectPlan', {path: '/plan'});
-        this.resource('projectTasks', {path: '/tasks'}, function(){});
-    });
+    this.resource('project', {path: '/projects/:project_id'});
 
     this.resource('myProjectList', {path: '/my/projects'});
 
@@ -53,7 +50,9 @@ App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.
 });
 
 
-App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
+App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+    parentType: 'project',
+
     model: function(params) {
         // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.
@@ -75,28 +74,13 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
         });
 
         return promise;
-    }
-});
-
-
-App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
-
-    parentId: function(){
-        return this.modelFor('project').get('id');
-    }.property(),
-    parentType: 'project',
-
-    setupController: function(controller, model) {
+    },
+    setupController: function(controller, model){
         this._super(controller, model);
 
-        var parentType = this.get('parentType');
-        var parent = this.modelFor(parentType);
-        var parentId = parent.id;
-
-        controller.set('tasks',App.Task.find({project: parentId}));
+        var parentId = model.get('id');
+        controller.set('tasks', App.Task.find({project: parentId}));
     }
-
-
 });
 
 
@@ -277,7 +261,7 @@ App.ProjectDonationListRoute = Em.Route.extend({
 
     setupController: function(controller, project) {
         this._super(controller, project);
-        controller.set('projectDonations', App.ProjectDonation.find({project: project.id}));
+        controller.set('projectDonations', App.MyProjectDonation.find({project: project.id}));
 
     }
 });

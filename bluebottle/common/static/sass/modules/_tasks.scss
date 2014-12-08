@@ -3,7 +3,7 @@
 
 // Task search result item                                 
 $task-item-background                                : $gray-lighter !default;
-$task-item-category-color                       	: $white !default;
+$task-item-category-color                           : $white !default;
 $task-item-category-background                    : $color-secondary !default;
 $task-item-header-background                      : $black !default;
 $task-item-title-background                       : rgba(0, 0, 0, 0.7) !default;
@@ -21,8 +21,8 @@ $task-list-open-background                             : $gray-lighter !default;
 $task-list-closed-background                           : $gray-lighter !default;
 
 // Project detail task list preview
-$task-preview-open-background								   : $color-secondary !default;
-$task-preview-closed-background								   : $gray !default;
+$task-preview-open-background                                  : $color-secondary !default;
+$task-preview-closed-background                                : $gray !default;
 
 // open tasks
 $task-preview-open-member-status-background            : $color-secondary !default;
@@ -51,7 +51,7 @@ $task-preview-closed-task-status-color               : $color-primary !default;
     a {
         display: block;
         border: 1px solid $gray-light;
-		text-decoration: none;
+        text-decoration: none;
     }
     
     .task-category {
@@ -76,24 +76,24 @@ $task-preview-closed-task-status-color               : $color-primary !default;
             position: absolute;
             bottom: 0;
             display: block;
-			padding: $base-padding;
-			background-color: $task-item-title-background;
-			color: $task-item-title-color;
-			
-			h3 {
-			    font-size: $base-font-size;
-			    color: $task-item-title-color;
-				padding: 0;
-				margin: 0;
-			}
-			
-			h4 {
-            	font-size: $font-size-small;
-				text-transform: none;
-				padding: 0;
-				margin: 0;
-				font-family: $base-font-family;
-			}
+            padding: $base-padding;
+            background-color: $task-item-title-background;
+            color: $task-item-title-color;
+            
+            h3 {
+                font-size: $base-font-size;
+                color: $task-item-title-color;
+                padding: 0;
+                margin: 0;
+            }
+            
+            h4 {
+                font-size: $font-size-small;
+                text-transform: none;
+                padding: 0;
+                margin: 0;
+                font-family: $base-font-family;
+            }
         }
         
         .task-image {
@@ -104,11 +104,11 @@ $task-preview-closed-task-status-color               : $color-primary !default;
             text-align: center;
             
             img {
-        		position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-			}
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
         }
         
     }
@@ -130,9 +130,9 @@ $task-preview-closed-task-status-color               : $color-primary !default;
         font-size: $font-size-smallest;
         
         li {
-			@include resetlist;
+            @include resetlist;
             @include grid(24,0,0);
-			
+            
             .flaticon {
             
             }
@@ -140,7 +140,7 @@ $task-preview-closed-task-status-color               : $color-primary !default;
     }    
     
     .task-description {
-		
+        
         display: none;
         font-family: $font-family-heavy;
         width: 100%;
@@ -190,129 +190,144 @@ $task-preview-closed-task-status-color               : $color-primary !default;
 // --------------------------------------------------
 
 .task-preview {
-	@include clear;
-	font-size: $font-size-small;
-	margin-bottom: $base-margin;
-	background-color: $task-preview-open-background;
-	
-	.task-member-status, .task-content, .task-arrow {
-		min-height: 90px;
-	}
-	.task-member-status {
-		@include grid(8,0,0);
-		background-color: $task-preview-open-member-status-background;
-		text-align: center;
-		color: $white;
-		padding: $base-padding;
-		
-		big {
-			font-weight: bold;
-			font-size: $font-size-largest;
-			display: block;
-			line-height: $base-line-height * .75;
-		}
-		
-		small {
-			display: block;
-			font-size: $font-size-smallest;
-			line-height: $base-line-height * .75;
-		}
-	}
-	
-	.task-content {
-		@include grid(36,0,0);
-		padding: $base-padding;
-		background-color: $white;
-	}
-	
-	.task-title {
-		margin-top: 0;
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-	
-	.task-theme {
-		font-size: $font-size-small;
-		color: $task-preview-open-theme-color;
-	}
-	
-	.task-arrow {
-		@include grid(4,0,0);
-		background: $task-preview-open-arrow-background;	
-		font-size: $font-size-largest;
-		color: $white;
-		font-weight: bold;
-		text-align: center;
-		vertical-align: middle;
-		padding: ($base-padding * .75) 0;
-			
-		.flaticon {
-			display: inline-block;
-		}
-	}
-	
-	.task-status {
-		color: $task-preview-open-task-status-color;
-	}
-	
-	.task-status, .task-time-needed, .task-deadline {
-		@include grid(16,0,2);
-	}
+    @include clear;
+    font-size: $font-size-small;
+    margin-top: $base-margin;
+    background-color: $task-preview-open-background;
+    
+    .task-member-status {
+        @include grid(8,0,0);
+        background-color: $task-preview-open-member-status-background;
+        text-align: center;
+        color: $white;
+        padding: $base-padding;
+        
+        big {
+            font-weight: bold;
+            font-size: $font-size-largest;
+            display: block;
+            line-height: $base-line-height * .75;
+        }
+        
+        small {
+            display: block;
+            font-size: $font-size-smallest;
+            line-height: $base-line-height * .75;
+        }
+    }
+    
+    .task-content {
+        @include grid(36,0,0);
+        padding: $base-padding;
+        background-color: $white;
+    }
+    
+    .task-title {
+        margin-top: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    
+    .task-theme {
+        font-size: $font-size-small;
+        color: $task-preview-open-theme-color;
+    }
+    
+    .task-arrow {
+        @include grid(4,0,0);
+        background: $task-preview-open-arrow-background;    
+        font-size: $font-size-largest;
+        color: $white;
+        font-weight: bold;
+        text-align: center;
+        vertical-align: middle;
+        padding: ($base-padding * .75) 0;
+            
+        .flaticon {
+            display: inline-block;
+        }
+    }
+    
+    .task-status {
+        color: $task-preview-open-task-status-color;
+    }
+    
+    .task-status, .task-time-needed, .task-deadline {
+        @include grid(16,0,2);
+    }
 }
 
 #task-list {
-	position: relative;
-	margin: 0;
-	padding: 0;
-	color: $tasks-task-list-color;
-	background-color: $tasks-task-list-bg-color;
-	
-	h3 {
-		margin-bottom: 0;
-		display: inline-block;
-		padding-bottom: 0;
-		color: $tasks-task-list-heading-color;
-	}
-	
-	p {
-		padding: 0;
-	}
-	
-	.task-create {
-		position: absolute;
-		top: 0;
-		right: 0;
-		margin-top: $base-margin;
-		
-	}
-	
-	.task-list-wrapper {
-		position: relative;
-		border-bottom: 1px solid $white;
-		padding: $base-padding 0;
-		margin: 0;
-		
-		&.task-list-open {
-			background-color: $task-list-open-background;
-			z-index: 1;
-		}
-		
-		&.task-list-closed {
-			background-color: $task-list-closed-background;
-			
-			.task-preview {
-				background-color: $task-preview-closed-background;
-				
-				.task-member-status {
-					background-color: $task-preview-closed-member-status-background;
-				}
-				
-				.task-arrow {
-					background: $task-preview-closed-arrow-background;
-				}
-			}
-			
-		}
-	}
+    position: relative;
+    margin: 0;
+    padding: 0;
+    color: $tasks-task-list-color;
+    background-color: $tasks-task-list-bg-color;
+
+    &.offset {
+        margin-top: -119px;
+    }
+
+    h3 {
+        margin-bottom: 0;
+        display: inline-block;
+        padding-bottom: 0;
+        color: $tasks-task-list-heading-color;
+    }
+    
+    p {
+        padding: 0;
+    }
+    
+    .task-create {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin-top: $base-margin;
+        
+    }
+    
+    .task-list-wrapper {
+        position: relative;
+        border-bottom: 1px solid $white;
+        padding: $base-padding 0;
+        margin: 0;
+        
+        &.task-list-open {
+            background-color: $task-list-open-background;
+            z-index: 1;
+        }
+        
+        &.task-list-closed {
+            background-color: $task-list-closed-background;
+            
+            .task-preview {
+                background-color: $task-preview-closed-background;
+                
+                .task-member-status {
+                    background-color: $task-preview-closed-member-status-background;
+                }
+                
+                .task-arrow {
+                    background: $task-preview-closed-arrow-background;
+                }
+            }
+            
+        }
+
+        h3 {
+            margin: 1em 0 1.5em 0 !important;
+        }
+
+        .task-action {
+            float: right;
+
+            .btn {
+                float: right;
+                white-space: nowrap;
+                display: block;
+            }
+        }
+    }
 }

@@ -3,17 +3,16 @@ from bluebottle.common.admin_utils import ImprovedModelForm
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
-from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.utils.utils import get_project_model, get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
 from .models import ProjectPhase, ProjectTheme
-
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
+
 
 class ProjectThemeAdmin(admin.ModelAdmin):
     model = ProjectTheme
@@ -45,6 +44,8 @@ class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
     raw_id_fields = ('owner', 'organization',)
 
     prepopulated_fields = {'slug': ('title',)}
+
+    readonly_fields = ('amount_donated', 'amount_needed')
 
     def queryset(self, request):
         # Optimization: Select related fields that are used in admin specific display fields.

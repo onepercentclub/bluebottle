@@ -107,7 +107,6 @@ Ember.Handlebars.helper('daysToGoText', function(value, options) {
 
   return new Handlebars.SafeString(text);
 });
-
 // With this helper you can pass a variable that holds the stack you want to render.
 Ember.Handlebars.registerHelper('renderFromVariable', function(name, options, contextString){
     if (!contextString) {

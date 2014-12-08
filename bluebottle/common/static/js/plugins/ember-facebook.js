@@ -1,6 +1,7 @@
 Ember.FacebookMixin = Ember.Mixin.create({
     FBUser: void 0,
     appId: void 0,
+    apiVersion: 'v2.1',
     facebookParams: Ember.Object.create(),
     fetchPicture: true,
     connectError: false,
@@ -26,7 +27,7 @@ Ember.FacebookMixin = Ember.Mixin.create({
             $(js).attr({
                 id: 'facebook-jssdk',
                 async: true,
-                src: "//connect.facebook.net/en_US/all.js"
+                src: "//connect.facebook.com/en_US/sdk.js"
             });
             return $('head').append(js);
         });
@@ -38,11 +39,12 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
         facebookParams = this.get('facebookParams');
         facebookParams = facebookParams.setProperties({
-            appId: this.get('appId' || facebookParams.get('appId') || void 0),
-            status: facebookParams.get('status') || true,
-            cookie: facebookParams.get('cookie') || true,
-            xfbml: facebookParams.get('xfbml') || true,
-            channelUrl: facebookParams.get('channelUrl') || void 0
+            appId:      this.get('appId' || facebookParams.get('appId') || void 0),
+            status:     facebookParams.get('status') || true,
+            cookie:     facebookParams.get('cookie') || true,
+            xfbml:      facebookParams.get('xfbml') || true,
+            channelUrl: facebookParams.get('channelUrl') || void 0,
+            version:    this.get('apiVersion')
         });
 
         FB.init(facebookParams);
@@ -85,11 +87,15 @@ Ember.FacebookMixin = Ember.Mixin.create({
 
 
 Ember.FBView = Ember.View.extend({
-   classNameBindings: [':btn', ':btn-facebook', ':btn-iconed', ':fb-login-button', 'isBusy:is-loading'],
-   attributeBindings: ['data-scope','data-size'],
+    classNameBindings: [':btn', ':btn-facebook', ':btn-iconed', ':fb-login-button', 'isBusy:is-loading'],
+    attributeBindings: ['data-scope','data-size'],
 
     click: function(e){
-        var _this = this;
+        var _this = this,
+            controller = this.get('controller');
+            
+        FBApp.set('callingController', controller);
+
         _this.set('isBusy', true);
         FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {

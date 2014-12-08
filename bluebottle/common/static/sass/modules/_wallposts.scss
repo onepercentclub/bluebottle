@@ -211,11 +211,26 @@
 	.wallposts-list {
 		margin: $base-margin 0;
 		@include grid(24,1,1);
+
+		.wallpost-title {
+			
+			h3 {
+				display: inline-block;
+				margin: 0.2em 0 1em 0;
+				//color: $booking-gray-blue;
+			}
+
+			.latest-update {
+				display: inline-block;
+				margin-left: 10px;
+				//color: $booking-gray-blue;
+			}
+		}
 	}
 	
 	.wallposts-important {
 		
-		@include grid(24,1,1);	
+		@include grid(24,1,1);
 	
 		.task-files {
 	

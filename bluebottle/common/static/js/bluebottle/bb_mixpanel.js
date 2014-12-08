@@ -34,7 +34,8 @@ App.TrackerController = Em.ObjectController.extend({
 
    init: function(){
        this._super();
-       if (MIXPANEL_KEY && mixpanel) {
+
+       if (typeof MIXPANEL_KEY == 'string' && mixpanel) {
            this.set('_tracker', mixpanel);
        }
 

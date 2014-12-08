@@ -1,13 +1,18 @@
 language: python
 python:
 - '2.7'
+env:
+- DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
-- pip install nose
+- python setup.py install
 before_script:
 - npm install
+- echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
+- python setup.py install
+- pip install -r test_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
 script:
-- python setup.py test
+- python manage.py test
 - grunt travis --verbose
 notifications:
   hipchat:

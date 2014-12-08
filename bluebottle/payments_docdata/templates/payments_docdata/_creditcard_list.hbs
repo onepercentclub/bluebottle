@@ -1,0 +1,31 @@
+{% load bb_ember i18n static %}
+
+
+{% tplhandlebars "_docdata_creditcard_list" %}
+    <ul class="card-types-list">
+        <li>
+            <label for="americanexpress" {{bind-attr class='isAmericanExpress:is-active:'}}>
+                {{view App.RadioButton name='creditcard' value='americanexpress' id='americanexpress' selectionBinding='default_pm'}}
+                <i class="checked-icon"></i>
+                <span class="creditcard-type">American Express</span>
+                <span class="icon-card americanexpress"></span>
+            </label>
+        </li>
+        <li>
+            <label for="mastercard" {{bind-attr class='isMastercard:is-active:'}}>
+                {{view App.RadioButton name='creditcard' value='mastercard' id='mastercard' selectionBinding='default_pm'}}
+                <i class="checked-icon"></i>
+                <span class="creditcard-type">Mastercard</span>
+                <span class="icon-card mastercard"></span>
+            </label>
+        </li>
+        <li>
+            <label for="visa" {{bind-attr class='isVisa:is-active:'}}>
+                {{view App.RadioButton name='creditcard' value='visa' id='visa' selectionBinding='default_pm'}}
+                <i class="checked-icon"></i>
+                <span class="creditcard-type">Visa</span>
+                <span class="icon-card visa"></span>
+            </label>
+        </li>
+    </ul>
+{% endtplhandlebars %}

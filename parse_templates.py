@@ -1,14 +1,16 @@
 #!/usr/bin/python
 
 import os, glob, sys, getopt
+import re
+
 from django.conf import settings
 from django.template import Context, Template, loader
 from django.utils.translation import ugettext
 from django.contrib.auth.models import AbstractBaseUser
 import templatetag_handlebars
-import re
 
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
+import HTMLParser
 
 PROJECT_ROOT = os.path.dirname(os.path.normpath(os.path.join(__file__, '..', '..')))
 USE_EMBER_STYLE_ATTRS=True
@@ -16,12 +18,13 @@ TEMPLATE_DIRS = (
     os.path.join(PROJECT_ROOT, 'templates')
 )
 
-settings.configure(
-    INSTALLED_APPS=('bluebottle.common','templatetag_handlebars','django.contrib.staticfiles','statici18n',),
-    STATIC_URL='',
-    ROOT_URLCONF='bluebottle.urls',
-    AUTH_USER_MODEL='models.AbstractBaseUser'
-)
+if not settings.configured:
+    settings.configure(
+        INSTALLED_APPS=('bluebottle.common','templatetag_handlebars','django.contrib.staticfiles','statici18n',),
+        STATIC_URL='',
+        ROOT_URLCONF='bluebottle.urls',
+        AUTH_USER_MODEL='models.AbstractBaseUser'
+    )
 
 def main(argv):
     destdir = './test/js/templates'
@@ -53,13 +56,20 @@ def main(argv):
 
     soup = BeautifulSoup(munged_templates)
 
-    print('Templates written:')
+    if not os.path.exists(destdir):
+        print 'Creating template directory ({0}):'.format(destdir)
+        os.makedirs(destdir)
+
+    html_parser = HTMLParser.HTMLParser()
+    count = 0
     for tag in soup('script'):
-        file = '%s/%s.handlebars' % (destdir, tag["id"].replace('/', '_'))
+        file = '%s/%s.handlebars' % (destdir, tag["data-template-name"].replace('/', '_'))
         f = open(file, 'w')
-        f.write(tag.string.encode('utf-8').strip())
+        f.write(html_parser.unescape(tag.prettify()))
         f.close()
-        print('   %s' % (file))
+        count += 1
+
+    print 'Parsed {0} templates to {1}'.format(count, destdir)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

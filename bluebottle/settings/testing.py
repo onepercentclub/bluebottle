@@ -1,9 +1,13 @@
 from .base import *
 from .secrets import *
+from bluebottle.payments_docdata.settings import *
 
+DOCDATA_MERCHANT_NAME = 'merchant_name'
+DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
+
+TEST_RUNNER = 'discover_runner.DiscoverRunner'
 
 INSTALLED_APPS += (
-    'bluebottle.test',
     'django_extensions',
 )
 
@@ -13,18 +17,6 @@ COMPRESS_ENABLED = False
 
 # Include the tests models
 INCLUDE_TEST_MODELS = True
-
-# Define the models to use for testing
-AUTH_USER_MODEL = 'test.TestBaseUser'
-PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
-ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
-TASKS_TASK_MODEL = 'test.TestTask'
-TASKS_SKILL_MODEL = 'test.TestSkill'
-TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
-TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
-ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
-ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
-PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
@@ -38,9 +30,40 @@ GRAPH_MODELS = {
   'group_models': True,
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': ':memory:',
-#     },
-# }
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.sqlite3',
+		'NAME': ':memory:'
+	}
+}
+
+VAT_RATE = 21
+
+DOCDATA_FEES = {
+    'transaction': 0.20,
+    'payment_methods': {
+        'ideal': 0.35,
+        'mastercard': '3.0%',
+        'visa': '3.5%',
+        'paypal': '3.5%',
+        'sepa_direct_debit': 0.25
+    }
+}
+
+PAYMENT_METHODS = (
+    {
+        'provider': 'docdata',
+        'id': 'docdata-creditcard',
+        'profile': 'creditcard',
+        'name': 'CreditCard',
+        'supports_recurring': False,
+    },
+    {
+        'provider': 'docdata',
+        'id': 'docdata-ideal',
+        'profile': 'ideal',
+        'name': 'iDEAL',
+        'restricted_countries': ('NL', 'Netherlands'),
+        'supports_recurring': False,
+    },
+)

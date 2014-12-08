@@ -4,28 +4,28 @@
 
 {% tplhandlebars "task_summary" %}
 
-	{{#link-to "task" this}}
-		<article class="task-preview">
-			<div class="task-member-status">
-				{{#if hasMembers}}
-					<big>{{membersCount}}</big>
-					<small>{% trans "Members" %}<br />{% trans "assigned" %}</small>
-				{{else}}
-					<big class="flaticon stroke work-1"></big>
-					<small>{% trans "Task open to apply" %}</small>
-				{{/if}}
-			</div>
-			<div class="task-content">
-				<h6 class="task-title">{{title}}</h6>
-				<div class="task-theme">{{skill.name}}</div>
-				<div class="task-status"><span class="flaticon solid user-1"></span> {{statusLabel}}</div>
-				<div class="task-time-needed"><span class="flaticon stroke time-1"></span> {{time_needed}} {% trans "Hour(s)" %}</div>
-				<div class="task-deadline"><span class="flaticon stroke stopwatch-1"></span> {{localize deadline formatting="X"}}</div>
-			</div>
-			<div class="task-arrow">
-				<span class="flaticon stroke right-2"></span>
-			</div>
-		</article>
-	{{/link-to}}
+	<li class="activity-item">
+		{{#link-to "task" this class="item-link"}}
+			<strong class="item-title">{{title}}</strong>
+			<span class="item-meta">
+				<span class="item-people"><em>{{membersCount}}</em> {% trans "assigned" %}</span>
+				<span class="item-time"><em>{{time_needed}}</em> {% trans "hour" %}</span>
+				<span class="item-deadline"><em>{{localize deadline formatting="X"}}</em></span>
+			</span>
+			{{#if isStatusOpen}}
+			    <span class="item-status task-open">{% trans "Open" %}</span>
+			{{/if}}
+			{{#if isStatusInProgress}}
+			    <span class="item-status task-running">{% trans "Running" %}</span>
+			{{/if}}
+			{{#if isStatusClosed}}
+			    <span class="item-status task-closed">{% trans "Closed" %}</span>
+			{{/if}}
+			{{#if isStatusRealized}}
+			    <span class="item-status task-done">{% trans "Done" %}</span>
+			{{/if}}
+			
+		{{/link-to}}
+	</li>
 
 {% endtplhandlebars %}

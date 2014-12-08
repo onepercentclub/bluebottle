@@ -15,9 +15,8 @@
             {% block_verbatim fieldset1 %}
                 <fieldset>
                     <ul>
-                        {% bb_component 'bb-text-field' name="'first_name'" label=_('First Name') valueBinding='first_name' errors='errors.first_name.length:error' placeholder=_('First Name') %}
-                        {% bb_component 'bb-text-field' name="'last_name'" label=_('Last Name') valueBinding='last_name' errors='errors.last_name.length:error' placeholder=_('Last Name') %}
-
+                        {{ bb-text-field name='first_name' label='First name' valueBinding='first_name' errors='errors.first_name.length:error' placeholder='First name' }}
+                        {{ bb-text-field name='last_name' label='Last name' valueBinding='last_name' errors='errors.last_name.length:error' placeholder='Last name' }}
                         {{ bb-upload-image hint='Upload profile picture' fileBinding=image image_url=image.large label='Profile Picture' buttonLabel='Upload picture' errors=errors.image }}
                 </ul>
                 </fieldset>

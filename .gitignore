@@ -14,6 +14,9 @@ develop-eggs
 .installed.cfg
 setup.cfg
 
+# Bundler
+.bundle
+
 # Installer logs
 pip-log.txt
 
@@ -23,6 +26,7 @@ pip-log.txt
 
 # JS testing
 node_modules
+bluebottle/common/static/refactor-sass/lib
 
 #Mr Developer
 .mr.developer.cfg
@@ -30,7 +34,6 @@ node_modules
 # Mac stuff and specific weirdness
 .DS\_Store
 *.sqlite
-*.sw?
 
 # Static files
 /static/media/*

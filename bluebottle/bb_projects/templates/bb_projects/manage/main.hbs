@@ -14,7 +14,7 @@
 						{% trans "My projects"%} <small>&rsaquo; {{ title }}</small>
 					</h1>
                     <div class="page-actions" style="padding:0px; margin-top:40px">
-                        {{#if isPhasePlanNew}}
+                        {{#if isStatusPlanNew}}
                             {{#if canPreview}}
                                 <a class="btn btn-modest campaign-preview-button" {{action openInScalableBox "projectPlan" this.model}}>
                                     <span class="flaticon solid eye-1"></span>
@@ -32,8 +32,8 @@
 
                         {{/if}}
                     </div>
-                    <ul id="campaign-steps" class="{{#if isPhasePlanNew}} steps {{else}} tabs {{/if}}">
-                        {{#if isPhasePlanNew}}
+                    <ul id="campaign-steps" class="{{#if isStatusPlanNew}} steps {{else}} tabs {{/if}}">
+                        {{#if isStatusPlanNew}}
                             <li class="tab">
                                 {{#link-to "myProject.start" classBinding=":tab-link :validated"}}
                                     {{#if validStart}}
@@ -47,7 +47,7 @@
                         <li class="tab">
                             {{#link-to "myProject.pitch" classBinding=":tab-link validPitch:validated"}}
                                 {{#if validPitch}}
-                                    {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
+                                    {{#if isStatusPlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                                 {{/if}}
                                 {% trans "Project" %}
                             {{/link-to}}
@@ -56,7 +56,7 @@
                         <li class="tab">
                             {{#link-to "myProject.story" classBinding=":tab-link validStory:validated"}}
                                 {{#if validStory}}
-                                    {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
+                                    {{#if isStatusPlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                                 {{/if}}
                                 {% trans "Description" %}
                             {{/link-to}}
@@ -65,7 +65,7 @@
                         <li class="tab">
                             {{#link-to "myProject.organisation" classBinding=":tab-link validOrganization:validated"}}
                                 {{#if validOrganization}}
-                                    {{#if isPhasePlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
+                                    {{#if isStatusPlanNew}}<span class="flaticon solid checkmark-1"></span>{{/if}}
                                 {{/if}}
                                 {% trans "Organisation" %}
                             {{/link-to}}

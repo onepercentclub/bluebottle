@@ -11,7 +11,7 @@ pavlov.specify('Contact Message Route Tests', function() {
 
         var route;
 
-        before(function() {      
+        beforeEach(function() {      
             Ember.run( function () {
                 // App.injectTestHelpers(); 
                 route = App.ContactMessageRoute.create();
@@ -20,7 +20,7 @@ pavlov.specify('Contact Message Route Tests', function() {
             // sinon.stub(App.CurrentUser, 'find').returns(Factory.create('user'));
         });
 
-        after(function () {
+        afterEach(function () {
             Ember.run( function () {
                 // App.removeTestHelpers();
             });

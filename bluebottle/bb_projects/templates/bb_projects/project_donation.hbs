@@ -5,8 +5,8 @@
 {% tplhandlebars "project_donation" %}
 
 	<tr>
-        {{#if donation.member}}
-        	<td class="fund-history-type"><a class="member" {{action 'openInBigBox' 'userModal' donation.member }} {{bindAttr data-title="donation.member.getFullName" data-content="donation.time_since"}}>{{donation.member.getFullName}}</a></td>
+        {{#if donation.user}}
+        	<td class="fund-history-type"><a class="member" {{action 'openInBigBox' 'userModal' donation.user}} {{bindAttr data-title="donation.user.getFullName" data-content="donation.time_since"}}>{{donation.user.getFullName}}</a></td>
         {{else}}
         	<td class="fund-history-type">{% trans 'Guest' %}</td>
         {{/if}}

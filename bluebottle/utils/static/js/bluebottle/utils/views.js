@@ -66,6 +66,21 @@ App.SocialShareView = Em.View.extend({
     dialogW: 626,
     dialogH: 436,
 
+
+    didInsertElement: function(){
+        // Because ZeroClipboard requires user interaction we can't handle the copy link as an action.
+        var controller = this.get('parentView.controller'),
+            _this = this,
+            project = this.get('context'),
+            server = document.location.protocol + '://' + document.location.host,
+            link = server + '/go/projects/'
+            clip = new ZeroClipboard(_this.$('.copy'));
+        clip.on('complete', function (client, args) {
+            clip.setText(link);
+            controller.send('setFlash', gettext("Copied!"));
+        });
+    },
+
     actions: {
         shareOnFacebook: function() {
             // context is the model object defined in the associated controller/route
@@ -108,12 +123,32 @@ App.SocialShareView = Em.View.extend({
             }
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
+        },
+        shareEmbedded: function() {
+            var project = this.get('context'),
+                controller = this.get('controller');
+            controller.send('openInBox', 'shareEmbedded', project, 'modalFront');
         }
     },
 
     showDialog: function(shareUrl, urlArgs, type) {
         window.open(shareUrl + urlArgs, type + '-share-dialog', 'width=' + this.get('dialogW') + ',height=' + this.get('dialogH'));
     }
+});
+
+
+
+App.ShareEmbeddedController = Em.Controller.extend({
+
+    embedCode: function(){
+        var code = '<link rel="stylesheet" href="/static/assets/css/widget.css" media="screen" />' +
+                   '<script type="text/javascript" src="/static/assets/js/widget.js"></script>' +
+                   '<div class="widget-container" data-language="en" data-project="' +
+                    this.controllerFor('project').get('model.id') +
+                    '"></div>';
+        return code;
+    }.property()
+
 });
 
 
@@ -125,7 +160,7 @@ App.DatePickerValue = Ember.TextField.extend({
 
 // See/Use App.DatePicker
 App.DatePickerWidget = Ember.TextField.extend({
-
+    placeholderBinding: "parentView.placeholder",
     dateBinding: "parentView.value",
     configBinding: "parentView.config",
 
@@ -239,3 +274,45 @@ App.CustomDatePicker = App.DatePicker.extend({
         }
     }
 });
+
+
+App.UploadMultipleFilesInput = Ember.TextField.extend({
+    type: 'file',
+    attributeBindings: ['name', 'accept', 'multiple'],
+
+    didInsertElement: function(){
+        // Or maybe try: https://github.com/francois2metz/html5-formdata.
+        var view = this.$();
+        if (Em.isNone(File)) {
+            $.getScript('//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js').done(
+                function(){
+                    $.getScript('/static/assets/js/polyfills/FileReader/jquery.FileReader.min.js').done(
+                        function(){
+                            view.fileReader({filereader: '/static/assets/js/polyfills/FileReader/filereader.swf'});
+                        }
+                    );
+                }
+            );
+        }
+    },
+
+    //contentBinding: 'parentView.parentView.controller.content',
+
+    change: function(e) {
+        //var controller = this.get('parentView.parentView.controller');
+        var files = e.target.files;
+        for (var i = 0; i < files.length; i++) {
+            var reader = new FileReader(),
+                file = files[i],
+                _this = this;
+            reader.readAsDataURL(file);
+
+            _this.$().parents('form').find('.preview').attr('src', '/static/assets/images/loading.gif');
+            reader.onload = function(e) {
+                _this.$().parents('form').find('.preview').attr('src', e.target.result);
+            };
+            _this.get('parentView').send('addFile', file);
+        }
+    }
+});
+

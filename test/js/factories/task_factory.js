@@ -1,6 +1,6 @@
 Factory.define('task', { 
     author: function() {
-    	return attr('userPreview');
+        return attr('userPreview');
     },
     title: 'Takeover Naboo',
     description: 'Title says it all',
@@ -10,39 +10,39 @@ Factory.define('task', {
 });
 
 Factory.define('taskFile', {
-	author: function () {
-		return attr('user');
-	},
-    task: function () {
-    	return attr('task');
+    author: function () {
+        return attr('user');
     },
-	title: 'Death Star Blueprints',
+    task: function () {
+        return attr('task');
+    },
+    title: 'Death Star Blueprints',
     file: 'deathstar.pdf'
 });
 
 Factory.define('skill', {
-	name: 'Engineer'
+    name: 'Engineer'
 });
 
 Factory.define('taskMember', {
-	member: function () {
-		return attr('userPreview');
-	},
-	task: function () {
-    return attr('task');
-  },
-	status: 'applied',
-	motivation: 'Build a better Death Star',
+    member: function () {
+        return attr('userPreview');
+    },
+    task: function () {
+        return attr('task');
+    },
+    status: 'applied',
+    motivation: 'Build a better Death Star',
 });
 
 Factory.define('taskSearch', {
-	text: 'star',
-	skill: 'Engineer',
-	ordering: 'newest',
-	status: 'open',
-	page: 1
+    text: 'star',
+    skill: 'Engineer',
+    ordering: 'newest',
+    status: 'open',
+    page: 1
 });
 
 Factory.define('skill', {
-	name: 'Mind Control'
+    name: 'Mind Control'
 });

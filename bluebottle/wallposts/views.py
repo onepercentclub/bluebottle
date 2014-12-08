@@ -6,7 +6,7 @@ from rest_framework import permissions
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
-from bluebottle.utils.utils import get_project_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
 
 from .models import TextWallPost, MediaWallPost, MediaWallPostPhoto
 from .permissions import IsConnectedWallPostAuthorOrReadOnly
@@ -15,7 +15,7 @@ from .models import WallPost, Reaction
 from .serializers import ReactionSerializer, WallPostSerializer
 
 PROJECT_MODEL = get_project_model()
-
+FUNDRAISER_MODEL = get_fundraiser_model()
 
 class WallPostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")

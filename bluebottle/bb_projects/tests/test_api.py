@@ -7,13 +7,13 @@ from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectThemeFactory,
     ProjectPhaseFactory)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import InitProjectDataMixin
+from bluebottle.test.utils import InitProjectDataMixin, BluebottleTestCase
 from rest_framework import status
 
 from ..models import ProjectPhase, ProjectTheme
 
 
-class ProjectEndpointTestCase(InitProjectDataMixin, TestCase):
+class ProjectEndpointTestCase(BluebottleTestCase):
     """
     Base class for ``projects`` app API endpoints test cases.
 
@@ -21,10 +21,10 @@ class ProjectEndpointTestCase(InitProjectDataMixin, TestCase):
     as well as a dummy testing user which can be used for unit tests.
     """
     def setUp(self):
+        super(ProjectEndpointTestCase, self).setUp()
+
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-
-        self.init_projects()
 
         self.phase_1 = ProjectPhase.objects.get(slug='plan-new')
         self.phase_2 = ProjectPhase.objects.get(slug='plan-submitted')
@@ -34,12 +34,9 @@ class ProjectEndpointTestCase(InitProjectDataMixin, TestCase):
         self.theme_2 = ProjectTheme.objects.get(id=2)
         self.theme_3 = ProjectTheme.objects.get(id=3)
 
-        self.project_1 = ProjectFactory.create(
-            owner=self.user, status=self.phase_1, theme=self.theme_1)
-        self.project_2 = ProjectFactory.create(
-            owner=self.user, status=self.phase_2, theme=self.theme_2)
-        self.project_3 = ProjectFactory.create(
-            owner=self.user, status=self.phase_3, theme=self.theme_3)
+        self.project_1 = ProjectFactory.create(owner=self.user, status=self.phase_1, theme=self.theme_1)
+        self.project_2 = ProjectFactory.create(owner=self.user, status=self.phase_2, theme=self.theme_2)
+        self.project_3 = ProjectFactory.create(owner=self.user, status=self.phase_3, theme=self.theme_3)
 
 
 class TestProjectPhaseList(ProjectEndpointTestCase):
@@ -256,7 +253,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         """
         response = self.client.get(reverse('project_manage_list'))
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')
@@ -328,7 +325,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         response = self.client.get(
             reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')

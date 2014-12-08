@@ -5,7 +5,7 @@
 
 {% tplhandlebars "my_project_organisation" %}
 
-    {{#unless isPhasePlanNew}}
+    {{#unless isStatusPlanNew}}
         {{bb-flash data=flash}}
     {{/unless}}
 
@@ -22,8 +22,7 @@
         <p>{% trans "Upload a document that identifies your contact person or your partner organisation. The document can be an ID, passport, memorandum of association or an other official document." %}</p>
     </legend>
 
-
-        <fieldset>
+    <fieldset>
         <ul>
             <li class="control-group has-popover" data-content="{% trans "please upload a copy of your passport. Make sure it's a valid one and we can read it clearly!" %}">
                 <label class="control-label">
@@ -35,7 +34,7 @@
 
                 <div class="controls manage-project-files">
                     <a class="btn btn-iconed btn-upload">
-                        {{view App.UploadMultipleFiles name="documents" multiple=true}}
+                        {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*" name="documents"}}
                         <span class="flaticon solid upload-document-1"></span>
                         {% trans "Upload scan(s)" %}
                     </a>

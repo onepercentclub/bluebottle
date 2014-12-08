@@ -27,23 +27,38 @@ started:
 
     $ python setup.py develop
 
-#.  You're ready to roll now, baby!    
+#.  You're ready to roll now, baby!
 
 Testing
 -------
 
-The BlueBottle test suite can be run completely using::
+The BlueBottle test suite can be run completely using:
 
-    $ python setup.py test
+    python setup.py test
+
+***Watching with Guard***
+
+The tests can be automatically run when changed using
+guard. To install and run do:
+
+    gem install bundler
+    bundle
+    bundle exec guard start
+
+Guard will run the whole test suite when starting, 
+run specific test files when they change, and run
+an apps test suite when the apps code changes.
 
 ***Frontend Javascript***
 
 From the root of the application (node/npm required):
 
-        npm install
-        grunt (or grunt test:chrome)
+    npm install
+    grunt
 
-This will install some npm & bower packages for dev & testing, and run the tests headless with PhantomJS using Karma. Karma is watching the test/ directory for changes.
+This will install some npm & bower packages for dev & testing, 
+and run the tests headless with PhantomJS using Karma. 
+Karma is watching the test/ directory for changes.
 
 
 Website developers

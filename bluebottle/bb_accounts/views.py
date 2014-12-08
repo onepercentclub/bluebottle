@@ -8,6 +8,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import ugettext_lazy as _
+from django.utils.importlib import import_module
 
 from registration import signals
 from registration.models import RegistrationProfile
@@ -15,8 +16,9 @@ from rest_framework import status, views, response, generics, viewsets
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
 from bluebottle.utils.serializers import DefaultSerializerMixin
-from rest_framework.permissions import IsAuthenticated
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
+from rest_framework.permissions import IsAuthenticated
 
 #this belongs now to onepercent should be here in bluebottle
 from .serializers import (
@@ -37,7 +39,14 @@ class UserSettingsDetail(generics.RetrieveUpdateAPIView):
 
 class CurrentUser(generics.RetrieveAPIView):
     model = BB_USER_MODEL
-    serializer_class = CurrentUserSerializer
+
+    def get_serializer_class(self):
+        dotted_path = self.model._meta.current_user_serializer
+        bits = dotted_path.split('.')
+        module_name = '.'.join(bits[:-1])
+        module = import_module(module_name)
+        cls_name = bits[-1]
+        return getattr(module, cls_name)
 
     def get_object(self, queryset=None):
         if isinstance(self.request.user, AnonymousUser):

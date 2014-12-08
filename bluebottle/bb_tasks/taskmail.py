@@ -3,158 +3,140 @@ from django.db.models.signals import post_save, pre_delete
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
-from django.template.loader import get_template, render_to_string
+from django.template.loader import render_to_string
 from django.template import Context
 from django.core.mail import EmailMultiAlternatives
 
-from bluebottle.utils.utils import get_task_model, get_taskmember_model
+from bluebottle.utils.model_dispatcher import get_taskmember_model
 
-TASK_MODEL = get_task_model()
 TASK_MEMBER_MODEL = get_taskmember_model()
+
+
+class TaskMemberMailSender:
+
+    """
+    The base class for Task Mail senders
+    """
+
+    def __init__(self, instance, *args, **kwargs):
+
+        self.task_member = instance
+        self.task = instance.task
+        self.task_link = '/go/tasks/{0}'.format(self.task.id)
+        self.site = 'https://' + Site.objects.get_current().domain
+        self.task_list = '/go/tasks'
+        self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
+
+    def send(self):
+
+        translation.activate(self.receiver.primary_language)
+        translation.deactivate()
+        text_content = render_to_string('{0}.txt'.format(self.template_mail), context_instance=self.ctx)
+        html_content = render_to_string('{0}.html'.format(self.template_mail), context_instance=self.ctx)
+        msg = EmailMultiAlternatives(subject=self.subject, body=text_content, to=[self.receiver.email])
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
+
+
+class TaskMemberAppliedMail(TaskMemberMailSender):
+
+    def __init__(self, instance, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+
+        self.template_mail = 'task_member_applied.mail'
+        self.receiver = self.task.author
+        self.subject = _('{0} applied for your task.'.format(self.task_member.member.get_short_name()))
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member, 'link': self.task_link,
+                            'site': self.site, 'motivation': self.task_member.motivation})
+
+
+class TaskMemberRejectMail(TaskMemberMailSender):
+
+    def __init__(self, instance, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+
+        self.template_mail = 'task_member_rejected.mail'
+        self.receiver = self.task_member.member
+        self.subject = _('{0}s found someone else to do the task you applied for.'.format(self.task.author.get_short_name()))
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
+                            'site': self.site, 'task_list': self.task_list})
+
+
+class TaskMemberAcceptedMail(TaskMemberMailSender):
+
+    def __init__(self, instance, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+
+        self.template_mail = 'task_member_accepted.mail'
+        self.receiver = self.task_member.member
+        self.subject = _('{0}s accepted you to complete the tasks you applied for.'.format(self.task.author.get_short_name()))
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
+                            'site': self.site})
+
+
+class TaskMemberRealizedMail(TaskMemberMailSender):
+
+    def __init__(self, instance, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+
+        self.template_mail = 'task_member_realized.mail'
+        self.receiver = self.task_member.member
+        self.subject = _('You realised your {0} task!'.format(self.task.project.title))
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
+                            'site': self.site, 'task_list': self.task_list,
+                            'project_link': self.project_link})
+
+
+class TaskMemberWithdrawMail(TaskMemberMailSender):
+
+    def __init__(self, instance, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+
+        self.template_mail = 'task_member_withdrew.mail'
+        self.receiver = self.task.author
+        self.subject = _('{0} is no longer available for the task').format(self.task_member.member.get_short_name())
+        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member,
+                            'link': self.task_link, 'site': self.site, 'task_list': self.task_list, 'project_link': self.project_link})
+
+
+class TaskMemberMailAdapter:
+    """
+    This class retrieve the correct TaskMemberMailSender instance based on the status and
+    allows to send task emails.
+    """
+
+    TASK_MEMBER_MAIL = {
+        TASK_MEMBER_MODEL.TaskMemberStatuses.applied: TaskMemberAppliedMail,
+        TASK_MEMBER_MODEL.TaskMemberStatuses.rejected: TaskMemberRejectMail,
+        TASK_MEMBER_MODEL.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
+        TASK_MEMBER_MODEL.TaskMemberStatuses.realized: TaskMemberRealizedMail,
+        'withdraw': TaskMemberWithdrawMail,
+    }
+
+    mail_sender = None
+
+    def __init__(self, instance, status=None):
+
+        if not status:
+            status = instance.status
+        # If a mailer is provided for the task status, set the mail_sender
+        if self.TASK_MEMBER_MAIL.get(status):
+            self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance)
+
+    def send_mail(self):
+        if self.mail_sender:
+            self.mail_sender.send()
 
 
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
 def new_reaction_notification(sender, instance, created, **kwargs):
-    task_member = instance
-    task = instance.task
 
-    site = 'https://' + Site.objects.get_current().domain
-
-    # Project Wall Post
-    if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.applied:
-        receiver = task.author
-        sender = task_member.member
-        link = '/#!/tasks/{0}'.format(task.id)
-
-        # Compose the mail
-        # Set the language for the receiver
-        translation.activate(receiver.primary_language)
-        subject = _('%(sender)s applied for your task.') % {'sender': sender.get_short_name()}
-        ctx = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
-                       'motivation': task_member.motivation})
-        text_content = render_to_string('task_member_applied.mail.txt', context_instance=ctx)
-        html_content = render_to_string('task_member_applied.mail.html', context_instance=ctx)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
-
-    if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.rejected:
-        sender = task.author
-        receiver = task_member.member
-        task_list = '/#!/tasks'
-        link = '/#!/tasks/{0}'.format(task.id)
-
-        # Compose the mail
-        # Set the language for the receiver
-        translation.activate(receiver.primary_language)
-        subject = _('%(sender)s found someone else to do the task you applied for.') % {'sender': sender.get_short_name()}
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
-                           'task_list': task_list})
-        text_content = get_template('task_member_rejected.mail.txt').render(context)
-        html_content = get_template('task_member_rejected.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
-
-    if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.accepted:
-        sender = task.author
-        receiver = task_member.member
-        link = '/#!/tasks/{0}'.format(task.id)
-
-        # Compose the mail
-        # Set the language for the receiver
-        translation.activate(receiver.primary_language)
-        subject = _('%(sender)s accepted you to complete the tasks you applied for.') % {'sender': sender.get_short_name()}
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
-        text_content = get_template('task_member_accepted.mail.txt').render(context)
-        html_content = get_template('task_member_accepted.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
-
-    if task_member.status == TASK_MEMBER_MODEL.TaskMemberStatuses.realized:
-        sender = task.author
-        receiver = task_member.member
-        link = '/#!/tasks/{0}'.format(task.id)
-        task_list = '/#!/tasks'
-        project_link = '/#!/projects/{0}'.format(task.project.slug)
-
-        # Compose the mail
-        # Set the language for the receiver
-        translation.activate(receiver.primary_language)
-        subject = _('You realised your Booking Cares task!')
-        context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
-                           'task_list':task_list, 'project_link':project_link})
-        text_content = get_template('task_member_realized.mail.txt').render(context)
-        html_content = get_template('task_member_realized.mail.html').render(context)
-        translation.deactivate()
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
+    mailer = TaskMemberMailAdapter(instance)
+    mailer.send_mail()
 
 
 @receiver(pre_delete, weak=False, sender=TASK_MEMBER_MODEL)
 def task_member_withdraw(sender, instance, **kwargs):
-    task_member = instance
-    task = instance.task
 
-    site = 'https://' + Site.objects.get_current().domain
-
-    receiver = task.author
-    sender = task_member.member
-    link = '/#!/tasks/{0}'.format(task.id)
-    task_list = '/#!/tasks'
-    project_link = '/#!/projects/{0}'.format(task.project.slug)
-
-    # Compose the mail
-    # Set the language for the receiver
-    translation.activate(receiver.primary_language)
-    subject = _('{name} is no longer available for the task').format(name=task_member.member.get_short_name())
-    context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site,
-                       'task_list':task_list, 'project_link':project_link})
-    text_content = get_template('task_member_withdrew.mail.txt').render(context)
-    html_content = get_template('task_member_withdrew.mail.html').render(context)
-    translation.deactivate()
-    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
-
-
-
-
-# @receiver(post_save, weak=False, sender=TASK_MODEL)
-# def send_mail_task_realized(sender, instance, created, **kwargs):
-#     """
-#     Send (multiple) e-mails when a task is realized.
-#     The task members that weren't rejected are the receivers.
-#     """
-#
-#     if not created and instance.status == 'realized':
-#         task = instance
-#         sender = task.author
-#         link = '/go/tasks/{0}'.format(task.id)
-#         site = 'https://' + Site.objects.get_current().domain
-#
-#         qs = task.members.all().exclude(status=TASK_MEMBER_MODEL.TaskMemberStatuses.rejected).select_related('member')
-#         receivers= [taskmember.member for taskmember in qs]
-#         emails = []
-#
-#         for receiver in receivers:
-#             translation.activate(receiver.primary_language)
-#             subject = _('Good job! "%(task)s" is realized!.') % {'task': task.title}
-#             context = Context({'task': task, 'receiver': receiver, 'sender': sender, 'link': link, 'site': site})
-#             text_content = get_template('task_realized.mail.txt').render(context)
-#             html_content = get_template('task_realized.mail.html').render(context)
-#             translation.deactivate()
-#             msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-#             msg.attach_alternative(html_content, "text/html")
-#             emails.append(msg)
-#
-#         if emails:
-#             connection = get_connection()
-#             connection.send_messages(emails)
-#             connection.close()
-
+    mailer = TaskMemberMailAdapter(instance, 'withdraw')
+    mailer.send_mail()

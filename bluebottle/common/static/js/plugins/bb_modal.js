@@ -20,9 +20,21 @@ BB.ModalControllerMixin = Em.Mixin.create({
 BB.ModalMixin = Em.Mixin.create({
     actions: {
         modalWillTransition: function(name, side, context) {
+            // If the side is not defined then use the current displayed side
+            if (! side || typeof side == 'undefined') {
+                // The higher index is for the visible side.
+                var frontIndex = parseInt($('#card .front').css('z-index')),
+                    backIndex = parseInt($('#card .back').css('z-index'));
+
+                side = frontIndex > backIndex ? 'modalFront' : 'modalBack';
+            }
+
+
             // Handle any cleanup for the previously set content for the modal
             var modalContainer = this.controllerFor('modalContainer'),
-                previousController = modalContainer.get('currentController');
+                previousController = modalContainer.get('currentController'),
+                oppositeSide = side == 'modalBack' ? 'modalFront' : 'modalBack',
+                _this = this;
 
             // Call willClose on the previous modal - if defined
             if (previousController && Em.typeOf(previousController.willClose) == 'function')
@@ -35,14 +47,30 @@ BB.ModalMixin = Em.Mixin.create({
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
 
-                // Call willOpen on the new modal - if defined
-                if (newController && Em.typeOf(newController.willOpen) == 'function')
-                    newController.willOpen();
+                if (newController.containerClass) {
+                     modalContainer.set('type', newController.containerClass);
+                } else {
+                    modalContainer.set('type', modalContainer.get('defaultType'));
+                }
 
                 // Setup the modal content and set the model if passed
                 if (Em.typeOf(context) != 'undefined')
                     newController.set('model', context);
 
+                // Call willOpen on the new modal - if defined
+                if (newController && Em.typeOf(newController.willOpen) == 'function')
+                    newController.willOpen();
+
+                // Unload a controller on the "other side" of the modal if its the same controller
+                // that would render the same template
+                if (modalContainer.get(oppositeSide + 'Controller') == newController) {
+                    _this.disconnectOutlet({
+                        outlet: oppositeSide,
+                        parentView: 'modalContainer'
+                    });
+                }
+
+                modalContainer.set(side + 'Controller', newController);
                 this.render(name, {
                     into: 'modalContainer',
                     outlet: side,
@@ -63,14 +91,20 @@ BB.ModalMixin = Em.Mixin.create({
             this.send('openInBox', name, context, 'large');
         },
 
+        openInDynamic: function(name, context) {
+            this.send('openInBox', name, context, 'donation');
+        },
+
         openInBox: function(name, context, type, callback) {
             // Setup the modal container
             var modalContainer = this.controllerFor('modalContainer');
 
-            if (Em.isEmpty(type))
+            if (Em.isEmpty(type)) {
                 modalContainer.set('type', 'normal');
-            else
+            } else {
                 modalContainer.set('type', type);
+                modalContainer.set('defaultType', type);
+            }
 
             this.render('modalContainer', {
                 into: 'application',
@@ -163,24 +197,31 @@ BB.ModalMixin = Em.Mixin.create({
             });
         },
 
-        modalFlip: function(name, context) {
+        modalContent: function (name, context) {
             var controller = this.controllerFor(name);
 
             if (Em.typeOf(context) != 'undefined')
-                controller.set('model', context);
+                controller.set('model', context);  
 
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack', context);
-
-            // add class flipped and reset default state
-            this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
+            this.send('modalWillTransition', name, null, context);
         },
 
-        modalFlipBack: function(name, context) {            
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront', context);
+        modalFlip: function (name, context) {
+            var controller = this.controllerFor(name);
 
-            $('#card').removeClass('flipped');
+            if (Em.typeOf(context) != 'undefined')
+                controller.set('model', context);            
+
+            if ($('#card').hasClass('flipped')) {
+                $('#card').removeClass('flipped');
+                modalSide = 'modalFront';
+            } else {
+                this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
+                modalSide = 'modalBack';
+            }
+
+            // Handle any cleanup for the previously set content for the modal
+            this.send('modalWillTransition', name, modalSide, context);
         },
 
         modalSlide: function (name, context) {
@@ -195,8 +236,7 @@ BB.ModalMixin = Em.Mixin.create({
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalBack', context);
             if ($('#card').hasClass('flipped')) {
-                $('#card').removeClass('flipped');
-                $('#card').addClass('flipped-alt');
+                $('#card').addClass('flipped');
             } else {
                 this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
             }
@@ -271,7 +311,10 @@ BB.ModalMixin = Em.Mixin.create({
 
 BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     currentController: null,
-    type: null
+    type: null,
+    defaultType: null,
+    modalFrontController: null,
+    modalBackController: null
 });
 
 BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
@@ -289,7 +332,7 @@ BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
 
     click: function(e) {
         var _this = this,
-            string = e.target.className.substring()
+            string = e.target.className.substring(),
             className = string.indexOf("is-active");
 
         if (className > 0) {

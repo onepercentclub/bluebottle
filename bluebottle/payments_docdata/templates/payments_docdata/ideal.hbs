@@ -1,0 +1,11 @@
+{% load bb_ember i18n static %}
+
+{% tplhandlebars "docdataIdeal" %}
+    <form>
+        <h6>{% trans 'Select your bank below'%}</h6>
+        {% blocktrans %} 
+            We'll redirect you through to iDeal where you can finish your donation securely.
+        {% endblocktrans %}
+        {{view App.DocdataIdealBankSelectView valueBinding='ideal_issuer_id' name='docDataiDealSelect'}}
+    </form>
+{% endtplhandlebars %}

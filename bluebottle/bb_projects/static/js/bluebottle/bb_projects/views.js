@@ -2,18 +2,6 @@ App.ProjectMembersView = Em.View.extend({
     templateName: 'project_members'
 });
 
-App.ProjectSupporterView = Em.View.extend({
-    templateName: 'project_supporter',
-    tagName: 'li',
-    didInsertElement: function(){
-        this.$('a').popover({trigger: 'hover', placement: 'top'});
-    }
-});
-
-App.ProjectSupporterListView = Em.View.extend({
-    templateName: 'project_supporter_list'
-});
-
 App.ProjectDonationView = Em.View.extend({
     templateName: 'project_donation'
 });
@@ -24,6 +12,10 @@ App.ProjectListView = Em.View.extend(App.ScrollInView, {
 
 App.ProjectPreviewView = Em.View.extend({
     templateName: 'project_preview'
+});
+
+App.ProjectPreviewListView = Em.View.extend({
+    templateName: 'project_preview_list'
 });
 
 App.ProjectSearchInput = Em.TextField.extend({
@@ -71,10 +63,6 @@ App.ProjectPlanView = Em.View.extend({
             event.preventDefault();
         }); 
     }
-});
-
-App.ProjectIndexView = Em.View.extend({
-    templateName: 'project_wall'
 });
 
 /* Form Elements */
@@ -165,6 +153,12 @@ App.MyProjectMediaView = Em.View.extend({
 
 App.MyProjectOrganisationView = Em.View.extend({
     templateName: 'my_project_organisation',
+
+    actions: {
+        addFile: function (file) {
+            this.get('controller').send('addFile', file);
+        }
+    },
 
     focusNameField: function () {
         // If there is already a focused element then don't 

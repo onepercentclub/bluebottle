@@ -1,11 +1,7 @@
 import factory
 
-from bluebottle.utils.utils import get_project_model
-from bluebottle.bb_projects.models import (
-    #ProjectDetailField,
-    #ProjectBudgetLine,
-    ProjectTheme,
-    ProjectPhase)
+from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory

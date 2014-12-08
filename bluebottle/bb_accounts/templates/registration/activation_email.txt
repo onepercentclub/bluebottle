@@ -1,0 +1,19 @@
+{% extends "base.mail.txt" %}
+
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+    {% trans "Override registration/activation_email.html to create your own activation mail template." %}
+    <br/>
+    {% trans "Confirm your registration" %}
+    <br/>
+    {% trans "You're almost done!" %}
+    <br/>
+    {% trans "Click the link below to confirm your registration" %}.
+    <br/>
+    {{ site }}/{{ LANGUAGE_CODE }}/#!/activate/{{ activation_key }}
+    <br/>
+    {% blocktrans %}Your activation code will expire in {{ expiration_days }} days.{% endblocktrans %}
+{% endblock %}
+

@@ -325,11 +325,10 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
 });
 
 
-App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
-    url: 'users/passwordset',
-
-    new_password1: DS.attr('string'),
-    new_password2: DS.attr('string'),
+App.PasswordReset = Em.Object.extend({
+    id: null,
+    new_password1: null,
+    new_password2: null,
 
     validPassword: function () {
         return this.get('new_password1.length') >= Em.get(App, 'settings.minPasswordLength');
@@ -340,11 +339,9 @@ App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
             return false;
         }
         return !Em.compare(this.get('new_password1'), this.get('new_password2'));
-    }.property('new_password1', 'new_password2'),
-
-
-
+    }.property('new_password1', 'new_password2')
 });
+
 
 App.UserLogin = Em.Object.extend({
     matchId: null,

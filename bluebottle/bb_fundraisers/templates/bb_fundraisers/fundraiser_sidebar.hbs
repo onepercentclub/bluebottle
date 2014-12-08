@@ -1,0 +1,14 @@
+{% load i18n bb_ember static %}
+
+{% tplhandlebars "fundraiser_sidebar" %}
+
+    <sidebar class="l-sidebar">
+
+        <h2>{% trans "Fundraising for project" %}</h2>
+        <p>{% trans "You'll be fundraising for this project" %}</p>
+
+        {{render "projectPreview" project}}
+
+    </sidebar>
+
+{% endtplhandlebars %}

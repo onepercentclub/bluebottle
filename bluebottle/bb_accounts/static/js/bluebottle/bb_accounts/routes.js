@@ -74,55 +74,6 @@ App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, App.TrackRo
 
 });
 
-// TODO: separate this
-App.UserOrdersRoute = Em.Route.extend({
-    model: function(params) {
-        return App.RecurringDirectDebitPayment.find({}).then(function(recurringPayments) {
-            if (recurringPayments.get('length') > 0) {
-                return recurringPayments.objectAt(0);
-            }else {
-                return null;
-            }
-        });
-    },
-
-    setupController: function(controller, recurringPayment) {
-        if (!Em.isNone(recurringPayment)) {
-            this._super(controller, recurringPayment);
-            controller.startEditing();
-        } else {
-            // Ember doesn't let you add other things to the controller when a record hasn't been set.
-            this._super(controller, App.RecurringDirectDebitPayment.createRecord({fakeRecord: true}));
-        }
-
-        // Set the monthly order.
-        App.Order.find({status: 'recurring'}).then(function(recurringOrders) {
-            if (recurringOrders.get('length') > 0) {
-                controller.set('recurringOrder', recurringOrders.objectAt(0))
-            } else {
-                controller.set('recurringOrder', null)
-            }
-        });
-
-        // Set the closed orders.
-        App.Order.find({status: 'closed'}).then(function(closedOrders) {
-            controller.set('closedOrders', closedOrders);
-        });
-    },
-
-    deactivate: function() {
-        this.controllerFor('userOrders').stopEditing();
-    },
-
-    actions: {
-        viewRecurringOrder: function() {
-            var controller = this.controllerFor('currentOrder');
-            controller.set('donationType', 'monthly');
-            this.transitionTo('currentOrder.donationList')
-        }
-    }
-});
-
 App.PasswordRequestRoute = Em.Route.extend({
     renderTemplate: function() {
         this.render('home');
@@ -141,30 +92,28 @@ App.PasswordResetRoute = Em.Route.extend({
     },
 
     model: function(params) {
-        var record = App.PasswordReset.createRecord({
+        return App.PasswordReset.create({
             id: params.reset_token
         });
-        // Need this so that the adapter makes a PUT instead of POST
-        record.transitionTo('loaded.saved');
-        return record
     },
 
     beforeModel: function(transition) {
-
         return Ember.RSVP.Promise(function (resolve, reject) {
             var hash = {
                 url: '/api/users/passwordset/' + transition.params.reset_token,
                 type: 'get',
                 contentType: 'application/json; charset=utf-8'
-                };
+            };
+            
             hash.success = function(response) {
                 Ember.run(null, resolve, null)
             };
+
             hash.error = function(response) {
                 Ember.run(null, reject, JSON.parse(response.responseText));
             };
-            Ember.$.ajax(hash);
 
+            Ember.$.ajax(hash);
         })
     },
     actions: {

@@ -1,9 +1,10 @@
+from bluebottle.test.utils import BluebottleTestCase
 from django.test import TestCase
 from django.utils import timezone
 
 from rest_framework import status
 
-from bluebottle.utils.utils import get_project_model, get_task_model
+from bluebottle.utils.model_dispatcher import get_task_model, get_project_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
@@ -15,10 +16,11 @@ BB_TASK_MODEL = get_task_model()
 BB_PROJECT_MODEL = get_project_model()
 
 
-class TaskApiIntegrationTests(TestCase):
+class TaskApiIntegrationTests(BluebottleTestCase):
     """ Tests for tasks. """
 
     def setUp(self):
+        super(TaskApiIntegrationTests, self).setUp()
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 

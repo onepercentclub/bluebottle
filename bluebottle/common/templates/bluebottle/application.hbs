@@ -15,9 +15,7 @@
                 <!-- logo -->
                 <div id="logo">
                     {% block_verbatim nav_logo %}
-                        {{#link-to 'home' class="logo-link"}}
-                            <object type="image/svg+xml" data="{% static "images/img/1procentclub.svg" %}" class="logo-image"></object>
-                        {{/link-to}}
+                        {{partial "main_logo"}}
                     {% endblock_verbatim %}
                 </div>
                 <!-- end: logo -->

@@ -5,9 +5,7 @@ App.Router.map(function(){
 
     // route disabled for now, let the backend handle the hours spent
     // this.resource('myTaskList', {path: '/my/tasks'});
-    this.resource('task', {path: '/tasks/:task_id'}, function(){
-
-    });
+    this.resource('task', {path: '/tasks/:task_id'});
     this.resource('taskEdit', {path: '/tasks/:task_id/edit'});
     this.resource('projectTask', {path: '/:task_id'}, function(){});
     this.resource('taskNew', {path: '/tasks/new/:project_id'});
@@ -38,7 +36,9 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
 });
 
 
-App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
+App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+
+    parentType: 'task',
 
     model: function(params) {
         return App.Task.find(params.task_id);
@@ -52,11 +52,16 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 
     actions: {
         applyForTask: function() {
-            var route = this;
-            var store = route.get('store');
-            var taskMember = store.createRecord(App.TaskMember);
-            var task = this.modelFor('task');
-            var view = App.TaskMemberApplyView.create();
+            if (! this.get('currentUser.username')) {
+                this.send('openInBox', 'login');
+                return;
+            }
+
+            var route = this,
+                store = route.get('store'),
+                taskMember = store.createRecord(App.TaskMember),
+                task = this.modelFor('task'),
+                view = App.TaskMemberApplyView.create();
 
 			if (!this.controllerFor('task').get('isMember')){
 				Bootstrap.ModalPane.popup({
@@ -160,18 +165,20 @@ App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.Tra
 });
 
 
-App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
-    parentId: function(){
-        return this.modelFor('task').get('id');
-    }.property(),
-    parentType: 'task'
-});
-
-
 App.TaskNewRoute = Em.Route.extend({
+    beforeModel: function (transition) {
+        var _this = this,
+            projectId = transition.params.project_id;
+
+        return App.Project.find(projectId).then(function (project) {
+            _this.set('project', project);
+        });
+    },
+
     model: function(params){
         var task = this.get('store').createRecord(App.Task);
-        task.set('project', App.Project.find(params.project_id));
+        task.set('project', this.get('project'));
+
         return task;
     }
 });

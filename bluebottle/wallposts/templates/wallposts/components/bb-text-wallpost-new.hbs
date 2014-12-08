@@ -1,0 +1,27 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "components/bb-text-wallpost-new" %}
+    <div class="wallpost-update">
+        <header class="wallpost-update-header">
+            <strong class="wallpost-update-title">{% trans "Write a comment" %}</strong>
+        </header>
+        <div class="wallpost-update-form">
+            {{#if wallpost.errors.text }}
+                <div class="errors">{{#each wallpost.errors.text }}<p class="error">{{this}}</p>{{/each}}</div>
+            {{/if}}
+
+            {{view Ember.TextArea valueBinding="wallpost.text" name="wallpost-update" class="wallpost-update-post"
+                classBinding="wallpost.errors.text.length:error" placeholderBinding="translatables.leaveCommentText"}}
+
+        </div>
+        <footer class="wallpost-update-footer">
+            <div class="wallpost-update-actions">
+                <button class="button action-cancel" {{action 'clearForm' target='view'}}>{% trans "Cancel" %}</button>
+                <button class="button action-submit" {{action 'saveWallpost'}}>{% trans "Post" %}</button>
+            </div>
+        </footer>
+    </div>
+{% endtplhandlebars %}

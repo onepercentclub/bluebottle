@@ -8,7 +8,9 @@ def installed_apps_context_processor(request):
     for app in settings.INSTALLED_APPS:
         if app[:11] == 'bluebottle.':
             # Ignore some standard apps
-            if app[11:] not in ['common', 'admin_dashboard', 'contentplugins', 'auth']:
+            if app[11:] not in ['common', 'admin_dashboard', 'contentplugins', 'auth', 'redirects',
+                                'donations', 'orders', 'fundraisers', 'tasks', 'bb_payouts', 'payouts',
+                                'payments_logger', 'widget']:
                 bb_apps.append(app[11:])
     context = {
         'installed_apps': settings.INSTALLED_APPS,
@@ -99,4 +101,4 @@ def mixpanel_settings(request):
         context = {'MIXPANEL': settings.MIXPANEL}
     except AttributeError:
         context = {}
-    return context
+    return context;

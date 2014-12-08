@@ -20,7 +20,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         kwargs['read_only'] = True
         super(UserPreviewSerializer, self).__init__(*args, **kwargs)
 
-    avatar = SorlImageField('picture', '133x133', crop='center', colorspace="GRAY")
+    avatar = SorlImageField('picture', '133x133', crop='center')
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)

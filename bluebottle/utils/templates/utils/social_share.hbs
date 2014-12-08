@@ -5,11 +5,16 @@
 
 {% tplhandlebars "social_share" %}
 
-    <ul id="share">
-        <li class="share-facebook"><a {{action shareOnFacebook target="view"}}><span class="flaticon social facebook-4"></span> <strong>{% trans "Share" %}</strong></a></li>
-        <li class="share-twitter"><a {{action shareOnTwitter target="view"}}><span class="flaticon social twitter-4"></span> <strong>{% trans "Tweet" %}</strong></a></li>
+    <ul class="share-action">
+        <li class="actions-dropdown"><strong>{% trans 'Share this campaign'%}</strong>
+            <ul>
+                <li><a {{action shareOnFacebook target="view"}} class="action-facebook">{% trans "Share on Facebook" %}</a></li>
+                <li><a {{action shareOnTwitter target="view"}} class="action-twitter">{% trans "Share on Twitter" %}</a></li>
+                {{!-- <li><a {{action shareLinkedIn target="view"}} class="action-linkedin">{% trans 'Share on Linkedin'%}</a></li>
+                <li><a {{action shareEmbedded target="view"}} class="action-embed">{% trans 'Embed on your site'%}</a></li>
+                <li><a {{action copyLink target="view"}} class="action-copy">{% trans 'Copy link'%}</a></li> --}}
+            </ul>
+        </li>
     </ul>
 
 {% endtplhandlebars %}
-
-

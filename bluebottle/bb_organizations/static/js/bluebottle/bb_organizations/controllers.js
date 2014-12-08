@@ -31,9 +31,9 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
         }
     }.property('hasSelectableOrganizations'),
 
-    isPhasePlanNew: function () {
-        return this.get('controllers.myProject.model.isPhasePlanNew');
-    }.property('controllers.myProject.model.isPhasePlanNew'),
+    isStatusPlanNew: function () {
+        return this.get('controllers.myProject.model.isStatusPlanNew');
+    }.property('controllers.myProject.model.isStatusPlanNew'),
 
     canSave: function () {
         var name = this.get('model.name');
@@ -57,6 +57,21 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
     }.observes('selectedOrganization'),
 
     actions: {
+        addFile: function(file) {
+            debugger
+            var store = this.get('store');
+            var doc = store.createRecord(App.MyOrganizationDocument);
+            doc.set('file', file);
+            var organization = this.get('model');
+            // If the organization is already saved we can save the doc right away
+            if (organization.get('id')) {
+                doc.set('organization', organization);
+                doc.save();
+            } else {
+                this.get('tempDocuments').addObject(doc);
+            }
+        },
+
         setFirstSelectableOrganization: function () {
             this.set('selectedOrganization', this.get('firstSelectableOrganization'));
         },
@@ -121,20 +136,6 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
                 reject(gettext('Hey! What are you doing here? Saving model failed.'));
             }, 10 * 1000);
         });
-    },
-
-    addFile: function(file) {
-        var store = this.get('store');
-        var doc = store.createRecord(App.MyOrganizationDocument);
-        doc.set('file', file);
-        var organization = this.get('model');
-        // If the organization is already saved we can save the doc right away
-        if (organization.get('id')) {
-            doc.set('organization', organization);
-            doc.save();
-        } else {
-            this.get('tempDocuments').addObject(doc);
-        }
     }
 });
 
@@ -156,9 +157,9 @@ App.MyProjectBankController = App.StandardTabController.extend({
     previousStep: "myProject.organisation",
     nextStep: 'myProject.submit',
 
-    isPhasePlanNew: function () {
-        return this.get('controllers.myProject.model.isPhasePlanNew');
-    }.property('controllers.myProject.model.isPhasePlanNew'),
+    isStatusPlanNew: function () {
+        return this.get('controllers.myProject.model.isStatusPlanNew');
+    }.property('controllers.myProject.model.isStatusPlanNew'),
 
 	setInEurope: function () {
 		if (this.get('model.validEuropeanBankOrganization')){

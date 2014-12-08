@@ -73,7 +73,7 @@ class LocaleMiddleware(object):
         """ Store the language """
         if self.enable_middleware():
             lang_code = translation.get_language()
-            
+
             if hasattr(request, 'session'):
                 """ Set the language in the session if it has changed """
                 if (request.session.get('django_language', False) and 

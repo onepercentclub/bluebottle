@@ -21,10 +21,16 @@ class PaymentStatusUpdateView(View):
     def get(self, request, **kwargs):
         merchant_order_id = kwargs['merchant_order_id']
         try:
+            # Try to load new style OrderPayment
             order_payment_id = merchant_order_id.split('-')[0]
             order_payment = OrderPayment.objects.get(pk=order_payment_id)
         except OrderPayment.DoesNotExist:
-            raise Exception("Couldn't find OrderPayment with pk: {0}".format(order_payment_id))
+            # Try to load old style DocdataPayment.
+            try:
+                payment = DocdataPayment.objects.get(merchant_order_id=merchant_order_id)
+                order_payment = payment.order_payment
+            except DocdataPayment.DoesNotExist:
+                raise Exception("Couldn't find Payment for merchant_order_id: {0}".format(merchant_order_id))
 
         service = PaymentService(order_payment)
         service.check_payment_status()

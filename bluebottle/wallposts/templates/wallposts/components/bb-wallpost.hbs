@@ -11,9 +11,7 @@
                 <img {{bindAttr src="wallpost.author.getAvatar" alt="wallpost.author.full_name"}} />
             </figure>
 
-            <a {{action "showProfile" wallpost.author}} class="user-name">
-                <strong>{{wallpost.author.full_name}}</strong>
-            </a>
+            <a {{action "showProfile" wallpost.author}} class="user-name"><strong>{{wallpost.author.full_name}}</strong></a>
 
             <abbr class="timestamp">{{ localize wallpost.created formatting="X" }}</abbr>
 

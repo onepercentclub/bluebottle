@@ -60,7 +60,9 @@ class BaseOrganizationDocument(models.Model):
 
     @property
     def document_url(self):
-        content_type = ContentType.objects.get_for_model(settings.ORGANIZATIONS_DOCUMENT_MODEL).id
+        from bluebottle.utils.model_dispatcher import get_organizationdocument_model
+        document_model = get_organizationdocument_model()
+        content_type = ContentType.objects.get_for_model(document_model).id
         return reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': self.pk})
 
 

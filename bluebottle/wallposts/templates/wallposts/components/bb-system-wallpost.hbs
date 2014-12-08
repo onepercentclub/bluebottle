@@ -19,9 +19,7 @@
 
             
             {{#if wallpost.author}}
-                <a {{action "showProfile" wallpost.author}} class="user-name">
-                    <strong>{{wallpost.author.full_name}}</strong>
-                </a> {% trans "made a donation" %}
+                <a {{action "showProfile" wallpost.author}} class="user-name"><strong>{{wallpost.author.full_name}}</strong></a>&nbsp;{% trans "made a donation" %}
             {{else}}
             <strong>{% trans "Guest" %}</strong> {% trans "made a donation" %}
             {{/if}}

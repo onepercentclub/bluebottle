@@ -16,15 +16,15 @@
                     {{/link-to}}
                 </div>
                 <h1 class="project-title">{{title}}</h1>
-                <p class="project-description">
+                <div class="project-description">
                     {{#if description}}
-                        {{linebreaks description}}
+                        <p>{{description}}</p>
                     {{/if}}
 
                     {{#if end_goal}}
-                        <br/><strong>{% trans "Goal" %}:</strong> {{linebreaks end_goal}}
+                        <p><strong>{% trans "Goal" %}:</strong> {{end_goal}}</p>
                     {{/if}}
-                </p>
+                </div>
                 <a class="project-more read-more">{% trans "Read more" %}</a>
             </article>
             <aside class="project-media">

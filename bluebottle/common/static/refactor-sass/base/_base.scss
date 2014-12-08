@@ -125,13 +125,15 @@ button, .button {
 
         &:hover {
             top: 0;
+            margin-bottom: -2px;
             box-shadow: 0 -4px 0 0 $color-pri-shadow inset;
             padding-bottom: calc(.6em + 4px);
         }
 
         &:active {
             top: 4px;
-            padding-top: calc(.5em + 1px);
+            padding-top: calc(.5em + 2px);
+            margin-bottom: 2px;
             padding-bottom: .6em;
             box-shadow: 0 1px 0 0 $color-real-black inset;
         }
@@ -206,7 +208,7 @@ button, .button {
 
         &:hover {
 
-            em {
+            strong {
                 @include border-top-radius($radius-large);
                 border-color: $color-grey-medium;
                 background-color: $color-real-white;

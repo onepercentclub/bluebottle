@@ -5,6 +5,10 @@
 
     a {
         text-decoration: none;
+
+        &:hover, &:active {
+            text-decoration: underline;
+        }
     }
 
     .user-avatar {
@@ -88,6 +92,10 @@
         p:last-of-type {
             margin-bottom: 0;
         }
+
+        .video {
+            margin-bottom: 0;
+        }
     }
 }
 
@@ -100,6 +108,7 @@
     }
 
     .user-name {
+
         font-size: 15px;
         display: inline;
         line-height: 1.7em;
@@ -118,6 +127,7 @@
     .user-avatar {
         position: relative;
         left: -2px;
+        margin-right: 13px;
 
         img {
             width: 25px;
@@ -163,7 +173,7 @@
     line-height: 1.5em;
     margin: 0 0 30px 0;
     color: $color-text;
-    padding: 0; // TODO: change global list
+    padding: 0 0 20px 0; // TODO: change global list
     border: 1px solid $color-grey-medium;
     border-radius: $radius-medium;
     background-color: $color-grey-lightest;
@@ -186,7 +196,7 @@
     .comment-body {
         @include break-all-words;
         overflow: hidden;
-        padding: 0 20px 20px 0;
+        padding: 0 20px 3px 0;
 
         &:first-letter {
             text-transform: uppercase;
@@ -194,7 +204,6 @@
     }
 
     .user-avatar {
-        
         img {
             width: 50px;
             height: 50px;
@@ -248,7 +257,7 @@
         height: calc(1.5em + 20px);
         margin: 0;
         padding: 0;
-        padding: 10px 20px 10px 50px;
+        padding: 10px 20px 10px 58px;
         border: none;
         box-shadow: none;
         @include svg-icon('wallposts/icon-comment-write.svg');

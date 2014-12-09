@@ -96,12 +96,13 @@ App.OrderRoute = Em.Route.extend({
             //        open then either close / re-open, or handle a transition.
             var defer = Ember.RSVP.defer(),
                 _this = this;
-            this.send('closeModal', defer);
 
             // Redirect to the order route.
             defer.promise.then(function() {
                 _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
             });
+
+            this.send('closeModal', defer);
         }
     },
 

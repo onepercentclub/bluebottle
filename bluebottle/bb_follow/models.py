@@ -28,6 +28,16 @@ class Follow(models.Model):
             return str(self.followed_object)
         return self.id
 
+    def validate_unique(self, exclude=None):
+        qs = Follow.objects.filter(user=self.user, content_type=self.content_type, object_id=self.object_id)
+        if qs.count() > 0:
+            return False
+        return True
+
+    def save(self, *args, **kwargs):
+        if self.validate_unique():
+            super(Follow, self).save(*args, **kwargs)
+
 
 @receiver(post_save)
 def create_follow(sender, instance, created, **kwargs):

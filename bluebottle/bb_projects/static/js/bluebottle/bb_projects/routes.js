@@ -58,26 +58,18 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
         // FIXME: Find out this -should- work.
         var project_id = params.project_id.split('?')[0];
 
-        var _this = this;
-
-        var promise = App.Project.find(project_id);
-
-        promise.then(function(model) {
-            if (_this.get('tracker')) {
-                _this.get('tracker').trackEvent("Project detail", {"title": model.get('title')});
-            }
-        }, function() {
-            _this.transitionTo('projectList');
-        });
-
-        return promise;
+        var page =  App.Project.find(project_id);
+        var route = this;
+        return page;
     },
+
     setupController: function(controller, model){
         this._super(controller, model);
 
         var parentId = model.get('id');
         controller.set('tasks', App.Task.find({project: parentId}));
     },
+
     afterModel: function(model, transition) {
         if (model.get('isStatusPlan')) {
             this.transitionTo('projectList');

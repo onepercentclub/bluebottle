@@ -135,7 +135,7 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     from bluebottle.utils.model_dispatcher import get_taskmember_model
     TASK_MEMBER_MODEL = get_taskmember_model()
     
-    if isinstance(instance, TASK_MEMBER_MODEL):
+    if isinstance(sender, TASK_MEMBER_MODEL):
         mailer = TaskMemberMailAdapter(instance)
         mailer.send_mail()
 
@@ -145,6 +145,6 @@ def task_member_withdraw(sender, instance, **kwargs):
     from bluebottle.utils.model_dispatcher import get_taskmember_model
     TASK_MEMBER_MODEL = get_taskmember_model()
 
-    if isinstance(instance, TASK_MEMBER_MODEL):
+    if isinstance(sender, TASK_MEMBER_MODEL):
         mailer = TaskMemberMailAdapter(instance, 'withdraw')
         mailer.send_mail()

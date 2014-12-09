@@ -81,6 +81,8 @@ App.OrderRoute = Em.Route.extend({
         // If the donation is anonymous or there is no current user
         // then only show the thank you toast.
         if (donation.get('anonymous') || !this.get('currentUser.isAuthenticated')) {
+            this.send('closeModal');
+            
             if (donation.get('fundraiser')) {
                 flashMessage = gettext("Thank you for supporting this fundraiser");
             } else {

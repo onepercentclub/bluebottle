@@ -36,8 +36,6 @@ import logging
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from bluebottle.utils.model_dispatcher import get_project_model, get_task_model
 from bluebottle.wallposts.models import Reaction, TextWallPost
 from bluebottle.wallposts.notifiers import ObserversContainer
 
@@ -50,8 +48,6 @@ from bluebottle.wallposts.notifiers import ObserversContainer
 # vouchers.voucher: 'order' has a relation with model fund.Order, which has either not been installed or is abstract.
 # cowry.payment: 'order' has a relation with model fund.Order, which has either not been installed or is abstract.
 # ===========
-TASK_MODEL = get_task_model()
-PROJECT_MODEL = get_project_model()
 
 
 logger = logging.getLogger(__name__)

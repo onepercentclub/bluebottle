@@ -7,10 +7,6 @@ from django.template.loader import render_to_string
 from django.template import Context
 from django.core.mail import EmailMultiAlternatives
 
-from bluebottle.utils.model_dispatcher import get_taskmember_model
-
-TASK_MEMBER_MODEL = get_taskmember_model()
-
 
 class TaskMemberMailSender:
 
@@ -105,17 +101,23 @@ class TaskMemberMailAdapter:
     allows to send task emails.
     """
 
-    TASK_MEMBER_MAIL = {
-        TASK_MEMBER_MODEL.TaskMemberStatuses.applied: TaskMemberAppliedMail,
-        TASK_MEMBER_MODEL.TaskMemberStatuses.rejected: TaskMemberRejectMail,
-        TASK_MEMBER_MODEL.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
-        TASK_MEMBER_MODEL.TaskMemberStatuses.realized: TaskMemberRealizedMail,
-        'withdraw': TaskMemberWithdrawMail,
-    }
+
+    
 
     mail_sender = None
 
     def __init__(self, instance, status=None):
+        from bluebottle.utils.model_dispatcher import get_taskmember_model
+
+        self.TASK_MEMBER_MODEL = get_taskmember_model()
+
+        self.TASK_MEMBER_MAIL = {
+            self.TASK_MEMBER_MODEL.TaskMemberStatuses.applied: TaskMemberAppliedMail,
+            self.TASK_MEMBER_MODEL.TaskMemberStatuses.rejected: TaskMemberRejectMail,
+            self.TASK_MEMBER_MODEL.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
+            self.TASK_MEMBER_MODEL.TaskMemberStatuses.realized: TaskMemberRealizedMail,
+            'withdraw': TaskMemberWithdrawMail,
+        }
 
         if not status:
             status = instance.status
@@ -128,15 +130,21 @@ class TaskMemberMailAdapter:
             self.mail_sender.send()
 
 
-@receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
+@receiver(post_save)
 def new_reaction_notification(sender, instance, created, **kwargs):
+    from bluebottle.utils.model_dispatcher import get_taskmember_model
+    TASK_MEMBER_MODEL = get_taskmember_model()
+    
+    if isinstance(instance, TASK_MEMBER_MODEL):
+        mailer = TaskMemberMailAdapter(instance)
+        mailer.send_mail()
 
-    mailer = TaskMemberMailAdapter(instance)
-    mailer.send_mail()
 
-
-@receiver(pre_delete, weak=False, sender=TASK_MEMBER_MODEL)
+@receiver(pre_delete)
 def task_member_withdraw(sender, instance, **kwargs):
+    from bluebottle.utils.model_dispatcher import get_taskmember_model
+    TASK_MEMBER_MODEL = get_taskmember_model()
 
-    mailer = TaskMemberMailAdapter(instance, 'withdraw')
-    mailer.send_mail()
+    if isinstance(instance, TASK_MEMBER_MODEL):
+        mailer = TaskMemberMailAdapter(instance, 'withdraw')
+        mailer.send_mail()

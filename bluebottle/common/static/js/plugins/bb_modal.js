@@ -145,20 +145,25 @@ BB.ModalMixin = Em.Mixin.create({
             };
         },
         
-        closeModal: function() {
+        // closeModal accepts an Ember.RSVP.defer() as an argument. This
+        // will be resolved once the modal has actually been closed, eg
+        // the outlets have been disconnected.
+        closeModal: function(defer) {
             var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
                 _this = this;
 
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition');
-
+            
             if ($.browser.msie && parseInt($.browser.version) < 10){
                 this.send('disconnectContainerOutlet');
+                if (typeof defer != 'undefined') defer.resolve();
             }
 
             $('.modal-fullscreen-background').one(animationEnd, function(){
                 // Finally clear the outlet
                 _this.send('disconnectContainerOutlet');
+                if (typeof defer != 'undefined') defer.resolve();
             });
 
             this.send('scrollEnable');

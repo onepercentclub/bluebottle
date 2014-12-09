@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
 from bluebottle.mail import send_mail
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_model, get_donation_model
 from bluebottle.bb_projects.models import BaseProject
@@ -28,6 +29,16 @@ class Follow(models.Model):
             return str(self.followed_object)
         return self.id
 
+    def validate_unique(self, exclude=None):
+        qs = Follow.objects.filter(user=self.user, content_type=self.content_type, object_id=self.object_id)
+        if qs.count() > 0:
+            return False
+        return True
+
+    def save(self, *args, **kwargs):
+        if self.validate_unique():
+            super(Follow, self).save(*args, **kwargs)
+
 
 @receiver(post_save)
 def create_follow(sender, instance, created, **kwargs):
@@ -46,6 +57,7 @@ def create_follow(sender, instance, created, **kwargs):
 
     """
     from bluebottle.wallposts.models import WallPost, Reaction # Imported inside the signal to prevent circular imports
+
 
     # A WallPost is created by user
     if created and isinstance(instance, WallPost):

@@ -237,10 +237,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
-    @property
-    def full_name(self):
-        return self.get_full_name()
-
     def get_jwt_token(self):
         payload = utils.jwt_payload_handler(self)
         token = utils.jwt_encode_handler(payload)

@@ -68,35 +68,17 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
         }
     },
 
-    actions: {
-        error: function(error, transition) {
-            this.transitionTo('projectList');
-        }
-    }
-});
-
-        var _this = this;
-
-        // FIXME: This isn't the way we should this. In the ProjectIndexRoute we use a App.WallRouteMixin, that
-        // uses parent stuff that refers to this controller. However, it calls the parent directly and doesn't
-        // handle the promise before the model is loaded. We should refactor the App.WallRouteMixin at some point.
-        var promise = App.Project.find(project_id);
-
-        promise.then(function(model) {
-            if (_this.get('tracker')) {
-                _this.get('tracker').trackEvent("Project detail", {"title": model.get('title')});
-            }
-        }, function() {
-            _this.transitionTo('projectList');
-        });
-
-        return promise;
-    },
     setupController: function(controller, model){
         this._super(controller, model);
 
         var parentId = model.get('id');
         controller.set('tasks', App.Task.find({project: parentId}));
+    },
+
+    actions: {
+        error: function(error, transition) {
+            this.transitionTo('projectList');
+        }
     }
 });
 

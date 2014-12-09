@@ -88,7 +88,20 @@ App.OrderRoute = Em.Route.extend({
             }
             this.send('setFlash', flashMessage);
         } else {
-            this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+            // Call closeModal as one might be open. We need to 
+            // wait for a defer to resolve so we are sure the modal has closed
+            // before we try to open another one.
+            // FIXME: This needs to be handled in bb_modal library, eg if the 
+            //        action to open a new modal is called and one is already
+            //        open then either close / re-open, or handle a transition.
+            var defer = Ember.RSVP.defer(),
+                _this = this;
+            this.send('closeModal', defer);
+
+            // Redirect to the order route.
+            defer.promise.then(function() {
+                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+            });
         }
     },
 

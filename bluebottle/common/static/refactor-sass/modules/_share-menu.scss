@@ -12,10 +12,7 @@
         background-image: none;
     }
     
-    ul {
-        display: none;
-    }
-
+   
     .actions-dropdown {
         @include border-top-radius($radius-large);
         display: inline-block;
@@ -26,6 +23,13 @@
         color: $color-text-on-dark;
         @include svg-icon('share/icon-share.svg', #F8F7F8, $color-white);
         background-position: 10px 12px;
+        @include transition(all .05s ease-out);
+
+        ul {
+            max-height: 0;
+            overflow: hidden;
+            @include transition(max-height 0.05s ease-out);
+        }
 
         strong {
             display: inline-block;
@@ -46,8 +50,9 @@
             }
 
             ul {
-                display: block;
-                //@include animation(fadeIn .2s ease-in-out);
+                max-height: 100px;
+                border-top: 1px solid $color-white;
+                @include transition(max-height 0.2s ease-out);
             }
         }
     }
@@ -59,7 +64,7 @@
         position: absolute;
         z-index: 200;
         background-color: $color-real-white;
-        border-top: 1px solid $color-white;
+        
         @include border-bottom-radius($radius-large);
         font-size: 13px;
 

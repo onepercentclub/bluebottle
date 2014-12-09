@@ -43,7 +43,7 @@
 
 #project-detail-header {
     position: relative;
-    min-height: 670px;
+    //min-height: 670px;
     color: $color-text-on-dark;
     top: -96px; // header height
     padding-top: 96px; // header height
@@ -65,7 +65,7 @@
             background-repeat: no-repeat;
             background-size: cover;
             background-position: 50% 50%;
-            @include filter(blur(8px));
+            @include filter(blur(25px));
             @include opacity(.4);
             @include transform(scale(1.05));
         }
@@ -97,7 +97,7 @@
                         background-color: $color-sec;
                         color: $color-white;
                         text-transform: uppercase;
-                        padding: 0 2px 0 10px;
+                        padding: 1px 5px 0 10px;
                         @include border-left-radius($radius-medium);
                         font-size: 13px;
                         height: 26px;
@@ -127,7 +127,7 @@
 
                     &:hover {
 
-                        .project-status {
+                        .project-linked {
                             background-color: $color-pri;
 
                             &:after {
@@ -175,7 +175,6 @@
             .project-description {
                 position: relative;
                 overflow: hidden;
-                //white-space: nowrap;
                 text-overflow: ellipsis;
                 max-height: 102px;
                 line-height: 1.5em;
@@ -185,15 +184,12 @@
                 @include transition(all .2s);
 
                 &.is-active {
-                    max-height: 310px;
+                    max-height: 350px;
                     display: block;
                 }
             }
 
             .project-more {
-                position: relative;
-                bottom: 15px;
-                left: 0;
                 color: $color-sec;
 
                 &:active {
@@ -227,25 +223,36 @@
 
         .project-image {
             clear: both;
-            //min-width: 360px;
             width: 100%;
             min-height: 180px;
             max-height: 236px;
             color: $color-text-on-dark;
-            @include calc(min-height, 330 / 16 * 9px);
-            @include calc(max-height, 430 / 16 * 9px);
 
-            iframe {
-                min-height: 180px;
-                max-height: 236px;
-                @include calc(min-height, 330 / 16 * 9px);
-                @include calc(max-height, 430 / 16 * 9px);
+            object, embed, iframe, img {
+                width: 100% !important;
+            }
+
+            position: relative;
+            padding-bottom: 56.25%; // 16:9
+            
+            img,
+            iframe, 
+            iframe,
+            object, 
+            object,
+            embed, 
+            embed {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: 100% !important;
             }
         }
     }
 
     #project-bar {
-        margin-top: 32px;
+        margin-top: 35px;
 
         .project-status {
             @include span-columns(7);
@@ -339,7 +346,6 @@
                         color: $color-pri !important;
                     }
                 }
-
             }
 
             .user-avatar {
@@ -393,6 +399,13 @@
                         display: inline-block;
                         width: 44px;
                         height: 44px;
+                        @include border-radius(1px);
+                    }
+
+                    &:hover {
+                        position: relative;
+                        top: -1px;
+
                     }
                 }                    
             }
@@ -425,7 +438,7 @@
 
     // Task detail specific
     &.task-detail {
-        min-height: 520px;
+        //min-height: 520px;
         
         .project-linked {
             @include svg-icon('sidebar/icon-tasks.svg', #999, #ffffff);
@@ -444,7 +457,7 @@
 
             li {
                 background-image: none;
-                line-height: 30px;
+                line-height: 34px;
                 background-position: 6px 50%;
                 text-indent: 14px;
                 font-weight: bold;

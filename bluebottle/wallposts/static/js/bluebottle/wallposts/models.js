@@ -43,6 +43,7 @@ App.WallPost = DS.Model.extend({
     type: DS.attr('string'),
     created: DS.attr('date'),
     reactions: DS.hasMany('App.WallPostReaction'),
+    email_followers: DS.attr('boolean'),
 
     video_url: DS.attr('string', {defaultValue: ''}),
     video_html: DS.attr('string'),

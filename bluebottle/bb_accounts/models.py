@@ -277,3 +277,4 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
         if valid_email(instance.email):
             send_welcome_mail(user=instance)
 
+

@@ -153,8 +153,8 @@ App.ProjectController = Em.ObjectController.extend({
     projectDonationsBinding: Ember.Binding.oneWay("projectDonations"),
 
     canEdit: function () {
-        return this.get('isStatusCampaign') && this.get('isProjectOwner');
-    }.property('isStatusCampaign', 'isProjectOwner'),
+        return this.get('editable') && this.get('isProjectOwner');
+    }.property('editable', 'isProjectOwner'),
 
     canDonate: function () {
         return !!this.get('amount_asked');

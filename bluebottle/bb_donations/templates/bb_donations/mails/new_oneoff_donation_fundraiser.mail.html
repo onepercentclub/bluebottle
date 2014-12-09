@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with amount=amount|floatformat:2 donor_name=donor_name site=site link=link receiver=receiver %}
+Hello {{first_name}},
+<br/><br/>
+You just received a EUR {{ amount }} donation!
+<br/><br/>
+Curious who made a donation, check your fundraiser page:
+<br/>
+<a href="{{ site }}{{ link }}">{{site}}{{link}}</a>.
+<br/><br/>
+Keep up the good work!<br/>
+{% endblocktrans %}
+{% endblock %}

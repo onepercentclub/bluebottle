@@ -70,19 +70,22 @@ def default_status_check(sender, instance, **kwargs):
     # Get the default status for the status field on Sender
     default_status = sender._meta.get_field_by_name('status')[0].get_default()
 
-    try:
-        from bluebottle.payments_logger.adapters import PaymentLogAdapter
+    from bluebottle.payments_logger.adapters import PaymentLogAdapter
 
-        # adding a Log when the status changes
-        payment_logger = PaymentLogAdapter()
+    # adding a Log when the status changes
+    payment_logger = PaymentLogAdapter()
+
+    try:
         # if there is no Payment associated to the order_payment do not log
         # The log will be created in the adapter
         payment = Payment.objects.get(order_payment=instance)
         payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
 
-    except:
+    except Payment.DoesNotExist:
         pass
-
+    except Payment.MultipleObjectsReturned:
+        payment = Payment.objects.order('-created').filter(order_payment=instance).all()[0]
+        payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
     finally:
         # Signal new status if current status is the default value
         if (instance.status == default_status):
@@ -92,3 +95,4 @@ def default_status_check(sender, instance, **kwargs):
                 'target': instance.status
             }
             post_transition.send(**signal_kwargs)
+

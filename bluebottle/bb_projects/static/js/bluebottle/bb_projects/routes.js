@@ -7,10 +7,7 @@ App.Router.map(function(){
         this.route('search');
     });
 
-    this.resource('project', {path: '/projects/:project_id'}, function() {
-        this.resource('projectPlan', {path: '/plan'});
-        this.resource('projectTasks', {path: '/tasks'}, function(){});
-    });
+    this.resource('project', {path: '/projects/:project_id'});
 
     this.resource('myProjectList', {path: '/my/projects'});
 
@@ -38,7 +35,8 @@ App.Router.map(function(){
  * Project Routes
  */
 
-App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
+App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.TrackRouteActivateMixin, {
+    trackEventName: "Browse projects",
     setupController: function(controller, model) {
         this._super(controller, model);
         App.UsedTheme.find().then(function(theme_list){
@@ -47,19 +45,39 @@ App.ProjectListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, {
             });
         });
     }
+
+
 });
 
 
-App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
+App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+    parentType: 'project',
+
     model: function(params) {
         // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.
         var project_id = params.project_id.split('?')[0];
-        var page =  App.Project.find(project_id);
-        var route = this;
-        return page;
-    },
 
+        var _this = this;
+
+        var promise = App.Project.find(project_id);
+
+        promise.then(function(model) {
+            if (_this.get('tracker')) {
+                _this.get('tracker').trackEvent("Project detail", {"title": model.get('title')});
+            }
+        }, function() {
+            _this.transitionTo('projectList');
+        });
+
+        return promise;
+    },
+    setupController: function(controller, model){
+        this._super(controller, model);
+
+        var parentId = model.get('id');
+        controller.set('tasks', App.Task.find({project: parentId}));
+    },
     afterModel: function(model, transition) {
         if (model.get('isStatusPlan')) {
             this.transitionTo('projectList');
@@ -71,26 +89,6 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, {
             this.transitionTo('projectList');
         }
     }
-});
-
-
-App.ProjectIndexRoute = Em.Route.extend(App.WallRouteMixin, {
-
-    parentId: function(){
-        return this.modelFor('project').get('id');
-    }.property(),
-    parentType: 'project',
-
-    setupController: function(controller, model) {
-        this._super(controller, model);
-
-        var parentType = this.get('parentType');
-        var parent = this.modelFor(parentType);
-        var parentId = parent.id;
-
-        controller.set('tasks',App.Task.find({project: parentId}));
-    }
-
 
 });
 
@@ -107,10 +105,7 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivate
     },
     setupController: function(controller, model) {
         this._super(controller, model);
-    },
-
-
-
+    }
 });
  
 

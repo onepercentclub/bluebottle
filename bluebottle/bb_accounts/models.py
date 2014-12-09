@@ -160,7 +160,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # specifying the serializer here allows us to leave the urls/views untouched while
         # modifying the serializer for the user model
         default_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
-        preview_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
+        preview_serializer = 'bluebottle.bb_accounts.serializers.UserPreviewSerializer'
         manage_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
         current_user_serializer = 'bluebottle.bb_accounts.serializers.CurrentUserSerializer'
 
@@ -237,6 +237,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
 
+    @property
     def full_name(self):
         return self.get_full_name()
 

@@ -1,0 +1,17 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+{% load bb_ember %}
+
+{% tplhandlebars "tag_widget" %}
+
+    {% bb_component 'view App.TagField' valueBinding="view.new_tag" name="tag" placeholder=_("Choose max. 5 keywords") class="tag" %} <button class="btn btn-modest add-tag" {{action addTag target=view}}>{% trans "Add" context "Add tag CC" %}</button>
+
+    <ul class="tags">
+        {{#each tags}}
+            <li class="tag"><span class="flaticon solid tag-2"></span> {{this.id}}<em {{action removeTag this target="view" }} class="flaticon solid x-1 delete"></em></li>
+        {{/each}}
+    </ul>
+
+{% endtplhandlebars %}
+

@@ -2,27 +2,16 @@
 
 
 {% tplhandlebars "project_fundraiser" %}
-    <li class="activity-list-item row">
-        {{#link-to "fundRaiser" fundraiser classNames='member'}}
-            <span class="picture">
+    <li class="activity-item">
+        {{#link-to "fundraiser" fundraiser classNames='item-link'}}
+            <figure class="user-avatar">
                 <img {{bindAttr src="image.square" alt="owner.first_name" }} />
-            </span>
-            <span class="synopsis">
-                <strong>{{owner.first_name}}</strong> {% trans "is fundraising for this project." %}
-                <h3>{{title}}</h3>
-                <span class="progress">
-                    {{#if amount_donated}}
-                        <span class="progress-bar">
-                            {{bb-progressbar class="project-fund-amount-slider" targetValue=amount currentValue=amount_donated}}
-                        </span>
-                        <span class="amount">
-                            &euro; {{amount_donated}} {% trans "Raised" %}
-                        </span>
-                    {{else}}
-                        <span class="progress-bar">
-                            {{bb-progressbar class="project-fund-amount-slider" targetValue=amount currentValue=amount_donated}}
-                        </span>
-                    {{/if}}
+            </figure>
+            <span class="item-body">
+            <strong class="user-name">{{owner.first_name}}</strong> {% trans "raised" %} <strong>&euro; {{amount_donated}},-</strong> {% trans "so far" %}<br />
+                {{!-- TODO: different text and design when fundraiser reached target or deadline --}}
+                <span class="progress-bar">
+                    {{bb-progressbar class="project-fund-amount-slider" targetValue=amount currentValue=amount_donated}}
                 </span>
             </span>
         {{/link-to}}

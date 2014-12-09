@@ -68,14 +68,24 @@ class FSMTransition:
         self.__dict__.update(new_self.__dict__)
 
 
-def get_client_ip(request):
+def get_client_ip(request=None):
     """ A utility method that returns the client IP for the given request. """
 
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if not request:
+        request = ThreadLocal.get_current_request()
+
+    try:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    except AttributeError:
+        x_forwarded_for = None
+
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
     else:
-        ip = request.META.get('REMOTE_ADDR')
+        try:
+            ip = request.META.get('REMOTE_ADDR')
+        except AttributeError:
+            ip = None
     return ip
 
 
@@ -170,6 +180,18 @@ def get_country_by_ip(ip_address=None):
     return gi.country_name_by_addr(ip_address)
     
 
+def get_country_code_by_ip(ip_address=None):
+    """
+    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    the popular Maxmind's GeoIP C API
+    """
+    if not ip_address:
+        return None
 
+    try:
+        socket.inet_aton(ip_address)
+    except socket.error:
+        raise InvalidIpError("Invalid IP address")
 
-
+    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gi.country_code_by_name(ip_address)

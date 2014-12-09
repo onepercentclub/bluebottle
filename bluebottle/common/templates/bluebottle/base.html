@@ -36,14 +36,14 @@
 
     {# Stylesheets #}
     {% compress css %}
-        {% block screen_css %}
-            <link rel="stylesheet" href="{% static 'css/screen.css' %}" media="screen" />
-            <link rel="stylesheet" href="{% static 'css/vendor/redactor.css' %}" media="screen" />
-            <!--[if IE]>
-            <link rel="stylesheet" href="{% static 'css/ie.css' %}" media="screen" />
-            <![endif]-->
-        {% endblock screen_css %}
+        <link rel="stylesheet" href="{% static 'css/screen.css' %}" media="screen" />
+        <link rel="stylesheet" href="{% static 'css/vendor/redactor.css' %}" media="screen" />
     {% endcompress %}
+
+    <link rel="stylesheet" href="{% static 'css/screen-refactor.css' %}" media="screen" />
+    <!--[if IE]>
+        <link rel="stylesheet" href="{% static 'css/ie.css' %}" media="screen" />
+    <![endif]-->
 
     {# Scripts #}
     <!-- avoid hardcoding these urls -->
@@ -57,6 +57,7 @@
         var MAPS_API_KEY = '{{ MAPS_API_KEY }}';
         var FACEBOOK_AUTH_ID = '{{ FACEBOOK_AUTH_ID }}';
         var MIXPANEL_KEY = '{{ MIXPANEL }}';
+
     </script>
 
     {% if RAVEN_DSN %}
@@ -83,7 +84,16 @@
         <script type="text/javascript" src="{% static 'js/vendor/handlebars-1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-v1.0.0.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/ember-data-v0.14.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'js/vendor/zeroclipboard/ZeroClipboard.js' %}"></script>
+
         <script type="text/javascript" src="{% static 'js/plugins/ember-facebook.js' %}"></script>
+
+        <script type="text/javascript">
+            ZeroClipboard.config({moviePath: STATIC_URL + '/js/vendor/zeroclipboard/ZeroClipboard.swf'});
+
+        </script>
+
     {% endcompress %}
 
     {% compress js %}
@@ -138,6 +148,7 @@
             <script type="text/javascript" src="{% static 'js/bluebottle/app.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/auth_jwt.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/utils.js' %}"></script>
+            <script type="text/javascript" src="{% static 'js/bluebottle/translatables.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
             <script type="text/javascript" src="{% static 'js/bluebottle/components.js' %}"></script>

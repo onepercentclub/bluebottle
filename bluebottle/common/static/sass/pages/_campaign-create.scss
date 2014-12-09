@@ -1,7 +1,11 @@
 #campaign-create {
 	
 	margin-bottom: $base-margin * 6;
-	
+
+    .field-container {
+      position: relative;
+    }
+
 	.campaign-header {
 		background-color: $gray-lighter;
 		
@@ -135,7 +139,7 @@
 	}
 
 	.campaign-budget-description {
-		@include grid(30,0,2);
+		@include grid(27,0,2);
 	}
 
 	.campaign-budget-amount {
@@ -143,7 +147,7 @@
 	}
 
 	.add-budget {
-		@include grid(6,0,0);
+		@include grid(9,0,0);
 	}
 	
 	.select-organisation {

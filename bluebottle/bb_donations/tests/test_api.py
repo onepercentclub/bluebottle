@@ -2,6 +2,7 @@ import json
 from mock import patch
 
 from django.test import TestCase
+from django.conf import settings
 
 from bluebottle.bb_orders.views import ManageOrderDetail
 from django.core.urlresolvers import reverse
@@ -13,6 +14,9 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
 from bluebottle.test.utils import InitProjectDataMixin
+
+from django.conf import settings
+from django.utils.importlib import import_module
 
 from django.core.urlresolvers import reverse
 from bluebottle.utils.utils import StatusDefinition
@@ -26,6 +30,15 @@ DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 class DonationApiTestCase(InitProjectDataMixin, TestCase):
 
     def setUp(self):
+        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+        engine = import_module(settings.SESSION_ENGINE)
+        store = engine.SessionStore()
+        store.save()
+        self.session = store
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = store.session_key
+
+        self.addCleanup(self._clear_session)
+
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -48,6 +61,9 @@ class DonationApiTestCase(InitProjectDataMixin, TestCase):
         self.project = ProjectFactory.create()
         self.order = OrderFactory.create(user=self.user)
 
+    def _clear_session(self):
+        self.session.flush()
+
 
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
 @patch.object(ManageOrderDetail, 'check_status_psp')
@@ -60,6 +76,7 @@ class TestDonationPermissions(DonationApiTestCase):
             "order": self.order.id,
             "amount": 35
         }
+
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
         response = self.client.post(reverse('manage-donation-list'), donation1, HTTP_AUTHORIZATION=self.user_token)
 
@@ -347,15 +364,12 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestAnonymousDonationCreate(DonationApiTestCase):
-
-    # FIXME: Write tests for anonymous donations
+class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
     def test_create_anonymous_donation(self):
         donation_url = reverse('manage-donation-list')
 
         # create a new anonymous donation
         response = self.client.post(donation_url, {'order': self.order.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True}, HTTP_AUTHORIZATION=self.user_token)
-
         self.assertEqual(response.status_code, 201)
 
         # retrieve the donation just created
@@ -367,9 +381,6 @@ class TestAnonymousDonationCreate(DonationApiTestCase):
 
         # Check if the anonymous is set to True
         self.assertEqual(True, response.data['anonymous'])
-
-        # Check that user is shown in private API
-        self.assertEqual(self.order.user.id, response.data['user'])
 
         # Set the order to success
         self.order.locked()
@@ -383,6 +394,24 @@ class TestAnonymousDonationCreate(DonationApiTestCase):
 
         # Check that user is NOT shown in public API
         self.assertEqual(None, response.data['user'])
+
+
+class TestUnauthenticatedDonationCreate(DonationApiTestCase):
+    def setUp(self):
+        super(TestUnauthenticatedDonationCreate, self).setUp()
+
+        self.order_anon = OrderFactory.create()
+
+        s = self.session
+        s['new_order_id'] = self.order_anon.pk
+        s.save()
+
+    def test_create_anonymous_donation(self):
+        donation_url = reverse('manage-donation-list')
+
+        # create a new anonymous donation
+        response = self.client.post(donation_url, {'order': self.order_anon.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True})
+        self.assertEqual(response.status_code, 201)
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')

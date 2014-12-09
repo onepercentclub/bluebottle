@@ -113,6 +113,38 @@ class TestOrderPermissions(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
+class TestAdditionalOrderPermissions(OrderApiTestCase):
+    def setUp(self):
+        super(TestAdditionalOrderPermissions, self).setUp()
+
+        self.order = OrderFactory.create(user=self.user1)
+
+    def test_create_for_another_owner(self):
+        """ Creating an order for another user should not be possible """
+        order_data = {
+            "user": self.user2.pk
+        }
+
+        response = self.client.post(self.manage_order_list_url, order_data, HTTP_AUTHORIZATION=self.user1_token)
+        # Order creation success but the user should be re-set to the current user
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['user'], self.user1.pk)
+
+    def test_update_with_another_owner(self):
+        """ Updating an order and assigning a different user should not be possible """
+        updated_order = {
+            "user": self.user2.pk
+        }
+
+        response = self.client.put(reverse('manage-order-detail',
+                           kwargs={'pk': self.order.id}),
+                           json.dumps(updated_order),
+                           'application/json',
+                           HTTP_AUTHORIZATION=self.user1_token)
+    
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class TestStatusUpdates(TestCase):
     def setUp(self):
         self.user1 = BlueBottleUserFactory.create()

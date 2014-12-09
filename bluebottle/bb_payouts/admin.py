@@ -17,6 +17,7 @@ from .models import ProjectPayoutLog, OrganizationPayoutLog
 
 from .admin_filters import HasIBANPayoutFilter
 from .admin_utils import link_to
+from django import forms
 
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
@@ -27,7 +28,7 @@ class PayoutLogBase(admin.TabularInline):
     extra = 0
     max_num = 0
     can_delete = False
-    fields = ['date', 'old_status', 'new_status']
+    fields = ['created', 'old_status', 'new_status']
     readonly_fields = fields
 
 
@@ -39,9 +40,16 @@ class OrganizationPayoutLogInline(PayoutLogBase):
     model = OrganizationPayoutLog
 
 
-class PayoutAdmin(admin.ModelAdmin):
-    model = PROJECT_PAYOUT_MODEL
+class ProjectPayoutForm(forms.ModelForm):
+    payout_rule = forms.ChoiceField(choices=PROJECT_PAYOUT_MODEL.PayoutRules.choices)
 
+    class Meta:
+        model = PROJECT_PAYOUT_MODEL
+
+
+class ProjectPayoutAdmin(admin.ModelAdmin):
+    model = PROJECT_PAYOUT_MODEL
+    form = ProjectPayoutForm
     inlines = (PayoutLogInline, )
 
     search_fields = [
@@ -52,24 +60,32 @@ class PayoutAdmin(admin.ModelAdmin):
     date_hierarchy = 'updated'
     can_delete = False
 
-    list_filter = [
-        'status', 'payout_rule', HasIBANPayoutFilter
-    ]
+    list_filter = ['status', 'payout_rule']
 
-    actions = ['recalculate_amounts']
+    actions = ['change_status_to_new', 'change_status_to_progress', 'change_status_to_settled',
+               'recalculate_amounts']
 
-    list_display = [
-        'payout', 'status', 'admin_project', 'amount_payable',
-        'payout_rule', 'admin_has_iban', 'created_date', 'submitted_date', 'completed_date'
-    ]
+    def change_status_to_new(self, request, queryset):
+        for payout in queryset.all():
+            payout.status = StatusDefinition.NEW
+            payout.save()
 
-    list_display_links = [
-        'payout',
-    ]
+    def change_status_to_progress(self, request, queryset):
+        for payout in queryset.all():
+            payout.status = StatusDefinition.IN_PROGRESS
+            payout.save()
 
-    readonly_fields = [
-        'admin_project', 'admin_organization', 'created', 'updated',
-    ]
+    def change_status_to_settled(self, request, queryset):
+        for payout in queryset.all():
+            payout.status = StatusDefinition.SETTLED
+            payout.save()
+
+    list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
+                    'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
+
+    list_display_links = ['payout']
+
+    readonly_fields = ['admin_project', 'admin_organization', 'created', 'updated']
 
     fieldsets = (
         (None, {
@@ -131,7 +147,8 @@ class PayoutAdmin(admin.ModelAdmin):
         lambda obj: obj.project,
         'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'], MODEL_MAP['project']['class'].lower()),
         view_args=lambda obj: (obj.project.id, ),
-        short_description=_('project')
+        short_description=_('project'),
+        truncate=50
     )
 
     # Link to organization
@@ -176,7 +193,11 @@ class PayoutAdmin(admin.ModelAdmin):
 
     recalculate_amounts.short_description = _("Recalculate amounts for new payouts.")
 
-admin.site.register(PROJECT_PAYOUT_MODEL, PayoutAdmin)
+    def rule(self, obj):
+        return dict(PROJECT_PAYOUT_MODEL.PayoutRules.choices)[obj.payout_rule]
+
+
+admin.site.register(PROJECT_PAYOUT_MODEL, ProjectPayoutAdmin)
 
 
 class OrganizationPayoutAdmin(admin.ModelAdmin):
@@ -191,7 +212,7 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
     list_filter = ['status', ]
 
     list_display = [
-        'invoice_reference', 'start_date', 'end_date',
+        'invoice_reference', 'start_date', 'end_date', 'status',
         'organization_fee_incl', 'psp_fee_incl',
         'other_costs_incl', 'payable_amount_incl'
     ]

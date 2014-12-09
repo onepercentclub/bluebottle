@@ -20,9 +20,21 @@ BB.ModalControllerMixin = Em.Mixin.create({
 BB.ModalMixin = Em.Mixin.create({
     actions: {
         modalWillTransition: function(name, side, context) {
+            // If the side is not defined then use the current displayed side
+            if (! side || typeof side == 'undefined') {
+                // The higher index is for the visible side.
+                var frontIndex = parseInt($('#card .front').css('z-index')),
+                    backIndex = parseInt($('#card .back').css('z-index'));
+
+                side = frontIndex > backIndex ? 'modalFront' : 'modalBack';
+            }
+
+
             // Handle any cleanup for the previously set content for the modal
             var modalContainer = this.controllerFor('modalContainer'),
-                previousController = modalContainer.get('currentController');
+                previousController = modalContainer.get('currentController'),
+                oppositeSide = side == 'modalBack' ? 'modalFront' : 'modalBack',
+                _this = this;
 
             // Call willClose on the previous modal - if defined
             if (previousController && Em.typeOf(previousController.willClose) == 'function')
@@ -35,6 +47,12 @@ BB.ModalMixin = Em.Mixin.create({
                 var newController = this.controllerFor(name);
                 modalContainer.set('currentController', newController);
 
+                if (newController.containerClass) {
+                     modalContainer.set('type', newController.containerClass);
+                } else {
+                    modalContainer.set('type', modalContainer.get('defaultType'));
+                }
+
                 // Setup the modal content and set the model if passed
                 if (Em.typeOf(context) != 'undefined')
                     newController.set('model', context);
@@ -43,6 +61,16 @@ BB.ModalMixin = Em.Mixin.create({
                 if (newController && Em.typeOf(newController.willOpen) == 'function')
                     newController.willOpen();
 
+                // Unload a controller on the "other side" of the modal if its the same controller
+                // that would render the same template
+                if (modalContainer.get(oppositeSide + 'Controller') == newController) {
+                    _this.disconnectOutlet({
+                        outlet: oppositeSide,
+                        parentView: 'modalContainer'
+                    });
+                }
+
+                modalContainer.set(side + 'Controller', newController);
                 this.render(name, {
                     into: 'modalContainer',
                     outlet: side,
@@ -71,10 +99,12 @@ BB.ModalMixin = Em.Mixin.create({
             // Setup the modal container
             var modalContainer = this.controllerFor('modalContainer');
 
-            if (Em.isEmpty(type))
+            if (Em.isEmpty(type)) {
                 modalContainer.set('type', 'normal');
-            else
+            } else {
                 modalContainer.set('type', type);
+                modalContainer.set('defaultType', type);
+            }
 
             this.render('modalContainer', {
                 into: 'application',
@@ -167,35 +197,56 @@ BB.ModalMixin = Em.Mixin.create({
             });
         },
 
-        modalFlip: function(name, context) {
+        modalContent: function (name, context) {
             var controller = this.controllerFor(name);
 
             if (Em.typeOf(context) != 'undefined')
-                controller.set('model', context);
+                controller.set('model', context);  
 
+            this.send('modalWillTransition', name, null, context);
+        },
+
+        modalFlip: function (name, context) {
+            var controller = this.controllerFor(name);
+
+            if (Em.typeOf(context) != 'undefined')
+                controller.set('model', context);            
+
+            if ($('#card').hasClass('flipped')) {
+                $('#card').removeClass('flipped');
+                modalSide = 'modalFront';
+            } else {
+                this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
+                modalSide = 'modalBack';
+            }
+
+            // Handle any cleanup for the previously set content for the modal
+            this.send('modalWillTransition', name, modalSide, context);
+        },
+
+        modalSlide: function (name, context) {
+            if ($('#card .front').hasClass('slide-out-left')) {
+                this.send('modalSlideRight', name, context);
+            } else {
+                this.send('modalSlideLeft', name, context);
+            }
+        },
+
+        modalSlideLeft: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition', name, 'modalBack', context);
+            if ($('#card').hasClass('flipped')) {
+                $('#card').addClass('flipped');
+            } else {
+                this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
+            }
 
-            // add class flipped and reset default state
-            this.send('addRemoveClass', 'attr', ['#card', '.front', '.back'], ['flipped', 'front', 'back'], ['class', 'class', 'class']);
         },
 
-        modalFlipBack: function(name, context) {
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalFront', context);
+        modalSlideRight: function(name, context) {
+            var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+                _this = this;
 
-            $('#card').removeClass('flipped');
-        },
-
-        modalSlide: function(name, context) {
-            // Handle any cleanup for the previously set content for the modal
-            this.send('modalWillTransition', name, 'modalBack', context);
-
-            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
-            this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
-        },
-
-        modalSlideBack: function(name, context) {
             // Handle any cleanup for the previously set content for the modal
             if ($.browser.msie && parseInt($.browser.version) < 10){
                 this.send('modalWillTransition', 'modalFlip', 'modalFront', context);
@@ -203,8 +254,13 @@ BB.ModalMixin = Em.Mixin.create({
                 return;
             }
             this.send('modalWillTransition', name, 'modalFront', context);
-            this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
-            this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+            if (!$('#card').hasClass('flipped')) {
+                this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-out-left', 'slide-in-right']);
+                this.send('addRemoveClass', 'add', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+                $('#card').one(animationEnd, function(){
+                    _this.send('addRemoveClass', 'remove', ['.front', '.back'], ['slide-in-left', 'slide-out-right']);
+                });
+            }
         },
 
         modalScale: function(name, context) {
@@ -255,11 +311,24 @@ BB.ModalMixin = Em.Mixin.create({
 
 BB.ModalContainerController = Em.ObjectController.extend(BB.ModalControllerMixin, {
     currentController: null,
-    type: null
+    type: null,
+    defaultType: null,
+    modalFrontController: null,
+    modalBackController: null
 });
 
 BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
     tagName: null,
+
+    touchStart: function(event) {
+        var _this = this,
+            string = event.target.className.substring()
+            className = string.indexOf("is-active");
+
+        if (className > 0) {
+            _this.get('controller').send('closeModal');
+        }
+    },
 
     click: function(e) {
         var _this = this,
@@ -273,7 +342,7 @@ BB.ModalContainerView = Em.View.extend(Ember.TargetActionSupport,{
     
     template: Ember.Handlebars.compile([
         '<div class="modal-fullscreen-background is-active">',
-            '<div {{bindAttr class=":big-modal type: :modal-fullscreen-container"}}>',
+            '<div {{bindAttr class="type: :modal-fullscreen-container"}}>',
                 '<div id="card">',
                     '<div class="front">',
                         '<div class="modal-fullscreen-item">{{outlet "modalFront"}}</div>',

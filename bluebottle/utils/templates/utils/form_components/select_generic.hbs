@@ -1,0 +1,10 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-select-generic" %}
+    {{#bb-form-field hint=hint label=label errors=errors}}
+        {{view Em.Select contentBinding='options' nameBinding=name optionValuePathBinding='valueProperty' optionLabelPathBinding='labelProperty'
+               promptBinding='prompt' selectionBinding='value' classBinding="errors.length:error"}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}

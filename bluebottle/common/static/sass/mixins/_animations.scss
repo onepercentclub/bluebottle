@@ -157,7 +157,7 @@
 }
 
 @include keyframes(shakeModal) {
-  0 {
+  0% {
     @include transform(translateX(0));
   }
   12.5% {

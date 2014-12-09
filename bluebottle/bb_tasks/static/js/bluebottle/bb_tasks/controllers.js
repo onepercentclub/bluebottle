@@ -153,6 +153,15 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         return isMember;
     }.property('members.@each.member.username', 'currentUser.username'),
 
+    isOwner: function() {
+        var username = this.get('currentUser.username');
+        var ownername = this.get('author.username');
+        if (username) {
+            return (username == ownername);
+        }
+        return false;
+    }.property('author', 'currentUser.username'),
+
     canUpload: function(){
         return (this.get('isMember') || this.get('isAuthor'));
     }.property('isMember', 'isAuthor'),
@@ -163,7 +172,11 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
     notAcceptedMembers: function() {
       return this.get('model').get('members').filterBy('isStatusAccepted', false);
-    }.property('members.@each.member.isStatusAccepted')
+    }.property('members.@each.member.isStatusAccepted'),
+
+    backgroundStyle: function(){
+        return "background-image:url('" + this.get('project.image.large') + "');";
+    }.property('project.image.large')
 
 });
 
@@ -179,44 +192,6 @@ App.TaskActivityController = App.TaskController.extend({
         }
         return false;
     }.property('controllers.task.author', 'currentUser.username'),
-
-});
-
-App.TaskIndexController = Em.ArrayController.extend({
-    needs: ['task'],
-    perPage: 5,
-    page: 1,
-    remainingItemCount: function(){
-        if (this.get('meta.total')) {
-            return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
-        }
-        return 0;
-    }.property('page', 'perPage', 'meta.total'),
-
-    canLoadMore: function(){
-        var totalPages = Math.ceil(this.get('meta.total') / this.get('perPage'));
-        return totalPages > this.get('page');
-    }.property('perPage', 'page', 'meta.total'),
-
-    actions: {
-        showMore: function() {
-            var controller = this;
-            var page = this.incrementProperty('page');
-            var id = this.get('controllers.task.model.id');
-            App.WallPost.find({'parent_type': 'task', 'parent_id': id, page: page}).then(function(items){
-                controller.get('model').pushObjects(items.toArray());
-            });
-        }
-    },
-
-    canAddMediaWallPost: function() {
-        var username = this.get('currentUser.username');
-        var ownername = this.get('controllers.task.model.author.username');
-        if (username) {
-            return (username == ownername);
-        }
-        return false;
-    }.property('controllers.task.model.author', 'currentUser.username')
 
 });
 
@@ -252,14 +227,21 @@ App.TaskMemberController = Em.ObjectController.extend({
         }
         return false;
     }.property(),
-
+    
     currentUserIsAuthor: function () {
         // TODO: move this into a function which can be accessed app-wide => pass a user instance and
-        //       the result will be true if the user is the current user.
+        //      the result will be true if the user is the current user.
         // TODO: we should be injecting the currentUser into all controllers so we can do this.get('currentUser')
-        //       in the controller and {{ currentUser }} in the templates.
-        return (this.get('currentUser.id_for_ember').toString() == this.get('task.author.id'));
-    }.property('task.author.id'),
+        //      in the controller and {{ currentUser }} in the templates.
+        var currentUsername = this.get('currentUser.username'),
+            authorUsername = this.get('task.author.username');
+
+        if (! currentUsername || ! authorUsername) {
+            return false;
+        }
+
+        return (currentUsername == authorUsername);
+    }.property('task.author.username', 'currentUser.username'),
 
     canEditStatus: function(){
         if (this.get('currentUserIsAuthor') && this.get('task') && this.get('task.status') != 'closed' && this.get('task.status') != 'completed'){
@@ -287,6 +269,17 @@ App.TaskMemberController = Em.ObjectController.extend({
     }.property('status'),
 
     actions: {
+
+        declineMember: function( member){
+            member.set('status', 'rejected');
+            member.save()
+        },
+
+        acceptMember: function( member){
+            member.set('status', 'accepted');
+            member.save()
+        },
+
         confirmMember: function( member){
             member.set('status', 'realized');
             member.save()
@@ -314,7 +307,7 @@ App.MyTaskMemberController = Em.ObjectController.extend({
 });
 
 App.TaskNewController = Em.ObjectController.extend({
-    needs: ['taskIndex', 'projectIndex'],
+
     createTask: function(event){
         var controller = this;
         var task = this.get('content');
@@ -339,6 +332,7 @@ App.TaskNewController = Em.ObjectController.extend({
 
 
 App.TaskEditController = App.TaskNewController.extend({
+
     updateTask: function(event){
         var controller = this;
         var task = this.get('content');

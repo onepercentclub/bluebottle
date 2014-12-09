@@ -12,11 +12,10 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField()
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
     status = serializers.CharField(source='status', read_only=True)
-    user = serializers.CharField(source='user.id', read_only=True)
 
     class Meta:
         model = DONATION_MODEL
-        fields = ('id', 'project', 'fundraiser', 'user', 'amount', 'status', 'order', 'anonymous', 'completed', 'created')
+        fields = ('id', 'project', 'fundraiser', 'amount', 'status', 'order', 'anonymous', 'completed', 'created')
 
     # FIXME Add validations for amount and project phase
 
@@ -28,7 +27,7 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DONATION_MODEL
-        fields = ('id', 'project', 'fundraiser', 'user', 'created', 'anonymous')
+        fields = ('id', 'project', 'fundraiser', 'user', 'created', 'anonymous', 'amount')
 
 
 class DefaultDonationSerializer(PreviewDonationSerializer):

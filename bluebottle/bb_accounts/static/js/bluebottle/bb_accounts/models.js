@@ -262,7 +262,7 @@ App.CurrentUser = App.UserPreview.extend({
     }.property('id_for_ember'),
 
     isAuthenticated: function(){
-        return (this.get('isLoaded') && !!this.get('username'));
+        return (this.get('isLoaded') && this.get('username'));
     }.property('username', 'isLoaded')
 });
 
@@ -290,11 +290,11 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
     }.property('password.length'),
 
     validFirstName: function() {
-        return this.get('first_name.length');
+        return this.get('first_name.length')
     }.property('first_name.length'),
 
     validLastName: function() {
-        return this.get('last_name.length');
+        return this.get('last_name.length')
     }.property('last_name.length'),
 
     validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
@@ -325,11 +325,10 @@ App.UserCreate = DS.Model.extend(App.ModelValidationMixin, {
 });
 
 
-App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
-    url: 'users/passwordset',
-
-    new_password1: DS.attr('string'),
-    new_password2: DS.attr('string'),
+App.PasswordReset = Em.Object.extend({
+    id: null,
+    new_password1: null,
+    new_password2: null,
 
     validPassword: function () {
         return this.get('new_password1.length') >= Em.get(App, 'settings.minPasswordLength');
@@ -340,11 +339,9 @@ App.PasswordReset = DS.Model.extend(App.ModelValidationMixin, {
             return false;
         }
         return !Em.compare(this.get('new_password1'), this.get('new_password2'));
-    }.property('new_password1', 'new_password2'),
-
-
-
+    }.property('new_password1', 'new_password2')
 });
+
 
 App.UserLogin = Em.Object.extend({
     matchId: null,

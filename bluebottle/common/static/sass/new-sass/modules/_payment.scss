@@ -1,6 +1,9 @@
+$font-family-body: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
+
 #payment {
     padding-left: 30px;
     padding-right: 30px;
+    font-family: $font-family-body;
 
     // reset ul and li
     ul {
@@ -50,7 +53,7 @@
             &.creditcard {
                 
                 &:before {
-                    background: image-url("icons/icon-creditcard-modal.svg") transparent no-repeat 0 14px;
+                    background: image-url("icons/icon-creditcard-modal.svg") transparent no-repeat 0 16px;
                 }
             }
 
@@ -62,11 +65,15 @@
             }
             &.ideal {
                 &:before {
-                    background: image-url("icons/ideal.png") transparent no-repeat 0 11px;
+                    background: image-url("icons/ideal.png") transparent no-repeat 0 13px;
                     background-size: 22px;
                 }
             }
-
+            &.directdebit {
+                &:before {
+                    background: image-url("icons/icon-directdebit-modal.svg") transparent no-repeat 0 16px;
+                }
+            }
 
             &.is-active {
                 background: #F5F4F6;
@@ -96,17 +103,67 @@
         text-align: left;
         background: #F5F4F6;
         border-radius: 8px;
-        font-size: 13px;
-        line-height: 18px;
-        min-height: 190px;
+        font-size: 14px;
+        line-height: 20px;
+        min-height: 220px;
 
         form, .no-form {
             padding: 20px 25px 25px 25px;
 
             select {
                 margin-top: 8px;
+
+                // Webkit
+                -webkit-appearance: none;
+                -webkit-border-radius: 0;
+                -webkit-box-shadow: none;
+                -webkit-padding-end: $base-padding;
+                -webkit-padding-start: $base-padding;
+                -webkit-user-select: none;
+                
+                // Firefox
+                -moz-appearance: none;
+                appearance: none;
+                
+                background-image: image-url("img/form-select-arrow.svg");
+                background-position: 100% 50% !important;
+                background-repeat: no-repeat;
+
+                border-radius: 4px;
+                border-color: #d8d8d8;
+                height: 40px;
+                color: $color-secondary;
+                
+                &:hover, &:focus {
+                    border-color: $color-secondary;
+                    background-image: image-url("img/form-select-arrow-hover.svg");
+                    background-position: 100% 50% !important;
+                }
+
+                option {
+                    border-width: 0;
+                }
+            }
+
+            &.directdebit-list {
+                .row {
+                    margin-bottom: 5px;
+
+                    .col12, .col8 {
+                        @include transition(all .2s ease-in-out);
+                    }
+                }
+
+                .bic-col {
+                    display: none;
+                }
+
+                #bicswift {
+                    font-size: 12px;
+                }
             }
         }
+
 
         span {
             font-size: 15px;
@@ -114,8 +171,11 @@
         }
 
         h6 {
-            margin: -8px 0 8px 0;
+            margin: 0 0 4px 0;
+            text-transform: none;
             font-size: 15px;
+            font-family: $font-family-body;
+            font-weight: 700;
         }
 
         .creditcard-cvc {
@@ -242,20 +302,16 @@
             float: left;
             max-width: 35px;
 
-            .icon-card {
+            .icon-card, .icon-card.is-unselected {
                 background-size: 75%;
-                @include opacity(1);
-                @include filter(grayscale(0%));
+                @include opacity(.4);
+                @include filter(grayscale(100%));
                 @include transition(all .2s ease-in-out);
+                cursor: pointer;
 
-                &:hover, &.is-unselected {
-                    @include opacity(.4);
-                    @include filter(grayscale(100%));
-
-                    &.is-selected {
-                        @include opacity(1);
-                        @include filter(grayscale(0%));
-                    }
+                &:hover, &.is-selected {
+                    @include opacity(1);
+                    @include filter(grayscale(0%));
                 }
 
             }

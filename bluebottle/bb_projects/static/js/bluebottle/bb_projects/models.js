@@ -66,6 +66,7 @@ App.Project = DS.Model.extend({
     amount_asked: DS.attr('number'),
     amount_donated: DS.attr('number'),
     amount_needed: DS.attr('number'),
+    deadline: DS.attr('date'),
 
     viewable: DS.attr('boolean'),
     editable: DS.attr('boolean'),
@@ -94,6 +95,10 @@ App.Project = DS.Model.extend({
     isStatusCompleted: Em.computed.equal('phaseNum', 5),
 
     isStatusStopped: Em.computed.gt('phaseNum', 6),
+
+    is_funded: function() {
+        return this.get('amount_needed') <= 0;
+    }.property('amount_needed'),
 
     isSupportable: function () {
         var now = new Date();
@@ -197,8 +202,10 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     url: 'bb_projects/manage',
     
     requiredStoryFields: ['description', 'reach'],
-    requiredPitchFields: ['title', 'pitch', 'theme', 'tags.length', 'country', 'latitude'],
-    friendlyFieldNames: null,
+    requiredPitchFields: ['validTitle', 'pitch', 'theme', 'tags.length', 'country', 'latitude', 'longitude'],
+    friendlyFieldNames: {
+        validTitle: gettext('Title')
+    },
 
     init: function () {
         this._super();
@@ -224,6 +231,11 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
 
         this._super();
     },
+
+    validTitle: function () {
+        // Valid title if it has a length and there are no api errors for the title.
+        return this.get('title.length') && !this.get('errors.title');
+    }.property('title.length', 'errors.title'),
 
     valid: function(){
         return (this.get('validStory') && this.get('validPitch'));

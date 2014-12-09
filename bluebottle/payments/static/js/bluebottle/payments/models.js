@@ -35,7 +35,13 @@ App.MyOrderPayment = App.OrderPayment.extend({
     authorizationAction: DS.attr('object')
 });
 
-App.StandardCreditCardPaymentModel = Em.Object.extend({
+
+App.StandardPaymentModel = Em.Object.extend({
+
+});
+
+
+App.StandardCreditCardPaymentModel = App.StandardPaymentModel.extend({
     cardOwner: '',
     cardNumber: '',
     expirationMonth: '',

@@ -78,6 +78,10 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         Em.Object.create({name:'Nederlands', code: 'nl'})
     ],
 
+    isEnglish: Em.computed.equal('language', 'en'),
+    
+    isDutch: Em.computed.equal('language', 'nl'),
+
     ready: function() {
 
         // only needed when submitting a form if the user isn't authenticated
@@ -129,6 +133,7 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
         // Inject currentUser into all controllers and routes
         application.inject('controller', 'currentUser', 'controller:currentUser');
         application.inject('route', 'currentUser', 'controller:currentUser');
+        application.inject('component', 'currentUser', 'controller:currentUser');
     },
 
     initSelectViews: function() {
@@ -549,12 +554,24 @@ App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
             });
         },
 
-        goTo: function(target) {
-            $('html, body').stop().animate({
-                scrollTop: $(target).offset().top - $('#header').height()
-            }, 500);
-        },
+        goTo: function(target, url) {
+            var go = function(){
+                $('html, body').stop().animate({
+                    scrollTop: $(target).offset().top - $('#header').height()
+                }, 500);
+            }
 
+            if (url && !this.get('controller.target').isActive(url)){
+                this.transitionTo(url).then(function(){
+                    // Small wait here to give page a chance to render
+                    Em.run.later(function(){
+                        go();
+                    }, 500)
+                });
+            } else {
+                go();
+            }
+        },
         addDonation: function (project, fundraiser) {
             var _this = this,
                 controller = this.get('controller');
@@ -651,6 +668,24 @@ App.EventMixin = Em.Mixin.create({
 
     $('.mobile-nav-btn').bind('click', toggleMenu);
     $('#content').bind('hover', closeMenu);
+  },
+
+  showHideReadmore: function() {
+    var description = $('#project-detail-header .project-description'),
+        readMore = $('.project-more.read-more');
+
+    if (!description) return;
+
+    if (description.height() > 92) {
+        readMore.show();
+        
+        readMore.on('click', function() {
+            description.toggleClass('is-active');
+            //readMore.html(gettext('Read less.'));
+        });
+    } else {
+        readMore.hide();
+    }
   }
 });
 
@@ -667,6 +702,10 @@ App.ApplicationView = Em.View.reopen(App.EventMixin, {
 
     setBindClick: function() {
         this.bindMobileClick();
+    }.on('didInsertElement'),
+
+    setCheckHeightDec: function() {
+        this.showHideReadmore();
     }.on('didInsertElement'),
 
     scrolled: function(dist) {

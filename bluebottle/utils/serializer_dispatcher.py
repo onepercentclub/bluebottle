@@ -2,6 +2,7 @@ from django.core.exceptions import ImproperlyConfigured
 from bluebottle.utils.model_dispatcher import get_model_class
 from bluebottle.utils.utils import import_class
 
+
 def get_serializer_class(model_name=None, serializer_type='default'):
     """
     Returns a serializer

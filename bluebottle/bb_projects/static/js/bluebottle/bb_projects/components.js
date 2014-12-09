@@ -24,4 +24,36 @@ App.BbProgressbarComponent = Ember.Component.extend({
 App.BbDatepickerComponent = Ember.Component.extend({
 });
 
+App.ProjectDonationsComponent = Em.Component.extend({
+    limitedDonations: function () {
+        if (! this.get('donations.isLoaded')) return;
 
+        var limit = this.get('limit') || 10;
+        return this.get('donations').toArray().splice(0, limit);
+    }.property('limit', 'donations.isLoaded'),
+
+    actions: {
+        show: function(profile) {
+            this.sendAction('showProfile', profile);
+        }
+    }
+});
+
+App.SimpleProjectSupportersComponent = Ember.Component.extend({
+    limitedSupporters: function () {
+        if (! this.get('supporters')) return;
+
+        var limit = this.get('limit') || 10;
+        return this.get('supporters').splice(0, limit);
+    }.property('limit', 'supporters.length'),
+
+    amountSupporters: function() {
+        return this.get('supporters');
+    }.property('supporters.length'),
+
+    actions: {
+        show: function(profile) {
+            this.sendAction('showProfile', profile);
+        }
+    }
+});

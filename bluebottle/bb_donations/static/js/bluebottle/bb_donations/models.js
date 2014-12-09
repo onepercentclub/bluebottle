@@ -18,37 +18,30 @@ App.Adapter.map('App.MyProjectDonation', {
 App.Donation = DS.Model.extend({
     amount: DS.attr('number'),
     project: DS.belongsTo('App.Project'),
-    fundraiser: DS.belongsTo('App.FundRaiser'),
+    fundraiser: DS.belongsTo('App.Fundraiser'),
     user: DS.belongsTo('App.UserPreview'),
     created: DS.attr('date'),
-    anonymous: DS.attr('boolean', {defaultValue: false})
+    anonymous: DS.attr('boolean', {defaultValue: false}),
+
+    time_since: function(){
+        return Globalize.format(this.get('created'), 'X');
+    }.property('created')
 });
 
-App.ProjectDonation = DS.Model.extend({
-    url: 'donations/project',
-
-    project: DS.belongsTo('App.Project'),
-    fundraiser: DS.belongsTo('App.FundRaiser'),
-
-    amount: DS.attr('number'),
-    created: DS.attr('date'),
-    user: DS.belongsTo('App.UserPreview')
+App.ProjectDonation = App.Donation.extend({
+    url: 'donations/project'
 });
 
 App.MyDonation = App.Donation.extend({
     url: 'donations/my',
 
     order: DS.belongsTo('App.MyOrder'),
-    amount: DS.attr('number'),
     completed: DS.attr('date'),
-    defaultAmount: 25,
+    amount: DS.attr('number', {defaultValue: 25}),
 
     validAmount: function () {
         var amount = this.get('amount');
-        if (!amount) {
-            //if no amount set the default amount
-            this.set('amount', this.get('defaultAmount'));
-        } else if (amount < 5) {
+        if (amount < 5) {
             return false;
         }
         return true;

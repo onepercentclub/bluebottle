@@ -16,14 +16,32 @@ App.DocdataIdealBankSelectView = Em.Select.extend({
     prompt: gettext("Select your bank")
 });
 
+App.DocdataDirectdebitView = Em.View.extend({
+    templateName: 'docdataDirectdebit',
 
-App.DocdataCreditcardSelectView = Em.Select.extend({
-    content:  [
-        {'id':'amex', 'name': 'American Express'},
-        {'id':'visa', 'name': 'Visa Card'},
-        {'id':'mastercard', 'name': 'Master Card'},
-    ],
-    optionValuePath: "content.id",
-    optionLabelPath: "content.name",
-    prompt: gettext("Select your credit card")
-});
+    didInsertElement: function() {
+        var accountNumber = this.$().find('#accountnumber');
+        accountNumber.on('keyup', function(){
+            var accountNumberVal = accountNumber.val(),
+                bic = $('.bic-col'),
+                iban = $('.iban-col');
+            if (accountNumberVal.length >= 2) {
+                if (accountNumberVal.indexOf('NL') > - 1) {
+                    bic.hide({
+                        duration: 200,
+                        specialEasing: 'fadeout',
+                        complete: function() {
+                            iban.attr('class', 'col12 iban-col');
+                        }
+                    });
+                } else {
+                    iban.attr('class', 'col8 iban-col');
+                    bic.show({
+                        duration: 300,
+                        specialEasing: 'fadein'
+                    });
+                }
+            }
+        });
+    }
+})

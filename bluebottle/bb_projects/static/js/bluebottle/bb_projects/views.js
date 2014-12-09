@@ -2,18 +2,6 @@ App.ProjectMembersView = Em.View.extend({
     templateName: 'project_members'
 });
 
-App.ProjectSupporterView = Em.View.extend({
-    templateName: 'project_supporter',
-    tagName: 'li',
-    didInsertElement: function(){
-        this.$('a').popover({trigger: 'hover', placement: 'top'});
-    }
-});
-
-App.ProjectSupporterListView = Em.View.extend({
-    templateName: 'project_supporter_list'
-});
-
 App.ProjectDonationView = Em.View.extend({
     templateName: 'project_donation'
 });
@@ -24,6 +12,10 @@ App.ProjectListView = Em.View.extend(App.ScrollInView, {
 
 App.ProjectPreviewView = Em.View.extend({
     templateName: 'project_preview'
+});
+
+App.ProjectPreviewListView = Em.View.extend({
+    templateName: 'project_preview_list'
 });
 
 App.ProjectSearchInput = Em.TextField.extend({
@@ -73,23 +65,19 @@ App.ProjectPlanView = Em.View.extend({
     }
 });
 
-App.ProjectIndexView = Em.View.extend({
-    templateName: 'project_wall'
-});
-
 /* Form Elements */
 
 App.ProjectPhaseSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a phase")
+    prompt: gettext("Pick a Phase")
 
 });
 
 App.ProjectPhaseChoiceView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a phase")
+    prompt: gettext("Pick a Phase")
 
 });
 
@@ -129,7 +117,7 @@ App.MyProjectListView = Em.View.extend({
 App.ThemeSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a theme")
+    prompt: gettext("Pick a Theme")
 });
 
 App.UsedThemeSelectView = App.ThemeSelectView.extend();
@@ -165,6 +153,12 @@ App.MyProjectMediaView = Em.View.extend({
 
 App.MyProjectOrganisationView = Em.View.extend({
     templateName: 'my_project_organisation',
+
+    actions: {
+        addFile: function (file) {
+            this.get('controller').send('addFile', file);
+        }
+    },
 
     focusNameField: function () {
         // If there is already a focused element then don't 

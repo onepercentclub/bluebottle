@@ -8,15 +8,11 @@
         {% endblocktrans%}
         {{partial docdata_creditcard_select}}
         <div class="card-holder">
-            <div class="card-item">
-                <div class="icon-card amex"></div>
-            </div>
-            <div class="card-item">
-                <div class="icon-card visa"></div>
-            </div>
-            <div class="card-item">
-                <div class="icon-card mastercard"></div>
-            </div>
+            {{#each type in cardTypes}}
+                <div class="card-item">
+                    <div {{action selectCardType type}} {{bind-attr class=":icon-card type.id:"}}></div>
+                </div>
+            {{/each}}
         </div>
     </form>
 {% endtplhandlebars %}

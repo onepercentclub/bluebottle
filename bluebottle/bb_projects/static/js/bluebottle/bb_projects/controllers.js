@@ -101,7 +101,11 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 
 
 App.ProjectController = Em.ObjectController.extend({
-    needs: ['projectIndex'],
+    projectDonations: null,
+
+    backgroundStyle: function(){
+        return "background-image:url('" + this.get('image.large') + "');";
+    }.property('image.large'),
 
     isFundable: function(){
        return (this.get('status') == '5' && this.get('campaign.money_asked'));
@@ -122,8 +126,90 @@ App.ProjectController = Em.ObjectController.extend({
             return (username == ownername);
         }
         return false;
-    }.property('model.owner', 'currentUser.username')
+    }.property('model.owner', 'currentUser.username'),
 
+    _setDonations: function () {
+        if (this.get('isLoaded')) {
+            this.set('projectDonations', App.ProjectDonation.find({project: this.get('id')}));
+        }
+    }.observes('isLoaded'),
+
+    supporters: function () {
+        if (this.get('projectDonations.isLoaded')) {
+            // return a unique list of supporters based on donations with users
+            return this.get('projectDonations').mapBy('user').filter(function(user) {return user}).uniq();
+        } else {
+            return null;
+        }
+    }.property('projectDonations.isLoaded'),
+
+    recentSupporters: function () {
+        if (this.get('supporters')) {
+            return this.get('supporters').splice(0, 13);
+        }
+    }.property('supporters.length'),
+
+    projectSupportersBinding: Ember.Binding.oneWay("supporters"),
+    projectDonationsBinding: Ember.Binding.oneWay("projectDonations"),
+
+    canEdit: function () {
+        return this.get('isStatusCampaign') && this.get('isProjectOwner');
+    }.property('isStatusCampaign', 'isProjectOwner'),
+
+    canDonate: function () {
+        return !!this.get('amount_asked');
+    }.property('amount_asked'),
+
+    remainingItemCount: function(){
+        if (this.get('meta.total')) {
+            return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
+        }
+        return 0;
+    }.property('page', 'perPage', 'meta.total'),
+
+    canLoadMore: function(){
+        var totalPages = Math.ceil(this.get('meta.total') / this.get('perPage'));
+        return totalPages > this.get('page');
+    }.property('perPage', 'page', 'meta.total'),
+
+    canAddMediaWallpost: function() {
+        var username = this.get('currentUser.username');
+        var ownername = this.get('model.owner.username');
+        if (username) {
+            return (username == ownername);
+        }
+        return false;
+    }.property('model.owner', 'currentUser.username'),
+
+    availableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isAvailable");
+        });
+    }.property('tasks.@each.isAvailable'),
+
+    unavailableTasks: function () {
+        return this.get('tasks').filter(function(task) {
+            return task.get("isUnavailable");
+        });
+    }.property('tasks.@each.isUnavailable'),
+
+    resetShowingAll: function () {
+        this.set("showingAll", false);
+    }.observes('parentId'),
+
+    actions: {
+        showActiveTasks: function () {
+            this.set("showingAll", false);
+        },
+
+        showAllTasks: function () {
+            this.set("showingAll", true);
+        },
+
+        showProfile: function (profile) {
+            this.send('openInBigBox', 'userModal', profile);
+        }
+    }
 });
 
 App.ProjectPlanController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.StaticMapMixin, {
@@ -152,78 +238,6 @@ App.ProjectPlanController = Ember.ObjectController.extend(BB.ModalControllerMixi
     }.property("story")
 });
 
-
-App.ProjectIndexController = Em.ArrayController.extend({
-    needs: ['project'],
-    perPage: 5,
-    page: 1,
-    parentId: null,
-    parentType: 'project',
-    showingAll: null,
-
-    isProjectOwner: function(){
-        return this.get('controllers.project.owner.username') == this.get('currentUser.username');
-    }.property('controllers.project.model.owner', 'currentUser.username'),
-
-    canDonate: function () {
-        return !!this.get('controllers.project.amount_asked');
-    }.property('controllers.project.amount_asked'),
-
-    remainingItemCount: function(){
-        if (this.get('meta.total')) {
-            return this.get('meta.total') - (this.get('page')  * this.get('perPage'));
-        }
-        return 0;
-    }.property('page', 'perPage', 'meta.total'),
-
-    canLoadMore: function(){
-        var totalPages = Math.ceil(this.get('meta.total') / this.get('perPage'));
-        return totalPages > this.get('page');
-    }.property('perPage', 'page', 'meta.total'),
-
-    canAddMediaWallPost: function() {
-        var username = this.get('currentUser.username');
-        var ownername = this.get('controllers.project.model.owner.username');
-        if (username) {
-            return (username == ownername);
-        }
-        return false;
-    }.property('controllers.project.model.owner', 'currentUser.username'),
-
-    availableTasks: function () {
-        return this.get('tasks').filter(function(task) {
-            return task.get("isAvailable");
-        });
-    }.property('tasks.@each.isAvailable'),
-
-    unavailableTasks: function () {
-        return this.get('tasks').filter(function(task) {
-            return task.get("isUnavailable");
-        });
-    }.property('tasks.@each.isUnavailable'),
-
-    resetShowingAll: function() {
-        this.set("showingAll", false);
-    }.observes('parentId'),
-    
-    actions: {
-        showMore: function() {
-            var controller = this;
-            var page = this.incrementProperty('page');
-            var parent_id = this.get('parentId');
-            var parent_type = this.get('parentType');
-            App.WallPost.find({'parent_type': parent_type, 'parent_id': parent_id, page: page}).then(function(items){
-                controller.get('model').pushObjects(items.toArray());
-            });
-        },
-        showActiveTasks: function() {
-            this.set("showingAll", false);
-        },
-        showAllTasks: function() {
-            this.set("showingAll", true);
-        }
-    }
-});
 
 App.GenericFieldController = Em.ObjectController.extend({});
 

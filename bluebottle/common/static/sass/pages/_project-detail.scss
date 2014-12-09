@@ -97,7 +97,12 @@
     } 
     
 	.project-info {
+        position: relative;
 		@include grid(24,1,1);
+
+        .share-menu {
+            top: 4px;
+        }
 	}
     
     .project-title {

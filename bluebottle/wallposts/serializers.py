@@ -120,7 +120,7 @@ class MediaWallPostSerializer(WallPostSerializerBase):
 
     class Meta:
         model = MediaWallPost
-        fields = WallPostSerializerBase.Meta.fields + ('title', 'text', 'video_html', 'video_url', 'photos')
+        fields = WallPostSerializerBase.Meta.fields + ('text', 'video_html', 'video_url', 'photos')
 
 
 class TextWallPostSerializer(WallPostSerializerBase):

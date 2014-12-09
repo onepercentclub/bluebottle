@@ -2,5 +2,11 @@
 
 
 {% tplhandlebars "_docdata_creditcard_select" %}
-    {{view App.DocdataCreditcardSelectView valueBinding='default_pm' name='docdata-cc-dropdown' class="creditcard-select"}}
+    {{view Em.Select valueBinding='default_pm' 
+                        name='docdata-cc-dropdown' 
+                        class='creditcard-select'
+                        contentBinding='cardTypes'
+                        optionValuePath='content.id'
+                        optionLabelPath='content.name'
+                        promptBinding='promptText'}}
 {% endtplhandlebars %}

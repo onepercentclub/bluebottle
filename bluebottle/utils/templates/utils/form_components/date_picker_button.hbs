@@ -1,0 +1,8 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "date_picker_button" %}
+    <input type="text" style="display: none"/>
+    <a {{action "showDatePicker" target="view"}} class="btn btn-modest btn-date-picker"><span class="flaticon solid calendar-3"></span>{% trans "Pick date" context "Goal page" %}</a>
+{% endtplhandlebars %}

@@ -1,11 +1,16 @@
-App.MockIdeal = Em.Object.extend({
-    issuerId: '',
-    mock: true,
-    type: 'mock-ideal'
+App.MockPayment = Em.Object.extend({
+    paymentMethod: ''
 });
 
-App.MockCreditcard = Em.Object.extend({
-    type: 'mock-creditcard',
-    mock: true
+App.MockCreditcard = App.MockPayment.extend({
+    default_pm: ''
 });
 
+App.MockiDeal = App.MockPayment.extend({
+    default_pm: 'ideal',
+    ideal_issuer_id: ''
+});
+
+App.MockPal = App.MockPayment.extend({
+    default_pm: 'paypal'
+});

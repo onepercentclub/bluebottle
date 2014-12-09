@@ -4,7 +4,6 @@ App.Adapter.map('App.MyOrder', {
 
 App.Order = DS.Model.extend({
     status: DS.attr('string'),
-    user: DS.belongsTo('App.UserPreview'),
     country: DS.belongsTo('App.Country'),
     totalAmount: DS.attr('number'),
     donations: DS.hasMany('App.Donation'),
@@ -14,4 +13,5 @@ App.Order = DS.Model.extend({
 App.MyOrder = App.Order.extend({
     url: 'orders/my',
     donations: DS.hasMany('App.MyDonation'),
+    user: DS.belongsTo('App.UserPreview')
 });

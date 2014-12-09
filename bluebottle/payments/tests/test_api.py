@@ -53,9 +53,9 @@ class TestOrderPaymentPermissions(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_payment_methods_unauthenticated(self):
-        """ Test that  unauthenticated users may not retrieve payment methods """
+        """ Test that  unauthenticated users may retrieve payment methods """
         response = self.client.get(reverse('payment-method-list'), {})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_payment_methods_authenticated(self):
         """ Test that authenticated users may retrieve payment methods """
@@ -63,7 +63,7 @@ class TestOrderPaymentPermissions(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_payment_method_detail_unauthenticated(self):
-        """ Test that unauthenticated users may not retrieve details of a payment method """
+        """ Test that unauthenticated users may retrieve details of a payment method """
         self.skipTest("This view is currently unused")
         response = self.client.get(reverse('payment-method-list'), {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

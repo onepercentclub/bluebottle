@@ -2,30 +2,42 @@
 
 
 {% tplhandlebars "_project_actions_without_funding" %}
-    <div class="l-section detail without-funding" id="project-members">
-        <section class="l-wrapper">
-
-            <ul class="member-list">
-                <li class="member-initiator">
-                    <ul>
-                        <li>
-                            <a {{action 'openInBigBox' 'userModal' owner }} class="member">
-                                <figure class="member-avatar"><img {{bindAttr src="owner.getAvatar"}} /></figure>
-                                <h4>{% trans "Initiator" %}</h4>
-                                <strong class="member-name">{{owner.full_name}}</strong>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-            {{#if deadline}}
-                <div class="project-deadline">
-                    <span class="flaticon solid stopwatch-1"></span>
-                    <span class="text">
-                        {{daysToGoText daysToGo}}
-                    </span>
+            <div class="row">
+                <div class="col8">
+                    <div class="project-status">
+                    </div>
                 </div>
-            {{/if}}
+                <div class="col4">
+
+                </div>
+            </div>
         </section>
-    </div>
+        <div id="project-members">
+            <section class="l-wrapper">
+                <div class="row">
+                    <div class="col4">
+                        <div class="member-initiator">
+                            <a {{action 'openInBigBox' 'userModal' owner }} class="member">
+                                <div class="row">
+                                    <div class="col3">
+                                        <figure class="photo">
+                                            <img {{bindAttr src="owner.getAvatar"}} />
+                                        </figure>
+                                    </div>
+                                    <div class="col9">
+                                        <h4>{% trans "Campaigner" %}</h4>
+                                        <strong class="name">{{owner.full_name}}</strong>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col8">
+                        <div class="project-member-supporters">
+                            {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=10}}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
 {% endtplhandlebars %}

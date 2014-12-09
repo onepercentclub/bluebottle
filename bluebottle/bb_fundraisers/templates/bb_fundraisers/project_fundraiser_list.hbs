@@ -2,33 +2,44 @@
 
 
 {% tplhandlebars "project_fundraiser_list" %}
+    
+    <div {{bindAttr class=":activity controllers.project.isStatusCampaign::activity-hide" }}>
 
-    <h3 class="activity-title">
-        {% trans "Fundraisers" %}
-    </h3>
+        {{#if fundraisers.length}}
+            <header class="activity-header">
+                <h2 class="activity-title">{% trans "Fundraisers" %}</h2>
+            </header>
 
+            <ul class="activity-list">
+                {{#each fundraiser in controller}}
+                    {{render "projectFundraiser" fundraiser}}
+                {{/each}}
+            </ul>
 
-    {{#if fundraisers.length}}
-        <ul class="activity-list">
-            {{#each fundraiser in controller}}
-                {{render "projectFundRaiser" fundraiser}}
-            {{/each}}
-            <li>
-                {{#if controllers.project.isStatusCampaign}}
-                    {{#linkTo 'fundRaiserNew' controllers.project.id class="activity-action"}}
-                        {% trans "Start a fundraiser" %}
+            {{#if controllers.project.isStatusCampaign}}
+                <footer class="activity-footer">
+                    {{#linkTo 'fundraiserNew' controllers.project.id class='activity-action' }}
+                        <strong>{% trans "Start your own fundraiser" %} &raquo;</strong><br />
+                        {% trans "Throw a party or run a marathon to raise funds" %}
                     {{/linkTo}}
-                {{/if}}
-            </li>
-        </ul>
-    {{else}}
-        {% trans "No fundraisers for this project." %}
-        {{#if controllers.project.isStatusCampaign}}
-            {{#linkTo 'fundRaiserNew' controllers.project.id class="activity-action"}}
-                {% trans "Be the first to start a fundraiser" %}
-            {{/linkTo}}
+                </footer>
+            {{/if}}
+        {{else}}
+            {{#if controllers.project.isStatusCampaign}}
+                <header class="activity-header">
+                    <h2 class="activity-title">{% trans "Fundraisers" %}</h2>
+                </header>
+
+                <footer class="activity-footer">
+                    {{#linkTo 'fundraiserNew' controllers.project.id class='activity-action' }}
+                        <strong>{% trans "Be the first to fundraise" %} &raquo;</strong><br />
+                        {% trans "Throw a party or run a marathon to raise funds" %}
+                    {{/linkTo}}
+                </footer>
+            {{/if}}
+
         {{/if}}
 
-    {{/if}}
+    </div>
 
 {% endtplhandlebars %}

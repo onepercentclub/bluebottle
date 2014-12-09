@@ -21,7 +21,7 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_payments.payment_set', null=True, to=orm['contenttypes.ContentType'])),
             ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(default='started', max_length=50)),
-            ('order_payment', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.OrderPayment'], unique=True)),
+            ('order_payment', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.OrderPayment'])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
         ))

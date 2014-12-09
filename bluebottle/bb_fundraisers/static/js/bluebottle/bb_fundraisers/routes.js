@@ -3,53 +3,35 @@
  */
 
 App.Router.map(function() {
-    // The empty function is there for the fundRaiserIndex route to be called.
-    this.resource('fundRaiser', {path: '/fundraisers/:fundraiser_id'}, function(){});
+    // The empty function is there for the fundraiserIndex route to be called.
+    this.resource('fundraiser', {path: '/fundraisers/:fundraiser_id'});
 
-    this.resource('fundRaiserEdit', {path: '/fundraisers/:fundraiser_id/edit'});
+    this.resource('fundraiserEdit', {path: '/fundraisers/:fundraiser_id/edit'});
 
-    this.resource('fundRaiserNew', {path: '/projects/:project_id/new-fundraiser'});
+    this.resource('fundraiserNew', {path: '/projects/:project_id/new-fundraiser'});
 
-    this.resource('myFundRaiserList', {path: '/my/fundraisers'});
+    this.resource('myFundraiserList', {path: '/my/fundraisers'});
 
-// TODO: Future resources.
-//    this.resource('myFundRaiser', {path: '/my/fundraisers/:my_fundraiser_id'});
-
-    this.resource('fundRaiserDonationList', {path: '/fundraisers/:fundraiser_id/donations'});
+    this.resource('fundraiserDonationList', {path: '/fundraisers/:fundraiser_id/donations'});
 });
 
 
 /**
  * Fundraiser Routes
  */
-App.FundRaiserRoute = Em.Route.extend(App.ScrollToTop, {
+App.FundraiserRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+
+    parentType: 'fund raiser',
+
     model: function(params) {
-        // Crap hack because Ember somehow doesn't strip queryparams.
-        // FIXME: Find out this -should- work.
+        // Crap hack because this Ember version doesn't strip queryparams.
         var fundraiser_id = params.fundraiser_id.split('?')[0];
-        return App.FundRaiser.find(fundraiser_id);
+        return App.Fundraiser.find(fundraiser_id);
     }
 });
 
 
-App.FundRaiserIndexRoute = Em.Route.extend({
-    // This way the ArrayController won't hold an immutable array thus it can be extended with more wall-posts.
-    setupController: function(controller, model) {
-        var parent_id = this.modelFor('fundRaiser').get('id');
-        // Only reload this if switched to another fundraiser.
-        if (controller.get('parent_id') != parent_id){
-            controller.set('page', 1);
-            controller.set('parent_id', parent_id);
-            App.WallPost.find({'parent_type': 'fund raiser', 'parent_id': parent_id}).then(function(items){
-                controller.set('meta', items.get('meta'));
-                controller.set('model', items.toArray());
-            });
-        }
-    }
-});
-
-
-App.FundRaiserNewRoute = Em.Route.extend(App.ScrollToTop, {
+App.FundraiserNewRoute = Em.Route.extend(App.ScrollToTop, {
     googleConversion: {
         label: 'P4TmCIKA7AsQ7o7O1gM'
     },
@@ -60,23 +42,23 @@ App.FundRaiserNewRoute = Em.Route.extend(App.ScrollToTop, {
 
         var projectPreview = App.ProjectPreview.find(params.project_id);
 
-        return store.createRecord(App.FundRaiser, {project: projectPreview});
+        return store.createRecord(App.Fundraiser, {project: projectPreview});
     }
 });
 
-App.FundRaiserEditRoute = Em.Route.extend(App.ScrollToTop, {
+App.FundraiserEditRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
-        return App.FundRaiser.find(params.fundraiser_id);
+        return App.Fundraiser.find(params.fundraiser_id);
     }
 });
 
 
-App.FundRaiserDonationListRoute = Em.Route.extend({
+App.FundraiserDonationListRoute = Em.Route.extend({
     model: function(params) {
         // Crap hack because Ember somehow doesn't strip queryparams.
         // FIXME: Find out this -should- work.
         var fundraiser_id = params.fundraiser_id.split('?')[0];
-        return App.FundRaiser.find(fundraiser_id);
+        return App.Fundraiser.find(fundraiser_id);
     },
 
     setupController: function(controller, fundraiser) {
@@ -87,11 +69,11 @@ App.FundRaiserDonationListRoute = Em.Route.extend({
 });
 
 
-App.MyFundRaiserListRoute = Em.Route.extend(App.ScrollToTop, {
+App.MyFundraiserListRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         return App.CurrentUser.find('current').then(function(user) {
             var user_id = user.get('id_for_ember');
-            return App.FundRaiser.find({owner: user_id});
+            return App.Fundraiser.find({owner: user_id});
         });
     },
     setupController: function(controller, model) {
@@ -100,8 +82,8 @@ App.MyFundRaiserListRoute = Em.Route.extend(App.ScrollToTop, {
 });
 //
 // TOOD: Unused at this time.
-//App.MyFundRaiserRoute = Em.Route.extend({
+//App.MyFundraiserRoute = Em.Route.extend({
 //    model: function(params) {
-//        return App.FundRaiser.find(params.my_fundraiser_id);
+//        return App.Fundraiser.find(params.my_fundraiser_id);
 //    }
 //});

@@ -29,14 +29,21 @@ class IsOrderCreator(permissions.BasePermission):
         else:
             order = obj.order
 
+        # Permission is granted if: 
+        #   * the order user is the logged in user
+        #   * the order has no user but the current
+        #     order in the session has the same order_id as the order being 
+        #     accessed. This will happen if the order was created anonymously
+        #     and then the user logged in / signed up.
+
         # Case 1: Authenticated user.
         if request.user.is_authenticated():
-            # Permission is only granted if the order user is the logged in user.
-            return order.user == request.user
+            # Does the order match the current user, or do they have an order 
+            # in the session which matches this order?
+            return (order.user == request.user or order.pk == request.session.get('new_order_id'))
 
         # Case 2: Anonymous user.
         else:
-            # For an anonymous user we grant access if the new order id is the same as the payment order id.
             order_id = request.session.get('new_order_id')
             if order_id:
                 return order_id == order.id
@@ -61,14 +68,24 @@ class IsOrderCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
-        # This is for creating new objects that have a relation (fk) to Order.
-        if not view.model == ORDER_MODEL:
+        if view.model == ORDER_MODEL:
+            # Order must belong to the current user or have no user assigned (anonymous)
+            order_user = request.DATA.get('user', None)
+            if order_user and order_user != request.user.pk:
+                return False
+            return True
+        else: # This is for creating new objects that have a relation (fk) to Order.
             order = self._get_order_from_request(request)
             if order:
-                return order.user == request.user
-            else:
+                # Allow action if order belongs to user or if the user is anonymous
+                # and the current order in the session is the same as this order
+                if request.user.is_authenticated():
+                    return (order.user == request.user or order.pk == request.session.get('new_order_id'))
+                elif order.pk == request.session.get('new_order_id'):
+                    return True
+            else: # deny if no order present
                 return False
-        return True
+
 
 class OrderIsNew(permissions.BasePermission):
     """

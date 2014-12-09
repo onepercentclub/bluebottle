@@ -33,7 +33,7 @@ class Payment(PolymorphicModel):
         (StatusDefinition.CHARGED_BACK, _('Charged_back')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
-        (StatusDefinition.UNKNOWN, _('Unknown')),
+        (StatusDefinition.UNKNOWN, _('Unknown'))
     )
 
     @classmethod
@@ -47,6 +47,20 @@ class Payment(PolymorphicModel):
     order_payment = models.OneToOneField('payments.OrderPayment')
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
+
+    @property
+    def method_name(self):
+        return self.get_method_name()
+
+    def get_method_name(self):
+        return 'unknown'
+
+    @property
+    def method_icon(self):
+        return self.get_method_icon()
+
+    def get_method_icon(self):
+        return 'images/payments/icons/icon-payment.svg'
 
     def get_fee(self):
         if not isinstance(self, Payment):
@@ -86,7 +100,7 @@ class OrderPayment(models.Model, FSMTransition):
     STATUS_CHOICES = Payment.STATUS_CHOICES
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
-    order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='payments')
+    order = models.ForeignKey(settings.ORDERS_ORDER_MODEL, related_name='order_payments')
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
     previous_status = None
     created = CreationDateTimeField(_("Created"))
@@ -170,6 +184,7 @@ class OrderPayment(models.Model, FSMTransition):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.full_clean()
         super(OrderPayment, self).save(force_insert, force_update, using, update_fields)
+
 
 class Transaction(PolymorphicModel):
     payment = models.ForeignKey('payments.Payment')

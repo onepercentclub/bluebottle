@@ -18,6 +18,7 @@ from bluebottle.utils.model_dispatcher import get_project_phaselog_model
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
+
 class ProjectTheme(models.Model):
     """ Themes for Projects. """
 
@@ -125,26 +126,21 @@ class BaseProject(models.Model):
         help_text=_('Project organization'), related_name='organization', null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this project was created.'))
+    created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    pitch = models.TextField(
-        _('pitch'), blank=True, help_text=_('Pitch your smart idea in one sentence'))
+    pitch = models.TextField(_('pitch'), help_text=_('Pitch your smart idea in one sentence'), blank=True)
     status = models.ForeignKey('bb_projects.ProjectPhase')
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True)
-    favorite = models.BooleanField(default=False)
-    tags = TaggableManager(blank=True, verbose_name=_('tags'),
-                           help_text=_('Add tags'))
+    favorite = models.BooleanField(default=True)
+    tags = TaggableManager(blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
 
     # Extended Description
-    description = models.TextField(
-        _('why, what and how'), help_text=_('Blow us away with the details!'),
-        blank=True)
+    description = models.TextField(_('why, what and how'), help_text=_('Blow us away with the details!'), blank=True)
 
     # Media
     image = ImageField(
@@ -158,6 +154,10 @@ class BaseProject(models.Model):
     amount_asked = MoneyField(default=0, null=True, blank=True)
     amount_donated = MoneyField(default=0)
     amount_needed = MoneyField(default=0)
+
+    @property
+    def is_realised(self):
+        return self.status == ProjectPhase.objects.get(slug='realised')
 
     @property
     def amount_pending(self):
@@ -298,3 +298,5 @@ class BaseProjectPhaseLog(models.Model):
     class Meta():
         abstract = True
 
+
+from projectwallmails import *

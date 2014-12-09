@@ -300,12 +300,12 @@ class SeleniumTestCase(LiveServerTestCase):
             url = sauce_url % (username, access_key)
 
             cls.browser = BrowserExt(driver_name='remote', url=url, browser='chrome',
-                                     wait_time=10, desired_capabilities=caps)
+                                     wait_time=30, desired_capabilities=caps)
         else:
-            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=10)
+            cls.browser = BrowserExt(settings.SELENIUM_WEBDRIVER, wait_time=30)
 
-        cls.browser.driver.implicitly_wait(10)
-        cls.browser.driver.set_page_load_timeout(10)
+        cls.browser.driver.implicitly_wait(2)
+        cls.browser.driver.set_page_load_timeout(30)
 
         super(SeleniumTestCase, cls).setUpClass()
 
@@ -323,7 +323,7 @@ class SeleniumTestCase(LiveServerTestCase):
 
         super(SeleniumTestCase, self)._post_teardown()
 
-    def login(self, username, password):
+    def login(self, username, password, wait_time=30):
         """
         Perform login operation on the website.
 
@@ -333,20 +333,28 @@ class SeleniumTestCase(LiveServerTestCase):
         """
         self.visit_homepage()
 
-        # Find the link to the signup button page and click it.
-        self.browser.find_link_by_itext('log in').first.click()
+        if not self.browser.find_by_css('.nav-signup-login'):
+            self.logout()
 
-        # Validate that we are on the intended page.
-        if not self.browser.is_text_present('LOG IN', wait_time=10):
-            return False
+        # Find the link to the signup button page and click it.
+        self.scroll_to_and_click_by_css('.nav-signup-login a')
+        self.wait_for_element_css('input[name=username]')
 
         # Fill in details.
-        self.browser.fill('username', username)
-        self.browser.fill('password', password)
+        self.browser.find_by_css('input[name=username]').first.fill(username)
+        self.browser.find_by_css('input[type=password]').first.fill(password)
 
-        self.browser.find_by_value('Login').first.click()
+        self.wait_for_element_css("a[name=login]", timeout=wait_time)
+        self.scroll_to_and_click_by_css("a[name=login]")
 
-        return self.browser.is_text_present('PROFILE', wait_time=10)
+        # Wait for modal animation to complete
+        self.wait_for_not_element_css('.modal-fullscreen-background')
+
+        return self.wait_for_element_css(".nav-member", timeout=wait_time)
+
+    def logout(self):
+        self.visit_path("/logout")
+        return self.wait_for_element_css('.nav-signup-login')
 
     def visit_path(self, path, lang_code=None):
         """
@@ -439,10 +447,35 @@ class SeleniumTestCase(LiveServerTestCase):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:
             element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-
             return element
         except TimeoutException:
             return None
+
+    def wait_for_element_css_index(self, selector, index=0, timeout=30):
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) > index)
+            return self.browser.driver.find_elements(By.CSS_SELECTOR, selector)[index]
+        except TimeoutException:
+            return None
+
+    def wait_for_not_element_css(self, selector, timeout=5):
+        """
+        Wait for an element with this css to disappear.
+        """
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) == 0)
+        except TimeoutException:
+            return None
+
+    def wait_for_toast_to_disappear(self):
+        # Wait until the toast message disappears.
+        return self.wait_for_not_element_css('.flash.is-active', 10)
+
+    def close_modal(self):
+        # Close modal, if any
+        self.browser.find_by_css('body').type(Keys.ESCAPE)
 
     def is_visible(self, selector, timeout=10):
         return not self.wait_for_element_css(selector, timeout) is None

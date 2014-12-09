@@ -1,3 +1,4 @@
+from decimal import Decimal
 from bluebottle.utils.utils import StatusDefinition
 from django.conf import settings
 from django.db import models
@@ -21,7 +22,7 @@ class BaseFundRaiser(models.Model):
     image = ImageField(_("picture"), max_length=255, blank=True, null=True, upload_to='fundraiser_images/', help_text=_("Minimal of 800px wide"))
     video_url = models.URLField(max_length=100, blank=True, default='')
 
-    amount = models.PositiveIntegerField(_("amount"))
+    amount = models.DecimalField(_("amount"), decimal_places=2, max_digits=10)
     currency = models.CharField(max_length="10", default='EUR')
     deadline = models.DateTimeField(null=True)
 
@@ -34,12 +35,11 @@ class BaseFundRaiser(models.Model):
 
     @property
     def amount_donated(self):
-        # FIXME: Removed import of DonationStatuses because it was resulting in circular imports.
         donations = self.donation_set.filter(order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING])
         if donations:
             total = donations.aggregate(sum=Sum('amount'))
             return total['sum']
-        return '000'
+        return 0.0
 
     def get_meta_title(self, **kwargs):
         return self.title
@@ -62,7 +62,7 @@ class BaseFundRaiser(models.Model):
 
         return tweet
 
-    class Meta:
+    class Meta():
         abstract = True
         default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
         preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'

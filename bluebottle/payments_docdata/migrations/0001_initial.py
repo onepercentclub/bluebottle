@@ -11,6 +11,10 @@ MODEL_MAP = get_model_mapping()
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('payments', '0001_initial'),
+    )
+
     def forwards(self, orm):
         # Adding model 'DocdataPayment'
         db.create_table(u'payments_docdata_docdatapayment', (
@@ -49,16 +53,6 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'payments_docdata', ['DocdataTransaction'])
 
-        # Adding model 'DocDataDirectDebitTransaction'
-        db.create_table(u'payments_docdata_docdatadirectdebittransaction', (
-            (u'transaction_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['payments.Transaction'], unique=True, primary_key=True)),
-            ('account_name', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('account_city', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('iban', self.gf('django.db.models.fields.CharField')(max_length=35)),
-            ('bic', self.gf('django.db.models.fields.CharField')(max_length=35)),
-        ))
-        db.send_create_signal(u'payments_docdata', ['DocDataDirectDebitTransaction'])
-
 
     def backwards(self, orm):
         # Deleting model 'DocdataPayment'
@@ -66,10 +60,6 @@ class Migration(SchemaMigration):
 
         # Deleting model 'DocdataTransaction'
         db.delete_table(u'payments_docdata_docdatatransaction')
-
-        # Deleting model 'DocDataDirectDebitTransaction'
-        db.delete_table(u'payments_docdata_docdatadirectdebittransaction')
-
 
     models = {
         u'auth.group': {
@@ -146,14 +136,6 @@ class Migration(SchemaMigration):
             'payment': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['payments.Payment']"}),
             'polymorphic_ctype': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'polymorphic_payments.transaction_set'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
-        },
-        u'payments_docdata.docdatadirectdebittransaction': {
-            'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocDataDirectDebitTransaction', '_ormbases': [u'payments.Transaction']},
-            'account_city': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            'account_name': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            'bic': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            'iban': ('django.db.models.fields.CharField', [], {'max_length': '35'}),
-            u'transaction_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['payments.Transaction']", 'unique': 'True', 'primary_key': 'True'})
         },
         u'payments_docdata.docdatapayment': {
             'Meta': {'ordering': "('-created', '-updated')", 'object_name': 'DocdataPayment', '_ormbases': [u'payments.Payment']},

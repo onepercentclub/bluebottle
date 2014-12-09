@@ -2,44 +2,32 @@
 
 
 {% tplhandlebars "my_donation_list" %}
-    <div class="l-section" id="donation-dashboard">
-        <div class="l-section" id="donation-header">
-            <nav class="l-wrapper">
-                <header>
-                    <h1 class="page-title">{% trans "My donations" %}</h1>
-                </header>
-            </nav>
+    <section class="l-wrapper">
+        <div class="l-full">
+
+            <header class="page-header">
+                <h1>{% trans "Donation History" %}</h1>
+            </header>
+
+            <table class="fund-history">
+                {{#each donation in controller}}
+                    <tr>
+                        <td class="donation-history-date">{{localize donation.created}}</td>
+                        <td class="donation-history-project">
+                            {{#link-to 'project' donation.project.id}}{{donation.project.title}}{{/link-to}}
+                        </td>
+                        <td class="donation-history-fundraiser">
+                            {{#if donation.fundraiser}}
+                                {{#link-to 'fundraiser' donation.fundraiser.id}}{{donation.fundraiser.title}}{{/link-to}}
+                            {{/if}}
+                        </td>
+                        <td class="donation-history-amount">&euro;{{ donation.amount }},-</td>
+                    </tr>
+                {{/each}}
+            </table>
+            {{#if canLoadMore}}
+                <a {{action "loadMore"}}>{% trans "Older donations" %}</a>
+            {{/if}}
         </div>
-        <div class="l-section" id="donation-history">
-            <div class="l-wrapper">
-                <div class="row">
-                    <div class="col12">
-                        {{#if model.isLoaded }}
-                            <table>
-                                <thead><th>Created</th><th>Project</th><th>Fundraiser</th><th>Amount</th></thead>
-                                <tbody>
-                                    {{#each donation in model}}
-                                        <tr>
-                                            <td class="donation-history-date">{{localize donation.created}}</td>
-                                            <td class="donation-history-project">
-                                                {{#link-to 'project' donation.project.id}}{{donation.project.title}}{{/link-to}}
-                                            </td>
-                                            <td class="donation-history-fundraiser">
-                                                {{#if donation.fundraiser}}
-                                                    {{#link-to 'fundRaiser' donation.fundraiser.id}}{{donation.fundraiser.title}}{{/link-to}}
-                                                {{/if}}
-                                            </td>
-                                            <td class="donation-history-amount">&euro;{{ donation.amount }},-</td>
-                                        </tr>
-                                    {{/each}}
-                                </tbody>
-                            </table>
-                        {{else}}
-                            <div class="is-loading-small"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading order history&#8230;" %}</strong></div>
-                        {{/if}}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 {% endtplhandlebars %}

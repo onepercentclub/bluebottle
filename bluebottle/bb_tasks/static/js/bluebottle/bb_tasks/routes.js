@@ -5,9 +5,7 @@ App.Router.map(function(){
 
     // route disabled for now, let the backend handle the hours spent
     // this.resource('myTaskList', {path: '/my/tasks'});
-    this.resource('task', {path: '/tasks/:task_id'}, function(){
-
-    });
+    this.resource('task', {path: '/tasks/:task_id'});
     this.resource('taskEdit', {path: '/tasks/:task_id/edit'});
     this.resource('projectTask', {path: '/:task_id'}, function(){});
     this.resource('taskNew', {path: '/tasks/new/:project_id'});
@@ -34,22 +32,36 @@ App.ProjectTasksIndexRoute = Em.Route.extend({
                 }
             });
         });
-    },
+    }
 });
 
 
-App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
+App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
+
+    parentType: 'task',
+
     model: function(params) {
         return App.Task.find(params.task_id);
     },
 
+    afterModel: function(model){
+        if (this.get('tracker')) {
+            this.get('tracker').trackEvent("Task detail", {title: model.get('title')});
+        }
+    },
+
     actions: {
         applyForTask: function() {
-            var route = this;
-            var store = route.get('store');
-            var taskMember = store.createRecord(App.TaskMember);
-            var task = this.modelFor('task');
-            var view = App.TaskMemberApplyView.create();
+            if (! this.get('currentUser.username')) {
+                this.send('openInBox', 'login');
+                return;
+            }
+
+            var route = this,
+                store = route.get('store'),
+                taskMember = store.createRecord(App.TaskMember),
+                task = this.modelFor('task'),
+                view = App.TaskMemberApplyView.create();
 
 			if (!this.controllerFor('task').get('isMember')){
 				Bootstrap.ModalPane.popup({
@@ -65,10 +77,9 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, {
 							taskMember.set('created', new Date());
 							taskMember.save();
 
-			                                if (route.get('tracker')) {
-			                                    route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
-			                                }
-
+							if (route.get('tracker')) {
+							    route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
+							}
 						}
 						if (opts.secondary) {
 							taskMember.deleteRecord();
@@ -151,14 +162,6 @@ App.TaskListIndexRoute = Em.Route.extend(App.UsedCountrySelectViewMixin, App.Tra
             });
         });
     }
-});
-
-
-App.TaskIndexRoute = Em.Route.extend(App.WallRouteMixin, {
-    parentId: function(){
-        return this.modelFor('task').get('id');
-    }.property(),
-    parentType: 'task'
 });
 
 

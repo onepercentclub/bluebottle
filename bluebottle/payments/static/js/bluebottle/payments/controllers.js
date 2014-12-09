@@ -1,5 +1,5 @@
 App.OrderPaymentController = Em.ObjectController.extend({
-    needs: ['application', 'projectDonationList', 'fundRaiserDonationList'],
+    needs: ['application', 'projectDonationList', 'fundraiserDonationList'],
 
     errorsFixedBinding: 'paymentMethodController.errorsFixed',
     validationErrorsBinding: 'paymentMethodController.validationErrors',
@@ -46,7 +46,10 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     willClose: function () {
         var currentPaymentMethodController = this.get('paymentMethodController');
-        if (currentPaymentMethodController) currentPaymentMethodController.clearValidations();
+        if (currentPaymentMethodController) {
+            currentPaymentMethodController.clearValidations();
+            currentPaymentMethodController._clearModel();
+        }
     },
 
     didError: function () {
@@ -61,7 +64,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
 
     _setFirstPaymentMethod: function () {
         if (this.get('methods.length') && !this.get('currentPaymentMethod') && !this.get('payment_method')) {
-            this.set('currentPaymentMethod', this.get('methods').objectAt(0));
+            this.set('currentPaymentMethod', this.get('methods.firstObject'));
         }
     }.observes('methods.length'),
 
@@ -81,14 +84,20 @@ App.OrderPaymentController = Em.ObjectController.extend({
         }
         if (meta.type == 'success') {
             // Refresh project and donations
-            var donation = this.get('order.donations').objectAt(0);
-            // TODO: Refresh FundRaiser if it's a FundRaisser
+            var donation = this.get('order.donations.firstObject');
+            // TODO: Refresh Fundraiser if it's a FundRaisser
             // TODO: Refresh donation list
             donation.get('project.getProject').reload();
 
             this.send('modalFlip', 'donationSuccess', donation, 'modalBack');
         }
     },
+
+    _paymentMethodChanged: function() {
+        if (this.get('paymentMethodController.didChange') && ! this.get('isValid')) {
+            this.get('model').transitionTo('loaded.created.uncommitted');
+        }
+    }.observes('paymentMethodController.didChange'),
 
     // Process the data associated with the current payment method
     _setIntegrationData: function () {
@@ -152,18 +161,24 @@ App.OrderPaymentController = Em.ObjectController.extend({
             // Slide back to the donation modal - keeping the current donation.
             // Currently the there is only one donation associated with each order
             // so grab the first donation item.
-            var donation = this.get('model.order.donations').objectAt(0);
-            this.send('modalSlideBack', 'donation', donation);
+            var donation = this.get('model.order.donations.firstObject');
+            
+            this.send('modalSlide', 'donation', donation);
         },
 
         nextStep: function () {
             var _this = this,
                 payment = this.get('model');
 
+
             // check for validation errors generated in the current payment method controller
             // This call will set the 'validationErrors' property on the payment methods 
             // controller.
             this.get('paymentMethodController').clientSideValidationErrors();
+
+            // Set the property to false so that if the save below fails then user changes to
+            // the paymentMethod data will trigger the _paymentMethodChanged in this controller.
+            this.set('paymentMethodController.didChange', false);
 
             // Check client side errors - there is a binding between validationErrors on the 
             // PaymentController and the PaymentMethodController.
@@ -183,25 +198,27 @@ App.OrderPaymentController = Em.ObjectController.extend({
                     // Reload the order to receive any backend updates to the
                     // order status
                     var order = payment.get('order');
-                    order.reload();
-                    // Proceed to the next step based on the status of the payment
-                    // 1) Payment status is 'success'
-                    // 2) Payment status is 'in_progress'
+                    order.reload().then(function(reloadedOrder) {
+                        // Proceed to the next step based on the status of the payment
+                        // 1) Payment status is 'success'
+                        // 2) Payment status is 'in_progress'
 
-                    // FIXME: For testing purposes we will direct the user to
-                    //        the success modal for creditcard payments and to
-                    //        the mock service provider for all others.
-                    if (order.get('status') == 'success') {
-                        // Load the success modal. Since all models are already
-                        // loaded in Ember here, we should just be able
-                        // to get the first donation of the order here
-                        var donation = order.get('donations').objectAt(0);
-                        _this.send('modalSlide', 'donationSuccess', donation);
-                    } else {
-                        // Process the authorization action to determine next
-                        // step in payment process.
-                        _this._processAuthorizationAction();
-                    }                },
+                        // FIXME: For testing purposes we will direct the user to
+                        //        the success modal for creditcard payments and to
+                        //        the mock service provider for all others.
+                        if (reloadedOrder.get('status') == 'success' || reloadedOrder.get('status') == 'pending') {
+                            // Close modal as the payment process here has ended.
+                            _this.send('closeModal');
+
+                            // Redirect to the order route.
+                            _this.transitionToRoute('order', reloadedOrder);
+                        } else {
+                            // Process the authorization action to determine next
+                            // step in payment process.
+                            _this._processAuthorizationAction();
+                        }
+                    });
+                },
                 // Failure
                 function (payment) {
                     _this.set('isBusy', false);
@@ -225,6 +242,8 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
     requiredFields: [],
     errorDefinitions: [],
     isBusy: null,
+    _clearModel: Em.K,
+    didChange: false,
 
     getIntegrationData: function() {
         return this.get('model');
@@ -232,43 +251,38 @@ App.StandardPaymentMethodController = Em.ObjectController.extend(App.ControllerV
 });
 
 App.StandardCreditCardPaymentController = App.StandardPaymentMethodController.extend({
-
+    cardTypes: ['amex', 'mastercard', 'visa'],
     requiredFields: ['cardOwner', 'cardNumber', 'expirationMonth', 'expirationYear', 'cvcCode'],
-
-    init: function () {
-        this._super();
-
-        this.set('errorDefinitions', [
-            {
-                'property': 'cardOwner',
-                'validateProperty': 'cardOwner.length',
-                'message': gettext('Card Owner can\'t be left empty'),
-                'priority': 2
-            },
-            {
-                'property': 'cardNumber',
-                'validateProperty': 'validCreditcard',
-                'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
-                'priority': 1
-            },
-            {
-                'property': 'expirationMonth',
-                'validateProperty': /^1[02]$|^0[1-9]$/,
-                'message': gettext('The expiration month is not valid'),
-                'priority': 3
-            },
-            {
-                'property': 'expirationYear',
-                'validateProperty': /^[1-9]\d{1}$/,
-                'message': gettext('The expiration year is not valid'),
-                'priority': 4
-            },
-            {
-                'property': 'cvcCode',
-                'validateProperty': /^\d{3}$/,
-                'message': gettext('The CVC is not valid'),
-                'priority': 5
-            }
-        ]);
-    }
+    errorDefinitions: [
+        {
+            'property': 'cardOwner',
+            'validateProperty': 'cardOwner.length',
+            'message': gettext('Card Owner can\'t be left empty'),
+            'priority': 2
+        },
+        {
+            'property': 'cardNumber',
+            'validateProperty': 'validCreditcard',
+            'message': gettext('Your creditcard doesn\'t have the right number of digit.'),
+            'priority': 1
+        },
+        {
+            'property': 'expirationMonth',
+            'validateProperty': /^1[02]$|^0[1-9]$/,
+            'message': gettext('The expiration month is not valid'),
+            'priority': 3
+        },
+        {
+            'property': 'expirationYear',
+            'validateProperty': /^[1-9]\d{1}$/,
+            'message': gettext('The expiration year is not valid'),
+            'priority': 4
+        },
+        {
+            'property': 'cvcCode',
+            'validateProperty': /^\d{3}$/,
+            'message': gettext('The CVC is not valid'),
+            'priority': 5
+        }
+    ]
 });

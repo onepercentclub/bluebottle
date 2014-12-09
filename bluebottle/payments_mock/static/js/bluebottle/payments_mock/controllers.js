@@ -3,6 +3,7 @@ App.MockIdealController = App.StandardPaymentMethodController.extend({
 
     init: function() {
         this._super();
+        
         this.set('errorDefinitions', [
             {
                 'property': 'issuerId',
@@ -11,7 +12,7 @@ App.MockIdealController = App.StandardPaymentMethodController.extend({
                 'priority': 1
             }
         ]);
-        this.set('model', App.MockIdeal.create());
+        this.set('model', App.MockiDeal.create());
     }
 
 });

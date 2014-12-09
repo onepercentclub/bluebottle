@@ -150,3 +150,4 @@ class BaseTask(models.Model):
         self.save()
 
 
+from taskwallmails import *

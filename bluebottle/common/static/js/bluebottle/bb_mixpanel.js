@@ -50,6 +50,38 @@ App.TrackerController = Em.ObjectController.extend({
         }
     },
 
+
+    identify: function(id){
+        if ( Em.typeOf(id) == 'number') {
+            this.get('_tracker').identify(id);
+        }
+    },
+
+    alias: function(id) {
+        if (Em.typeOf(id) == 'number') {
+            this.get('_tracker').alias(id);
+        }
+    },
+
+    peopleSet: function(properties) {
+        if (Em.typeOf(properties) == 'undefined') properties = {};
+
+        if (Em.typeOf(properties) == 'object') {
+            this.get('_tracker').people.set(properties);
+        }
+    },
+
+    peopleIncrement: function(key, value) {
+        if (Em.typeOf(name) == 'string' && Em.typeOf(value) == 'number') {
+             this.get('_tracker').people.increment(key, value);
+        }
+
+        if (Em.typeOf(name) == 'string' && Em.typeOf(value) == 'undefined') {
+             this.get('_tracker').people.increment(key);
+        }
+
+    },
+
     setUserDetails: function(){
         if (this.get('controllers.currentUser.isAuthenticated')) {
             var user = this.get('controllers.currentUser');

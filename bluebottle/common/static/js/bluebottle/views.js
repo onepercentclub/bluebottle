@@ -40,9 +40,39 @@ App.ApplicationView = Em.View.extend({
                 e.preventDefault();
             }
         }
-    }
+    },
+
+    isTouch: function() {
+        var isTouch = ('ontouchstart' in document.documentElement);
+        return isTouch;
+    },
+
+    addTouch: function(element) {
+        if (this.isTouch()) {
+            $('body').addClass('touch');
+        }
+        else {
+            $('body').addClass('no-touch');
+        };
+    }.on('didInsertElement'),
+
+    touchProfileMenu: function() {
+        if (this.isTouch()) {
+            var navMember = $('.nav-member');
+            navMember.addClass('touch');
+            
+            navMember.on('click', function(e) {
+                e.preventDefault();
+                navMember.toggleClass('is-active');
+            });
+        }
+    }.on('didInsertElement')
 });
 
+// Extend from this class to allow auto focus first input in form
+// and pressing 'enter' in one of the form inputs will submit the 
+// form (action) if the 'submitAction' property has been defined.
+// TODO: make this a mixin and/or component.
 App.FormView = Em.View.extend({
     setFocus: function() {
         var inputs = this.$().find('input');

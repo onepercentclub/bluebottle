@@ -1,17 +1,17 @@
 import logging
-
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
-from django.contrib.sites.models import get_current_site
+from bluebottle.payments_logger.models import PaymentLogEntry
 import gateway
 
-from bluebottle.payments_docdata.models import DocdataTransaction
 from django.utils.http import urlencode
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language
 
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.utils.utils import StatusDefinition, get_current_host
+from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
 from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class DocdataPaymentAdapter(BasePaymentAdapter):
 
-    MODEL_CLASS = DocdataPayment
+    MODEL_CLASSES = [DocdataPayment, DocdataDirectdebitPayment]
 
     # Payment methods specified by DocData. They should map to the payment methods we specify in our settings file so we can map
     # payment methods of Docdata to our own definitions of payment methods
@@ -30,7 +30,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'AMEX'                              : 'docdataCreditcard',
         'IDEAL'                             : 'docdataIdeal',
         'BANK_TRANSFER'                     : 'docdataBanktransfer',
-        'DIRECT_DEBIT'                      : 'docdataDirectdebit'
+        'DIRECT_DEBIT'                      : 'docdataDirectdebit',
+        'SEPA_DIRECT_DEBIT'                 : 'docdataDirectdebit'
+
     }
 
     STATUS_MAPPING = {
@@ -39,23 +41,98 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # Is this mapping correct?
         'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # Is this mapping correct?
         'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
-        'PAID':                           StatusDefinition.SETTLED, 
-        'CANCELLED':                      StatusDefinition.CANCELLED,
+        'PAID':                           StatusDefinition.SETTLED,
+        'CANCELED':                       StatusDefinition.CANCELLED, # Docdata responds with 'CANCELED'
         'CHARGED_BACK':                   StatusDefinition.CHARGED_BACK,
-        'CONFIRMED_PAID':                 StatusDefinition.PAID,
+        'CONFIRMED_PAID':                 StatusDefinition.SETTLED,
         'CONFIRMED_CHARGEDBACK':          StatusDefinition.CHARGED_BACK,
-        'CLOSED_SUCCESS':                 StatusDefinition.PAID,
+        'CLOSED_SUCCESS':                 StatusDefinition.SETTLED,
         'CLOSED_CANCELLED':               StatusDefinition.CANCELLED,
     }
 
     def __init__(self, *args, **kwargs):
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
+    def get_user_data(self):
+        user = self.order_payment.order.user
+        ip_address = get_client_ip()
+
+        if user:
+            user_data = {
+                'id': user.id,
+                'first_name': user.first_name or 'Unknown',
+                'last_name': user.last_name or 'Unknown',
+                'email': user.email,
+                'ip_address': ip_address,
+            }
+        else:
+            user_data = {
+                'id': 1,
+                'first_name': 'Nomen',
+                'last_name': 'Nescio',
+                'email': settings.CONTACT_EMAIL,
+                'ip_address': ip_address
+            }
+
+
+        if user and hasattr(user, 'address'):
+
+            street = user.address.line1.split(' ')
+            if street[-1] and any(char.isdigit() for char in street[-1]):
+                user_data['house_number'] = street.pop(-1)
+                user_data['street'] = ' '.join(street)
+            else:
+                user_data['house_number'] = 'Unknown'
+                if user.address.line1:
+                    user_data['street'] = user.address.line1
+                else:
+                    user_data['street'] = 'Unknown'
+
+            if user.address.postal_code:
+                user_data['postal_code'] = user.address.postal_code
+            else:
+                user_data['postal_code'] = 'Unknown'
+            if user.address.city:
+                user_data['city'] = user.address.city
+            else:
+                user_data['city'] = 'Unknown'
+            if user.address.country and hasattr(user.address.country, 'alpha2_code'):
+                user_data['country'] = user.address.country.alpha2_code
+            elif get_country_code_by_ip(ip_address):
+                user_data['country'] = get_country_code_by_ip(ip_address)
+            else:
+                user_data['country'] = 'NL'
+        else:
+            user_data['postal_code'] = 'Unknown'
+            user_data['street'] = 'Unknown'
+            user_data['city'] = 'Unknown'
+            country = get_country_code_by_ip(ip_address)
+            if country:
+                user_data['country'] = country
+            else:
+                user_data['country'] = 'NL'
+            user_data['house_number'] = 'Unknown'
+
+        if not user_data['country']:
+            user_data['country'] = 'NL'
+
+        user_data['company'] = ''
+        user_data['kvk_number'] = ''
+        user_data['vat_number'] = ''
+        user_data['house_number_addition'] = ''
+        user_data['state'] = ''
+        return user_data
+
+
     def get_status_mapping(self, external_payment_status):
         return self.STATUS_MAPPING.get(external_payment_status)
 
     def create_payment(self):
-        payment = self.MODEL_CLASS(order_payment=self.order_payment, **self.order_payment.integration_data)
+        if self.order_payment.payment_method == 'docdataDirectdebit':
+            payment = DocdataDirectdebitPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
+        else:
+            payment = DocdataPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
+
         payment.total_gross_amount = self.order_payment.amount * 100
 
         if payment.default_pm == 'paypal':
@@ -67,6 +144,21 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
         user = self.get_user_data()
+
+        # Store user data on payment too
+        payment.customer_id = user['id']
+        payment.email = user['email']
+        payment.first_name = user['first_name']
+        payment.last_name = user['last_name']
+
+        payment.address = user['street']
+        # payment.street = user['street']
+        # payment.house_number = user['house_number']
+
+        payment.city = user['city']
+
+        # payment.country = user['country']
+        # payment. = user['ip_address']
 
         name = gateway.Name(
             first=user['first_name'],
@@ -82,21 +174,23 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             date_of_birth=None,
             phone_number=None,
             mobile_phone_number=None,
-            ipAddress=None)
+            ipAddress=user['ip_address'])
 
         address = gateway.Address(
-            street=u'Unknown',
-            house_number='1',
-            house_number_addition=u'',
-            postal_code='Unknown',
-            city=u'Unknown',
-            state=u'',
-            country_code='NL',
+            street=user['street'],
+            house_number=user['house_number'],
+            house_number_addition=user['house_number_addition'],
+            postal_code=user['postal_code'],
+            city=user['city'],
+            state=user['state'],
+            country_code=user['country'],
         )
 
         bill_to = gateway.Destination(name=name, address=address)
 
         client = gateway.DocdataClient(testing_mode)
+
+        info_text = _("Bluebottle donation %(payment_id)s") % {'payment_id': self.order_payment.id}
 
         response = client.create(
             merchant=merchant,
@@ -104,8 +198,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             total_gross_amount=amount,
             shopper=shopper,
             bill_to=bill_to,
-            description=_("Bluebottle donation"),
-            receiptText=_("Bluebottle donation"),
+            description=info_text,
+            receiptText=info_text,
             includeCosts=False,
             profile=settings.DOCDATA_SETTINGS['profile'],
             days_to_pay=settings.DOCDATA_SETTINGS['days_to_pay'],
@@ -121,14 +215,21 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         #FIXME: get rid of these testing
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-
         client = gateway.DocdataClient(testing_mode)
+        client_language = get_language()
 
-        return_url_base = get_current_host()
-        client_language = 'en'
-
-        integration_data = self.order_payment.integration_data
-
+        if self.order_payment.payment_method == 'docdataDirectdebit':
+            try:
+                reply = client.start_remote_payment(
+                    order_key=self.payment.payment_cluster_key,
+                    payment=self.payment,
+                    payment_method='SEPA_DIRECT_DEBIT'
+                )
+                return {'type': 'success'}
+            except DocdataPaymentException as i:
+                raise PaymentException(i)
+        else:
+            return_url_base = get_current_host()
         try:
             url = client.get_payment_menu_url(
                 order_key=self.payment.payment_cluster_key,
@@ -139,10 +240,22 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         except DocdataPaymentException as i:
             raise PaymentException(i)
 
+        integration_data = self.order_payment.integration_data
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True
         if self.payment.default_pm == 'paypal_express_checkout':
+            default_act = True
+
+        url = client.get_payment_menu_url(
+            order_key=self.payment.payment_cluster_key,
+            order_id=self.order_payment.order_id,
+            return_url=return_url_base,
+            client_language=client_language,
+        )
+
+        default_act = False
+        if self.payment.ideal_issuer_id:
             default_act = True
 
         params = {
@@ -161,8 +274,12 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             return None
 
         status = self.get_status_mapping(response.payment[0].authorization.status)
+
+        totals = response.approximateTotals
+        if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
+            status = StatusDefinition.SETTLED
+
         if self.payment.status <> status:
-            totals = response.approximateTotals
             self.payment.total_registered = totals.totalRegistered
             self.payment.total_shopper_pending = totals.totalShopperPending
             self.payment.total_acquirer_pending = totals.totalAcquirerPending
@@ -170,12 +287,12 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_captured = totals.totalCaptured
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
-
             self.payment.status = status
             self.payment.save()
 
-        for transaction in response.payment:
-            self._store_payment_transaction(transaction)
+        # FIXME: Saving transactions fails...
+        # for transaction in response.payment:
+        #    self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)
@@ -187,6 +304,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             dd_transaction.capture_status = transaction.authorization.capture[0].status
             dd_transaction.capture_amount = transaction.authorization.capture[0].amount.value
             dd_transaction.capture_currency = transaction.authorization.capture[0].amount._currency
+
         dd_transaction.save()
 
     def _fetch_status(self):

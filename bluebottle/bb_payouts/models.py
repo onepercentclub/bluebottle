@@ -24,7 +24,6 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_donation_mo
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
 
-
 class InvoiceReferenceMixin(models.Model):
     """
     Mixin for generating an invoice reference.
@@ -123,7 +122,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
         assert self.pk
 
         try:
-            latest_state_change = self.log_set.latest()
+            latest_state_change = self.payout_logs.latest()
             return latest_state_change.new_status
 
         except ObjectDoesNotExist:
@@ -139,7 +138,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
 
         if old_status != self.status:
             # Create log entry
-            log_entry = self.log_set.model(
+            log_entry = self.payout_logs.model(
                 payout=self,
                 old_status=old_status, new_status=self.status
             )
@@ -170,8 +169,8 @@ class PayoutLogBase(models.Model):
         verbose_name_plural = _('state changes')
         abstract = True
 
-        ordering = ['-date']
-        get_latest_by = 'date'
+        ordering = ['-created']
+        get_latest_by = 'created'
 
     STATUS_CHOICES = (
         (StatusDefinition.NEW, _("New")),
@@ -179,7 +178,7 @@ class PayoutLogBase(models.Model):
         (StatusDefinition.SETTLED, _("Settled"))
     )
 
-    date = CreationDateTimeField(_("date"))
+    created = CreationDateTimeField(_("date"))
 
     old_status = models.CharField(
         _("old status"), max_length=20, choices=STATUS_CHOICES,
@@ -192,9 +191,9 @@ class PayoutLogBase(models.Model):
 
     def __unicode__(self):
         return _(
-            u'Status change of \'%(payout)s\' on %(date)s from %(old_status)s to %(new_status)s' % {
+            u'Status change of \'%(payout)s\' on %(created)s from %(old_status)s to %(new_status)s' % {
                 'payout': unicode(self.payout),
-                'date': self.date.strftime('%d-%m-%Y'),
+                'created': self.created.strftime('%d-%m-%Y'),
                 'old_status': self.old_status,
                 'new_status': self.new_status,
             }
@@ -213,8 +212,7 @@ class BaseProjectPayout(PayoutBase):
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 
-    payout_rule = models.CharField(_("Payout rule"), max_length=20, choices=PayoutRules.choices,
-                                   help_text=_("The payout rule for this project."))
+    payout_rule = models.CharField(_("Payout rule"), max_length=20,  help_text=_("The payout rule for this project."))
 
     amount_raised = MoneyField(_("amount raised"),
                                help_text=_('Amount raised when Payout was created or last recalculated.'))
@@ -242,6 +240,18 @@ class BaseProjectPayout(PayoutBase):
         get_latest_by = 'created'
         ordering = ['-created']
         abstract = True
+
+    @property
+    def amount_pending(self):
+        return self.get_amount_pending()
+
+    @property
+    def amount_safe(self):
+        return self.get_amount_safe()
+
+    @property
+    def amount_failed(self):
+        return self.get_amount_failed()
 
     def get_payout_rule(self):
         """
@@ -343,7 +353,7 @@ class BaseProjectPayout(PayoutBase):
 
 
 class ProjectPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='log_set')
+    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL, related_name='payout_logs')
 
 
 class BaseOrganizationPayout(PayoutBase):
@@ -445,10 +455,10 @@ class BaseOrganizationPayout(PayoutBase):
 
         # Do a silly trick by filtering the date the donation became paid
         # (the only place where the Docdata closed/paid status is matched).
-        # payments = payments.order_by('order__completed')
+        # payments = payments.order_by('order__closed')
         payments = payments.filter(
-            completed__gte=date_timezone_aware(self.start_date),
-            completed__lte=date_timezone_aware(self.end_date)
+            closed__gte=date_timezone_aware(self.start_date),
+            closed__lte=date_timezone_aware(self.end_date)
         )
 
         # Make sure this does not create additional objects
@@ -591,7 +601,7 @@ class BaseOrganizationPayout(PayoutBase):
 
 
 class OrganizationPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='log_set')
+    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='payout_logs')
 
 
 # Connect signals after defining models

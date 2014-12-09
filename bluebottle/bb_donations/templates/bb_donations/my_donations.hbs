@@ -1,0 +1,39 @@
+{% load i18n bb_ember static %}
+
+{% tplhandlebars "my_donations" %}
+
+    <div id="account">
+
+        <div class="l-section account-header">
+            <nav class="l-wrapper">
+                <figure class="account-avatar"><img {{bindAttr src="currentUser.getAvatar"}} /></figure>
+
+                <header class="account-title">
+                    {% blocktrans %}
+                        My 1% <em class="account-subtitle">Donations</em>
+                    {% endblocktrans %}
+                </header>
+
+                <ul class="tabs three">
+
+                    <li class="tab-item first">
+                        {{#linkTo "myDonationList" }}
+                            <em class="tab-icon"><span class="flaticon solid wallet-1"></span></em>
+                            <strong class="tab-title">
+                                {% trans "Donations" %}
+                                <em class="tab-subtitle">{% trans "Donation History" %}</em>
+                            </strong>
+                        {{/linkTo}}
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+
+        <div class="l-section account-details">
+            {{ outlet }}
+        </div>
+
+    </div>
+
+{% endtplhandlebars %}

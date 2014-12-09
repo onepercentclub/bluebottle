@@ -92,30 +92,28 @@ App.PasswordResetRoute = Em.Route.extend({
     },
 
     model: function(params) {
-        var record = App.PasswordReset.createRecord({
+        return App.PasswordReset.create({
             id: params.reset_token
         });
-        // Need this so that the adapter makes a PUT instead of POST
-        record.transitionTo('loaded.saved');
-        return record
     },
 
     beforeModel: function(transition) {
-
         return Ember.RSVP.Promise(function (resolve, reject) {
             var hash = {
                 url: '/api/users/passwordset/' + transition.params.reset_token,
                 type: 'get',
                 contentType: 'application/json; charset=utf-8'
-                };
+            };
+            
             hash.success = function(response) {
                 Ember.run(null, resolve, null)
             };
+
             hash.error = function(response) {
                 Ember.run(null, reject, JSON.parse(response.responseText));
             };
-            Ember.$.ajax(hash);
 
+            Ember.$.ajax(hash);
         })
     },
     actions: {

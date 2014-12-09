@@ -1,0 +1,31 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-upload-multiple-images" %}
+
+    <ul class="upload-photos">
+        {{#each photo in uploadFiles}}
+            <li class="upload-photo">
+                {{#if photo.errors}}
+                    <span class="message is-error">{% trans "Error" %}</span>
+                {{else}}
+                    {{#if photo.photo.small}}
+                        <img {{bindAttr src="photo.photo.small"}} />
+                        <a {{action "removeFile" photo}} class="action-delete">Delete</a>
+                    {{else}}
+                        <div class="is-loading-small"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading photos &#8230;" %}</strong></div>
+                    {{/if}}
+                {{/if}}
+            </li>
+        {{/each}}
+        
+        <li class="upload-photo">
+            <a class="action-upload">
+                {{view App.UploadMultipleFilesInput multiple="multiple" accept="image/*"}}
+            </a>
+        </li>
+    </ul>
+
+
+{% endtplhandlebars %}

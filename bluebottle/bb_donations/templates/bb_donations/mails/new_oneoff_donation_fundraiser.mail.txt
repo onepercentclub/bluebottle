@@ -1,0 +1,11 @@
+{% load i18n %}
+{% blocktrans with amount=amount donor_name=donor_name site=site link=link receiver=receiver %}
+Hello {{first_name}},
+
+You just received a EUR {{ amount }} donation!
+
+Curious who made a donation, check your fundraiser page:
+{{ site }}{{ link }}.
+
+Keep up the good work!
+{% endblocktrans %}

@@ -6,7 +6,6 @@ from django.db.models import options
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
-
 class BaseDonation(models.Model):
     """
     Donation of an amount from a user to a project.

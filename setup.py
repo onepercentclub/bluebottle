@@ -14,6 +14,7 @@ changes = ''
 
 install_requires = [
     'Babel==1.3',
+    'bunch==1.0.1',
     'Django==1.5.5',
     'Pillow==2.3.0',
     'South==0.8.1',
@@ -37,6 +38,7 @@ install_requires = [
     'django-tinymce==1.5.1b2',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.5.1',
+    'django-dynamic-fixture==1.8.0',
     'djangorestframework==2.3.12',
     'dkimpy==0.5.4',
     'html5lib==0.95',
@@ -95,7 +97,7 @@ tests_require = [
     'nose==1.3.4',
     'pylint==1.1.0',
     'sauceclient==0.1.0',
-    'selenium==2.44.0',
+    'selenium==2.43.0',
     'sorl-thumbnail==11.12',
     'splinter==0.6.0',
     'tdaemon==0.1.1',

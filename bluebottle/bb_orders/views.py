@@ -62,13 +62,14 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
     def get(self, request, *args, **kwargs):
         order = self.get_object()
 
-        if order.status != StatusDefinition.SUCCESS:
+        # Only check the status with the PSP if the order is locked or pending
+        if order.status in [StatusDefinition.LOCKED, StatusDefinition.PENDING]:
             self.check_status_psp(order)
         return super(ManageOrderDetail, self).get(request, *args, **kwargs)
 
     def check_status_psp(self, order):
         try:
-            order_payment = order.payments.all().order_by('-created')[0]
+            order_payment = order.order_payments.all().order_by('-created')[0]
         except IndexError:
             raise Http404
 

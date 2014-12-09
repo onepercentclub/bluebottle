@@ -6,10 +6,10 @@ class PaymentException(Exception):
         self.error_list = error_list
 
     def __str__(self):
-        return self.message
+        return str(self.message)
 
     def __unicode__(self):
-        return str(self)
+        return unicode(self.message)
 
 
 class PaymentAdminException(Exception):

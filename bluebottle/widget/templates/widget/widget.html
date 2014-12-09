@@ -1,0 +1,59 @@
+{% load i18n %}
+{% load thumbnail %}
+{% load static from staticfiles %}
+
+<div class="widget-holder">
+<style>
+    @import url("https://onepercentclub.com/static/assets/css/widget.css");
+</style>
+    <div class="widget-campaign-container {{ size }}">
+        {% for project in projects %}
+            <div class="campaign-item {{ size }}">
+                <a href="{{ host }}/go/projects/{{project.slug}}" class="campaign-item-holder">
+                    <header class="header">
+                        {% thumbnail project.image "400x380" as im %}
+                            <img src="{{ host }}{{ im.url }}" />
+                        {% endthumbnail %}
+                    </header>
+                    <span class="profile-photo">
+                        {% thumbnail project.owner.picture "120x120" colorspace="GRAY" as im %}
+                            <img src="{{ host }}{{ im.url }}" />
+                        {% endthumbnail %}
+                    </span>
+                    <div class="campaign-body">
+                        <p>
+                            <span class="profile-name">
+                                <strong>{{project.owner.full_name}}</strong> <span>{% trans 'campaigns for'%}</span>
+                            </span>
+                            <span class="campaign-body-names">
+                                {{project.title}}
+                            </span>
+                            <span class="campaign-hover-body">
+                                {{project.pitch}}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="campaign-footer">
+                            <div class="project-fund-amount-slider">
+                                <strong style="width: {{ project.donated_percentage }}%;" class="slider-progress is-in-progress" data-target-amount="{{project.amount_asked}}" data-donated-amount="{{project.amount_donated}}"><em class="slider-percentage">0%</em></strong></div>
+                            <div class="campaign-fund-amount">
+                                <span class="amount-raised"><strong>&euro; {{project.amount_donated|floatformat:0}} </strong>{% trans 'raised'%}</span>
+                                <span data-days-left="{{project.deadline| date:"d m Y"}}" class="days-left"><strong>{{project.daysToGo}} </strong></span>
+                            </div>
+                    </div>
+                    <div class="campaign-hover">
+                        <p class="campaign-hover-footer">
+                            <span class="go-to-campaign">
+                                {% trans 'Go to campaign'%}
+                            </span>
+                        </p>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+        <a href="https://onepercentclub.com/go/" class="powered-by">
+            <span>{% trans 'Powered by'%}</span>
+        </a>
+    </div>
+</div>

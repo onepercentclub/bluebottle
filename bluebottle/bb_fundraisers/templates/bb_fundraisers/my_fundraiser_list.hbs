@@ -29,19 +29,19 @@
 
                         <span class="project-header">
                             <figure class="project-image">
-                            	{{#linkTo 'fundRaiser' fundraiser.id}}
+                            	{{#linkTo 'fundraiser' fundraiser.id}}
                                 	<img {{bindAttr src="fundraiser.image.square" alt="fundraiser.title"}} />
                                 {{/linkTo}}
                             </figure>
                             <h2 class="project-title">
-                                {{#linkTo 'fundRaiser' fundraiser.id}}
+                                {{#linkTo 'fundraiser' fundraiser.id}}
                                 	{{ fundraiser.title }}
 	                            {{/linkTo}}
                             </h2>
                         </span>
 
 				        <div class="project-actions">
-				        	{{#linkTo 'fundRaiserEdit' fundraiser.id class="btn-link project-edit"}}<span class="flaticon solid pencil-3"></span> {% trans "Edit" %}{{/linkTo}}
+				        	{{#linkTo 'fundraiserEdit' fundraiser.id class="btn-link project-edit"}}<span class="flaticon solid pencil-3"></span> {% trans "Edit" %}{{/linkTo}}
 				        </div>
 				    </li>
 					{{/each}}

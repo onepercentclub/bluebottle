@@ -22,7 +22,7 @@
         </div>
         <div class="row">
             <div class="col12">
-                <a {{ action 'nextStep' }} {{bindAttr class=":btn :donate-btn blockingErrors:is-inactive"}} name="login">{% trans "Donate now" %}</a>
+                <a {{ action 'nextStep' }} {{bindAttr class=":btn :donate-btn validAmount::is-inactive"}} name="donate">{% trans "Donate now" %}</a>
             </div>
         </div>
         {{ partial "_donation_errors" }}

@@ -1,8 +1,8 @@
-App.Adapter.map('App.FundRaiser', {
+App.Adapter.map('App.Fundraiser', {
     owner: {embedded: 'load'}
 });
 
-App.FundRaiser = DS.Model.extend({
+App.Fundraiser = DS.Model.extend({
     url: 'fundraisers',
 
     project: DS.belongsTo('App.ProjectPreview'),
@@ -31,6 +31,11 @@ App.FundRaiser = DS.Model.extend({
     is_funded: function() {
         return this.get('amount_needed') <= 0;
     }.property('amount_needed'),
+
+    overDeadline: function() {
+        var now = new Date();
+        return now > this.get("deadline");
+    }.property('deadline'),
 
     daysToGo: function(){
         var now = new Date();

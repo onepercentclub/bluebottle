@@ -1,0 +1,10 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-datepicker" %}
+    {{#bb-form-field hint=hint label=label errors=errors }}
+        {{view App.CustomDatePicker minDateBinding='minDate' valueBinding='value'
+            nameBinding=name placeholderBinding=placeholder classBinding=extraClasses}}
+    {{/bb-form-field}}
+{% endtplhandlebars %}

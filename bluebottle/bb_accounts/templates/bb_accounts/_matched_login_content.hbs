@@ -2,10 +2,6 @@
 
 
 {% tplhandlebars "_matched_login_content" %}
-    <div class="modal-fullscreen-header">
-        <span class="modal-fullscreen-close" {{action "close"}}></span>
-        <h4>{%trans "Hello, is it me you're looking&nbsp;for"%}</h4>
-    </div>
     <div class="modal-fullscreen-profile">
             <span class="photo">
                 <img {{bindAttr src="matchedUser.getAvatar"}}>
@@ -13,7 +9,7 @@
         {{#if socialMatch}}
             <span class="already-registerd">
                 <strong>{{email}}</strong> {%trans "has already been registered via Facebook. Is this you? Please sign in below." %}
-            </span> 
+            </span>
         {{else}}
             <span class="already-registerd">
                 <strong>{{email}}</strong> {%trans "has already been registered with Bluebottle Project. Is this you? Please sign in below." %}

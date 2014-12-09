@@ -1,0 +1,26 @@
+@mixin custom-icon($elm, $w, $h, $t, $lnk) {
+    .custom-icons {
+        position: relative;
+        display: inline-block;
+        width: $w;
+        height: $h;
+
+        &:before {
+            position: absolute;
+            right: 0;
+            top: $t;
+            content: '';
+            width: $w;
+            height: $h;
+            background-repeat: no-repeat;
+        }
+
+        &.#{$elm} {
+            &:before {
+                background-image: $lnk;
+            }
+        }
+    }
+}
+
+    

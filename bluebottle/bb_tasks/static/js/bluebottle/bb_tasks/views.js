@@ -18,16 +18,14 @@ App.TaskSummaryView = Em.View.extend({
 App.ProjectTaskListView = Em.View.extend(App.ScrollInView, {});
 
 
-App.TaskIndexView = Em.View.extend({
-    templateName: 'wall'
-});
-
-
 App.TaskMenuView = Em.View.extend({
     templateName: 'task_menu',
     tagName: 'form'
 });
 
+App.TaskSearchView = Em.TextField.extend({
+    placeholder: gettext('Search')
+});
 
 
 App.TaskNewView = Em.View.extend(App.ScrollInView, {
@@ -100,7 +98,7 @@ App.TaskStatusSelectView = Em.Select.extend({
     content: App.TaskStatusList,
     optionValuePath: "content.value",
     optionLabelPath: "content.title",
-    prompt: "any status"
+    prompt: gettext("Any Status")
 
 });
 
@@ -108,7 +106,7 @@ App.TaskStatusSelectView = Em.Select.extend({
 App.SkillSelectView = Em.Select.extend({
     optionValuePath: "content",
     optionLabelPath: "content.name",
-    prompt: gettext("Pick a skill")
+    prompt: gettext("Pick a Skill")
 });
 
 
@@ -116,5 +114,5 @@ App.UsedSkillSelectView = App.SkillSelectView.extend();
 
 
 App.TaskMemberView = Ember.View.extend({
-    templateName: '_task_detail_member_partial'
+    templateName: 'task_member'
 });

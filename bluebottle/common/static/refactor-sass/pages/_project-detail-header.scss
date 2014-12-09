@@ -143,7 +143,7 @@
             }
 
             .project-location {
-                @include svg-icon('project-detail-header/icon-location.svg');
+                @include svg-icon('project-detail-header/icon-location.svg', #00C051, $color-sec);
                 padding: 0 0 0 20px !important;
                 margin-right: 30px;
                 background-position: 0 40%;
@@ -151,7 +151,7 @@
             }
 
             .project-category {
-                @include svg-icon('project-detail-header/icon-category.svg');
+                @include svg-icon('project-detail-header/icon-category.svg', #00C051, $color-sec);
                 padding-left: 20px;
                 background-position: 0 40%;
             }

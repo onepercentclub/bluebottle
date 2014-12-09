@@ -3,7 +3,6 @@ from django.db.models.signals import post_save
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
 from bluebottle.mail import send_mail
-from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_model, get_donation_model
 from bluebottle.bb_projects.models import BaseProject
@@ -57,7 +56,6 @@ def create_follow(sender, instance, created, **kwargs):
 
     """
     from bluebottle.wallposts.models import WallPost, Reaction # Imported inside the signal to prevent circular imports
-
 
     # A WallPost is created by user
     if created and isinstance(instance, WallPost):

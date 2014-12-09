@@ -149,12 +149,18 @@ BB.ModalMixin = Em.Mixin.create({
         // will be resolved once the modal has actually been closed, eg
         // the outlets have been disconnected.
         closeModal: function(defer) {
+            // If there is no modal then just resolve the defer if present
+            if (Ember.isEmpty($('.modal-fullscreen-background')) && typeof defer != 'undefined') {
+                defer.resolve();
+                return;
+            }
+
             var animationEnd = 'animationEnd animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
                 _this = this;
 
             // Handle any cleanup for the previously set content for the modal
             this.send('modalWillTransition');
-            
+
             if ($.browser.msie && parseInt($.browser.version) < 10){
                 this.send('disconnectContainerOutlet');
                 if (typeof defer != 'undefined') defer.resolve();

@@ -53,7 +53,7 @@ from bluebottle.wallposts.notifiers import ObserversContainer
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, weak=False, sender=TextWallPost)
+@receiver(post_save, weak=False, sender=TextWallpost)
 def new_wallpost_notification(sender, instance, created, **kwargs):
 
     container = ObserversContainer()

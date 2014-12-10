@@ -57,15 +57,10 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
         // Crap hack because Ember somehow doesn't strip query-params.
         // FIXME: Find out this -should- work.
         var project_id = params.project_id.split('?')[0];
+
         var page =  App.Project.find(project_id);
         var route = this;
         return page;
-    },
-
-    afterModel: function(model, transition) {
-        if (model.get('isStatusPlan')) {
-            this.transitionTo('projectList');
-        }
     },
 
     setupController: function(controller, model){
@@ -75,11 +70,18 @@ App.ProjectRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
         controller.set('tasks', App.Task.find({project: parentId}));
     },
 
+    afterModel: function(model, transition) {
+        if (model.get('isStatusPlan')) {
+            this.transitionTo('projectList');
+        }
+    },
+
     actions: {
         error: function(error, transition) {
             this.transitionTo('projectList');
         }
     }
+
 });
 
 

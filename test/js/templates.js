@@ -6587,7 +6587,7 @@ function program12(depth0,data) {
   hashTypes = {};
   hashContexts = {};
   options = {hash:{},contexts:[depth0,depth0],types:["STRING","ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "wallPostReactionList", "reactions", options) : helperMissing.call(depth0, "render", "wallPostReactionList", "reactions", options))));
+  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "wallpostReactionList", "reactions", options) : helperMissing.call(depth0, "render", "wallpostReactionList", "reactions", options))));
   data.buffer.push("\n        </div>\n\n    </article>");
   return buffer;
   
@@ -6613,7 +6613,7 @@ function program2(depth0,data) {
   data.buffer.push("\n                        ");
   hashTypes = {};
   hashContexts = {};
-  stack1 = helpers['if'].call(depth0, "item.isSystemWallPost", {hash:{},inverse:self.program(5, program5, data),fn:self.program(3, program3, data),contexts:[depth0],types:["ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data});
+  stack1 = helpers['if'].call(depth0, "item.isSystemWallpost", {hash:{},inverse:self.program(5, program5, data),fn:self.program(3, program3, data),contexts:[depth0],types:["ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n    	            ");
   return buffer;
@@ -6624,7 +6624,7 @@ function program3(depth0,data) {
   data.buffer.push("\n        	                ");
   hashTypes = {};
   hashContexts = {};
-  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.SystemWallPostView", {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.SystemWallpostView", {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
   data.buffer.push("\n                        ");
   return buffer;
   }
@@ -6635,7 +6635,7 @@ function program5(depth0,data) {
   data.buffer.push("\n        	                ");
   hashTypes = {};
   hashContexts = {};
-  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.ProjectWallPostView", {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.ProjectWallpostView", {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
   data.buffer.push("\n                        ");
   return buffer;
   }
@@ -6659,7 +6659,7 @@ function program7(depth0,data) {
   hashContexts = {'itemController': depth0};
   hashTypes = {'itemController': "STRING"};
   stack1 = helpers.each.call(depth0, "item", "in", "items", {hash:{
-    'itemController': ("wallPost")
+    'itemController': ("wallpost")
   },inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0,depth0,depth0],types:["ID","ID","ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n            	\n                ");
@@ -6671,7 +6671,7 @@ function program7(depth0,data) {
   hashTypes = {};
   hashContexts = {};
   options = {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "projectWallPostNew", options) : helperMissing.call(depth0, "render", "projectWallPostNew", options))));
+  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "projectWallpostNew", options) : helperMissing.call(depth0, "render", "projectWallpostNew", options))));
   data.buffer.push("\n            </sidebar>\n            \n        </section>\n    </div>");
   return buffer;
   
@@ -6697,7 +6697,7 @@ function program2(depth0,data) {
   data.buffer.push("\n        	<h3>Write an update</h3>\n        	<p>Write an update of your project to inform your crowd.</p>\n            ");
   hashContexts = {'content': depth0};
   hashTypes = {'content': "ID"};
-  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.MediaWallPostNewView", {hash:{
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.MediaWallpostNewView", {hash:{
     'content': ("content")
   },contexts:[depth0],types:["ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
   data.buffer.push("\n        ");
@@ -6710,7 +6710,7 @@ function program4(depth0,data) {
   data.buffer.push("\n        	<h3>Write a comment</h3>\n        	<p>Write an comment to place on the project's wall.</p>\n            ");
   hashContexts = {'content': depth0};
   hashTypes = {'content': "ID"};
-  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.TextWallPostNewView", {hash:{
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.TextWallpostNewView", {hash:{
     'content': ("content")
   },contexts:[depth0],types:["ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
   data.buffer.push("\n        ");
@@ -7109,7 +7109,7 @@ function program6(depth0,data) {
   hashTypes = {};
   hashContexts = {};
   options = {hash:{},contexts:[depth0,depth0],types:["STRING","ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "wallPostReactionList", "reactions", options) : helperMissing.call(depth0, "render", "wallPostReactionList", "reactions", options))));
+  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "wallpostReactionList", "reactions", options) : helperMissing.call(depth0, "render", "wallpostReactionList", "reactions", options))));
   data.buffer.push("\n        </div>\n\n    </article>");
   return buffer;
   
@@ -7531,7 +7531,7 @@ function program62(depth0,data) {
   hashTypes = {};
   hashContexts = {};
   options = {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "taskWallPostList", options) : helperMissing.call(depth0, "render", "taskWallPostList", options))));
+  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "taskWallpostList", options) : helperMissing.call(depth0, "render", "taskWallpostList", options))));
   data.buffer.push("\n			</div>			\n			\n        </div>\n               	\n		\n		<sidebar class=\"l-sidebar\">\n		\n	        <div class=\"task-section task-meta\">\n	            <h3>Task details</h3>\n	            <dl>\n	                <dt>\n	                    <span class=\"flaticon solid wrench-1\"></span>\n	                    Skill\n	                </dt>\n	                <dd>");
   hashTypes = {};
   hashContexts = {};
@@ -8542,7 +8542,7 @@ function program3(depth0,data) {
   hashTypes = {};
   hashContexts = {};
   options = {hash:{},contexts:[depth0,depth0],types:["STRING","ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "wallPostReactionList", "reactions", options) : helperMissing.call(depth0, "render", "wallPostReactionList", "reactions", options))));
+  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "wallpostReactionList", "reactions", options) : helperMissing.call(depth0, "render", "wallpostReactionList", "reactions", options))));
   data.buffer.push("\n        </div>\n\n    </article>");
   return buffer;
   
@@ -8558,7 +8558,7 @@ function program1(depth0,data) {
   hashTypes = {};
   hashContexts = {};
   options = {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "taskWallPostNew", options) : helperMissing.call(depth0, "render", "taskWallPostNew", options))));
+  data.buffer.push(escapeExpression(((stack1 = helpers.render || depth0.render),stack1 ? stack1.call(depth0, "taskWallpostNew", options) : helperMissing.call(depth0, "render", "taskWallpostNew", options))));
   data.buffer.push("\n	    ");
   return buffer;
   }
@@ -8602,7 +8602,7 @@ function program7(depth0,data) {
   data.buffer.push("\n            ");
   hashTypes = {};
   hashContexts = {};
-  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.TaskWallPostView", {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.TaskWallpostView", {hash:{},contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
   data.buffer.push("\n        ");
   return buffer;
   }
@@ -8626,7 +8626,7 @@ function program9(depth0,data) {
   hashContexts = {'itemController': depth0};
   hashTypes = {'itemController': "STRING"};
   stack1 = helpers.each.call(depth0, "item", "in", "items", {hash:{
-    'itemController': ("wallPost")
+    'itemController': ("wallpost")
   },inverse:self.noop,fn:self.program(6, program6, data),contexts:[depth0,depth0,depth0],types:["ID","ID","ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n\n    ");
@@ -10612,7 +10612,7 @@ function program1(depth0,data) {
   hashContexts = {'itemController': depth0};
   hashTypes = {'itemController': "STRING"};
   stack1 = helpers.each.call(depth0, "controller", {hash:{
-    'itemController': ("wallPostReaction")
+    'itemController': ("wallpostReaction")
   },inverse:self.noop,fn:self.program(2, program2, data),contexts:[depth0],types:["ID"],hashContexts:hashContexts,hashTypes:hashTypes,data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n        </ul>\n    ");
@@ -10624,7 +10624,7 @@ function program2(depth0,data) {
   data.buffer.push("\n                ");
   hashContexts = {'content': depth0};
   hashTypes = {'content': "ID"};
-  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.WallPostReactionView", {hash:{
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.WallpostReactionView", {hash:{
     'content': ("")
   },contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
   data.buffer.push("\n            ");

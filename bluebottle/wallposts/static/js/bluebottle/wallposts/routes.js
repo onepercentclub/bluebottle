@@ -24,7 +24,7 @@ App.WallRouteMixin = Em.Mixin.create({
             this.set('parentId', parentId);
             this.set('parentType', parentType);
             var store = this.get('store');
-            store.find('wallPost', {'parent_type': parentType, 'parent_id': parentId}).then(function(posts){
+            store.find('wallpost', {'parent_type': parentType, 'parent_id': parentId}).then(function(posts){
                 _this.set('wallpostTotal', posts.get('meta.total'));
                 _this.set('wallpostPage', 1);
                 controller.set('wallpostList', posts);
@@ -43,10 +43,10 @@ App.WallRouteMixin = Em.Mixin.create({
             store = this.store.get('store');
 
         controller.set('newTextWallpost',
-            App.TextWallPost.createRecord({'parent_id': parentId, 'parent_type': parentType})
+            App.TextWallpost.createRecord({'parent_id': parentId, 'parent_type': parentType})
         );
         controller.set('newMediaWallpost',
-            App.MediaWallPost.createRecord({'parent_id': parentId, 'parent_type': parentType})
+            App.MediaWallpost.createRecord({'parent_id': parentId, 'parent_type': parentType})
         );
     },
 
@@ -78,7 +78,7 @@ App.WallRouteMixin = Em.Mixin.create({
 
             controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
 
-            store.find('wallPost', {'parent_type': parentType, 'parent_id': parentId, 'page': wallpostPage}).then(function(posts){
+            store.find('wallpost', {'parent_type': parentType, 'parent_id': parentId, 'page': wallpostPage}).then(function(posts){
                 controller.get('wallpostList').addObjects(posts);
             });
         },
@@ -108,7 +108,7 @@ App.WallRouteMixin = Em.Mixin.create({
         addWallpostFile: function(file) {
             var _this = this,
                 controller = this.get('controller'),
-                photo = App.WallPostPhoto.createRecord();
+                photo = App.WallpostPhoto.createRecord();
 
             photo.set('photo', file);
             photo.save();

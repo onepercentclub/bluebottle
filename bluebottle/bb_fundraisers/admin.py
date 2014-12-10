@@ -8,7 +8,7 @@ from bluebottle.utils.model_dispatcher import get_fundraiser_model
 FUNDRAISER_MODEL = get_fundraiser_model()
 
 
-class FundRaiserAdmin(admin.ModelAdmin):
+class FundraiserAdmin(admin.ModelAdmin):
     list_display = ('title', 'amount_override', 'deadline', 'amount_donated_override')
     raw_id_fields = ('project', 'owner')
 
@@ -42,4 +42,4 @@ class FundRaiserAdmin(admin.ModelAdmin):
 
     owner_link.allow_tags = True
 
-admin.site.register(FUNDRAISER_MODEL, FundRaiserAdmin)
+admin.site.register(FUNDRAISER_MODEL, FundraiserAdmin)

@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -48,7 +48,7 @@ class TestDonationEmails(BluebottleTestCase):
 
         self.fund_owner = BlueBottleUserFactory.create(first_name='fundraiser')
 
-        self.fundraiser_project = FundRaiserFactory.create(
+        self.fundraiser_project = FundraiserFactory.create(
             owner=self.fund_owner,
             project=self.fund_project,
         )

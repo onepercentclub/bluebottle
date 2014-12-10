@@ -118,7 +118,7 @@
     .activity-action {
         display: block;
         padding-left: 55px;
-        @include svg-icon('sidebar/icon-sidebar-add.svg');
+        @include svg-icon('sidebar/icon-sidebar-add.svg', #9F9F9F, $color-grey);
 
         strong {
             color: $color-pri;
@@ -275,14 +275,14 @@
     }
 
     .activity-title {
-        @include svg-icon('sidebar/icon-fundraisers.svg');
+        @include svg-icon('sidebar/icon-fundraisers.svg', #999, $color-grey);
     }
 }
 
 #task-list {
 
     .activity-title {
-        @include svg-icon('sidebar/icon-tasks.svg');
+        @include svg-icon('sidebar/icon-tasks.svg', #999, $color-grey);
     }
 
 }
@@ -294,13 +294,13 @@
     }
 
     .activity-title {
-        @include svg-icon('sidebar/icon-supporters.svg');
+        @include svg-icon('sidebar/icon-supporters.svg', #999, $color-grey);
     }
 }
 
 #files-list {
 
     .activity-title {
-        @include svg-icon('sidebar/icon-files.svg');
+        @include svg-icon('sidebar/icon-files.svg', #999, $color-grey);
     }
 }

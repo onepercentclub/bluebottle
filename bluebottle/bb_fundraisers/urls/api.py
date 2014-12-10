@@ -1,9 +1,9 @@
 from django.conf.urls import patterns, url
 
-from ..views import FundRaiserListView, FundRaiserDetailView
+from ..views import FundraiserListView, FundraiserDetailView
 
 
 urlpatterns = patterns('',
-    url(r'^$', FundRaiserListView.as_view(), name='fundraiser-list'),
-    url(r'(?P<pk>[\d]+)$', FundRaiserDetailView.as_view(), name='fundraiser-detail'),
+    url(r'^$', FundraiserListView.as_view(), name='fundraiser-list'),
+    url(r'(?P<pk>[\d]+)$', FundraiserDetailView.as_view(), name='fundraiser-detail'),
 )

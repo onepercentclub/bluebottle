@@ -190,6 +190,8 @@ INSTALLED_APPS = (
     'bluebottle.payments_mock',
     'bluebottle.payments_logger',
 
+    'bluebottle.bb_follow',
+
     # Test Bb implementations
     'bluebottle.test',
 
@@ -272,7 +274,7 @@ AUTH_USER_MODEL = 'test.TestBaseUser'
 PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
 PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
 
-FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.FundRaiser'
+FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
 
 TASKS_TASK_MODEL = 'test.TestTask'
 TASKS_SKILL_MODEL = 'test.TestSkill'

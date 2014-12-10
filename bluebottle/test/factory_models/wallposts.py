@@ -2,10 +2,10 @@ import factory
 
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
-from bluebottle.wallposts.models import TextWallPost, Reaction
+from bluebottle.wallposts.models import TextWallpost, Reaction
 
-class TextWallPostFactory(factory.DjangoModelFactory):
-	FACTORY_FOR = TextWallPost
+class TextWallpostFactory(factory.DjangoModelFactory):
+	FACTORY_FOR = TextWallpost
 
 
 	content_object = factory.SubFactory(ProjectFactory)

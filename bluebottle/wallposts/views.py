@@ -8,31 +8,31 @@ from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
 from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
 
-from .models import TextWallPost, MediaWallPost, MediaWallPostPhoto
-from .permissions import IsConnectedWallPostAuthorOrReadOnly
-from .serializers import TextWallPostSerializer, MediaWallPostSerializer, MediaWallPostPhotoSerializer
-from .models import WallPost, Reaction
-from .serializers import ReactionSerializer, WallPostSerializer
+from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto
+from .permissions import IsConnectedWallpostAuthorOrReadOnly
+from .serializers import TextWallpostSerializer, MediaWallpostSerializer, MediaWallpostPhotoSerializer
+from .models import Wallpost, Reaction
+from .serializers import ReactionSerializer, WallpostSerializer
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
 
-class WallPostFilter(django_filters.FilterSet):
+class WallpostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")
     parent_id = django_filters.NumberFilter(name="object_id")
 
     class Meta:
-        model = WallPost
+        model = Wallpost
         fields = ['parent_type', 'parent_id']
 
 
-class WallPostList(ListAPIView):
-    model = WallPost
-    serializer_class = WallPostSerializer
+class WallpostList(ListAPIView):
+    model = Wallpost
+    serializer_class = WallpostSerializer
     paginate_by = 5
 
     def get_queryset(self):
-        queryset = super(WallPostList, self).get_queryset()
+        queryset = super(WallpostList, self).get_queryset()
 
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
@@ -48,7 +48,7 @@ class WallPostList(ListAPIView):
             try:
                 project = PROJECT_MODEL.objects.get(slug=parent_id)
             except PROJECT_MODEL.DoesNotExist:
-                return WallPost.objects.none()
+                return Wallpost.objects.none()
             queryset = queryset.filter(object_id=project.id)
         else:
             queryset = queryset.filter(object_id=parent_id)
@@ -57,15 +57,15 @@ class WallPostList(ListAPIView):
         return queryset
 
 
-class TextWallPostList(ListCreateAPIView):
-    model = TextWallPost
-    serializer_class = TextWallPostSerializer
-    filter_class = WallPostFilter
+class TextWallpostList(ListCreateAPIView):
+    model = TextWallpost
+    serializer_class = TextWallpostSerializer
+    filter_class = WallpostFilter
     paginate_by = 5
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     def get_queryset(self):
-        queryset = super(TextWallPostList, self).get_queryset()
+        queryset = super(TextWallpostList, self).get_queryset()
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
@@ -73,7 +73,7 @@ class TextWallPostList(ListCreateAPIView):
             try:
                 project = PROJECT_MODEL.objects.get(slug=parent_id)
             except PROJECT_MODEL.DoesNotExist:
-                return WallPost.objects.none()
+                return Wallpost.objects.none()
             queryset = queryset.filter(object_id=project.id)
 
         queryset = queryset.order_by('-created')
@@ -87,22 +87,22 @@ class TextWallPostList(ListCreateAPIView):
         obj.ip_address = get_client_ip(self.request)
 
 
-class MediaWallPostList(TextWallPostList):
-    model = MediaWallPost
-    serializer_class = MediaWallPostSerializer
-    filter_class = WallPostFilter
+class MediaWallpostList(TextWallpostList):
+    model = MediaWallpost
+    serializer_class = MediaWallpostSerializer
+    filter_class = WallpostFilter
     paginate_by = 5
 
 
-class WallPostDetail(RetrieveUpdateDeleteAPIView):
-    model = WallPost
-    serializer_class = WallPostSerializer
+class WallpostDetail(RetrieveUpdateDeleteAPIView):
+    model = Wallpost
+    serializer_class = WallpostSerializer
     permission_classes = (IsAuthorOrReadOnly, )
 
 
-class MediaWallPostPhotoList(ListCreateAPIView):
-    model = MediaWallPostPhoto
-    serializer_class = MediaWallPostPhotoSerializer
+class MediaWallpostPhotoList(ListCreateAPIView):
+    model = MediaWallpostPhoto
+    serializer_class = MediaWallpostPhotoSerializer
     paginate_by = 4
 
     def pre_save(self, obj):
@@ -134,13 +134,13 @@ class MediaWallPostPhotoList(ListCreateAPIView):
         post = request.POST.get('mediawallpost', False)
         if post and post == u'null':
             request.POST['mediawallpost'] = u''
-        return super(MediaWallPostPhotoList, self).create(request, *args, **kwargs)
+        return super(MediaWallpostPhotoList, self).create(request, *args, **kwargs)
 
 
-class MediaWallPostPhotoDetail(RetrieveUpdateDeleteAPIView):
-    model = MediaWallPostPhoto
-    serializer_class = MediaWallPostPhotoSerializer
-    permission_classes = (IsAuthorOrReadOnly, IsConnectedWallPostAuthorOrReadOnly)
+class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
+    model = MediaWallpostPhoto
+    serializer_class = MediaWallpostPhotoSerializer
+    permission_classes = (IsAuthorOrReadOnly, IsConnectedWallpostAuthorOrReadOnly)
 
 
 class ReactionList(ListCreateAPIView):

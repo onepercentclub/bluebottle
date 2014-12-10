@@ -1,7 +1,7 @@
 from django.contrib.sites.models import Site
 
 
-class WallPostObserver:
+class WallpostObserver:
 
     def __init__(self, instance):
 
@@ -45,7 +45,7 @@ class ObserversContainer:
 
     def register(self, observer):
         # can be done better, move this responsibility inside the Observer
-        if issubclass(observer, WallPostObserver):
+        if issubclass(observer, WallpostObserver):
             self._register_wallpost_observer(observer)
 
         if issubclass(observer, ReactionObserver):

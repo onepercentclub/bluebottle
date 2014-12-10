@@ -12,7 +12,7 @@ MODEL_MAP = get_model_mapping()
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'FundRaiser'
+        # Adding model 'Fundraiser'
         db.create_table(MODEL_MAP['fundraiser']['table'], (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[MODEL_MAP['user']['model']])),
@@ -28,11 +28,11 @@ class Migration(SchemaMigration):
             ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
         ))
-        db.send_create_signal(MODEL_MAP['fundraiser']['app'], ['FundRaiser'])
+        db.send_create_signal(MODEL_MAP['fundraiser']['app'], ['Fundraiser'])
 
 
     def backwards(self, orm):
-        # Deleting model 'FundRaiser'
+        # Deleting model 'Fundraiser'
         db.delete_table(MODEL_MAP['fundraiser']['table'])
 
 

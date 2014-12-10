@@ -62,7 +62,7 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     def from_native(self, data):
         if data == 'project':
             data = ContentType.objects.get_for_model(PROJECT_MODEL).model
-        if data == 'fund raiser':
+        if data == 'fundraiser':
             data = ContentType.objects.get_for_model(FUNDRAISER_MODEL).model
         return super(WallpostContentTypeField, self).from_native(data)
 

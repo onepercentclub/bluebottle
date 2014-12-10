@@ -170,6 +170,10 @@ App.Task = DS.Model.extend({
     membersCount: function() {
         return this.get('members').filterBy('isStatusAccepted', true).length;
     }.property("members.@each"),
+
+    membersNeeded: function() {
+        return this.get("people_needed") - this.get('members').filterBy('isStatusAccepted', true).length;
+    }.property('people_needed', 'members.@each'),
     
 	hasMoreThanOneMember: function() {
         return this.get('membersCount') > 1

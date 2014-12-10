@@ -133,7 +133,11 @@ App.Project = DS.Model.extend({
                 tag.transitionTo('loaded.updated.saved');
             }
         });
-    }.observes('isDirty')
+    }.observes('isDirty'),
+
+    hasTasks: function() {
+        return this.get('task_count') <= 0;
+    }.property('task_count')
 });
 
 

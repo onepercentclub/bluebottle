@@ -13,7 +13,7 @@ from django.db.models import options
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 
 
-class BaseFundRaiser(models.Model):
+class BaseFundraiser(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("initiator"), help_text=_("Project owner"))
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL, verbose_name=_("project"))
 
@@ -64,6 +64,6 @@ class BaseFundRaiser(models.Model):
 
     class Meta():
         abstract = True
-        default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
-        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
-        manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundRaiserSerializer'
+        default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundraiserSerializer'
+        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundraiserSerializer'
+        manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundraiserSerializer'

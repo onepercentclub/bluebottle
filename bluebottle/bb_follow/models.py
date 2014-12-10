@@ -8,7 +8,7 @@ from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_mod
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
-from bluebottle.bb_fundraisers.models import BaseFundRaiser
+from bluebottle.bb_fundraisers.models import BaseFundraiser
 
 USER_MODEL = get_user_model()
 
@@ -46,7 +46,7 @@ def create_follow(sender, instance, created, **kwargs):
         and creates the Follow object with the correct link between objects.
 
         A user starts following a project/task when:
-            - user creates a WallPost on a project, task or fundraise wall, (user will follow, the project or task)
+            - user creates a Wallpost on a project, task or fundraise wall, (user will follow, the project or task)
             - user does a donation to a project (user will follow project)
             - user applies for a task, i.e. a task member is created (user will follow task),
             - user creates a task for a project (user will follow project),
@@ -55,13 +55,13 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
-    from bluebottle.wallposts.models import WallPost, Reaction # Imported inside the signal to prevent circular imports
+    from bluebottle.wallposts.models import Wallpost, Reaction # Imported inside the signal to prevent circular imports
 
-    # A WallPost is created by user
-    if created and isinstance(instance, WallPost):
+    # A Wallpost is created by user
+    if created and isinstance(instance, Wallpost):
 
-        # Create a Follow to the specific Project or Task if a WallPost was created
-        if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask) or isinstance(instance.content_object, BaseFundRaiser):
+        # Create a Follow to the specific Project or Task if a Wallpost was created
+        if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask) or isinstance(instance.content_object, BaseFundraiser):
             user = instance.author
             if user and instance.content_object:
 
@@ -83,7 +83,7 @@ def create_follow(sender, instance, created, **kwargs):
                         follow.save()
 
                     # Check that the fundraiser is not the project owner
-                    if isinstance(instance.content_object, BaseFundRaiser) and instance.content_object.project.owner != user and instance.content_object.owner != user:
+                    if isinstance(instance.content_object, BaseFundraiser) and instance.content_object.project.owner != user and instance.content_object.owner != user:
                         follow = Follow(user=user, followed_object=instance.content_object.project)
                         follow.save()              
 
@@ -169,7 +169,7 @@ def create_follow(sender, instance, created, **kwargs):
                     follow.save()
 
     # A user creates a fundraiser for a project
-    if created and isinstance(instance, BaseFundRaiser):
+    if created and isinstance(instance, BaseFundraiser):
         # Create a Follow to the specific project and the fundraiser 
         user = instance.owner
 
@@ -193,9 +193,9 @@ def email_followers(sender, instance, created, **kwargs):
         signal handler looksup the appropriate followers depending on the type of page (project, task, fundraiser). It then sends out an email
         to those followers if they have campaign notifications enabled.
     """
-    from bluebottle.wallposts.models import WallPost
+    from bluebottle.wallposts.models import Wallpost
 
-    if isinstance(instance, WallPost):
+    if isinstance(instance, Wallpost):
         if instance.email_followers:
 
             content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
@@ -213,7 +213,7 @@ def email_followers(sender, instance, created, **kwargs):
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
 
-            if isinstance(instance.content_object, BaseFundRaiser):
+            if isinstance(instance.content_object, BaseFundraiser):
                 # Send update to all people who donated or posted to the wall --> Followers
                 content_type = ContentType.objects.get_for_model(instance.content_object.project)
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)

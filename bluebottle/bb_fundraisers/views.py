@@ -14,7 +14,7 @@ FUNDRAISER_MODEL = get_fundraiser_model()
 FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL', 'default')
 
 
-class FundRaiserListView(ListCreateAPIView):
+class FundraiserListView(ListCreateAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -26,7 +26,7 @@ class FundRaiserListView(ListCreateAPIView):
     # ordering = ('-created', )
 
     def get_queryset(self, queryset=None):
-        queryset = super(FundRaiserListView, self).get_queryset(queryset)
+        queryset = super(FundraiserListView, self).get_queryset(queryset)
 
         filter_kwargs = {}
 
@@ -55,7 +55,7 @@ class FundRaiserListView(ListCreateAPIView):
         obj.owner = self.request.user
 
 
-class FundRaiserDetailView(RetrieveUpdateDeleteAPIView):
+class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

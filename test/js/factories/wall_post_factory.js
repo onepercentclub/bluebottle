@@ -1,4 +1,4 @@
-Factory.define('wallPost', {
+Factory.define('wallpost', {
     title: 'Kick start on the road to clean drinking water',
     text: 'Community Water Enterprise’s recent marketing efforts',
     type: 'media',
@@ -11,7 +11,7 @@ Factory.define('wallPost', {
     photos: ''
 });
 
-Factory.define('textWallPost', {
+Factory.define('textWallpost', {
     title: 'Kick start on the road to clean drinking water',
     text: 'Community Water Enterprise’s recent marketing efforts',
     type: 'media',

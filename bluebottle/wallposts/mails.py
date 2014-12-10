@@ -38,7 +38,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from bluebottle.utils.model_dispatcher import get_project_model, get_task_model
-from bluebottle.wallposts.models import Reaction, TextWallPost
+from bluebottle.wallposts.models import Reaction, TextWallpost
 from bluebottle.wallposts.notifiers import ObserversContainer
 
 
@@ -57,7 +57,7 @@ PROJECT_MODEL = get_project_model()
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, weak=False, sender=TextWallPost)
+@receiver(post_save, weak=False, sender=TextWallpost)
 def new_wallpost_notification(sender, instance, created, **kwargs):
 
     container = ObserversContainer()

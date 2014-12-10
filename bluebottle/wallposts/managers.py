@@ -5,9 +5,9 @@ from polymorphic import PolymorphicManager
 from bluebottle.utils.managers import GenericForeignKeyManagerMixin
 
 
-class WallPostManager(GenericForeignKeyManagerMixin, PolymorphicManager):
+class WallpostManager(GenericForeignKeyManagerMixin, PolymorphicManager):
     def get_query_set(self):
-        queryset = super(WallPostManager, self).get_query_set()
+        queryset = super(WallpostManager, self).get_query_set()
         return queryset.filter(deleted__isnull=True)
 
 

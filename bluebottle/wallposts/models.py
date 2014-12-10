@@ -13,16 +13,16 @@ from polymorphic import PolymorphicModel
 
 from bluebottle.bb_follow.models import Follow
 
-from .managers import ReactionManager, WallPostManager
+from .managers import ReactionManager, WallpostManager
 
 
 WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH', 300)
 
 
-class WallPost(PolymorphicModel):
+class Wallpost(PolymorphicModel):
     """
-    The WallPost base class. This class will never be used directly because the content of a WallPost is always defined
+    The Wallpost base class. This class will never be used directly because the content of a Wallpost is always defined
     in the child classes.
 
     Implementation Note: Normally this would be an abstract class but it's not possible to make this an abstract class
@@ -30,7 +30,7 @@ class WallPost(PolymorphicModel):
     """
 
     # The user who wrote the wall post. This can be empty to support wall posts without users (e.g. anonymous
-    # TextWallPosts, system WallPosts for donations etc.)
+    # TextWallposts, system Wallposts for donations etc.)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), related_name="%(class)s_wallpost", blank=True, null=True)
     editor = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True, null=True, help_text=_("The last user to edit this wallpost."))
 
@@ -48,7 +48,7 @@ class WallPost(PolymorphicModel):
     email_followers = models.BooleanField(default=False)
 
     # Manager
-    objects = WallPostManager()
+    objects = WallpostManager()
 
     class Meta:
         ordering = ('created',)
@@ -57,7 +57,7 @@ class WallPost(PolymorphicModel):
         return str(self.id)
 
 
-class MediaWallPost(WallPost):
+class MediaWallpost(Wallpost):
     # The content of the wall post.
     title = models.CharField(max_length=60)
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True, default='')
@@ -68,9 +68,9 @@ class MediaWallPost(WallPost):
 
     # FIXME: See how we can re-enable this
     # def save(self, *args, **kwargs):
-    #     super(MediaWallPost, self).save(*args, **kwargs)
+    #     super(MediaWallpost, self).save(*args, **kwargs)
     #
-    #     # Mark the photos as deleted when the MediaWallPost is deleted.
+    #     # Mark the photos as deleted when the MediaWallpost is deleted.
     #     if self.deleted:
     #         for photo in self.photos.all():
     #             if not photo.deleted:
@@ -78,8 +78,8 @@ class MediaWallPost(WallPost):
     #                 photo.save()
 
 
-class MediaWallPostPhoto(models.Model):
-    mediawallpost = models.ForeignKey(MediaWallPost, related_name='photos', null=True, blank=True)
+class MediaWallpostPhoto(models.Model):
+    mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos', null=True, blank=True)
     photo = models.ImageField(upload_to='mediawallpostphotos')
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.IPAddressField(_('IP address'), blank=True, null=True, default=None)
@@ -87,7 +87,7 @@ class MediaWallPostPhoto(models.Model):
     editor = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True, null=True, help_text=_("The last user to edit this wallpost photo."))
 
 
-class TextWallPost(WallPost):
+class TextWallpost(Wallpost):
     # The content of the wall post.
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
@@ -95,7 +95,7 @@ class TextWallPost(WallPost):
         return Truncator(self.text).words(10)
 
 
-class SystemWallPost(WallPost):
+class SystemWallpost(Wallpost):
     # The content of the wall post.
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True)
 
@@ -110,7 +110,7 @@ class SystemWallPost(WallPost):
 
 class Reaction(models.Model):
     """
-    A user reaction or comment to a WallPost. This model is based on the Comments model from django.contrib.comments.
+    A user reaction or comment to a Wallpost. This model is based on the Comments model from django.contrib.comments.
     """
 
     # Who posted this reaction. User will need to be logged in to make a reaction.
@@ -119,7 +119,7 @@ class Reaction(models.Model):
 
     # The reaction text and the wallpost it's a reaction to.
     text = models.TextField(_('reaction text'), max_length=WALLPOST_REACTION_MAX_LENGTH)
-    wallpost = models.ForeignKey(WallPost, related_name='reactions')
+    wallpost = models.ForeignKey(Wallpost, related_name='reactions')
 
     # Metadata for the reaction.
     created = CreationDateTimeField(_('created'))

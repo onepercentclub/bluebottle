@@ -176,6 +176,7 @@ INSTALLED_APPS = (
     'bluebottle.quotes',
     'bluebottle.slides',
     'bluebottle.redirects',
+    'bluebottle.terms',
     'bluebottle.utils',
     'bluebottle.wallposts',
 

@@ -8,12 +8,9 @@ from django.contrib.contenttypes import generic
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django.conf import settings
 
-
 from polymorphic import PolymorphicModel
 
-from bluebottle.bb_follow.models import Follow
-
-from .managers import ReactionManager, WallpostManager
+from .managers import ReactionManager, WallPostManager
 
 
 WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)

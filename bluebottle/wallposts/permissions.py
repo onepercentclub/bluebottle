@@ -1,10 +1,10 @@
 from rest_framework import permissions
 
-from .models import WallPost, MediaWallPost
+from .models import Wallpost, MediaWallpost
 
 
 # TODO: Add write permission for 1%CREW / Assistants.
-class IsConnectedWallPostAuthorOrReadOnly(permissions.BasePermission):
+class IsConnectedWallpostAuthorOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only adding a photo to mediawallpost author.
     Model instances are expected to include an `mediawallpost` attribute.
@@ -20,8 +20,8 @@ class IsConnectedWallPostAuthorOrReadOnly(permissions.BasePermission):
         mediawallpost_id = request.DATA.get('mediawallpost', None)
         if mediawallpost_id:
             try:
-                mediawallpost = MediaWallPost.objects.get(pk=mediawallpost_id)
-            except MediaWallPost.DoesNotExist:
+                mediawallpost = MediaWallpost.objects.get(pk=mediawallpost_id)
+            except MediaWallpost.DoesNotExist:
                 return False
         else:
             # If the user isn't trying to set a wallpost, than we can carry on.

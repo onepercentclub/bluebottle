@@ -38,7 +38,7 @@ class ImageSerializerExt(ImageSerializer):
         return super(ImageSerializerExt, self).field_from_native(data, files, field_name, into)
 
 
-class BaseFundRaiserSerializer(serializers.ModelSerializer):
+class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
     owner = UserPreviewSerializer(read_only=True)

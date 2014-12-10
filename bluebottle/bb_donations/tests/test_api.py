@@ -12,7 +12,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
-from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.utils import InitProjectDataMixin
 
 from django.conf import settings
@@ -233,7 +233,7 @@ class TestCreateDonation(DonationApiTestCase):
         response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
         order_id = response.data['id']
 
-        fundraiser = FundRaiserFactory.create(amount=100)
+        fundraiser = FundraiserFactory.create(amount=100)
 
         donation1 = {
             "fundraiser": fundraiser.pk,
@@ -468,7 +468,7 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
 
         self.project4 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
         self.project4.set_status('campaign')
-        self.fundraiser = FundRaiserFactory.create(amount=4000, owner=self.user1, project=self.project4)
+        self.fundraiser = FundraiserFactory.create(amount=4000, owner=self.user1, project=self.project4)
 
         # User 2 makes a donation
         order = OrderFactory.create(user=self.user2)

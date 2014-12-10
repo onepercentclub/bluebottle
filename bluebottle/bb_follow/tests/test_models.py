@@ -3,13 +3,13 @@ from django.core import mail
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.wallposts import TextWallPostFactory
+from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.wallposts.models import Reaction
 from bluebottle.bb_follow.models import Follow
 from bluebottle.utils.model_dispatcher import get_model_class
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.fundraisers import FundRaiserFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.utils.utils import StatusDefinition
 
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
@@ -44,8 +44,8 @@ class FollowTests(TestCase):
 		""" Test that a Follow object is created between the user and the project when a wallpost is created """ 
 		self.assertEqual(Follow.objects.count(), 0)
 
-		# Create a text WallPost for our dummy project
-		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user)
+		# Create a text Wallpost for our dummy project
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.another_user)
 
 		self.assertEqual(Follow.objects.count(), 1)
 		self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
@@ -57,8 +57,8 @@ class FollowTests(TestCase):
 	# 	self.assertEqual(Follow.objects.count(), 0)
 	# 	commenter = BlueBottleUserFactory.create()
 
-	# 	# Create a text WallPost for our dummy project
-	# 	some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user)
+	# 	# Create a text Wallpost for our dummy project
+	# 	some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.another_user)
 	# 	self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
 
 	# 	some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
@@ -72,8 +72,8 @@ class FollowTests(TestCase):
 		""" Test that a Follow object is created when a user leaves a wallpost on a task """
 		self.assertEqual(Follow.objects.count(), 0)
 
-		# Create a text WallPost for our dummy project
-		some_wallpost = TextWallPostFactory.create(content_object=self.task, author=self.another_user)
+		# Create a text Wallpost for our dummy project
+		some_wallpost = TextWallpostFactory.create(content_object=self.task, author=self.another_user)
 
 		self.assertEqual(Follow.objects.count(), 1)
 		self.assertEqual(Follow.objects.all()[0].followed_object, self.task)
@@ -85,8 +85,8 @@ class FollowTests(TestCase):
 	# 	self.assertEqual(Follow.objects.count(), 0)
 	# 	commenter = BlueBottleUserFactory.create()
 
-	# 	# Create a text WallPost for our dummy project
-	# 	some_wallpost = TextWallPostFactory.create(content_object=self.task, author=self.another_user)
+	# 	# Create a text Wallpost for our dummy project
+	# 	some_wallpost = TextWallpostFactory.create(content_object=self.task, author=self.another_user)
 	# 	self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
 
 	# 	some_reaction = Reaction.objects.create(wallpost=some_wallpost, author=commenter, text="bla")
@@ -146,7 +146,7 @@ class FollowTests(TestCase):
 		self.assertEqual(Follow.objects.count(), 0)
 
 		fundraiser_person = BlueBottleUserFactory.create()
-		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)		
+		fundraiser = FundraiserFactory(project=self.project, owner=fundraiser_person)
 
 		self.assertEqual(Follow.objects.count(), 1)
 		self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
@@ -157,11 +157,11 @@ class FollowTests(TestCase):
 		self.assertEqual(Follow.objects.count(), 0)
 		commenter = BlueBottleUserFactory.create()
 
-		# Create a text WallPost for our dummy project
-		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.another_user, text="test1")
+		# Create a text Wallpost for our dummy project
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.another_user, text="test1")
 		self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
 
-		another_wallpost = TextWallPostFactory.create(content_object=self.project, author=commenter, text="test2")
+		another_wallpost = TextWallpostFactory.create(content_object=self.project, author=commenter, text="test2")
 
 		self.assertEqual(Follow.objects.count(), 2)
 		# Make sure to inspect the second Follow object, this is the Follow object for the Reaction
@@ -172,7 +172,7 @@ class FollowTests(TestCase):
 		""" Test that users do not follow their own project page """
 		self.assertEqual(Follow.objects.count(), 0)
 
-		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.some_user, text="test1")
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.some_user, text="test1")
 
 		self.assertEqual(Follow.objects.count(), 0)
 
@@ -181,7 +181,7 @@ class FollowTests(TestCase):
 		""" Test that users do not follow their own task page """
 		self.assertEqual(Follow.objects.count(), 0)
 
-		some_wallpost = TextWallPostFactory.create(content_object=self.task, author=self.some_user, text="test1")
+		some_wallpost = TextWallpostFactory.create(content_object=self.task, author=self.some_user, text="test1")
 
 		self.assertEqual(Follow.objects.count(), 0)
 
@@ -221,8 +221,8 @@ class FollowTests(TestCase):
 		# Verify we have two followers
 		self.assertEqual(Follow.objects.count(), 2)
 
-		# Create a text WallPost for our dummy project
-		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=self.project.owner, text="test1")
+		# Create a text Wallpost for our dummy project
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.project.owner, text="test1")
 
 		self.assertEqual(Follow.objects.count(), 2)
 
@@ -249,7 +249,7 @@ class FollowTests(TestCase):
 
 		# Create a follower that is someone who left a wallpost
 		commenter = BlueBottleUserFactory.create()
-		some_wallpost = TextWallPostFactory.create(content_object=self.project, author=commenter, text="test1")
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=commenter, text="test1")
 
 		# Create a follower by donating
 		donator1 = BlueBottleUserFactory.create()
@@ -258,12 +258,12 @@ class FollowTests(TestCase):
 
 		# Create a follower by being a fundraiser for the project
 		fundraiser_person = BlueBottleUserFactory.create()
-		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
+		fundraiser = FundraiserFactory(project=self.project, owner=fundraiser_person)
 
 		self.assertEqual(Follow.objects.count(), 4)
 
 		# Project owner creates a wallpost and emails followers
-		some_wallpost_2 = TextWallPostFactory.create(content_object=self.project, author=self.project.owner, text="test2", email_followers=True)
+		some_wallpost_2 = TextWallpostFactory.create(content_object=self.project, author=self.project.owner, text="test2", email_followers=True)
 
 		mail_count = 0
 
@@ -303,7 +303,7 @@ class FollowTests(TestCase):
 			if follower.user != task_owner1:
 				self.assertEqual(follower.followed_object, task)
 
-		some_wallpost = TextWallPostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
+		some_wallpost = TextWallpostFactory.create(content_object=task, author=task_owner1, text="test2", email_followers=True)
 
 		mail_count = 0
 
@@ -326,7 +326,7 @@ class FollowTests(TestCase):
 		self.assertEqual(Follow.objects.count(), 0)
 
 		fundraiser_person = BlueBottleUserFactory.create()
-		fundraiser = FundRaiserFactory(project=self.project, owner=fundraiser_person)
+		fundraiser = FundraiserFactory(project=self.project, owner=fundraiser_person)
 
 		donator1 = BlueBottleUserFactory.create()
 		order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
@@ -337,9 +337,9 @@ class FollowTests(TestCase):
 		donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=None)
 
 		commenter = BlueBottleUserFactory.create()
-		commenter_post = TextWallPostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter")
+		commenter_post = TextWallpostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter")
 
-		some_wallpost = TextWallPostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
+		some_wallpost = TextWallpostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
 
 		mail_count = 0
 

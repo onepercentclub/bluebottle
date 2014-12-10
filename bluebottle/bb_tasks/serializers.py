@@ -4,7 +4,7 @@ from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
-from bluebottle.wallposts.serializers import TextWallPostSerializer
+from bluebottle.wallposts.serializers import TextWallpostSerializer
 
 from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
     get_task_skill_model
@@ -83,17 +83,17 @@ class MyTaskMemberSerializer(BaseTaskMemberSerializer):
         fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
 
 
-# Task WallPost serializers
+# Task Wallpost serializers
 
-class TaskWallPostSerializer(TextWallPostSerializer):
-    """ TextWallPostSerializer with task specific customizations. """
+class TaskWallpostSerializer(TextWallpostSerializer):
+    """ TextWallpostSerializer with task specific customizations. """
 
     url = serializers.HyperlinkedIdentityField(view_name='task-twallpost-detail')
     task = PrimaryKeyGenericRelatedField(BB_TASK_MODEL)
 
-    class Meta(TextWallPostSerializer.Meta):
+    class Meta(TextWallpostSerializer.Meta):
         # Add the project slug field.
-        fields = TextWallPostSerializer.Meta.fields + ('task', )
+        fields = TextWallpostSerializer.Meta.fields + ('task', )
 
 
 class SkillSerializer(serializers.ModelSerializer):

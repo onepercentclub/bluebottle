@@ -9,32 +9,39 @@
     </li>
 
     <li>
-        {{#linkTo "myDonationList" }}
-            {% trans "My Donations" %}
-        {{/linkTo}}
+        {% trans "My Stuff" %}
+        <ul>
+            <li>
+                {{#linkTo "myDonationList" }}
+                    {% trans "My Donations" %}
+                {{/linkTo}}
+            </li>
+
+            {% if 'projects' in bb_apps %}
+                {% block_verbatim 'my-projects-menu-link' %}
+                    <li>
+                        {{#link-to 'myProjectList'}}
+                            {% trans "My Projects" %}
+                        {{/link-to}}
+                    </li>
+                {% endblock_verbatim %}
+            {% endif %}
+
+            {% comment %}
+                {% if 'tasks' in bb_apps %}
+                    {% block_verbatim 'my-tasks-menu-link' %}
+                        <li>
+                            {{#link-to 'myTaskList'}}
+                                {% trans "My Tasks" %}
+                            {{/link-to}}
+                        </li>
+                    {% endblock_verbatim %}
+                {% endif %}
+            {% endcomment %}
+        </ul>
+
     </li>
 
-    {% if 'projects' in bb_apps %}
-        {% block_verbatim 'my-projects-menu-link' %}
-            <li>
-                {{#link-to 'myProjectList'}}
-                    {% trans "My Projects" %}
-                {{/link-to}}
-            </li>
-        {% endblock_verbatim %}
-    {% endif %}
-
-    {% comment %}
-        {% if 'tasks' in bb_apps %}
-            {% block_verbatim 'my-tasks-menu-link' %}
-                <li>
-                    {{#link-to 'myTaskList'}}
-                        {% trans "My Tasks" %}
-                    {{/link-to}}
-                </li>
-            {% endblock_verbatim %}
-        {% endif %}
-    {% endcomment %}
 
     <li>
         {{#link-to "viewProfile" currentUser.id_for_ember }}

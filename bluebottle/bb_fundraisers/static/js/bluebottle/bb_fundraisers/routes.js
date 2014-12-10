@@ -21,7 +21,7 @@ App.Router.map(function() {
  */
 App.FundraiserRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
 
-    parentType: 'fund raiser',
+    parentType: 'fundraiser',
 
     model: function(params) {
         // Crap hack because this Ember version doesn't strip queryparams.

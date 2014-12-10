@@ -5,6 +5,7 @@ if (DEBUG) {
     });
 }
 
+
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
@@ -338,7 +339,6 @@ DS.Model.reopen(App.ModelMetaMixin, {});
 App.ApplicationController = Ember.Controller.extend({
 
     sub_menu: false,
-
     display_message: false,
     displayMessage: (function() {
         if (this.get('display_message')) {
@@ -437,6 +437,11 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
+
+    setupController: function(controller, model){
+        controller.set('terms',  App.Terms.find('current'));
+        controller.set('termsAgreements',  App.TermsAgreement.find());
+    },
 
     actions: {
         clearNextTransition: function () {

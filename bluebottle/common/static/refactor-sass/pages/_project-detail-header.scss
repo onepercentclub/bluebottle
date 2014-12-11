@@ -322,6 +322,13 @@
             strong {
                 font-size: 16px;
             }
+
+            &.project-task-join {
+                font-size: 20px;
+                padding: .5em 1em .7em 1em;
+                padding-top: calc(.5em + 2px);
+                cursor: pointer;
+            }
         }
     }
 

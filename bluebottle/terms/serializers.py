@@ -8,9 +8,13 @@ class TermsSerializer(serializers.ModelSerializer):
         model = Terms
         fields = ('id', 'date', 'version', 'contents')
         
-        
+
 class TermsAgreementSerializer(serializers.ModelSerializer):
-    
+
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    terms = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = TermsAgreement
-        fields = ('id', 'terms', 'user')
+        fields = ('id', 'terms', 'user', 'created')
+

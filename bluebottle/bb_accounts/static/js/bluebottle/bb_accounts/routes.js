@@ -69,9 +69,7 @@ App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, App.TrackRo
 
     deactivate: function() {
         this.controllerFor('userSettings').stopEditing();
-    },
-
-
+    }
 });
 
 App.PasswordRequestRoute = Em.Route.extend({

@@ -8,5 +8,6 @@ App.Terms = DS.Model.extend({
 App.TermsAgreement = DS.Model.extend({
     url: 'terms/agreements',
     terms: DS.belongsTo('App.Terms'),
-    user: DS.belongsTo('App.CurrentUser')
+    user: DS.belongsTo('App.CurrentUser'),
+    created: DS.attr('date')
 });

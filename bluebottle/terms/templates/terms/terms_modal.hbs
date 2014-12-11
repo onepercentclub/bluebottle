@@ -5,6 +5,13 @@
 
 {% tplhandlebars "terms_modal" %}
 
+    <style>
+        .terms-contents {
+            height: 400px;
+            overflow: auto;
+        }
+    </style>
+
     <div {{bindAttr class=":modal-fullscreen-content"}}>
         <span {{action 'close'}} class="modal-fullscreen-close"></span>
         <div id="profile-preview">
@@ -18,21 +25,17 @@
                 <div class="terms-contents">
                     {{{contents}}}
                 </div>
-                {{#unless agreement}}
-                    {{checkbox}} {% trans 'Agree' %}
-                {{/unless}}
-
             </div>
 
 
             <div class="modal-footer profile-preview-actions">
-            {{#if agreement}}
-                {% trans 'You have already agreed to these terms.' %}
-                {{aggreement.created}}
+            {{#if currentUser.agreedToTerms}}
+                {% trans 'You have already to these terms on ' %}
+                {{localize currentUser.agreedToTerms.created formatting='d'}}
                 <a {{action 'close'}} class="close-link" rel="close">&times; Close</a>
             {{else}}
                 <a {{action 'close'}} class="close-link" rel="close">&times; Close</a>
-                <a {{action 'agree'}} class="go-to-profile" rel="close">
+                <a {{action 'acceptTerms'}} class="go-to-profile" rel="close">
                     {% trans 'Agree' %}&nbsp;&rsaquo;
                 </a>
             {{/if}}

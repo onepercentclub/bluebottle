@@ -16,8 +16,8 @@ class Migration(SchemaMigration):
         db.create_table(u'terms_terms', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[MODEL_MAP['user']['model']])),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('date', self.gf('django.db.models.fields.DateTimeField')()),
             ('contents', self.gf('django.db.models.fields.CharField')(max_length=500000)),
             ('version', self.gf('django.db.models.fields.CharField')(max_length=40)),
@@ -29,7 +29,7 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[MODEL_MAP['user']['model']])),
             ('terms', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['terms.Terms'])),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
         ))
         db.send_create_signal(u'terms', ['TermsAgreement'])
 
@@ -166,18 +166,18 @@ class Migration(SchemaMigration):
             'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
         },
         u'terms.terms': {
-            'Meta': {'object_name': 'Terms'},
+            'Meta': {'ordering': "('-date',)", 'object_name': 'Terms'},
             'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
-            'contents': ('django.db.models.fields.CharField', [], {'max_length': '20000'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'contents': ('django.db.models.fields.CharField', [], {'max_length': '500000'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'date': ('django.db.models.fields.DateTimeField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modification_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'version': ('django.db.models.fields.CharField', [], {'max_length': '40'})
         },
         u'terms.termsagreement': {
             'Meta': {'object_name': 'TermsAgreement'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'terms': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['terms.Terms']"}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['{0}']".format(MODEL_MAP['user']['model'])})

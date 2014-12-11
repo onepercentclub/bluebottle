@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.timezone import now
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from django.utils.translation import ugettext_lazy as _
 
@@ -7,8 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 class Terms(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL)
 
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+    created = CreationDateTimeField(_('creation date'))
+    updated = ModificationDateTimeField(_('last modification'))
 
     date = models.DateTimeField()
 
@@ -20,10 +21,27 @@ class Terms(models.Model):
 
     class Meta:
         verbose_name_plural = 'Terms'
+        ordering = ('-date', )
+
+    @classmethod
+    def get_current(cls):
+        queryset = cls.objects.filter(date__lte=now()).order_by('-date')
+        if queryset.count():
+            return queryset.all()[0]
+        return None
 
 
 class TermsAgreement(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     terms = models.ForeignKey(Terms)
-    creation_date = CreationDateTimeField(_('Date'))
+    created = CreationDateTimeField(_('Date'))
+
+    @classmethod
+    def get_current(cls, user):
+        terms = Terms.get_current()
+        if terms:
+            queryset = cls.objects.filter(user=user, terms=terms)
+            if queryset.count():
+                return queryset.all()[0]
+        return None

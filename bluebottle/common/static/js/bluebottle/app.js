@@ -439,10 +439,12 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     setupController: function(controller, model){
+        var _this = this;
         this._super(controller, model);
-
         controller.set('terms',  App.Terms.find('current'));
-        controller.set('termsAgreements',  App.TermsAgreement.find());
+        var agreement = App.TermsAgreement.find('current').then(function(agreement){
+            _this.controllerFor('currentUser').set('agreedToTerms', agreement);
+        });
     },
 
     actions: {
@@ -730,5 +732,5 @@ App.ApplicationView = Em.View.reopen(App.EventMixin, {
             $('.mobile-nav-holder').addClass('is-scrolled');
         }
     }
-})
+});
 

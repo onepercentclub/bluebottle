@@ -61,7 +61,7 @@ class SorlImageField(serializers.ImageField):
 
 class ContentTextField(serializers.CharField):
     """
-    A serializer for content text such as text field found in Reaction and TextWallPost. This serializer creates
+    A serializer for content text such as text field found in Reaction and TextWallpost. This serializer creates
     clickable links for text urls and adds <br/> and/or <p></p> in-place of new line characters.
     """
 
@@ -115,7 +115,7 @@ class OEmbedField(serializers.Field):
 
 
 #
-# Serializers for django_polymorphic models. See WallPost Serializers for an example on how to use this.
+# Serializers for django_polymorphic models. See Wallpost Serializers for an example on how to use this.
 #
 class PolymorphicSerializerOptions(serializers.SerializerOptions):
     def __init__(self, meta):

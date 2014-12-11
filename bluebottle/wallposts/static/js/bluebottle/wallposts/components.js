@@ -105,7 +105,7 @@ App.BbModalTextWallpostNewComponent = App.BbTextWallpostNewComponent.extend({
         var parentType = this.get('parentType');
         var parentId = this.get('parentId');
 
-        this.set('wallpost', App.TextWallPost.createRecord({
+        this.set('wallpost', App.TextWallpost.createRecord({
             parent_type: parentType,
             parent_id: parentId,
             type: 'text'
@@ -347,7 +347,7 @@ App.BbWallpostCommentListComponent = Em.Component.extend(App.FormControls, {
     },
 
     createNewComment: function() {
-        var comment =  App.WallPostReaction.createRecord();
+        var comment =  App.WallpostReaction.createRecord();
         var name = this.get('currentUser.full_name');
         var values = {'name': name};
         var placeholder_unformatted = gettext("Hey %(name)s, you can leave a comment");

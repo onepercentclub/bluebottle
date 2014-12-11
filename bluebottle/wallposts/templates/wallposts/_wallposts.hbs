@@ -17,7 +17,7 @@
 
     {{#each wallpost in wallpostList}}
         {{#if wallpost.isLoaded}}
-            {{#if wallpost.isSystemWallPost}}
+            {{#if wallpost.isSystemWallpost}}
                 {{bb-system-wallpost wallpost=wallpost removeWallpost='removeWallpost'
                     addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile' currentUser=currentUser}}
             {{else}}

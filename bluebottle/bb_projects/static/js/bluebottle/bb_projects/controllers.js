@@ -119,7 +119,7 @@ App.ProjectController = Em.ObjectController.extend({
         }, "");
     }.property('tags.@each'),
 
-    isProjectOwner: function() {
+    isOwner: function() {
         var username = this.get('currentUser.username');
         var ownername = this.get('model.owner.username');
         if (username) {
@@ -153,8 +153,8 @@ App.ProjectController = Em.ObjectController.extend({
     projectDonationsBinding: Ember.Binding.oneWay("projectDonations"),
 
     canEdit: function () {
-        return this.get('editable') && this.get('isProjectOwner');
-    }.property('editable', 'isProjectOwner'),
+        return this.get('isStatusCampaign') && this.get('isOwner');
+    }.property('isStatusCampaign', 'isOwner'),
 
     canDonate: function () {
         return !!this.get('amount_asked');
@@ -172,14 +172,9 @@ App.ProjectController = Em.ObjectController.extend({
         return totalPages > this.get('page');
     }.property('perPage', 'page', 'meta.total'),
 
-    canAddMediaWallpost: function() {
-        var username = this.get('currentUser.username');
-        var ownername = this.get('model.owner.username');
-        if (username) {
-            return (username == ownername);
-        }
-        return false;
-    }.property('model.owner', 'currentUser.username'),
+    canAddMediaWallpost: function(){
+        return this.get('isOwner');
+    }.property('isOwner'),
 
     availableTasks: function () {
         return this.get('tasks').filter(function(task) {

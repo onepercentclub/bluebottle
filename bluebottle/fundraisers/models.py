@@ -1,5 +1,5 @@
-from bluebottle.bb_fundraisers.models import BaseFundRaiser
+from bluebottle.bb_fundraisers.models import BaseFundraiser
 
 
-class FundRaiser(BaseFundRaiser):
+class Fundraiser(BaseFundraiser):
     pass

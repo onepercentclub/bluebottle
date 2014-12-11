@@ -8,7 +8,7 @@ from django.conf import settings
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'WallPost'
+        # Adding model 'Wallpost'
         db.create_table(u'wallposts_wallpost', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('polymorphic_ctype', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'polymorphic_wallposts.wallpost_set', null=True, to=orm['contenttypes.ContentType'])),
@@ -21,44 +21,44 @@ class Migration(SchemaMigration):
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='content_type_set_for_wallpost', to=orm['contenttypes.ContentType'])),
             ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
         ))
-        db.send_create_signal(u'wallposts', ['WallPost'])
+        db.send_create_signal(u'wallposts', ['Wallpost'])
 
-        # Adding model 'MediaWallPost'
+        # Adding model 'MediaWallpost'
         db.create_table(u'wallposts_mediawallpost', (
-            (u'wallpost_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['wallposts.WallPost'], unique=True, primary_key=True)),
+            (u'wallpost_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['wallposts.Wallpost'], unique=True, primary_key=True)),
             ('title', self.gf('django.db.models.fields.CharField')(max_length=60)),
             ('text', self.gf('django.db.models.fields.TextField')(default='', max_length=300, blank=True)),
             ('video_url', self.gf('django.db.models.fields.URLField')(default='', max_length=100, blank=True)),
         ))
-        db.send_create_signal(u'wallposts', ['MediaWallPost'])
+        db.send_create_signal(u'wallposts', ['MediaWallpost'])
 
-        # Adding model 'MediaWallPostPhoto'
+        # Adding model 'MediaWallpostPhoto'
         db.create_table(u'wallposts_mediawallpostphoto', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('mediawallpost', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='photos', null=True, to=orm['wallposts.MediaWallPost'])),
+            ('mediawallpost', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='photos', null=True, to=orm['wallposts.MediaWallpost'])),
             ('photo', self.gf('django.db.models.fields.files.ImageField')(max_length=100)),
             ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
             ('ip_address', self.gf('django.db.models.fields.IPAddressField')(default=None, max_length=15, null=True, blank=True)),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='mediawallpostphoto_wallpost_photo', null=True, to=orm[settings.AUTH_USER_MODEL])),
             ('editor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[settings.AUTH_USER_MODEL], null=True, blank=True)),
         ))
-        db.send_create_signal(u'wallposts', ['MediaWallPostPhoto'])
+        db.send_create_signal(u'wallposts', ['MediaWallpostPhoto'])
 
-        # Adding model 'TextWallPost'
+        # Adding model 'TextWallpost'
         db.create_table(u'wallposts_textwallpost', (
-            (u'wallpost_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['wallposts.WallPost'], unique=True, primary_key=True)),
+            (u'wallpost_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['wallposts.Wallpost'], unique=True, primary_key=True)),
             ('text', self.gf('django.db.models.fields.TextField')(max_length=300)),
         ))
-        db.send_create_signal(u'wallposts', ['TextWallPost'])
+        db.send_create_signal(u'wallposts', ['TextWallpost'])
 
-        # Adding model 'SystemWallPost'
+        # Adding model 'SystemWallpost'
         db.create_table(u'wallposts_systemwallpost', (
-            (u'wallpost_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['wallposts.WallPost'], unique=True, primary_key=True)),
+            (u'wallpost_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['wallposts.Wallpost'], unique=True, primary_key=True)),
             ('text', self.gf('django.db.models.fields.TextField')(max_length=300, blank=True)),
             ('related_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
             ('related_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
         ))
-        db.send_create_signal(u'wallposts', ['SystemWallPost'])
+        db.send_create_signal(u'wallposts', ['SystemWallpost'])
 
         # Adding model 'Reaction'
         db.create_table(u'wallposts_reaction', (
@@ -66,7 +66,7 @@ class Migration(SchemaMigration):
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wallpost_reactions', to=orm[settings.AUTH_USER_MODEL])),
             ('editor', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='+', null=True, to=orm[settings.AUTH_USER_MODEL])),
             ('text', self.gf('django.db.models.fields.TextField')(max_length=300)),
-            ('wallpost', self.gf('django.db.models.fields.related.ForeignKey')(related_name='reactions', to=orm['wallposts.WallPost'])),
+            ('wallpost', self.gf('django.db.models.fields.related.ForeignKey')(related_name='reactions', to=orm['wallposts.Wallpost'])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
@@ -76,19 +76,19 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Deleting model 'WallPost'
+        # Deleting model 'Wallpost'
         db.delete_table(u'wallposts_wallpost')
 
-        # Deleting model 'MediaWallPost'
+        # Deleting model 'MediaWallpost'
         db.delete_table(u'wallposts_mediawallpost')
 
-        # Deleting model 'MediaWallPostPhoto'
+        # Deleting model 'MediaWallpostPhoto'
         db.delete_table(u'wallposts_mediawallpostphoto')
 
-        # Deleting model 'TextWallPost'
+        # Deleting model 'TextWallpost'
         db.delete_table(u'wallposts_textwallpost')
 
-        # Deleting model 'SystemWallPost'
+        # Deleting model 'SystemWallpost'
         db.delete_table(u'wallposts_systemwallpost')
 
         # Deleting model 'Reaction'
@@ -172,20 +172,20 @@ class Migration(SchemaMigration):
             'why': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'})
         },
         u'wallposts.mediawallpost': {
-            'Meta': {'ordering': "('created',)", 'object_name': 'MediaWallPost', '_ormbases': [u'wallposts.WallPost']},
+            'Meta': {'ordering': "('created',)", 'object_name': 'MediaWallpost', '_ormbases': [u'wallposts.Wallpost']},
             'text': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '300', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '60'}),
             'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'blank': 'True'}),
-            u'wallpost_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['wallposts.WallPost']", 'unique': 'True', 'primary_key': 'True'})
+            u'wallpost_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['wallposts.Wallpost']", 'unique': 'True', 'primary_key': 'True'})
         },
         u'wallposts.mediawallpostphoto': {
-            'Meta': {'object_name': 'MediaWallPostPhoto'},
+            'Meta': {'object_name': 'MediaWallpostPhoto'},
             'author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'mediawallpostphoto_wallpost_photo'", 'null': 'True', 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'editor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL), 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ip_address': ('django.db.models.fields.IPAddressField', [], {'default': 'None', 'max_length': '15', 'null': 'True', 'blank': 'True'}),
-            'mediawallpost': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'photos'", 'null': 'True', 'to': u"orm['wallposts.MediaWallPost']"}),
+            'mediawallpost': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'photos'", 'null': 'True', 'to': u"orm['wallposts.MediaWallpost']"}),
             'photo': ('django.db.models.fields.files.ImageField', [], {'max_length': '100'})
         },
         u'wallposts.reaction': {
@@ -198,22 +198,22 @@ class Migration(SchemaMigration):
             'ip_address': ('django.db.models.fields.IPAddressField', [], {'default': 'None', 'max_length': '15', 'null': 'True', 'blank': 'True'}),
             'text': ('django.db.models.fields.TextField', [], {'max_length': '300'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'wallpost': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'reactions'", 'to': u"orm['wallposts.WallPost']"})
+            'wallpost': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'reactions'", 'to': u"orm['wallposts.Wallpost']"})
         },
         u'wallposts.systemwallpost': {
-            'Meta': {'ordering': "('created',)", 'object_name': 'SystemWallPost', '_ormbases': [u'wallposts.WallPost']},
+            'Meta': {'ordering': "('created',)", 'object_name': 'SystemWallpost', '_ormbases': [u'wallposts.Wallpost']},
             'related_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'related_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             'text': ('django.db.models.fields.TextField', [], {'max_length': '300', 'blank': 'True'}),
-            u'wallpost_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['wallposts.WallPost']", 'unique': 'True', 'primary_key': 'True'})
+            u'wallpost_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['wallposts.Wallpost']", 'unique': 'True', 'primary_key': 'True'})
         },
         u'wallposts.textwallpost': {
-            'Meta': {'ordering': "('created',)", 'object_name': 'TextWallPost', '_ormbases': [u'wallposts.WallPost']},
+            'Meta': {'ordering': "('created',)", 'object_name': 'TextWallpost', '_ormbases': [u'wallposts.Wallpost']},
             'text': ('django.db.models.fields.TextField', [], {'max_length': '300'}),
-            u'wallpost_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['wallposts.WallPost']", 'unique': 'True', 'primary_key': 'True'})
+            u'wallpost_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['wallposts.Wallpost']", 'unique': 'True', 'primary_key': 'True'})
         },
         u'wallposts.wallpost': {
-            'Meta': {'ordering': "('created',)", 'object_name': 'WallPost'},
+            'Meta': {'ordering': "('created',)", 'object_name': 'Wallpost'},
             'author': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'wallpost_wallpost'", 'null': 'True', 'to': u"orm['{0}']".format(settings.AUTH_USER_MODEL)}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'content_type_set_for_wallpost'", 'to': u"orm['contenttypes.ContentType']"}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),

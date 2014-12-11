@@ -36,7 +36,7 @@ class RedirectFallbackMiddleware(object):
         if http_host:
             # Crappy workaround for localhost.
             # Always default to https if not on local machine. This will hopefully fix Safari problems.
-            if current_site in ['localhost', 'localhost:8000', '127.0.0.1:8000', '127.0.0.1']:
+            if http_host in ['localhost', 'localhost:8000', 'localhost:8081', '127.0.0.1:8000', '127.0.0.1']:
                 http_host = 'http://' + http_host
             else:
                 http_host = 'https://' + http_host

@@ -83,7 +83,7 @@
 
                             </ul>
 
-                            {{#if isProjectOwner}}
+                            {{#if isOwner}}
                                 <footer class="activity-footer">
                                     {{#linkTo 'taskNew' id class='activity-action' }}
                                         <strong>{% trans "Create a task" %} &raquo;</strong><br />
@@ -95,7 +95,7 @@
                         </div>
                     </div>
                 {{else}}
-                    {{#if isProjectOwner}}
+                    {{#if isOwner}}
                         {{#if isStatusCampaign}}
                             <div id="task-list">
                                 <div class="activity">

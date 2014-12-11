@@ -86,19 +86,6 @@ App.TaskSearchFormController = Em.ObjectController.extend({
 
 });
 
-
-App.IsProjectOwnerMixin = Em.Mixin.create({
-    isProjectOwner: function() {
-        var username = this.get('currentUser.username');
-        var ownername = this.get('controllers.project.model.owner.username');
-        if (username) {
-            return (username == ownername);
-        }
-        return false;
-    }.property('controllers.project.model.owner', 'currentUser.username')
-});
-
-
 App.CanEditTaskMixin = Em.Mixin.create({
     canEdit: function() {
         var username = this.get('currentUser.username');
@@ -176,7 +163,15 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 
     backgroundStyle: function(){
         return "background-image:url('" + this.get('project.image.large') + "');";
-    }.property('project.image.large')
+    }.property('project.image.large'),
+
+    canAddMediaWallpost: function(){
+        return this.get('isOwner');
+    }.property('isOwner'),
+
+    isOwner: function(){
+        return (this.get('author.username') == this.get('currentUser.username'));
+    }.property('author.username', 'currentUser.username'),
 
 });
 

@@ -439,6 +439,8 @@ App.Router.map(function() {
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
 
     setupController: function(controller, model){
+        this._super(controller, model);
+
         controller.set('terms',  App.Terms.find('current'));
         controller.set('termsAgreements',  App.TermsAgreement.find());
     },

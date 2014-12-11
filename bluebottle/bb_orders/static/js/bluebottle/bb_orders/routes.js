@@ -81,6 +81,8 @@ App.OrderRoute = Em.Route.extend({
         // If the donation is anonymous or there is no current user
         // then only show the thank you toast.
         if (donation.get('anonymous') || !this.get('currentUser.isAuthenticated')) {
+            this.send('closeModal');
+            
             if (donation.get('fundraiser')) {
                 flashMessage = gettext("Thank you for supporting this fundraiser");
             } else {
@@ -88,7 +90,21 @@ App.OrderRoute = Em.Route.extend({
             }
             this.send('setFlash', flashMessage);
         } else {
-            this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+            // Call closeModal as one might be open. We need to 
+            // wait for a defer to resolve so we are sure the modal has closed
+            // before we try to open another one.
+            // FIXME: This needs to be handled in bb_modal library, eg if the 
+            //        action to open a new modal is called and one is already
+            //        open then either close / re-open, or handle a transition.
+            var defer = Ember.RSVP.defer(),
+                _this = this;
+
+            // Redirect to the order route.
+            defer.promise.then(function() {
+                _this.send('openInDynamic', 'donationSuccess', donation, 'modalFront');
+            });
+
+            this.send('closeModal', defer);
         }
     },
 

@@ -18,7 +18,7 @@ class FundraiserListView(ListCreateAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    paginate_by = 4
+    paginate_by = 10
     paginate_by_param = 'page_size'
 
     # because we overwrite get_queryset, this is ignored

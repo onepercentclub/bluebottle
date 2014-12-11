@@ -5,25 +5,29 @@
 
     <div class="l-section">
         <section class="l-wrapper">
-            {{#if model.isLoaded}}
+
+            {{#if ownerTasks.isLoaded}}
+                <h3>{% trans "Tasks you created" %}</h3>
                 <ul id="search-results">
-                    {{#each itemController="myTaskMember"}}
-
-                        <dl>
-                            <dt>{% trans "Task" %}</dt>
-                            <dd>{{task.title}} ({{task.project.title}})</dd>
-                            <dt>{% trans "Status" %}</dt>
-                            <dd>{{statusLabel}}</dd>
-                            <dt>{% trans "Time spent (in hours)" %}</dt>
-                            <dd>
-                                {{#if isEditing}}
-                                    <input class="edit" {{bind-attr value=task.time_needed}}>
-                                {{else}}
-                                    <label {{action 'editTimeSpent' on="doubleClick"}}>{{time_spent}}</label>
-                                {{/if}}
-                            </dd>
-                        </dl>
-
+                    {{#each task in ownerTasks}}
+                        <li>
+                            <dl>
+                                <dt>{% trans "Task" %}</dt>
+                                <dd>
+                                    {{#link-to 'task' task}}
+                                        {{task.title}}
+                                    {{/link-to}}
+                                </dd>
+                                <dt>{% trans "Project" %}</dt>
+                                <dd>
+                                    {{#link-to 'project' task.project.id}}
+                                        {{task.project.title}}
+                                    {{/link-to}}
+                                </dd>
+                                <dt>{% trans "Status" %}</dt>
+                                <dd>{{task.status}}</dd>
+                            </dl>
+                        </li>
                     {{else}}
                         <li class="no-results">{% trans "No tasks found." %}</li>
                     {{/each}}
@@ -31,6 +35,38 @@
             {{else}}
                 <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading your tasks..." %}</strong></div>
             {{/if}}
+
+
+            {{#if memberTasks.isLoaded}}
+                <h3>{% trans "Tasks you joined" %}</h3>
+                <ul id="search-results">
+                    {{#each memberTasks}}
+                        <li>
+                            <dl>
+                                <dt>{% trans "Task" %}</dt>
+                                <dd>
+                                    {{#link-to 'task' task}}
+                                        {{task.title}}
+                                    {{/link-to}}
+                                </dd>
+                                <dt>{% trans "Project" %}</dt>
+                                <dd>
+                                    {{#link-to 'project' task.project.id}}
+                                        {{task.project.title}}
+                                    {{/link-to}}
+                                </dd>
+                                <dt>{% trans "Status" %}</dt>
+                                <dd>{{task.status}}</dd>
+                            </dl>
+                        </li>
+                    {{else}}
+                        <li class="no-results">{% trans "No tasks found." %}</li>
+                    {{/each}}
+                </ul>
+            {{else}}
+                <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading your tasks..." %}</strong></div>
+            {{/if}}
+
         </section>
     </div>
 

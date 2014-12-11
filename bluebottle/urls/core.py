@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     url(r'^api/slides/', include('bluebottle.slides.urls.api')),
     url(r'^api/utils/', include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/', include('bluebottle.wallposts.urls.api')),
+    url(r'^api/terms/', include('bluebottle.terms.urls.api')),
     url(r'^api/metadata/', include('bluebottle.utils.urls.api')),
 
     url(r'^api/orders/', include('bluebottle.bb_orders.urls.api')),

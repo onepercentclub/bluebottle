@@ -10,7 +10,7 @@ App.FundraiserIsOwner = Em.Mixin.create({
 });
 
 
-App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
+App.FundraiserController = Em.ObjectController.extend({
     needs: ['project'],
 
     backgroundStyle: function(){

@@ -96,9 +96,9 @@ App.Project = DS.Model.extend({
 
     isStatusStopped: Em.computed.gt('phaseNum', 6),
 
-    is_funded: Em.computed.gt('amount_needed', 0),
+    is_funded: Em.computed.lte('amount_needed', 0),
 
-    hasTasks: Em.computed.gt('task_count', 0),
+    hasTasks: Em.computed.gte('task_count', 0),
 
     isSupportable: function () {
         var now = new Date();

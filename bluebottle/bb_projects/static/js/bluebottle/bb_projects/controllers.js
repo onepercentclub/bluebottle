@@ -192,6 +192,14 @@ App.ProjectController = Em.ObjectController.extend({
         this.set("showingAll", false);
     }.observes('parentId'),
 
+    projectSupportName: function() {
+        return gettext('Support project')
+    }.property(),
+
+    projectTitle: function() {
+        return gettext('Campaigner');
+    }.property(),
+
     actions: {
         showActiveTasks: function () {
             this.set("showingAll", false);

@@ -46,6 +46,14 @@ App.FundraiserController = Em.ObjectController.extend({
         return (this.get('owner.username') == this.get('currentUser.username'));
     }.property('owner.username', 'currentUser.username'),
 
+    fundraiserSupportName: function() {
+        return this.get('owner.first_name');
+    }.property('owner.first_name'),
+
+    fundraiserTitle: function() {
+        return gettext('Fundraiser');
+    }.property('owner.first_name'),
+
     actions: {
         showProfile: function (profile) {
             this.send('openInBigBox', 'userModal', profile);

@@ -6,7 +6,7 @@
         <div class="project-status">
             <div class="project-fund">
                 <div class="project-fund-amount-slider is_funded::is-funded">
-                    {{bb-progressbar targetValue=amount currentValue=amount_donated}}
+                    {{partial 'other_progressbars'}}
                 </div>
                 <p class="project-fund-amount">
                     <strong class="amount-donated">&euro; {{localize amount_donated}}</strong>
@@ -31,8 +31,8 @@
                     {{localize deadline formatting="X"}}
                 </div>
             {{else}}
-                <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="button button-big"> {% trans "Support" %} {{owner.first_name}}</a>
-                {{view 'App.MpesaDonateView' class="mpesa-donate" }}
+                <a {{action 'addDonation' this.project this.model}} data-action-type="donate" class="button button-big"> {% trans "Support" %} {{fundraiserSupportName}}</a>
+                {{partial 'other_payments'}}
             {{/if}}
         </div>
     </div>
@@ -46,8 +46,12 @@
                     <img {{bind-attr src="owner.getAvatar"}} />
                 </figure>
                 <span class="user-name">
-                    <strong>{% trans "Fundraiser" %}</strong><br />
+                    <strong>{{fundraiserTitle}}</strong><br />
                     <em>{{owner.full_name}}</em>
+                    {{#if fundraiserOfficeName}}
+                        <br/>
+                        <em>{{fundraiserOfficeName}}</em>
+                    {{/if}}
                 </span>
             </a>
         </div>

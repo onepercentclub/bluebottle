@@ -96,9 +96,9 @@ App.Project = DS.Model.extend({
 
     isStatusStopped: Em.computed.gt('phaseNum', 6),
 
-    is_funded: function() {
-        return this.get('amount_needed') <= 0;
-    }.property('amount_needed'),
+    is_funded: Em.computed.gt('amount_needed', 0),
+
+    hasTasks: Em.computed.gt('task_count', 0),
 
     isSupportable: function () {
         var now = new Date();
@@ -133,11 +133,7 @@ App.Project = DS.Model.extend({
                 tag.transitionTo('loaded.updated.saved');
             }
         });
-    }.observes('isDirty'),
-
-    hasTasks: function() {
-        return this.get('task_count') <= 0;
-    }.property('task_count')
+    }.observes('isDirty')
 });
 
 

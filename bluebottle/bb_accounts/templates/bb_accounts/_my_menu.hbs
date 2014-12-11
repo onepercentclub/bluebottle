@@ -3,52 +3,45 @@
 
 {% tplhandlebars "_my_menu" %}
     <li>
-        {{#link-to "userProfile" }}
-            {% trans "Edit my profile & settings" %}
-        {{/link-to }}
-    </li>
-
-    <li>
-        {{#linkTo "myDonationList" }}
-            {% trans "My Donations" %}
-        {{/linkTo}}
-    </li>
-
-    {% if 'projects' in bb_apps %}
-        {% block_verbatim 'my-projects-menu-link' %}
-            <li>
-                {{#link-to 'myProjectList'}}
-                    {% trans "My Projects" %}
-                {{/link-to}}
-            </li>
-        {% endblock_verbatim %}
-    {% endif %}
-
-    {% comment %}
-        {% if 'tasks' in bb_apps %}
-            {% block_verbatim 'my-tasks-menu-link' %}
-                <li>
-                    {{#link-to 'myTaskList'}}
-                        {% trans "My Tasks" %}
-                    {{/link-to}}
-                </li>
-            {% endblock_verbatim %}
-        {% endif %}
-    {% endcomment %}
-
-    <li>
         {{#link-to "viewProfile" currentUser.id_for_ember }}
             {% trans "View my profile" %}
         {{/link-to}}
     </li>
 
     <li>
+        {{#link-to "userProfile" }}
+            {% trans "Edit my profile & settings" %}
+        {{/link-to }}
+    </li>
+
+    <li>
+        {% trans "My Stuff" %}
+        <ul>
+            <li>
+                {{#link-to "myDonationList" }}
+                    {% trans "My Donations" %}
+                {{/link-to}}
+            </li>
+            <li>
+                {{#link-to 'myProjectList'}}
+                    {% trans "My Projects" %}
+                {{/link-to}}
+            </li>
+            <li>
+                {{#link-to 'myTaskList'}}
+                    {% trans "My Tasks" %}
+                {{/link-to}}
+            </li>
+        </ul>
+
+    </li>
+
+    <li>
         <a {{action 'logout'}}>{%  trans "Logout" %}</a>
     </li>
 
-    {% block_verbatim language_switcher %}
-        <li class="nav-member-switch-language">
-            {% trans "Language" %} {{view "App.LanguageSwitchView"}}
-        </li>
-    {% endblock_verbatim %}
+
+    <li class="nav-member-switch-language">
+        {% trans "Language" %} {{view "App.LanguageSwitchView"}}
+    </li>
 {% endtplhandlebars %}

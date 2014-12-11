@@ -59,7 +59,7 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
     permission_classes = (IsProjectOwnerOrReadOnly,)
-    filter_fields = ('status', )
+    filter_fields = ('status', 'author')
 
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()

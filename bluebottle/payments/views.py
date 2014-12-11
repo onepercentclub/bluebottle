@@ -27,8 +27,10 @@ class PaymentMethodList(APIView):
         else:
             country = get_country_by_ip(ip)
 
-        # TODO: Determine available methods based on GET params (amount).
-        methods = get_payment_methods(country, 500)
+        # TODO: 1) Determine available methods based on GET params (amount).
+        #       2) Re-enable country-based filtering when front-end can handle
+        #          manually setting the country. For now send all methods.
+        methods = get_payment_methods('all', 500)
 
         result = {'country': country, 'results': methods}
         response = Response(result, status=status.HTTP_200_OK)

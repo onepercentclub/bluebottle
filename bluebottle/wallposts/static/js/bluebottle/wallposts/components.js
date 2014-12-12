@@ -16,6 +16,12 @@ App.FormControls = Ember.Mixin.create({
 });
 
 
+App.BbWallpostFirstTimestampComponent = Ember.Component.extend({
+    dateCreated: function() {
+        return this.get('model.created');
+    }.property(),
+});
+
 App.BbWallpostHelpComponent = Ember.Component.extend({
     actions: {
         focusOnInput: function() {

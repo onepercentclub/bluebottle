@@ -1,0 +1,13 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-wallpost-empty" %}
+
+{{!-- TODO: Change date into camaign created date --}}
+<div class="wallpost-history">
+	<h3>{% trans "Campaign created" %}</h3>
+	<p>{% trans "27 February 2014" %}</p>
+</div>
+
+{% endtplhandlebars %}

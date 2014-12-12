@@ -216,6 +216,11 @@
         overflow: hidden;
         background-color: $color-grey-lightest;
         @include border-bottom-radius($radius-medium);
+
+        .wallpost-update-options {
+            float: left;
+            padding: 15px 20px;
+        }
         
         .wallpost-update-actions {
             float: right;
@@ -234,6 +239,105 @@
             height: 50px;
             border-top: solid 1px $color-grey-medium;
         }
+    }
+}
+
+.wallpost-history {
+    position: relative;
+    top: -30px;
+    text-align: center;
+    color: $color-grey;
+    font-size: 14px;
+    @include svg-icon('wallposts/dotted-line-vertical.svg');
+    background-position: 50%;
+    background-repeat: repeat-y;
+    padding-top: 150px;
+
+    h3 {
+        padding: 20px 0 0 0;
+        color: $color-grey;
+        font-size: 20px;
+        background-color: $color-grey-back;
+    }
+
+    p {
+        color: $color-grey-medium;
+        background-color: $color-grey-back;
+    }
+
+    &:before {
+        position: absolute;
+        content: " ";
+        top: 150px; // same as padding parent
+        width: 20px;
+        height: 20px;
+        margin-left: -10px;
+        line-height: 20px;
+        @include border-radius(50%);
+        color: #fff;
+        background: $color-grey;
+        font-weight: bold;
+        text-align: center;
+        font-size: 22px;
+    }
+
+}
+
+.wallpost-help {
+    
+    .help-header {
+        text-align: center;
+
+        h1 {
+            color: $color-pri;
+        }
+    }
+
+    .help-body {
+        margin: 2em 6em;
+        color: $color-grey-dark;
+        font-size: 14px;
+
+        ol {
+            counter-reset: li;
+            margin: 0; 
+            padding: 0;
+
+            li {
+                position: relative; 
+                margin: 0 0 20px 2em;
+                padding: 0 10px;
+                list-style: none;
+                
+                &:before {
+                    content: counter(li);
+                    counter-increment: li;
+                    position: absolute;
+                    top: -2px;
+                    left: -2em;
+                    width: 40px;
+                    height: 40px;
+                    line-height: 40px;
+                    @include border-radius(50%);
+                    margin-right: 8px;
+                    color: #fff;
+                    background: $color-sec;
+                    font-weight: bold;
+                    text-align: center;
+                    font-size: 22px;
+                }
+
+                h2 {
+                    color: $color-grey-dark;
+                    font-weight: bold;
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+
+    .help-footer {
+        text-align: center;
     }
 }
 

@@ -1,10 +1,8 @@
 {% load i18n bb_ember %}
 
 {% tplhandlebars "_profile_anchor" %}
-    <a href="#" class="nav-member-dropdown">
+    <span class="nav-member-dropdown">
 		<img {{bindAttr src="currentUser.getAvatar" alt="currentUser.full_name"}}>
-        <strong>
-            {{currentUser.full_name}}
-        </strong>
-    </a>
+        <strong>{{currentUser.full_name}}</strong>
+    </span>
 {% endtplhandlebars %}

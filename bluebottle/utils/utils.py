@@ -6,9 +6,44 @@ from django_fsm.db.fields import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.utils.http import urlquote
+from django.utils.translation import ugettext as _
 
 import pygeoip
 import logging
+
+
+class GetTweetMixin:
+
+    def get_fb_title(self, **kwargs):
+        return self.get_meta_title()
+
+    def get_meta_title(self, **kwargs):
+        from bluebottle.utils.model_dispatcher import get_project_model
+
+        if isinstance(self, get_project_model()):
+            return u'{name_project} | {country}'.format(
+                name_project=self.title,
+                country=self.country.name if self.country else '')
+        return self.title
+
+    def get_tweet(self, **kwargs):
+        """ Build the tweet text for the meta data """
+        request = kwargs.get('request')
+        if request:
+            lang_code = request.LANGUAGE_CODE
+        else:
+            lang_code = 'en'
+        twitter_handle = settings.TWITTER_HANDLES.get(
+            lang_code, settings.DEFAULT_TWITTER_HANDLE)
+
+        title = urlquote(self.get_meta_title())
+
+        # {URL} is replaced in Ember to fill in the page url, avoiding the
+        # need to provide front-end urls in our Django code.
+        tweet = _(u'{title} {{URL}} via @{twitter_handle}').format(
+            title=title, twitter_handle=twitter_handle)
+        return tweet
 
 class StatusDefinition:
     """

@@ -9,6 +9,7 @@ from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
+from bluebottle.utils.utils import GetTweetMixin
 
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
@@ -90,7 +91,7 @@ class BaseTaskFile(models.Model):
         abstract = True
 
 
-class BaseTask(models.Model):
+class BaseTask(models.Model, GetTweetMixin):
     """ The base Task model """
 
     # We should probably turn this into another class model like the projectphase

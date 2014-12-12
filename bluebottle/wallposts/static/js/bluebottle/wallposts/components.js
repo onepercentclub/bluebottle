@@ -15,6 +15,15 @@ App.FormControls = Ember.Mixin.create({
     }
 });
 
+
+App.BbWallpostHelpComponent = Ember.Component.extend({
+    actions: {
+        focusOnInput: function() {
+            this.sendAction('focusOnInput');
+        }
+    }
+});
+
 App.BbTextWallpostNewComponent = Ember.Component.extend(App.FormControls, {
     /**
      * This is the base component for a wall-post form.

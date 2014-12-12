@@ -15,12 +15,19 @@
         {{partial 'signin'}}
     {{/if}}
     
-    {{!-- TODO: Only display these when there are no wallposts --}}
-    {{#if canAddMediaWallpost}}
-        {{bb-wallpost-help}}
-    {{else}}
-        {{bb-wallpost-empty}}
+
+    {{#if isOwner}}
+        {{#if noWallposts}}
+            {{bb-wallpost-help focusOnInput='focusOnInput'}}
+        {{ else }}
+            {{#if ownerHasWallposts}}
+            {{ else }}
+                {{bb-wallpost-empty}} 
+            {{/if}}
+        {{/if}}
+
     {{/if}}
+
 
     {{#each wallpost in wallpostList}}
         {{#if wallpost.isLoaded}}

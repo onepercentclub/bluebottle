@@ -197,7 +197,6 @@ def email_followers(sender, instance, created, **kwargs):
 
     if isinstance(instance, Wallpost):
         if instance.email_followers:
-
             content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
 
             # Determine if this wallpost is on a Project page, Task page, or Fundraiser page. Required because of different Follow object lookup  

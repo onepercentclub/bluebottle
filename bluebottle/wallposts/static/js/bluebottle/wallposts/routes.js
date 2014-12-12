@@ -29,7 +29,7 @@ App.WallRouteMixin = Em.Mixin.create({
                 _this.set('wallpostPage', 1);
                 controller.set('wallpostList', posts);
                 controller.set('wallpostFiles', Em.A());
-                controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
+                controller.set('wallpostRemaining', _this.get('wallpostRemaining'));   
             });
             this._createNewWallposts();
         }
@@ -102,6 +102,7 @@ App.WallRouteMixin = Em.Mixin.create({
             return wallpost.save();
         },
         removeWallpost: function(wallpost){
+            this.get('controller.wallpostList').removeObject(wallpost);
             wallpost.deleteRecord();
             wallpost.save();
         },
@@ -131,6 +132,10 @@ App.WallRouteMixin = Em.Mixin.create({
         removeWallpostComment: function(comment) {
             comment.deleteRecord();
             comment.save();
+        },
+
+        focusOnInput: function() {
+            $('.wallpost-update-post').focus();
         }
     }
 });

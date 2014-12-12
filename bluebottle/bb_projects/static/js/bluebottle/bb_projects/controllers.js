@@ -100,7 +100,7 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 });
 
 
-App.ProjectController = Em.ObjectController.extend({
+App.ProjectController = Em.ObjectController.extend(App.WallControllerMixin, {
     projectDonations: null,
 
     backgroundStyle: function(){

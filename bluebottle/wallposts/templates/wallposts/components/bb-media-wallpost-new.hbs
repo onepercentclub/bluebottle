@@ -42,7 +42,7 @@
         <footer class="wallpost-update-footer">
             <div class="wallpost-update-options">
                 <label for="emailSupporters" class="modal-checkbox">
-                    <input id="emailSupporters" type="checkbox" checked><span></span> {% trans "Notify supporters about my update via mail" %}
+                    {{input id="emailSupporters" type="checkbox" checkedBinding="wallpost.email_followers"}}<span></span>{% trans "Notify supporters about my update via mail" %}
                 </label>
             </div>
 

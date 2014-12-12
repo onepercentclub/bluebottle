@@ -15,12 +15,6 @@
         {{partial 'signin'}}
     {{/if}}
     
-    {{!-- TODO: Only display these when there are no wallposts --}}
-    {{#if canAddMediaWallpost}}
-        {{bb-wallpost-help}}
-    {{else}}
-        {{bb-wallpost-empty}}
-    {{/if}}
 
     {{#each wallpost in wallpostList}}
         {{#if wallpost.isLoaded}}
@@ -40,4 +34,15 @@
         </a>
     {{/if}}
 
+
+    {{#if isOwner}}
+        {{#if ownerHasWallposts}}
+            {{bb-wallpost-first-timestamp model=model}} 
+        {{else}}
+            {{bb-wallpost-help focusOnInput='focusOnInput'}}
+        {{/if}}
+    
+    {{else}}
+        {{bb-wallpost-first-timestamp}} 
+    {{/if}}
 {% endtplhandlebars %}

@@ -13,7 +13,6 @@
     </style>
 
     <div {{bindAttr class=":modal-fullscreen-content"}}>
-        <span {{action 'close'}} class="modal-fullscreen-close"></span>
         <div id="profile-preview">
             <div class="modal-header">
                 <header class="profile-header">
@@ -29,12 +28,12 @@
 
 
             <div class="modal-footer profile-preview-actions">
-            {{#if currentUser.agreedToTerms}}
+            {{#if currentUser.agreedToTerms.created}}
                 {% trans 'You have already to these terms on ' %}
                 {{localize currentUser.agreedToTerms.created formatting='d'}}
-                <a {{action 'close'}} class="close-link" rel="close">&times; Close</a>
+                <a {{action 'close'}} class="close-link" rel="close">&times; {% trans "Close" %}</a>
             {{else}}
-                <a {{action 'close'}} class="close-link" rel="close">&times; Close</a>
+                <a {{action 'rejectTerms'}} class="close-link" rel="close">&times; {% trans "I don't agree to this" %}</a>
                 <a {{action 'acceptTerms'}} class="go-to-profile" rel="close">
                     {% trans 'Agree' %}&nbsp;&rsaquo;
                 </a>

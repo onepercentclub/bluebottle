@@ -2,72 +2,45 @@
 
 
 {% tplhandlebars "myTaskList" %}
+    <div class="l-section" id="project-dashboard">
 
-    <div class="l-section">
-        <section class="l-wrapper">
-
-            {{#if ownerTasks.isLoaded}}
-                <h3>{% trans "Tasks you created" %}</h3>
-                <ul id="search-results">
-                    {{#each task in ownerTasks}}
-                        <li>
-                            <dl>
-                                <dt>{% trans "Task" %}</dt>
-                                <dd>
-                                    {{#link-to 'task' task}}
-                                        {{task.title}}
-                                    {{/link-to}}
-                                </dd>
-                                <dt>{% trans "Project" %}</dt>
-                                <dd>
-                                    {{#link-to 'project' task.project.id}}
-                                        {{task.project.title}}
-                                    {{/link-to}}
-                                </dd>
-                                <dt>{% trans "Status" %}</dt>
-                                <dd>{{task.status}}</dd>
-                            </dl>
-                        </li>
-                    {{else}}
-                        <li class="no-results">{% trans "No tasks found." %}</li>
-                    {{/each}}
-                </ul>
+        <div class="l-section campaign-header">
+            <nav class="l-wrapper">
+                <header>
+                    <h1 class="page-title">{% trans "My tasks"%}</h1>
+                </header>
+            </nav>
+        </div>
+        
+        <div class="l-wrapper">
+            {{#if isLoading}}
+                <div class="is-loading-big">
+                    <img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading tasks" %}</strong>
+                </div>
             {{else}}
-                <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading your tasks..." %}</strong></div>
+                <div class="l-content">
+                    <ul class="project-list">
+                        <h3>{% trans "Tasks you created" %}</h3>
+                        <ul id="search-results">
+                            {{#each task in ownerTasks}}
+                                {{partial "_my_task_preview"}}
+                            {{else}}
+                                <li class="no-results">{% trans "No tasks found." %}</li>
+                            {{/each}}
+                        </ul>
+
+                        <h3>{% trans "Tasks you joined" %}</h3>
+                        <ul id="search-results">
+                            {{#each memberTasks}}
+                                {{partial "_my_task_preview"}}
+                            {{else}}
+                                <li class="no-results">{% trans "No tasks found." %}</li>
+                            {{/each}}
+                        </ul>
+                    </ul>
+                </div>
             {{/if}}
-
-
-            {{#if memberTasks.isLoaded}}
-                <h3>{% trans "Tasks you joined" %}</h3>
-                <ul id="search-results">
-                    {{#each memberTasks}}
-                        <li>
-                            <dl>
-                                <dt>{% trans "Task" %}</dt>
-                                <dd>
-                                    {{#link-to 'task' task}}
-                                        {{task.title}}
-                                    {{/link-to}}
-                                </dd>
-                                <dt>{% trans "Project" %}</dt>
-                                <dd>
-                                    {{#link-to 'project' task.project.id}}
-                                        {{task.project.title}}
-                                    {{/link-to}}
-                                </dd>
-                                <dt>{% trans "Status" %}</dt>
-                                <dd>{{task.status}}</dd>
-                            </dl>
-                        </li>
-                    {{else}}
-                        <li class="no-results">{% trans "No tasks found." %}</li>
-                    {{/each}}
-                </ul>
-            {{else}}
-                <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading your tasks..." %}</strong></div>
-            {{/if}}
-
-        </section>
+        </div>
     </div>
 
 {% endtplhandlebars %}

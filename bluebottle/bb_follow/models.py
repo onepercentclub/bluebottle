@@ -195,7 +195,6 @@ def email_followers(sender, instance, created, **kwargs):
     """
     from bluebottle.wallposts.models import Wallpost
 
-    import pdb;pdb.set_trace()
     if isinstance(instance, Wallpost):
         if instance.email_followers:
             content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project

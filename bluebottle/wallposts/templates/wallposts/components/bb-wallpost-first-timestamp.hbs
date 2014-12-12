@@ -1,0 +1,13 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "components/bb-wallpost-first-timestamp" %}
+
+{{!-- TODO: Change date into camaign created date --}}
+<div class="wallpost-history">
+	<h3>{% trans "Campaign created" %}</h3>
+	<p>{{localize dateCreated formatting='X'}}</p>
+</div>
+
+{% endtplhandlebars %}

@@ -29,16 +29,7 @@ App.WallRouteMixin = Em.Mixin.create({
                 _this.set('wallpostPage', 1);
                 controller.set('wallpostList', posts);
                 controller.set('wallpostFiles', Em.A());
-                controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
-                controller.set('ownerHasWallposts', false);
-
-                posts.forEach(function(post){
-                    if (controller.get('isOwner')) {
-                        if (post.get('author.username') == controller.get('currentUser.username') && post.get('type') != 'system') {
-                            controller.set('ownerHasWallposts', true);
-                        }
-                    }                    
-                });     
+                controller.set('wallpostRemaining', _this.get('wallpostRemaining'));   
             });
             this._createNewWallposts();
         }
@@ -111,6 +102,7 @@ App.WallRouteMixin = Em.Mixin.create({
             return wallpost.save();
         },
         removeWallpost: function(wallpost){
+            this.get('controller.wallpostList').removeObject(wallpost);
             wallpost.deleteRecord();
             wallpost.save();
         },

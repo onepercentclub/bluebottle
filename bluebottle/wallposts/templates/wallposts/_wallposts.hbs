@@ -16,9 +16,6 @@
     {{/if}}
     
 
-
-
-
     {{#each wallpost in wallpostList}}
         {{#if wallpost.isLoaded}}
             {{#if wallpost.isSystemWallpost}}
@@ -36,6 +33,7 @@
             <span class="flaticon solid plus-2"></span> {% trans "Show more" %} <small>{{wallpostRemaining}} {% trans "more" %}</small>
         </a>
     {{/if}}
+
 
     {{#if isOwner}}
         {{#if ownerHasWallposts}}

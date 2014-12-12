@@ -1,4 +1,4 @@
-from bluebottle.terms.models import Terms
+from bluebottle.terms.models import Terms, TermsAgreement
 from django.contrib import admin
 from django import forms
 from tinymce.widgets import TinyMCE
@@ -17,3 +17,12 @@ class TermsAdmin(admin.ModelAdmin):
     raw_id_fields = ('author', )
 
 admin.site.register(Terms, TermsAdmin)
+
+
+class TermsAgreementAdmin(admin.ModelAdmin):
+    model = TermsAgreement
+    readonly_fields = ('user', 'terms')
+    fields = readonly_fields
+    list_display = readonly_fields
+
+admin.site.register(TermsAgreement, TermsAgreementAdmin)

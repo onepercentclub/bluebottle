@@ -97,7 +97,7 @@ App.CanEditTaskMixin = Em.Mixin.create({
     }.property('author', 'currentUser.username')
 });
 
-App.ProjectTasksIndexController = Em.ArrayController.extend(App.IsProjectOwnerMixin, {
+App.ProjectTasksIndexController = Em.ArrayController.extend({
     needs: ['project']
 });
 

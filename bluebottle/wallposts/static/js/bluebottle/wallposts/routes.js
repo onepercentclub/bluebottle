@@ -32,8 +32,6 @@ App.WallRouteMixin = Em.Mixin.create({
                 controller.set('wallpostRemaining', _this.get('wallpostRemaining'));
                 controller.set('ownerHasWallposts', false);
 
-                (posts.get('length') == 0) ? controller.set('noWallposts', true) : controller.set('noWallposts', false);
-
                 posts.forEach(function(post){
                     if (controller.get('isOwner')) {
                         if (post.get('author.username') == controller.get('currentUser.username') && post.get('type') != 'system') {

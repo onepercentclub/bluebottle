@@ -16,17 +16,7 @@
     {{/if}}
     
 
-    {{#if isOwner}}
-        {{#if noWallposts}}
-            {{bb-wallpost-help focusOnInput='focusOnInput'}}
-        {{ else }}
-            {{#if ownerHasWallposts}}
-            {{ else }}
-                {{bb-wallpost-empty}} 
-            {{/if}}
-        {{/if}}
 
-    {{/if}}
 
 
     {{#each wallpost in wallpostList}}
@@ -47,4 +37,14 @@
         </a>
     {{/if}}
 
+    {{#if isOwner}}
+        {{#if ownerHasWallposts}}
+            {{bb-wallpost-first-timestamp}} 
+        {{else}}
+            {{bb-wallpost-help focusOnInput='focusOnInput'}}
+        {{/if}}
+    
+    {{else}}
+        {{bb-wallpost-first-timestamp}} 
+    {{/if}}
 {% endtplhandlebars %}

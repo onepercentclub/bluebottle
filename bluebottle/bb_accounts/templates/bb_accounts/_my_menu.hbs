@@ -3,45 +3,42 @@
 
 {% tplhandlebars "_my_menu" %}
     <li>
-        {{#link-to "viewProfile" currentUser.id_for_ember }}
-            {% trans "View my profile" %}
-        {{/link-to}}
-    </li>
-
-    <li>
         {{#link-to "userProfile" }}
-            {% trans "Edit my profile & settings" %}
+            {% trans "My Account" %}
         {{/link-to }}
-    </li>
-
-    <li>
-        {% trans "My Stuff" %}
         <ul>
             <li>
                 {{#link-to "myDonationList" }}
-                    {% trans "My Donations" %}
+                    {% trans "Donations" %}
                 {{/link-to}}
             </li>
             <li>
                 {{#link-to 'myProjectList'}}
-                    {% trans "My Projects" %}
+                    {% trans "Campaigns" %}
                 {{/link-to}}
             </li>
             <li>
                 {{#link-to 'myTaskList'}}
-                    {% trans "My Tasks" %}
+                    {% trans "Tasks" %}
+                {{/link-to}}
+            </li>
+            <li>
+                {{#link-to 'myFundraiserList'}}
+                    {% trans "Fundraisers" %}
                 {{/link-to}}
             </li>
         </ul>
 
     </li>
+    
+    {{!-- TODO: Logic if there are multiple languages --}}
+    {{#if hasMultipleLanguages}}
+        <li class="nav-member-switch-language">
+            {% trans "Language" %} {{view "App.LanguageSwitchView"}}
+        </li>
+    {{/if}}
 
     <li>
-        <a {{action 'logout'}}>{%  trans "Logout" %} YO!</a>
-    </li>
-
-
-    <li class="nav-member-switch-language">
-        {% trans "Language" %} {{view "App.LanguageSwitchView"}}
+        <a {{action 'logout'}}>{%  trans "Logout" %}</a>
     </li>
 {% endtplhandlebars %}

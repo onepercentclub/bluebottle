@@ -270,7 +270,7 @@ class FollowTests(TestCase):
 		# People who should get an email: self.some_user, task_owner1, fundraiser_person, commenter, and donator1
 		receivers = [task_owner1.email, commenter.email, donator1.email, fundraiser_person.email]
 		for email in mail.outbox:
-			if "Mail with the wallpost" in email.subject:
+			if "New wallpost on" in email.subject:
 				mail_count += 1
 				self.assertTrue(email.to[0] in receivers)
 				receivers.remove(email.to[0])
@@ -310,7 +310,7 @@ class FollowTests(TestCase):
 		receivers = [task_member_1.member.email, task_member_2.member.email]
 
 		for email in mail.outbox:
-			if "Mail with the wallpost" in email.subject:
+			if "New wallpost on" in email.subject:
 				mail_count += 1
 				self.assertTrue(email.to[0] in receivers)
 				receivers.remove(email.to[0])
@@ -351,7 +351,7 @@ class FollowTests(TestCase):
 		receivers = [donator1.email, donator2.email, commenter.email]
 
 		for email in mail.outbox:
-			if "Mail with the wallpost" in email.subject:
+			if "New wallpost on" in email.subject:
 				mail_count += 1
 				self.assertTrue(email.to[0] in receivers)
 				receivers.remove(email.to[0])

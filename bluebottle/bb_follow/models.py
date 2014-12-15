@@ -2,8 +2,10 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
-from bluebottle.mail import send_mail
+from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import ugettext as _
+from bluebottle.mail import send_mail
 from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_model, get_donation_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
@@ -202,29 +204,43 @@ def email_followers(sender, instance, created, **kwargs):
 
             # Determine if this wallpost is on a Project page, Task page, or Fundraiser page. Required because of different Follow object lookup  
             mailers = set() # Contains unique user objects
+            link = None
+
             if isinstance(instance.content_object, BaseProject):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
+                follow_object = _('campaign')
+                link = '/go/projects/{0}'.format(instance.content_object.slug)
+
 
             if isinstance(instance.content_object, BaseTask):
                 # Send update to all task members and to people who posted to the wall --> Follower
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
+                follow_object = _('task')
+                link = '/go/tasks/{0}'.format(instance.content_object.id)
 
             if isinstance(instance.content_object, BaseFundraiser):
                 # Send update to all people who donated or posted to the wall --> Followers
                 content_type = ContentType.objects.get_for_model(instance.content_object.project)
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
-                [mailers.add(follower.user) for follower in followers]           
-
+                [mailers.add(follower.user) for follower in followers]      
+                follow_object = _('fundraiser') 
+                link = '/go/fundraisers/{0}'.format(instance.content_object.id)
+    
             wallpost_text = instance.text
+            subject = _("New wallpost on %(name)s") % {'name': instance.content_object.title}
+            site = 'https://' + Site.objects.get_current().domain
 
+            full_link = site + link
             for mailee in mailers:
                 send_mail(
-                        template_name='wallpost_mail.mail',
-                        subject="Mail with the wallpost",
-                        wallpost_text=wallpost_text,
+                        template_name='bb_follow/mails/wallpost_mail.mail',
+                        subject=subject,
+                        wallpost_text=wallpost_text[:250],
                         to=mailee,
-                        link='NO LINK'
+                        link=full_link,
+                        follow_object=follow_object,
+                        first_name = mailee.first_name
                     )

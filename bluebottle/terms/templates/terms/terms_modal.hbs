@@ -33,8 +33,8 @@
                 {{localize currentUser.agreedToTerms.created formatting='d'}}
                 <a {{action 'close'}} class="close-link" rel="close">&times; {% trans "Close" %}</a>
             {{else}}
-                <a {{action 'rejectTerms'}} class="close-link" rel="close">&times; {% trans "I don't agree to this" %}</a>
-                <a {{action 'acceptTerms'}} class="go-to-profile" rel="close">
+                <a {{action 'rejectTerms'}} data-action-type="reject-terms" class="close-link" rel="close">&times; {% trans "I don't agree to this" %}</a>
+                <a {{action 'acceptTerms'}} data-action-type="accept-terms" class="go-to-profile" rel="close">
                     {% trans 'Agree' %}&nbsp;&rsaquo;
                 </a>
             {{/if}}

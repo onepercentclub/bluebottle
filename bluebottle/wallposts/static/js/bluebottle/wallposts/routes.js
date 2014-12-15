@@ -132,10 +132,6 @@ App.WallRouteMixin = Em.Mixin.create({
         removeWallpostComment: function(comment) {
             comment.deleteRecord();
             comment.save();
-        },
-
-        focusOnInput: function() {
-            $('.wallpost-update-post').focus();
         }
     }
 });

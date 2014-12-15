@@ -13,5 +13,9 @@ App.WallControllerMixin = Em.Mixin.create({
                 }
             }                    
         });     
-    }.observes('wallpostList.length')
+    }.observes('wallpostList.length'),
+
+    focusOnInput: function() {
+        $('.wallpost-update-post').focus();
+    }
 });

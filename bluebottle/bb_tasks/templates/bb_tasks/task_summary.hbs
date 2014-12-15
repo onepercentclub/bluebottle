@@ -4,40 +4,42 @@
 
 {% tplhandlebars "task_summary" %}
 
-	<li class="activity-item">
-		{{#link-to "task" this class="item-link"}}
-			<strong class="item-title">{{title}}</strong>
-			<span class="item-meta">
-			{{#if isStatusOpen}}
-				<span class="item-people"><em>{{membersNeeded}}</em> {% trans "of" %} {{people_needed}} {% trans "people needed" %}</span>
-				<span class="item-time"><em>{{time_needed}}</em> {% trans "hour" %}</span>
-			{{/if}}
-			{{#if isStatusInProgress}}
-				<span class="item-people"><em>{{membersCount}}</em> {% trans "people accepted for this task" %}</span>
-			{{/if}}
-			{{#if isStatusClosed}}
-				<span class="item-people">{% trans "This task was cancelled" %}</span>
-			{{/if}}
-			{{#if isStatusRealized}}
-				<span class="item-people"><em>{{membersCount}}</em> {% trans "people realised this task on" %}</span>
-			{{/if}}
+    <li class="activity-item">
+        {{#link-to "task" this class="item-link"}}
+            <strong class="item-title">{{title}}</strong>
+            <span class="item-meta">
+                {{#if isStatusOpen}}
+                    <span class="item-people"><em>{{membersNeeded}}</em> {% trans "of" %} {{people_needed}} {% trans "people needed" %}</span>
+                    <span class="item-time"><em>{{time_needed}}</em> {% trans "hour" %}</span>
+                {{/if}}
+                {{#if isStatusInProgress}}
+                    <span class="item-people"><em>{{membersCount}}</em> {% trans "people accepted for this task" %}</span>
+                {{/if}}
+                {{#if isStatusClosed}}
+                    <span class="item-people">{% trans "This task was cancelled" %}</span>
+                {{/if}}
+                {{#if isStatusRealized}}
+                    <span class="item-people"><em>{{membersCount}}</em> {% trans "people realised this task on" %}</span>
+                {{/if}}
+                <span class="item-deadline"><em>{{localize deadline}}</em></span>
+            </span>
 
-				<span class="item-deadline"><em>{{localize deadline}}</em></span>
-			</span>
-			{{#if isStatusOpen}}
-			    <span class="item-status task-open">{% trans "Open" %}</span>
-			{{/if}}
-			{{#if isStatusInProgress}}
-			    <span class="item-status task-running">{% trans "Running" %}</span>
-			{{/if}}
-			{{#if isStatusClosed}}
-			    <span class="item-status task-closed">{% trans "Closed" %}</span>
-			{{/if}}
-			{{#if isStatusRealized}}
-			    <span class="item-status task-done">{% trans "Done" %}</span>
-			{{/if}}
-			
-		{{/link-to}}
-	</li>
+            {{#if isStatusOpen}}
+                <span class="item-status task-open">{% trans "Open" %}</span>
+            {{/if}}
+
+            {{#if isStatusInProgress}}
+                <span class="item-status task-running">{% trans "Running" %}</span>
+            {{/if}}
+
+            {{#if isStatusClosed}}
+                <span class="item-status task-closed">{% trans "Closed" %}</span>
+            {{/if}}
+            
+            {{#if isStatusRealized}}
+                <span class="item-status task-done">{% trans "Done" %}</span>
+            {{/if}}
+        {{/link-to}}
+    </li>
 
 {% endtplhandlebars %}

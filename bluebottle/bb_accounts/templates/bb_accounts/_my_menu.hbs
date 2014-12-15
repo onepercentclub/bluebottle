@@ -8,28 +8,28 @@
         {{/link-to }}
         <ul>
             <li>
-                {{#if currentUser.donationCount}}
+                {{#if currentUser.hasDonations}}
                     {{#link-to "myDonationList" }}
                         {% trans "Donations" %}
                     {{/link-to}}
                 {{/if}}
             </li>
             <li>
-                {{#if currentUser.projectCount}}
+                {{#if currentUser.hasProjects}}
                     {{#link-to 'myProjectList'}}
                         {% trans "Campaigns" %}
                     {{/link-to}}
                 {{/if}}
             </li>
             <li>
-                {{#if currentUser.taskCount}}
+                {{#if currentUser.hasTasks}}
                     {{#link-to 'myTaskList'}}
                         {% trans "Tasks" %}
                     {{/link-to}}
                 {{/if}}
             </li>
             <li>
-                {{#if currentUser.fundraiserCount}}
+                {{#if currentUser.hasFundraisers}}
                     {{#link-to 'myFundraiserList'}}
                         {% trans "Fundraisers" %}
                     {{/link-to}}

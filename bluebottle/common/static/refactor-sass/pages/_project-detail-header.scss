@@ -324,9 +324,10 @@
             }
 
             &.project-task-join {
-                font-size: 20px;
+                margin-top: 13px;
                 padding: .5em 1em .7em 1em;
                 padding-top: calc(.5em + 2px);
+                font-size: 20px;
                 cursor: pointer;
             }
         }

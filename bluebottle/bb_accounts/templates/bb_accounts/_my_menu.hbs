@@ -8,24 +8,32 @@
         {{/link-to }}
         <ul>
             <li>
-                {{#link-to "myDonationList" }}
-                    {% trans "Donations" %}
-                {{/link-to}}
+                {{#if currentUser.hasCurrentDonation}}
+                    {{#link-to "myDonationList" }}
+                        {% trans "Donations" %}
+                    {{/link-to}}
+                {{/if}}
             </li>
             <li>
-                {{#link-to 'myProjectList'}}
-                    {% trans "Campaigns" %}
-                {{/link-to}}
+                {{#if currentUser.hasCurrentCampaign}}
+                    {{#link-to 'myProjectList'}}
+                        {% trans "Campaigns" %}
+                    {{/link-to}}
+                {{/if}}
             </li>
             <li>
-                {{#link-to 'myTaskList'}}
-                    {% trans "Tasks" %}
-                {{/link-to}}
+                {{#if currentUser.hasCurrentTask}}
+                    {{#link-to 'myTaskList'}}
+                        {% trans "Tasks" %}
+                    {{/link-to}}
+                {{/if}}
             </li>
             <li>
-                {{#link-to 'myFundraiserList'}}
-                    {% trans "Fundraisers" %}
-                {{/link-to}}
+                {{#if currentUser.hasCurrentFundraiser}}
+                    {{#link-to 'myFundraiserList'}}
+                        {% trans "Fundraisers" %}
+                    {{/link-to}}
+                {{/if}}
             </li>
         </ul>
 

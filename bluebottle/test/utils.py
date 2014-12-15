@@ -473,6 +473,10 @@ class SeleniumTestCase(LiveServerTestCase):
         # Wait until the toast message disappears.
         return self.wait_for_not_element_css('.flash.is-active', 10)
 
+    def wait_for_modal_to_disappear(self):
+        # Wait until the toast message disappears.
+        return self.wait_for_not_element_css('.modal-fullscreen-background', 10)
+
     def close_modal(self):
         # Close modal, if any
         self.browser.find_by_css('body').type(Keys.ESCAPE)

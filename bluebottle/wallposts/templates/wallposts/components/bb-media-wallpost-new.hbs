@@ -40,6 +40,12 @@
                 </div>
             </div>
         <footer class="wallpost-update-footer">
+            <div class="wallpost-update-options">
+                <label for="emailSupporters" class="modal-checkbox">
+                    {{input id="emailSupporters" type="checkbox" checkedBinding="wallpost.email_followers"}}<span></span>{% trans "Notify supporters about my update via mail" %}
+                </label>
+            </div>
+
             <div class="wallpost-update-actions">
                 <button class="button action-cancel" {{action 'clearForm'}}>{% trans "Cancel" %}</button>
                 <button class="button action-submit" {{action 'saveWallpost'}}>{% trans "Post" %}</button>

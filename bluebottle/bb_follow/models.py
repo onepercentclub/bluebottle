@@ -4,6 +4,7 @@ from django.contrib.contenttypes import generic
 from django.dispatch import receiver
 from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import ugettext as _
 from bluebottle.mail import send_mail
 from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_model, get_donation_model
 from bluebottle.bb_projects.models import BaseProject

@@ -229,7 +229,6 @@ def email_followers(sender, instance, created, **kwargs):
                 follow_object = _('fundraiser') 
                 link = '/go/fundraisers/{0}'.format(instance.content_object.id)
     
-
             wallpost_text = instance.text
             subject = _("New wallpost on %(name)s") % {'name': instance.content_object.title}
             site = 'https://' + Site.objects.get_current().domain

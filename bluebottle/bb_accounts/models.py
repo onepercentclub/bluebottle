@@ -19,7 +19,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from rest_framework_jwt import utils
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model
+from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model, get_fundraiser_model
 
 
 from taggit.managers import TaggableManager
@@ -279,6 +279,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def project_count(self):
         """ Return the number of projects a user started / is owner of """
         return get_project_model().objects.filter(owner=self).count()
+
+    @property
+    def fundraiser_count(self):
+        return get_fundraiser_model().objects.filter(owner=self).count()
 
 
 

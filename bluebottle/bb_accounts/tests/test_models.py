@@ -11,6 +11,7 @@ from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.utils import InitProjectDataMixin
 
 TASKS_MEMBER_MODEL = get_taskmember_model()
@@ -202,3 +203,18 @@ class BlueBottleUserTestCase(InitProjectDataMixin, TestCase):
         project2 = ProjectFactory.create(owner=self.user)
 
         self.assertEqual(self.user.project_count, 2)
+
+    def test_calculate_fundraiser_count(self):
+        """ Test the counter for the number of fundraisers a user is owner of """
+        self.init_projects()
+
+        self.assertEqual(self.user.fundraiser_count, 0)
+
+        fundraiser = FundraiserFactory.create(amount=4000, owner=self.user)
+
+        self.assertEqual(self.user.fundraiser_count, 1)        
+        
+        fundraiser2 = FundraiserFactory.create(amount=4000, owner=self.user)
+
+        self.assertEqual(self.user.fundraiser_count, 2)
+

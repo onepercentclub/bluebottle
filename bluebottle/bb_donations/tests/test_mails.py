@@ -100,7 +100,7 @@ class TestDonationEmails(BluebottleTestCase):
         self.fund_order.locked()
         self.fund_order.succeeded()
 
-        # With fundraiser so two mails should be sent: one to the owner and one to fundraiser
+        # With fundraiser so two mails should be sent: one to the owner and one to fundraiser.
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], self.fund_owner.email)
         self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))

@@ -66,16 +66,16 @@ App.TaskMember = DS.Model.extend({
                 return gettext('applied for');
                 break;
             case 'rejected':
-                return gettext('is rejected for');
+                return gettext('was rejected for');
                 break;
             case 'accepted':
-                return gettext('is working on');
+                return gettext('was accepted for');
                 break;
             case 'realized':
                 return gettext('realised');
                 break;
             case 'stopped':
-                return gettext('stopped working on');
+                return gettext('withdrew from');
                 break;
             default:
                 Em.Logger.error('Task status not found: ' + status);

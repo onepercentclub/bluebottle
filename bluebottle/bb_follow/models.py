@@ -232,6 +232,7 @@ def email_followers(sender, instance, created, **kwargs):
             wallpost_text = instance.text
             subject = _("New wallpost on %(name)s") % {'name': instance.content_object.title}
             site = 'https://' + Site.objects.get_current().domain
+
             full_link = site + link
             for mailee in mailers:
                 send_mail(

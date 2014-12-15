@@ -6,6 +6,14 @@ from mock import patch
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.models import TestBaseUser
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.utils.model_dispatcher import get_taskmember_model
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectFactory
+from bluebottle.test.utils import InitProjectDataMixin
+
+TASKS_MEMBER_MODEL = get_taskmember_model()
 
 
 class BlueBottleUserManagerTestCase(TestCase):
@@ -35,7 +43,7 @@ class BlueBottleUserManagerTestCase(TestCase):
             email='')
 
 
-class BlueBottleUserTestCase(TestCase):
+class BlueBottleUserTestCase(InitProjectDataMixin, TestCase):
     """
     Test case for the implementation of the abstract user model.
     """
@@ -140,3 +148,57 @@ class BlueBottleUserTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 0) #The setup function also creates a user and generates a mail
         new_user = TestBaseUser.objects.create_user(email='new_user@onepercentclub.com')
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_calculate_task_count(self):
+        """ 
+        Test that the task_count property on a user is calculated correctly. We count a) tasks where a user is a task author and 
+        b) TaskMembers where a user is applied, accepted or realized
+        """
+        self.init_projects()
+
+        self.assertEqual(self.user.task_count, 0)
+
+        task = TaskFactory.create(author=self.user)
+        self.assertEqual(self.user.task_count, 1)
+
+        taskmember = TaskMemberFactory.create(
+            member=self.user,
+            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied,
+            task=task
+        )
+
+        self.assertEqual(self.user.task_count, 2)
+
+        uncounted_taskmember = TaskMemberFactory.create(
+            member=self.user,
+            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.stopped,
+            task=task
+        )
+
+        self.assertEqual(self.user.task_count, 2)
+
+    def test_calculate_donation_count(self):
+        """ Test the counter for the number of donations a user has done """ 
+        self.init_projects()
+
+        self.assertEqual(self.user.donation_count, 0)
+
+        order = OrderFactory.create(user=self.user)
+        donation = DonationFactory.create(amount=1000, order=order)
+
+        self.assertEqual(self.user.donation_count, 1)
+
+
+    def test_calculate_project_count(self):
+        """ Test the counter for the number of projects a user has started """
+        self.init_projects()
+
+        self.assertEqual(self.user.project_count, 0)
+
+        project = ProjectFactory.create(owner=self.user)
+
+        self.assertEqual(self.user.project_count, 1)
+
+        project2 = ProjectFactory.create(owner=self.user)
+
+        self.assertEqual(self.user.project_count, 2)

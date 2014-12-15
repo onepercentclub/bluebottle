@@ -1,0 +1,8 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with receiver_name=receiver.first_name author_name=author.full_name %}
+
+{% endblocktrans %}
+{% endblock %}

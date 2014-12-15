@@ -1,1 +1,15 @@
-Test email
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans %}
+Hi {{first_name}},
+
+There has been an update on {{follow_object}}. 
+
+{{wallpost_text}}...
+
+Read the full story at {{here}} 
+
+{% endblocktrans %}
+{% endblock %}

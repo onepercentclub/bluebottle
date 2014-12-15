@@ -247,6 +247,14 @@ App.CurrentUser = App.UserPreview.extend({
 
     validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
 
+    hasCurrentDonation: Em.computed.gt('current_donation.length', 0),
+
+    hasCurrentCampaign: Em.computed.gt('current_campaign.length', 0),
+
+    hasCurrentTask: Em.computed.gt('current_task.length', 0),
+
+    hasCurrentFundraiser: Em.computed.gt('current_fundraiser.length', 0),
+
     firstLogin: function () {
         //There is a small lag (ms) between creating the user and getting your token.
         // Therefore we cannot do a direct compare. We allow a 5000ms (5 sec) delay.

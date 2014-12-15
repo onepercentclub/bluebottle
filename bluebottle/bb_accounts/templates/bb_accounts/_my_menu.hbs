@@ -15,7 +15,7 @@
                 {{/if}}
             </li>
             <li>
-                {{#if currentUser.campaignCount}}
+                {{#if currentUser.projectCount}}
                     {{#link-to 'myProjectList'}}
                         {% trans "Campaigns" %}
                     {{/link-to}}
@@ -29,7 +29,7 @@
                 {{/if}}
             </li>
             <li>
-                {{#if currentUser.hasCurrentFundraiser}}
+                {{#if currentUser.fundraiserCount}}
                     {{#link-to 'myFundraiserList'}}
                         {% trans "Fundraisers" %}
                     {{/link-to}}

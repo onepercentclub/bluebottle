@@ -245,6 +245,11 @@ App.CurrentUser = App.UserPreview.extend({
     last_login: DS.attr('date'),
     date_joined: DS.attr('date'),
 
+    donation_count: DS.attr('number'),
+    project_count: DS.attr('number'),
+    task_count: DS.attr('number'),
+    fundraiser_count: DS.attr('number'),
+
     validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
 
     donationCount: Em.computed.gt('donation_count', 0),
@@ -253,7 +258,7 @@ App.CurrentUser = App.UserPreview.extend({
 
     taskCount: Em.computed.gt('task_count', 0),
 
-    //hasCurrentFundraiser: Em.computed.gt('current_fundraiser.length', 0),
+    fundraiserCount: Em.computed.gt('fundraiser_count', 0),
 
     firstLogin: function () {
         //There is a small lag (ms) between creating the user and getting your token.

@@ -55,7 +55,8 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
-    from bluebottle.wallposts.models import Wallpost, Reaction # Imported inside the signal to prevent circular imports
+    from bluebottle.wallposts.models import Wallpost, Reaction, SystemWallpost
+    # Imported inside the signal to prevent circular imports
 
     # A Wallpost is created by user
     if created and isinstance(instance, Wallpost):
@@ -193,15 +194,14 @@ def email_followers(sender, instance, created, **kwargs):
         signal handler looksup the appropriate followers depending on the type of page (project, task, fundraiser). It then sends out an email
         to those followers if they have campaign notifications enabled.
     """
-    from bluebottle.wallposts.models import Wallpost
+    from bluebottle.wallposts.models import Wallpost, SystemWallpost
 
-    if isinstance(instance, Wallpost):
+    if isinstance(instance, Wallpost) and not isinstance(instance, SystemWallpost):
         if instance.email_followers:
             content_type = ContentType.objects.get_for_model(instance.content_object) #content_type references project
 
             # Determine if this wallpost is on a Project page, Task page, or Fundraiser page. Required because of different Follow object lookup  
             mailers = set() # Contains unique user objects
-            
             if isinstance(instance.content_object, BaseProject):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)

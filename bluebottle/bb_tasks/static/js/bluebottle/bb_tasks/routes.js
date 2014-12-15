@@ -199,8 +199,8 @@ App.MyTaskListRoute = Em.Route.extend(App.ScrollToTop, {
     setupController: function(controller, model){
         var _this = this;
         var user = App.CurrentUser.find('current');
-        controller.set('ownerTasks', App.Task.find({'author': user.get('username')}));
-        controller.set('memberTasks',  App.MyTaskMember.find({'member': user.get('username')}));
+        controller.set('ownerTasks', App.Task.find({'author': user.get('id')}));
+        controller.set('memberTasks',  App.MyTaskMember.find({'member': user.get('id')}));
         
     }
 

@@ -158,10 +158,10 @@ class FollowTests(TestCase):
 		commenter = BlueBottleUserFactory.create()
 
 		# Create a text Wallpost for our dummy project
-		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.another_user, text="test1")
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.another_user, text="test1", email_followers=False)
 		self.assertEqual(Follow.objects.count(), 1) #Side-effectg of creating the wallpost
 
-		another_wallpost = TextWallpostFactory.create(content_object=self.project, author=commenter, text="test2")
+		another_wallpost = TextWallpostFactory.create(content_object=self.project, author=commenter, text="test2", email_followers=False)
 
 		self.assertEqual(Follow.objects.count(), 2)
 		# Make sure to inspect the second Follow object, this is the Follow object for the Reaction
@@ -222,7 +222,7 @@ class FollowTests(TestCase):
 		self.assertEqual(Follow.objects.count(), 2)
 
 		# Create a text Wallpost for our dummy project
-		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.project.owner, text="test1")
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=self.project.owner, text="test1", email_followers=False)
 
 		self.assertEqual(Follow.objects.count(), 2)
 
@@ -249,7 +249,7 @@ class FollowTests(TestCase):
 
 		# Create a follower that is someone who left a wallpost
 		commenter = BlueBottleUserFactory.create()
-		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=commenter, text="test1")
+		some_wallpost = TextWallpostFactory.create(content_object=self.project, author=commenter, text="test1", email_followers=False)
 
 		# Create a follower by donating
 		donator1 = BlueBottleUserFactory.create()
@@ -337,7 +337,7 @@ class FollowTests(TestCase):
 		donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=None)
 
 		commenter = BlueBottleUserFactory.create()
-		commenter_post = TextWallpostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter")
+		commenter_post = TextWallpostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter", email_followers=False)
 
 		some_wallpost = TextWallpostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
 

@@ -235,12 +235,13 @@ def email_followers(sender, instance, created, **kwargs):
 
             full_link = site + link
             for mailee in mailers:
-                send_mail(
-                        template_name='bb_follow/mails/wallpost_mail.mail',
-                        subject=subject,
-                        wallpost_text=wallpost_text[:250],
-                        to=mailee,
-                        link=full_link,
-                        follow_object=follow_object,
-                        first_name = mailee.first_name
-                    )
+                if mailee.campaign_notifications:
+                    send_mail(
+                            template_name='bb_follow/mails/wallpost_mail.mail',
+                            subject=subject,
+                            wallpost_text=wallpost_text[:250],
+                            to=mailee,
+                            link=full_link,
+                            follow_object=follow_object,
+                            first_name = mailee.first_name
+                        )

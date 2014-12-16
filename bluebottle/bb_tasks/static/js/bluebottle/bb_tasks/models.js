@@ -187,6 +187,10 @@ App.Task = DS.Model.extend({
         return this.get("people_needed") > 1
     }.property("people_needed"),
 
+    acceptedMemberCount: function(){
+        return (this.get('members').filterBy('isAccepted').get('length'));
+    }.property('model.members.@each.status'),
+
     timeNeeded: function(){
         var times = App.TimeNeededList;
         var hours = this.get('time_needed');

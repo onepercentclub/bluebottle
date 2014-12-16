@@ -1,3 +1,26 @@
+App.ApplicationController.reopen({
+    checkAgreement: function() {
+        if (! this.get('terms.isLoaded') || ! this.get('currentUser.agreedToTerms.isLoaded')) return;
+
+        var _this = this,
+            terms = this.get('terms'),
+            agreement = this.get('currentUser.agreedToTerms');
+            
+        if (! Em.isEmpty(terms.get('contents')) && terms.get('isLoaded') && terms.get('contents') &&
+            agreement && agreement.get('isLoaded') && !agreement.get('created') && !this.get('termsModalOpen')) {
+            _this.set('termsModalOpen', true);
+            _this.send('openInBigBox', 'terms_modal', terms);
+        }
+    }.observes('currentUser.agreedToTerms.isLoaded', 'terms.isLoaded'),
+
+    rejectedTerms: function(){
+        if (this.get('currentUser.rejectedTerms')) {
+            this.send('logout');
+        }
+    }.observes('currentUser.rejectedTerms')
+});
+
+
 App.TermsModalController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['currentUser'],
 

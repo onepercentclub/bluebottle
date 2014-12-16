@@ -70,6 +70,8 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
     // TODO: Remove this in production builds.
     LOG_TRANSITIONS: DEBUG,
 
+    // Enable share features
+    shareEnabled: true,
 
     // We store language & locale here because they need to be available before loading templates.
     language: 'en',

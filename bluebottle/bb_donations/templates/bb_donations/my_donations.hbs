@@ -9,9 +9,11 @@
                 <figure class="account-avatar"><img {{bindAttr src="currentUser.getAvatar"}} /></figure>
 
                 <header class="account-title">
-                    {% blocktrans %}
-                        My 1% <em class="account-subtitle">Donations</em>
-                    {% endblocktrans %}
+                    {% trans "My Account" %}
+                        <em class="account-subtitle">
+                            {% trans "Donations" %}
+                        </em>
+
                 </header>
 
                 <ul class="tabs three">

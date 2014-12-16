@@ -103,7 +103,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
     #        in our ember-data adapter. This could cause birthdate's to not be savable in some cases.
     birthdate = serializers.DateTimeField(required=False)
     email = serializers.EmailField(required=False)
-    primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en', required=False)
+    primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en')
 
     class Meta:
         model = BB_USER_MODEL

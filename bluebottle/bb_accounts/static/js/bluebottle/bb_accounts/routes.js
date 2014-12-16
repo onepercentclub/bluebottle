@@ -46,7 +46,7 @@ App.UserProfileRoute = Em.Route.extend(App.ScrollToTop, App.AuthenticatedRouteMi
     }
 });
 
-App.ViewProfileRoute = Em.Route.extend({
+App.ViewProfileRoute = Em.Route.extend(App.ScrollToTop, {
     model: function(params) {
         var model = App.User.find(params.user_id);
         var route = this;
@@ -57,7 +57,7 @@ App.ViewProfileRoute = Em.Route.extend({
     }
 });
 
-App.UserSettingsRoute = Em.Route.extend(App.AuthenticatedRouteMixin, App.TrackRouteActivateMixin, {
+App.UserSettingsRoute = Em.Route.extend(App.ScrollToTop, App.AuthenticatedRouteMixin, App.TrackRouteActivateMixin, {
     trackEventName: "View settings",
     model: function() {
         var route = this;

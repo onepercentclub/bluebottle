@@ -439,14 +439,20 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
+    /**
+        Hook into the ApplicationRoute setup complete
+        by using the ".on" function, eg:
 
+            App.ApplicationRoute.reopen({
+                doSomething: function() {
+                    console.log('ApplicationRoute setup completed!');
+                }.on('setupCompleted')
+            });
+    */
     setupController: function(controller, model){
-        var _this = this;
         this._super(controller, model);
-        controller.set('terms',  App.Terms.find('current'));
-        var agreement = App.TermsAgreement.find('current').then(function(agreement){
-            _this.controllerFor('currentUser').set('agreedToTerms', agreement);
-        });
+        
+        Ember.sendEvent(this, 'setupCompleted');
     },
 
     actions: {

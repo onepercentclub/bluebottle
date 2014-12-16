@@ -12,6 +12,7 @@ App.FundraiserIsOwner = Em.Mixin.create({
 
 App.FundraiserController = Em.ObjectController.extend({
     needs: ['project'],
+    showWallpostHelp: true,
 
     backgroundStyle: function(){
         return "background-image:url('" + this.get('project.image') + "');";

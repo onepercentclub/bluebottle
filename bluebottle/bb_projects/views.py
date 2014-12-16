@@ -13,6 +13,7 @@ from .permissions import IsProjectOwner
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 
+
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL
     paginate_by = 8
@@ -69,9 +70,11 @@ class ProjectPhaseLogList(generics.ListAPIView):
         qs = super(ProjectPhaseLogList, self).get_queryset()
         return qs
 
+
 class ProjectPhaseLogDetail(generics.RetrieveAPIView):
     model = PROJECT_PHASELOG_MODEL
     serializer_class = ProjectPhaseLogSerializer
+
 
 class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
     model = PROJECT_MODEL

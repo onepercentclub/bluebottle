@@ -122,14 +122,14 @@ class ManageDonationList(generics.ListCreateAPIView):
         queryset = super(ManageDonationList, self).get_queryset()
 
         filter_kwargs = {}
-
         user_id = self.request.user.id
         if user_id:
             filter_kwargs['order__user__pk'] = user_id
 
         status = self.request.QUERY_PARAMS.get('status', None)
-        if status == 'success':
-            queryset = queryset.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        statuses = self.request.QUERY_PARAMS.getlist('status[]', None)
+        if statuses:
+            queryset = queryset.filter(order__status__in=statuses)
         elif status:
             filter_kwargs['order__status'] = status
 

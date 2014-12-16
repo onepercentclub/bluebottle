@@ -395,24 +395,20 @@ App.Editable = Ember.Mixin.create({
 
     actions : {
         save: function(record) {
-            var controller = this;
+            var _this = this;
 
             if (record.get('isDirty')) {
                 this.set('saving', true);
                 this.set('saved', false);
             }
 
-            record.one('didUpdate', function() {
+            record.save().then(function () {
                 // record was saved
-                controller.set('saving', false);
-                controller.set('saved', true);
+                _this.set('saving', false);
+                _this.set('saved', true);
+            }, function () {
+                _this.set('saving', false);
             });
-
-            record.one('becameInvalid', function(record) {
-                controller.set('saving', false);
-            });
-
-            record.save();
         },
 
         goToNextStep: function(){
@@ -448,8 +444,7 @@ App.Editable = Ember.Mixin.create({
                     controller.send('goToNextStep');
                 });
             }
-
-
+            
             model.save();
         }
 
@@ -474,6 +469,7 @@ App.Editable = Ember.Mixin.create({
                     if (opts.secondary) {
                         model.rollback();
                     }
+                    this.destroy();
                 }
             });
         }

@@ -9,7 +9,7 @@ from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 from .permissions import IsMemberOrAuthorOrReadOnly
 from .serializers import (
     BaseTaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
-    MyTaskMemberSerializer, SkillSerializer)
+    MyTaskMemberSerializer, SkillSerializer, MyTasksSerializer)
 
 from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
     get_task_skill_model
@@ -88,6 +88,16 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     def pre_save(self, obj):
         obj.author = self.request.user
 
+class MyTaskList(generics.ListAPIView):
+    model = BB_TASK_MODEL
+    paginate_by = 8
+    filter_fields = ('author',)
+    serializer_class = MyTasksSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated():
+            return BB_TASK_MODEL.objects.filter(author=self.request.user)
+        return BB_TASK_MODEL.objects.none()
 
 class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
     model = BB_TASK_MODEL

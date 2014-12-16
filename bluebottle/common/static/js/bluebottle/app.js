@@ -284,6 +284,9 @@ App.AdapterPlurals = {
     "bb_projects/pitches/manage": "bb_projects/pitches/manage",
     "bb_organizations/addresses/manage": "bb_organizations/addresses/manage",
     "bb_projects/ambassadors/manage": "bb_projects/ambassadors/manage",
+
+    // Tasks
+    "bb_tasks/my" : "bb_tasks/my"
 };
 
 App.Adapter = DS.DRF2Adapter.extend({

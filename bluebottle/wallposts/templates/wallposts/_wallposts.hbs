@@ -39,7 +39,9 @@
         {{#if ownerHasWallposts}}
             {{bb-wallpost-first-timestamp model=model}} 
         {{else}}
-            {{bb-wallpost-help focusOnInput='focusOnInput'}}
+            {{#if showWallpostHelp}}
+                {{bb-wallpost-help focusOnInput='focusOnInput'}}
+            {{/if}}
         {{/if}}
     
     {{else}}

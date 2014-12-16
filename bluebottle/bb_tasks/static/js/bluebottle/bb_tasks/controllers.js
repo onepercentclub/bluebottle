@@ -103,6 +103,8 @@ App.ProjectTasksIndexController = Em.ArrayController.extend({
 
 
 App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuthorMixin, App.WallControllerMixin, {
+    showWallpostHelp: false,
+
 	// you can apply to a task only if:
 	// the task is not closed, realized or completed
 	// (strange behaviour since completed is not a status but just a label)

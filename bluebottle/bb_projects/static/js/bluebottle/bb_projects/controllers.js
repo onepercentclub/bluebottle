@@ -103,6 +103,8 @@ App.ProjectSearchFormController = Em.ObjectController.extend({
 App.ProjectController = Em.ObjectController.extend(App.WallControllerMixin, {
     projectDonations: null,
 
+    showWallpostHelp: true,
+
     backgroundStyle: function(){
         return "background-image:url('" + this.get('image.large') + "');";
     }.property('image.large'),

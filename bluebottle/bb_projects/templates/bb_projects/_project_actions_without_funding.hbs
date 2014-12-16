@@ -26,7 +26,7 @@
                     <a {{action 'addDonation' this}} data-action-type="create-task-campaign" class="button button-big"> {% trans "Create a Task" %}</a>
                 {{else}}
                     {{#if hasTasks}}
-                        <div class="project-closed project-task-join">
+                        <div {{action 'goTo' '#task-list'}} class="project-closed project-task-join">
                             <strong data-action-type="join-task-campaign">
                                 {% trans "Join a Task" %}
                             </strong>

@@ -88,6 +88,7 @@ App.TaskMember = DS.Model.extend({
 App.MyTaskMember = App.TaskMember.extend({
     url: 'bb_tasks/members/my-task',
 
+    member: DS.belongsTo('App.UserPreview'),
     task: DS.belongsTo('App.TaskPreview'),
     time_spent: DS.attr('number')
     // TODO: validation, time_spent can't be greater than 8

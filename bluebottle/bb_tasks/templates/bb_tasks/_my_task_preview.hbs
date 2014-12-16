@@ -9,7 +9,11 @@
                 {{#if task.project.image.square}}
                     <img {{bindAttr src="task.project.image.square" alt="task.title"}} />
                 {{else}}
-                    &nbsp;
+                    {{#if task.project.image}}
+                        <img {{bindAttr src="task.project.image" alt="task.title"}} />
+                    {{else}}
+                        &nbsp;
+                    {{/if}}
                 {{/if}}
             </figure>
             <div class="project-info">

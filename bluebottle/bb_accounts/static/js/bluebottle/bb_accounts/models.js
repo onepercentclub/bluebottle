@@ -168,6 +168,7 @@ App.UserSettings = DS.Model.extend({
 
     email: DS.attr('string'),
     newsletter: DS.attr('boolean'),
+    campaign_notifications: DS.attr('boolean'),
     share_time_knowledge: DS.attr('boolean'),
     share_money: DS.attr('boolean'),
     gender: DS.attr('string'),

@@ -21,7 +21,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
         if now.day <= 15:
             next_date = timezone.datetime(now.year, now.month, 15)
         else:
-            next_date = timezone.datetime(now.year, now.month, 1).replace(month=now.month+1)
+            next_date = timezone.datetime(now.year, now.month, 1) + timedelta(days=20)
 
         PROJECT_PAYOUT_MODEL = get_project_payout_model()
 

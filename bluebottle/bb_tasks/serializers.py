@@ -82,6 +82,13 @@ class MyTaskMemberSerializer(BaseTaskMemberSerializer):
     class Meta(BaseTaskMemberSerializer.Meta):
         fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
 
+class MyTasksSerializer(BaseTaskSerializer):
+    task = MyTaskPreviewSerializer()
+    skill = serializers.PrimaryKeyRelatedField()
+
+    class Meta:
+        model = BB_TASK_MODEL
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'end_goal')
 
 # Task Wallpost serializers
 

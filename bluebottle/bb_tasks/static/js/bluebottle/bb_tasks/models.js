@@ -83,8 +83,6 @@ App.TaskMember = DS.Model.extend({
         }
 
     }.property('status')
-
-
 });
 
 App.MyTaskMember = App.TaskMember.extend({
@@ -245,6 +243,10 @@ App.Task = DS.Model.extend({
 
     }.property('status')
 
+});
+
+App.MyTask = App.Task.extend({
+    url: 'bb_tasks/my'
 });
 
 App.NewTask = App.Task.extend({

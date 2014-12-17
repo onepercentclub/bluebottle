@@ -320,13 +320,13 @@
             color: $color-text-on-dark;
             text-align: center;
             @include opacity(0.6);
+            min-height: 46px;
 
             strong {
                 font-size: 16px;
             }
 
             &.project-task-join {
-                margin-top: 13px;
                 padding: .5em 1em .7em 1em;
                 padding-top: calc(.5em + 2px);
                 font-size: 20px;
@@ -420,6 +420,10 @@
                 }                    
             }
         }
+
+        .project-action {
+            margin-top: 10px;
+        }
     }
     
     // Campaign without funding
@@ -492,10 +496,6 @@
                     @include svg-icon('tasks/icon-task-users.svg');
                 }
             }
-        }
-        
-        .project-action {
-            margin-top: 10px;
         }
     }
 }

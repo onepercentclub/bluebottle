@@ -31,7 +31,12 @@
                                 {% trans "Join a Task" %}
                             </strong>
                         </div>
+                    {{else}}
+                        <div class="project-closed project-task-join">
+                            <strong>{% trans "No open Tasks" %}</strong>
+                        </div>
                     {{/if}}
+
                 {{/if}}
             </div>
         </div>

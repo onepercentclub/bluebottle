@@ -107,6 +107,10 @@
                                 {% trans "Apply for task" %}
                             </a>
                             {{/ifExpired}}
+                        {{else}}
+                            <div class="project-closed project-task-join">
+                                <strong>{% trans "Task is" %} {{statusLabel}} </strong>
+                            </div>
                         {{/if}}
                     {{/if}}
                 </div>

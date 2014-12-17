@@ -22,7 +22,8 @@ install_requires = [
     'django-admin-tools==0.5.1', # for now replaced by fork
     'django-apptemplates==0.0.1',
     'django-choices==1.1.11',
-    'django-compressor==1.2',
+    'django-compressor==1.3',
+    'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
     'django-filetransfers==0.0.0',
     'django-filter==0.6',

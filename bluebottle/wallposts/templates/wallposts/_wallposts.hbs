@@ -45,6 +45,8 @@
         {{/if}}
     
     {{else}}
-        {{bb-wallpost-first-timestamp}} 
+        {{#unless wallpostRemaining}}
+            {{bb-wallpost-first-timestamp}}
+        {{/unless}}
     {{/if}}
 {% endtplhandlebars %}

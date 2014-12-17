@@ -90,6 +90,7 @@
                     text-overflow: ellipsis;
                     line-height: 25px;
                     text-decoration: none;
+                    color: $color-sec;
 
                     .project-linked {
                         position: relative;
@@ -126,6 +127,7 @@
                     }
 
                     &:hover {
+                        color: $color-pri;
 
                         .project-linked {
                             background-color: $color-pri;

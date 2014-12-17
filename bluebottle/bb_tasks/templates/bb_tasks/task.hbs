@@ -28,13 +28,6 @@
                 <a class="project-more read-more">{% trans "Read more" %}</a>
             </article>
             <aside class="project-media">
-                {{#if canEdit}}
-                    <div class="project-owner-actions">
-                        {{#link-to 'taskEdit' model}}
-                            {% trans 'Edit Task' %}
-                        {{/link-to}}
-                    </div>
-                {{/if}}
                 <div class="project-share">
                     {{view App.SocialShareView}}
                 </div>
@@ -57,7 +50,7 @@
                             {{#ifExpired deadline}}
                                 {% trans "Deadline passed" %}
                             {{else}}
-                                {{localize deadline formatting="X"}}
+                                {{localize deadline formatting="d"}}
                             {{/ifExpired}}
                         {{else}}
                             {% trans "No deadline" %}

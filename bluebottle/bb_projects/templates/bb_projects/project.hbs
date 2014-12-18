@@ -14,7 +14,11 @@
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">{{pitch}}</p>
-                <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                {{#if otherProjectPlan}}
+                    <a {{action openInExtraLargeBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                {{else}}
+                    <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                {{/if}}
             </article>
             <aside class="project-media">
 

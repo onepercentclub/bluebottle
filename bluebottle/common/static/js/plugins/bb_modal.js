@@ -83,6 +83,10 @@ BB.ModalMixin = Em.Mixin.create({
             this.send('openInBox', name, context, 'full-screen');
         },
 
+        openInExtraLargeBox: function(name, context) {
+            this.send('openInBox', name, context, 'x-large');
+        },
+
         openInScalableBox: function(name, context) {
             this.send('openInBox', name, context, 'scalable');
         },

@@ -451,6 +451,14 @@ class SeleniumTestCase(LiveServerTestCase):
         except TimeoutException:
             return None
 
+    def wait_for_n_elements_css(self, selector, n, timeout=30):
+        wait = WebDriverWait(self.browser.driver, timeout)
+        try:
+            wait.until(lambda s: len(s.find_elements(By.CSS_SELECTOR, selector)) == n)
+            return self.browser.driver.find_elements(By.CSS_SELECTOR, selector)
+        except TimeoutException:
+            return None
+
     def wait_for_element_css_index(self, selector, index=0, timeout=30):
         wait = WebDriverWait(self.browser.driver, timeout)
         try:

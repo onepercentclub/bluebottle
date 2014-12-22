@@ -1,5 +1,9 @@
 .tooltip-holder {
-
+	position: relative;
+	text-align: center;
+	@include transform(translateZ(0));
+	-webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+	
 	.tooltip {
 		background: rgb(60,60,60);
 		bottom: 100%;
@@ -58,7 +62,7 @@
 			@include animation(fadeInUp .25s ease-out);
 
 			&:after {
-                border-top: none;
+                // border-top: none;
             }
 
             .cvcPreview {

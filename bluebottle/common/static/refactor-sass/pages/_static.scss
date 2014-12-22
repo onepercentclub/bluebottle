@@ -1,0 +1,168 @@
+.static {
+	font-size: 18px;
+	color: $color-text;
+
+
+	h1, h2, h3, {
+		text-transform: none;
+		font-family: $font-family-header;
+		font-weight: 700;
+		color: $color-sec;
+
+		em {
+			font-family: $font-family-header;
+			color: $color-pri;
+			font-weight: 700 !important;
+		}
+	}
+
+	blockquote {
+		color: $color-grey;
+		font-weight: bold;
+		font-style: italic;
+		font-size: 22px;
+		border: 0;
+		line-height: 1.3em;
+	}
+
+	figure {
+
+		img {
+			@include border-radius($radius-medium);
+		}
+
+		figcaption {
+			font-style: italic;
+			color: $color-grey;
+			text-align: center;
+			margin: 0.5em 0;
+			font-size: 14px;
+		}
+	}
+
+	.l-wrapper {
+	    padding-left: $grid-padding;
+	    padding-right: $grid-padding;
+	    min-width: 960px;
+	}
+
+	.static-header {
+		background-color: $color-black;
+		margin-top: -96px;
+
+		.static-header-body {
+			@include span-columns(7);
+
+			h1 {
+				font-size: 50px;
+				color: $color-white;
+				margin: 0;
+			}
+
+			h2 {
+				font-size: 32px;
+				font-weight: normal;
+				margin: 0;
+				color: $color-white;
+			}
+
+		}
+
+	}
+
+	.static-content {
+		padding: 3em 0;
+	}
+
+	.static-content-wide {
+		padding: 2em 0;
+		background: $color-grey-back;
+
+		figure, blockquote {
+			padding: 0 15%;
+		}
+	}
+
+	.static-content-body {
+		@include span-columns(7);
+
+		h1 {
+			font-size: 32px;
+			line-height: 1.2em;
+			margin-bottom: 0.5em;
+		}
+
+		ul {
+			margin: 1em 1em;
+			padding: 0;
+
+			li {
+				margin: 0;
+				padding: 4px 1em;
+				@include svg-icon('global/icon-unorder-list-item.svg');
+				background-position: 0 0.6em;
+			}
+		
+		}
+
+		ol {
+			margin: 1em 2em;
+			padding: 0;
+
+			li {
+				margin: 0;
+				padding: 4px 0;
+				
+			}
+
+		}
+
+		.static-intro {
+			font-weight: bold;
+			margin-top: 1em;
+		}
+
+	}
+
+	.static-content-sidebar {
+		@include span-columns(4.5);
+		@include shift(0.5);
+	}
+
+	.static-content-box-list {
+		display: table;
+		border-spacing: 20px 0;
+		margin: 0 -20px;
+		padding: 1em 0;
+
+		dl {
+			width: 25%;
+			display: block;
+			border: 1px solid $color-grey-medium;
+			background-color: $color-real-white;
+			text-align: center;
+			color: $color-grey;
+			line-height: 1.5em;
+			padding: 15px;
+			display: table-cell;
+			float: none;
+			@include border-radius($radius-large);
+
+			dt {
+				width: 100%;
+				float: none;
+				font-weight: bold;
+				color: $color-sec;
+				text-transform: none;
+				font-size: 15px;
+			}
+
+			dd {
+				display: block;
+				width: 100%;
+				float: none;
+				font-size: 14px;
+			}
+		}
+	}
+}

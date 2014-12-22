@@ -6,7 +6,6 @@ from taggit.managers import TaggableManager
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.db.models import options
 
@@ -15,6 +14,7 @@ from django_extensions.db.fields import (
 from sorl.thumbnail import ImageField
 
 from bluebottle.utils.model_dispatcher import get_project_phaselog_model
+from bluebottle.utils.utils import GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
@@ -115,7 +115,7 @@ class BaseProjectManager(models.Manager):
         return qs
 
 
-class BaseProject(models.Model):
+class BaseProject(models.Model, GetTweetMixin):
     """ The base Project model. """
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
@@ -243,38 +243,6 @@ class BaseProject(models.Model):
             return 0
 
         return total['sum']
-
-    # TODO: move to mixin
-    def get_meta_title(self, **kwargs):
-        return u'{name_project} | {country}'.format(
-            name_project=self.title,
-            country=self.country.name if self.country else '')
-
-    def get_fb_title(self, **kwargs):
-        title = _(u'{name_project} in {country}').format(
-            name_project=self.title,
-            country=self.country.name if self.country else '')
-
-        return title
-
-    def get_tweet(self, **kwargs):
-        """ Build the tweet text for the meta data """
-        request = kwargs.get('request')
-        if request:
-            lang_code = request.LANGUAGE_CODE
-        else:
-            lang_code = 'en'
-        twitter_handle = settings.TWITTER_HANDLES.get(
-            lang_code, settings.DEFAULT_TWITTER_HANDLE)
-
-        title = urlquote(self.get_fb_title())
-
-        # {URL} is replaced in Ember to fill in the page url, avoiding the
-        # need to provide front-end urls in our Django code.
-        tweet = _(u'{title} {{URL}} via @{twitter_handle}').format(
-            title=title, twitter_handle=twitter_handle)
-
-        return tweet
 
     @property
     def editable(self):

@@ -2,7 +2,7 @@
 
 {% tplhandlebars "project" %}
 <div id="project-detail">
-    <div id="project-detail-header" {{bindAttr class=":campaign-detail amount_asked::without"}}>
+    <div id="project-detail-header" {{bindAttr class=":campaign-detail"}}>
         <div class="project-background">
             <div class="project-background-image" {{bindAttr style=backgroundStyle}}></div>
         </div>
@@ -14,7 +14,11 @@
                 </div>
                 <h1 class="project-title">{{title}}</h1>
                 <p class="project-description">{{pitch}}</p>
-                <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                {{#if otherProjectPlan}}
+                    <a {{action openInExtraLargeBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                {{else}}
+                    <a {{action openInFullScreenBox "projectPlan" this}} class="project-more">{% trans "Read full project plan" %}</a>
+                {{/if}}
             </article>
             <aside class="project-media">
 
@@ -83,7 +87,7 @@
 
                             </ul>
 
-                            {{#if isProjectOwner}}
+                            {{#if isOwner}}
                                 <footer class="activity-footer">
                                     {{#linkTo 'taskNew' id class='activity-action' }}
                                         <strong>{% trans "Create a task" %} &raquo;</strong><br />
@@ -95,7 +99,7 @@
                         </div>
                     </div>
                 {{else}}
-                    {{#if isProjectOwner}}
+                    {{#if isOwner}}
                         {{#if isStatusCampaign}}
                             <div id="task-list">
                                 <div class="activity">

@@ -65,7 +65,7 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
-        # Test for objects/lists related to a Project (e.g WallPosts).
+        # Test for objects/lists related to a Project (e.g Wallposts).
         # Get the project from the request
         project = self._get_project_from_request(request)
 

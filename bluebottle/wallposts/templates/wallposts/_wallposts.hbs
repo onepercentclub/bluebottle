@@ -14,10 +14,11 @@
     {{else}}
         {{partial 'signin'}}
     {{/if}}
+    
 
     {{#each wallpost in wallpostList}}
         {{#if wallpost.isLoaded}}
-            {{#if wallpost.isSystemWallPost}}
+            {{#if wallpost.isSystemWallpost}}
                 {{bb-system-wallpost wallpost=wallpost removeWallpost='removeWallpost'
                     addWallpostComment='addWallpostComment' removeWallpostComment='removeWallpostComment' showProfile='showProfile' currentUser=currentUser}}
             {{else}}
@@ -33,4 +34,19 @@
         </a>
     {{/if}}
 
+
+    {{#if isOwner}}
+        {{#if ownerHasWallposts}}
+            {{bb-wallpost-first-timestamp model=model}} 
+        {{else}}
+            {{#if showWallpostHelp}}
+                {{bb-wallpost-help focusOnInput='focusOnInput'}}
+            {{/if}}
+        {{/if}}
+    
+    {{else}}
+        {{#unless wallpostRemaining}}
+            {{bb-wallpost-first-timestamp}}
+        {{/unless}}
+    {{/if}}
 {% endtplhandlebars %}

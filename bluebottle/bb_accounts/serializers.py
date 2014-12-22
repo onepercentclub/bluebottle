@@ -39,11 +39,16 @@ class CurrentUserSerializer(UserPreviewSerializer):
     # This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.Field(source='get_full_name')
+    task_count = serializers.Field(source='task_count')
+    project_count = serializers.Field(source='project_count')
+    donation_count = serializers.Field(source='donation_count')
+    fundraiser_count = serializers.Field(source='donation_count')
 
     class Meta:
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name',
-                                                      'available_time', 'last_login', 'date_joined')
+                                                      'available_time', 'last_login', 'date_joined', 'task_count',
+                                                      'project_count', 'donation_count', 'fundraiser_count')
 
 
 class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
@@ -98,14 +103,14 @@ class UserSettingsSerializer(serializers.ModelSerializer):
     #        in our ember-data adapter. This could cause birthdate's to not be savable in some cases.
     birthdate = serializers.DateTimeField(required=False)
     email = serializers.EmailField(required=False)
-    primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en', required=False)
+    primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en')
 
     class Meta:
         model = BB_USER_MODEL
         # TODO: Add password update using password field.
         # TODO: Facebook connect
         fields = ('id', 'email', 'share_time_knowledge', 'share_money',
-                  'newsletter', 'gender', 'birthdate', 'user_type', 'primary_language')
+                  'newsletter', 'gender', 'birthdate', 'user_type', 'primary_language', 'campaign_notifications')
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

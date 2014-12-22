@@ -2,36 +2,45 @@
 
 
 {% tplhandlebars "myTaskList" %}
+    <div class="l-section" id="project-dashboard">
 
-    <div class="l-section">
-        <section class="l-wrapper">
-            {{#if model.isLoaded}}
-                <ul id="search-results">
-                    {{#each itemController="myTaskMember"}}
-
-                        <dl>
-                            <dt>{% trans "Task" %}</dt>
-                            <dd>{{task.title}} ({{task.project.title}})</dd>
-                            <dt>{% trans "Status" %}</dt>
-                            <dd>{{statusLabel}}</dd>
-                            <dt>{% trans "Time spent (in hours)" %}</dt>
-                            <dd>
-                                {{#if isEditing}}
-                                    <input class="edit" {{bind-attr value=task.time_needed}}>
-                                {{else}}
-                                    <label {{action 'editTimeSpent' on="doubleClick"}}>{{time_spent}}</label>
-                                {{/if}}
-                            </dd>
-                        </dl>
-
-                    {{else}}
-                        <li class="no-results">{% trans "No tasks found." %}</li>
-                    {{/each}}
-                </ul>
+        <div class="l-section campaign-header">
+            <nav class="l-wrapper">
+                <header>
+                    <h1 class="page-title">{% trans "My tasks"%}</h1>
+                </header>
+            </nav>
+        </div>
+        
+        <div class="l-wrapper">
+            {{#if isLoading}}
+                <div class="is-loading-big">
+                    <img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading tasks" %}</strong>
+                </div>
             {{else}}
-                <div class="is-loading-big"><img src="{% get_static_prefix %}images/loading.gif" /> <strong>{% trans "Loading your tasks..." %}</strong></div>
+                <div class="l-content">
+                    <ul class="project-list">
+                        <h3>{% trans "Tasks you created" %}</h3>
+                        <ul id="search-results">
+                            {{#each task in ownerTasks}}
+                                {{partial "_my_task_preview"}}
+                            {{else}}
+                                <li class="no-results">{% trans "No tasks found." %}</li>
+                            {{/each}}
+                        </ul>
+
+                        <h3>{% trans "Tasks you joined" %}</h3>
+                        <ul id="search-results">
+                            {{#each memberTasks}}
+                                {{partial "_my_task_preview"}}
+                            {{else}}
+                                <li class="no-results">{% trans "No tasks found." %}</li>
+                            {{/each}}
+                        </ul>
+                    </ul>
+                </div>
             {{/if}}
-        </section>
+        </div>
     </div>
 
 {% endtplhandlebars %}

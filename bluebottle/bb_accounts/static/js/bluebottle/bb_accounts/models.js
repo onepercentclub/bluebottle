@@ -168,6 +168,7 @@ App.UserSettings = DS.Model.extend({
 
     email: DS.attr('string'),
     newsletter: DS.attr('boolean'),
+    campaign_notifications: DS.attr('boolean'),
     share_time_knowledge: DS.attr('boolean'),
     share_money: DS.attr('boolean'),
     gender: DS.attr('string'),
@@ -245,7 +246,20 @@ App.CurrentUser = App.UserPreview.extend({
     last_login: DS.attr('date'),
     date_joined: DS.attr('date'),
 
+    donation_count: DS.attr('number'),
+    project_count: DS.attr('number'),
+    task_count: DS.attr('number'),
+    fundraiser_count: DS.attr('number'),
+
     validEmail: Em.computed.match('email', /.+\@.+\..+/i ),
+
+    hasDonations: Em.computed.gt('donation_count', 0),
+
+    hasProjects: Em.computed.gt('project_count', 0),
+
+    hasTasks: Em.computed.gt('task_count', 0),
+
+    hasFundraisers: Em.computed.gt('fundraiser_count', 0),
 
     firstLogin: function () {
         //There is a small lag (ms) between creating the user and getting your token.

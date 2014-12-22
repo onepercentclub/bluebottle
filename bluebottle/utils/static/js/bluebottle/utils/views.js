@@ -65,7 +65,10 @@ App.SocialShareView = Em.View.extend({
     templateName: 'social_share',
     dialogW: 626,
     dialogH: 436,
-
+    
+    canShare: function () {
+        return App.get('shareEnabled');
+    }.property(),
 
     didInsertElement: function(){
         // Because ZeroClipboard requires user interaction we can't handle the copy link as an action.

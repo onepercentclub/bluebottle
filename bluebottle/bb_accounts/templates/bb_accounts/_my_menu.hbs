@@ -4,51 +4,49 @@
 {% tplhandlebars "_my_menu" %}
     <li>
         {{#link-to "userProfile" }}
-            {% trans "Edit my profile & settings" %}
+            {% trans "My Account" %}
         {{/link-to }}
-    </li>
-
-    <li>
-        {{#linkTo "myDonationList" }}
-            {% trans "My Donations" %}
-        {{/linkTo}}
-    </li>
-
-    {% if 'projects' in bb_apps %}
-        {% block_verbatim 'my-projects-menu-link' %}
+        <ul>
             <li>
-                {{#link-to 'myProjectList'}}
-                    {% trans "My Projects" %}
-                {{/link-to}}
-            </li>
-        {% endblock_verbatim %}
-    {% endif %}
-
-    {% comment %}
-        {% if 'tasks' in bb_apps %}
-            {% block_verbatim 'my-tasks-menu-link' %}
-                <li>
-                    {{#link-to 'myTaskList'}}
-                        {% trans "My Tasks" %}
+                {{#if currentUser.hasDonations}}
+                    {{#link-to "myDonationList" }}
+                        {% trans "Donations" %}
                     {{/link-to}}
-                </li>
-            {% endblock_verbatim %}
-        {% endif %}
-    {% endcomment %}
+                {{/if}}
+            </li>
+            <li>
+                {{#if currentUser.hasProjects}}
+                    {{#link-to 'myProjectList'}}
+                        {% trans "Campaigns" %}
+                    {{/link-to}}
+                {{/if}}
+            </li>
+            <li>
+                {{#if currentUser.hasTasks}}
+                    {{#link-to 'myTaskList'}}
+                        {% trans "Tasks" %}
+                    {{/link-to}}
+                {{/if}}
+            </li>
+            <li>
+                {{#if currentUser.hasFundraisers}}
+                    {{#link-to 'myFundraiserList'}}
+                        {% trans "Fundraisers" %}
+                    {{/link-to}}
+                {{/if}}
+            </li>
+        </ul>
 
-    <li>
-        {{#link-to "viewProfile" currentUser.id_for_ember }}
-            {% trans "View my profile" %}
-        {{/link-to}}
     </li>
+    
+    {{!-- TODO: Logic if there are multiple languages --}}
+    {{#if hasMultipleLanguages}}
+        <li class="nav-member-switch-language">
+            {% trans "Language" %} {{view "App.LanguageSwitchView"}}
+        </li>
+    {{/if}}
 
     <li>
         <a {{action 'logout'}}>{%  trans "Logout" %}</a>
     </li>
-
-    {% block_verbatim language_switcher %}
-        <li class="nav-member-switch-language">
-            {% trans "Language" %} {{view "App.LanguageSwitchView"}}
-        </li>
-    {% endblock_verbatim %}
 {% endtplhandlebars %}

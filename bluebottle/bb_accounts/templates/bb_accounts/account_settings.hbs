@@ -122,7 +122,7 @@
             <div class="is-saved"><span class="flaticon solid checkmark-1"></span> <strong>{% trans "Account settings saved" %}</strong></div>
         {{/if}}
 
-        <button class="btn btn-iconed btn-primary btn-save" {{action 'save' model}}>
+        <button {{bind-attr class=":btn :btn-iconed :btn-primary :btn-save isDirty::disabled"}} {{action 'save' model}}>
             <span class="flaticon solid checkmark-1"></span>
             {{saveButtonText}}
         </button>

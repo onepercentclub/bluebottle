@@ -13,12 +13,12 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
 
-        # Changing field 'FundRaiser.amount'
+        # Changing field 'Fundraiser.amount'
         db.alter_column(MODEL_MAP['fundraiser']['table'], 'amount', self.gf('django.db.models.fields.DecimalField')(max_digits=10, decimal_places=2))
 
     def backwards(self, orm):
 
-        # Changing field 'FundRaiser.amount'
+        # Changing field 'Fundraiser.amount'
         db.alter_column(MODEL_MAP['fundraiser']['table'], 'amount', self.gf('django.db.models.fields.PositiveIntegerField')())
 
     models = {

@@ -41,15 +41,19 @@ App.TaskMember = DS.Model.extend({
     isStatusApplied: function(){
         return (this.get('status') == 'applied');
     }.property('status'),
+
     isStatusAccepted: function(){
         return (this.get('status') == 'accepted');
     }.property('status'),
+
     isStatusRejected: function(){
         return (this.get('status') == 'rejected');
     }.property('status'),
+
     isStatusRealized: function(){
         return (this.get('status') == 'realized');
     }.property('status'),
+
     isAccepted: function(){
         return (this.get('isStatusAccepted') || this.get('isStatusRealized'));
     }.property('status'),
@@ -62,16 +66,16 @@ App.TaskMember = DS.Model.extend({
                 return gettext('applied for');
                 break;
             case 'rejected':
-                return gettext('is rejected for');
+                return gettext('was rejected for');
                 break;
             case 'accepted':
-                return gettext('is working on');
+                return gettext('was accepted for');
                 break;
             case 'realized':
                 return gettext('realised');
                 break;
             case 'stopped':
-                return gettext('stopped working on');
+                return gettext('withdrew from');
                 break;
             default:
                 Em.Logger.error('Task status not found: ' + status);
@@ -79,13 +83,12 @@ App.TaskMember = DS.Model.extend({
         }
 
     }.property('status')
-
-
 });
 
 App.MyTaskMember = App.TaskMember.extend({
     url: 'bb_tasks/members/my-task',
 
+    member: DS.belongsTo('App.UserPreview'),
     task: DS.belongsTo('App.TaskPreview'),
     time_spent: DS.attr('number')
     // TODO: validation, time_spent can't be greater than 8
@@ -164,8 +167,12 @@ App.Task = DS.Model.extend({
     }.property('isAvailable'),
 
     membersCount: function() {
-        return this.get('members.length')
-    }.property("members.length"),
+        return this.get('members').filterBy('isStatusAccepted', true).length;
+    }.property("members.@each"),
+
+    membersNeeded: function() {
+        return this.get("people_needed") - this.get('members').filterBy('isStatusAccepted', true).length;
+    }.property('people_needed', 'members.@each'),
     
 	hasMoreThanOneMember: function() {
         return this.get('membersCount') > 1
@@ -178,6 +185,10 @@ App.Task = DS.Model.extend({
     moreThanOnePersonNeeded: function() {
         return this.get("people_needed") > 1
     }.property("people_needed"),
+
+    acceptedMemberCount: function(){
+        return (this.get('members').filterBy('isAccepted').get('length'));
+    }.property('model.members.@each.status'),
 
     timeNeeded: function(){
         var times = App.TimeNeededList;
@@ -233,6 +244,10 @@ App.Task = DS.Model.extend({
 
     }.property('status')
 
+});
+
+App.MyTask = App.Task.extend({
+    url: 'bb_tasks/my'
 });
 
 App.NewTask = App.Task.extend({

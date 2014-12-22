@@ -3,8 +3,7 @@ App.Router.map(function(){
         this.route('search');
     });
 
-    // route disabled for now, let the backend handle the hours spent
-    // this.resource('myTaskList', {path: '/my/tasks'});
+    this.resource('myTaskList', {path: '/my/tasks'});
     this.resource('task', {path: '/tasks/:task_id'});
     this.resource('taskEdit', {path: '/tasks/:task_id/edit'});
     this.resource('projectTask', {path: '/:task_id'}, function(){});
@@ -197,8 +196,13 @@ App.TaskEditRoute = Em.Route.extend({
  */
 
 App.MyTaskListRoute = Em.Route.extend(App.ScrollToTop, {
-    model: function(params) {
-        return App.MyTaskMember.find();
+    setupController: function(controller, model){
+        App.CurrentUser.find('current').then(function (user) {
+            controller.set('ownerTasks', App.MyTask.find({'author': user.get('id')}));
+            controller.set('memberTasks',  App.MyTaskMember.find({'member': user.get('id')}));
+        });
     }
 });
+
+
 

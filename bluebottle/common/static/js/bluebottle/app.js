@@ -5,6 +5,7 @@ if (DEBUG) {
     });
 }
 
+
 Ember.Application.initializer({
     name: 'currentUser',
     after: 'store',
@@ -69,6 +70,8 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
     // TODO: Remove this in production builds.
     LOG_TRANSITIONS: DEBUG,
 
+    // Enable share features
+    shareEnabled: true,
 
     // We store language & locale here because they need to be available before loading templates.
     language: 'en',
@@ -281,6 +284,9 @@ App.AdapterPlurals = {
     "bb_projects/pitches/manage": "bb_projects/pitches/manage",
     "bb_organizations/addresses/manage": "bb_organizations/addresses/manage",
     "bb_projects/ambassadors/manage": "bb_projects/ambassadors/manage",
+
+    // Tasks
+    "bb_tasks/my" : "bb_tasks/my"
 };
 
 App.Adapter = DS.DRF2Adapter.extend({
@@ -338,7 +344,6 @@ DS.Model.reopen(App.ModelMetaMixin, {});
 App.ApplicationController = Ember.Controller.extend({
 
     sub_menu: false,
-
     display_message: false,
     displayMessage: (function() {
         if (this.get('display_message')) {
@@ -437,6 +442,21 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Em.Route.extend(BB.ModalMixin, {
+    /**
+        Hook into the ApplicationRoute setup complete
+        by using the ".on" function, eg:
+
+            App.ApplicationRoute.reopen({
+                doSomething: function() {
+                    console.log('ApplicationRoute setup completed!');
+                }.on('setupCompleted')
+            });
+    */
+    setupController: function(controller, model){
+        this._super(controller, model);
+        
+        Ember.sendEvent(this, 'setupCompleted');
+    },
 
     actions: {
         clearNextTransition: function () {
@@ -723,5 +743,5 @@ App.ApplicationView = Em.View.reopen(App.EventMixin, {
             $('.mobile-nav-holder').addClass('is-scrolled');
         }
     }
-})
+});
 

@@ -8,18 +8,18 @@ from sorl.thumbnail.admin.compat import AdminImageMixin
 from bluebottle.utils.utils import set_author_editor_ip
 
 
-from bluebottle.wallposts.models import SystemWallPost
-from .models import WallPost, MediaWallPost, TextWallPost, MediaWallPostPhoto, Reaction
+from bluebottle.wallposts.models import SystemWallpost
+from .models import Wallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
 
-class MediaWallPostPhotoInline(AdminImageMixin, admin.StackedInline):
-    model = MediaWallPostPhoto
+class MediaWallpostPhotoInline(AdminImageMixin, admin.StackedInline):
+    model = MediaWallpostPhoto
     extra = 0
     raw_id_fields = ('author', 'editor')
 
 
-class MediaWallPostAdmin(PolymorphicChildModelAdmin):
-    base_model = WallPost
+class MediaWallpostAdmin(PolymorphicChildModelAdmin):
+    base_model = Wallpost
     readonly_fields = ('ip_address', 'deleted')
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'video_url', 'photos', 'author')
@@ -27,7 +27,7 @@ class MediaWallPostAdmin(PolymorphicChildModelAdmin):
     readonly_fields = ('view_online', )
 
     ordering = ('-created', )
-    inlines = (MediaWallPostPhotoInline,)
+    inlines = (MediaWallpostPhotoInline,)
 
     def get_text(self, obj):
         if len(obj.text) > 150:
@@ -35,7 +35,7 @@ class MediaWallPostAdmin(PolymorphicChildModelAdmin):
     get_text.allow_tags = True
 
     def photos(self, obj):
-        photos = MediaWallPostPhoto.objects.filter(mediawallpost=obj)
+        photos = MediaWallpostPhoto.objects.filter(mediawallpost=obj)
         if len(photos):
             return len(photos)
         return '-'
@@ -45,7 +45,7 @@ class MediaWallPostAdmin(PolymorphicChildModelAdmin):
             return u'<a href="/go/projects/{slug}">{title}</a>'.format(slug=obj.content_object.slug, title=obj.content_object.title)
         if obj.content_type.name == 'task':
             return u'<a href="/go/projects/{slug}/tasks/{task_id}">{title}</a>'.format(slug=obj.content_object.project.slug, task_id=obj.content_object.id, title=obj.content_object.project.title)
-        if obj.content_type.name == 'fund raiser':
+        if obj.content_type.name == 'fundraiser':
             return u'<a href="/go/fundraisers/{id}">{title}</a>'.format(id=obj.content_object.id, title=obj.content_object.title)
         return '---'
 
@@ -53,8 +53,8 @@ class MediaWallPostAdmin(PolymorphicChildModelAdmin):
 
 
 
-class TextWallPostAdmin(PolymorphicChildModelAdmin):
-    base_model = WallPost
+class TextWallpostAdmin(PolymorphicChildModelAdmin):
+    base_model = Wallpost
     readonly_fields = ('ip_address', 'deleted')
     list_display = ('created', 'author', 'content_type', 'text')
     raw_id_fields = ('author', 'editor')
@@ -76,32 +76,32 @@ class TextWallPostAdmin(PolymorphicChildModelAdmin):
 
 
 
-class SystemWallPostAdmin(PolymorphicChildModelAdmin):
-    base_model = WallPost
+class SystemWallpostAdmin(PolymorphicChildModelAdmin):
+    base_model = Wallpost
     readonly_fields = ('ip_address', 'deleted')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text')
     raw_id_fields = ('author', 'editor')
     ordering = ('-created', )
 
 
-class WallPostParentAdmin(PolymorphicParentModelAdmin):
+class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
-    base_model = WallPost
+    base_model = Wallpost
     list_display = ('created', 'author', 'content_type')
     ordering = ('-created', )
     child_models = (
-        (MediaWallPost, MediaWallPostAdmin),
-        (TextWallPost, TextWallPostAdmin),
-        (SystemWallPost, SystemWallPostAdmin),
+        (MediaWallpost, MediaWallpostAdmin),
+        (TextWallpost, TextWallpostAdmin),
+        (SystemWallpost, SystemWallpostAdmin),
     )
 
 # Only the parent needs to be registered:
-admin.site.register(WallPost, WallPostParentAdmin)
+admin.site.register(Wallpost, WallpostParentAdmin)
 
 # So why you are also registering the child?
-admin.site.register(MediaWallPost, MediaWallPostAdmin)
-admin.site.register(TextWallPost, TextWallPostAdmin)
-admin.site.register(SystemWallPost, SystemWallPostAdmin)
+admin.site.register(MediaWallpost, MediaWallpostAdmin)
+admin.site.register(TextWallpost, TextWallpostAdmin)
+admin.site.register(SystemWallpost, SystemWallpostAdmin)
 
 
 class ReactionAdmin(admin.ModelAdmin):

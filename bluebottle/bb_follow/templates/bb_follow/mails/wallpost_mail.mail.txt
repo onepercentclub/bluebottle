@@ -1,0 +1,17 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans %}
+Hi {{first_name}},
+
+There has been an update on a {{follow_object}} you follow. 
+
+Here's an excerpt of the update:
+
+{{wallpost_text}}...
+
+Read the full story at {{here}} 
+
+{% endblocktrans %}
+{% endblock %}

@@ -10,8 +10,9 @@ App.FundraiserIsOwner = Em.Mixin.create({
 });
 
 
-App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
+App.FundraiserController = Em.ObjectController.extend({
     needs: ['project'],
+    showWallpostHelp: true,
 
     backgroundStyle: function(){
         return "background-image:url('" + this.get('project.image') + "');";
@@ -45,6 +46,14 @@ App.FundraiserController = Em.ObjectController.extend(App.FundraiserIsOwner, {
     isOwner: function(){
         return (this.get('owner.username') == this.get('currentUser.username'));
     }.property('owner.username', 'currentUser.username'),
+
+    fundraiserSupportName: function() {
+        return this.get('owner.first_name');
+    }.property('owner.first_name'),
+
+    fundraiserTitle: function() {
+        return gettext('Fundraiser');
+    }.property('owner.first_name'),
 
     actions: {
         showProfile: function (profile) {

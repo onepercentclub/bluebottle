@@ -5,9 +5,9 @@ from django.utils.translation import ugettext_lazy as _
 # from rest_framework import status
 # from rest_framework.test import APITestCase
 #
-# from bluebottle.test.factory_models.wallposts import TextWallPostFactory
+# from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 #
-# class TextWallPostTestCase(APITestCase)
+# class TextWallpostTestCase(APITestCase)
 #     """
 #     Base class for test cases for ``text wall post`` module.
 #
@@ -15,12 +15,12 @@ from django.utils.translation import ugettext_lazy as _
 #     subclass this.
 #     """
 #     def setUp(self):
-#     	self.textwallpost = TextWallPostFactory.create()
+#     	self.textwallpost = TextWallpostFactory.create()
 #
 #
-# class TextWallPostListTestCase(TextWallPostTestCase)
+# class TextWallpostListTestCase(TextWallpostTestCase)
 #     """
-#     Test case for ``TextWallPostList`` API view.
+#     Test case for ``TextWallpostList`` API view.
 #
 #     Endpoint: /api/textwallposts/
 #     """
@@ -47,7 +47,7 @@ from rest_framework import status
 from bluebottle.mail import send_mail
 from bluebottle.utils.tests import UserTestsMixin
 from bluebottle.test.factory_models.tasks import TaskFactory
-from bluebottle.test.factory_models.wallposts import TextWallPostFactory
+from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
 from ..models import Reaction
@@ -57,15 +57,15 @@ from ..models import Reaction
 from bluebottle.wallposts import mails
 
 
-class WallPostReactionApiIntegrationTest(BluebottleTestCase):
+class WallpostReactionApiIntegrationTest(BluebottleTestCase):
     """
-    Integration tests for the Project Media WallPost API.
+    Integration tests for the Project Media Wallpost API.
     """
 
     def setUp(self):
-        super(WallPostReactionApiIntegrationTest, self).setUp()
-        self.some_wallpost = TextWallPostFactory.create()
-        self.another_wallpost = TextWallPostFactory.create()
+        super(WallpostReactionApiIntegrationTest, self).setUp()
+        self.some_wallpost = TextWallpostFactory.create()
+        self.another_wallpost = TextWallpostFactory.create()
         
         self.some_user = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
@@ -80,7 +80,7 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
 
     def test_wallpost_reaction_crud(self):
         """
-        Tests for creating, retrieving, updating and deleting a reaction to a Project WallPost.
+        Tests for creating, retrieving, updating and deleting a reaction to a Project Wallpost.
         """
 
         # Create a Reaction
@@ -130,7 +130,7 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
         # https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping
         self.assertTrue('not so sure' in response.data['text'])
 
-        # retrieve the list of Reactions for this WallPost should return two
+        # retrieve the list of Reactions for this Wallpost should return two
         response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
                                    HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -220,10 +220,10 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
 
     # def test_embedded_reactions(self):
         """
-            Test reactions embedded in Project WallPost Api calls
+            Test reactions embedded in Project Wallpost Api calls
         """
         #
-        # # Create two Reactions and retrieve the related Project Text WallPost should have the embedded
+        # # Create two Reactions and retrieve the related Project Text Wallpost should have the embedded
         # self.client.login(email=self.some_user.email, password='testing')
         # reaction1_text = "Hear! Hear!"
         # response = self.client.post(self.wallpost_reaction_url,
@@ -239,7 +239,7 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
         # self.assertTrue(reaction1_text in response.data['reactions'][0]['text'])
         # self.assertTrue(reaction2_text in response.data['reactions'][1]['text'])
 #
-#         # Create a Reaction to another WallPost and retrieve that WallPost should return one embedded reaction
+#         # Create a Reaction to another Wallpost and retrieve that Wallpost should return one embedded reaction
 #         reaction3_text = "That other post was way better..."
 #         self.client.post(self.wallpost_reaction_url, {'text': reaction3_text, 'wallpost': self.another_wallpost.id})
 #         another_wallpost_detail_url = "{0}{1}".format(self.wallpost_url, str(self.another_wallpost.id))
@@ -248,7 +248,7 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
 #         self.assertEqual(len(response.data['reactions']), 1)
 #         self.assertTrue(reaction3_text in response.data['reactions'][0]['text'])
 #
-#         # The first WallPost should still have just two reactions
+#         # The first Wallpost should still have just two reactions
 #         response = self.client.get(some_wallpost_detail_url)
 #         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 #         self.assertEqual(len(response.data['reactions']), 2)
@@ -257,15 +257,15 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
 #         response = self.client.delete(reaction1_detail_url)
 #         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
 #
-#         # The first WallPost should have only one reaction now
+#         # The first Wallpost should have only one reaction now
 #         response = self.client.get(some_wallpost_detail_url)
 #         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 #         self.assertEqual(len(response.data['reactions']), 1)
 #
 #
-# class WallPostApiRegressionTests(UserTestsMixin, TestCase): #ProjectWallPostTestsMixin,
+# class WallpostApiRegressionTests(UserTestsMixin, TestCase): #ProjectWallpostTestsMixin,
 #     """
-#     Integration tests for the Project Media WallPost API.
+#     Integration tests for the Project Media Wallpost API.
 #     """
 #
 #     def setUp(self):
@@ -306,7 +306,7 @@ class WallPostReactionApiIntegrationTest(BluebottleTestCase):
 #         self.assertEqual(escaped_reaction_text, response.data['text'])
 
 
-class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTestsMixin,
+class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallpostTestsMixin,
     
     def setUp(self):
         super(WallpostMailTests, self).setUp()
@@ -365,7 +365,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         # |
         # +-- Wallpost by A (+)
 
-        post = TextWallPostFactory.create(content_object=self.project_1, author=self.user_a)
+        post = TextWallpostFactory.create(content_object=self.project_1, author=self.user_a)
 
         # Mailbox should not contain anything.
         self.assertEqual(len(mail.outbox), 0)
@@ -378,7 +378,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         # |
         # +-- Wallpost by B (+)
 
-        post = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
+        post = TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
         self.assertEqual(len(mail.outbox), 1)
@@ -396,7 +396,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         # |   |
         # |   +-- Reaction by A (+)
 
-        w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_a)
+        w = TextWallpostFactory.create(content_object=self.project_1, author=self.user_a)
 
         # Empty outbox.
         mail.outbox = []
@@ -417,7 +417,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         # |   |
         # |   +-- Reaction by B (+)
 
-        w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_a)
+        w = TextWallpostFactory.create(content_object=self.project_1, author=self.user_a)
 
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
 
@@ -441,7 +441,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         #     |
         #     +-- Reaction by A (+)
 
-        w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
+        w = TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
 
         # Empty outbox.
         mail.outbox = []
@@ -465,7 +465,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         #     |
         #     +-- Reaction by B (+)
 
-        w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
+        w = TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
 
         # Empty outbox.
@@ -492,7 +492,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         #     |
         #     +-- Reaction by C (+)
 
-        w = TextWallPostFactory.create(content_object=self.project_1, author=self.user_b)
+        w = TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_a)
         Reaction.objects.create(text='Hello world', wallpost=w, author=self.user_b)
 
@@ -515,7 +515,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallPostTes
         # |
         # +-- Wallpost by B (+)
 
-        post = TextWallPostFactory.create(content_object=self.task_1, author=self.user_b)
+        post = TextWallpostFactory.create(content_object=self.task_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
         self.assertEqual(len(mail.outbox), 1)

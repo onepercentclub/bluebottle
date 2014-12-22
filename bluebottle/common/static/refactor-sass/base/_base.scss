@@ -27,7 +27,7 @@ label {
         }
 
         input[type='checkbox']:checked + span {
-            @include svg-icon('forms/icon-checkbox-checked.svg');
+            @include svg-icon('forms/icon-checkbox-checked.svg', #00C051, $color-sec);
         }
 
         input[type='radio']:checked + span {

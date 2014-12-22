@@ -4,7 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from bluebottle.bb_donations.donationmail import new_oneoff_donation, successful_donation_fundraiser_mail
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.wallposts.models import SystemWallPost
+from bluebottle.wallposts.models import SystemWallpost
 
 ORDER_MODEL = get_order_model()
 
@@ -39,7 +39,7 @@ def _order_status_changed(sender, instance, **kwargs):
                 new_oneoff_donation(donation)
 
                 #Create Wallpost on project wall
-                post = SystemWallPost()
+                post = SystemWallpost()
                 post.content_object = donation.project
                 post.related_object = donation
                 post.author = author
@@ -48,7 +48,7 @@ def _order_status_changed(sender, instance, **kwargs):
 
                 # Create Wallpost on fundraiser wall (if FR present)
                 if donation.fundraiser:
-                    fr_post = SystemWallPost()
+                    fr_post = SystemWallpost()
                     fr_post.content_object = donation.fundraiser
                     fr_post.related_object = donation
                     fr_post.author = author

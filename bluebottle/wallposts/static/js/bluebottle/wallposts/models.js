@@ -2,21 +2,21 @@
  * Embedded mapping
  */
 
-App.Adapter.map('App.WallPost', {
+App.Adapter.map('App.Wallpost', {
     author: {embedded: 'load'},
     photos: {embedded: 'load'},
     reactions: {embedded: 'load'}
 });
-App.Adapter.map('App.TextWallPost', {
+App.Adapter.map('App.TextWallpost', {
     author: {embedded: 'load'},
     reactions: {embedded: 'load'}
 });
-App.Adapter.map('App.MediaWallPost', {
+App.Adapter.map('App.MediaWallpost', {
     author: {embedded: 'load'},
     photos: {embedded: 'load'},
     reactions: {embedded: 'load'}
 });
-App.Adapter.map('App.WallPostReaction', {
+App.Adapter.map('App.WallpostReaction', {
     author: {embedded: 'load'}
 });
 
@@ -26,14 +26,14 @@ App.Adapter.map('App.WallPostReaction', {
  */
 
 
-App.WallPostPhoto = DS.Model.extend({
+App.WallpostPhoto = DS.Model.extend({
     url: 'wallposts/photos',
     photo: DS.attr('image'),
-    mediawallpost: DS.belongsTo('App.MediaWallPost')
+    mediawallpost: DS.belongsTo('App.MediaWallpost')
 });
 
 // This is union of all different wallposts.
-App.WallPost = DS.Model.extend({
+App.Wallpost = DS.Model.extend({
     url: 'wallposts',
 
     // Model fields
@@ -42,11 +42,12 @@ App.WallPost = DS.Model.extend({
     text: DS.attr('string', {defaultValue: ''}),
     type: DS.attr('string'),
     created: DS.attr('date'),
-    reactions: DS.hasMany('App.WallPostReaction'),
+    reactions: DS.hasMany('App.WallpostReaction'),
+    email_followers: DS.attr('boolean'),
 
     video_url: DS.attr('string', {defaultValue: ''}),
     video_html: DS.attr('string'),
-    photos: DS.hasMany('App.WallPostPhoto'),
+    photos: DS.hasMany('App.WallpostPhoto'),
 
     parent_id: DS.attr('string'),
     parent_type: DS.attr('string'),
@@ -56,7 +57,7 @@ App.WallPost = DS.Model.extend({
 
     related_object: DS.attr('object'), // keep it generic
 
-    isSystemWallPost: function(){
+    isSystemWallpost: function(){
         return (this.get('type') == 'system');
     }.property('type'),
 
@@ -64,12 +65,12 @@ App.WallPost = DS.Model.extend({
     fundraiser: function() {
         if (this.get('related_object')){
             var fundraiser = this.get('related_object').fundraiser;
-            if(this.get('isSystemWallPost') && this.get('related_type') == 'donation' && fundraiser !== undefined){
+            if(this.get('isSystemWallpost') && this.get('related_type') == 'donation' && fundraiser !== undefined){
                 return fundraiser;
             }
         }
         return false;
-    }.property('related_type', 'isSystemWallPost', 'related_object'),
+    }.property('related_type', 'isSystemWallpost', 'related_object'),
 	
 	coverPhoto: function() {
 		return this.get("photos").toArray()[0];
@@ -86,12 +87,12 @@ App.WallPost = DS.Model.extend({
 });
 
 
-App.TextWallPost = App.WallPost.extend({
+App.TextWallpost = App.Wallpost.extend({
     url: 'wallposts/textwallposts'
 });
 
 
-App.MediaWallPost = App.WallPost.extend({
+App.MediaWallpost = App.Wallpost.extend({
     url: 'wallposts/mediawallposts'
 });
 
@@ -99,12 +100,12 @@ App.MediaWallPost = App.WallPost.extend({
 /* Reactions */
 
 
-App.WallPostReaction = DS.Model.extend({
+App.WallpostReaction = DS.Model.extend({
     url: 'wallposts/reactions',
 
     text: DS.attr('string'),
     author: DS.belongsTo('App.UserPreview'),
     created: DS.attr('date'),
-    wallpost: DS.belongsTo('App.WallPost')
+    wallpost: DS.belongsTo('App.Wallpost')
 });
 

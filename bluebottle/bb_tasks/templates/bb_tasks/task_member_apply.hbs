@@ -11,7 +11,7 @@
         <ul>
             <li class="control-group">
                 <label class="control-label wide" for="motivation" >{% trans "Motivation" %}</label>
-                <small>{% trans "Please share your motivation. For planning purposes please indicate if you are in the CS department."%}</small>
+                <small>{% trans "Please share your motivation for joining this task."%}</small>
 
                 <div class="controls wide">
                     {{view Ember.TextArea valueBinding="view.motivation" name="motivation" classBinding="errors.motivation.length:error"}}

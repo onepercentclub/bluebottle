@@ -141,7 +141,7 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
                     if (opts.primary) {
                         taskMember.save();
                     }
-                    if (opts.secondary) {
+                    if (opts.secondary && taskMember.get('isDirty')) {
                         taskMember.rollback();
                     }
                 }

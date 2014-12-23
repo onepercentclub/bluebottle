@@ -126,6 +126,12 @@ label, .control-label {
         }
     }
 
+    small {
+        margin-bottom: 8px;
+        display: block;
+        line-height: 20px;
+    }
+
     .controls {
         position: relative;
         @include grid(36,1,2);

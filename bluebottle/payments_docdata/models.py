@@ -89,6 +89,9 @@ class DocdataPayment(Payment):
         verbose_name = _("Docdata Payment")
         verbose_name_plural = _("Docdata Payments")
 
+    def __unicode__(self):
+        return 'Docdata Payment {0}'.format(self.payment_cluster_key)
+
 
 class DocdataTransaction(Transaction):
     """
@@ -150,3 +153,6 @@ class DocdataDirectdebitPayment(Payment):
     iban = models.CharField(max_length=35)  # max_length from DocData
     bic = models.CharField(max_length=35)  # max_length from DocData
     agree = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return 'Docdata Direct Debit Payment {0}'.format(self.payment_cluster_key)

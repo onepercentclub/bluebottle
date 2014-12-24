@@ -127,7 +127,11 @@
                 }
 
                 .nav-member-switch-language {
-                    color: $color-text;
+                    display: inline-block;
+                    width: 100%;
+                    padding: 6px 20px;
+                    border-bottom: 1px solid darken($color-sec-shadow, 5%);
+                    color: $color-white;
                     font-weight: normal;
 
                     span {
@@ -150,9 +154,10 @@
 
                         a {
                             display: inline;
+                            border-top: inherit;
                             padding: 0 0 0 1em;
 
-                            color: $color-pri-shadow;
+                            color: darken($color-sec-shadow, 5%);
 
                             &:hover, &:active {
                                 color: $color-text;
@@ -161,7 +166,7 @@
                         }
 
                         div.active a {
-                            color: $color-text;
+                            color: $color-white;
                         }
                     }
                 }

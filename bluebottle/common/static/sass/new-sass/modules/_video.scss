@@ -95,10 +95,17 @@
             margin-left: auto;
             margin-right: auto;     
             z-index: 9;
-            width: 40%;
+            width: 50%;
 
             h1 {
                 text-align: center;
+            }
+
+            .sub-heading {
+                text-align: center;
+                width: 70%;
+                margin: 30px auto;
+                font-size: 20px;
             }
         }
 

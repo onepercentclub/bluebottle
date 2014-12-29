@@ -24,6 +24,8 @@ urlpatterns = patterns(
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),
     url(r'^admin/utils/admintools/', include('admin_tools.urls')),
 
+    url(r'^admin/documents/', include('bluebottle.utils.urls.main')),
+
     # account login/logout, password reset, and password change
     url(r'^accounts/', include('django.contrib.auth.urls', namespace='accounts')),
 )

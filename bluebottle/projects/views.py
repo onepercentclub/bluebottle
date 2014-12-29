@@ -1,27 +1,11 @@
-from bluebottle.projects.models import ProjectBudgetLine, PartnerOrganization
-from bluebottle.bb_projects.views import ProjectPreviewList
-from bluebottle.geo.models import Country
-from bluebottle.geo.serializers import CountrySerializer
-import django_filters
-
-from django.db.models.query_utils import Q
+from bluebottle.projects.models import ProjectBudgetLine
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _
-from django.http import Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.detail import DetailView
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
-
-from apps.fund.models import Donation, DonationStatuses
-from bluebottle.projects.serializers import (
-    ProjectSupporterSerializer, ProjectPreviewSerializer, ProjectThemeSerializer, ProjectBudgetLineSerializer)
+from bluebottle.projects.serializers import ProjectBudgetLineSerializer
 from bluebottle.projects.permissions import IsProjectOwner
-from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.utils.model_dispatcher import get_project_model
-
 from .models import Project
-from .serializers import ProjectSerializer, ProjectDonationSerializer
 
 
 class ManageProjectBudgetLineList(generics.ListCreateAPIView):

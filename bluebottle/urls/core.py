@@ -30,8 +30,16 @@ urlpatterns = patterns('',
     url(r'^api/order_payments/', include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/', include('bluebottle.payments.urls.api')),
 
+    url(r'^api/partners/', include('bluebottle.partners.urls.api')),
+
     url(r'^payments_mock/', include('bluebottle.payments_mock.urls.core')),
     url(r'^payments_docdata/', include('bluebottle.payments_docdata.urls.core')),
+
+    # Urls for partner sites
+    url(r'^pp/', include('bluebottle.partners.urls.partners')),
+
+    # Project view that search engines will use.
+    url(r'^projects/', include('bluebottle.projects.urls.seo')),
 
     url(r'^documents/', include('bluebottle.utils.urls.main')),
     url(r'^embed/', include('bluebottle.widget.urls.core')),

@@ -10,7 +10,7 @@ from bluebottle.utils.serializers import MetaField
 from bluebottle.bluebottle_drf2.serializers import OEmbedField
 
 from bluebottle.bb_projects.serializers import ProjectThemeSerializer
-from apps.fund.models import Donation
+from bluebottle.donations.models import Donation
 
 from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.serializers import (ProjectSerializer as BaseProjectSerializer,

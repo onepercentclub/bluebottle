@@ -1,6 +1,8 @@
 # Django settings for BlueBottle project.
 
 import os, datetime
+from payments import *
+
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -104,8 +106,6 @@ TEMPLATE_DIRS = (
     (os.path.join(PROJECT_ROOT, 'templates')),
 )
 
-
-
 MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
@@ -136,78 +136,120 @@ JWT_AUTH = {
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
+
 INSTALLED_APPS = (
+    # Django apps
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
 
-    # BlueBottle dependencies.
-    'compressor',
-    'registration',
-    'rest_framework',
-    'taggit',
+    # 3rd party apps
+    'django_extensions',
+    'django_extensions.tests',
+    'raven.contrib.django.raven_compat',
+    'djcelery',
     'south',
+    # 'django_nose',
+    'compressor',
     'sorl.thumbnail',
+    'taggit',
+    'taggit_autocomplete_modified',
+    'micawber.contrib.mcdjango',  # Embedding videos
+    'templatetag_handlebars',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'polymorphic',
+    'registration',
+    'filetransfers',
+    'loginas',
+    #'social_auth',
+    'social.apps.django_app.default',
 
-    # BlueBottle applications.
+    # Onepercent app to send POST requests to AFOM
+    # 'onepercent_afom',
+
+    #Widget
+    'bluebottle.widget',
+
+    # CMS page contents
+    'fluent_contents',
+    'fluent_contents.plugins.text',
+    'fluent_contents.plugins.oembeditem',
+    'fluent_contents.plugins.rawhtml',
+    'django_wysiwyg',
+    'tinymce',
+    'statici18n',
+    'django.contrib.humanize',
+    'django_tools',
+
+    # FB Auth
+    'bluebottle.auth',
+
+    # Password auth from old PHP site.
+    'legacyauth',
+
+
+    # Newly moved BB apps
+    'bluebottle.members',
+    'bluebottle.projects',
+    'bluebottle.partners',
+    'bluebottle.organizations',
+    'bluebottle.tasks',
+    'bluebottle.hbtemplates',
+    'bluebottle.bluebottle_dashboard',
+    'bluebottle.statistics',
+    'bluebottle.homepage',
+    'bluebottle.crawlable',
+    'bluebottle.recurring_donations',
+    'bluebottle.payouts',
+    'bluebottle.bluebottle_salesforce',
+
+    # Plain Bluebottle apps
+    'bluebottle.wallposts',
+    'bluebottle.utils',
+    'bluebottle.common',
+    'bluebottle.contentplugins',
+    'bluebottle.contact',
+    'bluebottle.geo',
+    'bluebottle.pages',
+    'bluebottle.news',
+    'bluebottle.slides',
+    'bluebottle.quotes',
+    'bluebottle.payments',
+    'bluebottle.payments_docdata',
+    'bluebottle.payments_logger',
+    'bluebottle.payments_voucher',
+    'bluebottle.redirects',
+
+    # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
     'bluebottle.bb_donations',
+    'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
-
-    # Other Bb apps
-    'bluebottle.common',
-    'bluebottle.contact',
-    'bluebottle.contentplugins',
-    'bluebottle.geo',
-    'bluebottle.news',
-    'bluebottle.pages',
-    'bluebottle.quotes',
-    'bluebottle.slides',
-    'bluebottle.redirects',
-    'bluebottle.terms',
-    'bluebottle.utils',
-    'bluebottle.wallposts',
+    'bluebottle.bb_follow',
 
     # Basic Bb implementations
     'bluebottle.fundraisers',
-    'bluebottle.orders',
     'bluebottle.donations',
-    'bluebottle.payouts',
+    'bluebottle.orders',
 
-    'bluebottle.payments',
-    'bluebottle.payments_docdata',
-    'bluebottle.payments_mock',
-    'bluebottle.payments_logger',
-    'bluebottle.payments_voucher',
-
-    'bluebottle.bb_follow',
-
-    # Test Bb implementations
-    'bluebottle.test',
-
-    # Modules required by BlueBottle
-    'fluent_contents',
-    'fluent_contents.plugins.text',
-    'fluent_contents.plugins.oembeditem',
-    'fluent_contents.plugins.rawhtml',
-
-    'django_wysiwyg',
-    'templatetag_handlebars',
-
-    'raven.contrib.django.raven_compat',
+    # Custom dashboard
+    'fluent_dashboard',
+    'admin_tools',
+    'admin_tools.theming',
+    'admin_tools.menu',
+    'admin_tools.dashboard',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
 )
+
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
@@ -270,52 +312,36 @@ LOGGING = {
 }
 
 
-# Define the models to use for testing
-AUTH_USER_MODEL = 'test.TestBaseUser'
+# Custom User model
+AUTH_USER_MODEL = 'members.Member'
 
-PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
-PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
+PROJECTS_PROJECT_MODEL = 'projects.Project'
+PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
 
 FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
 
-TASKS_TASK_MODEL = 'test.TestTask'
-TASKS_SKILL_MODEL = 'test.TestSkill'
-TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
-TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
+TASKS_TASK_MODEL = 'tasks.Task'
+TASKS_SKILL_MODEL = 'tasks.Skill'
+TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
+TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
 
-ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
-ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
-ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
+ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
+ORGANIZATIONS_DOCUMENT_MODEL = 'organizations.OrganizationDocument'
+ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
 
-DONATIONS_DONATION_MODEL = 'donations.Donation'
 ORDERS_ORDER_MODEL = 'orders.Order'
+DONATIONS_DONATION_MODEL = 'donations.Donation'
 
 PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
 PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
 
+BB_APPS = ['wallposts', 'utils', 'contact', 'geo', 'pages', 'news', 'slides', 'quotes',
+           'payments', 'payments_docdata', 'payments_voucher', 'bb_accounts', 'bb_organizations',
+           'bb_projects', 'bb_tasks', 'bb_fundraisers', 'bb_donations', 'bb_orders',
+           'homepage', 'recurring_donations', 'partners']
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True
-
-
-PROJECT_PHASES = (
-    ('Plan', (
-        ('plan-new', 'Plan - New'),
-        ('plan-submitted', 'Plan - Submitted'),
-        ('plan-needs-work', 'Plan - Needs work'),
-        ('plan-rejected', 'Plan - Rejected'),
-        ('plan-approved', 'Plan - Approved'),
-    )),
-    ('Campaign', (
-        ('campaign-running', 'Campaign - Running'),
-        ('campaign-stopped', 'Campaign - Stopped'),
-    )),
-    ('Done', (
-        ('done-completed', 'Done - Completed'),
-        ('done-incomplete', 'Done - Incomplete'),
-        ('done-stopped', 'Done - Stopped'),
-    )),
-)
 
 # Twitter handles, per language
 TWITTER_HANDLES = {
@@ -333,5 +359,3 @@ ACCOUNT_ACTIVATION_DAYS = 7
 HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
-
-THUMBNAIL_DEBUG = False

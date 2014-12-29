@@ -32,6 +32,12 @@ urlpatterns = patterns('',
 
     url(r'^api/partners/', include('bluebottle.partners.urls.api')),
 
+    # Homepage API urls
+    url(r'^api/homepage/', include('bluebottle.homepage.urls.api')),
+    url(r'^api/stats', include('bluebottle.statistics.urls.api')),
+    url(r'^api/bb_projects/', include('bluebottle.projects.urls.api')),
+
+
     url(r'^payments_mock/', include('bluebottle.payments_mock.urls.core')),
     url(r'^payments_docdata/', include('bluebottle.payments_docdata.urls.core')),
 

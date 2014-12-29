@@ -84,7 +84,6 @@
         <div class="project-action">
             {{#if isStatusCampaign}}
                 <a {{action 'addDonation' this}} data-action-type="donate" class="button button-big"> {{projectSupportName}}</a>
-                {{partial 'other_payments'}}
             {{else}}
                 <div class="project-closed">
                     <strong>{% trans "Campaign" %} {{#if is_funded}}{% trans "fully funded and" %} {{/if}}{% trans "closed" %}</strong><br />

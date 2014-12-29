@@ -29,6 +29,7 @@ urlpatterns = patterns('',
     url(r'^api/donations/', include('bluebottle.bb_donations.urls.api')),
     url(r'^api/order_payments/', include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/', include('bluebottle.payments.urls.api')),
+    url(r'^api/monthly_donations/', include('bluebottle.recurring_donations.urls.api')),
 
     url(r'^api/partners/', include('bluebottle.partners.urls.api')),
 

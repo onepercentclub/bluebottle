@@ -7,7 +7,8 @@ from bluebottle.utils.model_dispatcher import get_project_model
 
 from onepercentclub.tests.factory_models.project_factories import OnePercentProjectFactory
 
-from apps.fund.models import DonationStatuses, Donation, Order
+from bluebottle.donations.models import Donation
+from bluebottle.orders.models import Order
 from onepercentclub.tests.utils import OnePercentTestCase
 
 PROJECT_MODEL = get_project_model()
@@ -53,7 +54,7 @@ class CalculateProjectMoneyDonatedTest(OnePercentTestCase):
     #     second_donation.order.save()
     #     self.assertEqual(self.some_project.amount_donated, 40)
 
-    def _create_donation(self, user=None, amount=None, project=None, status=DonationStatuses.new):
+    def _create_donation(self, user=None, amount=None, project=None, status=StatusDefinition.NEW):
         """ Helper method for creating donations."""
         if not project:
             project = OnePercentProjectFactory.create()
@@ -65,8 +66,8 @@ class CalculateProjectMoneyDonatedTest(OnePercentTestCase):
         if not amount:
             amount = Decimal('10.00')
 
-        order = Order.objects.create()
-        donation = Donation.objects.create(user=user, amount=amount, status=status, project=project, order=order)
+        order = Order.objects.create(status=status)
+        donation = Donation.objects.create(user=user, amount=amount, project=project, order=order)
 
         return donation
 

@@ -1,5 +1,7 @@
+from bluebottle.auth.views import GetAuthToken
 from django.conf.urls import patterns, include, url
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
 from django.shortcuts import render_to_response
@@ -80,6 +82,43 @@ js_info_dict = {
 
 urlpatterns += patterns(
     '',
+    (r'^js$', 'django.views.i18n.javascript_catalog'),
+)
+
+# Serve django-staticfiles (only works in DEBUG)
+# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-development
+urlpatterns += staticfiles_urlpatterns()
+
+# Serve media files (only works in DEBUG)
+# https://docs.djangoproject.com/en/dev/howto/static-files/#django.conf.urls.static.static
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+urlpatterns += patterns('',
+
+    url('', include('social.apps.django_app.urls', namespace='social')),
+    url(r'^api/social-login/(?P<backend>[^/]+)/$', GetAuthToken.as_view()),
+
+    # Needed for the self-documenting API in Django Rest Framework.
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # JSON Web Token based authentication for Django REST framework
+    url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
+    url(r'^api/token-auth-refresh/$', 'rest_framework_jwt.views.refresh_jwt_token'),
+
+    url(r'^', include('django.conf.urls.i18n')),
+)
+
+urlpatterns += patterns('loginas.views',
+    url(r"^login/user/(?P<user_id>.+)/$", "user_login", name="loginas-user-login"),
+)
+
+
+js_info_dict = {
+    'packages': ('apps.accounts', 'bluebottle.projects'),
+}
+
+urlpatterns += patterns('',
     (r'^js$', 'django.views.i18n.javascript_catalog'),
 )
 

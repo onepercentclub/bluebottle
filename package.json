@@ -51,7 +51,10 @@
     "phantomjs": "~1.9.7-10",
     "qunitjs": "~1.14.0",
     "sinon": "~1.10.3",
-    "sinon-qunit": "~2.0.0"
+    "sinon-qunit": "~2.0.0",
+    "grunt-contrib-sass": "~0.8.1",
+    "jit-grunt": "~0.9.0",
+    "time-grunt": "~1.0.0"
   },
   "scripts": {
     "build": "grunt build",

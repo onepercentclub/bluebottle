@@ -1,4 +1,7 @@
 module.exports = function (grunt) {
+  require('time-grunt')(grunt);
+  require('jit-grunt')(grunt);
+
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-ember-template-compiler');
   grunt.loadNpmTasks('grunt-hashres');
@@ -10,6 +13,12 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-microlib');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-contrib-compass');
+
+  var sassOutputStyle = grunt.option('output_style') || 'expanded',
+    staticPath = './bluebottle/common/static/',
+    compassPath = staticPath + 'sass',
+    sassPath = staticPath + 'refactor-sass',
+    cssOutputPath = staticPath + '/css';
 
   // Project configuration.
   grunt.initConfig({
@@ -155,36 +164,52 @@ module.exports = function (grunt) {
         dest: 'static/build/js/templates.js'
       }
     },
+    sass: {
+      dist: {
+        files: [{
+          expand: true,
+          cwd: sassPath,
+          src: 'screen-refactor.scss',
+          dest: cssOutputPath,
+          ext: '.css'
+        }]
+      }
+    },
     compass: {
       // live
       dist: {
         options: {
           httpPath: '/static/assets/',
-          basePath: 'bluebottle/common/static',
+          basePath: staticPath,
           sassDir: 'sass',
           cssDir: 'css',
-          imagesDir: 'images',
-          javascriptsDir: 'js',
-          outputStyle: 'compressed',
+          imagesDir: 'images',          
+          javascriptsDir: 'js',          
+          outputStyle: sassOutputStyle,
           relativeAssets: true,
           noLineComments: true,
           environment: 'production',
-          raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available
+          raw: 'preferred_syntax = :scss\n', // Use `raw` since it's not directly available
+          importPath: compassPath,
+          force: true
         }
       },
       // development
       dev: {
         options: {
           httpPath: '/static/assets/',
-          basePath: 'bluebottle/common/static',
+          basePath: staticPath,
           sassDir: 'sass',
           cssDir: 'css',
-          imagesDir: 'images',
-          javascriptsDir: 'js',
-          outputStyle: 'expanded',
+          imagesDir: 'images',          
+          javascriptsDir: 'js',          
+          outputStyle: sassOutputStyle,
           relativeAssets: true,
           noLineComments: false,
-          raw: 'preferred_syntax = :scss\n' // Use `raw` since it's not directly available        
+          raw: 'preferred_syntax = :scss\n', // Use `raw` since it's not directly available  
+          importPath: compassPath,
+          force: false, 
+          sourcemap: true
         }
       }
     }
@@ -196,4 +221,5 @@ module.exports = function (grunt) {
   grunt.registerTask('travis', ['build', 'karma:ci']);
   grunt.registerTask('local', ['dev', 'watch']);
   grunt.registerTask('deploy', ['concat:dist', 'uglify:dist', 'hashres', 'compass:dist']);
+  grunt.registerTask('build:css', ['sass:dist', 'compass:dist']);
 };

@@ -2,7 +2,7 @@
 
 import os, datetime
 from payments import *
-
+from admin_dashboard import *
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -189,17 +189,6 @@ TENANT_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
 
-    # CMS page contents
-    'fluent_contents',
-    'fluent_contents.plugins.text',
-    'fluent_contents.plugins.oembeditem',
-    'fluent_contents.plugins.rawhtml',
-    'django_wysiwyg',
-    'tinymce',
-    'statici18n',
-    'django.contrib.humanize',
-    'django_tools',
-
     # FB Auth
     'bluebottle.auth',
 
@@ -255,6 +244,17 @@ TENANT_APPS = (
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
+
+    # CMS page contents
+    'fluent_contents',
+    'fluent_contents.plugins.text',
+    'fluent_contents.plugins.oembeditem',
+    'fluent_contents.plugins.rawhtml',
+    'django_wysiwyg',
+    'tinymce',
+    'statici18n',
+    'django.contrib.humanize',
+    'django_tools',
 )
 
 INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)

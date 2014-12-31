@@ -17,8 +17,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.slides.*',
             'bluebottle.banners.*',
             'bluebottle.quotes.*',
-            'apps.statistics.*',
-            'apps.campaigns.*',
+            'bluebottle.statistics.*',
         ],
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -28,7 +27,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.projects.*',
             'bluebottle.bb_projects.*',
             'bluebottle.fundraisers.*',
-            'apps.organizations.*',
+            'bluebottle.organizations.*',
             'bluebottle.bb_organizations.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
@@ -39,14 +38,13 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.donations.*',
             'bluebottle.orders.*',
             'bluebottle.payments_voucher.models.Voucher',
-            'apps.mchanga.*'
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
     }),
     (_('Monthly Donations'), {
         'models': (
-            'apps.recurring_donations.*',
+            'bluebottle.recurring_donations.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -56,14 +54,14 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.payments.*',
             'bluebottle.payments_docdata.*',
             'bluebottle.payments_logger.*',
-            'apps.payouts.*',
+            'bluebottle.payouts.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
     }),
     (_('Tasks'), {
         'models': (
-            'apps.tasks.*',
+            'bluebottle.tasks.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -81,7 +79,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
     (_('Site settings'), {
         'models': (
             'django.contrib.sites.*',
-            'apps.redirects.*'
+            'bluebottle.redirects.*'
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -93,7 +91,6 @@ FLUENT_DASHBOARD_APP_GROUPS = (
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
     }),
-
     # The '*' selector acts like a fallback for all other apps. This section mainly displays models
     # with tabular data that is rarely touched. The important models have an icon.
     (_('Applications'), {

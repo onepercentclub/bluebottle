@@ -107,6 +107,7 @@ TEMPLATE_DIRS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
@@ -137,7 +138,9 @@ JWT_AUTH = {
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 
-INSTALLED_APPS = (
+SHARED_APPS = (
+    'bluebottle.clients', # you must list the app where your tenant model resides in
+
     # Django apps
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -168,12 +171,6 @@ INSTALLED_APPS = (
     #'social_auth',
     'social.apps.django_app.default',
 
-    # Onepercent app to send POST requests to AFOM
-    # 'onepercent_afom',
-
-    #Widget
-    'bluebottle.widget',
-
     # CMS page contents
     'fluent_contents',
     'fluent_contents.plugins.text',
@@ -185,12 +182,19 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'django_tools',
 
+    # Password auth from old PHP site.
+    'legacyauth',
+)
+
+TENANT_APPS = (
+    'south',
+    'django.contrib.contenttypes',
+
     # FB Auth
     'bluebottle.auth',
 
-    # Password auth from old PHP site.
-    'legacyauth',
-
+    #Widget
+    'bluebottle.widget',
 
     # Newly moved BB apps
     'bluebottle.members',
@@ -250,6 +254,17 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
 )
 
+INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)
+
+TENANT_MODEL = "clients.Client"
+
+SOUTH_DATABASE_ADAPTERS = {
+    'default': 'south.db.postgresql_psycopg2',
+}
+
+SOUTH_MIGRATION_MODULES = {
+    'taggit': 'taggit.south_migrations',
+}
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',

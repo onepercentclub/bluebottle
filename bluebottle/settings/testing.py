@@ -33,7 +33,8 @@ GRAPH_MODELS = {
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.sqlite3',
-		'NAME': ':memory:'
+		'NAME': ':memory:',
+        'ATOMIC_REQUESTS': True
 	}
 }
 

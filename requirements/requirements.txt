@@ -1,6 +1,7 @@
 -e git://github.com/GetBlimp/django-rest-framework-jwt.git@b6b42b967c3584b426446df1f72149b7a07fd520#egg=djangorestframework-jwt
 -e git://github.com/onepercentclub/django-salesforce.git@1e54beb7bcc15a893e9590fb27cbf08853da5599#egg=django-salesforce
 -e git://github.com/onepercentclub/legacyauth.git@3f2406c50dead25a748fb2433de55b73a9162f18#egg=legacyauth
+-e git://github.com/mrmachine/django-taggit-autocomplete-modified.git@8e41e333ce1f0690e1041515b1f2cbf12e0452ce#egg=django-taggit-autocomplete-modified
 
 -e hg+https://bitbucket.org/wkornewald/django-filetransfers@32ddeac#egg=django-filetransfers
 -e hg+https://bitbucket.org/sergei_maertens/django-admin-tools@c989fd1#egg=django-admin-tools
@@ -8,9 +9,9 @@
 
 Babel==1.3
 bunch==1.0.1
-Django==1.5.5
+Django==1.6.8
 Pillow==2.3.0
-South==0.8.1
+South==1.0
 Sphinx==1.2b1
 django-celery==3.0.17
 django-apptemplates==0.0.1
@@ -19,15 +20,14 @@ django-compressor==1.3
 ember-compressor-compiler==0.3.1
 django-extensions==1.1.1
 django-filter==0.6
-django-fluent-contents==0.9a1 # Version 1.0b1 and up breaks our co
+django-fluent-contents==1.0c3 # Version 1.0b1 and up breaks our co
 django-iban==0.2.1
 django-localflavor==1.0
 django-social-auth==0.7.23
 django-statici18n==0.4.5
-django-taggit==0.10a1
-django-taggit-autocomplete-modified==0.1.0b4
+django-taggit==0.12.1
 django-templatetag-handlebars==1.2.0
-django-tinymce==1.5.1b2
+django-tinymce==1.5.2
 django-uuidfield==0.5.0
 django-wysiwyg==0.5.1
 django-dynamic-fixture==1.8.0
@@ -55,5 +55,6 @@ unicodecsv==0.9.4
 python-dateutil==1.5
 gunicorn==0.14.6
 surlex==0.2.0
+django_polymorphic==0.5.6
 dnspython
 fabric

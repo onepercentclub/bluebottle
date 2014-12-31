@@ -168,7 +168,7 @@ class Migration(DataMigration):
         },
         u'fund.recurringdirectdebitpayment': {
             'Meta': {'object_name': 'RecurringDirectDebitPayment'},
-            'account': ('apps.fund.fields.DutchBankAccountField', [], {'max_length': '10'}),
+            'account': ('bluebottle.utils.fields.DutchBankAccountField', [], {'max_length': '10'}),
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'amount': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
             'bic': ('django_iban.fields.SWIFTBICField', [], {'default': "''", 'max_length': '11', 'blank': 'True'}),

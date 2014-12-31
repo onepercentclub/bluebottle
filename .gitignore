@@ -56,6 +56,8 @@ reports
 
 # SASS
 .sass-cache
+bluebottle/common/static/css/*.css*
+bluebottle/common/static/css/admin/dashboard.css
 
 # Espresso
 *.esproj

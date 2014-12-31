@@ -5,6 +5,11 @@ if (DEBUG) {
     });
 }
 
+if (typeof gettext == 'undefined') {
+    function gettext(text) {
+        return text;
+    }
+}
 
 Ember.Application.initializer({
     name: 'currentUser',

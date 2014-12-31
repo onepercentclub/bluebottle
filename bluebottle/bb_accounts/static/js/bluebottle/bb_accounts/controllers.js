@@ -286,7 +286,7 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
     }
 });
 
-App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
+App.LoginController = Em.ObjectController.extend(App.AuthJwtMixin, BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
     requiredFields: ['email', 'password'],
 

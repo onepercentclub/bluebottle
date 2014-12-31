@@ -231,6 +231,8 @@ App.Router.map(function() {
 
 });
 
+App.ApplicationRoute.reopen(App.LogoutJwtMixin);
+
 App.LoginWithRoute = Em.Route.extend({
     beforeModel: function(transition) {
         var _this = this,

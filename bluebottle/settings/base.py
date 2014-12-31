@@ -163,13 +163,31 @@ SHARED_APPS = (
     'micawber.contrib.mcdjango',  # Embedding videos
     'templatetag_handlebars',
     'rest_framework',
-    'rest_framework.authtoken',
-    'polymorphic',
     'registration',
     'filetransfers',
     'loginas',
+
+    # Password auth from old PHP site.
+    'legacyauth',
+)
+
+TENANT_APPS = (
+    'south',
+    'polymorphic',
+
     #'social_auth',
     'social.apps.django_app.default',
+
+    # Custom dashboard
+    'fluent_dashboard',
+    'admin_tools',
+    'admin_tools.theming',
+    'admin_tools.menu',
+    'admin_tools.dashboard',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
 
     # CMS page contents
     'fluent_contents',
@@ -182,19 +200,13 @@ SHARED_APPS = (
     'django.contrib.humanize',
     'django_tools',
 
-    # Password auth from old PHP site.
-    'legacyauth',
-)
-
-TENANT_APPS = (
-    'south',
-    'django.contrib.contenttypes',
-
     # FB Auth
     'bluebottle.auth',
 
     #Widget
     'bluebottle.widget',
+
+    'rest_framework.authtoken',
 
     # Newly moved BB apps
     'bluebottle.members',
@@ -243,15 +255,6 @@ TENANT_APPS = (
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
-
-    # Custom dashboard
-    'fluent_dashboard',
-    'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
-    'django.contrib.admin',
-    'django.contrib.admindocs',
 )
 
 INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)

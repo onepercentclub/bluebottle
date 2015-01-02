@@ -142,6 +142,7 @@ SHARED_APPS = (
     'bluebottle.clients', # you must list the app where your tenant model resides in
 
     # Django apps
+    'south',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -154,8 +155,6 @@ SHARED_APPS = (
     'django_extensions.tests',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'south',
-    # 'django_nose',
     'compressor',
     'sorl.thumbnail',
     'taggit',
@@ -163,12 +162,8 @@ SHARED_APPS = (
     'micawber.contrib.mcdjango',  # Embedding videos
     'templatetag_handlebars',
     'rest_framework',
-    'registration',
     'filetransfers',
     'loginas',
-
-    # Password auth from old PHP site.
-    'legacyauth',
 )
 
 TENANT_APPS = (
@@ -178,12 +173,17 @@ TENANT_APPS = (
     #'social_auth',
     'social.apps.django_app.default',
 
+    # TODO: can we remove this app?
+    'registration',
+
     # Custom dashboard
     'fluent_dashboard',
+    
     'admin_tools',
     'admin_tools.theming',
     'admin_tools.menu',
     'admin_tools.dashboard',
+
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -270,6 +270,7 @@ SOUTH_MIGRATION_MODULES = {
 }
 
 TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.core.context_processors.request',
     'django.contrib.auth.context_processors.auth',
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',

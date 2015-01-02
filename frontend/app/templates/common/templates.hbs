@@ -1,0 +1,18 @@
+{% load i18n %}
+{% load bb_ember %}
+{% load static %}
+
+
+{% block handlebars_templates %}
+    {% for app in bb_apps %}
+        {% include app|add:"/base.hbs" %}
+    {% endfor %}
+
+    {% include "common/_main_nav.hbs" %}
+    {% include "common/application.hbs" %}
+    {% include "common/footer.hbs" %}
+    {% include "common/components.hbs" %}
+    {% include "common/not_allowed.hbs" %}
+    {% include "common/_main_logo.hbs" %}
+    {% include "common/_other_progressbars.hbs" %}
+{% endblock handlebars_templates %}

@@ -104,6 +104,7 @@ TEMPLATE_LOADERS = (
 
 TEMPLATE_DIRS = (
     (os.path.join(PROJECT_ROOT, 'templates')),
+    (os.path.join(PROJECT_ROOT, 'frontend', 'templates'))
 )
 
 MIDDLEWARE_CLASSES = (
@@ -178,7 +179,7 @@ TENANT_APPS = (
 
     # Custom dashboard
     'fluent_dashboard',
-    
+
     'admin_tools',
     'admin_tools.theming',
     'admin_tools.menu',
@@ -332,7 +333,7 @@ LOGGING = {
 
 
 # Custom User model
-AUTH_USER_MODEL = 'members.Member'
+AUTH_USER_MODEL = 'auth.User'
 
 PROJECTS_PROJECT_MODEL = 'projects.Project'
 PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'

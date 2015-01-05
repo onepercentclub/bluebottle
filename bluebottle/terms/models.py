@@ -25,7 +25,7 @@ class Terms(models.Model):
 
     @classmethod
     def get_current(cls):
-        queryset = cls.objects.filter(date__lte=now()).order_by('-date')
+        queryset = cls.objects.filter(date__gte=now()).order_by('-date')
         if queryset.count():
             return queryset.all()[0]
         return None

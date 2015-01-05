@@ -120,7 +120,7 @@
         <script type="text/javascript" src="{% static 'js/plugins/unslider.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/plugins/ember.hashbang.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/vendor/jquery.scrollTo.min.js' %}" charset="utf-8"></script>
-        <script type="text/javascript" src="{% static 'js/marker_clusterer.js' %}"></script>
+        <script type="text/javascript" src="{% static 'vendor/js/marker_clusterer.js' %}"></script>
 
         <script type="text/javascript" src="{% static 'js/plugins/bb_modal.js' %}"></script>
 
@@ -144,15 +144,15 @@
 
         {# BlueBottle Application #}
         {% block ember_scripts %}
-            <script type="text/javascript" src="{% static 'js/bluebottle/presets.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/app.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/auth_jwt.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/utils.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/translatables.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/mixins.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/controllers.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/components.js' %}"></script>
-            <script type="text/javascript" src="{% static 'js/bluebottle/views.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/utils/presets.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/app.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/utils/auth_jwt.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/utils/utils.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/utils/translatables.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/mixins/mixins.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/controllers/controllers.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/components/components.js' %}"></script>
+            <script type="text/javascript" src="{% static 'app/views/views.js' %}"></script>
 
             {#  Tracking modules #}
             {% if MIXPANEL %}
@@ -161,19 +161,19 @@
             {%  endif  %}
 
             {% for app in bb_apps %}
-                {% with 'js/bluebottle/'|add:app|add:'/routes.js' as js_static %}
+                {% with 'app/models/'|add:app|add:'.js' as js_static %}
                     <script type="text/javascript" src="{% static js_static %}"></script>
                 {% endwith %}
-                {% with 'js/bluebottle/'|add:app|add:'/controllers.js' as js_static %}
+                {% with 'app/pods/'|add:app|add:'/routes.js' as js_static %}
                     <script type="text/javascript" src="{% static js_static %}"></script>
                 {% endwith %}
-                {% with 'js/bluebottle/'|add:app|add:'/views.js' as js_static %}
+                {% with 'app/pods/'|add:app|add:'/controllers.js' as js_static %}
                     <script type="text/javascript" src="{% static js_static %}"></script>
                 {% endwith %}
-                {% with 'js/bluebottle/'|add:app|add:'/models.js' as js_static %}
+                {% with 'app/pods/'|add:app|add:'/views.js' as js_static %}
                     <script type="text/javascript" src="{% static js_static %}"></script>
                 {% endwith %}
-                {% with 'js/bluebottle/'|add:app|add:'/components.js' as js_static %}
+                {% with 'app/pods/'|add:app|add:'/components.js' as js_static %}
                     <script type="text/javascript" src="{% static js_static %}"></script>
                 {% endwith %}
             {% endfor %}

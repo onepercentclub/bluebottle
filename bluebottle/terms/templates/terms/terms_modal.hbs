@@ -19,11 +19,9 @@
                 </div>
             </div>
 
-
+            <br/>
             <div class="modal-footer profile-preview-actions">
             {{#if currentUser.agreedToTerms.created}}
-                {% trans 'You have already to these terms on ' %}
-                {{localize currentUser.agreedToTerms.created formatting='d'}}
                 <a {{action 'close'}} class="close-link" rel="close">&times; {% trans "Close" %}</a>
             {{else}}
                 <a {{action 'rejectTerms'}} data-action-type="reject-terms" class="close-link" rel="close">&times; {% trans "I don't agree to this" %}</a>
@@ -33,6 +31,11 @@
             {{/if}}
 
             </div>
+            {{#if currentUser.agreedToTerms.created}}
+                <br/>
+                {% trans 'You have already agreed to these terms on ' %}
+                {{localize currentUser.agreedToTerms.created formatting='d'}}
+            {{/if}}
         </div>
     </div>
 

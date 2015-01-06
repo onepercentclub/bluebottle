@@ -7,5 +7,4 @@ You just received a EUR {{ amount }} donation from {{ donor_name }}!
 Quickly thank your supporter by posting a personal message on your project wall: {{ site }}{{ link }}.
 
 Cheers,
-1%Club
 {% endblocktrans %}

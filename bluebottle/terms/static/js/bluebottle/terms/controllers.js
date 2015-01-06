@@ -24,6 +24,10 @@ App.ApplicationController.reopen({
 App.TermsModalController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
     needs: ['currentUser'],
 
+    willOpen: function() {
+        this.container.lookup('controller:modalContainer').set('type', 'large');
+    },
+
     willClose: function(){
         // Set the terms to rejected when modal is closed.
         var terms = this.get('model'),

@@ -85,6 +85,7 @@ STATICFILES_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     # You can also name this tuple like: ('css', '/path/to/css')
     (os.path.join(PROJECT_ROOT, 'static', 'global')),
+    (os.path.join(PROJECT_ROOT, 'frontend')),
 )
 
 # List of finder classes that know how to find static files in
@@ -104,6 +105,7 @@ TEMPLATE_LOADERS = (
 
 TEMPLATE_DIRS = (
     (os.path.join(PROJECT_ROOT, 'templates')),
+    (os.path.join(PROJECT_ROOT, 'frontend', 'app', 'templates'))
 )
 
 MIDDLEWARE_CLASSES = (
@@ -178,7 +180,7 @@ TENANT_APPS = (
 
     # Custom dashboard
     'fluent_dashboard',
-    
+
     'admin_tools',
     'admin_tools.theming',
     'admin_tools.menu',
@@ -355,8 +357,8 @@ PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
 PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
 
 BB_APPS = ['wallposts', 'utils', 'contact', 'geo', 'pages', 'news', 'slides', 'quotes',
-           'payments', 'payments_docdata', 'payments_voucher', 'bb_accounts', 'bb_organizations',
-           'bb_projects', 'bb_tasks', 'bb_fundraisers', 'bb_donations', 'bb_orders',
+           'payments', 'payments_docdata', 'payments_voucher', 'members', 'organizations',
+           'projects', 'tasks', 'fundraisers', 'donations', 'orders',
            'homepage', 'recurring_donations', 'partners']
 
 # Required for handlebars_template to work properly

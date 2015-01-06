@@ -1,0 +1,14 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% include "donations/donation.hbs" %}
+{% include "donations/_donation_amount.hbs"%}
+
+{% include 'donations/donation_success.hbs' %}
+{% include 'donations/my_donation_list.hbs' %}
+{% include 'donations/my_donations.hbs' %}
+
+{% include "donations/_donation_errors.hbs" %}
+{% include "donations/_donation_canvas.hbs" %}

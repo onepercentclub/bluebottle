@@ -1,0 +1,318 @@
+.project-status {
+    .project-action {
+        .btn {
+            font-size: 18px;
+            position: relative;
+            display: inline-block;
+            background: $color-secondary-new;
+            padding: 0.75em 1.25em;
+            vertical-align: center;
+            border-radius: 8px;
+            color: #fff;
+            font-family: $font-family-bold;
+            font-weight: 700;
+            border: none;
+            text-transform: inherit;
+            @include single-box-shadow($color-secondary-shadow, 0, -2px, 0, 0, true);
+            @include single-transition(all, .1s ease-in-out);
+
+            // fix for chrome animation bug
+            -webkit-backface-visibility: hidden;
+            -webkit-transform: scale(1);
+
+            &.btn-third {
+                background: $color-primary;
+                @include single-box-shadow($color-primary-shadow, 0, -2px, 0, 0, true);
+
+                &:hover {
+                    @include single-box-shadow($color-primary-shadow, 0, -4px, 0, 0, true);
+                }
+            }
+
+
+            &.btn-sec {
+                color: $color-primary;
+                font-weight: normal;
+                background: none;
+                border: 1px solid $color-primary;
+                @include box-shadow(none);
+
+                &:hover {
+                    top: 0;
+                    background-color: $color-primary;
+                    color: $white;
+                    @include box-shadow(none);
+                }
+
+                &:active, &:focus {
+                    border: 1px solid $gray-darker;
+                }
+            }
+
+            &.btn-facebook {
+                background-color: #3368A2;
+                padding-left: 50px;
+                @include single-box-shadow(#254363, 0, -2px, 0, 0, true);
+
+                span {
+                    background-color: transparent !important;
+                    color: #fff !important;
+                }
+
+                &:hover {
+                    @include single-box-shadow(#254363, 0, -4px, 0, 0, true);
+                }
+
+                &:active, &:focus {
+                    @include single-box-shadow($gray-darkest, 0, 2px, 0, 0, true);
+                }
+            }
+
+            &:hover {
+                top: -1px;
+                @include single-transition(none);
+                @include single-box-shadow($color-secondary-shadow, 0, -4px, 0, 0, true);
+            }
+
+            &.is-inactive {
+                background: #D8D8D8;
+                @include single-box-shadow(darken(#D8D8D8, 10%), 0, -2px, 0, 0, true);
+
+                &:hover {
+                    @include single-box-shadow(darken(#D8D8D8, 10%), 0, -4px, 0, 0, true);
+                }
+
+                &:active, &:focus {
+                    @include single-box-shadow($gray-darkest, 0, 2px, 0, 0, true);
+                }
+            }
+
+            &:active, &:focus {
+                top: 1px !important;
+                background: $gray-darker !important;
+                color: $gray-light !important;
+                @include single-box-shadow($gray-darkest, 0, 2px, 0, 0, true);
+
+                span {
+                    background: transparent !important; // TODO: Reset old flaticon
+                }
+            }
+
+            // TODO: Reset old flaticon
+            .flaticon {
+                &.social {
+                    &:before {
+                        border-right: solid 1px rgba(255,255,255,0.2);
+                        padding-right: 13px;
+                    }
+                }
+            }
+
+            &:hover .flaticon {
+                background-color: none !important;
+            }
+
+            &.is-loading {
+                @include transition(none);
+                @include box-shadow(none);
+                background: image-url("img/loaders/loader-button-darkgrey.gif") #D8D8D8 no-repeat 50% 50% !important;
+                background-size: 32px !important;
+                @include hide-text();
+
+                &:hover {
+                    @include box-shadow(none);
+                }
+            }
+        }
+    }
+}
+
+.member-list {    
+    li {
+        &.project-member-fundraisers {
+            @include grid(14,0,1);
+        }
+        
+        &.project-member-supporters {
+            @include grid(20,1,0);
+            margin-right: 0;   
+            float: right;
+        }
+        
+        &.project-member-fundraisers, &.project-member-supporters {
+            
+            ul {
+                @include clear;
+                margin-bottom: $base-margin/4;
+            }
+            
+            .member {
+                width: 45px;
+                height: 45px;
+                color: $color-text;
+                vertical-align: middle;
+                text-align: center;
+                text-transform: uppercase;
+                white-space: normal;
+                line-height: 1em;
+        
+                strong {
+                    color: $color-primary;
+                }
+        
+                em {
+                    font-style: normal;
+                }
+                    
+                &:hover {
+                
+                    img {
+                        margin-top: 4px;
+                    }
+                }
+                
+                // Needed for position changing on active
+                &:before {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    left: 0;
+                }
+            }
+        }
+        
+        &.project-member-fundraisers .popover {
+            width: 460px;
+            
+            .fundraiser-image {
+                @include grid(12,0,1);
+                float: left;
+                margin-bottom: $base-margin;
+                
+                img { 
+                    border: 1px solid $white;
+                }
+            }
+            
+
+            .fundraiser-content {
+                @include grid(36,0,1);
+                margin-bottom: $base-margin;
+            }
+            
+            .fundraiser-title {
+                font-size: $font-size-large;
+                color: $color-secondary;
+                font-family: $font-family-heavy;
+            }
+            
+            .fundraiser-name {
+                font-size: $base-font-size;
+                font-family: $font-family-heavy;
+            }
+            
+            .project-fund-amount {
+                margin-top: $base-margin;
+                color: $gray;
+                font-size: $font-size-small;
+                
+                strong {
+                    color: $gray-darker;
+                }
+                
+                .amount-donated {
+                    
+                }
+                
+                .amount-asked {
+                    
+                }
+            }
+        }
+        
+        &.project-member-supporters .popover {
+            width: 240px;
+            text-align: center;
+            
+            .popover-title {
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+            
+            .popover-content {
+                margin-top: 0;
+                padding-top: 0;
+            }
+        }
+        
+        .fundraiser-become {
+            @include transition(all 0.2s ease-out);
+            font-family: $font-family-heavy;
+            text-transform: uppercase;
+            display: inline-block;
+            color: $color-primary;
+            padding-right: 16px;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAALCAYAAABCm8wlAAAAfElEQVQoz2P4nziLAYgNgXgfEItD+XAMImyA+D0Q/wfi60Asia5gPVQShm8AsRSyAk4g3oGm6BYQy8AUgDA7EG9DU3QHiOWQHcQDxG/RFO1FNmErmuRdmAkcQLwdixtkYW5YjSZ5E4ilkX1hBMRv8IUDCOsC8X4glkAPSQDpL9be9X9n1gAAAABJRU5ErkJggg==') transparent no-repeat 100% 50%;
+            
+            &:hover, &:active {
+                padding-right: 20px;
+                text-decoration: none;
+            }
+        }
+    }
+}
+
+.all-fundraisers {
+    margin: 18px;
+    max-height: 400px;
+    overflow: auto;
+    .fundraiser-item {
+        border-bottom: 1px solid $gray-light;
+        margin-bottom: 8px;
+        @include clearfix();
+
+        .fundraiser-image {
+            @include grid(8, 0, 1);
+            float: left;
+            margin-top: $base-margin;
+
+            img {
+                border: 1px solid $white;
+            }
+        }
+
+        .fundraiser-content {
+            @include grid(36, 0, 1);
+            margin-bottom: $base-margin;
+        }
+
+        .fundraiser-title {
+            font-size: $font-size-large;
+            color: $color-secondary;
+            font-family: $font-family-heavy;
+        }
+
+        .fundraiser-name {
+            font-size: $base-font-size;
+            font-family: $font-family-heavy;
+        }
+
+        .project-fund-amount {
+            color: $gray;
+            font-size: $font-size-small;
+
+            strong {
+                color: $gray-darker;
+            }
+
+            .amount-donated {
+
+            }
+
+            .amount-asked {
+
+            }
+        }
+    }
+}

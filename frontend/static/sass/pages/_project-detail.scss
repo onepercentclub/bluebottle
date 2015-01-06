@@ -1,0 +1,206 @@
+//
+// Project detail
+// --------------------------------------------------
+
+.detail {
+    @include clearfix;
+    padding-top: $base-padding;
+    
+    .project-meta {
+        font-family: $font-family-heavy;
+		@include clear;
+		.project-location, .project-theme {
+			@include grid(20,0,0);
+		}
+		.project-edit {
+			@include grid(8,0,0);
+			text-align: right;
+			
+			a {
+				text-decoration: none;
+			}
+		}
+    }
+    
+    #share {
+        float: left;
+    }
+    
+    .project-title {
+        clear: both;
+        font-size: $font-size-larger;
+		margin: $base-margin/2 0;
+    }
+    
+    .project-status {
+        @include clear;
+        padding: $base-padding/4 0;
+    }
+    
+    .project-days-left {
+        @include grid(12,1,1);
+    	color: $gray-light;
+    	margin-top: $base-margin/2;
+    	
+    	strong {
+    	    font-size: 2em;
+    	    
+    	    em {
+        	    font-size: 0.5em;
+        	    font-family: $base-font-family;
+            }
+    	}
+    }
+    
+    .project-fund {
+        @include grid(14,1,1);
+    }
+    
+    .project-fund-amount {
+    
+        .amount-donated {
+            font-size: 1.5em;
+        }
+    }
+    
+    .project-action {
+        @include grid(22,1,1);
+        float: right;
+        
+        .btn {
+            font-family: $font-family-bold;
+            white-space: nowrap;
+            font-size: 1.5em;
+            display: block;
+            
+            .flaticon {
+                color: $white;
+                font-size: 1.2em;
+            }
+        }
+    }
+}
+
+#project-detail {
+    background-color: $gray-darkest;
+    color: $color-text-light;
+		
+	.project-detail-main {
+		padding: ($base-padding*2) 0;
+	}
+	
+    .project-image {
+		@include grid(24,1,1);
+		img {
+		       border: 1px solid $gray-lighter; 
+		}	
+    } 
+    
+	.project-info {
+        position: relative;
+		@include grid(24,1,1);
+
+        .share-menu {
+            top: 4px;
+        }
+	}
+    
+    .project-title {
+        color: $white;
+    }
+    
+    .project-plan-link {
+	    color: $color-secondary;
+    }
+    
+    .project-days-left {
+    	color: $gray-light;
+    	
+    	strong {
+    	    color: $gray-lighter;
+    	    
+    	    em {
+        	    color: $gray-light;  
+            }
+    	}
+    }
+    
+	.project-deadline-badge {
+		padding: $base-padding / 2 0;
+		color: white;
+		@include grid(10,1,1);
+		big {
+			font-size: $font-size-larger;
+//			vertical-align: middle;
+		}
+		small {
+			font-size: $font-size-smallest;
+		}
+		.flaticon {
+			padding-top: $base-padding / 2;
+			display: block;
+			@include grid(10,0,2);
+			font-size: $font-size-largest;
+		}
+		.text {
+			clear: none;
+			display: block;
+			@include grid(38,0,0);			
+		}
+	}
+	
+    .project-fund-amount {
+    	color: $gray-light;
+    
+        .amount-donated {
+            color: $color-text-light;
+        }
+        
+        strong {
+            color: $gray-light;
+        }
+    }
+}
+
+#project-members {
+    padding: $base-padding 0;
+    background-color: $gray-darker;
+	
+	.task-list {
+		@include grid(24,0,1);
+	}
+	
+	.member-list {
+	    @include grid(24,1,0);		
+	}
+	.member-initiator {		
+	    @include grid(24,0,0);		
+	}
+
+    &.without-funding {
+        .member-list {
+            @include grid(14,1,0);
+
+            .member-initiator {     
+                @include grid(54,0,0);
+                width: 118%;
+
+                h4 {
+                    color: $white;
+                }
+            }
+        }
+
+        .project-deadline {
+            margin-left: 0;
+        }
+    }
+}
+
+#project-actions {
+    background-color: $gray-lighter;
+
+    .tabs {
+        @include grid(48,1,1);
+    }
+}

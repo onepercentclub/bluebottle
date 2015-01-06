@@ -1,0 +1,44 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "contact_message" %}
+    <div class="l-section" id="page">
+        <section class="l-wrapper">
+
+                <article class="l-content">
+                    <header class="page-header">
+                        <h1>{% trans "Contact" %}</h1>
+                        <p>
+                            {% blocktrans %}
+                            Send us a message or get in touch using the details below. Talk to you soon!
+                            {% endblocktrans %}
+                        </p>
+                    </header>
+
+                    <form id="contact-form">
+                        {{#if isSent}}
+                            <legend>
+                                <strong>{% trans "Thanks for your message!. We'll get back to you soon" %}.</strong>
+                            </legend>
+                        {{else}}
+                            <fieldset>
+                                <ul>
+                                    {% bb_component 'bb-text-field' label=_("Name") name='name' valueBinding='name' errorsBinding='errors.name' placeholder=_("Enter your name") %}
+
+                                    {% bb_component 'bb-text-field' label=_("Email") name='email' valueBinding='email' errorsBinding='errors.email' placeholder=_("example@my-domain.com") %}
+
+                                    {% bb_component 'bb-text-area' label=_("Message") name='message' valueBinding='message' errorsBinding='errors.message' rows="6" %}
+                                </ul>
+                            </fieldset>
+                            <button {{bindAttr class=":btn :btn-iconed :btn-primary :btn-submit"}} {{action updateRecordOnServer}}><span class="flaticon solid envelope-1"></span>{% trans "Send Message" %}</button>
+                        {{/if}}
+                    </form>
+                </article>
+
+                {{partial contact_sidebar}}
+
+        </section>
+    </div>
+{% endtplhandlebars %}

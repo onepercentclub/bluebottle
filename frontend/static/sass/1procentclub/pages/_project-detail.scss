@@ -1,0 +1,198 @@
+.project-detail {
+    
+    .project-status {
+        @include clear;
+        padding: $base-padding/4 0;
+    }
+    
+    .project-days-left {
+        @include grid(12,1,1);
+    	color: $gray-light;
+    	margin-top: $base-margin/2;
+    	
+    	strong {
+    	    font-size: 2em;
+    	    
+    	    em {
+        	    font-size: 0.5em;
+        	    font-family: $base-font-family;
+            }
+    	}
+    }
+    
+    .project-fund {
+        @include grid(14,1,1);
+        
+        .expired {
+            .funded-progress {
+                background: #A6A2BA!important;
+            }
+            .slider-progress {
+                background: #444444!important;
+            }
+        }
+            
+    }
+
+    .project-fund-amount {
+        .amount-donated {
+            font-size: $base-font-size * 1.5;
+        }
+
+    }
+
+    .project-meta {
+        @include grid(24,0,0);
+        .project-location {
+            @include grid(24,0,2);
+        }
+        .project-theme {
+            @include grid(24,0,2);
+        }
+    }
+
+    .project-share {
+        @include grid(20,0,0);
+    }
+    
+    .owner-actions {
+	    @include grid(2,0,0);
+    }
+}
+
+#project-members {
+    .member-list {
+        @include grid(48,1,1);
+        .member-initiator {
+            @include grid(14,0,1);
+        }
+    }
+}
+
+#task-list {
+    .task-preview {
+        overflow: hidden;
+        height: 90px;
+        .task-member-status {
+            padding: (1.20 * $base-padding) $base-padding;
+        }
+        .task-arrow {
+            padding: ($base-padding * 0.80) 0;   
+        }
+    }
+}
+
+// Cheetah Styling
+.cheetah-project-progress {
+
+    .project-fund-amount-slider {
+        overflow: visible;
+    }
+
+    .cheetah-funded {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        font-size: 11px;
+        text-align: right;
+        color: #A6A2BA;
+
+        strong {
+            color: $color-primary;
+        }
+
+        .cheetah-funded-text {
+            display: block;
+            float: right;
+            width: 70%;
+
+            span {
+                display: block;
+                float: left;
+                margin-left: -20px;
+
+                strong {
+                    color: $white;
+                }
+            }
+        }
+
+        .cheetah-funded-dot {
+            position: absolute;
+            content: '';
+            height: 7px;
+            width: 7px;
+            margin-left: -3px;
+            border-radius: 50%;
+            background: #28245C;
+            bottom: -9px;
+            border: solid 1px white;
+            z-index: 1;
+        }
+    }
+
+    .cheetah-fully-funded {
+        .slider-progress {
+            background-color: #00c051!important;
+        }
+    }
+
+    .campaign-fund-amount-slider {
+        border-radius: 1.1em;
+        border: none;
+        background: #28245C;
+        overflow: hidden;
+
+        .slider-progress {
+            height: 1.1em;
+            line-height: 1.1em;
+            border-right: 1px solid white;
+            background-color: #28245C;
+        }
+
+        &.is-funded {
+            background: $color-secondary;
+            border-color: $color-secondary;
+
+            .slider-progress {
+                background-color: $color-secondary;
+            }
+        }
+
+        .funded-progress-togo {
+            position: relative;
+            width: 30%;
+            background: #A6A2BA;
+            float: left;
+
+            .funded-cheetah-progress {
+                position: absolute;
+                overflow: visible!important;//force to overwrite inline styling in javascript
+
+                .funded-cheetah-holder {
+
+                    &:after {
+                        position: absolute;
+                        content: '';
+                        right: 0;
+                        width: 40px;
+                        height: 13px;
+                        margin: -15px 100px 0 0;
+                        background-image: image-url("cheetah/progressbar/cheetah.svg");
+                        z-index: 9;
+                    }
+                }
+            }
+        }
+
+        .funded-progress {
+            float: left;
+            width: 70%;
+            background: $color-secondary;
+            position: relative;
+            height: 1.1em;
+            border-left: 1px dashed white;
+        }
+
+    }
+}

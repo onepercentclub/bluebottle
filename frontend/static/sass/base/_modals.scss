@@ -1,0 +1,203 @@
+//
+// Modals
+// --------------------------------------------------
+
+// Background
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    background-color: $modal-backdrop-bg-color;
+    @include opacity($modal-backdrop-opacity);
+}
+
+
+// The modal
+.modal {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    z-index: 1001;
+    width: 560px;
+    margin-left: -280px;
+    background-color: $modal-bg-color;
+    padding: 0;
+    outline: none;
+
+	.close {
+        z-index: 100;
+	}
+    &.large {
+        width: 600px;
+        margin-left: -300px;
+        
+        .modal-body {
+            max-height: 90%;
+        }
+    }
+
+  &.scalable {
+    height: 80%;
+    width: 60%;
+    left: 20%;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: hidden;
+
+    .modal-wrapper {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+
+        #project-plan {
+            overflow-y: auto;
+            position: relative;
+            height: 100%;
+        }
+
+        // this is needed because of nesting
+        .ember-view {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+    }
+    .modal-body {
+    	max-height: initial;
+    }
+  }
+  &.full-screen {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin-left: 0;
+    margin-top: 0;
+    .modal-wrapper, .ember-view {
+        position: relative;
+        height: 100%;
+    }
+  }
+}
+
+.modal-header, .modal-body, .modal-footer {
+    padding: $base-padding*1.5 $base-padding*2.5;
+}
+
+.modal-close, .modal .close {
+    position: absolute;
+    top: 0;
+    right: 0;
+	padding: $base-padding/4;
+    color: $modal-close-color;
+    background-color: $modal-close-bg-color;
+    text-decoration: none;
+    font-size: 2em;
+    
+    &:hover, &:active {
+        position: absolute;
+        top: 0;
+        color: $modal-close-hover-color;
+    }
+}
+
+.modal-header {
+    background-color: $modal-header-bg-color;
+    
+    .modal-title, h3 {
+        font-size: $font-size-larger;
+        color: $modal-header-color;
+    }
+    
+}
+
+.modal-body {
+    position: relative;
+    height: 194px;
+    
+    // Reset form margins
+    form, fieldset, legend {
+        padding: 0;
+        margin: 0;
+        background: none;
+    }
+    
+    .control-label {
+        @include grid(16,0,0);
+        
+        &.wide {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    }
+    
+    .controls {
+        @include grid(32,0,0);
+        
+        &.wide {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    }
+    
+    .has-errors {
+        display: block;
+        left: auto;
+        margin: 0;
+        position: relative;
+        width: auto;
+        float: none;
+        right: 0;
+    }
+    
+}
+
+.modal-footer {
+    @include clear;
+    margin-bottom: 0;
+    background-color: $modal-footer-bg-color;
+    vertical-align: middle;
+    
+    
+    a:not(.btn) {
+        line-height: $base-line-height*2;
+        color: $modal-footer-link-color;
+        
+        &:hover, &:active {
+            color: $modal-footer-link-hover-color;
+        }
+    }
+    
+    .btn {
+        float: right;
+        
+        &.btn-primary {
+            float: right;
+        }
+        
+        &.btn-secondary {
+            float: left;
+        }
+    }
+  
+    // Properly space out buttons
+    .btn + .btn {
+    //margin-left: 5px;
+    //margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
+    }
+    // but override that for button groups
+    .btn-group .btn + .btn {
+    //margin-left: -1px;
+    }
+    // and override it for block buttons as well
+    .btn-block + .btn-block {
+    //margin-left: 0;
+    }
+}
+
+
+

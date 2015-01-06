@@ -1,0 +1,261 @@
+#campaign-create {
+	
+	margin-bottom: $base-margin * 6;
+
+    .field-container {
+      position: relative;
+    }
+
+	.campaign-header {
+		background-color: $gray-lighter;
+		
+		.page-title {
+			@include grid(36,1,1);
+			padding: $base-padding/2 0;
+			margin-top: 0;
+			margin-bottom: 0;
+			// width: auto;
+		}
+
+		.page-actions {
+			@include grid(12,1,1);
+			padding: $base-padding*2 0;
+			text-align: right;
+		}
+		
+		#campaign-steps {
+			padding: 0;
+			//margin-bottom: -1px;
+			@include clear;
+			@include grid(48,1,1);
+		}
+		// .campaign-preview-button {
+		// 	// @include grid(8,0,1);
+		// }
+	}
+
+	.campaign-campaigner {
+		.campaigner-avatar {
+			@include grid(16,0,2);
+		}
+		.campaigner-details {
+			@include grid(32,2,0);		
+		}
+	}
+
+	.campaign-footer {
+		// width: 100%;
+		// bottom: 0;
+		// left: 0;
+		@include clear;
+		padding: $base-padding;
+		background: $gray-lighter;
+		padding: $base-padding;
+		// z-index: 100;
+		// position: fixed;
+		// .navigation {
+		// 	@include grid(32,1,1);
+		// }
+		// .actions {
+		// 	@include grid(16, 1,1);
+		// 	text-align: right;
+		// 	padding: ($base-padding/2) 0
+		// }
+		.save {
+			text-decoration: none;
+			color: $gray-light;
+			float: right;
+		}
+		.next {
+			float: right;
+		}
+		.previous {
+			float: left;			
+		}
+	}
+
+	.campaign-amount {
+		label {
+			padding-top: $base-padding / 2;
+			@include grid(16,0,0);
+		}
+		input {
+			@include grid(32,0,0);			
+		}
+	}
+
+	table {
+		td {
+			padding: ($base-padding/2) 0;
+			padding-right: $base-padding;
+		}
+	}
+
+	.campaign-create-preview-widget {
+		margin-bottom: $base-margin * 4;
+	}
+	.campaign-create-tips {
+		ul {
+			margin-left: $base-margin * 1.5;
+			li {
+				@include resetlist;
+				list-style-position: outside;
+				list-style-type: circle;
+				margin-bottom: $base-margin;
+			}
+		}
+	}
+    .jslider {
+        padding-top: $base-padding;
+        td {
+            padding: 0;
+        }
+        @include grid(34,0,2);
+    }
+
+	.campaign-budget-breakdown {
+		margin-top: $base-margin;
+		border-top: 1px solid $gray-light;
+		
+		tfoot {
+			color: $gray;
+			td {
+				border-bottom: none;
+			}
+		}
+		
+		a {
+			text-decoration: none;
+		}
+		
+		.campaign-budget-breakdown-desc {
+			width: 60%;
+		}
+		
+		.campaign-budget-breakdown-amount {
+			width: 20%;
+			white-space: nowrap;
+		}
+	}
+
+	.campaign-budget-description {
+		@include grid(27,0,2);
+	}
+
+	.campaign-budget-amount {
+		@include grid(12,0,2);
+	}
+
+	.add-budget {
+		@include grid(9,0,0);
+	}
+	
+	.select-organisation {
+		
+		select {
+			@include grid(42,0,1);
+		}
+		
+		.add-org {
+			@include grid(6,0,0);
+		}
+		
+	}
+
+	.missing-steps {
+		margin: 0;
+		padding: 0;
+		margin-top: $base-margin * 4;
+		
+		li {
+			@include resetlist;
+			@include clearfix;
+			padding: $base-padding $base-padding * 2;
+			background: $gray-lighter;
+			border-bottom: 1px solid $white;
+			
+			.category {
+				display: inline;
+				a {
+					text-transform: lowercase;
+				}
+			}
+			.details {
+				display: inline;
+			}
+			.action {
+				display: inline;
+				float: right;			
+				a {
+					color: $color-success;
+					text-decoration: none;
+				}
+			}
+			&.introduction {
+				color: $white;
+				background-color: $gray;
+				padding: $base-padding * 2;
+				strong {
+					display: block;
+					color: $gray-darkest;
+				}
+				h3 {
+					margin: 0;
+					color: $white;
+					font-weight: bold;
+					text-transform: none;
+				}
+				.flaticon {
+					@include grid(8,0,4);
+					font-size: $font-size-largest;
+					text-align: center;
+				}
+			}			
+		}
+	}
+
+	.in-review {
+		padding: $base-padding * 2;
+		background-color: $color-success;
+		color: $black;
+		margin-bottom: $base-margin * 2;
+		.flaticon {
+			@include grid(6,0,4);
+			font-size: $font-size-largest;
+			text-align: center;
+			color: $white;
+		}
+		.in-review-text {		
+			h3 {
+				color: $white;
+				margin: 0;
+				text-transform: none;
+				font-weight: bold;
+			}
+		}
+	}
+	.suggestion {
+		text-align: center;
+	}
+	
+	.l-sidebar {
+		margin-top: $base-margin*4;
+	}
+	
+	.steps {
+				
+		// For campaign create
+		li a.active {
+			background-color: $gray-dark;
+			color: $white;
+			
+			.flaticon { 
+				color: $white;
+			}
+			
+			&:after {
+				border-left-color: $gray-dark;
+			}
+		}
+	}
+}

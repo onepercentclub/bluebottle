@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="21px" height="20px" viewBox="0 0 21 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch Beta 3.2 (9885) - http://www.bohemiancoding.com/sketch -->
+    <title>clock</title>
+    <desc>Created with Sketch Beta.</desc>
+    <defs></defs>
+    <g id="Campaign-Detail---Donations" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Desktop-HD" sketch:type="MSArtboardGroup" transform="translate(-649.000000, -451.000000)" fill="#9F9F9F">
+            <g id="top" sketch:type="MSLayerGroup" transform="translate(0.000000, 84.000000)">
+                <g id="donations" transform="translate(248.000000, 330.000000)" sketch:type="MSShapeGroup">
+                    <g id="amount" transform="translate(0.000000, 4.000000)">
+                        <g id="days" transform="translate(401.000000, 1.000000)">
+                            <g id="clock" transform="translate(0.787500, 32.000000)">
+                                <g id="Imported-Layers">
+                                    <path d="M9.9233871,0 C4.44071573,0 0,4.42688172 0,9.89247312 C0,15.3580645 4.44071573,19.7849462 9.9233871,19.7849462 C15.4060585,19.7849462 19.8467742,15.3580645 19.8467742,9.89247312 C19.8467742,4.42688172 15.4060585,0 9.9233871,0 L9.9233871,0 Z M9.9233871,17.311828 C5.81758569,17.311828 2.48084677,13.9854839 2.48084677,9.89247312 C2.48084677,5.79946237 5.81758569,2.47311828 9.9233871,2.47311828 C14.0291885,2.47311828 17.3659274,5.79946237 17.3659274,9.89247312 C17.3659274,13.9854839 14.0291885,17.311828 9.9233871,17.311828 L9.9233871,17.311828 Z" id="Fill-1"></path>
+                                    <path d="M12.4042339,9.89247312 L9.9233871,9.89247312 L9.9233871,7.41935484 C9.9233871,6.73553763 9.36891784,6.1827957 8.68296371,6.1827957 C7.99700958,6.1827957 7.44254032,6.73553763 7.44254032,7.41935484 L7.44254032,11.1290323 C7.44254032,11.8128495 7.99700958,12.3655914 8.68296371,12.3655914 L12.4042339,12.3655914 C13.090188,12.3655914 13.6446573,11.8128495 13.6446573,11.1290323 C13.6446573,10.4452151 13.090188,9.89247312 12.4042339,9.89247312" id="Fill-2"></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

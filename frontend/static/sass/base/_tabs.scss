@@ -1,0 +1,242 @@
+//
+// Tabs
+// --------------------------------------------------
+
+#campaign-steps {
+	clear: both;
+	@include grid(48,1,1);
+	margin-top: 0;
+	
+	&.steps li a {
+		@include grid(9.6,0,0);
+	}
+}
+
+
+.tabs {
+	@include clear;
+    padding: 0;
+    margin-top: $base-margin;
+    margin-left: 0;
+    margin-bottom: 0;
+
+	li {
+        //@include grid(12,0,0); default
+        @include resetlist;
+        display: inline;
+        position: relative;
+
+       	> a, > span {
+            //color: $tabs-tabitem-bg-color;
+            display: inline-block;
+            text-decoration: none;
+            //padding: $base-padding $base-padding $base-padding/2 $base-padding;
+			padding: $base-padding ($base-padding*2);
+			margin-right: $base-margin/2;
+			margin-bottom: 0;
+            color: $gray-light;
+			font-weight: bold;
+			background-color: $gray-lighter;
+			text-transform: uppercase;
+			
+            .tab-icon {
+                @include transition(all 0.1s ease-out);
+                display: block;
+                float: left;
+                background-color: $tabs-tabitem-icon-bg-color;
+                @include border-radius(16px);
+                width: 32px;
+                height: 32px;
+                line-height: 32px;
+                font-family: $font-family-heavy;
+                text-align: center;
+                color: $tabs-tabitem-icon-text-color;
+            }
+            
+            .tab-title {
+                display: block;
+                font-size: $font-size-small;
+                line-height: 1.3em;
+                margin-left: 2em + $base-margin;
+            }
+            
+            .tab-subtitle {
+                display: block;
+                font-size: $font-size-smallest;
+                font-style: normal;
+                font-family: $base-font-family;
+            }
+            
+            &:hover {
+                color: $tabs-tabitem-hover-text-color;
+                
+                .tab-icon {
+                    background-color: $tabs-tabitem-hover-icon-text-color;
+                }
+            }
+            
+            //Needed for position changing on active
+            &:before {
+        	    content: '';
+        	    position: absolute;
+        	    top: 0;
+        	    right: 0;
+        	    bottom: 0;
+        	    left: 0;
+        	}
+	        
+	    }
+
+    }
+    
+    // TODO create only one type for active state: li.is-active
+    li.is-active > a, li > a.active, li.is-active > span, li > span.active {
+    	background-color: $tabs-tabitem-active-bg-color;
+    	border-color: $tabs-tabitem-active-border-color;
+    	color: $gray-darker;
+    	
+    	.tab-icon {
+            background-color: $tabs-tabitem-active-icon-bg-color;
+            color: $tabs-tabitem-active-icon-color;
+        }
+        
+        .tab-title {
+            color: $tabs-tabitem-active-title-color;
+        }
+        
+        .tab-subtitle {
+            color: $tabs-tabitem-active-subtitle-color;
+        } 
+    }
+}
+
+
+// Tabs as steps
+
+$steps-border: $gray-lighter;
+
+$step-color: $gray-dark;
+$step-background-color: $white;
+$step-icon-color: $white;
+
+$step-active-color: $white;
+$step-active-background-color: #00c051;
+$step-active-icon-color: $white;
+
+$step-validated-color: $white;
+$step-validated-background-color: $color-success;
+$step-validated-icon-color: $white;
+
+.steps {
+	overflow: hidden;
+	border-bottom: 1px solid $steps-border;
+	
+	li {
+        @include resetlist;
+        display: inline;
+        position: relative;
+        
+       	a {
+       		position: relative;
+			background-color: $step-background-color;
+			float: left;
+			//line-height: $base-line-height * 2.2;
+			text-align: center;
+			font-weight: bold;
+			text-decoration: none;
+			color: $gray;
+			display: block;
+			white-space: nowrap;
+			
+			.flaticon {
+				color: $gray-lighter;
+				border-radius: 50%;
+				padding: $base-padding/2;
+				text-align: center;
+			}
+
+			&:nth-child(2), &:last-child {
+				margin-left: -8px;
+			}
+			
+			&.validated {
+				background-color: $step-validated-background-color;
+				color: $step-validated-color;
+				
+				.flaticon { 
+					color: $step-validated-icon-color;
+				}
+				
+				&:after {
+					border-left-color: $step-validated-background-color;
+				}
+			}
+			
+			&.active {
+				background-color: $step-active-background-color;
+				color: $white;
+				
+				.flaticon { 
+					color: $white;
+				}
+				
+				&:after {
+					border-left-color: $step-active-background-color;
+				}
+			}
+			
+			&:after, &:before {
+				content: " ";
+				left: 100%;
+				top: 50%;
+				border: solid transparent;
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+				border-left-color: $white;
+				border-width: 28px;
+				margin-top: -28px;
+				z-index: 2;
+			}
+			
+			&:before {
+				border-left-color: $steps-border;
+				left: 100%;
+				z-index: 1;	
+				border-width: 30px;
+				margin-top: -30px;
+			}
+		}
+		
+		&:last-of-type a {
+			&:after, &:before {
+				display: none;
+			}
+		}
+	}
+	
+	&.two li a {
+        @include grid(24,0,0);
+    } 
+     
+    &.three li a {
+        @include grid(16,0,0);
+    } 
+    
+    &.four li a {
+        @include grid(12,0,0);
+    }
+    
+    &.five li a {
+        @include grid(9.5,0,0);
+    }
+}
+
+.hide {
+    display: none;
+}
+
+.show {
+    display: list-item;
+}

@@ -1,0 +1,316 @@
+//
+// Task detail page
+// --------------------------------------------------
+
+
+// Task detail page
+$task-detail-background                                : $gray-darkest !default;
+$task-detail-color                                   : $white !default;
+$task-detail-header-color                           : $white !default;
+$task-detail-border-bottom-color                        : $gray-darker !default;
+$task-detail-project-color                           : $gray !default;
+$task-detail-badge-border-color                 : $white !default;
+$task-detail-status-background                    : $color-primary !default;
+$task-detail-read-more-color                         : $gray !default;
+$task-detail-read-more-background                      : $gray-darkest !default;
+$task-detail-meta-color                         : $gray !default;
+$task-detail-file-border-bottom-color     : $gray !default;
+$task-detail-file-meta-color              : $gray !default;
+$task-detail-members-background                        : $gray-darker !default;
+$task-detail-action-icon-color                  : $white !default;
+$task-detail-wallposts-background                      : $gray-light !default;
+$task-detail-wallposts-color                         : $black !default;
+$task-detail-wallposts-action-border-color           : $gray !default;
+$task-detail-wallposts-title-color            : $color-primary !default;
+
+#task-detail {
+	
+	//padding: $base-padding 0;
+	background-color: $gray-darkest;
+	color: $white;
+	
+	#task-details {
+		padding: ($base-padding * 2) 0;
+		background-color: $task-detail-background;
+		color: $task-detail-color;		
+	}
+	
+	h1, h2, h3 {
+		text-transform: none;
+		color: $task-detail-header-color;
+		font-family: $font-family-heavy;
+		margin: 0;
+		margin-bottom: $base-margin / 4;
+	}
+	
+	dl {
+		border-bottom: 1px solid $task-detail-border-bottom-color;
+//		> dt, dd {
+//			width: auto;
+//		}
+		dt {
+			@include grid(4,0,1);
+		}
+		dd {
+			@include grid(44,1,0);
+		}
+	}
+		
+	.l-content {
+    	margin-top: $base-padding*2;
+        padding-top: $base-margin;
+	}
+	
+	.task-project {
+		color: $task-detail-project-color;
+	}
+	
+	.task-badge {
+		border: 2px solid $task-detail-badge-border-color;
+		position: relative;
+		@include grid(8,1,1);
+		@include clear;	
+		
+		.task-status {
+			padding: $base-padding / 2;
+			text-align: center;
+			background: $task-detail-status-background;
+			width: 100%;
+			border-bottom: 2px solid $task-detail-badge-border-color;
+		}
+	}
+	.task-sidebar {
+		@include grid(16,0,1)
+	}
+	.edit-task {
+		text-align: right;
+		padding: $base-padding 0;
+		a {
+			text-decoration: none;
+		}
+		
+	}
+
+//	.task-status {
+//		display: block;
+//		@include grid(12,2,4);
+//		
+//	   .flaticon {
+//            font-size: 40px;
+//            display: block;
+//        }
+//        
+//        padding: $base-padding 0;
+//        background-color: $gray-lighter;
+//        color: $white;
+//        text-align: center;
+//        text-transform: uppercase;
+//    }
+    
+	.task-description {
+		position: relative;
+//		@include grid(36,0,0);
+		@include grid(24,0,1);		
+//		border-bottom: 1px solid $gray;
+		margin-bottom: $base-margin * 2;
+		
+		.task-read-more {
+			text-decoration: none;
+			color: $task-detail-read-more-color;
+			position: absolute;
+			bottom: -12px;
+			right: 0;
+			display: block;
+			background-color: $task-detail-read-more-background;
+			padding-right: $base-padding * 4;
+			padding-left: $base-padding;
+		}
+	}
+	
+//	#wallposts {
+//	    @include clear;
+//	    clear: both;
+//    	
+//    	#wallpost-form {
+//    	    @include clear;
+//            clear: both;
+//        	@include grid(48,12,0);
+//        	margin-bottom: $base-margin*2;
+//        	
+//        	.btn {
+//            	float: right;
+//        	}
+//    	}
+//    	
+//    	.wallpost {
+//        	@include clear;
+//            clear: both;
+//    	}
+//	}
+	
+	// Sidebar
+	.task-section {
+	    @include clear;
+//	    background-color: $gray-lighter;
+	    margin-bottom: $base-margin;
+//		padding: $base-padding $base-padding*2;
+		
+	}
+	
+	.task-meta {
+		p {
+			color: $task-detail-meta-color;
+		}
+	}
+	
+//	.task-members {
+//	    margin: 0;
+//				
+//		.task-member {
+//		    @include resetlist;
+//            position: relative;
+//			@include clear;
+//            display: block;
+//            padding: $base-padding/2 0;
+//            border-bottom: 1px solid $gray-light;
+//            
+//             &:last-of-type {
+//                //border: none;
+//            }
+//            
+//            a {
+//                text-decoration: none;
+//            }
+//            
+//			.member {
+//			    float: left;
+//				text-transform: uppercase;
+//				
+//				.member-avatar {
+//				    display: inline-block;
+//					width: 40px;
+//					padding: 0;
+//					float: left;
+//					margin-right: $base-margin/2;
+//				}
+//				
+//				.timestamp {
+//				    font-style: normal;
+//    				color: $gray;
+//                    text-transform: uppercase;
+//                    font-size: $font-size-smallest;
+//				}
+//				
+//				.member-status {
+//    				font-style: normal;
+//    				color: $color-primary;
+//                    text-transform: uppercase;
+//                    font-size: $font-size-smallest;
+//				}
+//			}
+//			
+//	        .task-edit-status {
+//				color: $gray;
+//				font-size: $font-size-smallest;
+//				text-transform: uppercase;
+//				float: right;
+//				
+//				&:hover, &:active {
+//    				color: $color-text;
+//				}
+//	        }
+//		}
+//	}
+
+
+	.task-files {
+        margin: 0;
+        
+        .task-file {
+            @include resetlist;
+            
+            a {
+                @include clear;
+                display: block;
+                text-decoration: none;
+                padding: $base-padding/2 0;
+                border-bottom: 1px solid $task-detail-file-border-bottom-color;
+            }
+                            
+            &:last-of-type a {
+                border: none;
+            }
+            
+			.file-size, .file-author, .time-applied {
+				font-size: $font-size-smallest;
+				text-transform: uppercase;
+				font-style: normal;
+				color: $task-detail-file-meta-color;
+			}
+        }	
+	}
+	
+	.task-action {
+	    @include grid(16,1,1);
+	    float: right;
+		margin-top: $base-margin;
+
+	    .btn {
+	        font-family: $font-family-bold;
+	        white-space: nowrap;
+	        font-size: 1.5em;
+	        display: block;
+    
+	        .flaticon {
+	            color: $task-detail-action-icon-color;
+	            font-size: 1.2em;
+	        }
+	    }
+	}
+
+	#task-members {
+		
+		background-color: $task-detail-members-background;
+		padding: $base-padding 0;
+		
+		.task-members-list {
+		    @include grid(32,1,1);
+			float: left;	
+		}
+
+
+        .member-initiator {
+            @include grid(18,0,1);		
+		}
+        .member-assigned {
+            @include grid(18,0,0);
+		}		
+	}
+	
+	#wallposts {
+		
+		background-color: $task-detail-wallposts-background;
+		padding: $base-padding 0;
+		color: $task-detail-wallposts-color;
+		
+		.wallposts-timeline {
+			@include grid(32,1,1);
+			float: left;
+		}
+		
+		.wallposts-important {
+			@include grid(32,1,1);
+			float: right;
+		}
+		
+		.wallpost-action {
+			border: 1px dashed $task-detail-wallposts-action-border-color;
+		}
+		.wallpost-author, .wallpost-title {
+			color: $task-detail-wallposts-title-color;
+		}
+	}
+}
+
+
+

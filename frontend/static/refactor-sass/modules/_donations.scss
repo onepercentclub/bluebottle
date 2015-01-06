@@ -1,0 +1,50 @@
+// TODO move all donation components here
+// http://localhost:8000/en/#!/orders/51171/success
+
+.donation-share {
+	position: relative;
+	z-index: 10;
+	font-size: 14px;
+	color: $color-grey;
+	font-style: italic;
+	margin-top: 20px;
+
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style-type: none;
+
+		li {
+			margin: 0;
+			padding: 0;
+			display: inline;
+			background-image: none;
+
+			a {
+				display: inline-block;
+				@include hide-text;
+				width: 20px;
+				height: 20px;
+				background-size: 20px 20px;
+				margin: 0 10px;
+
+				&.share-facebook {
+					@include svg-icon('share/icon-share-facebook.svg', #999, $color-grey);
+
+
+					&:hover, &:active {
+						@include svg-icon('share/icon-share-facebook.svg', #999, $color-facebook);
+					}
+				}
+
+				&.share-twitter {
+					@include svg-icon('share/icon-share-twitter.svg', #999, $color-grey);
+
+					&:hover, &:active {
+						@include svg-icon('share/icon-share-twitter.svg', #999, $color-twitter);
+					}
+				}
+			}
+		}
+	}
+}

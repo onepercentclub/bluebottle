@@ -1,0 +1,16 @@
+.campaign-grid {
+    padding: 0.25em;
+
+    li {
+        float:left;
+        width:31.3333333333333333%;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -o-box-sizing: border-box;
+
+        &:nth-of-type(3n-1) {
+            margin-right: 3%;
+            margin-left: 3%;
+        }
+    }
+}

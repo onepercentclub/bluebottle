@@ -356,10 +356,11 @@ DONATIONS_DONATION_MODEL = 'donations.Donation'
 PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
 PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
 
-BB_APPS = ['wallposts', 'utils', 'contact', 'geo', 'pages', 'news', 'slides', 'quotes',
-           'payments', 'payments_docdata', 'payments_voucher', 'members', 'organizations',
+# For building frontend code
+BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
+           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
            'projects', 'tasks', 'fundraisers', 'donations', 'orders',
-           'homepage', 'recurring_donations', 'partners']
+           'homepage', 'recurring-donations', 'partners']
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

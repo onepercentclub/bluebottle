@@ -5,14 +5,7 @@
 
 {% tplhandlebars "terms_modal" %}
 
-    <style>
-        .terms-contents {
-            height: 400px;
-            overflow: auto;
-        }
-    </style>
-
-    <div {{bindAttr class=":modal-fullscreen-content"}}>
+    <div {{bindAttr class=":modal-fullscreen-content contents:terms"}}>
         <div id="profile-preview">
             <div class="modal-header">
                 <header class="profile-header">

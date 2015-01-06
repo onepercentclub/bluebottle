@@ -300,6 +300,13 @@ $gray-border-hover                                         : #9F9F9F;
 				font-weight: bold;
 			}
 
+			&.terms {
+				.terms-contents {
+					height: 190px;
+					overflow-y: auto;
+				}
+			}
+
 		}
 
 		.modal-fullscreen-close {

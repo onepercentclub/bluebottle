@@ -15,10 +15,10 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-compass');
 
   var sassOutputStyle = grunt.option('output_style') || 'expanded',
-    staticPath = './bluebottle/common/static/',
+    staticPath = './static/',
     compassPath = staticPath + 'sass',
     sassPath = staticPath + 'refactor-sass',
-    cssOutputPath = staticPath + '/css';
+    cssOutputPath = staticPath + 'css';
 
   // Project configuration.
   grunt.initConfig({
@@ -166,6 +166,11 @@ module.exports = function (grunt) {
     },
     sass: {
       dist: {
+        options: {
+          loadPath: sassPath,
+          sourcemap: 'auto',
+          require: sassPath + '/sass_extensions.rb'
+        },
         files: [{
           expand: true,
           cwd: sassPath,

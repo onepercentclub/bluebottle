@@ -7,6 +7,14 @@ from django.template.base import TemplateDoesNotExist
 
 
 class TenantTemplateLoader(BaseLoader):
+    """
+    Based on FileSystemLoader from django-tenant-schemas:
+    https://github.com/bernardopires/django-tenant-schemas/blob/master/tenant_schemas/template_loaders.py#L79
+    Changes are:
+    - Use MULTI_TENANT_DIR from config for path (not multiple paths in MULTITENANT_TEMPLATE_DIRS)
+    - Use tenant.client_name not tenant.domain_url
+    """
+
     is_usable = True
 
     def get_template_sources(self, template_name, template_dirs=None):
@@ -19,9 +27,9 @@ class TenantTemplateLoader(BaseLoader):
             return
         if not template_dirs:
             try:
-                template_dirs = settings.MULTITENANT_TEMPLATE_DIRS
+                template_dirs = [settings.MULTI_TENANT_DIR]
             except AttributeError:
-                raise ImproperlyConfigured('To use %s.%s you must define the MULTITENANT_TEMPLATE_DIRS' %
+                raise ImproperlyConfigured('To use %s.%s you must define the MULTI_TENANT_DIR' %
                                            (__name__, TenantTemplateLoader.__name__))
         for template_dir in template_dirs:
             try:

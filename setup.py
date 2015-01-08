@@ -68,7 +68,7 @@ install_requires = [
     # Github requirements
     'djangorestframework-jwt',
     'django-salesforce',
-    'django-taggit-autocomplete-modified',
+    'django-taggit-autocomplete-modified==0.0.0',
     'django-tenant-schemas',
 
     # Bitbucket requirements
@@ -84,7 +84,7 @@ dependency_links = [
     'https://github.com/GetBlimp/django-rest-framework-jwt/archive/b6b42b967c3584b426446df1f72149b7a07fd520.zip#egg=djangorestframework-jwt',
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce',
     'https://github.com/onepercentclub/legacyauth/archive/3f2406c50dead25a748fb2433de55b73a9162f18.zip#egg=legacyauth',
-    'https://github.com/mrmachine/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified',
+    'https://github.com/mrmachine/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.0.0',
     'https://github.com/bernardopires/django-tenant-schemas/archive/71e7a89707fa8edbd729683a073b0a1b0ffc544f.zip#egg=django-tenant-schemas',
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers',

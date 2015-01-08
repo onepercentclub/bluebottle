@@ -9,7 +9,7 @@ install:
 before_script:
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
 - python setup.py install
-- pip install -r test_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
+- pip install -r requirements/ci_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
 script:
 - python manage.py test
 notifications:

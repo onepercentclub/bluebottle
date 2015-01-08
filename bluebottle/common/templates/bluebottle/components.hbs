@@ -27,3 +27,8 @@
         <div class="backdrop-gradient"></div>
     </div>
 {% endtplhandlebars %}
+
+
+{% tplhandlebars "components/bb-char-count" %}
+<span class="count-words">{{count}}</span>/<span class="total-words">{{maxLength}}</span>
+{% endtplhandlebars %}

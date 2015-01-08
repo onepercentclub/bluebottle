@@ -18,7 +18,7 @@ class TenantStaticFilesFinder(FileSystemFinder):
         """
         matches = []
         tenants = Client.objects.all()
-        tenant_dir = getattr(settings, 'MULTITENANT_DIR', None)
+        tenant_dir = getattr(settings, 'MULTI_TENANT_DIR', None)
         if not tenant_dir:
             return matches
 

@@ -1,5 +1,7 @@
 *.py[co]
 
+.ruby-*
+
 # Packages
 *.egg
 *.egg-info

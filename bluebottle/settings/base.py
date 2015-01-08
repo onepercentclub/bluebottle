@@ -1,8 +1,6 @@
 # Django settings for BlueBottle project.
 
 import os, datetime
-from payments import *
-from admin_dashboard import *
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -84,8 +82,11 @@ STATICFILES_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     # You can also name this tuple like: ('css', '/path/to/css')
-    (os.path.join(PROJECT_ROOT, 'static', 'global')),
-    (os.path.join(PROJECT_ROOT, 'frontend')),
+    ("app", os.path.join(PROJECT_ROOT, 'frontend', 'app')),
+    ("vendor", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'vendor')),
+    ("css", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'css')),
+    ("images", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'images')),
+    ("fonts", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'fonts'))
 )
 
 # List of finder classes that know how to find static files in

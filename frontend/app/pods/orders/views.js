@@ -1,1 +1,0 @@
-App.OrderView = Em.View.extend();

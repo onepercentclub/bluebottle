@@ -1,19 +1,17 @@
 from datetime import datetime
-from bluebottle.payments.services import PaymentService
+
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.payments.services import PaymentService
 from bluebottle.test.utils import BluebottleTestCase
 
-from django.test import TestCase
 from django_fsm.db.fields import TransitionNotAllowed
 
 from bluebottle.test.factory_models.payments import PaymentFactory, OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.models import TestBaseUser
-
 from bluebottle.utils.utils import StatusDefinition
 
 
-class BlueBottlePaymentTestCase(TestCase):
+class BlueBottlePaymentTestCase(BluebottleTestCase):
     
     def setUp(self):
         self.order = OrderFactory.create()

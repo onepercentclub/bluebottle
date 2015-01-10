@@ -4,13 +4,11 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations_factories import OrganizationFactory
 from bluebottle.utils.model_dispatcher import get_project_model
 
-from django_dynamic_fixture import N, G
-
-from bluebottle.payouts.models import ProjectPayout
+from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
-from onepercentclub.tests.factory_models.project_factories import OnePercentProjectFactory, PartnerFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, PartnerFactory
 
 PROJECT_MODEL = get_project_model()
 
@@ -23,7 +21,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Set up a project ready for payout
         organization = OrganizationFactory.create()
         organization.save()
-        self.project = OnePercentProjectFactory.create(organization=organization, amount_asked=50)
+        self.project = ProjectFactory.create(organization=organization, amount_asked=50)
 
         # Update phase to campaign.
         self.project.status = ProjectPhase.objects.get(slug='campaign')
@@ -46,7 +44,7 @@ class PayoutTestCase(BluebottleTestCase):
         """ Test saving a payout. """
 
         # Generate new payout
-        payout = N(ProjectPayout, completed=None)
+        payout = ProjectPayoutFactory.create(completed=None)
 
         # Validate
         payout.clean()
@@ -57,13 +55,13 @@ class PayoutTestCase(BluebottleTestCase):
     def test_unicode(self):
         """ Test unicode() on payout. """
 
-        payout = G(ProjectPayout, completed=None)
+        payout = ProjectPayoutFactory.create()
         self.assertTrue(unicode(payout))
 
     def test_completed(self):
         """ Test the transition to settled. """
 
-        payout = G(ProjectPayout, completed=None, status=StatusDefinition.IN_PROGRESS)
+        payout = ProjectPayoutFactory.create(completed=None, status=StatusDefinition.IN_PROGRESS))
         payout.save()
 
         self.assertFalse(payout.completed)

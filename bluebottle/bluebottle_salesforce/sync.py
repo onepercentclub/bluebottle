@@ -1,5 +1,5 @@
 import logging
-from apps.recurring_donations.models import MonthlyDonor
+from bluebottle.recurring_donations.models import MonthlyDonor
 from bluebottle.payments.models import OrderPayment
 import re
 from django.utils import timezone

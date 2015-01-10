@@ -20,6 +20,8 @@ class PageTestCase(APITestCase):
 	subclass this.
 	"""
 	def setUp(self):
+		super(PageTestCase, self).setUp()
+
 		self.user = BlueBottleUserFactory.create()
 
 		self.page1 = PageFactory.create(author=self.user, language = 'nl')

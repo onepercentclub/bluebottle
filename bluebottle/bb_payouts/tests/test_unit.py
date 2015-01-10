@@ -22,14 +22,14 @@ class PayoutTestCase(BluebottleTestCase):
     def setUp(self):
         super(PayoutTestCase, self).setUp()
 
+        self.init_projects()
+
         # Set up a project ready for payout
         organization = OrganizationFactory.create()
         organization.save()
-        self.project = ProjectFactory.create(organization=organization, amount_asked=50)
 
-        # Update phase to campaign.
-        self.project.status = ProjectPhase.objects.get(slug='campaign')
-        self.project.save()
+        campaign_status = ProjectPhase.objects.get(slug='campaign')
+        self.project = ProjectFactory.create(organization=organization, amount_asked=50, status=campaign_status)
 
         self.order = OrderFactory.create()
 

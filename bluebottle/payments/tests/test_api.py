@@ -1,8 +1,11 @@
 import json
+
 from mock import patch
-from django.test import TestCase
+
 from django.core.urlresolvers import reverse
 from rest_framework import status
+
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.orders.models import Order
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_order_model
@@ -13,10 +16,12 @@ from bluebottle.test.factory_models.orders import OrderFactory, OrderActionFacto
 from bluebottle.bb_orders.views import ManageOrderDetail
 from bluebottle.payments_mock.adapters import MockPaymentAdapter
 
-class TestOrderPaymentPermissions(TestCase):
+class TestOrderPaymentPermissions(BluebottleTestCase):
     """ Test the permissions for order ownership in bb_orders """
 
     def setUp(self):
+        super(TestOrderPaymentPermissions, self).setUp()
+        
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -42,14 +47,14 @@ class TestOrderPaymentPermissions(TestCase):
         """ User that is owner of the order tries to create an order payment gets a 201 CREATED"""
 
         response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
-                                   HTTP_AUTHORIZATION=self.user1_token)
+                                   token=self.user1_token)
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_orderpayment_user_not_owner(self):
         """ User that is not owner of the order tries to create an order payment gets 403"""
         response = self.client.post(reverse('manage-order-payment-list'), self.order_payment_data,
-                                   HTTP_AUTHORIZATION=self.user2_token)
+                                   token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_payment_methods_unauthenticated(self):
@@ -59,7 +64,7 @@ class TestOrderPaymentPermissions(TestCase):
 
     def test_get_payment_methods_authenticated(self):
         """ Test that authenticated users may retrieve payment methods """
-        response = self.client.get(reverse('payment-method-list'), {}, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.get(reverse('payment-method-list'), {}, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_payment_method_detail_unauthenticated(self):
@@ -71,6 +76,6 @@ class TestOrderPaymentPermissions(TestCase):
     def test_get_payment_method_detail_authenticated(self):
         """ Test that authenticated users may retrieve details of a payment methods """
         self.skipTest("This view is currently unused")
-        response = self.client.get(reverse('payment-method-list'), {}, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.get(reverse('payment-method-list'), {}, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

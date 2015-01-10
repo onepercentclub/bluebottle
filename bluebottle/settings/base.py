@@ -363,6 +363,9 @@ BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', '
            'projects', 'tasks', 'fundraisers', 'donations', 'orders',
            'homepage', 'recurring-donations', 'partners']
 
+MINIMAL_PAYOUT_AMOUNT = 21.00
+VAT_RATE = '0.21'
+
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True
 

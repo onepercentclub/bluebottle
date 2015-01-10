@@ -1,4 +1,3 @@
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 from mock import patch
 from bluebottle.test.utils import BluebottleTestCase

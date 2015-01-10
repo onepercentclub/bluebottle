@@ -15,6 +15,8 @@ class NewsItemApiTestCase(APITestCase):
     Integration tests for the NewsItem API.
     """
     def setUp(self):
+        super(NewsItemApiTestCase, self).setUp()
+
         self.some_dutch_news = NewsItemFactory.create(language='nl')
         self.some_other_dutch_news = NewsItemFactory.create(language='nl')
         self.third_dutch_news = NewsItemFactory.create(language='nl')

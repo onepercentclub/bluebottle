@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from django_fsm.db.fields import TransitionNotAllowed
 
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
@@ -8,7 +8,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.utils import StatusDefinition
 
 
-class BlueBottleOrderTestCase(TestCase):
+class BlueBottleOrderTestCase(BluebottleTestCase):
     
     def setUp(self):
         self.order = OrderFactory.create()

@@ -5,11 +5,7 @@ from bluebottle.payments_docdata.settings import *
 DOCDATA_MERCHANT_NAME = 'merchant_name'
 DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
 
-TEST_RUNNER = 'discover_runner.DiscoverRunner'
-
-INSTALLED_APPS += (
-    'django_extensions',
-)
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 # Set up a proper testing email backend
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
@@ -18,9 +14,13 @@ COMPRESS_ENABLED = False
 # Include the tests models
 INCLUDE_TEST_MODELS = True
 
+INSTALLED_APPS += (
+    'bluebottle.payments_mock',
+)
+
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
-SOUTH_TESTS_MIGRATE = True
+SOUTH_TESTS_MIGRATE = False
 
 ROOT_URLCONF = 'bluebottle.urls'
 
@@ -31,40 +31,15 @@ GRAPH_MODELS = {
 }
 
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.sqlite3',
-		'NAME': ':memory:',
-        'ATOMIC_REQUESTS': True
-	}
-}
-
-VAT_RATE = 21
-
-DOCDATA_FEES = {
-    'transaction': 0.20,
-    'payment_methods': {
-        'ideal': 0.35,
-        'mastercard': '3.0%',
-        'visa': '3.5%',
-        'paypal': '3.5%',
-        'sepa_direct_debit': 0.25
+    'default': {
+        'ENGINE': 'tenant_schemas.postgresql_backend',
+        'HOST': '',
+        'PORT': '',
+        'NAME': 'bluebottle_test',
+        'USER': '',
+        'PASSWORD': ''
     }
 }
 
-PAYMENT_METHODS = (
-    {
-        'provider': 'docdata',
-        'id': 'docdata-creditcard',
-        'profile': 'creditcard',
-        'name': 'CreditCard',
-        'supports_recurring': False,
-    },
-    {
-        'provider': 'docdata',
-        'id': 'docdata-ideal',
-        'profile': 'ideal',
-        'name': 'iDEAL',
-        'restricted_countries': ('NL', 'Netherlands'),
-        'supports_recurring': False,
-    },
-)
+from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS, MOCK_FEES
+PAYMENT_METHODS = MOCK_PAYMENT_METHODS

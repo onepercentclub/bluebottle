@@ -6,7 +6,7 @@ import logging
 from bluebottle.utils.tests import UserTestsMixin
 import requests
 from datetime import datetime
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from django.conf import settings
 from django.core.management import call_command
 from salesforce import auth
@@ -38,7 +38,7 @@ except (ConnectionError, AttributeError):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class OAuthTest(TestCase):
+class OAuthTest(BluebottleTestCase):
     """
     Test cases verify authentication is working using Django-Salesforce auth with oauth 2.0
     """
@@ -70,7 +70,7 @@ class OAuthTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceOrganizationTest(TestCase):
+class SalesforceOrganizationTest(BluebottleTestCase):
     """
     Test cases for Salesforce account object.
     """
@@ -102,7 +102,7 @@ class SalesforceOrganizationTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceContactTest(TestCase):
+class SalesforceContactTest(BluebottleTestCase):
     """
     Test cases for Salesforce Contact object.
     """
@@ -134,7 +134,7 @@ class SalesforceContactTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceDonationTest(TestCase):
+class SalesforceDonationTest(BluebottleTestCase):
     """
     Test cases for Salesforce Opportunity object.
     """
@@ -164,7 +164,7 @@ class SalesforceDonationTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceProjectTest(TestCase):
+class SalesforceProjectTest(BluebottleTestCase):
     """
     Test cases for Salesforce project object.
     """
@@ -194,7 +194,7 @@ class SalesforceProjectTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SyncToSalesforceIntegrationTest(UserTestsMixin, TestCase):
+class SyncToSalesforceIntegrationTest(UserTestsMixin, BluebottleTestCase):
     def smoke_test_sync_script(self):
         #FIXME: We need more objects created here for the test to work.
         # Need to have data for each model that we want to run the smoke test on.

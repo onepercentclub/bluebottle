@@ -4,14 +4,13 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from ..middleware import HASHBANG, ESCAPED_FRAGMENT, HashbangMiddleware
-from onepercentclub.tests.utils import OnePercentTestCase
-
+from bluebottle.test.utils import BluebottleTestCase
 
 def escape_url(url):
     return url.replace(HASHBANG, '?%s=' % ESCAPED_FRAGMENT)
 
 
-class HashbangMiddlewareTests(OnePercentTestCase):
+class HashbangMiddlewareTests(BluebottleTestCase):
 
     def setUp(self):
         self.init_projects()

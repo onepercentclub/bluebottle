@@ -9,11 +9,20 @@ import base64
 
 from bunch import bunchify
 
+import django
+from django.db import connection
+from django.test import TransactionTestCase
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings
 from django.test import TestCase
+from django.core.management import call_command
+
+from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.middleware import TenantMiddleware
+from tenant_schemas.test.client import TenantClient
+from tenant_schemas.utils import get_public_schema_name, get_tenant_model
 
 from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
@@ -26,7 +35,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
+from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.test.factory_models.utils import LanguageFactory
+from bluebottle.utils.models import Language
+from bluebottle.clients.models import Client
 
 
 def css_dict(style):
@@ -215,22 +227,27 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        phase_data = [{'id': 1, 'name': 'Plan - New', 'viewable': False},
-                      {'id': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                      {'id': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                      {'id': 4, 'name': 'Plan - Rejected', 'viewable': False},
-                      {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
-                      {'id': 5, 'name': 'Campaign', 'viewable': True},
-                      {'id': 7, 'name': 'Stopped', 'viewable': False},
-                      {'id': 8, 'name': 'Realised', 'viewable': True},
-                      {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
+        ProjectPhase.objects.all().delete()
+        ProjectTheme.objects.all().delete()
+        Language.objects.all().delete()
 
-        theme_data = [{'id': 1, 'name': 'Education'},
-                      {'id': 2, 'name': 'Environment'},
-                      {'id': 3, 'name': 'Health'}]
+        phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
+                      {'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
+                      {'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
+                      {'sequence': 4, 'name': 'Plan - Rejected', 'viewable': False},
+                      {'sequence': 6, 'name': 'Plan - Accepted', 'viewable': True},
+                      {'sequence': 5, 'name': 'Campaign', 'viewable': True},
+                      {'sequence': 7, 'name': 'Stopped', 'viewable': False},
+                      {'sequence': 8, 'name': 'Realised', 'viewable': True},
+                      {'sequence': 9, 'name': 'Done - Incomplete', 'viewable': True},
+                      {'sequence': 10, 'name': 'Done - Complete', 'viewable': True}]
 
-        language_data = [{'id': 1, 'code': 'en', 'language_name': 'English', 'native_name': 'English'},
-                         {'id': 2, 'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
+        theme_data = [{'name': 'Education'},
+                      {'name': 'Environment'},
+                      {'name': 'Health'}]
+
+        language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
+                         {'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
 
         for phase in phase_data:
             ProjectPhaseFactory.create(**phase)
@@ -254,12 +271,119 @@ else:
     sauce = SauceClient(USERNAME, ACCESS_KEY)
 
 
+class ApiClient(TenantClient):
+    tm = TenantMiddleware()
+
+    def get(self, path, data={}, token=None, follow=False, **extra):
+        if token:
+            extra['HTTP_AUTHORIZATION'] = token
+
+        extra['content_type'] = 'application/json'
+
+        response = super(ApiClient, self).get(path, data, **extra)
+
+        if follow:
+            response = self._handle_redirects(response, **extra)
+        
+        return response
+
+    def post(self, path, data={}, token=None, **extra):
+        if token:
+            extra['HTTP_AUTHORIZATION'] = token
+
+        extra['content_type'] = 'application/json'
+
+        if type(data) is dict:
+            data = json.dumps(data)
+
+        return super(ApiClient, self).post(path, data, **extra)
+
+    def patch(self, path, data={}, token=None, **extra):
+        if token:
+            extra['HTTP_AUTHORIZATION'] = token
+        
+        extra['content_type'] = 'application/json'
+        
+        return super(ApiClient, self).patch(path, data, **extra)
+
+    def put(self, path, data={}, token=None, **extra):
+        if token:
+            extra['HTTP_AUTHORIZATION'] = token
+        
+        extra['content_type'] = 'application/json'
+        
+        if type(data) is dict:
+            data = json.dumps(data)
+ 
+        return super(ApiClient, self).put(path, data, **extra)
+
+    def delete(self, path, data='', token=None, content_type='application/json',
+               **extra):
+        if token:
+            extra['HTTP_AUTHORIZATION'] = token
+
+        return super(ApiClient, self).delete(path, data, **extra)
+
+    # Taken from Django Test Client
+    def _handle_redirects(self, response, **extra):
+        "Follows any redirects by requesting responses from the server using GET."
+
+        response.redirect_chain = []
+        while response.status_code in (301, 302, 303, 307):
+            response_url = response.url
+            redirect_chain = response.redirect_chain
+            redirect_chain.append((response_url, response.status_code))
+
+            url = urlsplit(response_url)
+            if url.scheme:
+                extra['wsgi.url_scheme'] = url.scheme
+            if url.hostname:
+                extra['SERVER_NAME'] = url.hostname
+            if url.port:
+                extra['SERVER_PORT'] = str(url.port)
+
+            response = self.get(url.path, QueryDict(url.query), follow=False, **extra)
+            response.redirect_chain = redirect_chain
+
+            if redirect_chain[-1] in redirect_chain[:-1]:
+                # Check that we're not redirecting to somewhere we've already
+                # been to, to prevent loops.
+                raise RedirectCycleError("Redirect loop detected.", last_response=response)
+            if len(redirect_chain) > 20:
+                # Such a lengthy chain likely also means a loop, but one with
+                # a growing path, changing view, or changing query argument;
+                # 20 is the value of "network.http.redirection-limit" from Firefox.
+                raise RedirectCycleError("Too many redirects.", last_response=response)
+
+        return response
+
 
 @override_settings(DEBUG=True)
 class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
     def setUp(self):
-        self.init_projects()
+        self.client = ApiClient(self.__class__.tenant)
+
+    @classmethod
+    def setUpClass(cls):
+        # create a tenant
+        tenant_domain = 'testserver'
+        cls.tenant = get_tenant_model()(
+            domain_url=tenant_domain, 
+            schema_name='test',
+            client_name='test')
+
+        cls.tenant.save(verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
+        connection.set_tenant(cls.tenant)
+
+    @classmethod
+    def tearDownClass(cls):
+        # delete tenant
+        connection.set_schema_to_public()
+        cls.tenant.delete()
+
+        cursor = connection.cursor()
+        cursor.execute('DROP SCHEMA test CASCADE')
 
 
 

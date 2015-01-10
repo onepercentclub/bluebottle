@@ -8,7 +8,7 @@ from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 
-from apps.recurring_donations.models import MonthlyProject
+from bluebottle.recurring_donations.models import MonthlyProject
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model, get_project_model
 from bluebottle.utils.utils import StatusDefinition

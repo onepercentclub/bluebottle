@@ -85,7 +85,7 @@ dependency_links = [
     'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce',
     'https://github.com/onepercentclub/legacyauth/archive/3f2406c50dead25a748fb2433de55b73a9162f18.zip#egg=legacyauth',
     'https://github.com/mrmachine/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.0b4',
-    'https://github.com/bernardopires/django-tenant-schemas/archive/71e7a89707fa8edbd729683a073b0a1b0ffc544f.zip#egg=django-tenant-schemas',
+    'https://github.com/bernardopires/django-tenant-schemas/archive/v1.5.1.zip#egg=django-tenant-schemas',
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers',
     'https://bitbucket.org/sergei_maertens/django-admin-tools/get/c989fd1.zip#egg=django-admin-tools',

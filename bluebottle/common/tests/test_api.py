@@ -54,7 +54,7 @@ class TestDonationList(DonationApiTestCase):
     def test_latest_donation_list(self, check_status_psp):
         user_token = Token.objects.create(user=self.user1)
         response = self.client.get(self.fundraiser_donation_list_url, 
-            HTTP_AUTHORIZATION="Token {0}".format(user_token))
+            token="Token {0}".format(user_token))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data['results']), 2)

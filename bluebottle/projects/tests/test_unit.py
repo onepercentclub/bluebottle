@@ -5,23 +5,23 @@ from django.test import TestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_project_model
 
-from onepercentclub.tests.factory_models.project_factories import OnePercentProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from onepercentclub.tests.utils import OnePercentTestCase
+from bluebottle.test.utils import BluebottleTestCase
 
 PROJECT_MODEL = get_project_model()
 
 
-class CalculateProjectMoneyDonatedTest(OnePercentTestCase):
+class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
 
     def setUp(self):
         # Required by Project model save method
         self.init_projects()
 
-        self.some_project = OnePercentProjectFactory.create(amount_asked=5000)
-        self.another_project = OnePercentProjectFactory.create(amount_asked=5000)
+        self.some_project = ProjectFactory.create(amount_asked=5000)
+        self.another_project = ProjectFactory.create(amount_asked=5000)
 
         self.some_user = BlueBottleUserFactory.create()
         self.another_user = BlueBottleUserFactory.create()
@@ -57,7 +57,7 @@ class CalculateProjectMoneyDonatedTest(OnePercentTestCase):
     def _create_donation(self, user=None, amount=None, project=None, status=StatusDefinition.NEW):
         """ Helper method for creating donations."""
         if not project:
-            project = OnePercentProjectFactory.create()
+            project = ProjectFactory.create()
             project.save()
 
         if not user:

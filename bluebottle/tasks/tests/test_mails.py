@@ -1,12 +1,14 @@
-from bluebottle.bb_projects.models import ProjectPhase
 from django.core import mail
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from django.test.utils import override_settings
-from onepercentclub.tests.factory_models.project_factories import OnePercentProjectFactory
-from onepercentclub.tests.utils import OnePercentTestCase
+
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.utils import BluebottleTestCase
+
 
 @override_settings(SEND_WELCOME_MAIL=False)
-class TestTaskMails(OnePercentTestCase):
+class TestTaskMails(BluebottleTestCase):
     """
     Test the sending of email notifications when a Task' status changes
     """
@@ -14,7 +16,7 @@ class TestTaskMails(OnePercentTestCase):
     def setUp(self):
         self.init_projects()
         self.status_running = ProjectPhase.objects.get(slug='campaign')
-        self.project = OnePercentProjectFactory.create(status=self.status_running)
+        self.project = ProjectFactory.create(status=self.status_running)
         self.task = TaskFactory.create(project=self.project)
 
     def test_member_applied_to_task_mail(self):

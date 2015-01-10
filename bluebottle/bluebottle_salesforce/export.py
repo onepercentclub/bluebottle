@@ -8,9 +8,9 @@ from django.utils import timezone
 from django.conf import settings
 from apps.cowry_docdata.models import payment_method_mapping
 from apps.fund.models import Donation, DonationStatuses
-from apps.recurring_donations.models import MonthlyDonor
+from bluebottle.recurring_donations.models import MonthlyDonor
 from apps.vouchers.models import Voucher, VoucherStatuses
-from apps.organizations.models import Organization, OrganizationMember
+from bluebottle.organizations.models import Organization, OrganizationMember
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.projects.models import Project

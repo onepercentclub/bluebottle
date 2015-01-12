@@ -56,6 +56,10 @@ class Wallpost(PolymorphicModel):
     def __unicode__(self):
         return str(self.id)
 
+    def save(self, *args, **kwargs):
+        if self.email_followers == None:
+            self.email_followers = False
+        return super(Wallpost, self).save(*args, **kwargs)
 
 class MediaWallpost(Wallpost):
     # The content of the wall post.

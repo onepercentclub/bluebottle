@@ -42,7 +42,7 @@ class Page(models.Model):
 
     # Metadata
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False)
+        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

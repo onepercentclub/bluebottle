@@ -171,19 +171,19 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         # Setup: get the password reset token and url.
-        c = re.compile('(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})', re.DOTALL)
+        c = re.compile('\/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})\/', re.DOTALL)
         m = c.search(mail.outbox[0].body)
         password_set_url = '{0}{1}-{2}'.format(self.user_password_set_api_url, m.group(1), m.group(2))
 
         # Test: check that non-matching passwords produce a validation error.
         passwords = {'new_password1': 'rabbit', 'new_password2': 'rabbitt'}
-        response = self.client.put(password_set_url, passwords, 'application/json')
+        response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(response.data['new_password2'][0], "The two password fields didn't match.")
 
         # Test: check that updating the password works when the passwords match.
         passwords['new_password2'] = 'rabbit'
-        response = self.client.put(password_set_url, passwords, 'application/json')
+        response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         # Test: check that the user can login with the new password.
@@ -193,7 +193,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['email'], new_user_email)
 
         # Test: check that trying to reuse the password reset link doesn't work.
-        response = self.client.put(password_set_url, passwords, 'application/json')
+        response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
 

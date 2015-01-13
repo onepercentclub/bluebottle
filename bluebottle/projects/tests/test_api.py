@@ -188,21 +188,21 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # Back to the previous pitch. Try to cheat and put it to status approved.
         project_data['status'] = self.phase_campaign.id
-        response = self.client.put(project_url, json.dumps(project_data), 
+        response = self.client.put(project_url, project_data, 
                                     token=self.another_user_token)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEquals(response.data['status'][0], 'You can not change the project state.', 'status change should not be possible')
 
         # Ok, let's try to submit it. We have to submit all previous data again too.
         project_data['status'] = self.phase_submitted.id
-        response = self.client.put(project_url, json.dumps(project_data), 
+        response = self.client.put(project_url, project_data, 
                                     token=self.another_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
         self.assertEquals(response.data['status'], self.phase_submitted.id)
 
         # Changing the slug for this project should just reset it to the previous value
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
-        response_2 = self.client.put(project_url, json.dumps(project_data), 
+        response_2 = self.client.put(project_url, project_data, 
                                         token=self.another_user_token)
         self.assertEquals(response_2.data['slug'], response.data['slug'], 'changing the slug should not be possible')
 
@@ -260,7 +260,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         budget_line = response.data['budget_lines'][0]
         budget_line['amount'] = 350
         budget_line_url = "{0}{1}".format(self.manage_budget_lines_url, budget_line['id'])
-        response = self.client.put(budget_line_url, json.dumps(budget_line), 
+        response = self.client.put(budget_line_url, budget_line, 
                                     token=self.some_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
         self.assertEquals(response.data['amount'], '350.00')
@@ -330,7 +330,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Update the created Project Media Wallpost by author.
         new_wallpost_text = 'This is my super-duper project!'
         response = self.client.put(project_wallpost_detail_url, 
-                                    json.dumps({'text': new_wallpost_text, 'parent_type': 'project','parent_id': self.some_project.slug}), 
+                                    {'text': new_wallpost_text, 'parent_type': 'project','parent_id': self.some_project.slug}, 
                                     token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['text'], "<p>{0}</p>".format(new_wallpost_text))
@@ -403,7 +403,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Typically the photos are uploaded before the wallpost is uploaded so we simulate that here
         photo_file = open(self.some_photo, mode='rb')
         response = self.client.post(self.media_wallpost_photos_url, {'photo': photo_file},
-                                    token=self.owner_token)
+                                        format='multipart', token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         some_photo_detail_url = "{0}{1}".format(self.media_wallpost_photos_url, response.data['id'])
 
@@ -418,7 +418,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         some_wallpost_detail_url = "{0}{1}".format(self.wallposts_url, some_wallpost_id)
 
         # Try to connect the photo to this new wallpost
-        response = self.client.put(some_photo_detail_url, json.dumps({'mediawallpost': some_wallpost_id}), 
+        response = self.client.put(some_photo_detail_url, {'mediawallpost': some_wallpost_id}, 
                                     token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
@@ -452,7 +452,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Make sure the first user can't connect it's picture to someone else's wallpost
-        response = self.client.put(another_photo_detail_url, json.dumps({'mediawallpost': another_wallpost_id}), 
+        response = self.client.put(another_photo_detail_url, {'mediawallpost': another_wallpost_id}, 
                                     token=self.some_user_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
@@ -465,12 +465,12 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         text_wallpost_id = response.data['id']
 
         # Adding a photo to that should be denied.
-        response = self.client.put(another_photo_detail_url, json.dumps({'mediawallpost': another_wallpost_id}), 
+        response = self.client.put(another_photo_detail_url, {'mediawallpost': another_wallpost_id}, 
                                     token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Add that second photo to our first wallpost and verify that will now contain two photos.
-        response = self.client.put(another_photo_detail_url, json.dumps({'mediawallpost': some_wallpost_id}), 
+        response = self.client.put(another_photo_detail_url, {'mediawallpost': some_wallpost_id}, 
                                     token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
@@ -532,7 +532,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         text2a = 'I like this project!'
         wallpost_detail_url = "{0}{1}".format(self.wallposts_url, str(response.data['id']))
         response = self.client.put(wallpost_detail_url, 
-                                    json.dumps({'text': text2a, 'parent_type': 'project', 'parent_id': self.some_project.slug}), 
+                                    {'text': text2a, 'parent_type': 'project', 'parent_id': self.some_project.slug}, 
                                     token=self.another_user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertTrue(text2a in response.data['text'])

@@ -49,7 +49,7 @@ class Slide(models.Model):
 
     # Metadata
     sequence = models.IntegerField()
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

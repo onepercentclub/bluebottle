@@ -73,6 +73,16 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
     // Enable share features
     shareEnabled: true,
 
+    /*
+    // enable/disable explicit sharing options. Will default to twitter/facebook if not set.
+    shareOptions = {
+        twitter: true,
+        facebook: true,
+        flyer: false,
+        linkedin: false
+    }
+    */
+
     // We store language & locale here because they need to be available before loading templates.
     language: 'en',
     locale: 'en-GB',

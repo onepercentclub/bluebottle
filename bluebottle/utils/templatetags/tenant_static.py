@@ -2,6 +2,9 @@ from django import template
 from django.templatetags.static import StaticNode
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.db import connection
+from django.utils._os import safe_join
+import os
+
 
 register = template.Library()
 
@@ -13,7 +16,10 @@ class StaticFilesNode(StaticNode):
         path = self.path.resolve(context)
         if not connection.tenant:
             return staticfiles_storage.url(path)
-        path = "/".join([connection.tenant.client_name, path])
+
+        local_path = safe_join(connection.tenant.client_name, path)
+        if os.path.isfile(local_path):
+            path = "/".join([connection.tenant.client_name, path])
         return staticfiles_storage.url(path)
 
 

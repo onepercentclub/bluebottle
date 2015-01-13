@@ -30,6 +30,11 @@ App.IsAuthorMixin = Em.Mixin.create({
     }.property('author.username', 'currentUser.username')
 });
 
+emailValidator = function(s) {
+    var re = /^(([^<>()\[\]\\.,;:\s@\"]+(\.[^<>()\[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(s);
+};
+
 // It Provides different validations
 // standart empty fields validation (_requiredFieldsChecker and blockingErrors)
 // validation based on fields errors (validateErrors, enabled by calling enableValidation)

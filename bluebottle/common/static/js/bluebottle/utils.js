@@ -675,3 +675,49 @@ App.TrackRouteActivateMixin = Ember.Mixin.create({
         }
     }
 });
+
+App.Serializable = Ember.Mixin.create({
+    serialize: function () {
+        var result = {};
+        for (var key in $.extend(true, {}, this))
+        {
+            // Skip these
+            if (key === 'isInstance' ||
+            key === 'isDestroyed' ||
+            key === 'isDestroying' ||
+            key === 'concatenatedProperties' ||
+            typeof this[key] === 'function')
+            {
+                continue;
+            }
+            result[key] = this[key];
+        }
+        return result;
+    },
+    submit: function(target) {
+        var _this = this;
+
+        return Ember.RSVP.Promise(function (resolve, reject) {
+            var hash = {
+                    url: target,
+                    type: 'post',
+                    data: _this.serialize()
+                };
+
+            hash.success = function (response) {
+                Ember.run(null, resolve, gettext("Success"));
+            };
+
+            hash.error = function (response) {
+                var msg = gettext('Error, invalid token');
+                _this.set('error', msg);
+
+                // Reject the promise
+                Ember.run(null, reject, msg);
+            };
+
+            Ember.$.ajax(hash);
+        });
+    }
+});
+

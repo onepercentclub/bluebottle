@@ -1,5 +1,7 @@
 from django.test import TestCase
 from mock import patch
+
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.payments.services import PaymentService
@@ -10,10 +12,12 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import FsmTestMixin
 
 
-class TestPaymentLogger(TestCase, FsmTestMixin):
+class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
 
     @patch.object(DocdataClient, 'create')
     def setUp(self, mock_client_create):
+        super(TestPaymentLogger, self).setUp()
+
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 
         self.order = OrderFactory.create(total=35)
@@ -48,10 +52,12 @@ class TestPaymentLogger(TestCase, FsmTestMixin):
         self.assertEqual(last_log.level, 'INFO')
         
 
-class TestPaymentLoggerAdapter(TestCase):
+class TestPaymentLoggerAdapter(BluebottleTestCase):
 
     @patch.object(DocdataClient, 'create')
     def setUp(self, mock_client_create):
+        super(TestPaymentLoggerAdapter, self).setUp()
+
         # Mock response to creating the payment at docdata
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 

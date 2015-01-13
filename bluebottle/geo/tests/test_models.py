@@ -39,6 +39,8 @@ class GeoTestCase(BluebottleTestCase):
     """ Tests for models in the geo app. """
 
     def setUp(self):
+        super(GeoTestCase, self).setUp()
+
         # Start with a clean database for each test.
         Country.objects.all().delete()
         SubRegion.objects.all().delete()

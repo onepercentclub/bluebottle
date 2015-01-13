@@ -15,7 +15,7 @@ changes = ''
 install_requires = [
     'Babel==1.3',
     'bunch==1.0.1',
-    'Django==1.6.8',
+    'django>=1.6.8,<1.7',
     'Pillow==2.3.0',
     'South==1.0',
     'Sphinx==1.2b1',
@@ -38,7 +38,7 @@ install_requires = [
     'django-wysiwyg==0.5.1',
     'django-dynamic-fixture==1.8.0',
     'django-fluent-dashboard==0.3.2',
-    'djangorestframework==2.3.12',
+    'djangorestframework==2.3.13',
     'dkimpy==0.5.4',
     'html5lib==0.95',
     'micawber==0.2.6',
@@ -61,15 +61,16 @@ install_requires = [
     'python-dateutil==1.5',
     'gunicorn==0.14.6',
     'surlex==0.2.0',
-    'django_polymorphic==0.5.6',
+    'django_polymorphic==0.6.1',
     'dnspython',
     'fabric',
+    'django-tenant-schemas==1.5.1-4-g45c9ee9',
+    'django-salesforce==0.5',
+    'raven==5.1.1',
 
     # Github requirements
-    'djangorestframework-jwt',
-    'django-salesforce',
+    'djangorestframework-jwt<=1.1.2',
     'django-taggit-autocomplete-modified==0.1.0b4',
-    'django-tenant-schemas',
 
     # Bitbucket requirements
     'django-filetransfers',
@@ -80,12 +81,10 @@ install_requires = [
 
 
 dependency_links = [
-
-    'https://github.com/GetBlimp/django-rest-framework-jwt/archive/b6b42b967c3584b426446df1f72149b7a07fd520.zip#egg=djangorestframework-jwt',
-    'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce',
+    # 'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce',
     'https://github.com/onepercentclub/legacyauth/archive/3f2406c50dead25a748fb2433de55b73a9162f18.zip#egg=legacyauth',
     'https://github.com/mrmachine/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.0b4',
-    'https://github.com/bernardopires/django-tenant-schemas/archive/v1.5.1.zip#egg=django-tenant-schemas',
+    'https://github.com/GetBlimp/django-rest-framework-jwt/archive/1.1.1.zip#egg=djangorestframework-jwt-1.1.2',
 
     'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers',
     'https://bitbucket.org/sergei_maertens/django-admin-tools/get/c989fd1.zip#egg=django-admin-tools',

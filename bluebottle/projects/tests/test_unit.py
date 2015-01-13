@@ -17,6 +17,8 @@ PROJECT_MODEL = get_project_model()
 class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
 
     def setUp(self):
+        super(CalculateProjectMoneyDonatedTest, self).setUp()
+
         # Required by Project model save method
         self.init_projects()
 

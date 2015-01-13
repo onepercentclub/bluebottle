@@ -14,6 +14,8 @@ class TestTaskMails(BluebottleTestCase):
     """
 
     def setUp(self):
+        super(TestTaskMails, self).setUp()
+
         self.init_projects()
         self.status_running = ProjectPhase.objects.get(slug='campaign')
         self.project = ProjectFactory.create(status=self.status_running)

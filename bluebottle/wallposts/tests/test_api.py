@@ -45,7 +45,7 @@ from django.core import mail
 from django.test import TestCase
 from rest_framework import status
 from bluebottle.mail import send_mail
-from bluebottle.utils.tests import UserTestsMixin
+from bluebottle.utils.tests.test_unit  import UserTestsMixin
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

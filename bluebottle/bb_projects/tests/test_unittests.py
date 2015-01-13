@@ -8,8 +8,7 @@ PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()
 
 class TestProjectTestCase(BluebottleTestCase):
     def setUp(self):
-        super(OrganizationsEndpointTestCase, self).setUp()
-        
+        super(TestProjectTestCase, self).setUp()
         self.init_projects()
 
     def test_fake(self):

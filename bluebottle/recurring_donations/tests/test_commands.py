@@ -13,6 +13,8 @@ from django.core.management import call_command
 class MonthlyDonationCommandsTest(BluebottleTestCase):
 
     def setUp(self):
+        super(MonthlyDonationCommandsTest, self).setUp()
+
         self.init_projects()
         self.phase_campaign = ProjectPhase.objects.get(slug='campaign')
         self.country = CountryFactory()

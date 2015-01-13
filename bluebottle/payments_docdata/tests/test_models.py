@@ -18,7 +18,7 @@ from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory, DocdataTransactionFactory
 from bluebottle.payments.models import OrderPayment 
 from bluebottle.payments_logger.models import PaymentLogEntry
-
+from bluebottle.test.utils import BluebottleTestCase
 
 from mock import patch
 
@@ -34,10 +34,12 @@ def fake_create_payment(self):
     return payment
 
 
-class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
+class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
 
     @patch.object(DocdataClient, 'create')
     def setUp(self, mock_client_create):
+        super(PaymentsDocdataTestCase, self).setUp()
+
         # Mock response to creating the payment at docdata
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 
@@ -171,9 +173,7 @@ class PaymentsDocdataTestCase(TestCase, FsmTestMixin):
         self.assertEqual(log.level, 'WARNING')
 
 
-class AdapterTestCase(TestCase):
-    def setUp(self):
-        pass
+class AdapterTestCase(BluebottleTestCase):
 
     @patch.object(DocdataClient, 'create')
     def test_incomplete_userdata(self, mock_client_create):

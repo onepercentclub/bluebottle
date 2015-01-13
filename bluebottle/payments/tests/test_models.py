@@ -14,6 +14,9 @@ from bluebottle.utils.utils import StatusDefinition
 class BlueBottlePaymentTestCase(BluebottleTestCase):
     
     def setUp(self):
+        super(BlueBottlePaymentTestCase, self).setUp()
+        self.init_projects()
+
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order)
 
@@ -95,6 +98,8 @@ class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(BlueBottlePaymentFeeTestCase, self).setUp()
+        self.init_projects()
+        
         self.order = OrderFactory.create()
         self.donation = DonationFactory(amount=60, order=self.order)
         self.order_payment = OrderPaymentFactory.create(order=self.order)

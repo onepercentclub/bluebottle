@@ -10,6 +10,7 @@ from django_dynamic_fixture import N, G
 from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
 from bluebottle.donations.models import Donation
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
@@ -48,7 +49,7 @@ class PayoutTestCase(BluebottleTestCase):
         """ Test saving a payout. """
 
         # Generate new payout
-        payout = N(ProjectPayout, completed=None)
+        payout = ProjectPayoutFactory.create(completed=None)
 
         # Validate
         payout.clean()
@@ -59,13 +60,13 @@ class PayoutTestCase(BluebottleTestCase):
     def test_unicode(self):
         """ Test unicode() on payout. """
 
-        payout = G(ProjectPayout, completed=None)
+        payout = ProjectPayoutFactory.create(completed=None)
         self.assertTrue(unicode(payout))
 
     def test_completed(self):
         """ Test the transition to settled. """
 
-        payout = G(ProjectPayout, completed=None, status=StatusDefinition.IN_PROGRESS)
+        payout = ProjectPayoutFactory.create(completed=None, status=StatusDefinition.IN_PROGRESS)
         payout.save()
 
         self.assertFalse(payout.completed)

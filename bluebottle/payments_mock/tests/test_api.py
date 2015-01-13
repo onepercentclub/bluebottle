@@ -17,6 +17,7 @@ class PaymentMockTests(BluebottleTestCase):
     """
     def setUp(self):
         super(PaymentMockTests, self).setUp()
+        self.init_projects()
 
         self.order_payment = OrderPaymentFactory.create(status=StatusDefinition.CREATED, amount=100, payment_method='mock')
         self.user1 = BlueBottleUserFactory.create()
@@ -84,6 +85,7 @@ class PaymentErrorTests(BluebottleTestCase):
 
     def setUp(self):
         super(PaymentErrorTests, self).setUp()
+        self.init_projects()
         
         self.donation1 = DonationFactory.create(amount=500)
         self.donation2 = DonationFactory.create(amount=700)

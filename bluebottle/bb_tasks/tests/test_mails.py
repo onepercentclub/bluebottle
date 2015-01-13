@@ -17,6 +17,8 @@ class TaskEmailTests(BluebottleTestCase):
 
     def setUp(self):
         super(TaskEmailTests, self).setUp()
+        self.init_projects()
+
         self.some_user = BlueBottleUserFactory.create(first_name='King')
         self.another_user = BlueBottleUserFactory.create(first_name='Kong')
 

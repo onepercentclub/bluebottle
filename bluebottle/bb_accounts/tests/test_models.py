@@ -23,9 +23,8 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         """
         Tests the manager ``create_user`` method.
         """
-        user = BlueBottleUserFactory.objects.create_user(email='john_doe@onepercentclub.com')
+        user = BlueBottleUserFactory.create(email='john_doe@onepercentclub.com')
 
-        self.assertEqual(user.username, 'john_doe')
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_superuser)
         self.assertFalse(user.is_staff)
@@ -38,7 +37,7 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         self.assertRaisesMessage(
             ValueError,
             'The given email address must be set',
-            BlueBottleUserFactory.objects.create_user,
+            BlueBottleUserFactory.create(email=''),
             email='')
 
 
@@ -131,7 +130,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         mail.outbox = []
 
         self.assertEqual(len(mail.outbox), 0)
-        new_user = BlueBottleUserFactory.objects.create_user(email='new_user@onepercentclub.com')
+        new_user = BlueBottleUserFactory.create(email='new_user@onepercentclub.com')
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue("Welcome" in mail.outbox[0].subject) #We need a better way to verify the right mail is loaded
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
@@ -145,7 +144,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         mail.outbox = []
 
         self.assertEqual(len(mail.outbox), 0) #The setup function also creates a user and generates a mail
-        new_user = BlueBottleUserFactory.objects.create_user(email='new_user@onepercentclub.com')
+        new_user = BlueBottleUserFactory.create(email='new_user@onepercentclub.com')
         self.assertEqual(len(mail.outbox), 0)
 
     def test_calculate_task_count(self):

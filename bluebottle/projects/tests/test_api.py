@@ -182,7 +182,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             'pitch': 'Lorem ipsum, bla bla ',
             'description': 'Some more text'
         }
-        response = self.client.put(project_url, json.dumps(project_data), 
+        response = self.client.put(project_url, project_data, 
                                     token=self.another_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
 
@@ -232,9 +232,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN, response)
 
     def test_project_budgetlines_crud(self):
-        project_data = {'title': 'Some project with a goal & budget'}
+        project_data = {"title": "Some project with a goal & budget"}
         response = self.client.post(self.manage_projects_url, project_data, 
-                                    token=self.some_user_token)
+                                        token=self.some_user_token)
         self.assertEquals(response.data['title'], project_data['title'])
         project_id = response.data['id']
         project_url = '{0}{1}'.format(self.manage_projects_url, project_id)
@@ -625,7 +625,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         Changing project status to submitted sets the date_submitted field
         """
-        project = Project.objects.get(id=Project.objects.last().id - randint(1, Project.objects.count()))
+        project = Project.objects.get(id=Project.objects.last().id - randint(0, Project.objects.count() - 1))
         self.assertTrue(project.date_submitted is None)
 
         #Change status of project to Needs work
@@ -654,7 +654,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         Changing status to needs work clears the date_submitted field of a project
         """
-        project = Project.objects.get(id=Project.objects.last().id - randint(1, Project.objects.count()))
+        project = Project.objects.get(id=Project.objects.last().id - randint(0, Project.objects.count() - 1))
         self.set_date_submitted(project)
 
         #Change status of project to Needs work
@@ -668,7 +668,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         Changing status to new clears the date_submitted field of a project
         """
-        project = Project.objects.get(id=Project.objects.last().id - randint(1, Project.objects.count()))
+        project = Project.objects.get(id=Project.objects.last().id - randint(0, Project.objects.count() - 1))
         self.set_date_submitted(project)
 
         #Change status of project to Needs work

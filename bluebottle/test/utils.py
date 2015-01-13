@@ -11,13 +11,16 @@ from bunch import bunchify
 
 import django
 from django.db import connection
-from django.test import TransactionTestCase
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings
 from django.test import TestCase
 from django.core.management import call_command
+
+from rest_framework.compat import force_bytes_or_smart_bytes
+from rest_framework.settings import api_settings
+from rest_framework.test import APIClient as RestAPIClient
 
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.middleware import TenantMiddleware
@@ -271,91 +274,73 @@ else:
     sauce = SauceClient(USERNAME, ACCESS_KEY)
 
 
-class ApiClient(TenantClient):
+class ApiClient(RestAPIClient):
     tm = TenantMiddleware()
+    renderer_classes_list = api_settings.TEST_REQUEST_RENDERER_CLASSES
+    default_format = api_settings.TEST_REQUEST_DEFAULT_FORMAT
 
-    def get(self, path, data={}, token=None, follow=False, **extra):
-        if token:
-            extra['HTTP_AUTHORIZATION'] = token
-
-        extra['content_type'] = 'application/json'
-
-        response = super(ApiClient, self).get(path, data, **extra)
-
-        if follow:
-            response = self._handle_redirects(response, **extra)
+    def __init__(self, tenant, enforce_csrf_checks=False, **defaults):
+        super(ApiClient, self).__init__(enforce_csrf_checks, **defaults)
         
-        return response
+        self.tenant = tenant
 
-    def post(self, path, data={}, token=None, **extra):
-        if token:
-            extra['HTTP_AUTHORIZATION'] = token
+        self.renderer_classes = {}
+        for cls in self.renderer_classes_list:
+            self.renderer_classes[cls.format] = cls
 
-        extra['content_type'] = 'application/json'
+    def get(self, path, data=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
 
-        if type(data) is dict:
-            data = json.dumps(data)
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).post(path, data, **extra)
+        return super(ApiClient, self).get(path, data=data, **extra)
 
-    def patch(self, path, data={}, token=None, **extra):
-        if token:
-            extra['HTTP_AUTHORIZATION'] = token
-        
-        extra['content_type'] = 'application/json'
-        
-        return super(ApiClient, self).patch(path, data, **extra)
+    def post(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
 
-    def put(self, path, data={}, token=None, **extra):
-        if token:
-            extra['HTTP_AUTHORIZATION'] = token
-        
-        extra['content_type'] = 'application/json'
-        
-        if type(data) is dict:
-            data = json.dumps(data)
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+
+        return super(ApiClient, self).post(
+            path, data=data, format=format, content_type=content_type, **extra)
+
+    def put(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
+
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
  
-        return super(ApiClient, self).put(path, data, **extra)
+        return super(ApiClient, self).put(
+            path, data=data, format=format, content_type=content_type, **extra)
 
-    def delete(self, path, data='', token=None, content_type='application/json',
-               **extra):
-        if token:
-            extra['HTTP_AUTHORIZATION'] = token
+    def patch(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
 
-        return super(ApiClient, self).delete(path, data, **extra)
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+                
+        return super(ApiClient, self).patch(
+            path, data=data, format=format, content_type=content_type, **extra)
 
-    # Taken from Django Test Client
-    def _handle_redirects(self, response, **extra):
-        "Follows any redirects by requesting responses from the server using GET."
+    def delete(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
 
-        response.redirect_chain = []
-        while response.status_code in (301, 302, 303, 307):
-            response_url = response.url
-            redirect_chain = response.redirect_chain
-            redirect_chain.append((response_url, response.status_code))
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
 
-            url = urlsplit(response_url)
-            if url.scheme:
-                extra['wsgi.url_scheme'] = url.scheme
-            if url.hostname:
-                extra['SERVER_NAME'] = url.hostname
-            if url.port:
-                extra['SERVER_PORT'] = str(url.port)
-
-            response = self.get(url.path, QueryDict(url.query), follow=False, **extra)
-            response.redirect_chain = redirect_chain
-
-            if redirect_chain[-1] in redirect_chain[:-1]:
-                # Check that we're not redirecting to somewhere we've already
-                # been to, to prevent loops.
-                raise RedirectCycleError("Redirect loop detected.", last_response=response)
-            if len(redirect_chain) > 20:
-                # Such a lengthy chain likely also means a loop, but one with
-                # a growing path, changing view, or changing query argument;
-                # 20 is the value of "network.http.redirection-limit" from Firefox.
-                raise RedirectCycleError("Too many redirects.", last_response=response)
-
-        return response
+        return super(ApiClient, self).delete(
+            path, data=data, format=format, content_type=content_type, **extra)
 
 
 @override_settings(DEBUG=True)

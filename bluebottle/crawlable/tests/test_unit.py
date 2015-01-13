@@ -13,6 +13,8 @@ def escape_url(url):
 class HashbangMiddlewareTests(BluebottleTestCase):
 
     def setUp(self):
+        super(HashbangMiddlewareTests, self).setUp()
+
         self.init_projects()
 
         self.rf = RequestFactory()
@@ -26,7 +28,7 @@ class HashbangMiddlewareTests(BluebottleTestCase):
 
         self.assertIsNone(result)
 
-    @mock.patch('apps.crawlable.middleware.WebCache.get_driver')
+    @mock.patch('bluebottle.crawlable.middleware.WebCache.get_driver')
     def test_middleware_with_escaped_element(self, mock_get_driver):
         mock_get_driver.return_value = mock.MagicMock(page_source='<html><a href="%s">link</a></html>' % self.test_url)
 

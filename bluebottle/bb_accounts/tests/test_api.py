@@ -211,14 +211,14 @@ class LocaleMiddlewareTest(BluebottleTestCase):
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
     def test_early_redirect_to_user_language(self):
-        response = self.client.get('/nl/', token=self.user_1_token, follow=False)
+        response = self.client.get('/nl/', follow=False, token=self.user_1_token)
         self.assertRedirects(response, '/en/')
 
     def test_no_redirect_for_non_language_urls(self):
-        response = self.client.get('/api/', token=self.user_1_token, follow=False)
+        response = self.client.get('/api/', follow=False, token=self.user_1_token)
         self.assertTrue(response.status_code, 200)
 
-        response = self.client.get('/', token=self.user_1_token, follow=False)
+        response = self.client.get('/', follow=False, token=self.user_1_token)
         self.assertTrue(response.status_code, 200)
 
     def test_no_redirect_for_anonymous_user(self):
@@ -231,6 +231,8 @@ class UserProfileUpdateTests(BluebottleTestCase):
     Integration tests for the User API with dependencies on different bluebottle apps.
     """
     def setUp(self):
+        super(UserProfileUpdateTests, self).setUp()
+
         self.user_1 = BlueBottleUserFactory.create()
         self.user_2 = BlueBottleUserFactory.create()
         self.current_user_api_url = '/api/users/current'

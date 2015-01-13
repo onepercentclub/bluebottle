@@ -1,5 +1,5 @@
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.tests import generate_random_slug
+from bluebottle.utils.tests.test_unit import generate_random_slug
 
 from .models import Organization
 

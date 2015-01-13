@@ -6,13 +6,14 @@ from rest_framework.compat import patterns, url
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from fluent_contents.models import Placeholder
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 
-class PageTestCase(APITestCase):
+
+class PageTestCase(BluebottleTestCase):
 	"""
 	Base class for test cases for ``page`` module.
 
@@ -21,6 +22,7 @@ class PageTestCase(APITestCase):
 	"""
 	def setUp(self):
 		super(PageTestCase, self).setUp()
+		self.init_projects()
 
 		self.user = BlueBottleUserFactory.create()
 

@@ -12,8 +12,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 from rest_framework import status
 
-from apps.fund.models import Donation, DonationStatuses, Order
-
 
 class HomepageTestCase(BluebottleTestCase):
     """ Test that the homepage doesn't error out if no/a campaign is available """

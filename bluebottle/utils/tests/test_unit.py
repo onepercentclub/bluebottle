@@ -1,12 +1,14 @@
 import json
 import uuid
+
 from django.utils import unittest
+from django.test import TestCase
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.db.models import loading
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from django.test.client import Client
 from django.test.utils import override_settings
 
@@ -15,8 +17,8 @@ from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.contentplugins.models import PictureItem
-from .models import MetaDataModel
-from .utils import clean_for_hashtag
+from bluebottle.utils.models import MetaDataModel
+from bluebottle.utils.utils import clean_for_hashtag
 
 
 BB_USER_MODEL = get_user_model()
@@ -72,7 +74,7 @@ class HashTagTestCase(unittest.TestCase):
         self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
 
 
-class MetaTestCase(TestCase):
+class MetaTestCase(BluebottleTestCase):
     def setUp(self):
         """
         The complex work is using the fluent_contents stuff.
@@ -81,6 +83,8 @@ class MetaTestCase(TestCase):
         PictureItem, TextItem, OEmbedItem manually and creating a Placeholder to
         group these ContentItems on the parent.
         """
+
+        super(MetaTestCase, self).setUp()
 
         # Create the MetaDataModel instance
         self.object = MetaDataModel.objects.create(title='Wow. Such meta. Amaze.')

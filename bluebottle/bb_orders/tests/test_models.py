@@ -11,6 +11,8 @@ from bluebottle.utils.utils import StatusDefinition
 class BlueBottleOrderTestCase(BluebottleTestCase):
     
     def setUp(self):
+        super(BlueBottleOrderTestCase, self).setUp()
+
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order)
 

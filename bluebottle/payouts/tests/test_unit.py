@@ -61,7 +61,7 @@ class PayoutTestCase(BluebottleTestCase):
     def test_completed(self):
         """ Test the transition to settled. """
 
-        payout = ProjectPayoutFactory.create(completed=None, status=StatusDefinition.IN_PROGRESS))
+        payout = ProjectPayoutFactory.create(completed=None, status=StatusDefinition.IN_PROGRESS)
         payout.save()
 
         self.assertFalse(payout.completed)

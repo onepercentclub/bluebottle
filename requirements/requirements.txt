@@ -2,7 +2,6 @@
 -e git://github.com/onepercentclub/django-salesforce.git@1e54beb7bcc15a893e9590fb27cbf08853da5599#egg=django-salesforce
 -e git://github.com/onepercentclub/legacyauth.git@3f2406c50dead25a748fb2433de55b73a9162f18#egg=legacyauth
 -e git://github.com/mrmachine/django-taggit-autocomplete-modified.git@8e41e333ce1f0690e1041515b1f2cbf12e0452ce#egg=django-taggit-autocomplete-modified
--e git://github.com/bernardopires/django-tenant-schemas.git@v1.5.1#egg=django-tenant-schemas
 
 -e hg+https://bitbucket.org/wkornewald/django-filetransfers@32ddeac#egg=django-filetransfers
 -e hg+https://bitbucket.org/sergei_maertens/django-admin-tools@c989fd1#egg=django-admin-tools
@@ -58,5 +57,6 @@ gunicorn==0.14.6
 surlex==0.2.0
 django_polymorphic==0.5.6
 raven==4.2.3
+django-tenant-schemas==1.5.1
 dnspython
 fabric

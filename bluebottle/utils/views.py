@@ -65,31 +65,69 @@ from collections import namedtuple
 from django.http import HttpResponse
 from bluebottle.utils.model_dispatcher import get_project_model
 from sorl.thumbnail.shortcuts import get_thumbnail
+from django.template.loader import render_to_string
+from django.template import Context
 
 PROJECT_MODEL = get_project_model()
 
 class ShareFlyerView(View):
-    def post(self, request, *args, **kwargs):
-        data = request.POST
-
-        projectid = data.get('projectid')
-
+    def project_args(self, projectid):
         try:
             project = PROJECT_MODEL.objects.get(slug=projectid)
         except PROJECT_MODEL.DoesNotExist:
+            return None
+
+        project_image = self.request.build_absolute_uri(settings.MEDIA_URL + unicode(get_thumbnail(project.image, "400x380")))
+        args = dict(
+            project_title=project.title,
+            project_pitch=project.pitch,
+            project_image=project_image
+        )
+
+        return args
+
+    def get(self, request, *args, **kwargs):
+        """
+            return the bare email as preview. We do not have access to the
+            logged in user so use fake data
+        """
+        data = request.GET
+
+        args = self.project_args(data.get('projectid'))
+
+        if args is None:
             return HttpResponseNotFound()
 
+        args['share_name'] = "John Doe"
+        args['share_email'] = "john@example.com"
+        args['sender_name'] = "Jane Doe"
+        args['sender_email'] = "jane@example.com"
+
+        args['share_motivation'] = """(sample motivation) Great to see you again this afternoon. Attached you'll find a project flyer for the big event next friday. If you care to join in, please let me know, I'll add you as my +1 on the attendee list.
+
+        Hope to hear from you soon
+
+        Cheers,
+
+        Jane"""
+        result = render_to_string('utils/mails/share_flyer.mail.html', {}, Context(args))
+        return HttpResponse(result, status=200)
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+
+        args = self.project_args(data.get('projectid'))
+        if args is None:
+            return HttpResponseNotFound()
+
+        sender_name = self.request.user.get_full_name() or self.request.user.username
+        sender_email = self.request.user.email
         share_name = data.get('share_name', None)
         share_email = data.get('share_email', None)
         share_motivation = data.get('share_motivation', None)
         share_cc = data.get('share_cc', False) 
 
-        sender_name = request.user.get_full_name() or request.user.username
-        sender_email = request.user.email
-
-        project_image = self.request.build_absolute_uri(settings.MEDIA_URL + unicode(get_thumbnail(project.image, "800x450")))
-        # what image size? 400x380 perhaps ("small")?
-        args = dict(
+        args.update(dict(
             template_name='utils/mails/share_flyer.mail',
             subject=_('%(name)s wants to share a project with you!') % dict(name=sender_name),
             to=namedtuple("Receiver", "email")(email=share_email),
@@ -98,10 +136,7 @@ class ShareFlyerView(View):
             share_motivation=share_motivation,
             sender_name=sender_name,
             sender_email=sender_email,
-            project_title=project.title,
-            project_pitch=project.pitch,
-            project_image=project_image
-        )
+        ))
         if share_cc:
             args['cc'] = [sender_email]
 

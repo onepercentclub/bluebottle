@@ -1,9 +1,10 @@
-from bluebottle.test.utils import BluebottleTestCase
-from django.utils import timezone
-from django.core import mail
-
 from mock import patch
 
+from django.utils import timezone
+from django.core import mail
+from django.db import IntegrityError
+
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.utils.model_dispatcher import get_taskmember_model
@@ -34,11 +35,10 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         Tests exception raising when trying to create a new user without
         providing an email.
         """
-        self.assertRaisesMessage(
-            ValueError,
-            'The given email address must be set',
-            BlueBottleUserFactory.create(email=''),
-            email='')
+        with self.assertRaisesMessage(IntegrityError, 'null value in column "email" violates not-null constraint'):
+            user = BlueBottleUserFactory.build()
+            user.email = None
+            user.save()
 
 
 class BlueBottleUserTestCase(BluebottleTestCase):

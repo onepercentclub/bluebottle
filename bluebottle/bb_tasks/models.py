@@ -47,6 +47,9 @@ class BaseTaskMember(models.Model):
     time_spent = models.PositiveSmallIntegerField(
         _('time spent'), default=0, help_text=_('Time spent executing this task.'))
 
+    externals = models.PositiveSmallIntegerField(
+        _('Externals'), default=0, help_text=_('External people helping for this task'))
+
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
@@ -63,9 +66,15 @@ class BaseTaskMember(models.Model):
         self.check_number_of_members_needed(self.task)
 
     def check_number_of_members_needed(self, task):
-        members_accepted = get_taskmember_model().objects.filter(task=task, status='accepted').count()
+        members = get_taskmember_model().objects.filter(task=task, status='accepted')
+        total_externals = 0
+        for member in members:
+            total_externals += member.externals
+        members_accepted = members.count() + total_externals 
+
         if task.status == 'open' and task.people_needed <= members_accepted:
             task.set_in_progress()
+        return members_accepted
 
     def get_member_email(self):
         if self.member.email:

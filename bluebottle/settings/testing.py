@@ -37,16 +37,21 @@ GRAPH_MODELS = {
   'group_models': True,
 }
 
+DEFAULT_DB_ALIAS = 'default'
 DATABASES = {
     'default': {
         'ENGINE': 'tenant_schemas.postgresql_backend',
         'HOST': '',
         'PORT': '',
-        'NAME': 'bluebottle_test',
+        'NAME': 'bluebottle',
         'USER': '',
         'PASSWORD': ''
     }
 }
+
+DATABASE_ROUTERS = (
+    'tenant_schemas.routers.TenantSyncRouter',
+)
 
 TENANT_APPS += (
     'bluebottle.payments_mock',

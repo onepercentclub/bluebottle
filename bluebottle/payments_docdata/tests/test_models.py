@@ -181,7 +181,6 @@ class AdapterTestCase(BluebottleTestCase):
         mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
 
         user = BlueBottleUserFactory()
-        address = BlueBottleAddressFactory(user=user)
         self.order = OrderFactory.create(user=user)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',
                                                         integration_data={'default_pm': 'ideal'})
@@ -214,8 +213,13 @@ class AdapterTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory()
         holland = CountryFactory(name='Netherlands', alpha2_code='NL')
 
-        address = BlueBottleAddressFactory(user=user, line1='Dam 1a', line2='Bovenste bel', city='Amsterdam',
-                                           postal_code='1000AA', country=holland)
+        # Update user address
+        user.address.line1 = 'Dam 1a'
+        user.address.line2 = 'Bovenste bel'
+        user.address.city = 'Amsterdam'
+        user.address.postal_code = '1000AA'
+        user.address.country = holland
+        user.address.save()
 
         self.order = OrderFactory.create(user=user)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',

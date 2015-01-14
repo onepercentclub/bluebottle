@@ -8,6 +8,7 @@ install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e41e333ce1f0690e1041515b1f2cbf12e0452ce#egg=django-taggit-autocomplete-modified
 - pip install -e .[test]
+- createdb bluebottle_test
 before_script:
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
 script:

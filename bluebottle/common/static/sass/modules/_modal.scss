@@ -473,6 +473,7 @@ $gray-border-hover                                         : #9F9F9F;
 				@include animation(scaleDown .3s ease-out .1s);
 				@include animation-fill-mode(forwards);
 			}
+			z-index: 2;
 		}
 
 		.back {
@@ -499,6 +500,7 @@ $gray-border-hover                                         : #9F9F9F;
 				@include animation(scaleDown .3s ease-out .1s);
 				@include animation-fill-mode(forwards);
 			}
+			z-index: 1;
 		}
 
 		&.flipped {

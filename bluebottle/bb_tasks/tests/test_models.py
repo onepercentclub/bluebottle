@@ -45,4 +45,29 @@ class TestTaskMemberCase(BluebottleTestCase):
         # More than people_needed have applied
         self.assertEqual(task.status, 'in progress')
 
+
 class TestTaskCase(BluebottleTestCase):
+    
+    def test_save_check_status_update_insufficent_accepted_members(self):
+        """ Check that the save method correctly sets the status of the task if not enough task members are 
+            accepted for the task and the save method is called """
+        task = TaskFactory.create(status='open', people_needed=4)
+        task_member1 = TaskMemberFactory.create(task=task, status='accepted', externals=1)
+        task.save()
+
+        self.assertEqual(task.status, 'open')
+
+        task_member2 = TaskMemberFactory.create(task=task, status='accepted')
+        task.save()
+
+        # Total of 3 out of 4 people. Task status should be open.
+        self.assertEqual(task.status, 'open')
+
+    def test_save_check_status_update_sufficent_accepted_members(self):
+        """ Check that the save method correctly sets the status of the task if enough task members are 
+            accepted for the task and the save method is called """
+        task = TaskFactory.create(status='open', people_needed=2)
+        task_member1 = TaskMemberFactory.create(task=task, status='accepted', externals=1)
+        task.save()
+
+        self.assertEqual(task.status, 'in progress')

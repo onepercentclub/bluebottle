@@ -43,7 +43,7 @@ DATABASES = {
         'ENGINE': 'tenant_schemas.postgresql_backend',
         'HOST': '',
         'PORT': '',
-        'NAME': 'bluebottle',
+        'NAME': 'bluebottle_test',
         'USER': '',
         'PASSWORD': ''
     }

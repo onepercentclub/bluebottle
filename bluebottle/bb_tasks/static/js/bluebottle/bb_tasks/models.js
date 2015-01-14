@@ -133,7 +133,7 @@ App.Task = DS.Model.extend({
             totalExternals += member.get('externals');
         });
         return totalExternals;
-    }.property(),
+    }.property('members.@each'),
 
     tags_list: function() {
     	var arr = [];
@@ -198,7 +198,7 @@ App.Task = DS.Model.extend({
 
     acceptedMemberCount: function(){
         return (this.get('members').filterBy('isAccepted').get('length') + this.get('totalExternals'));
-    }.property('model.members.@each.status'),
+    }.property('model.members.@each.status', 'members.@each'),
 
     timeNeeded: function(){
         var times = App.TimeNeededList;

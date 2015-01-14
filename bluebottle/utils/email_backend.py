@@ -54,7 +54,7 @@ class TestMailBackend(EmailBackend):
             return False
         return True
 
-def send_mail(template_name, subject, to, **kwargs):
+def send_mail(template_name, subject, to, cc=None, bcc=None, **kwargs):
     if hasattr(to, 'primary_language') and to.primary_language:
         translation.activate(to.primary_language)
 
@@ -72,7 +72,14 @@ def send_mail(template_name, subject, to, **kwargs):
     if hasattr(to, 'primary_language') and to.primary_language:
         translation.deactivate()
 
-    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[to.email])
+    args = dict(subject=subject, body=text_content, to=[to.email])
+    if cc:
+        args['cc'] = cc
+    if bcc:
+        args['bcc'] = bcc
+
+    msg = EmailMultiAlternatives(**args)
+
     msg.attach_alternative(html_content, "text/html")
 
     return msg.send()

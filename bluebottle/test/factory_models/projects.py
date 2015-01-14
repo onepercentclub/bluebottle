@@ -1,3 +1,8 @@
+import datetime
+from datetime import timedelta
+from django.utils import timezone
+from django.utils.timezone import now
+
 import factory
 
 from bluebottle.utils.model_dispatcher import get_project_model
@@ -35,3 +40,8 @@ class ProjectFactory(factory.DjangoModelFactory):
     status = factory.SubFactory(ProjectPhaseFactory)
     theme = factory.SubFactory(ProjectThemeFactory)
     country = factory.SubFactory(CountryFactory)
+
+    deadline = timezone.now() + timedelta(days=100)
+    amount_needed = 100
+    amount_asked = 100
+    allow_overfunding = True

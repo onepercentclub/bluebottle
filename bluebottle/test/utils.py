@@ -9,11 +9,23 @@ import base64
 
 from bunch import bunchify
 
+import django
+from django.db import connection
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings
 from django.test import TestCase
+from django.core.management import call_command
+
+from rest_framework.compat import force_bytes_or_smart_bytes
+from rest_framework.settings import api_settings
+from rest_framework.test import APIClient as RestAPIClient
+
+from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.middleware import TenantMiddleware
+from tenant_schemas.test.client import TenantClient
+from tenant_schemas.utils import get_public_schema_name, get_tenant_model
 
 from splinter.browser import _DRIVERS
 from splinter.element_list import ElementList
@@ -26,7 +38,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
+from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.test.factory_models.utils import LanguageFactory
+from bluebottle.utils.models import Language
+from bluebottle.clients.models import Client
 
 
 def css_dict(style):
@@ -215,22 +230,27 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        phase_data = [{'id': 1, 'name': 'Plan - New', 'viewable': False},
-                      {'id': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                      {'id': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                      {'id': 4, 'name': 'Plan - Rejected', 'viewable': False},
-                      {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
-                      {'id': 5, 'name': 'Campaign', 'viewable': True},
-                      {'id': 7, 'name': 'Stopped', 'viewable': False},
-                      {'id': 8, 'name': 'Realised', 'viewable': True},
-                      {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
+        ProjectPhase.objects.all().delete()
+        ProjectTheme.objects.all().delete()
+        Language.objects.all().delete()
 
-        theme_data = [{'id': 1, 'name': 'Education'},
-                      {'id': 2, 'name': 'Environment'},
-                      {'id': 3, 'name': 'Health'}]
+        phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
+                      {'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
+                      {'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
+                      {'sequence': 4, 'name': 'Plan - Rejected', 'viewable': False},
+                      {'sequence': 6, 'name': 'Plan - Accepted', 'viewable': True},
+                      {'sequence': 5, 'name': 'Campaign', 'viewable': True},
+                      {'sequence': 7, 'name': 'Stopped', 'viewable': False},
+                      {'sequence': 8, 'name': 'Realised', 'viewable': True},
+                      {'sequence': 9, 'name': 'Done - Incomplete', 'viewable': True},
+                      {'sequence': 10, 'name': 'Done - Complete', 'viewable': True}]
 
-        language_data = [{'id': 1, 'code': 'en', 'language_name': 'English', 'native_name': 'English'},
-                         {'id': 2, 'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
+        theme_data = [{'name': 'Education'},
+                      {'name': 'Environment'},
+                      {'name': 'Health'}]
+
+        language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
+                         {'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
 
         for phase in phase_data:
             ProjectPhaseFactory.create(**phase)
@@ -254,12 +274,101 @@ else:
     sauce = SauceClient(USERNAME, ACCESS_KEY)
 
 
+class ApiClient(RestAPIClient):
+    tm = TenantMiddleware()
+    renderer_classes_list = api_settings.TEST_REQUEST_RENDERER_CLASSES
+    default_format = api_settings.TEST_REQUEST_DEFAULT_FORMAT
+
+    def __init__(self, tenant, enforce_csrf_checks=False, **defaults):
+        super(ApiClient, self).__init__(enforce_csrf_checks, **defaults)
+        
+        self.tenant = tenant
+
+        self.renderer_classes = {}
+        for cls in self.renderer_classes_list:
+            self.renderer_classes[cls.format] = cls
+
+    def get(self, path, data=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
+
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+
+        return super(ApiClient, self).get(path, data=data, **extra)
+
+    def post(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
+
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+
+        return super(ApiClient, self).post(
+            path, data=data, format=format, content_type=content_type, **extra)
+
+    def put(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
+
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+ 
+        return super(ApiClient, self).put(
+            path, data=data, format=format, content_type=content_type, **extra)
+
+    def patch(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
+
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+                
+        return super(ApiClient, self).patch(
+            path, data=data, format=format, content_type=content_type, **extra)
+
+    def delete(self, path, data=None, format='json', content_type=None, **extra):
+        if extra.has_key('token'):
+            extra['HTTP_AUTHORIZATION'] = extra['token']
+            del extra['token']
+
+        if 'HTTP_HOST' not in extra:
+            extra['HTTP_HOST'] = self.tenant.domain_url
+
+        return super(ApiClient, self).delete(
+            path, data=data, format=format, content_type=content_type, **extra)
+
 
 @override_settings(DEBUG=True)
 class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
     def setUp(self):
-        self.init_projects()
+        self.client = ApiClient(self.__class__.tenant)
+
+    @classmethod
+    def setUpClass(cls):
+        # create a tenant
+        tenant_domain = 'testserver'
+        cls.tenant = get_tenant_model()(
+            domain_url=tenant_domain, 
+            schema_name='test',
+            client_name='test')
+
+        cls.tenant.save(verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
+        connection.set_tenant(cls.tenant)
+
+    @classmethod
+    def tearDownClass(cls):
+        # delete tenant
+        connection.set_schema_to_public()
+        cls.tenant.delete()
+
+        cursor = connection.cursor()
+        cursor.execute('DROP SCHEMA test CASCADE')
 
 
 

@@ -45,7 +45,7 @@ from django.core import mail
 from django.test import TestCase
 from rest_framework import status
 from bluebottle.mail import send_mail
-from bluebottle.utils.tests import UserTestsMixin
+from bluebottle.utils.tests.test_unit  import UserTestsMixin
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -64,6 +64,9 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
 
     def setUp(self):
         super(WallpostReactionApiIntegrationTest, self).setUp()
+
+        self.init_projects()
+
         self.some_wallpost = TextWallpostFactory.create()
         self.another_wallpost = TextWallpostFactory.create()
         
@@ -87,7 +90,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text = "Hear! Hear!"
         response = self.client.post(self.wallpost_reaction_url,
                                             {'text': reaction_text, 'wallpost': self.some_wallpost.id},
-                                            HTTP_AUTHORIZATION=self.some_token)
+                                            token=self.some_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text in response.data['text'])
@@ -101,9 +104,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         # Update the created Reaction by author.
         new_reaction_text = 'HEAR!!! HEAR!!!'
         response = self.client.put(reaction_detail_url,
-                                   json.dumps({'text': new_reaction_text,
-                                               'wallpost': self.some_wallpost.id}),
-                                   'application/json', HTTP_AUTHORIZATION=self.some_token)
+                                    {'text': new_reaction_text, 'wallpost': self.some_wallpost.id},
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertTrue(new_reaction_text in response.data['text'])
 
@@ -111,20 +113,20 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.client.logout()
 
         # Retrieve the created Reaction by non-author should work
-        response = self.client.get(reaction_detail_url, HTTP_AUTHORIZATION=self.another_token)
+        response = self.client.get(reaction_detail_url, token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertTrue(new_reaction_text in response.data['text'])
 
         # Delete Reaction by non-author should not work
         self.client.logout()
-        response = self.client.delete(reaction_detail_url, HTTP_AUTHORIZATION=self.another_token)
+        response = self.client.delete(reaction_detail_url, token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response)
 
         # Create a Reaction by another user
         another_reaction_text = "I'm not so sure..."
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': another_reaction_text, 'wallpost': self.some_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.another_token)
+                                    token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         # Only check the substring because the single quote in "I'm" is escaped.
         # https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping
@@ -132,7 +134,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
 
         # retrieve the list of Reactions for this Wallpost should return two
         response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
-                                   HTTP_AUTHORIZATION=self.another_token)
+                                   token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 2)
         self.assertTrue(new_reaction_text in response.data['results'][0]['text'])
@@ -142,11 +144,11 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.assertTrue('not so sure' in response.data['results'][1]['text'])
 
         # Delete Reaction by author should work
-        response = self.client.delete(reaction_detail_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.delete(reaction_detail_url, token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response)
 
         # Retrieve the deleted Reaction should fail
-        response = self.client.get(reaction_detail_url, HTTP_AUTHORIZATION=self.another_token)
+        response = self.client.get(reaction_detail_url, token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
 
@@ -159,26 +161,26 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text_1 = 'Great job!'
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text_1, 'wallpost': self.some_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.some_token)
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text_1 in response.data['text'])
 
         reaction_text_2 = 'This is a really nice post.'
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text_2, 'wallpost': self.some_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.some_token)
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text_2 in response.data['text'])
 
 
         # Check the size of the reaction list is correct.
         response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.some_token)
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 2)
 
         # Check that the reaction listing without a wallpost id is working.
-        response = self.client.get(self.wallpost_reaction_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.wallpost_reaction_url, token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 2)
 
@@ -186,7 +188,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text_3 = 'Super!'
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text_3, 'wallpost': self.another_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.some_token)
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text_3 in response.data['text'])
         # Save the detail url to be used in the authorization test below.
@@ -194,7 +196,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
 
         # Check that the size and data in the first reaction list is correct.
         response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.some_token)
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         # filter_fields seems to do not work...WHYYYYY
@@ -206,7 +208,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         # Check that the size and data in the second reaction list is correct.
         response = self.client.get(self.wallpost_reaction_url, 
                                     {'wallpost': self.another_wallpost.id},
-                                    HTTP_AUTHORIZATION=self.some_token)
+                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['count'], 1)
         self.assertTrue(reaction_text_3 in response.data['results'][0]['text'])
@@ -214,7 +216,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         # Test that a reaction update from a user who is not the author is forbidden.
         response = self.client.post(second_reaction_detail_url, 
                                     {'text': 'Can I update this reaction?'},
-                                    HTTP_AUTHORIZATION=self.another_token)
+                                    token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, response.data)
 
 
@@ -309,15 +311,20 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
 class WallpostMailTests(UserTestsMixin, BluebottleTestCase): #ProjectWallpostTestsMixin,
     
     def setUp(self):
+        from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
+        
         super(WallpostMailTests, self).setUp()
+
+        self.init_projects()
+
         self.user_a = self.create_user(email='a@example.com', first_name='aname ', last_name='alast')
         self.user_b = self.create_user(email='b@example.com', first_name='bname ', last_name='blast')
         self.user_c = self.create_user(email='c@example.com', first_name='cname ', last_name='clast')
 
         #self.project = self.create_project(owner=self.user_a)
 
-        self.theme_1 = ProjectThemeFactory.create()
-        self.phase_1 = ProjectPhaseFactory.create()
+        self.theme_1 = ProjectTheme.objects.get(name='Education')
+        self.phase_1 = ProjectPhase.objects.get(slug='campaign')
 
         self.project_1 = ProjectFactory.create(
             owner=self.user_a, status=self.phase_1, theme=self.theme_1)

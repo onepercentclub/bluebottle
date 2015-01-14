@@ -17,6 +17,8 @@ class PaymentMockTests(BluebottleTestCase):
     """
     def setUp(self):
         super(PaymentMockTests, self).setUp()
+        self.init_projects()
+
         self.order_payment = OrderPaymentFactory.create(status=StatusDefinition.CREATED, amount=100, payment_method='mock')
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
@@ -83,6 +85,8 @@ class PaymentErrorTests(BluebottleTestCase):
 
     def setUp(self):
         super(PaymentErrorTests, self).setUp()
+        self.init_projects()
+        
         self.donation1 = DonationFactory.create(amount=500)
         self.donation2 = DonationFactory.create(amount=700)
         self.donation3 = DonationFactory.create(amount=5)
@@ -106,7 +110,7 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.post(self.order_payment_url, data, token=self.user1_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['payment_method'][0], u'This field is required.')
@@ -117,7 +121,7 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.post(self.order_payment_url, data, token=self.user1_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:10], 'First name')
@@ -128,7 +132,7 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=self.user2_token)
+        response = self.client.post(self.order_payment_url, data, token=self.user2_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:9], 'Last name')
@@ -142,7 +146,7 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, HTTP_AUTHORIZATION=user3_token)
+        response = self.client.post(self.order_payment_url, data, token=user3_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:6], 'Amount')

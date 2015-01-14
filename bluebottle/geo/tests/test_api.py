@@ -18,6 +18,9 @@ class GeoTestCase(BluebottleTestCase):
     """
     def setUp(self):
         super(GeoTestCase, self).setUp()
+
+        self.init_projects()
+
         self.country_1 = CountryFactory.create(name="Afghanistan")
         self.country_2 = CountryFactory.create(name="Albania")
 

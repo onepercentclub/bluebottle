@@ -13,6 +13,9 @@ class TaskApiTestcase(BluebottleTestCase):
 
     def setUp(self):
         super(TaskApiTestcase, self).setUp()
+
+        self.init_projects()
+
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 

@@ -1,18 +1,20 @@
 from decimal import Decimal
-from apps.recurring_donations.models import MonthlyOrder
-from apps.recurring_donations.tests.model_factory import MonthlyDonorFactory, MonthlyDonorProjectFactory
+from bluebottle.recurring_donations.models import MonthlyOrder
+from bluebottle.recurring_donations.tests.model_factory import MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from onepercentclub.tests.factory_models.project_factories import OnePercentProjectFactory
-from onepercentclub.tests.utils import OnePercentTestCase
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.utils import BluebottleTestCase
 from django.core.management import call_command
 
-class MonthlyDonationCommandsTest(OnePercentTestCase):
+class MonthlyDonationCommandsTest(BluebottleTestCase):
 
     def setUp(self):
+        super(MonthlyDonationCommandsTest, self).setUp()
+
         self.init_projects()
         self.phase_campaign = ProjectPhase.objects.get(slug='campaign')
         self.country = CountryFactory()
@@ -20,7 +22,7 @@ class MonthlyDonationCommandsTest(OnePercentTestCase):
         self.projects = []
 
         for amount in [500, 100, 1500, 300, 200]:
-            self.projects.append(OnePercentProjectFactory.create(amount_asked=amount, status=self.phase_campaign))
+            self.projects.append(ProjectFactory.create(amount_asked=amount, status=self.phase_campaign))
 
         # Some donations to get the popularity going
         # Top 3 after this should be projects 4, 3, 0

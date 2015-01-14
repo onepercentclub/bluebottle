@@ -141,6 +141,6 @@ class Reaction(models.Model):
         return Truncator(s).words(10)
 
 #Import the signals for sending mails in case they are present
-if 'apps.tasks' in settings.INSTALLED_APPS and 'apps.projects' in settings.INSTALLED_APPS:
+if 'bluebottle.tasks' in settings.INSTALLED_APPS and 'bluebottle.projects' in settings.INSTALLED_APPS:
     import mails
 

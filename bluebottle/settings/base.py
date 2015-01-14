@@ -131,7 +131,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-    ),
+    )
 }
 
 JWT_AUTH = {
@@ -175,9 +175,6 @@ TENANT_APPS = (
 
     #'social_auth',
     'social.apps.django_app.default',
-
-    # TODO: can we remove this app?
-    'registration',
 
     # Custom dashboard
     'fluent_dashboard',
@@ -362,6 +359,9 @@ BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', '
            'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
            'projects', 'tasks', 'fundraisers', 'donations', 'orders',
            'homepage', 'recurring-donations', 'partners']
+
+MINIMAL_PAYOUT_AMOUNT = 21.00
+VAT_RATE = '0.21'
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

@@ -6,12 +6,12 @@ from rest_framework.compat import patterns, url
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.test import APITestCase
 
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.slides import SlideFactory, DraftSlideFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-class SlideTestCase(APITestCase):
+class SlideTestCase(BluebottleTestCase):
 	"""
 	Base class for test cases for ``slide`` module.
 
@@ -19,6 +19,8 @@ class SlideTestCase(APITestCase):
 	subclass this.
 	"""
 	def setUp(self):
+		super(SlideTestCase, self).setUp()
+
 		self.user = BlueBottleUserFactory.create()
 
 		self.slide1 = SlideFactory.create(author=self.user, language='nl')

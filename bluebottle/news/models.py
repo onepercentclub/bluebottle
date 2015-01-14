@@ -3,7 +3,6 @@ from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext_lazy as _
 
-
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.models import PlaceholderField
@@ -36,7 +35,7 @@ class NewsItem(models.Model):
     allow_comments = models.BooleanField(_("Allow comments"), default=True)
 
     # Metadata
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 
@@ -48,6 +47,6 @@ class NewsItem(models.Model):
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')
         s = MLStripper()
-        s.feed(render_placeholder(request, self.contents))
+        s.feed(render_placeholder(request, self.contents).html)
         return truncatechars(s.get_data(), 250)
 

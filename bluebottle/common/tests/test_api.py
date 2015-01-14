@@ -7,9 +7,9 @@ from django.core.urlresolvers import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from bluebottle.bb_donations.tests.test_api import DonationApiTestCase
 from bluebottle.bb_orders.views import ManageOrderDetail
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -17,12 +17,14 @@ from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')
-class TestDonationList(DonationApiTestCase):
+class TestDonationList(BlueBottleUserFactory):
     """
     Test that the fundraiser donations list only works for the fundraiser owner
     """
     def setUp(self):
         super(TestDonationList, self).setUp()
+
+        self.init_projects()
 
         # Make user 1 a staff user
         self.user1.is_staff = True
@@ -54,7 +56,7 @@ class TestDonationList(DonationApiTestCase):
     def test_latest_donation_list(self, check_status_psp):
         user_token = Token.objects.create(user=self.user1)
         response = self.client.get(self.fundraiser_donation_list_url, 
-            HTTP_AUTHORIZATION="Token {0}".format(user_token))
+            token="Token {0}".format(user_token))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data['results']), 2)

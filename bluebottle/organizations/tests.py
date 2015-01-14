@@ -1,6 +1,5 @@
-from django.test import TestCase
-
-from bluebottle.utils.tests import generate_random_slug
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.tests.test_unit import generate_random_slug
 
 from .models import Organization
 
@@ -25,7 +24,7 @@ class OrganizationTestsMixin(object):
         return organization
 
 
-class OrganizationTests(TestCase, OrganizationTestsMixin):
+class OrganizationTests(BluebottleTestCase, OrganizationTestsMixin):
     """ Tests for organizations. """
 
     def test_save_unicode(self):

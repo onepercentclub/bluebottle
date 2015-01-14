@@ -1,3 +1,4 @@
+sudo: false
 language: python
 python:
 - '2.7'
@@ -8,8 +9,6 @@ install:
 - python setup.py install
 before_script:
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
-- python setup.py install
-- pip install -r requirements/ci_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
 script:
 - python manage.py test
 notifications:

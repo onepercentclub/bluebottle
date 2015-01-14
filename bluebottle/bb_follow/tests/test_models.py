@@ -1,4 +1,4 @@
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from django.core import mail
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
@@ -15,21 +15,13 @@ from bluebottle.utils.utils import StatusDefinition
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
-class FollowTests(TestCase):
+class FollowTests(BluebottleTestCase):
     """ Testcases for the creation of a Follow object """
 
     def setUp(self):
-
-        phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
-                {'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                {'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                {'sequence': 4, 'name': 'Running', 'viewable': True},
-                {'sequence': 5, 'name': 'Realised', 'viewable': True},
-                {'sequence': 6, 'name': 'Closed', 'viewable': False}]
-
-        for phase in phase_data:
-            ProjectPhaseFactory.create(**phase)
-
+        super(FollowTests, self).setUp()
+        self.init_projects()
+        
         self.some_user = BlueBottleUserFactory.create()
         self.another_user = BlueBottleUserFactory.create()
         self.phase1 = ProjectPhaseFactory.create(slug='realised') # Required model for bb_payouts signals 

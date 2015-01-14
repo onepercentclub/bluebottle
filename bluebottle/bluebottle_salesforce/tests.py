@@ -3,10 +3,10 @@ The test cases in bluebottle_salesforce are intended to be used for integration
 with Django ORM and Salesforce for Onepercentclub.
 """
 import logging
-from bluebottle.utils.tests import UserTestsMixin
+from bluebottle.utils.tests.test_unit import UserTestsMixin
 import requests
 from datetime import datetime
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from django.conf import settings
 from django.core.management import call_command
 from salesforce import auth
@@ -38,39 +38,39 @@ except (ConnectionError, AttributeError):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class OAuthTest(TestCase):
+class OAuthTest(BluebottleTestCase):
     """
     Test cases verify authentication is working using Django-Salesforce auth with oauth 2.0
     """
-    def validate_oauth(self, d):
+    def validate_oauth(self, data):
         """
         Validate input file for oauth 2.0 in secrets.py
         """
         for key in ('access_token', 'id', 'instance_url', 'issued_at', 'signature'):
-            if key not in d:
+            if key not in data['salesforce']:
                 self.fail("Missing %s key in returned oauth data." % key)
-            elif not d[key]:
+            elif not data['salesforce'][key]:
                 self.fail("Empty value for %s key in returned oauth data." % key)
 
     def test_token_renewal(self):
         """
         Authenticate with Salesforce in real life using oauth 2.0
         """
-        auth.authenticate(settings.DATABASES[settings.SALESFORCE_DB_ALIAS])
+        auth.authenticate(settings_dict=settings.DATABASES[settings.SALESFORCE_DB_ALIAS])
         self.validate_oauth(auth.oauth_data)
         old_data = auth.oauth_data
 
         auth.expire_token()
-        self.assertEqual(auth.oauth_data, None)
+        self.assertEqual(auth.oauth_data, {})
 
-        auth.authenticate(settings.DATABASES[settings.SALESFORCE_DB_ALIAS])
+        auth.authenticate(settings_dict=settings.DATABASES[settings.SALESFORCE_DB_ALIAS])
         self.validate_oauth(auth.oauth_data)
 
-        self.assertEqual(old_data['access_token'], auth.oauth_data['access_token'])
+        self.assertEqual(old_data['salesforce']['access_token'], auth.oauth_data['salesforce']['access_token'])
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceOrganizationTest(TestCase):
+class SalesforceOrganizationTest(BluebottleTestCase):
     """
     Test cases for Salesforce account object.
     """
@@ -102,7 +102,7 @@ class SalesforceOrganizationTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceContactTest(TestCase):
+class SalesforceContactTest(BluebottleTestCase):
     """
     Test cases for Salesforce Contact object.
     """
@@ -113,7 +113,11 @@ class SalesforceContactTest(TestCase):
         """
         self.test_contact = SalesforceContact(first_name="User",
                                               last_name="Unittest Contact",
-                                              email=test_email)
+                                              email=test_email,
+                                              receive_newsletter=False,
+                                              is_active=True,
+                                              has_activated=True,
+                                              bank_account_active_recurring_debit=False)
                                               # In the future the below will be used
                                               #Account = "ORG_INDIVIDUAL"
         self.test_contact.save()
@@ -134,7 +138,7 @@ class SalesforceContactTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceDonationTest(TestCase):
+class SalesforceDonationTest(BluebottleTestCase):
     """
     Test cases for Salesforce Opportunity object.
     """
@@ -164,7 +168,7 @@ class SalesforceDonationTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SalesforceProjectTest(TestCase):
+class SalesforceProjectTest(BluebottleTestCase):
     """
     Test cases for Salesforce project object.
     """
@@ -194,7 +198,7 @@ class SalesforceProjectTest(TestCase):
 
 
 @unittest.skipUnless(run_salesforce_tests, 'Salesforce settings not set or not online')
-class SyncToSalesforceIntegrationTest(UserTestsMixin, TestCase):
+class SyncToSalesforceIntegrationTest(UserTestsMixin, BluebottleTestCase):
     def smoke_test_sync_script(self):
         #FIXME: We need more objects created here for the test to work.
         # Need to have data for each model that we want to run the smoke test on.

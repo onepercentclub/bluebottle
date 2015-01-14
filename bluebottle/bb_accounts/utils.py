@@ -4,7 +4,6 @@ from django.template import loader
 from django.contrib.sites.models import Site
 
 
-
 def send_welcome_mail(user=None):
     current_site = Site.objects.get_current()
     site_name = current_site.name
@@ -19,10 +18,10 @@ def send_welcome_mail(user=None):
         'LANGUAGE_CODE': user.primary_language
     }
 
-    subject_template_name = 'registration/activation_email_subject.txt'
+    subject_template_name = 'bb_accounts/activation_email_subject.txt'
 
     extension = getattr(settings, 'HTML_ACTIVATION_EMAIL', False) and 'html' or 'txt'
-    email_template_name = 'registration/activation_email.' + extension
+    email_template_name = 'bb_accounts/activation_email.' + extension
 
     subject = loader.render_to_string(subject_template_name, c)
     # Email subject *must not* contain newlines
@@ -40,3 +39,4 @@ def valid_email(email=None):
     if p.match(email):
         return True
     return False
+    

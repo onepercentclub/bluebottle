@@ -1,5 +1,7 @@
 from django.contrib.auth import login, get_user_model
-from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
+from django import forms
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import get_current_site
 from django.conf import settings
@@ -10,8 +12,6 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from django.utils.importlib import import_module
 
-from registration import signals
-from registration.models import RegistrationProfile
 from rest_framework import status, views, response, generics, viewsets
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
@@ -114,28 +114,31 @@ class UserCreate(generics.CreateAPIView):
             #Sending a welcome mail is now done via a post_save signal on a user model
 
 
-class UserActivate(generics.RetrieveAPIView):
-    serializer_class = CurrentUserSerializer
+class PasswordResetForm(forms.Form):
+    error_messages = {
+        'unknown': _("That email address doesn't have an associated "
+                     "user account. Are you sure you've registered?"),
+        'unusable': _("The user account associated with this email "
+                      "address cannot reset the password."),
+    }
+    email = forms.EmailField(label=_("Email"), max_length=254)
 
-    def login_user(self, request, user):
-        # Auto login the user after activation
-        user.backend = 'django.contrib.auth.backends.ModelBackend'
-        return login(request, user)
-
-    def get(self, request, *args, **kwargs):
-        activation_key = self.kwargs.get('activation_key', None)
-        activated_user = RegistrationProfile.objects.activate_user(activation_key)
-        if activated_user:
-            # Log the user in when the user has been activated and return the current user object.
-            self.login_user(request, activated_user)
-            self.object = activated_user
-            serializer = self.get_serializer(self.object)
-            signals.user_activated.send(sender=self.__class__,
-                                        user=activated_user,
-                                        request=request)
-            return response.Response(serializer.data)
-        # Return 400 when the activation didn't work.
-        return response.Response(status=status.HTTP_400_BAD_REQUEST)
+    def clean_email(self):
+        """
+        Validates that an active user exists with the given email address.
+        """
+        UserModel = get_user_model()
+        email = self.cleaned_data["email"]
+        self.users_cache = UserModel._default_manager.filter(email__iexact=email)
+        if not len(self.users_cache):
+            raise forms.ValidationError(self.error_messages['unknown'])
+        if not any(user.is_active for user in self.users_cache):
+            # none of the filtered users are active
+            raise forms.ValidationError(self.error_messages['unknown'])
+        if any((user.password == UNUSABLE_PASSWORD_PREFIX)
+               for user in self.users_cache):
+            raise forms.ValidationError(self.error_messages['unusable'])
+        return email
 
 
 class PasswordReset(views.APIView):
@@ -146,15 +149,19 @@ class PasswordReset(views.APIView):
     serializer_class = PasswordResetSerializer
 
     def save(self, password_reset_form, domain_override=None,
-             subject_template_name='registration/password_reset_subject.txt',
-             email_template_name='registration/password_reset_email.html', use_https=True,
+             subject_template_name='bb_accounts/password_reset_subject.txt',
+             email_template_name='bb_accounts/password_reset_email.html', use_https=True,
              token_generator=default_token_generator, from_email=None, request=None):
         """
         Generates a one-use only link for resetting password and sends to the user. This has been ported from the
         Django PasswordResetForm to allow HTML emails instead of plaint text emails.
         """
         # TODO: Create a patch to Django to use user.email_user instead of send_email.
-        for user in password_reset_form.users_cache:
+        UserModel = get_user_model()
+        email = password_reset_form.cleaned_data["email"]
+        active_users = UserModel._default_manager.filter(
+            email__iexact=email, is_active=True)
+        for user in active_users:
             if not domain_override:
                 current_site = get_current_site(request)
                 site_name = current_site.name

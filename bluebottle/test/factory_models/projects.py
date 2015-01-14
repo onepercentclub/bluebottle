@@ -37,8 +37,8 @@ class ProjectFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
-    status = factory.SubFactory(ProjectPhaseFactory)
-    theme = factory.SubFactory(ProjectThemeFactory)
+    status_id = 1
+    # theme = factory.SubFactory(ProjectThemeFactory)
     country = factory.SubFactory(CountryFactory)
 
     deadline = timezone.now() + timedelta(days=100)

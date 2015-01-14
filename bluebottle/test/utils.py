@@ -252,8 +252,11 @@ class InitProjectDataMixin(object):
         language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
                          {'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
 
+        self.project_status = {}
+
         for phase in phase_data:
-            ProjectPhaseFactory.create(**phase)
+            status = ProjectPhaseFactory.create(**phase)
+            self.project_status[status.slug] = status
 
         for theme in theme_data:
             ProjectThemeFactory.create(**theme)

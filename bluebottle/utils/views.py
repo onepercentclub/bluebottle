@@ -63,26 +63,49 @@ from bluebottle.utils.email_backend import send_mail
 from django.utils.translation import ugettext as _
 from collections import namedtuple
 from django.http import HttpResponse
+from bluebottle.utils.model_dispatcher import get_project_model
+from sorl.thumbnail.shortcuts import get_thumbnail
+
+PROJECT_MODEL = get_project_model()
 
 class ShareFlyerView(View):
     def post(self, request, *args, **kwargs):
         data = request.POST
 
+        projectid = data.get('projectid')
+
+        try:
+            project = PROJECT_MODEL.objects.get(slug=projectid)
+        except PROJECT_MODEL.DoesNotExist:
+            return HttpResponseNotFound()
+
         share_name = data.get('share_name', None)
         share_email = data.get('share_email', None)
         share_motivation = data.get('share_motivation', None)
-        share_cc = data.get('share_cc', False)
+        share_cc = data.get('share_cc', False) 
 
-        result = send_mail(
-            template_name='landing_page/mails/contact.mail',
-            subject=_('You received a contact request!'),
-            to=namedtuple("Receiver", "email")(email=settings.CONTACT_EMAIL),
-            # bcc='cares@onepercentclub.com',
-            contact_name=share_name,
-            contact_email=share_email,
-            contact_motivation=share_motivation
+        sender_name = request.user.get_full_name() or request.user.username
+        sender_email = request.user.email
+
+        project_image = self.request.build_absolute_uri(settings.MEDIA_URL + unicode(get_thumbnail(project.image, "800x450")))
+        # what image size? 400x380 perhaps ("small")?
+        args = dict(
+            template_name='utils/mails/share_flyer.mail',
+            subject=_('%(name)s wants to share a project with you!') % dict(name=sender_name),
+            to=namedtuple("Receiver", "email")(email=share_email),
+            share_name=share_name,
+            share_email=share_email,
+            share_motivation=share_motivation,
+            sender_name=sender_name,
+            sender_email=sender_email,
+            project_title=project.title,
+            project_pitch=project.pitch,
+            project_image=project_image
         )
-        ## if cc is true, do same for tp=logged in user
+        if share_cc:
+            args['cc'] = [sender_email]
+
+        result = send_mail(**args)
 
         return HttpResponse(result, status=200)
 

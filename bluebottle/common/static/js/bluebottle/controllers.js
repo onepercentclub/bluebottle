@@ -10,6 +10,7 @@ App.StandardTabController = Em.ObjectController.extend(App.ControllerObjectSaveM
 App.ModalContainerController = BB.ModalContainerController.extend();
 
 App.ShareFlyer = Em.Object.extend(App.Serializable, {
+    projectid: null,
     share_name: null,
     share_email: null,
     share_motivation:  null,

@@ -138,9 +138,9 @@ App.SocialShareView = Em.View.extend({
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
         },
         shareOnFlyer: function() {
-            var project = this.get('context'),
+            var project = this.get('context').get('model'),
                 controller = this.get('controller');
-            controller.send('openInBox', 'shareFlyer', App.ShareFlyer.create({}), 'big-modal donation-small');
+            controller.send('openInBox', 'shareFlyer', App.ShareFlyer.create({projectid:project.id}), 'big-modal donation-small');
         },
         shareEmbedded: function() {
             var project = this.get('context'),

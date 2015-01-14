@@ -12,8 +12,6 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from django.utils.importlib import import_module
 
-from registration import signals
-from registration.models import RegistrationProfile
 from rest_framework import status, views, response, generics, viewsets
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
@@ -114,30 +112,6 @@ class UserCreate(generics.CreateAPIView):
             obj.is_active = True
             obj.save()
             #Sending a welcome mail is now done via a post_save signal on a user model
-
-
-class UserActivate(generics.RetrieveAPIView):
-    serializer_class = CurrentUserSerializer
-
-    def login_user(self, request, user):
-        # Auto login the user after activation
-        user.backend = 'django.contrib.auth.backends.ModelBackend'
-        return login(request, user)
-
-    def get(self, request, *args, **kwargs):
-        activation_key = self.kwargs.get('activation_key', None)
-        activated_user = RegistrationProfile.objects.activate_user(activation_key)
-        if activated_user:
-            # Log the user in when the user has been activated and return the current user object.
-            self.login_user(request, activated_user)
-            self.object = activated_user
-            serializer = self.get_serializer(self.object)
-            signals.user_activated.send(sender=self.__class__,
-                                        user=activated_user,
-                                        request=request)
-            return response.Response(serializer.data)
-        # Return 400 when the activation didn't work.
-        return response.Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class PasswordResetForm(forms.Form):

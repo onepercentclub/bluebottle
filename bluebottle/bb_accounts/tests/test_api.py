@@ -4,7 +4,6 @@ import re
 from django.core import mail
 from bluebottle.test.utils import BluebottleTestCase
 
-from registration.models import RegistrationProfile
 from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

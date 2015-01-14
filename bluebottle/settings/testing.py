@@ -1,5 +1,5 @@
 from .base import *
-from .testing_secrets import *
+from .secrets import *
 from bluebottle.payments_docdata.settings import *
 
 # Supress naive date warnings
@@ -12,7 +12,6 @@ warnings.filterwarnings(
 DOCDATA_MERCHANT_NAME = 'merchant_name'
 DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
 
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 # Set up a proper testing email backend
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

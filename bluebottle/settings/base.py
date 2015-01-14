@@ -176,9 +176,6 @@ TENANT_APPS = (
     #'social_auth',
     'social.apps.django_app.default',
 
-    # TODO: can we remove this app?
-    'registration',
-
     # Custom dashboard
     'fluent_dashboard',
 

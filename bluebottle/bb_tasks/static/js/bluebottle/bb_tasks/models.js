@@ -37,6 +37,7 @@ App.TaskMember = DS.Model.extend({
     status: DS.attr('string', {defaultValue: 'applied'}),
     motivation: DS.attr('string'),
     task: DS.belongsTo('App.Task'),
+    externals: DS.attr('number'),
 
     isStatusApplied: function(){
         return (this.get('status') == 'applied');

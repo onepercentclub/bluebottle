@@ -8,3 +8,4 @@ App.StandardTabController = Em.ObjectController.extend(App.ControllerObjectSaveM
 
 // Extend BB Modal
 App.ModalContainerController = BB.ModalContainerController.extend();
+

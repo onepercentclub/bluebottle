@@ -70,6 +70,16 @@ App.SocialShareView = Em.View.extend({
         return App.get('shareEnabled');
     }.property(),
 
+    shareOptions: function() {
+        // if no options are explictly configured, return default set
+        var options = App.get('shareOptions');
+
+        if(typeof options === "undefined") {
+            return {facebook: true, twitter: true};
+        }
+        return options;
+    }.property(),
+
     didInsertElement: function(){
         // Because ZeroClipboard requires user interaction we can't handle the copy link as an action.
         var controller = this.get('parentView.controller'),
@@ -126,6 +136,11 @@ App.SocialShareView = Em.View.extend({
             }
 
             this.showDialog('https://twitter.com/home?status=', status, 'twitter');
+        },
+        shareOnFlyer: function() {
+            var project = this.get('context').get('model'),
+                controller = this.get('controller');
+            controller.send('openInBox', 'shareFlyer', App.ShareFlyer.create({projectid:project.id}), 'big-modal donation-small');
         },
         shareEmbedded: function() {
             var project = this.get('context'),

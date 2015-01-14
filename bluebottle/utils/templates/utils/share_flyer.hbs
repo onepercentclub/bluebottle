@@ -1,0 +1,33 @@
+{% load templatetag_handlebars %}
+{% load i18n %}
+{% load static %}
+{% load bb_ember %}
+
+
+{% tplhandlebars "share_flyer" %}
+
+    <div class="modal-fullscreen-content">
+        <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+        <h4>{% blocktrans %}Share a Project flyer{% endblocktrans %}</h4>
+        <big>{% trans "Share this project with your partners and/or invite them to join" %}
+             (<a href="/utils/share_flyer?projectid={{unbound model.projectid}}" target="_blank"> {% trans "view example" %}</a>)
+
+        </big>
+
+         <label for="contactName">{% trans "Recipients name" %}* </label>
+        {{input id="contactName" valueBinding='share_name' type="text" name="share_name" maxlength="254" placeholder=App.translatables.placeholders.share_name classBinding="errorList.share_name.length:error"}}
+
+         <label for="contactEmail">{% trans "Recipients email" %}* </label>
+        {{input id="contactEmail" valueBinding='share_email' type="text" name="share_email" maxlength="254" placeholder=App.translatables.placeholders.share_email classBinding="errorList.share_email.length:error"}}
+
+         <label for="contactMotivation">{% trans "Your motivation" %}*  0/250</label>
+        {{view Ember.TextArea id="contactMotivation" valueBinding='share_motivation' name="share_motivation" maxlength="254" placeholderBinding=App.translatables.placeholders.share_motivation classBinding="errorList.share_motivation.length:error"}}
+        <label for="sendCC">{% trans "Send me a copy (cc)" %}</label>
+        {{view Ember.Checkbox id="sendCC" valueBinding="share_cc" name="share_cc"}}
+
+        <a {{action "submit"}} class="btn donate-btn">{% trans "Send project invitation" %}</a>
+    </div>
+
+{% endtplhandlebars %}
+
+

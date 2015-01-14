@@ -64,10 +64,10 @@ App.ShareFlyerController =  Em.ObjectController.extend(BB.ModalControllerMixin, 
             this.set('error', null);
 
             _this.send("closeModal");
-            model.submit("/landing/contact/").then(
+            model.submit("/utils/share_flyer").then(
                 function(res) {
                     // what is a valid flash type?
-                    _this.send("setFlash", gettext("Thanks for contacting us, we'll get back to you as soon as possible"), "success", 2000);
+                    _this.send("setFlash", gettext("Great! Your project flyer will be shared."), "success", 2000);
                 },
                 function(res) {
                     // what is a valid flash type?

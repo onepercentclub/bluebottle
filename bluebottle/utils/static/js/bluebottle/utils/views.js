@@ -140,7 +140,7 @@ App.SocialShareView = Em.View.extend({
         shareOnFlyer: function() {
             var project = this.get('context'),
                 controller = this.get('controller');
-            controller.send('openInBox', 'shareFlyer', project, 'modalFront');
+            controller.send('openInBox', 'shareFlyer', App.ShareFlyer.create({}), 'big-modal donation-small');
         },
         shareEmbedded: function() {
             var project = this.get('context'),

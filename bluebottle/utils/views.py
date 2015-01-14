@@ -59,6 +59,32 @@ class DocumentDownloadView(View):
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
 
+from bluebottle.utils.email_backend import send_mail
+from django.utils.translation import ugettext as _
+from collections import namedtuple
+from django.http import HttpResponse
+
+class ShareFlyerView(View):
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+
+        share_name = data.get('share_name', None)
+        share_email = data.get('share_email', None)
+        share_motivation = data.get('share_motivation', None)
+        share_cc = data.get('share_cc', False)
+
+        result = send_mail(
+            template_name='landing_page/mails/contact.mail',
+            subject=_('You received a contact request!'),
+            to=namedtuple("Receiver", "email")(email=settings.CONTACT_EMAIL),
+            # bcc='cares@onepercentclub.com',
+            contact_name=share_name,
+            contact_email=share_email,
+            contact_motivation=share_motivation
+        )
+        ## if cc is true, do same for tp=logged in user
+
+        return HttpResponse(result, status=200)
 
 #TODO: this was creating problems with the tests
 # TESTS

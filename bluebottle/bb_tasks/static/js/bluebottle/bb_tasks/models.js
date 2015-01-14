@@ -128,7 +128,7 @@ App.Task = DS.Model.extend({
 
     totalExternals: function() {
         totalExternals = 0;
-        var members = this.get('members').filterBy('isStatusAccepted', true);
+        var members = this.get('members').filterBy('isAccepted', true);
         members.forEach(function(member){
             totalExternals += member.get('externals');
         });

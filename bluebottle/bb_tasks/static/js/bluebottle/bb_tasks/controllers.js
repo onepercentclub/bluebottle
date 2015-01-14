@@ -126,10 +126,6 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
 	}.property('status', 'isMember', 'model.isStatusClosed', 'model.isStatusRealized', 'model.isStatusCompleted',
 		'model.@members.isStatusAccepted'),
 
-    acceptedMemberCount: function(){
-        return (this.get('members').filterBy('isAccepted').get('length'));
-    }.property('model.members.@each.status'),
-
     isMember: function() {
         var user = this.get('currentUser.username');
         var isMember = false;

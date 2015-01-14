@@ -76,7 +76,7 @@ App.TaskRoute = Em.Route.extend(App.ScrollToTop, App.WallRouteMixin, {
 							taskMember.set('task', task);
 							taskMember.set('created', new Date());
 							taskMember.save();
-                            debugger
+                            
 							if (route.get('tracker')) {
 							    route.get('tracker').trackEvent("Apply for task", {task: task.get('title')});
 							}

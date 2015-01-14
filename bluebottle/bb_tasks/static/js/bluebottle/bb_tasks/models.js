@@ -126,6 +126,15 @@ App.Task = DS.Model.extend({
     status: DS.attr('string', {defaultValue: 'open'}),
     tags: DS.hasMany('App.Tag'),
 
+    totalExternals: function() {
+        totalExternals = 0;
+        var members = this.get('members').filterBy('isStatusAccepted', true);
+        members.forEach(function(member){
+            totalExternals += member.get('externals');
+        });
+        return totalExternals;
+    }.property(),
+
     tags_list: function() {
     	var arr = [];
         this.get('tags').forEach(function (item, index, self) {
@@ -172,7 +181,7 @@ App.Task = DS.Model.extend({
     }.property("members.@each"),
 
     membersNeeded: function() {
-        return this.get("people_needed") - this.get('members').filterBy('isStatusAccepted', true).length;
+        return this.get("people_needed") - this.get('members').filterBy('isStatusAccepted', true).length - this.get('totalExternals');
     }.property('people_needed', 'members.@each'),
     
 	hasMoreThanOneMember: function() {
@@ -188,7 +197,7 @@ App.Task = DS.Model.extend({
     }.property("people_needed"),
 
     acceptedMemberCount: function(){
-        return (this.get('members').filterBy('isAccepted').get('length'));
+        return (this.get('members').filterBy('isAccepted').get('length') + this.get('totalExternals'));
     }.property('model.members.@each.status'),
 
     timeNeeded: function(){

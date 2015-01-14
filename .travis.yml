@@ -6,7 +6,7 @@ env:
 - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
-- python setup.py install
+- pip install -e .[test]
 before_script:
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
 script:

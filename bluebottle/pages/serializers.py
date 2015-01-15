@@ -1,5 +1,6 @@
 from django.template import Context, Template
 
+from django.utils.safestring import mark_safe
 from fluent_contents.rendering import render_placeholder
 from rest_framework import serializers
 
@@ -12,7 +13,7 @@ class PageContentsField(serializers.Field):
 
     def to_native(self, obj):
         request = self.context.get('request', None)
-        contents_html = render_placeholder(request, obj)
+        contents_html = mark_safe(render_placeholder(request, obj).html)
         contents_html = Template(contents_html).render(Context({}))
         return contents_html
 

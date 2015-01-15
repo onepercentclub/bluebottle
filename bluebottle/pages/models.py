@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField)
@@ -55,5 +56,5 @@ class Page(models.Model):
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')
         s = MLStripper()
-        s.feed(render_placeholder(request, self.body).html)
+        s.feed(mark_safe(render_placeholder(request, self.body).html))
         return truncatechars(s.get_data(), 200)

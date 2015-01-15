@@ -317,27 +317,28 @@ class FollowTests(BluebottleTestCase):
         # On a Fundraiser page, people who posted to the wall and who donated get an email --> Followers
         self.assertEqual(Follow.objects.count(), 0)
 
+        # A user creates a fundraiser
         fundraiser_person = BlueBottleUserFactory.create()
         fundraiser = FundraiserFactory(project=self.project, owner=fundraiser_person)
 
+        # Two people donate to the fundraiser
         donator1 = BlueBottleUserFactory.create()
         order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=None)
+        donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=fundraiser)
 
         donator2 = BlueBottleUserFactory.create()
         order2 = OrderFactory.create(user=donator2, status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=None)
+        donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=fundraiser)
 
+        # A user create a wallpost on the fundraiser
         commenter = BlueBottleUserFactory.create()
         commenter_post = TextWallpostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter", email_followers=False)
 
+        # The fundraiser owner creates a wallpost to followers
         some_wallpost = TextWallpostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
 
         mail_count = 0
-
         self.assertEqual(Follow.objects.count(), 4)
-        for follower in Follow.objects.all():
-            follower.followed_object = self.project
 
         # When the fundraiser sends an email to the followers he doesn't get one himself
         receivers = [donator1.email, donator2.email, commenter.email]

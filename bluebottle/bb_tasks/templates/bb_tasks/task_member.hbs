@@ -11,7 +11,7 @@
             </a>
         </figure>
         <div class="item-body">
-            <a {{action openInBigBox "userModal" member}} class="user-name">{{member.full_name}}</a> {{statusLabel}} {% trans "this task" %}</strong>
+            <a {{action openInBigBox "userModal" member}} class="user-name">{{member.full_name}} {{#if externals }}(+{{externals}} externals) {{/if}}</a> {{statusLabel}} {% trans "this task" %}</strong>
             {{#if canEditStatus}}
                 <a class="action-edit" {{action 'editTaskMember' this}}>
                     {% trans "Edit" %}

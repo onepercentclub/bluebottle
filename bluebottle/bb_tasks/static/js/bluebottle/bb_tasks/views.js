@@ -61,7 +61,19 @@ App.TaskMemberEdit = Em.View.extend({
 App.TaskMemberApplyView = Em.View.extend({
     templateName: 'task_member_apply',
     tagName: 'form',
-    motivation: ''
+    motivation: '',
+
+    totalExternals: 10,
+
+    externalsList: function() {
+        var result = [];
+        for (var i = 0; i <= this.get('totalExternals'); i++) {
+            result.push(i);
+        };
+        return result; 
+    }.property(),
+    externals: null,
+    
 });
 
 

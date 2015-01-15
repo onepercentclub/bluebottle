@@ -74,14 +74,14 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         # Should have 3 donations
         self.assertEqual(monthly_order.donations.count(), 3)
         # Check donation amounts and projects
-        self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('33.33'))
-        self.assertEqual(monthly_order.donations.all()[0].project, self.projects[3])
+        self.assertEqual(monthly_order.donations.all()[2].amount, Decimal('33.33'))
+        self.assertEqual(monthly_order.donations.all()[2].project, self.projects[3])
 
         self.assertEqual(monthly_order.donations.all()[1].amount, Decimal('33.33'))
         self.assertEqual(monthly_order.donations.all()[1].project, self.projects[4])
 
-        self.assertEqual(monthly_order.donations.all()[2].amount, Decimal('33.34'))
-        self.assertEqual(monthly_order.donations.all()[2].project, self.projects[0])
+        self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('33.34'))
+        self.assertEqual(monthly_order.donations.all()[0].project, self.projects[0])
 
 
 

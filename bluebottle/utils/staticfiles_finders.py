@@ -19,6 +19,7 @@ class TenantStaticFilesFinder(FileSystemFinder):
         matches = []
         tenants = Client.objects.all()
         tenant_dir = getattr(settings, 'MULTI_TENANT_DIR', None)
+
         if not tenant_dir:
             return matches
 
@@ -30,5 +31,7 @@ class TenantStaticFilesFinder(FileSystemFinder):
                 local_path = safe_join(tenant_dir, tenant_path)
                 print local_path
                 if os.path.exists(local_path):
+                    if all:
+                        return [local_path]
                     return local_path
-        return
+        return matches

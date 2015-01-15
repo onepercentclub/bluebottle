@@ -146,7 +146,7 @@ class OrderPayment(models.Model, FSMTransition):
         # TODO: add cancelled state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.CHARGED_BACK)
+    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED], target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         self.closed = None
 

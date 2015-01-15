@@ -34,7 +34,7 @@ $gray-border-hover                                         : #9F9F9F;
 		}
 	}
 
-	input {
+	input, textarea {
 		border-radius: 4px;
 		margin: 5px 0 5px 0;
 		border-color: $gray-border;
@@ -284,6 +284,23 @@ $gray-border-hover                                         : #9F9F9F;
 					width: 45%;
 					height: 100%;
 					border-bottom: solid 1px $gray-border;
+				}
+			}
+
+			.share-flyer {
+				text-align: left;
+
+				input {
+					margin-bottom: 20px;
+				}
+
+				textarea {
+					height: 100px;
+					margin-bottom: 20px;
+				}
+
+				.counter-holder {
+					float: right;
 				}
 			}
 

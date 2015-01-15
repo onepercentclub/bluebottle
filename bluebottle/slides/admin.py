@@ -7,8 +7,10 @@ from django.utils import simplejson
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.utils.safestring import mark_safe
+
 from fluent_contents.models import Placeholder
-from fluent_contents.rendering import render_content_items, render_placeholder
+from fluent_contents.rendering import render_content_items
 
 from .models import Slide
 
@@ -78,7 +80,7 @@ class SlideAdmin(admin.ModelAdmin):
 
         # Get fluent-contents placeholder
         items = self._get_preview_items(request, blogpost)
-        contents_html = render_content_items(request, items)
+        contents_html = mark_safe(render_content_items(request, items).html)
 
         status = 200
         json = {

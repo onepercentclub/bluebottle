@@ -1,4 +1,7 @@
 sudo: false
+cache:
+  directories:
+  - $HOME/.pip-cache/
 language: python
 python:
 - '2.7'
@@ -6,8 +9,7 @@ env:
 - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
-- pip install -e git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e41e333ce1f0690e1041515b1f2cbf12e0452ce#egg=django-taggit-autocomplete-modified
-- pip install -e .[test]
+- pip install -e .[test] --process-dependency-links
 - createdb bluebottle_test
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat

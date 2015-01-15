@@ -37,7 +37,7 @@ class ProjectFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
-    status_id = 1
+    status =  factory.SubFactory(ProjectPhaseFactory, sequence=1, name='Plan - New')
     # theme = factory.SubFactory(ProjectThemeFactory)
     country = factory.SubFactory(CountryFactory)
 

@@ -6,8 +6,11 @@ env:
 - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
+- pip install -e git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e41e333ce1f0690e1041515b1f2cbf12e0452ce#egg=django-taggit-autocomplete-modified
 - pip install -e .[test]
+- createdb bluebottle_test
 before_script:
+- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
 script:
 - python manage.py test

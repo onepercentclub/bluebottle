@@ -93,14 +93,11 @@ def create_recurring_order(user, projects, batch, donor):
 
     rest_amount = donor.amount - project_amount * len(projects)
 
-    for p in projects:
-        project = PROJECT_MODEL.objects.get(id=p.id)
-        don = MonthlyDonation.objects.create(user=user, project=project, amount=project_amount, order=order)
+    project_count = len(projects)
+    for index, project in enumerate(projects):
+        amount = project_amount if index < project_count - 1 else project_amount + rest_amount
+        don = MonthlyDonation.objects.create(user=user, project=project, amount=amount, order=order)
         don.save()
-
-    # Update amount for last donation to make sure donation total == donor amount
-    don.amount += rest_amount
-    don.save()
 
     return order
 

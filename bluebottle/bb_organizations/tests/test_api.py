@@ -109,7 +109,9 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             'email': 'info@onepercentclub.com',
             'twitter': '@1percentclub',
             'facebook': '/onepercentclub',
-            'skype': 'onepercentclub'
+            'skype': 'onepercentclub',
+            'account_iban': 'NL18ABNA0484869868',
+            'account_bic': 'ABNANL2A'
         }
 
         response = self.client.post(reverse('manage_organization_list'), post_data, token=self.user_1_token)
@@ -188,14 +190,14 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
             'email': 'info@utrecht.nl',
             'twitter': 'utrecht',
             'facebook': '/utrecht',
-            'skype': 'utrecht'
+            'skype': 'utrecht',
+            'account_iban': 'NL18ABNA0484869868',
+            'account_bic': 'ABNANL2A'
         }
-
-        data = json.dumps(put_data)
 
         response = self.client.put(
             reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}), 
-                    data, token=self.user_1_token)
+                    put_data, token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 

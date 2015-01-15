@@ -57,35 +57,28 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         call_command('process_monthly_donations', prepare=True)
 
         # Now check that we have 2 prepared donations.
-        monthly_orders = MonthlyOrder.objects
-        self.assertEqual(monthly_orders.count(), 2)
+        self.assertEqual(MonthlyOrder.objects.count(), 2)
 
         # Check first monthly order
-        monthly_order = monthly_orders.all()[0]
+        monthly_order = MonthlyOrder.objects.get(user=self.user1)
 
         # Should have one donation
         self.assertEqual(monthly_order.donations.count(), 1)
+        
         # Donation should have amount 25 and go to first project
         self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('25'))
         self.assertEqual(monthly_order.donations.all()[0].project, self.projects[0])
 
         # Check second monthly order
-        monthly_order = monthly_orders.all()[1]
         # Should have 3 donations
-        self.assertEqual(monthly_order.donations.count(), 3)
-        # Check donation amounts and projects
-        self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('33.33'))
-        self.assertEqual(monthly_order.donations.all()[0].project, self.projects[3])
+        monthly_donations = MonthlyOrder.objects.get(user=self.user2).donations.all()
+        self.assertEqual(len(monthly_donations), 3)
 
-        self.assertEqual(monthly_order.donations.all()[1].amount, Decimal('33.33'))
-        self.assertEqual(monthly_order.donations.all()[1].project, self.projects[4])
+        self.assertEqual(monthly_donations[0].amount, Decimal('33.33'))
+        self.assertEqual(monthly_donations[0].project, self.projects[3])
 
-        self.assertEqual(monthly_order.donations.all()[2].amount, Decimal('33.34'))
-        self.assertEqual(monthly_order.donations.all()[2].project, self.projects[0])
+        self.assertEqual(monthly_donations[1].amount, Decimal('33.33'))
+        self.assertEqual(monthly_donations[1].project, self.projects[4])
 
-
-
-
-
-
-
+        self.assertEqual(monthly_donations[2].amount, Decimal('33.34'))
+        self.assertEqual(monthly_donations[2].project, self.projects[0])

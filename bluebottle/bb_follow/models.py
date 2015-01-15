@@ -57,11 +57,13 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
+    if not created: return
+
     from bluebottle.wallposts.models import Wallpost, Reaction, SystemWallpost
     # Imported inside the signal to prevent circular imports
 
     # A Wallpost is created by user
-    if created and isinstance(instance, Wallpost):
+    if isinstance(instance, Wallpost):
 
         # Create a Follow to the specific Project or Task if a Wallpost was created
         if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask) or isinstance(instance.content_object, BaseFundraiser):
@@ -74,20 +76,20 @@ def create_follow(sender, instance, created, **kwargs):
                 try:
                     follow = Follow.objects.get(user=user,
                                                 object_id=instance.content_object.id,
-                                                content_type=instance.content_type)
+                                                content_type=content_type)
                 except Follow.DoesNotExist:
                     # Check that the project owner is not the user
                     if isinstance(instance.content_object, BaseProject) and instance.content_object.owner != user:
                         follow = Follow(user=user, followed_object=instance.content_object)
                         follow.save()
                     # Check that the task owner is not the user
-                    if isinstance(instance.content_object, BaseTask) and instance.content_object.author != user:
+                    elif isinstance(instance.content_object, BaseTask) and instance.content_object.author != user:
                         follow = Follow(user=user, followed_object=instance.content_object)
                         follow.save()
 
                     # Check that the fundraiser is not the project owner
-                    if isinstance(instance.content_object, BaseFundraiser) and instance.content_object.project.owner != user and instance.content_object.owner != user:
-                        follow = Follow(user=user, followed_object=instance.content_object.project)
+                    elif isinstance(instance.content_object, BaseFundraiser) and instance.content_object.project.owner != user and instance.content_object.owner != user:
+                        follow = Follow(user=user, followed_object=instance.content_object)
                         follow.save()              
 
     # For now, posting a a reaction does not make you a follower. This code is left in commented because it might be re-enabled soon.
@@ -116,78 +118,82 @@ def create_follow(sender, instance, created, **kwargs):
     #                     follow.save()      
 
     # A user does a donation
-    if created and isinstance(instance, BaseDonation):
+    elif isinstance(instance, BaseDonation):
         # Create a Follow to the specific Project or Task if a donation was made
         user = instance.user
+        followed_object = instance.fundraiser or instance.project 
 
-        if user and instance.project:
+        if user and followed_object:
 
-            content_type = ContentType.objects.get_for_model(instance.project)
+            content_type = ContentType.objects.get_for_model(followed_object)
 
             # A Follow object should link the project to the user, not the donation and the user 
             try:
                 follow = Follow.objects.get(user=user, 
-                                            object_id=instance.project.id,
+                                            object_id=followed_object.id,
                                             content_type=content_type)
             except Follow.DoesNotExist:
-                if user != instance.project.owner:
-                    follow = Follow(user=user, followed_object=instance.project)
+                if user != followed_object.owner:
+                    follow = Follow(user=user, followed_object=followed_object)
                     follow.save()
 
     # A user applies for a task
-    if created and isinstance(instance, BaseTaskMember):
+    elif isinstance(instance, BaseTaskMember):
         # Create a Follow to the specific Task if a user applies for the task
         user = instance.member
+        followed_object = instance.task
 
-        if user and instance.task:
+        if user and followed_object:
 
-            content_type = ContentType.objects.get_for_model(instance.task)
+            content_type = ContentType.objects.get_for_model(followed_object)
 
             try:
                 follow = Follow.objects.get(user=user, 
-                                            object_id=instance.task.id,
+                                            object_id=followed_object.id,
                                             content_type=content_type)
             except Follow.DoesNotExist:
-                if user != instance.task.author and user != instance.task.project.owner:
-                    follow = Follow(user=user, followed_object=instance.task)
+                if user != followed_object.author and user != followed_object.project.owner:
+                    follow = Follow(user=user, followed_object=followed_object)
                     follow.save()        
 
 
     # A user creates a task for a project
-    if created and isinstance(instance, BaseTask):
+    elif isinstance(instance, BaseTask):
         # Create a Follow to the specific Task if a task author is not the owner of the task 
         user = instance.author
+        followed_object = instance.project
 
-        if user and instance:
+        if user and followed_object:
 
-            content_type = ContentType.objects.get_for_model(instance)
+            content_type = ContentType.objects.get_for_model(followed_object)
 
             try:
                 follow = Follow.objects.get(user=user, 
-                                            object_id=instance.id,
+                                            object_id=followed_object.id,
                                             content_type=content_type)
             except Follow.DoesNotExist:
-                if user != instance.project.owner:
-                    follow = Follow(user=user, followed_object=instance.project)
+                if user != followed_object.owner:
+                    follow = Follow(user=user, followed_object=followed_object)
                     follow.save()
 
     # A user creates a fundraiser for a project
-    if created and isinstance(instance, BaseFundraiser):
-        # Create a Follow to the specific project and the fundraiser 
+    elif isinstance(instance, BaseFundraiser):
+        # Create a Follow to the specific project
         user = instance.owner
+        followed_object = instance.project
 
-        if user and instance:
+        if user and followed_object:
 
-            content_type = ContentType.objects.get_for_model(instance.project)
+            content_type = ContentType.objects.get_for_model(followed_object)
 
             try:
                 follow = Follow.objects.get(user=user, 
-                                            object_id=instance.project.id,
+                                            object_id=followed_object.id,
                                             content_type=content_type)
             except Follow.DoesNotExist:
-                if user != instance.project.owner:
-                    follow = Follow(user=user, followed_object=instance.project)
-                    follow.save()      
+                if user != followed_object.owner:
+                    follow = Follow(user=user, followed_object=followed_object)
+                    follow.save()
 
 @receiver(post_save)
 def email_followers(sender, instance, created, **kwargs):
@@ -213,18 +219,16 @@ def email_followers(sender, instance, created, **kwargs):
                 follow_object = _('campaign')
                 link = '/go/projects/{0}'.format(instance.content_object.slug)
 
-
             if isinstance(instance.content_object, BaseTask):
                 # Send update to all task members and to people who posted to the wall --> Follower
-                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('task')
                 link = '/go/tasks/{0}'.format(instance.content_object.id)
 
             if isinstance(instance.content_object, BaseFundraiser):
                 # Send update to all people who donated or posted to the wall --> Followers
-                content_type = ContentType.objects.get_for_model(instance.content_object.project)
-                followers = Follow.objects.filter(content_type=content_type, object_id=instance.object_id).distinct().exclude(user=instance.author)
+                followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]      
                 follow_object = _('fundraiser') 
                 link = '/go/fundraisers/{0}'.format(instance.content_object.id)

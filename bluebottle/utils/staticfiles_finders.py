@@ -17,8 +17,9 @@ class TenantStaticFilesFinder(FileSystemFinder):
         """
         tenants = Client.objects.all()
         tenant_dir = getattr(settings, 'MULTI_TENANT_DIR', None)
+
         if not tenant_dir:
-            return
+            return []
 
         for tenant in tenants:
             if "{0}/".format(tenant.client_name) in path:
@@ -26,5 +27,7 @@ class TenantStaticFilesFinder(FileSystemFinder):
                                            '{0}/static/'.format(tenant.client_name))
                 local_path = safe_join(tenant_dir, tenant_path)
                 if os.path.exists(local_path):
+                    if all:
+                        return [local_path]
                     return local_path
-        return
+        return []

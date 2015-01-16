@@ -117,13 +117,17 @@
 
 .modal-body {
     position: relative;
-    height: 194px;
+    max-height: 254px;
     
     // Reset form margins
     form, fieldset, legend {
         padding: 0;
         margin: 0;
         background: none;
+    }
+
+    textarea, input {
+        margin-bottom: 5px;
     }
     
     .control-label {

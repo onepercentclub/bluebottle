@@ -1,7 +1,7 @@
 [
 {
     "pk": 1,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": false,
         "slug": "plan-new",
@@ -14,7 +14,7 @@
 },
 {
     "pk": 2,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": false,
         "slug": "plan-submitted",
@@ -27,10 +27,10 @@
 },
 {
     "pk": 3,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": false,
-        "slug": "plan-needs-work"
+        "slug": "plan-needs-work",
         "name": "Plan - Needs Work",
         "sequence": 3,
         "editable": true,
@@ -39,38 +39,12 @@
     }
 },
 {
-    "pk": 4,
-    "model": "projects.projectphase",
-    "fields": {
-        "viewable": false,
-        "slug": "plan-rejected",
-        "name": "Plan - Rejected",
-        "sequence": 4,
-        "editable": false,
-        "active": true,
-        "description": ""
-    }
-},
-{
     "pk": 5,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": true,
-        "slug": "plan-approved",
-        "name": "Plan - Approved",
-        "sequence": 5,
-        "editable": true,
-        "active": true,
-        "description": ""
-    }
-},
-{
-    "pk": 6,
-    "model": "projects.projectphase",
-    "fields": {
-        "viewable": true,
-        "slug": "campaign-running",
-        "name": "Campaign - Running",
+        "slug": "campaign",
+        "name": "Campaign",
         "sequence": 6,
         "editable": true,
         "active": true,
@@ -78,21 +52,8 @@
     }
 },
 {
-    "pk": 7,
-    "model": "projects.projectphase",
-    "fields": {
-        "viewable": true,
-        "name": "Campaign - Stopped",
-        "slug": "campaign-stopped",
-        "sequence": 7,
-        "editable": false,
-        "active": true,
-        "description": ""
-    }
-},
-{
     "pk": 8,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": true,
         "name": "Done - Completed",
@@ -105,7 +66,7 @@
 },
 {
     "pk": 9,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": true,
         "name": "Done - Incomplete",
@@ -118,11 +79,11 @@
 },
 {
     "pk": 10,
-    "model": "projects.projectphase",
+    "model": "bb_projects.projectphase",
     "fields": {
         "viewable": false,
-        "name": "Done - Stopped",
-        "slug": "done-stopped",
+        "name": "Closed",
+        "slug": "closed",
         "sequence": 10,
         "editable": false,
         "active": true,

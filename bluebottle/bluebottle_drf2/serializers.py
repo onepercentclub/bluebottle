@@ -2,6 +2,7 @@ import decimal
 import logging
 import sys
 import json
+from os.path import isfile
 import os
 import re
 import types
@@ -279,6 +280,9 @@ class ImageSerializer(serializers.ImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         thumbnail = ""
+        if not isfile(value.path):
+            print 'File not found: {0}'.format(value.path)
+            return None
         try:
             large = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x450', crop=self.crop))
             full = settings.MEDIA_URL + unicode(get_thumbnail(value, '1200x900'))

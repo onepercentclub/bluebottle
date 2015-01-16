@@ -7,13 +7,14 @@
         .video-item-container {
             @include animation(fadeOutUpBig .3s ease-out);
             @include animation-fill-mode(forwards);
+            @include opacity(0);
         }
 
         .vimeo-item-container {
             @include animation(fadeInDownBig .3s ease-out);
             @include animation-fill-mode(forwards);
             z-index: 9;
-            opacity: 1;
+            @include opacity(1);
             @include transition(opacity, .3s ease-in-out);
 
             .vimeo-item-content {
@@ -28,13 +29,14 @@
         .video-item-container {
             @include animation(fadeInDownBig.3s ease-out);
             @include animation-fill-mode(forwards);
+            @include opacity(1);
         }
 
         .vimeo-item-container {
             @include animation(fadeOutUpBig .3s ease-out);
             @include animation-fill-mode(forwards);
             z-index: 0;
-            opacity: 0;
+            @include opacity(0);
 
             .vimeo-item-content {
                 .close-video {
@@ -133,7 +135,7 @@
         right: 0;
         bottom: 0;
         background: rgba(0,0,0, 1);
-        opacity: 0;
+        @include opacity(0);
         @include transition(opacity, .3s ease-in-out);
 
         .vimeo-item-content {

@@ -403,7 +403,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Typically the photos are uploaded before the wallpost is uploaded so we simulate that here
         photo_file = open(self.some_photo, mode='rb')
         response = self.client.post(self.media_wallpost_photos_url, {'photo': photo_file},
-                                        format='multipart', token=self.owner_token)
+                                        token=self.owner_token, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         some_photo_detail_url = "{0}{1}".format(self.media_wallpost_photos_url, response.data['id'])
 
@@ -428,7 +428,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         # Let's upload another photo
         photo_file = open(self.another_photo, mode='rb')
-        response = self.client.post(self.media_wallpost_photos_url, {'photo': photo_file}, token=self.owner_token, format='multipart')
+        response = self.client.post(self.media_wallpost_photos_url, {'photo': photo_file},
+                                    token=self.owner_token, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         another_photo_detail_url = "{0}{1}".format(self.media_wallpost_photos_url, response.data['id'])
 

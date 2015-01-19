@@ -239,7 +239,7 @@ def email_followers(sender, instance, created, **kwargs):
                     send_mail(
                             template_name='bb_follow/mails/wallpost_mail.mail',
                             subject=subject,
-                            wallpost_text=wallpost_text[:250],
+                            wallpost_text=wallpost_text,
                             to=mailee,
                             link=full_link,
                             follow_object=follow_object,

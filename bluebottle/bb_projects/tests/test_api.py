@@ -32,7 +32,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.phase_3 = ProjectPhase.objects.get(slug='campaign')
 
         self.theme_1 = ProjectTheme.objects.get(name='Education')
-        self.theme_2 = ProjectTheme.objects.get(name='Environment')
+        self.theme_2 = ProjectTheme.objects.get(name='Climate')
         self.theme_3 = ProjectTheme.objects.get(name='Health')
 
         self.project_1 = ProjectFactory.create(owner=self.user, status=self.phase_1, theme=self.theme_1)
@@ -214,7 +214,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 11)
 
         for item in data:
             self.assertIn('id', item)

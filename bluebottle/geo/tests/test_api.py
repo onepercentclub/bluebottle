@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.bb_projects.models import ProjectPhase
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -57,7 +58,9 @@ class UsedCountryListTestCase(GeoTestCase):
 
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
-        self.project = ProjectFactory.create(country=self.country_1)
+
+        campaign_status = ProjectPhase.objects.get(slug='campaign')
+        self.project = ProjectFactory.create(country=self.country_1, status=campaign_status)
 
     """
     Test case for ``CountryList`` API view.

@@ -230,33 +230,12 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        ProjectPhase.objects.all().delete()
-        ProjectTheme.objects.all().delete()
         Language.objects.all().delete()
-
-        phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
-                      {'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                      {'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                      {'sequence': 4, 'name': 'Plan - Rejected', 'viewable': False},
-                      {'sequence': 6, 'name': 'Plan - Accepted', 'viewable': True},
-                      {'sequence': 5, 'name': 'Campaign', 'viewable': True},
-                      {'sequence': 7, 'name': 'Stopped', 'viewable': False},
-                      {'sequence': 8, 'name': 'Realised', 'viewable': True},
-                      {'sequence': 9, 'name': 'Done - Incomplete', 'viewable': True},
-                      {'sequence': 10, 'name': 'Done - Complete', 'viewable': True}]
-
-        theme_data = [{'name': 'Education'},
-                      {'name': 'Environment'},
-                      {'name': 'Health'}]
 
         language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
                          {'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
 
-        for phase in phase_data:
-            ProjectPhaseFactory.create(**phase)
-
-        for theme in theme_data:
-            ProjectThemeFactory.create(**theme)
+        self.project_status = {}
 
         for language in language_data:
             LanguageFactory.create(**language)

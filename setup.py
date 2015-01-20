@@ -18,11 +18,12 @@ dependency_links = [
 
 install_requires = [
     'Babel==1.3',
-    'bunch==1.0.1',
-    'django==1.6.8',
+    'BeautifulSoup==3.2.1',
+    'Django==1.6.8',
     'Pillow==2.3.0',
     'South==1.0',
     'Sphinx==1.2b1',
+    'bunch==1.0.1',
     'django-celery==3.0.17',
     'django-apptemplates==0.0.1',
     'django-choices==1.1.11',

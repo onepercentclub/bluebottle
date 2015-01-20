@@ -4,6 +4,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
+from bluebottle.bb_projects.models import ProjectPhase
+
 BB_TASK_MODEL = get_task_model()
 BB_PROJECT_MODEL = get_project_model()
 
@@ -19,7 +21,8 @@ class TaskApiTestcase(BluebottleTestCase):
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 
-        self.some_project = ProjectFactory.create(owner=self.some_user)
+        campaign_status = ProjectPhase.objects.get(slug='campaign')
+        self.some_project = ProjectFactory.create(owner=self.some_user, status=campaign_status)
 
         self.task1 = TaskFactory.create(
             status=BB_TASK_MODEL.TaskStatuses.open,

@@ -5,13 +5,13 @@
 {% blocktrans %}
 Hi {{first_name}},
 
-There has been an update on a {{follow_object}} you follow. 
+There has been a new post on a {{follow_object}} you follow. 
 
-Here's an excerpt of the update:
+Here's part of the post:
 
 {{wallpost_text}}...
 
-Read the full story at {{here}} 
+Check the wall {{link}} for the full update.
 
 {% endblocktrans %}
 {% endblock %}

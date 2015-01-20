@@ -56,8 +56,8 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Done - Completed",
-            "slug": "done-completed",
+            "name": "Done - Complete",
+            "slug": "done-complete",
             "sequence": 8,
             "editable": true,
             "active": true,

@@ -331,7 +331,7 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
     @classmethod
     def setUpClass(cls):
         # create a tenant
-        tenant_domain = 'localhost'
+        tenant_domain = 'testserver'
         cls.tenant = get_tenant_model()(
             domain_url=tenant_domain, 
             schema_name='test',

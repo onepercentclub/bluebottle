@@ -226,6 +226,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         full_name = u'{0} {1}'.format(self.first_name, self.last_name)
         return full_name.strip()
 
+    @property
+    def full_name(self):
+        return self.get_full_name()
+
     def get_short_name(self):
         """
         The user is identified by their email address.

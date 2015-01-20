@@ -8,18 +8,9 @@ from django.utils.translation import ugettext_lazy as _
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
-from .models import ProjectPhase, ProjectTheme
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-
-
-class ProjectThemeAdmin(admin.ModelAdmin):
-    model = ProjectTheme
-    prepopulated_fields = {'slug': ('name', 'name_nl')}
-
-admin.site.register(ProjectTheme, ProjectThemeAdmin)
-
 
 class ProjectPhaseLogInline(admin.TabularInline):
     model = PROJECT_PHASELOG_MODEL
@@ -83,13 +74,3 @@ class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
 # (possibly inheriting from BaseProjectAdmin), and then re-register it
 admin.site.register(PROJECT_MODEL, BaseProjectAdmin)
 
-
-class ProjectPhaseAdmin(admin.ModelAdmin):
-    model = ProjectPhase
-    ordering = ['sequence']
-    list_editable = ['active', 'editable', 'viewable', 'owner_editable']
-    list_filter = ['active', ]
-    list_display_links = ['name']
-    list_display = ['sequence', 'name', 'active', 'editable', 'viewable', 'owner_editable']
-
-admin.site.register(ProjectPhase, ProjectPhaseAdmin)

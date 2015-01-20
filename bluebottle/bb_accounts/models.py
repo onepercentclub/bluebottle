@@ -255,10 +255,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def short_name(self):
         return self.get_short_name()
 
-    @property
-    def email_confirmation(self):
-        return self.email
-
     def reset_disable_token(self):
         token = uuid.uuid4().hex #Generates a random UUID and converts it to a 32-character hexidecimal string
         self.disable_token = token

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
@@ -119,15 +120,28 @@ class UserCreateSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     email = serializers.EmailField(required=True, max_length=254)
-    email_confirmation = serializers.EmailField(required=False, max_length=254)
+    email_confirmation = serializers.EmailField(label=_('password_confirmation'), max_length=254)
     password = PasswordField(required=True, max_length=128)
     username = serializers.CharField(read_only=True)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
+    def validate_email_confirmation(self, attrs, source):
+        """
+        email_confirmation check
+        """
+        email_confirmation = attrs[source]
+        email = attrs['email']
+
+        if email_confirmation != email:
+            raise serializers.ValidationError(_('Email confirmation mismatch'))
+
+        return attrs
+
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'jwt_token', 'email_confirmation')
-
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'jwt_token')
+        non_native_fields = ('email_confirmation',)
+        
 
 class PasswordResetSerializer(serializers.Serializer):
     """

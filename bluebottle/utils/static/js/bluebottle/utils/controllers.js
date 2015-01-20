@@ -3,7 +3,7 @@ App.ShareFlyer = Em.Object.extend(App.Serializable, {
     share_name: null,
     share_email: null,
     share_motivation:  null,
-    share_cc: false
+    share_cc: null
 });
 
 App.ShareFlyerController =  Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
@@ -39,7 +39,7 @@ App.ShareFlyerController =  Em.ObjectController.extend(BB.ModalControllerMixin, 
         submit: function() {
             var _this = this,
                 model = this.get('model');
-
+            
             _this.enableValidation();
             _this.set('errorsFixed', false);
 

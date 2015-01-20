@@ -125,7 +125,7 @@ class ShareFlyerView(View):
         share_name = data.get('share_name', None)
         share_email = data.get('share_email', None)
         share_motivation = data.get('share_motivation', None)
-        share_cc = data.get('share_cc', False) 
+        share_cc = data.get('share_cc', 'false') == 'true'
 
         args.update(dict(
             template_name='utils/mails/share_flyer.mail',

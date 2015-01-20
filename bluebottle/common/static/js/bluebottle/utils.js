@@ -690,6 +690,11 @@ App.Serializable = Ember.Mixin.create({
             {
                 continue;
             }
+
+            if (typeof(this[key].toISOString) === 'function') {
+                result[key] = this[key].toISOString();
+                continue;
+            } 
             result[key] = this[key];
         }
         return result;

@@ -65,7 +65,15 @@ App.SocialShareView = Em.View.extend({
     templateName: 'social_share',
     dialogW: 626,
     dialogH: 436,
-    
+
+    getProject: function() {
+        if (this.get('context.model.project') == undefined ) {
+            return this.get('context.model');
+        } else {  
+            return this.get('context.model.project');
+        }
+    },
+
     canShare: function () {
         return App.get('shareEnabled');
     }.property(),
@@ -140,7 +148,7 @@ App.SocialShareView = Em.View.extend({
         shareOnFlyer: function() {
             var project = this.get('context').get('model'),
                 controller = this.get('controller');
-            controller.send('openInBox', 'shareFlyer', App.ShareFlyer.create({projectid:project.id}), 'big-modal');
+            controller.send('openInBox', 'shareFlyer', App.ShareFlyer.create({projectid: this.getProject().get('id')}), 'big-modal');
         },
         shareEmbedded: function() {
             var project = this.get('context'),

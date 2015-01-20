@@ -7,9 +7,11 @@ from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import get_template
 from django.utils import translation
-import dkim
 from django_tools.middlewares import ThreadLocal
+import dkim
 
+import logging
+log = logging.getLogger(__name__)
 
 class DKIMBackend(EmailBackend):
     def _send(self, email_message):
@@ -54,7 +56,7 @@ class TestMailBackend(EmailBackend):
             return False
         return True
 
-def send_mail(template_name, subject, to, cc=None, bcc=None, **kwargs):
+def send_mail(template_name, subject, to, cc=None, bcc=None, from_email=settings.CONTACT_EMAIL, **kwargs):
     if hasattr(to, 'primary_language') and to.primary_language:
         translation.activate(to.primary_language)
 
@@ -77,8 +79,12 @@ def send_mail(template_name, subject, to, cc=None, bcc=None, **kwargs):
         args['cc'] = cc
     if bcc:
         args['bcc'] = bcc
+    if from_email:
+        args['from_email'] = from_email
 
     msg = EmailMultiAlternatives(**args)
+
+    log.info("Sending email, to: {0} from: {1} cc: {2}, bcc: {3} subject: {4} body: {5}".format(msg.to, msg.from_email, msg.cc, msg.bcc, msg.subject, msg.body ))
 
     msg.attach_alternative(html_content, "text/html")
 

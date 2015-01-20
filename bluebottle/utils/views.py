@@ -131,6 +131,7 @@ class ShareFlyerView(View):
             template_name='utils/mails/share_flyer.mail',
             subject=_('%(name)s wants to share a project with you!') % dict(name=sender_name),
             to=namedtuple("Receiver", "email")(email=share_email),
+            from_email=sender_email,
             share_name=share_name,
             share_email=share_email,
             share_motivation=share_motivation,

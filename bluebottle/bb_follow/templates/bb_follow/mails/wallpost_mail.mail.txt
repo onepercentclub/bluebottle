@@ -11,7 +11,7 @@ Here's part of the post:
 
 {{wallpost_text}}...
 
-Check the wall {{link}} for the full update.
+Check the wall at: {{link}} for the full update.
 
 {% endblocktrans %}
 {% endblock %}

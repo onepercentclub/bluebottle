@@ -215,19 +215,26 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        phase_data = [{'id': 1, 'name': 'Plan - New', 'viewable': False},
-                      {'id': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                      {'id': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                      {'id': 4, 'name': 'Plan - Rejected', 'viewable': False},
-                      {'id': 6, 'name': 'Plan - Accepted', 'viewable': True},
-                      {'id': 5, 'name': 'Campaign', 'viewable': True},
-                      {'id': 7, 'name': 'Stopped', 'viewable': False},
-                      {'id': 8, 'name': 'Realised', 'viewable': True},
-                      {'id': 9, 'name': 'Done - Incomplete', 'viewable': True}]
+        from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
+        from bluebottle.utils.models import Language
 
-        theme_data = [{'id': 1, 'name': 'Education'},
-                      {'id': 2, 'name': 'Environment'},
-                      {'id': 3, 'name': 'Health'}]
+        ProjectPhase.objects.all().delete()
+        ProjectTheme.objects.all().delete()
+        Language.objects.all().delete()
+
+        phase_data = [{'name': 'Plan - New', 'viewable': False},
+                      {'name': 'Plan - Submitted', 'viewable': False},
+                      {'name': 'Plan - Needs Work', 'viewable': False},
+                      {'name': 'Plan - Rejected', 'viewable': False},
+                      {'name': 'Plan - Accepted', 'viewable': True},
+                      {'name': 'Campaign', 'viewable': True},
+                      {'name': 'Stopped', 'viewable': False},
+                      {'name': 'Realised', 'viewable': True},
+                      {'name': 'Done - Incomplete', 'viewable': True}]
+
+        theme_data = [{'name': 'Education'},
+                      {'name': 'Environment'},
+                      {'name': 'Health'}]
 
         language_data = [{'id': 1, 'code': 'en', 'language_name': 'English', 'native_name': 'English'},
                          {'id': 2, 'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]

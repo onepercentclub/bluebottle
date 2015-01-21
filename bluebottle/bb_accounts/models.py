@@ -219,12 +219,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def clean(self):
         self.update_deleted_timestamp()
         self.generate_username()
-        try:
-            self.address
-        except UserAddress.DoesNotExist:
-            self.address = UserAddress.objects.create(user=self)
-            self.address.save()
-
 
     def get_full_name(self):
         """
@@ -296,6 +290,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def fundraiser_count(self):
         return get_fundraiser_model().objects.filter(owner=self).count()
+
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
+        try:
+            self.address
+        except UserAddress.DoesNotExist:
+            self.address = UserAddress.objects.create(user=self)
+            self.address.save()
 
 
 class UserAddress(Address):

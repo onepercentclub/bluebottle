@@ -113,7 +113,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
     primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en')
 
-    address = UserAddressSerializer(source='address')
+    address = UserAddressSerializer(source='address', required=False)
 
     class Meta:
         model = BB_USER_MODEL

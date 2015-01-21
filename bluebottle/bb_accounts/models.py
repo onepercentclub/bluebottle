@@ -1,3 +1,4 @@
+from bluebottle.utils.models import Address
 import os
 import random
 import string
@@ -286,6 +287,30 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def fundraiser_count(self):
         return get_fundraiser_model().objects.filter(owner=self).count()
 
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
+        try:
+            self.address
+        except UserAddress.DoesNotExist:
+            self.address = UserAddress.objects.create(user=self)
+            self.address.save()
+
+
+class UserAddress(Address):
+
+    class AddressType(DjangoChoices):
+        primary = ChoiceItem('primary', label=_("Primary"))
+        secondary = ChoiceItem('secondary', label=_("Secondary"))
+
+    address_type = models.CharField(_("address type"),max_length=10, blank=True, choices=AddressType.choices,
+                                    default=AddressType.primary)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name=_("user"), related_name="address")
+
+    class Meta:
+        db_table = 'members_useraddress'
+        verbose_name = _("user address")
+        verbose_name_plural = _("user addresses")
 
 
 from django.db.models.signals import post_save

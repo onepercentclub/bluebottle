@@ -1,3 +1,4 @@
+from bluebottle.bb_accounts.models import UserAddress
 from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
@@ -11,6 +12,13 @@ from bluebottle.utils.serializers import URLField
 
 
 BB_USER_MODEL = get_user_model()
+
+
+class UserAddressSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserAddress
+        fields = ('id', 'line1','line2', 'address_type', 'city', 'state', 'country', 'postal_code')
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):
@@ -106,11 +114,13 @@ class UserSettingsSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
     primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en')
 
+    address = UserAddressSerializer(source='address', required=False)
+
     class Meta:
         model = BB_USER_MODEL
         # TODO: Add password update using password field.
         # TODO: Facebook connect
-        fields = ('id', 'email', 'share_time_knowledge', 'share_money',
+        fields = ('id', 'email', 'address', 'share_time_knowledge', 'share_money',
                   'newsletter', 'gender', 'birthdate', 'user_type', 'primary_language', 'campaign_notifications')
 
 

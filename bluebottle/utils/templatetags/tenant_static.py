@@ -15,7 +15,7 @@ class StaticFilesNode(StaticNode):
     def url(self, context):
         context
         path = self.path.resolve(context)
-        if not connection.tenant:
+        if not getattr(connection , 'tenant', None):
             return staticfiles_storage.url(path)
 
         local_path = safe_join(getattr(settings, 'MULTI_TENANT_DIR', 'clients'), connection.tenant.client_name, 'static', path)

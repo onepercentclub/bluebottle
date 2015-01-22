@@ -1,12 +1,13 @@
-from django.template.loader import BaseLoader
-from django.db import connection
+import hashlib
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.utils._os import safe_join
 from django.template.base import TemplateDoesNotExist
+from django.template.loader import BaseLoader
+from django.utils._os import safe_join
+from django.db import connection
 
 
-class TenantTemplateLoader(BaseLoader):
+class FilesystemLoader(BaseLoader):
     """
     Based on FileSystemLoader from django-tenant-schemas:
     https://github.com/bernardopires/django-tenant-schemas/blob/master/tenant_schemas/template_loaders.py#L79
@@ -18,11 +19,6 @@ class TenantTemplateLoader(BaseLoader):
     is_usable = True
 
     def get_template_sources(self, template_name, template_dirs=None):
-        """
-        Returns the absolute paths to "template_name", when appended to each
-        directory in "template_dirs". Any paths that don't lie inside one of the
-        template dirs are excluded from the result set, for security reasons.
-        """
         if not connection.tenant:
             return
         if not template_dirs:
@@ -30,7 +26,7 @@ class TenantTemplateLoader(BaseLoader):
                 template_dirs = [settings.MULTI_TENANT_DIR]
             except AttributeError:
                 raise ImproperlyConfigured('To use %s.%s you must define the MULTI_TENANT_DIR' %
-                                           (__name__, TenantTemplateLoader.__name__))
+                                           (__name__, FilesystemLoader.__name__))
         for template_dir in template_dirs:
             try:
                 if '%s' in template_dir:

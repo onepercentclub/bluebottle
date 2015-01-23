@@ -85,3 +85,6 @@ ghostdriver.log
 
 # node modules
 bower_components
+
+# GeoIP.dat
+GeoIP.dat

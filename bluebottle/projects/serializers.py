@@ -66,7 +66,8 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
         fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count', 'allow_overfunding',
-                  'is_campaign', 'amount_asked', 'amount_donated', 'amount_needed', 'deadline', 'status', 'owner', 'partner')
+                  'latitude', 'longitude', 'is_campaign', 'amount_asked', 'amount_donated', 'amount_needed',
+                  'deadline', 'status', 'owner', 'partner')
 
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):

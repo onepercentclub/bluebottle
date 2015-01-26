@@ -41,11 +41,11 @@ DEFAULT_DB_ALIAS = 'default'
 DATABASES = {
     'default': {
         'ENGINE': 'tenant_schemas.postgresql_backend',
-        'HOST': '192.168.59.103',
+        'HOST': '',
         'PORT': '',
         'NAME': 'bluebottle_test',
-        'USER': 'bluebottle',
-        'PASSWORD': 'bluebottle'
+        'USER': '',
+        'PASSWORD': ''
     }
 }
 

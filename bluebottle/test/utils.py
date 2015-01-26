@@ -1,36 +1,27 @@
 import time
 import urlparse
 import os
-import sys
 import json
 import requests
 import base64
 
 from bunch import bunchify
 
-import django
 from django.db import connection
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings
 from django.test import TestCase
-from django.core.management import call_command
 
-from rest_framework.compat import force_bytes_or_smart_bytes
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 
-from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.middleware import TenantMiddleware
-from tenant_schemas.test.client import TenantClient
-from tenant_schemas.utils import get_public_schema_name, get_tenant_model
+from tenant_schemas.utils import get_tenant_model
 
-from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectThemeFactory
-from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
-from bluebottle.clients.models import Client
 
 
 def css_dict(style):
@@ -70,18 +61,6 @@ class InitProjectDataMixin(object):
 
         for language in language_data:
             LanguageFactory.create(**language)
-            
-
-RUN_LOCAL = os.environ.get('RUN_TESTS_LOCAL') == 'False'
-
-if RUN_LOCAL:
-    # could add Chrome, PhantomJS etc... here
-    browsers = ['Firefox']
-else:
-    from sauceclient import SauceClient
-    USERNAME = os.environ.get('SAUCE_USERNAME')
-    ACCESS_KEY = os.environ.get('SAUCE_ACCESS_KEY')
-    sauce = SauceClient(USERNAME, ACCESS_KEY)
 
 
 class ApiClient(RestAPIClient):

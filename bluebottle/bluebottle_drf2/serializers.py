@@ -48,6 +48,8 @@ class SorlImageField(serializers.ImageField):
         # so we need to deal with exceptions like is done in the template tag.
         try:
             thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
+        except IOError:
+            return ""
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
@@ -281,7 +283,6 @@ class ImageSerializer(serializers.ImageField):
         # so we need to deal with exceptions like is done in the template tag.
         thumbnail = ""
         if not isfile(value.path):
-            print 'File not found: {0}'.format(value.path)
             return None
         try:
             large = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x450', crop=self.crop))

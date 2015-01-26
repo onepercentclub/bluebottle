@@ -1,4 +1,3 @@
-from selenium import webdriver
 import time
 import urlparse
 import os

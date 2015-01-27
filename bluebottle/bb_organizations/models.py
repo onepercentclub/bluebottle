@@ -128,7 +128,7 @@ class BaseOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
-    def full_clean(self, exclude=None):
+    def full_clean(self, exclude=None, validate_unique=False):
         if not self.slug:
             original_slug = slugify(self.name)
             slug = original_slug

@@ -44,7 +44,8 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         if obj.content_type.name == 'project':
             return u'<a href="/go/projects/{slug}">{title}</a>'.format(slug=obj.content_object.slug, title=obj.content_object.title)
         if obj.content_type.name == 'task':
-            return u'<a href="/go/projects/{slug}/tasks/{task_id}">{title}</a>'.format(slug=obj.content_object.project.slug, task_id=obj.content_object.id, title=obj.content_object.project.title)
+            if obj.content_object:
+                return u'<a href="/go/projects/{slug}/tasks/{task_id}">{title}</a>'.format(slug=obj.content_object.project.slug, task_id=obj.content_object.id, title=obj.content_object.project.title)
         if obj.content_type.name == 'fundraiser':
             return u'<a href="/go/fundraisers/{id}">{title}</a>'.format(id=obj.content_object.id, title=obj.content_object.title)
         return '---'

@@ -1,5 +1,8 @@
+import urlparse
+
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import render_to_string
 
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 from sorl.thumbnail.admin.compat import AdminImageMixin
@@ -22,7 +25,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
     readonly_fields = ('ip_address', 'deleted')
     raw_id_fields = ('author', 'editor')
-    list_display = ('created', 'view_online', 'get_text', 'video_url', 'photos', 'author')
+    list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author')
 
     readonly_fields = ('view_online', )
 
@@ -34,11 +37,26 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
             return u'<span title="{text}">{short_text} [...]</span>'.format(text=obj.text, short_text=obj.text[:145])
     get_text.allow_tags = True
 
-    def photos(self, obj):
+    def thumbnail(self, obj):
+        data = {}
+        if obj.video_url:
+            data['video_url'] = obj.video_url
+            if 'youtube.com' in obj.video_url:
+                try:
+                    urlparts = urlparse.urlparse(obj.video_url)
+                    data['youtubeid'] = urlparse.parse_qs(urlparts.query)['v'][0]
+                except (ValueError, IndexError):
+                    pass
+
         photos = MediaWallpostPhoto.objects.filter(mediawallpost=obj)
+        data['count'] = len(photos)
+        data['remains'] = max(0, data['count'] - 1)
+
         if len(photos):
-            return len(photos)
-        return '-'
+            data['firstimage'] = photos[0].photo.url
+        return render_to_string("admin/wallposts/preview_thumbnail.html", data)
+
+    thumbnail.allow_tags = True
 
     def view_online(self, obj):
         if obj.content_type.name == 'project':

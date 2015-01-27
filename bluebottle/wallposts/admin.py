@@ -17,19 +17,31 @@ from .models import Wallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, R
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 
-class MediaWallpostPhotoInline(AdminImageMixin, admin.StackedInline):
+class MediaWallpostPhotoInline(admin.TabularInline):
     model = MediaWallpostPhoto
     extra = 0
-    raw_id_fields = ('author', 'editor')
+    raw_id_fields = ('author', 'editor') # for performance reasons?
 
+    readonly_fields = ('image_tag',)
+
+    fields = ('image_tag', 'photo')
+
+    def image_tag(self, obj):
+        data = {}
+        data['image_url'] = obj.photo.url
+
+        return render_to_string("admin/wallposts/mediawallpost_photoinline.html", data)
+
+    image_tag.short_description = 'Preview'
+    image_tag.allow_tags = True
 
 class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted')
+    readonly_fields = ('ip_address', 'deleted', 'view_online', 'gallery')
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author')
 
-    readonly_fields = ('view_online', )
+    extra_fields = ("gallery", )
 
     ordering = ('-created', )
     inlines = (MediaWallpostPhotoInline,)
@@ -76,7 +88,12 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
     view_online.allow_tags = True
 
+    def gallery(self, obj):
+        data = {}
+        data['images'] = [p.photo.url for p in obj.photos.all()]
 
+        return render_to_string("admin/wallposts/mediawallpost_gallery.html", data)
+    gallery.allow_tags = True
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost

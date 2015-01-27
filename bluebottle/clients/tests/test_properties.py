@@ -37,7 +37,7 @@ class TestProperties(TestCase):
         with mock.patch("bluebottle.clients.middleware.settings",
                         MULTI_TENANT_DIR='/tmp/') as settings , \
              mock.patch("__builtin__.execfile") as execfile:
-            properties.set_tenant(Mock(name='testtenant'))
+            properties.set_tenant(Mock(client_name='testtenant'))
             self.assertEquals(execfile.call_args[0][1]['settings'], settings)
 
 
@@ -56,7 +56,7 @@ class TestTenantMiddleware(TestCase):
             works """
         with mock.patch("bluebottle.clients.middleware.settings", foo=42), \
              mock.patch("bluebottle.clients.middleware.connection",
-                           Mock(**{"tenant.name":"dontexist"})):
+                           Mock(**{"tenant.client_name":"dontexist"})):
             self.middleware.process_request(Mock())
             self.assertEquals(properties.foo, 42)
 
@@ -65,7 +65,7 @@ class TestTenantMiddleware(TestCase):
         with mock.patch("bluebottle.clients.middleware.settings",
                         MULTI_TENANT_DIR="/some/client/path/"), \
              mock.patch("bluebottle.clients.middleware.connection",
-                        Mock(**{"tenant.name":"valid"})), \
+                        Mock(**{"tenant.client_name":"valid"})), \
              mock.patch("__builtin__.execfile") as execfile:
             self.middleware.process_request(Mock())
             self.assertEquals(execfile.call_args[0][0],

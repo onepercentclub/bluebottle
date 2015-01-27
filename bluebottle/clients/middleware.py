@@ -23,7 +23,7 @@ class TenantProperties(local):
         ## or when no MULTI_TENANT_DIR is configured
         try:
             propsmod = safe_join(settings.MULTI_TENANT_DIR,
-                                         tenant.name,
+                                         tenant.client_name,
                                          "properties.py")
             ## try to load tenant specific properties. We're using execfile since tenant
             ## directories are not pythonpackages (e.g. no __init__.py)

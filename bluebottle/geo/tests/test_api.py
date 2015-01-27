@@ -1,13 +1,10 @@
-from bluebottle.test.utils import BluebottleTestCase
 from django.core.urlresolvers import reverse
-
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-
-from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.geo.models import Country
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -22,8 +19,8 @@ class GeoTestCase(BluebottleTestCase):
 
         self.init_projects()
 
-        self.country_1 = CountryFactory.create(name="Afghanistan")
-        self.country_2 = CountryFactory.create(name="Albania")
+        self.country_1 = Country.objects.get(name="Afghanistan")
+        self.country_2 = Country.objects.get(name="Belgium")
 
 
 class CountryListTestCase(GeoTestCase):
@@ -39,7 +36,7 @@ class CountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('country-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 242)
 
 
     def test_api_country_list_data(self):
@@ -51,8 +48,9 @@ class CountryListTestCase(GeoTestCase):
         country = response.data[0]
         self.assertEqual(country['id'], 1)
         self.assertEqual(country['name'], 'Afghanistan')
-        self.assertEqual(country['oda'], False)
-        self.assertEqual(country['code'], '')
+        self.assertEqual(country['oda'], True)
+        self.assertEqual(country['code'], 'AF')
+
 
 class UsedCountryListTestCase(GeoTestCase):
 

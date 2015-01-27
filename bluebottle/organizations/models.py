@@ -30,7 +30,7 @@ class Organization(BaseOrganization):
         default_serializer = 'bluebottle.organizations.serializers.OrganizationSerializer'
         manage_serializer = 'bluebottle.organizations.serializers.ManageOrganizationSerializer'
 
-    def full_clean(self, exclude=None):
+    def full_clean(self, exclude=None, validate_unique=False):
         if not self.slug:
             original_slug = slugify(self.name)
             slug = original_slug

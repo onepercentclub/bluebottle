@@ -163,7 +163,7 @@ class OrderPayment(models.Model, FSMTransition):
         # Currently the status in Payment and OrderPayment is one to one.
         return payment_status
 
-    def full_clean(self, exclude=None):
+    def full_clean(self, exclude=None, validate_unique=False):
         self.amount = self.order.total
         if self.id:
             # If the payment method has changed we should recalculate the fee.

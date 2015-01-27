@@ -1,6 +1,7 @@
 {% if video_url %}
 <a href="{{video_url}}" target="_blank">
   {% if youtubeid %}
+    {# a play button overlay would be nice to show it's a video #}
     <img src="https://img.youtube.com/vi/{{youtubeid}}/default.jpg">
   {% else %}
     {{video_url}}
@@ -11,5 +12,5 @@
 <img src="{{firstimage}}" style="height:50px">
 {% endif %}
 {% if remains %}
-{{remains}} more images
+<br>{{remains}} more images
 {% endif %}

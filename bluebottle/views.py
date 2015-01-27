@@ -6,6 +6,7 @@ from django.http import HttpResponseServerError
 
 from django.views.generic import TemplateView
 
+from bluebottle.clients import properties
 
 def handler500(request, template_name='500.html'):
     """
@@ -38,5 +39,7 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         """ Add some extra context. """
         context = {}
+
+        context['tenant_properties'] = properties
 
         return context

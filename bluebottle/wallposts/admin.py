@@ -28,7 +28,9 @@ class MediaWallpostPhotoInline(admin.TabularInline):
 
     def image_tag(self, obj):
         data = {}
-        data['image_url'] = obj.photo.url
+        if obj.photo:
+            data['image_full_url'] = obj.photo.url
+            data['image_thumb_url'] = get_thumbnail(obj.photo, "120x120", crop="center").url
 
         return render_to_string("admin/wallposts/mediawallpost_photoinline.html", data)
 
@@ -69,8 +71,8 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         if len(photos):
             ## Not sure what's better: scale image on the server, probably no cached version
             ## available the first time, or leave it to the browser?
-            # data['firstimage'] = get_thumbnail(photos[0].photo, "400x300").url
-            data['firstimage'] = photos[0].photo.url
+            data['firstimage'] = get_thumbnail(photos[0].photo, "120x120", crop="center").url
+            data['firstimage_url'] = photos[0].photo.url
 
         return render_to_string("admin/wallposts/preview_thumbnail.html", data)
 
@@ -90,7 +92,8 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
     def gallery(self, obj):
         data = {}
-        data['images'] = [p.photo.url for p in obj.photos.all()]
+        data['images'] = [dict(full=p.photo.url, thumb=get_thumbnail(p.photo, "120x120", crop="center").url)
+                          for p in obj.photos.all()]
 
         return render_to_string("admin/wallposts/mediawallpost_gallery.html", data)
     gallery.allow_tags = True

@@ -20,7 +20,7 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 class MediaWallpostPhotoInline(admin.TabularInline):
     model = MediaWallpostPhoto
     extra = 0
-    raw_id_fields = ('author', 'editor') # for performance reasons?
+    raw_id_fields = ('author', 'editor')
 
     readonly_fields = ('image_tag',)
 
@@ -43,7 +43,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author')
 
-    extra_fields = ("gallery", )
+    extra_fields = ('gallery', )
 
     ordering = ('-created', )
     inlines = (MediaWallpostPhotoInline,)

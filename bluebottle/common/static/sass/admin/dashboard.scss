@@ -163,3 +163,56 @@ h1, h2, h3, h4, h5, h6 {
     }
   }
 }
+
+.video-container {
+    position: relative;
+
+    .play-btn {
+        position: absolute;
+        top: -10px;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: 40px;
+        height: 40px;
+        background: url("/static/assets/images/img/icons/icon-play-video.svg") no-repeat;
+        background-size: 40px;
+
+        &:hover {
+            width: 45px;
+            height: 45px;
+            background-size: 45px;
+        }
+    }
+
+    .video-text {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -40px;
+        padding: 3px 6px;
+        margin-left: auto;
+        margin-right: auto;
+        background: #003580;
+        color: #fff;
+        text-align: right;
+    }
+}
+
+.photo-container {
+    position: relative;
+
+    .photo-text {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 3px 6px;
+        margin-left: auto;
+        margin-right: auto;
+        background: #003580;
+        color: #fff;
+        text-align: right;
+    }
+}

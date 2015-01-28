@@ -1,21 +1,24 @@
 {% if video_url %}
-  <a href="{{video_url}}" target="_blank">
+  <a href="{{video_url}}" target="_blank" class="video-container">
     {% if youtubeid %}
       {# a play button overlay would be nice to show it's a video #}
       <img src="https://img.youtube.com/vi/{{youtubeid}}/default.jpg">
+      <span class="play-btn"></span>
     {% else %}
       {{video_url}}
     {% endif %}
-  </a>
   {% if count > 0 %}
-  <br> and {{count}} images
+    <div class="video-text">&#43; {{count}} images</div>
   {% endif %}
+  </a>
 
 {% else %}
-  {% if firstimage %}
-  <img src="{{firstimage}}" >
-  {% endif %}
-  {% if remains %}
-  <br>and {{remains}} more images
-  {% endif %}
+  <div class="photo-container">
+    {% if firstimage %}
+    <img src="{{firstimage}}" >
+    {% endif %}
+    {% if remains %}
+    <div class="photo-text">&#43; {{remains}} more</div>
+    {% endif %}
+  </div>
 {% endif %}

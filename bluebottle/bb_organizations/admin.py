@@ -20,7 +20,7 @@ class OrganizationDocumentInline(admin.StackedInline):
         url = obj.document_url
 
         if url is not None:
-            return "<a href='{0}'>{1}</a>".format(str(obj.document_url), 'Download')
+            return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
         return '(None)'
     download_url.allow_tags = True
 

@@ -69,9 +69,8 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         data['remains'] = max(0, data['count'] - 1)
 
         if len(photos):
-            ## Not sure what's better: scale image on the server, probably no cached version
-            ## available the first time, or leave it to the browser?
-            data['firstimage'] = get_thumbnail(photos[0].photo, "120x120", crop="center").url
+            data['firstimage'] = get_thumbnail(photos[0].photo, "120x120",
+                                               crop="center").url
             data['firstimage_url'] = photos[0].photo.url
 
         return render_to_string("admin/wallposts/preview_thumbnail.html", data)

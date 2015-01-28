@@ -1,5 +1,18 @@
 from bluebottle.recurring_donations.models import MonthlyDonor
 from rest_framework import permissions
+from bluebottle.clients import properties
+
+
+class RecurringDonationsEnabled(permissions.BasePermission):
+    """
+    Check if Recurring Donations are enabled for the current Client
+    """
+
+    def has_permission(self, request, view):
+        return getattr(properties, 'RECURRING_DONATIONS_ENABLED', False)
+
+    def has_object_permission(self, request, view, obj):
+        return getattr(properties, 'RECURRING_DONATIONS_ENABLED', False)
 
 
 class IsOwner(permissions.BasePermission):

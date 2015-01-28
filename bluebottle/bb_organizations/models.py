@@ -67,7 +67,7 @@ class BaseOrganizationDocument(models.Model):
         ## generated.
         if self.pk is not None:
             return reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': self.pk or 1})
-        return ''
+        return None
 
 class BaseOrganization(models.Model):
     """

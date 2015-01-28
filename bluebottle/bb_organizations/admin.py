@@ -17,7 +17,11 @@ class OrganizationDocumentInline(admin.StackedInline):
     fields = readonly_fields + ('file', 'author')
 
     def download_url(self, obj):
-        return "<a href='{0}'>{1}</a>".format(str(obj.document_url), 'Download')
+        url = obj.document_url
+
+        if url is not None:
+            return "<a href='{0}'>{1}</a>".format(str(obj.document_url), 'Download')
+        return '(None)'
     download_url.allow_tags = True
 
 

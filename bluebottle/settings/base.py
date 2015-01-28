@@ -353,6 +353,12 @@ DONATIONS_DONATION_MODEL = 'donations.Donation'
 PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
 PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
 
+
+# Default Client properties
+RECURRING_DONATIONS_ENABLED = True
+DONATIONS_ENABLED = True
+
+
 # For building frontend code
 BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
            'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',

@@ -7,6 +7,7 @@ from bluebottle.clients.middleware import properties
 
 Mock = mock.Mock
 
+
 class TestProperties(TestCase):
     def test_property_match(self):
         """ A match found in the client properties """

@@ -72,3 +72,5 @@ DOCDATA_FEES = {
         'sepa_direct_debit': 0.13
     }
 }
+
+RECURRING_DONATIONS_ENABLED = True

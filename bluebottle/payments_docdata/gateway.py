@@ -308,7 +308,7 @@ class DocdataClient(object):
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
-            'merchant_name': settings.DOCDATA_MERCHANT_NAME,
+            'merchant_name': properties.DOCDATA_MERCHANT_NAME,
             'return_url_success': "{0}/{1}/#!/orders/{2}/success".format(return_url, client_language, order_id),
             'return_url_pending': "{0}/{1}/#!/orders/{2}/pending".format(return_url, client_language, order_id),
             'return_url_canceled': "{0}/{1}/#!/orders/{2}/cancelled".format(return_url, client_language, order_id),

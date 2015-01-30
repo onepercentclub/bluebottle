@@ -318,9 +318,27 @@ $gray-border-hover                                         : #9F9F9F;
 			}
 
 			&.terms {
+				h4 {
+					text-align: center;
+					margin-bottom: 0 !important;
+				}
+
+				small {
+					display: block;
+					text-align: center;
+					font-size: 13px;
+				}
+
 				.terms-contents {
-					height: 190px;
+					height: 260px;
+					padding: 15px;
 					overflow-y: auto;
+					border: solid 1px #ccc;
+
+					p {
+						color: #ccc!important;
+						font-size: 12px!important;
+					}
 				}
 			}
 
@@ -400,6 +418,28 @@ $gray-border-hover                                         : #9F9F9F;
 
 			&.no-content {
 				padding: 0;
+			}
+
+			&.terms {
+				.btn {
+					&.close-terms {
+						float: right;
+					}
+
+					padding: 0.5em 1em;
+
+					&:hover {
+						border: none;
+					}
+				}
+
+				.profile-preview-actions {
+					text-align: right;
+				}
+
+				.profile-preview-agreed {
+					padding-top: 10px;
+				}
 			}
 
 			.modal-payment-provider {

@@ -71,7 +71,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 'id': 1,
                 'first_name': 'Nomen',
                 'last_name': 'Nescio',
-                'email': settings.CONTACT_EMAIL,
+                'email': properties.CONTACT_EMAIL,
                 'ip_address': ip_address
             }
 

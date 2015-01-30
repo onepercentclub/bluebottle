@@ -13,6 +13,7 @@ from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirect
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
 from .models import DocdataPayment
+from bluebottle.clients import properties
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +141,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
 
-        merchant = gateway.Merchant(name=settings.DOCDATA_MERCHANT_NAME, password=settings.DOCDATA_MERCHANT_PASSWORD)
+        merchant = gateway.Merchant(name=properties.DOCDATA_MERCHANT_NAME, password=properties.DOCDATA_MERCHANT_PASSWORD)
 
         amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
         user = self.get_user_data()

@@ -20,13 +20,14 @@ class TenantProperties(local):
         # when tenant has no specific config, has no directory
         # or when no MULTI_TENANT_DIR is configured
         try:
-            propsmod = safe_join(settings.MULTI_TENANT_DIR,
-                                         tenant.client_name,
-                                         "properties.py")
-            # try to load tenant specific properties. We're using execfile since tenant
-            # directories are not pythonpackages (e.g. no __init__.py)
-            execfile(propsmod, dict(settings=settings),
-                     self.tenant_properties)
+            for settings_file in ['properties', 'secrets']:
+                props_mod = safe_join(settings.MULTI_TENANT_DIR,
+                                             tenant.client_name,
+                                             "{0}.py".format(settings_file))
+                # try to load tenant specific properties. We're using execfile since tenant
+                # directories are not python packages (e.g. no __init__.py)
+                execfile(props_mod, dict(settings=settings),
+                         self.tenant_properties)
         except (ImportError, AttributeError, IOError):
             pass
 

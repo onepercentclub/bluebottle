@@ -1,6 +1,6 @@
 from bluebottle.payments.exception import PaymentException
 import re
-from django.conf import settings
+from bluebottle.clients import properties
 from bluebottle.utils.utils import import_class
 from bluebottle.payments.models import OrderPayment
 
@@ -10,7 +10,7 @@ def get_payment_methods(country=None, amount=None):
     Get all payment methods from settings.
     """
     # TODO: Add logic to filter methods based on amount
-    all_methods = getattr(settings, 'PAYMENT_METHODS', ())
+    all_methods = getattr(properties, 'PAYMENT_METHODS', ())
     if country == 'all':
         return all_methods
 

@@ -15,6 +15,7 @@ from suds import plugin
 from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
+from bluebottle.clients import properties
 
 from .exceptions import DocdataPaymentStatusException
 
@@ -100,16 +101,16 @@ class DocdataClient(object):
         self.client = get_suds_client(testing_mode)
         self.testing_mode = testing_mode
 
-        if not settings.DOCDATA_MERCHANT_NAME:
+        if not properties.DOCDATA_MERCHANT_NAME:
             raise ImproperlyConfigured("Missing DOCDATA_MERCHANT_NAME setting!")
-        if not settings.DOCDATA_MERCHANT_PASSWORD:
+        if not properties.DOCDATA_MERCHANT_PASSWORD:
             raise ImproperlyConfigured("Missing DOCDATA_MERCHANT_PASSWORD setting!")
 
         # Create the merchant node which is passed to every request.
         # The _ notation is used to assign attributes to the XML node, instead of child elements.
         self.merchant = self.client.factory.create('ns0:merchant')
-        self.merchant._name = settings.DOCDATA_MERCHANT_NAME
-        self.merchant._password = settings.DOCDATA_MERCHANT_PASSWORD
+        self.merchant._name = properties.DOCDATA_MERCHANT_NAME
+        self.merchant._password = properties.DOCDATA_MERCHANT_PASSWORD
 
         # Create the integration info node which is passed to every request.
         self.integration_info = TechnicalIntegrationInfo()
@@ -307,7 +308,7 @@ class DocdataClient(object):
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
-            'merchant_name': settings.DOCDATA_MERCHANT_NAME,
+            'merchant_name': properties.DOCDATA_MERCHANT_NAME,
             'return_url_success': "{0}/{1}/#!/orders/{2}/success".format(return_url, client_language, order_id),
             'return_url_pending': "{0}/{1}/#!/orders/{2}/pending".format(return_url, client_language, order_id),
             'return_url_canceled': "{0}/{1}/#!/orders/{2}/cancelled".format(return_url, client_language, order_id),

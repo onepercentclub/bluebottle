@@ -367,6 +367,10 @@ App.ApplicationController = Ember.Controller.extend({
         this.set('display_message', false);
     },
 
+    hasMultipleLanguages: function() {
+        return App.Language.find().get('length') > 1;
+    }.property('App.Language.length'),
+
     // Override this to do something when the currentUser call in the initializer doesn't succeed
     missingCurrentUser: Em.K
 });

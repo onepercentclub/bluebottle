@@ -1,5 +1,6 @@
 
 App.Suggestion = DS.Model.extend({
+    url: 'suggestions',
     title: DS.attr('string'),
     pitch: DS.attr('string'),
     deadline: DS.attr('date'),

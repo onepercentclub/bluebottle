@@ -1,0 +1,21 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "suggestion_list" %}
+    {{#if currentUser.office }}
+        <h3>User destination: {{ currentUser.office.name }}
+        {{#if hasSuggestions }}
+            <h2>We got suggestions!</h2>
+            <h3>Total suggestions {{ totalSuggestions }} </h3>
+        {{ else }}
+            <h2>Argh, there are no initiatives</h2>
+        {{/if}}
+    {{ else }}
+        <h2>You haven't selected a location.</h2>
+        <h3>Select your location in your profile</h3>
+        {{#link-to "userProfile" }}Add your location{{/link-to}}
+    {{/if}}
+
+{% endtplhandlebars %}

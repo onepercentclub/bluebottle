@@ -14,5 +14,14 @@ App.Suggestion = DS.Model.extend({
     org_website : DS.attr('string'),
 
     status : DS.attr('string'),
-    project: DS.belongsTo("App.Project")
+    project: DS.belongsTo("App.Project"),
+
+    isUnconfirmed: Em.computed.equal('status', 'unconfirmed'),
+    isDraft: Em.computed.equal('status', 'draft'),
+    isAccepted: Em.computed.equal('status', 'accepted'),
+    isRejected: Em.computed.equal('status', 'rejected'),
+    isExpired: Em.computed.equal('status', 'expired'),
+    isInProgress: Em.computed.equal('status', 'in_progress'),
+    isSubmitted: Em.computed.equal('status', 'submitted')
+
 });

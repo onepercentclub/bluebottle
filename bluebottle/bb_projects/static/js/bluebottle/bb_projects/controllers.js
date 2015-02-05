@@ -341,12 +341,7 @@ App.MyProjectController = Em.ObjectController.extend({
     }.property('myOrganization.validOrganization', 'model.organization.validOrganization')
 });
 
-App.MyProjectStartController = App.StandardTabController.extend({
-    nextStep: 'myProject.pitch'
-});
-
 App.MyProjectPitchController = App.StandardTabController.extend({
-    previousStep: 'myProject.start',
     nextStep: 'myProject.story',
 
     canSave: function () {

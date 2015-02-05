@@ -13,7 +13,6 @@ App.Router.map(function(){
 
     this.resource('myProject', {path: '/my/projects/:id'}, function() {
 
-        this.route('start');
         this.route('pitch');
         this.route('story');
         this.route('organisation');
@@ -104,8 +103,8 @@ App.MyProjectListRoute = Em.Route.extend(App.ScrollToTop, App.TrackRouteActivate
 App.MyProjectRoute = Em.Route.extend({
     // Load the Project
     model: function(params) {
-        var store = this.get('store');
-        if (params.id == 'new' || params.id == 'null') {
+        var store = this.get('store'); 
+        if (params.id == 'new' || params.id == 'null' || params.id == 'undefined') {
             return App.MyProject.createRecord();
         }
         var project = store.find('myProject', params.id);
@@ -140,25 +139,6 @@ App.MyProjectSubRoute = Em.Route.extend(App.SaveOnTransitionRouteMixin, App.Scro
     model: function(params) {
         return this.modelFor('myProject');
     }
-});
-
-App.MyProjectStartRoute = App.MyProjectSubRoute.extend({
-    skipExitSignal: true,
-    redirect: function() {
-        var phase = this.modelFor('myProject').get('phase');
-        switch(phase) {
-            case 'plan-submitted':
-                this.transitionTo('myProjectReview');
-                break;
-            case 'plan-rejected':
-                this.transitionTo('myProjectRejected');
-                break;
-        }
-    },
-    model: function(params) {
-        return this.modelFor('myProject');
-    }
-
 });
 
 App.MyProjectPitchRoute = App.MyProjectSubRoute.extend(App.TrackRouteActivateMixin, {

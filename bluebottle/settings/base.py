@@ -251,7 +251,6 @@ TENANT_APPS = (
     'fluent_contents.plugins.rawhtml',
     'django_wysiwyg',
     'tinymce',
-    'statici18n',
     'django.contrib.humanize',
     'django_tools',
 )
@@ -329,6 +328,7 @@ LOGGING = {
     }
 }
 
+CLIENTS_CLIENT_MODEL = 'clients.Client'
 
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'

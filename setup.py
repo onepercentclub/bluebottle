@@ -35,7 +35,6 @@ install_requires = [
     'django-iban==0.2.1',
     'django-localflavor==1.0',
     'django-social-auth==0.7.23',
-    'django-statici18n==0.4.5',
     'django-taggit==0.12.1',
     'django-templatetag-handlebars==1.2.0',
     'django-tinymce==1.5.2',

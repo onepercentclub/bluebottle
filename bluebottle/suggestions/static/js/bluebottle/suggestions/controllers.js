@@ -5,6 +5,6 @@ App.SuggestionListController = Em.ArrayController.extend({
 
     hasSuggestions: function() {
         return this.get('totalSuggestions') > 0;
-    }
+    }.property('totalSuggestions')
 });
 

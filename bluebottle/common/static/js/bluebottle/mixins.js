@@ -170,7 +170,6 @@ App.ControllerObjectSaveMixin = Em.Mixin.create({
                 self.set('flash', null);
 
             if (model) {
-                debugger
                 model.one(saveEvent, function() {
                     var message = gettext('Successfully saved.');
                     self._setFlash('success', message);

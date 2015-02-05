@@ -4,13 +4,13 @@
 
 
 {% tplhandlebars "suggestion_list" %}
-    {{#if currentUser.office }}
-        <h3>User destination: {{ currentUser.office.name }}
+    {{#if currentUser.hasOffice }}
+        <h3>User destination: {{ currentUser.officeName }}
         {{#if hasSuggestions }}
             <h2>We got suggestions!</h2>
             <h3>Total suggestions {{ totalSuggestions }} </h3>
         {{ else }}
-            <h2>Argh, there are no initiatives</h2>
+            <h2>Argh, there are no initiatives in {{ currentUser.officeName }}.</h2>
         {{/if}}
     {{ else }}
         <h2>You haven't selected a location.</h2>

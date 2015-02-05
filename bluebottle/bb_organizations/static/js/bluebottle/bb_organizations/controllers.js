@@ -58,7 +58,6 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
 
     actions: {
         addFile: function(file) {
-            debugger
             var store = this.get('store');
             var doc = store.createRecord(App.MyOrganizationDocument);
             doc.set('file', file);

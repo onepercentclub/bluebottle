@@ -13,7 +13,8 @@ module.exports = function(config) {
       'karma-coverage',
       'karma-ember-preprocessor',
       'karma-phantomjs-launcher',
-      'karma-spec-reporter'
+      'karma-spec-reporter',
+      'karma-osx-reporter'
     ],
 
     preprocessors: {
@@ -58,12 +59,12 @@ module.exports = function(config) {
       // Load some apps earlier as other apps depend on them
       '../../bluebottle/wallposts/static/js/**/{components,controllers,models,routes,views}.js',
       // Loading everything else
-      '../../bluebottle/{bb_accounts,bb_fundraisers,bb_donations,bb_organizations,bb_orders,bb_projects,bb_tasks,contact,geo,news,pages,payments,payments_mock,quotes,slides}/static/js/bluebottle/**/{components,controllers,models,routes,views}.js',
+      '../../bluebottle/{bb_accounts,bb_fundraisers,bb_donations,bb_organizations,bb_orders,bb_projects,bb_tasks,contact,geo,news,pages,payments,payments_mock,quotes,slides,suggestions}/static/js/bluebottle/**/{components,controllers,models,routes,views}.js',
 
       // Handlebar Templates
       // Need to do some preprocessing first to get the django processed
       // Handlebars templates before loading them here!
-      // '../../apps/**/templates/*.hbs',
+       '../static/build/templates/*.hbs',
 
       // Test Libs - concat using grunt
       '../../static/build/js/lib/test_deps.js',
@@ -95,7 +96,7 @@ module.exports = function(config) {
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['dots', 'coverage'],
+    reporters: ['dots', 'coverage', 'osx'],
 
     // web server port
     port: 9876,

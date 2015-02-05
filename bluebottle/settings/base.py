@@ -193,6 +193,7 @@ INSTALLED_APPS = (
     'bluebottle.payments_voucher',
 
     'bluebottle.bb_follow',
+    'bluebottle.suggestions',
 
     # Test Bb implementations
     'bluebottle.test',

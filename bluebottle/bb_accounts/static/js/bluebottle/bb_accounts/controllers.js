@@ -198,7 +198,7 @@ App.CurrentUserController = Ember.ObjectController.extend(BB.ModalControllerMixi
             msg2 = gettext(' Ready to do some good?'),
             msg = msg1 + ' ' + msg2;
         return msg
-    }.property()
+    }.property(),
 });
 
 
@@ -217,7 +217,11 @@ App.UserProfileController = Ember.ObjectController.extend(App.Editable, {
         return list;
     }).property(),
 
-    label: gettext("Time available")
+    label: gettext("Time available"),
+
+    successHandler: function() {
+        this.get('currentUser.model').reload();
+    }
 });
 
 

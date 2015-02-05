@@ -9,6 +9,11 @@
         {{#if hasSuggestions }}
             <h2>We got suggestions!</h2>
             <h3>Total suggestions {{ totalSuggestions }} </h3>
+            <ul>
+            {{#each suggestion in model }}
+              <li>{{ suggestion.title }}</li>
+            {{/each}}
+            </ul>
         {{ else }}
             <h2>Argh, there are no initiatives in {{ currentUser.officeName }}.</h2>
         {{/if}}

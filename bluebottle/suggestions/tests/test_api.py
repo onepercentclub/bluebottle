@@ -35,7 +35,7 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
         response = self.client.get(self.suggestion_list_url, HTTP_AUTHORIZATION=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_retrieve_suggestion_list_items(self):
+    def test_retrieve_suggestion_list_all_items(self):
         """
         Test if all suggestions are retrieved
         """

@@ -251,7 +251,6 @@ TENANT_APPS = (
     'fluent_contents.plugins.rawhtml',
     'django_wysiwyg',
     'tinymce',
-    'statici18n',
     'django.contrib.humanize',
     'django_tools',
 )

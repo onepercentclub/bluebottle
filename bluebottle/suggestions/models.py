@@ -5,6 +5,7 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.bb_projects.models import ProjectTheme
 
 PROJECT_MODEL = get_project_model()
 
@@ -24,7 +25,7 @@ class Suggestion(models.Model):
     title = models.TextField() ## description
     pitch = models.TextField() ## requirements
     deadline = models.DateField() ## date
-    theme = models.CharField(max_length=100)
+    theme = models.ForeignKey(ProjectTheme, null=True, blank=True)
     destination = models.CharField(max_length=100)
 
     org_name = models.CharField(max_length=100)

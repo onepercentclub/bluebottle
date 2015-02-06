@@ -16,7 +16,7 @@ class Migration(SchemaMigration):
             ('title', self.gf('django.db.models.fields.TextField')()),
             ('pitch', self.gf('django.db.models.fields.TextField')()),
             ('deadline', self.gf('django.db.models.fields.DateField')()),
-            ('theme', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('theme', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['bb_projects.ProjectTheme'], null=True, blank=True)),
             ('destination', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('org_name', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('org_contactname', self.gf('django.db.models.fields.CharField')(max_length=100)),
@@ -233,7 +233,7 @@ class Migration(SchemaMigration):
             'pitch': ('django.db.models.fields.TextField', [], {}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'suggestions'", 'null': 'True', 'to': u"orm['projects.BookingProject']"}),
             'status': ('django.db.models.fields.CharField', [], {'default': "'unconfirmed'", 'max_length': '64'}),
-            'theme': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'theme': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['bb_projects.ProjectTheme']", 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.TextField', [], {}),
             'token': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})

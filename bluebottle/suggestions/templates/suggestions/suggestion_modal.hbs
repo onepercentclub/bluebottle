@@ -37,7 +37,7 @@
         <div class="row">
             <div class="col12">
                 <span>{% trans "To be executed on:" %} {{ this.deadline }}</span>
-                <a {{bindAttr class=":btn :donate-btn validAmount::is-inactive"}} name="adopt">{% trans "Adopt this project" %}</a>
+                <a {{action 'adoptSuggestion' this }}{{bindAttr class=":btn :donate-btn validAmount::is-inactive"}} name="adopt">{% trans "Adopt this project" %}</a>
             </div>
         </div>
     </div>

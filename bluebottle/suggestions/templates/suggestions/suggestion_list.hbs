@@ -11,7 +11,7 @@
             <h3>Total suggestions {{ totalSuggestions }} </h3>
             <ul>
             {{#each suggestion in model }}
-              <li><a {{action openInExtraLargeBox "suggestionModal" suggestion }}{{ suggestion.title }}</a></li>
+              <li><a {{action  "showSuggestion" suggestion }}{{ suggestion.title }}</a></li>
             {{/each}}
             </ul>
         {{ else }}

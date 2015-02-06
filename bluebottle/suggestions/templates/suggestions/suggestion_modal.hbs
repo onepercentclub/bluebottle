@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load static %}
 
-{% tplhandlebars "suggestion_modal" %}
+{% tplhandlebars "suggestion" %}
     <div {{bindAttr class=":modal-fullscreen-content"}}>
         <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
         <h4>{{this.title}}</h4>

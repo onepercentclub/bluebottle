@@ -1,3 +1,5 @@
+App.SuggestionController = Em.ObjectController.extend({});
+
 App.SuggestionListController = Em.ArrayController.extend({
     totalSuggestions: function() {
         return this.get('model.length');
@@ -5,14 +7,12 @@ App.SuggestionListController = Em.ArrayController.extend({
 
     hasSuggestions: function() {
         return this.get('totalSuggestions') > 0;
-    }.property('totalSuggestions')
+    }.property('totalSuggestions'),
+
+    actions: {
+        showSuggestion: function(suggestion) {
+            this.send('openInExtraLargeBox', "suggestion", suggestion);
+        }
+    }
 });
 
-
-App.SuggestionModalController = Em.ObjectController.extend(BB.ModalControllerMixin, {
-    init: function() {
-        this._super();
-    },
-
-
-});

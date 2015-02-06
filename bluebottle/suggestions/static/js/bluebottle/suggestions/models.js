@@ -5,7 +5,7 @@ App.Suggestion = DS.Model.extend({
     title: DS.attr('string'),
     pitch: DS.attr('string'),
     deadline: DS.attr('date'),
-    theme: DS.attr('string'),
+    theme: DS.belongsTo('App.Theme'),
     destination: DS.attr('string'),
 
     org_contactname : DS.attr('string'),

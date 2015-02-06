@@ -1,23 +1,18 @@
 App.SuggestionController = Em.ObjectController.extend({
     actions: {
         adoptSuggestion: function(suggestion) {
-
-            App.Theme.find(suggestion.get('theme')).then(function(theme) {
-                debugger
-                App.MyProject.createRecord({
-                    title: suggestion.get('title'),
-                    pitch: suggestion.get('pitch'),
-                    theme: theme
-                }).save().then(function (project) {
-                    // Redirect to project edit flow
-                    this.transitionTo('myProject.pitch', project)
-                });
+            App.MyProject.createRecord({
+                title: suggestion.get('title'),
+                pitch: suggestion.get('pitch'),
+                theme: suggestion.get('theme')
+            }).save().then(function (project) {
+                // Redirect to project edit flow
+                this.transitionTo('myProject.pitch', project)
             });
 
         }
     }
 });
-
 
 App.SuggestionListController = Em.ArrayController.extend({
     totalSuggestions: function() {

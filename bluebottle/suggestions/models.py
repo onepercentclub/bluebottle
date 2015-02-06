@@ -25,7 +25,7 @@ class Suggestion(models.Model):
     title = models.TextField() ## description
     pitch = models.TextField() ## requirements
     deadline = models.DateField() ## date
-    theme = models.ForeignKey(ProjectTheme, null=True, blank=True)
+    theme = models.ForeignKey(ProjectTheme)
     destination = models.CharField(max_length=100)
 
     org_name = models.CharField(max_length=100)

@@ -1,36 +1,63 @@
 App.SuggestionController = Em.ObjectController.extend({
 
-    updateSuggestion: function(project) {
+    createOrganization: function() {
         var model = this.get('model');
-        model.set('status', 'in_progress');
-        model.set('project', project);
-        model.save();
+
+        var organization = App.MyOrganization.createRecord({
+            name: model.get('org_name'),
+            current_name: model.get('org_contactname'),
+            phone_number: model.get('org_phone'),
+            website: model.get('org_website)'),
+            email: model.get('org_email')
+        });
+        
+        return organization;
     },
 
-    createProject: function() {
+    updateSuggestion: function(project) {
+        var model = this.get('model');
+
+        model.set('status', 'in_progress');
+        model.set('project', project);
+
+        return model;
+    },
+
+    createProject: function(myOrganization) {
         var model = this.get('model');
 
         var project = App.MyProject.createRecord({
             title: model.get('title'),
             pitch: model.get('pitch'),
-            theme: model.get('theme')
+            theme: model.get('theme'),
+            //organization: myOrganization
         });
-        project.save();
+
         return project;
+
     },
 
     actions: {
 
         adoptSuggestion: function() {
-            
-            this.send('closeModal');
+            var _this = this;
+            debugger
+            _this.createOrganization().save().then(function(organization) {
 
-            var project = this.createProject();
-            
-            this.updateSuggestion(project);
+                _this.createProject(organization).save().then(function(project) {
 
-            // Redirect to project edit flow
-            this.transitionTo('myProject.pitch', project)
+                    _this.updateSuggestion(project).save().then(function() {
+
+                        _this.send('closeModal');
+                        // Redirect to project edit flow
+                        _this.transitionTo('myProject.pitch', project)                  
+                    });      
+                }, function(err) {
+                    debugger
+                });
+            });            
+
+
 
         }
     }

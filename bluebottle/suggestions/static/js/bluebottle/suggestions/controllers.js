@@ -8,3 +8,11 @@ App.SuggestionListController = Em.ArrayController.extend({
     }.property('totalSuggestions')
 });
 
+
+App.SuggestionModalController = Em.ObjectController.extend(BB.ModalControllerMixin, {
+    init: function() {
+        this._super();
+    },
+
+
+});

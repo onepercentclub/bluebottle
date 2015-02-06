@@ -1,0 +1,46 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "suggestion_modal" %}
+    <div {{bindAttr class=":modal-fullscreen-content"}}>
+        <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+        <h4>{{this.title}}</h4>
+        <big>{% blocktrans %}Be sure to contact the partner organisation in order to fully understand their needs.{% endblocktrans %}</big>
+        <div class="row">
+            <div class="col4">
+                <h3>{% trans "Details" %}</h3>
+                <ul>
+                    <li>{{this.deadline}}</li>
+                    <li>{{this.theme}}</li>
+                    <li>{{this.destination}}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col4">
+                <h3>{% trans "Partner Organisation" %}</h3>
+                <ul>
+                    <li>{{this.org_name}}</li>
+                    <li>{{this.org_phone}}</li>
+                    <li>{{this.org_email}}</li>
+                    <li>{{this.org_website}}</li>
+                </ul>
+            </div>
+        </div>
+        <div clas="row">
+            <div class="col8">
+                <h3>{% trans "Goal" %}</h3>
+                <p>{{this.pitch}}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col12">
+                <span>{% trans "To be executed on:" %} {{ this.deadline }}</span>
+                <a {{bindAttr class=":btn :donate-btn validAmount::is-inactive"}} name="adopt">{% trans "Adopt this project" %}</a>
+            </div>
+        </div>
+    </div>
+
+
+{% endtplhandlebars %}

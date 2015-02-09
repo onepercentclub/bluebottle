@@ -4,23 +4,40 @@
 
 
 {% tplhandlebars "suggestion_list" %}
-    {{#if currentUser.hasOffice }}
-        <h3>User destination: {{ currentUser.officeName }}
-        {{#if hasSuggestions }}
-            <h2>We got suggestions!</h2>
-            <h3>Total suggestions {{ totalSuggestions }} </h3>
-            <ul>
-            {{#each suggestion in model }}
-              <li>{{ suggestion.title }}</li>
-            {{/each}}
-            </ul>
+    <div class="suggestion-box">
+        {{#if currentUser.hasOffice }}
+            <h3>User destination: {{ currentUser.officeName }}
+            {{#if hasSuggestions }}
+                <h2 class="suggestion-title">Adopt a local project</h2>
+                <div class="suggestion-block">
+                    <span class="suggestion-description">
+                        {% blocktrans %}
+                            This local initiatives could use your help.<br>
+                            Select a project suggestion to find out more.
+                        {% endblocktrans %}
+                    </span>
+                    <ul class="suggestion-list">
+                    {{#each suggestion in model }}
+                        <li class="suggestion-item">
+                            <strong class="item-title">{{ suggestion.title }}</strong>
+                            <span class="item-deadline">
+                                {% trans 'On' %} {{localize suggestion.deadline formatting="dd/MM/yyyy"}}
+                                 - 
+                                <span class="contact-name">                                   
+                                    {% trans 'suggested by'%} {{suggestion.org_contactname}}
+                                </span>
+                            </span>
+                        </li>
+                    {{/each}}
+                    </ul>
+                </div>
+            {{ else }}
+                <h2>Argh, there are no initiatives in {{ currentUser.officeName }}.</h2>
+            {{/if}}
         {{ else }}
-            <h2>Argh, there are no initiatives in {{ currentUser.officeName }}.</h2>
+            <h2>You haven't selected a location.</h2>
+            <h3>Select your location in your profile</h3>
+            {{#link-to "userProfile" }}Add your location{{/link-to}}
         {{/if}}
-    {{ else }}
-        <h2>You haven't selected a location.</h2>
-        <h3>Select your location in your profile</h3>
-        {{#link-to "userProfile" }}Add your location{{/link-to}}
-    {{/if}}
-
+    </div>
 {% endtplhandlebars %}

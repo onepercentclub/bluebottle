@@ -19,9 +19,10 @@ from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from rest_framework_jwt import utils
+
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model, get_fundraiser_model
-
 
 from taggit.managers import TaggableManager
 
@@ -276,7 +277,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def donation_count(self):
         """ Returns the number of donations a user has made """
-        return get_donation_model().objects.filter(order__user=self).count()
+        ['success', 'pending']
+        qs = get_donation_model().objects.filter(owner=self)
+        qs = qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+
+        return qs.count()
 
     @property
     def project_count(self):

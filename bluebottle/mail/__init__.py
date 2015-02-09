@@ -1,9 +1,9 @@
 from django.contrib.sites.models import Site
-from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.utils import translation
 
 from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import EmailMultiAlternatives
 
 
 def send_mail(template_name, subject, to, **kwargs):

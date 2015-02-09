@@ -4,10 +4,11 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
 
 from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.clients.context import ClientContext
+
+from bluebottle.clients.mail import EmailMultiAlternatives
 
 TASK_MEMBER_MODEL = get_taskmember_model()
 

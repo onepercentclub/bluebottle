@@ -1,8 +1,8 @@
 from django.contrib.sites.models import Site
-from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 
 from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import EmailMultiAlternatives
 
 
 def mail_project_funded_internal(project):

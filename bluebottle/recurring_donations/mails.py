@@ -1,11 +1,11 @@
 from babel.dates import format_date
 from babel.numbers import format_currency
 from django.contrib.sites.models import Site
-from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from celery import task
 
 from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import EmailMultiAlternatives
 
 
 @task

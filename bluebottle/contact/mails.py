@@ -1,10 +1,10 @@
-from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 
 from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import EmailMultiAlternatives
 
 
 def send_contact_email(message, contact_email):

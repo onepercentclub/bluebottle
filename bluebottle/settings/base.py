@@ -328,8 +328,6 @@ LOGGING = {
     }
 }
 
-CLIENTS_CLIENT_MODEL = 'clients.Client'
-
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 

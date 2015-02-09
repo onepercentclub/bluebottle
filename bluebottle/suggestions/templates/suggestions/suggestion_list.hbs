@@ -6,7 +6,6 @@
 {% tplhandlebars "suggestion_list" %}
     <div class="suggestion-box">
         {{#if currentUser.hasOffice }}
-            <h3>User destination: {{ currentUser.officeName }}
             {{#if hasSuggestions }}
                 <h2 class="suggestion-title">Adopt a local project</h2>
                 <div class="suggestion-block">
@@ -32,12 +31,31 @@
                     </ul>
                 </div>
             {{ else }}
-                <h2>Argh, there are no initiatives in {{ currentUser.officeName }}.</h2>
+                <h2 class="suggestion-title">No local initiatives found.</h2>
+                <div class="suggestion-block">
+                    <span class="suggestion-description">
+                        {% blocktrans %}
+                            We couldn't find any initiatives near your Booking.com <br>
+                            destination. Feel free to <a>create your own project.</a>
+                        {% endblocktrans %}
+                    </span>
+                    <div class="suggestion-image nothing-found"></div>
+                </div>
             {{/if}}
         {{ else }}
-            <h2>You haven't selected a location.</h2>
-            <h3>Select your location in your profile</h3>
-            {{#link-to "userProfile" }}Add your location{{/link-to}}
+            <h2 class="suggestion-title">Adopt local project</h2>
+                <div class="suggestion-block">
+                    <span class="suggestion-description">
+                        {% blocktrans %}
+                            Please add your Booking.com office location to your profile <br>
+                            to see if we can find you an interesting project.
+                        {% endblocktrans %}
+                    </span>
+                    <div class="suggestion-image"></div>
+                    <div class="suggestion-action">
+                        {{#link-to "userProfile" classNames="btn btn-sec" }}Add your location{{/link-to}}
+                    </div>
+                </div>
         {{/if}}
     </div>
 {% endtplhandlebars %}

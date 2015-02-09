@@ -428,6 +428,16 @@ App.MyProjectSubmitController = App.StandardTabController.extend({
             }
 
             model.on('didUpdate', function() {
+
+                App.Suggestion.find({project_slug: model.get('slug')}).then(function(suggestions) { 
+                    var suggestion = suggestions.get('firstObject');
+                    
+                    if (suggestion != undefined ) {
+                        suggestion.set('status', 'submitted');
+                        suggestion.save();       
+                    }
+                });
+ 
                 controller.transitionToRoute('myProjectReview');
             });
             

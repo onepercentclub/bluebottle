@@ -65,7 +65,7 @@ def get_organization_payout_model():
 
 
 def get_client_model():
-    return get_model_class('CLIENTS_CLIENT_MODEL')
+    return get_model_class('TENANT_MODEL')
 
 
 def get_auth_user_model():
@@ -141,6 +141,6 @@ def get_model_mapping():
         + _map_model('organization', 'ORGANIZATIONS_ORGANIZATION_MODEL').items()
         + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()
         + _map_model('organization_document', 'ORGANIZATIONS_DOCUMENT_MODEL').items()
-        + _map_model('client', 'CLIENTS_CLIENT_MODEL').items()
+        + _map_model('client', 'TENANT_MODEL').items()
     )
     return map

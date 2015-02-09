@@ -4,6 +4,8 @@ from django.test import TestCase
 from rest_framework import status
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+
 from bluebottle.test.utils import InitProjectDataMixin
 from bluebottle.suggestions.models import Suggestion
 
@@ -85,6 +87,34 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
 
         self.assertEqual(data[0]['status'].lower(), status)
         self.assertEqual(data[1]['status'].lower(), status)
+
+    def test_retrieve_only_suggestions_with_project_slug(self):
+        """
+        Test the project slug filter on the API endpoint. Should return one suggestion
+        """
+        project = ProjectFactory.create()
+        suggestion_accepted_1 = SuggestionFactory.create(project=project)        
+
+        response = self.client.get(self.suggestion_list_url, {'project_slug': project.slug},
+                                    HTTP_AUTHORIZATION=self.user_1_token)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data), 1)
+
+        self.assertEqual(data[0]['project'].lower(), project.slug)
+
+    def test_retrieve_no_suggestions_with_fake_project_slug(self):
+        """
+        Test the project slug filter on the API endpoint. Shouldn't return any suggestions
+        """
+        project = ProjectFactory.create()
+        suggestion_accepted_1 = SuggestionFactory.create(project=project)        
+
+        response = self.client.get(self.suggestion_list_url, {'project_slug': "non-existing-slug"},
+                                    HTTP_AUTHORIZATION=self.user_1_token)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data), 0)
 
 
 

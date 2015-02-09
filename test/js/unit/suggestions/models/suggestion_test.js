@@ -13,7 +13,7 @@ pavlov.specify("Suggestion model unit tests", function() {
             title: 'Suggestion: Kill the rebels',
             pitch: 'Lets wipe them all out',
             deadline: new Date(2016, 12, 1),
-            theme: 'Party of destruction',
+            //theme: 'Party of destruction',
             destination: 'Hell',
             org_name: 'Rebel Alliance',
             org_contactname: "Leia Organa",
@@ -34,7 +34,7 @@ pavlov.specify("Suggestion model unit tests", function() {
                 assert(suggestion.get('title')).equals(data['title']);
                 assert(suggestion.get('pitch')).equals(data['pitch']);
                 assert(suggestion.get('deadline')).equals(data['deadline']);
-                assert(suggestion.get('theme')).equals(data['theme']);
+                //assert(suggestion.get('theme')).equals(data['theme']);
                 assert(suggestion.get('destination')).equals(data['destination']);
                 assert(suggestion.get('org_name')).equals(data['org_name']);
                 assert(suggestion.get('org_contactname')).equals(data['org_contactname']);

@@ -1,11 +1,13 @@
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
-from django.template import Context
+
+from bluebottle.clients.context import ClientContext
 
 
 def mail_project_funded_internal(project):
-    context = Context({'project': project,
+    context = ClientContext(
+                       {'project': project,
                        'link': '/go/projects/{0}'.format(project.slug),
                        'site': 'https://{0}'.format(Site.objects.get_current().domain)})
     subject = "A project has been funded"

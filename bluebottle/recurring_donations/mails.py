@@ -3,15 +3,18 @@ from babel.numbers import format_currency
 from django.contrib.sites.models import Site
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
-from django.template import Context
 from celery import task
+
+from bluebottle.clients.context import ClientContext
+
 
 @task
 def mail_monthly_donation_processed_notification(monthly_order):
     # TODO: Use English base and the regular translation mechanism.
     receiver = monthly_order.user
 
-    context = Context({'order': monthly_order,
+    context = ClientContext(
+                       {'order': monthly_order,
                        'receiver_first_name': receiver.first_name.capitalize(),
                        'date': format_date(locale='nl_NL'),
                        'amount': format_currency(monthly_order.amount, 'EUR', locale='nl_NL'),
@@ -28,7 +31,8 @@ def mail_monthly_donation_processed_notification(monthly_order):
 @task
 def mail_project_funded_monthly_donor_notification(receiver, project):
     # TODO: Use English base and the regular translation mechanism.
-    context = Context({'receiver_first_name': receiver.first_name.capitalize(),
+    context = ClientContext(
+                      {'receiver_first_name': receiver.first_name.capitalize(),
                        'project': project,
                        'link': '/go/projects/{0}'.format(project.slug),
                        'site': 'https://' + Site.objects.get_current().domain})

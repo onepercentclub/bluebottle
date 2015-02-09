@@ -23,11 +23,10 @@ class SuggestionList(generics.ListCreateAPIView):
             qs = qs.filter(status__iexact=status)
         return qs.order_by('deadline')
  
-    def pre_save(self, obj):
-        import pdb;pdb.set_trace()
 
 
 class SuggestionDetail(generics.RetrieveUpdateAPIView):
     model = Suggestion
 
     serializer_class = SuggestionSerializer
+

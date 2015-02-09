@@ -1,7 +1,6 @@
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from django.template import Context
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
@@ -10,6 +9,7 @@ from django.utils import translation
 import dkim
 from django_tools.middlewares import ThreadLocal
 
+from bluebottle.clients.context import ClientContext
 
 class DKIMBackend(EmailBackend):
     def _send(self, email_message):
@@ -63,7 +63,7 @@ def send_mail(template_name, subject, to, **kwargs):
         'site': 'https://{0}'.format(Site.objects.get_current().domain)
     })
 
-    context = Context(kwargs)
+    context = ClientContext(kwargs)
     subject = unicode(subject)  # Unlazy the translatable string subject within activated language.
 
     text_content = get_template('{0}.txt'.format(template_name)).render(context)

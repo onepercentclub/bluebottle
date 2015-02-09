@@ -277,8 +277,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def donation_count(self):
         """ Returns the number of donations a user has made """
-        ['success', 'pending']
-        qs = get_donation_model().objects.filter(owner=self)
+        qs = get_donation_model().objects.filter(order__user=self)
         qs = qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
 
         return qs.count()

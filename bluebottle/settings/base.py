@@ -379,6 +379,9 @@ TWITTER_HANDLES = {
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
 
+# Used when creating default payment address
+DEFAULT_COUNTRY_CODE = 'NL'
+
 # E-MAILS
 CONTACT_EMAIL = 'contact@my-bluebottle-project.com'
 

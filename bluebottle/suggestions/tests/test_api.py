@@ -27,7 +27,7 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
         self.client.logout()
 
     def test_unauthenticated_user(self):
-        """ Test that unauthenticated users get a 401 unauthorized response """
+        """ Test that unauthenticated users get a 403 forbidden response """
         response = self.client.get(self.suggestion_list_url, follow=False)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)    
 

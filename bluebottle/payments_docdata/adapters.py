@@ -75,6 +75,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 'ip_address': ip_address
             }
 
+        default_country_code = getattr(properties, 'DEFAULT_COUNTRY_CODE')
 
         if user and hasattr(user, 'address'):
 
@@ -102,7 +103,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             elif get_country_code_by_ip(ip_address):
                 user_data['country'] = get_country_code_by_ip(ip_address)
             else:
-                user_data['country'] = 'NL'
+                user_data['country'] = default_country_code
         else:
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'
@@ -111,11 +112,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             if country:
                 user_data['country'] = country
             else:
-                user_data['country'] = 'NL'
+                user_data['country'] = default_country_code
             user_data['house_number'] = 'Unknown'
 
         if not user_data['country']:
-            user_data['country'] = 'NL'
+            user_data['country'] = default_country_code
 
         user_data['company'] = ''
         user_data['kvk_number'] = ''

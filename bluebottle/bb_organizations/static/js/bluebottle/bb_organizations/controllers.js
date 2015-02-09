@@ -98,7 +98,7 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
             var organization = controller.get('model'),
                 project = controller.get('controllers.myProject.model'),
                 timer;
-
+                
             if (!organization.get('isDirty')) {
                 resolve(gettext('Model is not dirty.'));
                 return;

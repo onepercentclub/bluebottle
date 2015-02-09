@@ -117,7 +117,7 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         """
         obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
         obj.owner = self.request.user
-
+        
 
 class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL

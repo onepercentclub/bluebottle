@@ -1,4 +1,5 @@
 App.SuggestionController = Em.ObjectController.extend({
+    errors: null,
 
     createOrganization: function() {
         var model = this.get('model');
@@ -7,11 +8,10 @@ App.SuggestionController = Em.ObjectController.extend({
 
                         App.MyOrganization.createRecord({
                             name: model.get('org_name'),
-                            current_name: model.get('org_contactname'),
+                            contact_name: model.get('org_contactname'),
                             phone_number: model.get('org_phone'),
-                            website: model.get('org_website)'),
-                            email: model.get('org_email')
-
+                            website: model.get('org_website'),
+                            email: model.get('org_email'),
                         }).save().then(function (organization) {
                                 resolve(organization);
                             }, function (newDonation) {
@@ -37,14 +37,12 @@ App.SuggestionController = Em.ObjectController.extend({
 
         return new Ember.RSVP.Promise(function(resolve, reject){
 
-                        App.MyProject.createRecord({
+                        var project = App.MyProject.createRecord({
                                     title: model.get('title'),
                                     pitch: model.get('pitch'),
                                     theme: model.get('theme'),
                                     deadline: model.get('deadline'),
-                                    //destination: model.get('destination'),
                                     organization: myOrganization
-
                         }).save().then(function (project) {
                                 resolve(project);
                             }, function (project) {
@@ -61,7 +59,7 @@ App.SuggestionController = Em.ObjectController.extend({
             
             _this.createOrganization().then(function(organization) {
 
-                _this.createProject().then(function(project) {
+                _this.createProject(organization).then(function(project) {
 
                     _this.updateSuggestion(project);
                     _this.send('closeModal');
@@ -71,7 +69,7 @@ App.SuggestionController = Em.ObjectController.extend({
 
                     //});      
                 }, function(err) {
-                    console.log(err);
+                    _this.set('errors', err);
                 });
             });            
 

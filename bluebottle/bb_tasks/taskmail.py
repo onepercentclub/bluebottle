@@ -4,10 +4,10 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import render_to_string
-from django.template import Context
 from django.core.mail import EmailMultiAlternatives
 
 from bluebottle.utils.model_dispatcher import get_taskmember_model
+from bluebottle.clients.context import ClientContext
 
 TASK_MEMBER_MODEL = get_taskmember_model()
 
@@ -28,7 +28,6 @@ class TaskMemberMailSender:
         self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
 
     def send(self):
-
         translation.activate(self.receiver.primary_language)
         translation.deactivate()
         text_content = render_to_string('{0}.txt'.format(self.template_mail), context_instance=self.ctx)
@@ -46,7 +45,7 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
         self.template_mail = 'task_member_applied.mail'
         self.receiver = self.task.author
         self.subject = _('{0} applied for your task.'.format(self.task_member.member.get_short_name()))
-        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member, 'link': self.task_link,
+        self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member, 'link': self.task_link,
                             'site': self.site, 'motivation': self.task_member.motivation})
 
 
@@ -58,7 +57,7 @@ class TaskMemberRejectMail(TaskMemberMailSender):
         self.template_mail = 'task_member_rejected.mail'
         self.receiver = self.task_member.member
         self.subject = _('{0}s found someone else to do the task you applied for.'.format(self.task.author.get_short_name()))
-        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
+        self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list})
 
 
@@ -70,7 +69,7 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
         self.template_mail = 'task_member_accepted.mail'
         self.receiver = self.task_member.member
         self.subject = _('{0}s accepted you to complete the tasks you applied for.'.format(self.task.author.get_short_name()))
-        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
+        self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site})
 
 
@@ -82,7 +81,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
         self.template_mail = 'task_member_realized.mail'
         self.receiver = self.task_member.member
         self.subject = _('You realised your {0} task!'.format(self.task.project.title))
-        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
+        self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list,
                             'project_link': self.project_link})
 
@@ -95,7 +94,7 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
         self.template_mail = 'task_member_withdrew.mail'
         self.receiver = self.task.author
         self.subject = _('{0} is no longer available for the task').format(self.task_member.member.get_short_name())
-        self.ctx = Context({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member,
+        self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member,
                             'link': self.task_link, 'site': self.site, 'task_list': self.task_list, 'project_link': self.project_link})
 
 

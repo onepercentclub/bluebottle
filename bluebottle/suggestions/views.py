@@ -1,12 +1,12 @@
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.suggestions.serializers import SuggestionSerializer
 
 class SuggestionList(generics.ListCreateAPIView):
     model = Suggestion
-
+    permission_classes = (IsAuthenticated, )
     serializer_class = SuggestionSerializer
-
 
     def get_queryset(self):
         qs = Suggestion.objects.all()
@@ -27,6 +27,6 @@ class SuggestionList(generics.ListCreateAPIView):
 
 class SuggestionDetail(generics.RetrieveUpdateAPIView):
     model = Suggestion
-
+    permission_classes = (IsAuthenticated, )
     serializer_class = SuggestionSerializer
 

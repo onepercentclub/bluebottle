@@ -2,6 +2,7 @@ import datetime
 import json
 from django.test import TestCase
 from rest_framework import status
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -27,7 +28,7 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
 
     def test_unauthenticated_user(self):
         """ Test that unauthenticated users get a 401 unauthorized response """
-        response = self.client.get(self.suggestion_list_url)
+        response = self.client.get(self.suggestion_list_url, follow=False)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)    
 
     def test_retrieve_suggestion_list_status(self):

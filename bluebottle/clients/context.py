@@ -9,4 +9,9 @@ class ClientContext(Context):
     """
     def __init__(self, *args, **kw):
         super(ClientContext, self).__init__(*args, **kw)
-        self.update({'tenant_properties':properties})
+        try:
+            self.update({
+                'tenant_mail_properties':properties.TENANT_MAIL_PROPERTIES
+            })
+        except AttributeError:
+            pass

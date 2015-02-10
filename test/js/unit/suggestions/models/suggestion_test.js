@@ -6,21 +6,31 @@ pavlov.specify("Suggestion model unit tests", function() {
             assert(DS.Model.detect(App.Suggestion)).isTrue();
         });
     });
+
     
     describe("Suggestion Instance", function () {
+        var theme,
+            data;
+
+        beforeEach(function() {
+            create('theme').then(function(loadedTheme) {
+                theme = loadedTheme;
+                data = {
+                    title: 'Suggestion: Kill the rebels',
+                    pitch: 'Lets wipe them all out',
+                    deadline: new Date(2016, 12, 1),
+                    theme: theme,
+                    destination: 'Hell',
+                    org_name: 'Rebel Alliance',
+                    org_contactname: "Leia Organa",
+                    org_email: "leia69@hotmail.com",
+                    org_phone: '555-1254',
+                    org_website: 'www.rebelalliance.com'
+                };
+            });
+        });
                 
-        var data = {
-            title: 'Suggestion: Kill the rebels',
-            pitch: 'Lets wipe them all out',
-            deadline: new Date(2016, 12, 1),
-            //theme: 'Party of destruction',
-            destination: 'Hell',
-            org_name: 'Rebel Alliance',
-            org_contactname: "Leia Organa",
-            org_email: "leia69@hotmail.com",
-            org_phone: '555-1254',
-            org_website: 'www.rebelalliance.com'
-        };
+
 
         it('should be a new suggestion', function() {
             build('suggestion').then(function(suggestion) {
@@ -34,7 +44,7 @@ pavlov.specify("Suggestion model unit tests", function() {
                 assert(suggestion.get('title')).equals(data['title']);
                 assert(suggestion.get('pitch')).equals(data['pitch']);
                 assert(suggestion.get('deadline')).equals(data['deadline']);
-                //assert(suggestion.get('theme')).equals(data['theme']);
+                assert(suggestion.get('theme')).equals(data['theme']);
                 assert(suggestion.get('destination')).equals(data['destination']);
                 assert(suggestion.get('org_name')).equals(data['org_name']);
                 assert(suggestion.get('org_contactname')).equals(data['org_contactname']);

@@ -3,9 +3,7 @@ App.SuggestionController = Em.ObjectController.extend({
 
     createOrganization: function() {
         var model = this.get('model');
-
         return new Ember.RSVP.Promise(function(resolve, reject){
-
                         App.MyOrganization.createRecord({
                             name: model.get('org_name'),
                             contact_name: model.get('org_contactname'),
@@ -14,7 +12,7 @@ App.SuggestionController = Em.ObjectController.extend({
                             email: model.get('org_email'),
                         }).save().then(function (organization) {
                                 resolve(organization);
-                            }, function (newDonation) {
+                            }, function (organization) {
                                 reject(organization.errors);
                             });
                     });

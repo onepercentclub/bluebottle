@@ -4,5 +4,13 @@ Factory.define('project', {
         return attr('userPreview');
     },
     slug: 'empire-strikes-back',
-    title: 'Empire Strikes Back'
+    title: 'Empire Strikes Back',
+    
+    theme: function() {
+        return attr('theme');
+    }
+});
+
+Factory.define('theme', {
+    name: 'Science Fiction'
 });

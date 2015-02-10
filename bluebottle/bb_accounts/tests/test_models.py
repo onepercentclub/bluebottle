@@ -184,8 +184,13 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         order = OrderFactory.create(user=self.user)
         donation = DonationFactory.create(amount=1000, order=order)
 
-        self.assertEqual(self.user.donation_count, 1)
+        # Only successful or pending orders/donations are counted
+        self.assertEqual(self.user.donation_count, 0)
 
+        # Set donation to pending to be included in count
+        order.locked()
+        order.pending()
+        self.assertEqual(self.user.donation_count, 1)
 
     def test_calculate_project_count(self):
         """ Test the counter for the number of projects a user has started """

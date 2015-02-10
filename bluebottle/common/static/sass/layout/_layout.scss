@@ -12,6 +12,7 @@
         height: 100%;
         background: rgba(24,24,24, .60);
         z-index: 9999;
+        cursor: pointer;
         @include animation(fadeOut .3s ease-out);
         @include animation-fill-mode(forwards);
 

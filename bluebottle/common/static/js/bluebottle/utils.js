@@ -397,6 +397,8 @@ App.ModelValidationMixin = Ember.Mixin.create({
  */
 App.Editable = Ember.Mixin.create({
     saved: false,
+    
+    successHandler: Em.K(), // SuccessHandlers can be overriden in the class using the mixin
 
     actions : {
         save: function(record) {
@@ -411,6 +413,7 @@ App.Editable = Ember.Mixin.create({
                 // record was saved
                 _this.set('saving', false);
                 _this.set('saved', true);
+                _this.successHandler();
             }, function () {
                 _this.set('saving', false);
             });

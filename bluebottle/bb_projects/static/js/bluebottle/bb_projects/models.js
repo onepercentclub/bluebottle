@@ -218,6 +218,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
     },
 
     save: function () {
+        
         this.one('becameInvalid', function(record) {
             // Ember-data currently has no clear way of dealing with the state
             // loaded.created.invalid on server side validation, so we transition
@@ -229,7 +230,7 @@ App.MyProject = App.Project.extend(App.ModelValidationMixin, {
             }
         });
 
-        this._super();
+        return this._super();
     },
 
     validTitle: function () {

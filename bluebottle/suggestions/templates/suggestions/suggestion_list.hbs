@@ -1,0 +1,61 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+
+{% tplhandlebars "suggestion_list" %}
+    <div class="suggestion-box">
+        {{#if currentUser.hasOffice }}
+            {{#if hasSuggestions }}
+                <h2 class="suggestion-title">Adopt a local project</h2>
+                <div class="suggestion-block">
+                    <span class="suggestion-description">
+                        {% blocktrans %}
+                            This local initiatives could use your help.<br>
+                            Select a project suggestion to find out more.
+                        {% endblocktrans %}
+                    </span>
+                    <ul class="suggestion-list">
+                    {{#each suggestion in model }}
+                        <li class="suggestion-item" {{action  "showSuggestion" suggestion }}>
+                            <strong class="item-title">{{ suggestion.title }}</strong>
+                            <span class="item-deadline">
+                                {% trans 'On' %} {{localize suggestion.deadline formatting="dd/MM/yyyy"}}
+                                 - 
+                                <span class="contact-name">                                   
+                                    {% trans 'suggested by'%} {{suggestion.org_contactname}}
+                                </span>
+                            </span>
+                        </li>
+                    {{/each}}
+                    </ul>
+                </div>
+            {{ else }}
+                <h2 class="suggestion-title">No local initiatives found.</h2>
+                <div class="suggestion-block">
+                    <span class="suggestion-description">
+                        {% blocktrans %}
+                            We couldn't find any initiatives near your Booking.com <br>
+                            destination. Feel free to <a>create your own project.</a>
+                        {% endblocktrans %}
+                    </span>
+                    <div class="suggestion-image nothing-found"></div>
+                </div>
+            {{/if}}
+        {{ else }}
+            <h2 class="suggestion-title">Adopt local project</h2>
+                <div class="suggestion-block">
+                    <span class="suggestion-description">
+                        {% blocktrans %}
+                            Please add your Booking.com office location to your profile <br>
+                            to see if we can find you an interesting project.
+                        {% endblocktrans %}
+                    </span>
+                    <div class="suggestion-image"></div>
+                    <div class="suggestion-action">
+                        {{#link-to "userProfile" classNames="btn btn-sec" }}Add your location{{/link-to}}
+                    </div>
+                </div>
+        {{/if}}
+    </div>
+{% endtplhandlebars %}

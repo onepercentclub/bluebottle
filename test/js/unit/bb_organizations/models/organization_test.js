@@ -17,7 +17,15 @@ pavlov.specify("Organization model unit tests", function() {
     });
     
     describe("Project Instance", function () {
-        
+
+        afterEach(function () {
+            Ember.run(function() {
+                App.Organization.find().forEach(function(record) {
+                    record.deleteRecord();
+                });
+            });
+        });
+
         it("should be a new org", function () {
             build('organization', data).then(function(org) {
                 assert(org instanceof App.Organization).isTrue();

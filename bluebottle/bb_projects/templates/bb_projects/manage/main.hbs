@@ -32,17 +32,7 @@
 
                         {{/if}}
                     </div>
-                    <ul id="campaign-steps" class="{{#if isStatusPlanNew}} steps {{else}} tabs {{/if}}">
-                        {{#if isStatusPlanNew}}
-                            <li class="tab">
-                                {{#link-to "myProject.start" classBinding=":tab-link :validated"}}
-                                    {{#if validStart}}
-                                        <span class="flaticon solid checkmark-1 "></span>
-                                    {{/if}}
-                                    {% trans "Start" %}
-                                {{/link-to}}
-                            </li>
-                        {{/if}}
+                    <ul id="campaign-steps" {{bind-attr class="isStatusPlanNew:steps:tabs"}}>
 
                         <li class="tab">
                             {{#link-to "myProject.pitch" classBinding=":tab-link validPitch:validated"}}

@@ -1,0 +1,48 @@
+{% load bb_ember %}
+{% load i18n %}
+{% load static %}
+
+{% tplhandlebars "suggestion" %}
+    <div {{bindAttr class=":modal-fullscreen-content :suggestion-detail"}}>
+        <span {{action 'closeModal'}} class="modal-fullscreen-close"></span>
+        <h4 class="suggestion-detail-title">{{this.title}}</h4>
+        <big>{% blocktrans %}Be sure to contact the partner organisation in order to fully understand their needs.{% endblocktrans %}</big>
+        <div class="row">
+            <div class="col4">
+                <h3>{% trans "Details" %}</h3>
+                <ul>
+                    <li>{{localize this.deadline formatting="dd/MM/yyyy"}}</li>
+                    <li>{{this.theme.name}}</li>
+                    <li>{{this.destination}}</li>
+                </ul>
+            </div>
+
+            <div class="col8">
+                <h3>{% trans "Partner Organisation" %}</h3>
+                <ul>
+                    <li>{{this.org_name}}</li>
+                    <li>{{this.org_phone}}</li>
+                    <li>{{this.org_email}}</li>
+                    <li>{{this.org_website}}</li>
+                </ul>
+            </div>
+        </div>
+
+        <div clas="row">
+            <div class="col12">
+                <h3>{% trans "Goal" %}</h3>
+                <p class="suggestion-detail-pitch">{{this.pitch}}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col12">
+                <span class="execute-date">{% trans "To be executed on:" %} {{localize this.deadline formatting="dd/MM/yyyy"}}</span>
+                <span class="adopt-action">
+                    <a {{action 'adoptSuggestion' }} class="btn" name="adopt">{% trans "Adopt this project" %}</a>
+                </span>
+            </div>
+        </div>
+    </div>
+
+
+{% endtplhandlebars %}

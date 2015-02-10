@@ -58,7 +58,6 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
 
     actions: {
         addFile: function(file) {
-            debugger
             var store = this.get('store');
             var doc = store.createRecord(App.MyOrganizationDocument);
             doc.set('file', file);
@@ -99,7 +98,7 @@ App.MyProjectOrganisationController = App.StandardTabController.extend({
             var organization = controller.get('model'),
                 project = controller.get('controllers.myProject.model'),
                 timer;
-
+                
             if (!organization.get('isDirty')) {
                 resolve(gettext('Model is not dirty.'));
                 return;

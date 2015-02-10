@@ -126,11 +126,6 @@ App.MyProjectView = Em.View.extend({
     templateName: 'my_project'
 });
 
-//~mg
-App.MyProjectStartView = Em.View.extend({
-    templateName: 'my_project_start'
-});
-
 App.MyProjectPitchView = Em.View.extend({
     templateName: 'my_project_pitch'
 });

@@ -107,6 +107,8 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
+    organization = serializers.PrimaryKeyRelatedField(required=False)
+
 
     def validate_status(self, attrs, source):
         value = attrs.get(source, None)

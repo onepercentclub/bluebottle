@@ -80,3 +80,6 @@ ghostdriver.log
 
 # node modules
 bower_components
+
+# compiled files
+bluebottle/common/static/css/ie.css

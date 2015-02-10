@@ -51,7 +51,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     task_count = serializers.Field(source='task_count')
     project_count = serializers.Field(source='project_count')
     donation_count = serializers.Field(source='donation_count')
-    fundraiser_count = serializers.Field(source='donation_count')
+    fundraiser_count = serializers.Field(source='fundraiser_count')
 
     class Meta:
         model = BB_USER_MODEL

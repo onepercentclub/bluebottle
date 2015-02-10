@@ -11,7 +11,7 @@ class ClientContext(Context):
         super(ClientContext, self).__init__(*args, **kw)
         try:
             self.update({
-                'tenant_mail_properties':properties.TENANT_MAIL_PROPERTIES
+                'TENANT_MAIL_PROPERTIES':properties.TENANT_MAIL_PROPERTIES
             })
         except AttributeError:
             pass

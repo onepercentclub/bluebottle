@@ -17,7 +17,7 @@
                     </span>
                     <ul class="suggestion-list">
                     {{#each suggestion in model }}
-                        <li class="suggestion-item">
+                        <li class="suggestion-item" {{action  "showSuggestion" suggestion }}>
                             <strong class="item-title">{{ suggestion.title }}</strong>
                             <span class="item-deadline">
                                 {% trans 'On' %} {{localize suggestion.deadline formatting="dd/MM/yyyy"}}

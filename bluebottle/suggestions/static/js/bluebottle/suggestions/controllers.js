@@ -34,7 +34,6 @@ App.SuggestionController = Em.ObjectController.extend({
         var model = this.get('model');
 
         return new Ember.RSVP.Promise(function(resolve, reject){
-
                         var project = App.MyProject.createRecord({
                                     title: model.get('title'),
                                     pitch: model.get('pitch'),
@@ -44,7 +43,7 @@ App.SuggestionController = Em.ObjectController.extend({
                         }).save().then(function (project) {
                                 resolve(project);
                             }, function (project) {
-                                reject(project.errors);
+                                reject(project);
                             });
                     });
 
@@ -54,7 +53,7 @@ App.SuggestionController = Em.ObjectController.extend({
 
         adoptSuggestion: function() {
             var _this = this;
-            
+
             _this.createOrganization().then(function(organization) {
 
                 _this.createProject(organization).then(function(project) {
@@ -70,9 +69,6 @@ App.SuggestionController = Em.ObjectController.extend({
                     _this.set('errors', err);
                 });
             });            
-
-
-
         }
     }
 });

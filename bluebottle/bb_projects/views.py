@@ -83,8 +83,11 @@ class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
         status = self.request.QUERY_PARAMS.get('status', None)
+        title = self.request.QUERY_PARAMS.get('title', None)
         if status:
             qs = qs.filter(Q(status_id=status))
+        if title:
+            qs = qs.filter(title=title)
         return qs.filter(status__viewable=True)
 
 
@@ -117,7 +120,11 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         """
         obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
         obj.owner = self.request.user
-        
+
+    # def create(self, request, *args, **kwargs):
+    #     import pdb;pdb.set_trace()
+    #     super(ManageProjectList, self).create(request, *args, **kwargs)        
+
 
 class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL

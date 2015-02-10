@@ -104,7 +104,7 @@ App.MyProjectRoute = Em.Route.extend({
     // Load the Project
     model: function(params) {
         var store = this.get('store'); 
-        if (params.id == 'new' || params.id == 'null' || params.id == 'undefined') {
+        if (params.id == 'new' || params.id == 'null') {
             return App.MyProject.createRecord();
         }
         var project = store.find('myProject', params.id);

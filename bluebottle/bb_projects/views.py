@@ -119,11 +119,7 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         Set the project owner and the status of the project.
         """
         obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
-        obj.owner = self.request.user
-
-    # def create(self, request, *args, **kwargs):
-    #     import pdb;pdb.set_trace()
-    #     super(ManageProjectList, self).create(request, *args, **kwargs)        
+        obj.owner = self.request.user      
 
 
 class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):

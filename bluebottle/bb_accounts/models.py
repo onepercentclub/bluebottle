@@ -18,9 +18,10 @@ from django.db.models import Q
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
-from rest_framework_jwt import utils
 from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model, get_fundraiser_model
+
+from rest_framework_jwt.settings import api_settings
 
 
 from taggit.managers import TaggableManager
@@ -248,8 +249,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         msg.send()
 
     def get_jwt_token(self):
-        payload = utils.jwt_payload_handler(self)
-        token = utils.jwt_encode_handler(payload)
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+
+        payload = jwt_payload_handler(self)
+        token = jwt_encode_handler(payload)
         return token
 
     @property

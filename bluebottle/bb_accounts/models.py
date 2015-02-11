@@ -22,7 +22,7 @@ from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model, get_fundraiser_model
 
 from rest_framework_jwt.settings import api_settings
-
+from bluebottle.utils.utils import StatusDefinition
 
 from taggit.managers import TaggableManager
 
@@ -280,7 +280,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def donation_count(self):
         """ Returns the number of donations a user has made """
-        return get_donation_model().objects.filter(order__user=self).count()
+        qs = get_donation_model().objects.filter(order__user=self)
+        qs = qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+
+        return qs.count()
 
     @property
     def project_count(self):

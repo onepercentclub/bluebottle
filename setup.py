@@ -53,7 +53,7 @@ install_requires = [
     'django-loginas==0.1.3',
     'pygraphviz==1.2',
     'beautifulsoup4==4.3.2',
-    'psycopg2==2.2.1',
+    'psycopg2==2.5.5',
     'django-fsm==1.6.0',
     'suds-jurko==0.6',
     'django-ipware==0.0.8',

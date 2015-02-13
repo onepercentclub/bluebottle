@@ -23,7 +23,7 @@ class ExpiredFilter(admin.SimpleListFilter):
         if self.value() == 'expired':
             return queryset.filter(deadline__lt=date.today())
 
-        if self.value() == 'notexpired':
+        if self.value() == 'notexpired' or not self.value():
             return queryset.filter(deadline__gte=date.today())      
 
         if self.value() == 'all':

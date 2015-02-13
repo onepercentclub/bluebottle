@@ -188,20 +188,21 @@ App = Em.Application.createWithMixins(Em.FacebookMixin, {
             });
         });
 
-        App.ProjectPhaseChoiceView.reopen({
-            sortProperties: ['sequence'],
+        App.ProjectPhase.find().then(function(data){
+            App.ProjectPhaseChoiceView.reopen({
+                sortProperties: ['sequence'],
 
-            phases: function () {
-                return App.ProjectPhase.find();
-            }.property(),
+                phases: data,
 
-            data: function () {
-                return App.ProjectPhase.filter(function(item) {
-                    return item.get('ownerEditable');
-                });
-            }.property('phases.length'),
+                items: function () {
+                    var _this = this;
+                    return data.filter(function(item) {
+                        return item.get('ownerEditable');
+                    });
+                }.property('phases.length'),
 
-            contentBinding: 'data'
+                contentBinding: 'items'
+            });
         });
     },
 

@@ -34,8 +34,7 @@
                 <div class="suggestion-block">
                     <span class="suggestion-description">
                         {% blocktrans %}
-                            We couldn't find any initiatives near your Booking.com destination. Feel free to <a href="">create your own project.</a>
-                        {% endblocktrans %}
+                        We couldn't find any initiatives near your Booking.com destination. Feel free to {% endblocktrans %}{{#link-to 'myProject.pitch' 'new'}}{% trans "create your own project." %}{{/link-to}}
                     </span>
                     <div class="suggestion-image nothing-found"></div>
                 </div>

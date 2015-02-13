@@ -38,7 +38,7 @@ class ExpiredFilter(admin.SimpleListFilter):
             }
 
 class SuggestionAdmin(admin.ModelAdmin):
-    list_display = ('title', 'destination', 'created', 'updated', 'status')
+    list_display = ('title', 'destination', 'deadline', 'created', 'updated', 'status')
     list_filter = ('status', 'destination', ExpiredFilter)
 
     readonly_fields = ('created', 'updated', 'expired')

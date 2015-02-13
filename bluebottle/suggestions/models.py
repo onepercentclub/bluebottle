@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from django.db import models
 from djchoices import DjangoChoices, ChoiceItem
 from django.utils.translation import ugettext as _
+from django.utils.translation import pgettext
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from bluebottle.utils.model_dispatcher import get_project_model
@@ -16,7 +17,8 @@ class Suggestion(models.Model):
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
         expired = ChoiceItem('expired', label=_('Expired'))
-        in_progress = ChoiceItem('in_progress', label=_('In progress'))
+        # To prevent the translationsin booking for overwriting this translation we use pgettext
+        in_progress = ChoiceItem('in_progress', label=pgettext('suggestion label', 'In progress'))
         submitted = ChoiceItem('submitted', label=_('Submitted'))
 
     created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))

@@ -8,14 +8,6 @@
         <h4 class="suggestion-detail-title">{{this.title}}</h4>
         <big>{% blocktrans %}Be sure to contact the the partner organisation before submitting the project.{% endblocktrans %}</big>
         <div class="row">
-            <div class="col4">
-                <h3>{% trans "Details" %}</h3>
-                <ul>
-                    <li>{{localize this.deadline formatting="dd/MM/yyyy"}}</li>
-                    <li>{{this.theme.name}}</li>
-                    <li>{{this.destination}}</li>
-                </ul>
-            </div>
 
             <div class="col8">
                 <h3>{% trans "Partner Organisation" %}</h3>
@@ -24,6 +16,15 @@
                     <li>{{this.org_phone}}</li>
                     <li>{{this.org_email}}</li>
                     <li>{{this.org_website}}</li>
+                </ul>
+            </div>
+
+            <div class="col4">
+                <h3>{% trans "Details" %}</h3>
+                <ul>
+                    <li>{{localize this.deadline formatting="dd/MM/yyyy"}}</li>
+                    <li>{{this.theme.name}}</li>
+                    <li>{{this.destination}}</li>
                 </ul>
             </div>
         </div>

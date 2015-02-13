@@ -1,5 +1,6 @@
 from datetime import date
 from django.contrib import admin
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.suggestions.models import Suggestion
@@ -58,8 +59,9 @@ class SuggestionAdmin(admin.ModelAdmin):
 
     def project_link(self, obj):
         if obj.project:
+            url = reverse('admin:{0}_{1}_change'.format(obj.project._meta.app_label, obj.project._meta.module_name), args=[obj.project.id])
             return u"<a href='{0}' target='_blank'>{1}</a>".format(
-                                       obj.project.get_absolute_url(),
+                                       url,
                                        obj.project.title)
         return u"(None)"
     project_link.allow_tags = True

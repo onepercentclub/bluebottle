@@ -180,7 +180,6 @@ $gray-border-hover                                         : #9F9F9F;
 		border-radius: 8px;
 		font-family: $font-family-body;
 		padding: 6px;
-		text-align: center;
 		@include transform-style(preserve-3d);
 		@include single-box-shadow(rgba(0,00,0,0.55), 0, 0, 15px, 0, false);
 
@@ -212,6 +211,7 @@ $gray-border-hover                                         : #9F9F9F;
 			border-radius: 4px;
 			border: solid 1px #ccc;
 			padding: 30px;
+			color: #444;
 
 			h4 {
 				font-size: 24px;
@@ -220,12 +220,15 @@ $gray-border-hover                                         : #9F9F9F;
 				font-weight: 700;
 				margin-bottom: 15px;
 				margin-top: 0;
+				text-align: center;
 			}
 
 			big {
 				margin: -11px 0 31px 0;
 				display: block;
 				font-size: 15px;
+				padding: 0 60px 0 60px;
+				text-align: center;
 			}
 
 			.modal-flash-message {

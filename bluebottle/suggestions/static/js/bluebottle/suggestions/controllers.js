@@ -84,7 +84,7 @@ App.SuggestionListController = Em.ArrayController.extend({
 
     actions: {
         showSuggestion: function(suggestion) {
-            this.send('openInExtraLargeBox', "suggestion", suggestion);
+            this.send('openInBox', "suggestion", suggestion, 'big-modal');
         }
     }
 });

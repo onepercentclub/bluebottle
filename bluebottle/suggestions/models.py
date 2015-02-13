@@ -16,7 +16,6 @@ class Suggestion(models.Model):
         draft = ChoiceItem('draft', label=_('Draft'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
-        expired = ChoiceItem('expired', label=_('Expired'))
         # To prevent the translationsin booking for overwriting this translation we use pgettext
         in_progress = ChoiceItem('in_progress', label=pgettext('suggestion label', 'In progress'))
         submitted = ChoiceItem('submitted', label=_('Submitted'))

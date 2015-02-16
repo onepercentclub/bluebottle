@@ -212,6 +212,7 @@ $gray-border-hover                                         : #9F9F9F;
 			border: solid 1px #ccc;
 			padding: 30px;
 			color: #444;
+			text-align: center;
 
 			h4 {
 				font-size: 24px;
@@ -220,7 +221,6 @@ $gray-border-hover                                         : #9F9F9F;
 				font-weight: 700;
 				margin-bottom: 15px;
 				margin-top: 0;
-				text-align: center;
 			}
 
 			big {
@@ -228,7 +228,6 @@ $gray-border-hover                                         : #9F9F9F;
 				display: block;
 				font-size: 15px;
 				padding: 0 60px 0 60px;
-				text-align: center;
 			}
 
 			.modal-flash-message {

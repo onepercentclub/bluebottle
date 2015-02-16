@@ -1,6 +1,97 @@
 [
     {
         "pk": 1,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "slug": "plan-new",
+            "name": "Plan - New",
+            "sequence": 1,
+            "editable": true,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 2,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "slug": "plan-submitted",
+            "name": "Plan - Submitted",
+            "sequence": 2,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 3,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "slug": "plan-needs-work",
+            "name": "Plan - Needs Work",
+            "sequence": 3,
+            "editable": true,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 5,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "slug": "campaign",
+            "name": "Campaign",
+            "sequence": 6,
+            "editable": true,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 8,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "name": "Done - Complete",
+            "slug": "done-complete",
+            "sequence": 8,
+            "editable": true,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 9,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "name": "Done - Incomplete",
+            "slug": "done-incomplete",
+            "sequence": 9,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 10,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "name": "Closed",
+            "slug": "closed",
+            "sequence": 10,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 1,
         "model": "bb_projects.projecttheme",
         "fields": {
             "slug": "education",

@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def update_statuses_for_client(self, client):
         """
         Projects which have expired but have been funded will already have their status 
-        set to done-complete so these can be ignored. We only need to update projects which 
+        set to done so these can be ignored. We only need to update projects which
         haven't been funded but have expired, or they have been overfunded and have expired.
         """
         connection.set_tenant(client)

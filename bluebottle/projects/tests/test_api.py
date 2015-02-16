@@ -695,10 +695,9 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         donation = DonationFactory.create(user=self.user, project=project, amount=10000)
 
         loaded_project = Project.objects.get(pk=project.pk)
-        # FIXME: Re-enable this if donations are ok again
-        # self.assertTrue(loaded_project.campaign_ended is not None)
-        # self.assertTrue(loaded_project.campaign_funded is not None)
-        # self.assertEquals(loaded_project.status, ProjectPhase.objects.get(slug="done-complete"))
+        self.assertTrue(loaded_project.campaign_ended is not None)
+        self.assertTrue(loaded_project.campaign_funded is not None)
+        self.assertEquals(loaded_project.status, ProjectPhase.objects.get(slug="finished"))
 
     def test_campaign_project_got_funded_allow_overfunding(self):
         """

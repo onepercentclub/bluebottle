@@ -145,13 +145,12 @@ class Project(BaseProject):
 
     def update_status_after_donation(self):
         if not self.campaign_funded and not self.campaign_ended and \
-                                            self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                           Q(slug="done-incomplete") |
-                                                           Q(slug="done-stopped")) and self.amount_needed <= 0:
+                                            self.status not in ProjectPhase.objects.filter(Q(slug="finished") |
+                                                           Q(slug="closed")) and self.amount_needed <= 0:
             self.campaign_funded = timezone.now()
 
             if not self.allow_overfunding:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
+                self.status = ProjectPhase.objects.get(slug="finished")
                 self.campaign_ended = self.campaign_funded
 
             self.save()
@@ -196,7 +195,7 @@ class Project(BaseProject):
 
     @property
     def is_realised(self):
-        return self.status in ProjectPhase.objects.filter(slug__in=['done-complete', 'done-incomplete', 'realised']).all()
+        return self.status in ProjectPhase.objects.filter(slug='finished').all()
 
     def supporters_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
@@ -329,15 +328,13 @@ class Project(BaseProject):
             self.deadline = timezone.now() + datetime.timedelta(days=30)
 
         #Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                           Q(slug="done-incomplete") |
-                                                           Q(slug="done-stopped")) and self.deadline < timezone.now():
-            self.status = ProjectPhase.objects.get(slug="done-incomplete")
+        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="finished") |
+                                                           Q(slug="closed")) and self.deadline < timezone.now():
+            self.status = ProjectPhase.objects.get(slug="finished")
             self.campaign_ended = self.deadline
 
-        if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                           Q(slug="done-incomplete") |
-                                                           Q(slug="done-stopped")) and not self.campaign_ended:
+        if self.status in ProjectPhase.objects.filter(Q(slug="finished") |
+                                                           Q(slug="closed")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         if self.amount_asked:
@@ -381,8 +378,7 @@ class PartnerOrganization(models.Model):
     @property
     def projects(self):
         return self.project_set.order_by('-favorite', '-popularity').filter(status__in=[ProjectPhase.objects.get(slug="campaign"),
-                                                                            ProjectPhase.objects.get(slug="done-complete"),
-                                                                            ProjectPhase.objects.get(slug="done-incomplete")])
+                                                                            ProjectPhase.objects.get(slug="finished")])
 
     class Meta:
         db_table = 'projects_partnerorganization'

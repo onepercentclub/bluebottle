@@ -1,7 +1,10 @@
-from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from bluebottle.clients.models import Client
+from bluebottle.projects.models import Project
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import Task
+from django.db import connection
 
 
 class Command(BaseCommand):
@@ -9,32 +12,30 @@ class Command(BaseCommand):
     help = 'Sets projects to "Done Incomplete" and task status to "Realised" when the deadline is passed'
 
     def handle(self, *args, **options):
-        from bluebottle.projects.models import Project
-        from bluebottle.bb_projects.models import ProjectPhase
-        from apps.tasks.models import Task
 
-        """ 
+        for client in Client.objects.all():
+            self.update_statuses_for_client(client)
+
+    def update_statuses_for_client(self, client):
+        """
         Projects which have expired but have been funded will already have their status 
-        set to done-complete so these can be ignored. We only need to update projects which 
+        set to done so these can be ignored. We only need to update projects which
         haven't been funded but have expired, or they have been overfunded and have expired.
         """
-        try:
-            done_incomplete_phase = ProjectPhase.objects.get(slug='done-incomplete')
-            self.stdout.write("Found ProjectPhase model with name 'Done Incomplete'")
-        except ProjectPhase.DoesNotExist:
-            raise CommandError("A ProjectPhase with name 'Done Incomplete' does not exist")
+        connection.set_tenant(client)
+        self.stdout.write("Checking deadlines for client {0}".format(client.client_name))
 
         try:
-            done_complete_phase = ProjectPhase.objects.get(slug='done-complete')
-            self.stdout.write("Found ProjectPhase model with name 'Done Complete'")
+            done_phase = ProjectPhase.objects.get(slug='done')
+            self.stdout.write("Found ProjectPhase model with name 'Done'")
         except ProjectPhase.DoesNotExist:
-            raise CommandError("A ProjectPhase with name 'Done Complete' does not exist")
+            raise CommandError("A ProjectPhase with name 'Done' does not exist")
 
         try:
-            campaign_phase = ProjectPhase.objects.get(slug='campaign')
-            self.stdout.write("Found ProjectPhase model with name 'Campaign'")
+            campaign_phase = ProjectPhase.objects.get(slug='running')
+            self.stdout.write("Found ProjectPhase model with name 'Running'")
         except ProjectPhase.DoesNotExist:
-            raise CommandError("A ProjectPhase with name 'Campaign' does not exist")
+            raise CommandError("A ProjectPhase with name 'Running' does not exist")
 
         """
         Projects which have at least the funds asked, are still in campaign phase and have not expired 
@@ -46,24 +47,11 @@ class Command(BaseCommand):
         Project.objects.filter(amount_needed__lte=0, status=campaign_phase, deadline__gt=now()).update(campaign_funded=now())
 
         """
-        Projects which have at least the funds asked, are still in campaign phase but have expired 
-        need to be set to 'done complete' and the campaign ended date set to now.
-        Iterate over projects and save them one by one so the receivers get a signal
+        Projects which are still in campaign phase but have expired need to be set to 'done'.
         """
-        self.stdout.write("Checking Project overfunded deadlines...")
-        for project in Project.objects.filter(amount_needed__lt=0, status=campaign_phase, deadline__lte=now()).all():
-            project.status = done_complete_phase
-            project.campaign_ended = now()
-            project.save()
-
-        """
-        Projects which don't have the funds asked, are still in campaign phase but have expired 
-        need to be set to 'done incomplete' and the campaign ended date set to now.
-        Iterate over projects and save them one by one so the receivers get a signal
-        """
-        self.stdout.write("Checking Project unfunded deadlines...")
-        for project in Project.objects.filter(status=campaign_phase, deadline__lt=now()).all():
-            project.status = done_incomplete_phase
+        self.stdout.write("Checking Project deadlines...")
+        for project in Project.objects.filter(status=campaign_phase, deadline__lte=now()).all():
+            project.status = done_phase
             project.campaign_ended = now()
             project.save()
 

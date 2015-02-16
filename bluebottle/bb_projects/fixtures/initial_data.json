@@ -39,40 +39,27 @@
         }
     },
     {
-        "pk": 5,
+        "pk": 4,
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
             "slug": "campaign",
             "name": "Campaign",
-            "sequence": 6,
+            "sequence": 4,
             "editable": true,
             "active": true,
             "description": ""
         }
     },
     {
-        "pk": 8,
+        "pk": 5,
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Done - Complete",
-            "slug": "done-complete",
-            "sequence": 8,
+            "name": "Finished",
+            "slug": "finished",
+            "sequence": 5,
             "editable": true,
-            "active": true,
-            "description": ""
-        }
-    },
-    {
-        "pk": 9,
-        "model": "bb_projects.projectphase",
-        "fields": {
-            "viewable": true,
-            "name": "Done - Incomplete",
-            "slug": "done-incomplete",
-            "sequence": 9,
-            "editable": false,
             "active": true,
             "description": ""
         }

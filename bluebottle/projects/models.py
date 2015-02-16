@@ -328,13 +328,13 @@ class Project(BaseProject):
             self.deadline = timezone.now() + datetime.timedelta(days=30)
 
         #Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="finished") |
-                                                           Q(slug="closed")) and self.deadline < timezone.now():
+        if not self.campaign_ended and self.deadline < timezone.now() and \
+                        self.status not in ProjectPhase.objects.filter(Q(slug="finished") |Q(slug="closed")):
             self.status = ProjectPhase.objects.get(slug="finished")
             self.campaign_ended = self.deadline
 
         if self.status in ProjectPhase.objects.filter(Q(slug="finished") |
-                                                           Q(slug="closed")) and not self.campaign_ended:
+                Q(slug="closed")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         if self.amount_asked:

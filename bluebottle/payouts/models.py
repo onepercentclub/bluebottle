@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.conf import settings
 from bluebottle.clients import properties
 
+
 class ProjectPayout(BaseProjectPayout):
 
     class PayoutRules(DjangoChoices):
@@ -33,21 +34,21 @@ class ProjectPayout(BaseProjectPayout):
         """
         Calculate the amount payable for beneath_threshold rule
         """
-        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES.beneath_threshold
+        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES['beneath_threshold']
         return self.amount_raised * Decimal(payable_rate)
 
     def calculate_amount_payable_rule_fully_funded(self, total):
         """
         Calculate the amount payable for fully_funded rule
         """
-        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES.fully_funded
+        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES['fully_funded']
         return self.amount_raised * Decimal(payable_rate)
 
     def calculate_amount_payable_rule_not_fully_funded(self, total):
         """
         Calculate the amount payable for not_fully_funded rule
         """
-        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES.not_fully_funded
+        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES['not_fully_funded']
         return self.amount_raised * Decimal(payable_rate)
 
     # Legacy payout rules
@@ -104,19 +105,13 @@ class ProjectPayout(BaseProjectPayout):
             # New rules per 2014
 
             if self.project.amount_donated >= self.project.amount_asked:
-                # Fully funded
-                # If it's a Cheetah campaign then set 0 percent rule.
-                partners = PartnerOrganization.objects.filter(slug__in=['cheetah']).all()
-                if self.project.partner_organization in partners:
-                    return self.PayoutRules.zero
-                # Default payout rule is 7 percent.
-                return self.PayoutRules.seven
+                return self.PayoutRules.fully_funded
             elif self.project.amount_donated < settings.MINIMAL_PAYOUT_AMOUNT:
                 # Funding less then minimal payment amount.
                 return self.PayoutRules.hundred
             else:
                 # Not fully funded
-                return self.PayoutRules.twelve
+                return self.PayoutRules.not_fully_funded
 
         # Campaign started before 2014
         # Always 5 percent

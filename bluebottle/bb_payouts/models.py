@@ -208,7 +208,9 @@ class BaseProjectPayout(PayoutBase):
 
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        five = ChoiceItem('five', label=_("5%"))
+        beneath_threshold = ChoiceItem('beneath_threshold', label=_("Beneath minimal payout amount"))
+        fully_funded = ChoiceItem('fully_funded', label=_("Fully funded"))
+        not_fully_funded = ChoiceItem('not_fully_funded', label=_("Not fully funded"))
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 

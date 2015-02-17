@@ -25,7 +25,7 @@
                         <p><strong>{% trans "Goal" %}:</strong> {{end_goal}}</p>
                     {{/if}}
                 </div>
-                <a class="project-more read-more">{% trans "Read more" %}</a>
+                <a {{action 'readMore'}} class="project-more read-more">{% trans "Read more" %}</a>
             </article>
             <aside class="project-media">
                 <div class="project-share">

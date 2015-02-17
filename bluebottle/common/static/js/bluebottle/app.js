@@ -709,11 +709,6 @@ App.EventMixin = Em.Mixin.create({
 
     if (description.height() > 92) {
         readMore.show();
-        
-        readMore.on('click', function() {
-            description.toggleClass('is-active');
-            //readMore.html(gettext('Read less.'));
-        });
     } else {
         readMore.hide();
     }

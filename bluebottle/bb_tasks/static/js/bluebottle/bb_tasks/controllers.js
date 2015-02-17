@@ -171,6 +171,12 @@ App.TaskController = Em.ObjectController.extend(App.CanEditTaskMixin, App.IsAuth
         return (this.get('author.username') == this.get('currentUser.username'));
     }.property('author.username', 'currentUser.username'),
 
+    actions: {
+        readMore: function() {
+            var description = $('#project-detail-header .project-description');
+            description.toggleClass('is-active')
+        }
+    }
 });
 
 

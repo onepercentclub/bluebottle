@@ -218,3 +218,38 @@ class UserTestsMixin(object):
         user.save()
 
         return user
+
+
+import mock
+from django.core.exceptions import SuspiciousFileOperation
+
+class TenantAwareStorageTest(unittest.TestCase):
+        
+    def test_location_with_tenant(self):
+        with mock.patch("django.db.connection") as connection:
+            # The new storage must be imported after the db connection is mocked
+            from ..storage import TenantFileSystemStorage
+
+            name = 'testname'
+            connection.tenant.schema_name  = 'dummy_schema_name'
+            storage = TenantFileSystemStorage()
+
+
+            res = storage.path(name=name)
+
+            self.assertEqual(res.split('/')[-1], name)
+            self.assertEqual(res.split('/')[-4:-1], ['static', 'media', 'dummy_schema_name'])
+
+        #connection.tenant
+
+        #self.assertEqual(res, )
+
+    # @patch(db, 'connection')
+    # def test_location_without_tenant(self, connection):
+    #     connection.return_value = {}
+    #     self.fail('Not implemented')
+    
+    # @patch(db, 'connection')
+    # def test_invalid_path(self, connection):
+    #     connection.return_value = {'tenant': {'schema_name': 'test'}}
+    #     self.fail('Not implemented')

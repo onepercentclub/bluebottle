@@ -234,15 +234,27 @@ class TenantAwareStorageTest(unittest.TestCase):
             connection.tenant.schema_name  = 'dummy_schema_name'
             storage = TenantFileSystemStorage()
 
-
             res = storage.path(name=name)
 
             self.assertEqual(res.split('/')[-1], name)
             self.assertEqual(res.split('/')[-4:-1], ['static', 'media', 'dummy_schema_name'])
 
-        #connection.tenant
+    def test_location_without_tenant(self):
+        with mock.patch("django.db.connection") as connection:
+            # The new storage must be imported after the db connection is mocked
+            from ..storage import TenantFileSystemStorage
 
-        #self.assertEqual(res, )
+            name = 'testname'
+            connection.tenant = None
+            connection.location = "/"
+
+            storage = TenantFileSystemStorage()
+
+            res = storage.path(name=name)
+
+            self.assertEqual(res.split("/")[-1], name)
+            self.assertEqual(res.split("/")[-4:-2], ['static', 'media'])
+
 
     # @patch(db, 'connection')
     # def test_location_without_tenant(self, connection):

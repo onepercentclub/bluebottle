@@ -1,5 +1,6 @@
 import datetime
 import json
+from datetime import date, timedelta
 from django.test import TestCase
 from rest_framework import status
 
@@ -43,16 +44,30 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
 
     def test_retrieve_suggestion_list_all_items(self):
         """
-        Test if all suggestions are retrieved
+        Test if all suggestions are retrieved that have a deadline today or later
         """
-        suggestion_2 = SuggestionFactory.create()
-        suggestion_3 = SuggestionFactory.create()
+        suggestion_2 = SuggestionFactory.create(deadline=date.today())
+        suggestion_3 = SuggestionFactory.create(deadline=date.today())
 
         response = self.client.get(self.suggestion_list_url, HTTP_AUTHORIZATION=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = json.loads(response.content)
         self.assertEqual(len(data), Suggestion.objects.count())
+
+    def test_retrieve_suggestion_list_expired_deadlines(self):
+        """
+        Test that no suggestions are returned if there deadline is 'lower' than today
+        """
+        suggestion_2 = SuggestionFactory.create(deadline=date.today() - timedelta(1))
+        suggestion_3 = SuggestionFactory.create(deadline=date.today() - timedelta(1))
+
+        response = self.client.get(self.suggestion_list_url, HTTP_AUTHORIZATION=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = json.loads(response.content)
+        # We still have the original initialized Suggestion, so 1 instead of 0 
+        self.assertEqual(len(data), 1)
 
     def test_retrieve_only_suggestions_with_destination(self):
         """

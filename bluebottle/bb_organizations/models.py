@@ -43,7 +43,7 @@ class BaseOrganizationDocument(models.Model):
     """ Document for an Organization """
 
     file = models.FileField(
-        upload_to='organizations/documents', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT))
+        upload_to='organizations/documents')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), blank=True, null=True)
     organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, related_name="documents")
     created = CreationDateTimeField(_('created'))

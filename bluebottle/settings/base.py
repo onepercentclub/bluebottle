@@ -391,6 +391,7 @@ SEND_WELCOME_MAIL = False
 
 TENANT_MAIL_PROPERTIES = {}
 
+TENANT_BASE = os.path.join(PROJECT_ROOT, 'static', 'media')
 
 PROJECT_PAYOUT_FEES = {
     'beneath_threshold': 1,

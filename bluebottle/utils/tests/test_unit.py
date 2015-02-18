@@ -218,3 +218,59 @@ class UserTestsMixin(object):
         user.save()
 
         return user
+
+
+import mock
+from django.core.exceptions import SuspiciousFileOperation
+
+class TenantAwareStorageTest(unittest.TestCase):
+        
+    def test_location_with_tenant(self):
+        """ Test that the proper location path is generated when a tenant is specified """
+        # The storage must be imported after the db connection is mocked
+        with mock.patch("django.db.connection") as connection:
+            from ..storage import TenantFileSystemStorage
+
+            name = 'testname'
+            
+            connection.tenant.schema_name  = 'dummy_schema_name'
+            storage = TenantFileSystemStorage()
+
+            res = storage.path(name=name)
+
+            self.assertEqual(res.split('/')[-1], name)
+            self.assertEqual(res.split('/')[-4:-1], ['static', 'media', 'dummy_schema_name'])
+
+    def test_location_without_tenant(self):
+        """ Test that there is no tenant location path when there is no tenant specified """ 
+        with mock.patch("django.db.connection") as connection:
+            from ..storage import TenantFileSystemStorage
+            
+            name = 'testname'
+            
+            connection.tenant = None
+            connection.location = "/"
+
+            storage = TenantFileSystemStorage()
+
+            res = storage.path(name=name)
+            self.assertEqual(res.split("/")[-1], name)
+            self.assertEqual(res.split("/")[-3:-1], ['static', 'media'])
+
+    def test_raise_suspicious_error(self):
+        """ Test that a SuspiciousFileOperation is raised when the location path is generated """
+        with mock.patch("django.utils._os.safe_join") as safe_join, \
+             mock.patch("django.db.connection") as connection:
+
+            from ..storage import TenantFileSystemStorage
+            
+            connection.tenant = None # Make sure that the 2nd safe_join is called in the storage code
+
+            name = 'testname_join'
+            
+            safe_join.side_effect = ValueError
+
+            storage = TenantFileSystemStorage()
+
+            self.assertRaises(SuspiciousFileOperation, storage.path, name=name)
+

@@ -1,11 +1,18 @@
+{% extends "base.mail.txt" %}
 {% load i18n %}
+
+{% block content %}
 {% blocktrans with amount=amount donor_name=donor_name site=site link=link %}
+
 Hello {{first_name}},
 
-You just received a EUR {{ amount }} donation from {{ donor_name }}!
+You received a € {{ amount }} donation from {{ donor_name }}.
 
-Quickly thank your supporter by posting a personal message on your project wall: {{ site }}{{ link }}.
+Quickly thank your supporter by posting a personal message on your project page.
 
-Cheers,
-1%Club
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+Say thanks: {{ site }}{{ link }}
+{% endblock %}

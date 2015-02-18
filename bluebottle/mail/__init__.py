@@ -4,7 +4,6 @@ from django.utils import translation
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.clients import properties
 
 
 def send_mail(template_name, subject, to, **kwargs):
@@ -25,9 +24,7 @@ def send_mail(template_name, subject, to, **kwargs):
     if hasattr(to, 'primary_language') and to.primary_language:
         translation.deactivate()
 
-    from_email = properties.CONTACT_EMAIL
-
-    msg = EmailMultiAlternatives(subject=subject, from_email=from_email, body=text_content, to=[to.email])
+    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[to.email])
     msg.attach_alternative(html_content, "text/html")
 
     return msg.send()

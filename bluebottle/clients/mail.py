@@ -8,10 +8,11 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
     address, if available
     """
     def __init__(self, from_email=None, *args, **kwargs):
-        tenant_from = properties.TENANT_MAIL_PROPERTIES.get('sender')
+        mail_address = properties.TENANT_MAIL_PROPERTIES.get('address')
+        mail_name = properties.TENANT_MAIL_PROPERTIES.get('name')
+        tenant_from = " {0} <{1}>".format(mail_name, mail_address)
         if from_email is None and tenant_from:
             kwargs['from_email'] = tenant_from
 
         super(EmailMultiAlternatives, self).__init__(*args, **kwargs)
-
 

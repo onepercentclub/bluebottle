@@ -389,8 +389,12 @@ HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
 
-MINIMAL_PAYOUT_AMOUNT = 21
-
 TENANT_MAIL_PROPERTIES = {}
 
 TENANT_BASE = os.path.join(PROJECT_ROOT, 'static', 'media')
+
+PROJECT_PAYOUT_FEES = {
+    'beneath_threshold': 1,
+    'fully_funded': .05,
+    'not_fully_funded': .05
+}

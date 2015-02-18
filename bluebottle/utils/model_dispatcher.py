@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import get_model
+from django.db import models
+from django.core.management import call_command
 
 
 def get_task_skill_model():
@@ -144,3 +146,20 @@ def get_model_mapping():
         + _map_model('client', 'TENANT_MODEL').items()
     )
     return map
+
+
+def load_fixture(file_name, orm):
+    original_get_model = models.get_model
+
+    def get_model_southern_style(*args):
+        try:
+            return orm['.'.join(args)]
+        except:
+            return original_get_model(*args)
+
+    models.get_model = get_model_southern_style
+
+    call_command('loaddata', file_name)
+
+    models.get_model = original_get_model
+

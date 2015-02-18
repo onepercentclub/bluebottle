@@ -7,20 +7,51 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 from django.conf import settings
+from bluebottle.clients import properties
 
 
 class ProjectPayout(BaseProjectPayout):
 
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        old = ChoiceItem('old', label=_("Old 1%/5%"))
-        zero = ChoiceItem('zero', label=_("0%"))
-        five = ChoiceItem('five', label=_("5%"))
-        seven = ChoiceItem('seven', label=_("7%"))
-        twelve = ChoiceItem('twelve', label=_("12%"))
-        hundred = ChoiceItem('hundred', label=_("100%"))
-        unknown = ChoiceItem('unknown', label=_("Unknown"))
-        other = ChoiceItem('other', label=_("Other"))
+        beneath_threshold = ChoiceItem('beneath_threshold', label=_("Beneath minimal payout amount"))
+        fully_funded = ChoiceItem('fully_funded', label=_("Fully funded"))
+        not_fully_funded = ChoiceItem('not_fully_funded', label=_("Not fully funded"))
+
+        # Legacy payout rules
+        old = ChoiceItem('old', label=_("Legacy: Old 1%/5%"))
+        zero = ChoiceItem('zero', label=_("Legacy: 0%"))
+        five = ChoiceItem('five', label=_("Legacy: 5%"))
+        seven = ChoiceItem('seven', label=_("Legacy: 7%"))
+        twelve = ChoiceItem('twelve', label=_("Legacy: 12%"))
+        hundred = ChoiceItem('hundred', label=_("Legacy: 100%"))
+        unknown = ChoiceItem('unknown', label=_("Legacy: Unknown"))
+        other = ChoiceItem('other', label=_("Legacy: Other"))
+
+    # Payout rules
+
+    def calculate_amount_payable_rule_beneath_threshold(self, total):
+        """
+        Calculate the amount payable for beneath_threshold rule
+        """
+        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES['beneath_threshold']
+        return self.amount_raised * Decimal(payable_rate)
+
+    def calculate_amount_payable_rule_fully_funded(self, total):
+        """
+        Calculate the amount payable for fully_funded rule
+        """
+        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES['fully_funded']
+        return self.amount_raised * Decimal(payable_rate)
+
+    def calculate_amount_payable_rule_not_fully_funded(self, total):
+        """
+        Calculate the amount payable for not_fully_funded rule
+        """
+        payable_rate = 1 - properties.PROJECT_PAYOUT_FEES['not_fully_funded']
+        return self.amount_raised * Decimal(payable_rate)
+
+    # Legacy payout rules
 
     def calculate_amount_payable_rule_old(self, total):
         """
@@ -74,19 +105,13 @@ class ProjectPayout(BaseProjectPayout):
             # New rules per 2014
 
             if self.project.amount_donated >= self.project.amount_asked:
-                # Fully funded
-                # If it's a Cheetah campaign then set 0 percent rule.
-                partners = PartnerOrganization.objects.filter(slug__in=['cheetah']).all()
-                if self.project.partner_organization in partners:
-                    return self.PayoutRules.zero
-                # Default payout rule is 7 percent.
-                return self.PayoutRules.seven
+                return self.PayoutRules.fully_funded
             elif self.project.amount_donated < settings.MINIMAL_PAYOUT_AMOUNT:
                 # Funding less then minimal payment amount.
                 return self.PayoutRules.hundred
             else:
                 # Not fully funded
-                return self.PayoutRules.twelve
+                return self.PayoutRules.not_fully_funded
 
         # Campaign started before 2014
         # Always 5 percent

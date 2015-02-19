@@ -21,6 +21,8 @@ class PayoutTestCase(BluebottleTestCase):
     def setUp(self):
         super(PayoutTestCase, self).setUp()
 
+        self.init_projects()
+
         # Set up a project ready for payout
         organization = OrganizationFactory.create()
         organization.save()

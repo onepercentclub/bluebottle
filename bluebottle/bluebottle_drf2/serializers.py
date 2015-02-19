@@ -394,7 +394,11 @@ class TaggableSerializerMixin(object):
         # First save the object so we can add tags to it.
         super(TaggableSerializerMixin, self).save_object(obj, **kwargs)
 
-        tags = getattr(obj, 'tags')
+        try:
+            tags = getattr(obj, 'tags')
+        except AttributeError:
+            return
+            
         if hasattr(self, 'tag_list'):
             tags.clear()
             if type(self.tag_list) == types.UnicodeType:

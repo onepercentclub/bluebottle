@@ -6,16 +6,15 @@
 
 Hello {{ receiver_name }},
 
-Good news! {{ sender_name }} applied for your task {{ task_title }}.
+Good news! {{ sender_name }} applied for your task '{{ task_title }}'.
 
 {{ sender_name }} replied with the following motivation to your task:
 {{ motivation }}
 
 Please accept or reject this application, he or she will receive an email when you have confirmed the status.
-
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-Confirm now: {{ site }}{{ link }}
+{% trans 'Confirm now' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

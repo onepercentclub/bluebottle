@@ -4,15 +4,14 @@
 {% block content %}
 {% blocktrans with amount=amount donor_name=donor_name site=site link=link %}
 
-Hello {{first_name}},
+Hello {{ first_name }},
 
 You received a € {{ amount }} donation from {{ donor_name }}.
 
 Quickly thank your supporter by posting a personal message on your project page.
-
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-Say thanks: {{ site }}{{ link }}
+{% trans 'Say thanks' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

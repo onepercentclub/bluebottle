@@ -2,15 +2,14 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=receiver.first_name author_name=author.full_name %}
+{% blocktrans with receiver_name=receiver.first_name author_name=author.first_name project_title=project.title %}
+
 Hello {{ receiver_name }},
 
-{{ author_name }} commented on your wallpost.
-
-Don't wait any longer and check it out.
-
-{{ site }}{{ link }}
-
-1%Club
+{{ author_name }} just posted a comment on your '{{ project_title }}' wallpost.
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+{% trans 'View comment' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

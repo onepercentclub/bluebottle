@@ -3,12 +3,13 @@
 
 {% block content %}
 {% blocktrans %}
-Hey Project Team,<br/>
-<br/>
-A project has just been funded! Check it out.<br/>
-<br/>
-<a href="{{ site }}{{ link }}">{{ project }}</a>.<br/>
-<br/>
+
+Hello Project Team,
+<br><br>
+A project has been funded!
 {% endblocktrans %}
 {% endblock %}
 
+{% block action %}
+<a href="{{ site }}{{ link }}" class="action-email">{% trans 'View project' context 'email' %}</a>
+{% endblock %}

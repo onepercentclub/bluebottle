@@ -1,11 +1,17 @@
+{% extends "base.mail.txt" %}
 {% load i18n %}
+
+{% block content %}
 {% blocktrans with amount=amount donor_name=donor_name site=site link=link receiver=receiver %}
-Hello {{first_name}},
 
-You just received a EUR {{ amount }} donation!
+Hello {{ first name }},
 
-Curious who made a donation, check your fundraiser page:
-{{ site }}{{ link }}.
+You received a &euro; {{ amount }} donation from {{ donor_name }}.
 
-Keep up the good work!
+Quickly thank your supporter by posting a personal message on your fundraiser page.
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+{% trans 'Say thanks' context 'email' %}: {{ site }}{{ link }}
+{% endblock %}

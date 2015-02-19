@@ -6,13 +6,12 @@
 	
 Hello {{ receiver_name }},
 
-Oh no, {{ sender_name }} withdrew from the task {{ task_title }}
+Oh no, {{ sender_name }} withdrew from the task '{{ task_title }}'
 
 The task is open again for new volunteers to apply.
-
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-View task: {{ site }}{{ link }}
+{% trans 'View task' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

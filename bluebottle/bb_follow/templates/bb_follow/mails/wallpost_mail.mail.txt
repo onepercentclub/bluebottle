@@ -1,17 +1,17 @@
-{% extends "base.mail.txt" %}
+{% extends "base.mail.html" %}
 {% load i18n %}
 
 {% block content %}
-{% blocktrans %}
-Hi {{first_name}},
+{% blocktrans with receiver_name=receiver.first_name author_name=author.first_name %}
 
-There has been an update on a {{follow_object}} you follow. 
+Hello {{ receiver_name }},
 
-Here's an excerpt of the update:
+{{ author_name }} added a new post on a {{ follow_object }} you follow:
 
-{{wallpost_text}}...
-
-Read the full story at {{here}} 
-
+'{{ wallpost_text }}...'
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+<{% trans 'View full update' context 'email' %}: {{ here }}
 {% endblock %}

@@ -3,11 +3,13 @@
 
 {% block content %}
 {% blocktrans %}
-Hey Project Team,
 
-A project has just been funded! Check it out.
+Hello Project Team,
 
-{{ site }}{{ link }}
-
+A project has been funded!
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+{% trans 'View project' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

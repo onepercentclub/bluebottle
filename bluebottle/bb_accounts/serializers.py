@@ -85,7 +85,7 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
                   'about', 'why', 'website', 'available_time', 'date_joined', 'location', 'twitter', 'facebook',
-                  'skypename', 'tags', 'email', 'address', 'birthdate', 'gender')
+                  'skypename', 'tags', 'email', 'address', 'birthdate', 'gender', 'newsletter')
 
 
 # Thanks to Neamar Tucote for this code:

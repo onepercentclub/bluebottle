@@ -172,7 +172,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         # Setup: get the password reset token and url.
         c = re.compile('\/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})\/', re.DOTALL)
         m = c.search(mail.outbox[0].body)
-        import pdb; pdb.set_trace()
         password_set_url = '{0}{1}-{2}'.format(self.user_password_set_api_url, m.group(1), m.group(2))
 
         # Test: check that non-matching passwords produce a validation error.

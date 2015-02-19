@@ -157,7 +157,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def is_realised(self):
-        return self.status == ProjectPhase.objects.get(slug='realised')
+        return self.status == ProjectPhase.objects.get(slug='done-complete')
 
     @property
     def amount_pending(self):

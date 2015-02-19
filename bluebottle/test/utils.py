@@ -49,9 +49,12 @@ def css_dict(style):
 class InitProjectDataMixin(object):
 
     def init_projects(self):
+        from django.core import management
         """
         Set up some basic models needed for project creation.
         """
+        management.call_command('loaddata', 'project_data.json', verbosity=0)
+        
         Language.objects.all().delete()
 
         language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
@@ -134,7 +137,6 @@ class ApiClient(RestAPIClient):
 
 @override_settings(DEBUG=True)
 class BluebottleTestCase(InitProjectDataMixin, TestCase):
-
     def setUp(self):
         self.client = ApiClient(self.__class__.tenant)
 

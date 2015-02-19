@@ -48,11 +48,11 @@ class TaskEmailTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 2)
 
         m = mail.outbox.pop(0)
-        self.assertEqual(m.subject, 'applied for your task')
+        self.assertEqual(m.subject, 'King applied for your task')
         self.assertEqual(m.recipients()[0], self.some_project.owner.email)
 
         m = mail.outbox.pop(0)
-        self.assertEqual(m.subject, 'applied for your task')
+        self.assertEqual(m.subject, 'Kong applied for your task')
         self.assertEqual(m.recipients()[0], self.some_project.owner.email)
 
     def test_mails_task_realized_and_mail_rejected(self):

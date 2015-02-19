@@ -276,7 +276,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.core.context_processors.tz',
     'django.contrib.messages.context_processors.messages',
-    'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
@@ -398,3 +397,15 @@ PROJECT_PAYOUT_FEES = {
     'fully_funded': .05,
     'not_fully_funded': .05
 }
+
+EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key', 'git_commit', \
+                             'debug', 'compress_templates', 'facebook_auth_id', 'installed_apps', \
+                             'bb_apps', ]
+
+MIXPANEL = ''
+MAPS_API_KEY = ''
+ANALYTICS = ''
+GIT_COMMIT = ''
+DEBUG = True
+COMPRESS_TEMPLATES = False
+FACEBOOK_AUTH_ID = ''

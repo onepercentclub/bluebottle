@@ -22,14 +22,14 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
         self.option_list = BaseCommand.option_list + (
-            make_option('--name', help='Specifies the full name for the tenant (e.g. "Our New Tenant").'),
+            make_option('--full-name', help='Specifies the full name for the tenant (e.g. "Our New Tenant").'),
             make_option('--schema-name', help='Specifies the schema name for the tenant (e.g. "new_tenant").'),
             make_option('--domain-url', help='Specifies the domain_url for the tenant (e.g. "new-tenant.localhost").'),
             make_option('--client-name', help='Specifies the client name for the tenant (e.g. "new-tenant").'),
         )
 
     def handle(self, *args, **options):
-        name = options.get('name', None)
+        name = options.get('full_name', None)
         client_name = options.get('client_name', None)
         schema_name = options.get('schema_name', None)
         domain_url = options.get('domain_url', None)

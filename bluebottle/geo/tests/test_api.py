@@ -14,6 +14,8 @@ class GeoTestCase(BluebottleTestCase):
     The testing classes for ``slide`` module related to the API must
     subclass this.
     """
+    fixtures = ['geo_data.json']
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
 

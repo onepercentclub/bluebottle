@@ -46,6 +46,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     Test case for the implementation of the abstract user model.
     """
     def setUp(self):
+        self.init_projects()
         self.user = BlueBottleUserFactory.create()
 
     @patch('django.utils.timezone.now')
@@ -152,8 +153,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         Test that the task_count property on a user is calculated correctly. We count a) tasks where a user is a task author and 
         b) TaskMembers where a user is applied, accepted or realized
         """
-        self.init_projects()
-
         self.assertEqual(self.user.task_count, 0)
 
         task = TaskFactory.create(author=self.user)
@@ -177,8 +176,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
     def test_calculate_donation_count(self):
         """ Test the counter for the number of donations a user has done """ 
-        self.init_projects()
-
         self.assertEqual(self.user.donation_count, 0)
 
         order = OrderFactory.create(user=self.user)
@@ -194,8 +191,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
     def test_calculate_project_count(self):
         """ Test the counter for the number of projects a user has started """
-        self.init_projects()
-
         self.assertEqual(self.user.project_count, 0)
 
         project = ProjectFactory.create(owner=self.user)
@@ -208,8 +203,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
     def test_calculate_fundraiser_count(self):
         """ Test the counter for the number of fundraisers a user is owner of """
-        self.init_projects()
-
         self.assertEqual(self.user.fundraiser_count, 0)
 
         fundraiser = FundraiserFactory.create(amount=4000, owner=self.user)

@@ -34,6 +34,24 @@ class Command(BaseCommand):
         schema_name = options.get('schema_name', None)
         domain_url = options.get('domain_url', None)
 
+        if name:
+            if not client_name:
+                client_name=''.join(ch  if ch.isalnum() else '-' for ch in name).lower()
+            if not schema_name:
+                schema_name=client_name.replace('-', '_')
+            if not domain_url:
+                base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'localhost')
+                domain_url='{0}.{1}'.format(client_name, base_domain)
+
+            client = self.store_client(
+                name=name,
+                client_name=client_name,
+                domain_url=domain_url,
+                schema_name=schema_name
+            )
+            if not client:
+                name = None
+
         while name is None:
             if not name:
                 input_msg = 'Tenant name'
@@ -65,19 +83,32 @@ class Command(BaseCommand):
 
             print name, client_name,
 
-            try:
-                self.client = Client.objects.create(
-                    name=name,
-                    client_name=client_name,
-                    domain_url=domain_url,
-                    schema_name=schema_name
-                )
-                self.client.save()
-            except exceptions.ValidationError as e:
-                self.stderr.write("Error: %s" % '; '.join(e.messages))
+            client = self.store_client(
+                name=name,
+                client_name=client_name,
+                domain_url=domain_url,
+                schema_name=schema_name
+            )
+            if not client:
                 name = None
                 continue
-            except IntegrityError as e:
-                self.stderr.write("Error: We've already got a tenant with that name or property.")
-                name = None
-                continue
+
+
+
+    def store_client(self, name, client_name, domain_url, schema_name):
+        try:
+            client = Client.objects.create(
+                name=name,
+                client_name=client_name,
+                domain_url=domain_url,
+                schema_name=schema_name
+            )
+            client.save()
+            return client
+        except exceptions.ValidationError as e:
+            self.stderr.write("Error: %s" % '; '.join(e.messages))
+            name = None
+            return False
+        except IntegrityError as e:
+            self.stderr.write("Error: We've already got a tenant with that name or property.")
+            return False

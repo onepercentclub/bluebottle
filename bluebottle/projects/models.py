@@ -17,6 +17,15 @@ from .mails import mail_project_funded_internal
 from .signals import project_funded
 
 
+group_perms = {
+    'Staff': {
+        'perms': (
+            'add_project', 'change_project', 'delete_project',
+            'add_partnerorganization', 'change_partnerorganization', 'delete_partnerorganization',
+        )
+    }
+}
+
 class ProjectPhaseLog(BaseProjectPhaseLog):
     pass
 

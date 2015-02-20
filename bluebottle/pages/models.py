@@ -13,6 +13,14 @@ from fluent_contents.rendering import render_placeholder
 from bluebottle.utils.serializers import MLStripper
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_page', 'change_page', 'delete_page',
+        )
+    }
+}
+
 class Page(models.Model):
     """
     Slides for homepage.

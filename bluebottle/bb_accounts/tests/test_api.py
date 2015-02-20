@@ -25,10 +25,26 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
         self.user_profile_api_url = '/api/users/profiles/'
-        self.user_settings_api_url = '/api/users/settings/'
         self.user_activation_api_url = '/api/users/activate/'
         self.user_password_reset_api_url = '/api/users/passwordreset'
         self.user_password_set_api_url = '/api/users/passwordset/'
+
+
+    def test_user_profile_returned_fields(self):
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.user_1.id)
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.assertEqual(response.data['id'], self.user_1.id)
+
+        # Fields taken from the serializer
+        serializer_fields = ['id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
+                  'about', 'why', 'website', 'available_time', 'date_joined', 'location', 'twitter', 'facebook',
+                  'skypename', 'tags', 'email', 'address', 'birthdate', 'gender', 'newsletter']
+
+        for field in serializer_fields:
+            self.assertTrue(field in response.data)
+
 
     def test_user_profile_retrieve_and_update(self):
         """
@@ -70,33 +86,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         self.client.logout()
 
-    def test_user_settings(self):
-        """
-        Test retrieving and updating a user's settings by id.
-        """
-        # Settings shouldn't be accessible until a user is logged in.
-        user_settings_url = "{0}{1}".format(self.user_settings_api_url, self.user_1.id)
-        response = self.client.get(user_settings_url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
-
-        # Settings should be accessible after a user is logged in.
-        user_1_settings_url = "{0}{1}".format(self.user_settings_api_url, self.user_1.id)
-        response = self.client.get(user_1_settings_url, token=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['email'], self.user_1.email)
-        self.assertFalse(response.data['newsletter'])
-
-        # Test that the settings can be updated.
-        response = self.client.put(user_1_settings_url, {'newsletter': True}, token=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertTrue(response.data['newsletter'])
-
-        self.client.logout()
-
     def test_user_create(self):
         """
-        Test creating a user with the api, activating the new user and
-        updating the settings once logged in.
+        Test creating a user with the api and activating the new user.
         """
         # Create a user.
         new_user_email = 'nijntje27@hetkonijntje.nl'
@@ -106,12 +98,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         token = "JWT {0}".format(response.data['jwt_token'])
         user_id = response.data['id']
-
-        # Test that the settings can be updated.
-        new_user_settings_url = "{0}{1}".format(self.user_settings_api_url, user_id)
-        response = self.client.put(new_user_settings_url, {'newsletter': True}, token=token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertTrue(response.data['newsletter'])
 
         # Test that the email field is required on user create.
         response = self.client.post(self.user_create_api_url, {'password': new_user_password})
@@ -185,12 +171,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        # Test: check that the user can login with the new password.
-        new_user_settings_url = "{0}{1}".format(self.user_settings_api_url, user_id)
-        response = self.client.get(new_user_settings_url, token=token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['email'], new_user_email)
-
         # Test: check that trying to reuse the password reset link doesn't work.
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
@@ -237,7 +217,6 @@ class UserProfileUpdateTests(BluebottleTestCase):
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
         self.user_profile_api_url = '/api/users/profiles/'
-        self.user_settings_api_url = '/api/users/settings/'
         self.user_activation_api_url = '/api/users/activate/'
         self.user_password_reset_api_url = '/api/users/passwordreset'
         self.user_password_set_api_url = '/api/users/passwordset/'

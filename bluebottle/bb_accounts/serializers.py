@@ -76,11 +76,16 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
 
+    address = UserAddressSerializer(source='address', required=False)
+    birthdate = serializers.DateTimeField(required=False)
+    email = serializers.EmailField(required=False)
+
+
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
                   'about', 'why', 'website', 'available_time', 'date_joined', 'location', 'twitter', 'facebook',
-                  'skypename', 'tags')
+                  'skypename', 'tags', 'email', 'address', 'birthdate', 'gender', 'newsletter')
 
 
 # Thanks to Neamar Tucote for this code:
@@ -101,27 +106,6 @@ class PasswordField(serializers.CharField):
     def to_native(self, value):
         """ Hide hashed-password in API display. """
         return self.hidden_password_string
-
-
-class UserSettingsSerializer(serializers.ModelSerializer):
-    """
-    Serializer for viewing and editing a user's settings. This should only be
-    accessible to authenticated users.
-    """
-    # FIXME: We should really be serializing 'birthdate' as a DateField but that would require some additional work
-    #        in our ember-data adapter. This could cause birthdate's to not be savable in some cases.
-    birthdate = serializers.DateTimeField(required=False)
-    email = serializers.EmailField(required=False)
-    primary_language = serializers.ChoiceField(choices=settings.LANGUAGES, default='en')
-
-    address = UserAddressSerializer(source='address', required=False)
-
-    class Meta:
-        model = BB_USER_MODEL
-        # TODO: Add password update using password field.
-        # TODO: Facebook connect
-        fields = ('id', 'email', 'address', 'share_time_knowledge', 'share_money',
-                  'newsletter', 'gender', 'birthdate', 'user_type', 'primary_language', 'campaign_notifications')
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

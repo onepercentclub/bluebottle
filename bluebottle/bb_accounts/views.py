@@ -22,19 +22,13 @@ from rest_framework.permissions import IsAuthenticated
 
 #this belongs now to onepercent should be here in bluebottle
 from .serializers import (
-    CurrentUserSerializer, UserSettingsSerializer, UserCreateSerializer,
+    CurrentUserSerializer, UserCreateSerializer,
     PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
 
 class UserProfileDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
     model = BB_USER_MODEL
     permission_classes = (IsCurrentUserOrReadOnly,)
-
-
-class UserSettingsDetail(generics.RetrieveUpdateAPIView):
-    model = BB_USER_MODEL
-    serializer_class = UserSettingsSerializer
-    permission_classes = (IsCurrentUser,)
 
 
 class CurrentUser(generics.RetrieveAPIView):

@@ -63,7 +63,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = BB_TASK_MODEL
         fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'tags', 'description', 'end_goal',
-        'location', 'deadline', 'time_needed', 'title', 'people_needed')
+        'location', 'deadline', 'time_needed', 'title', 'people_needed', 'meta_data')
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):

@@ -1,6 +1,5 @@
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, BaseSkill
 
-
 class Task(BaseTask):
     pass
 

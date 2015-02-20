@@ -246,6 +246,20 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEquals(task.members.count(),1)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
+    def test_get_correct_base_task_fields(self):
+        """ Test that the fields defined in the BaseTask serializer are returned in the response """
+
+        task = TaskFactory.create()
+
+        response = self.client.get('{0}{1}'.format(self.task_url, task.id), 
+                                        token=self.some_token)  
+
+        # Fields as defined in the serializer
+        serializer_fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'tags', 'description', 'end_goal',
+        'location', 'deadline', 'time_needed', 'title', 'people_needed', 'meta_data')
+
+        for field in serializer_fields:
+            self.assertTrue(field in response.data)
 
 # TODO: Test edit task
 # TODO: Test change TaskMember edit status

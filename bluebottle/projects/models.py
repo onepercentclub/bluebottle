@@ -17,7 +17,7 @@ from .mails import mail_project_funded_internal
 from .signals import project_funded
 
 
-group_perms = {
+GROUP_PERMS = {
     'Staff': {
         'perms': (
             'add_project', 'change_project', 'delete_project',

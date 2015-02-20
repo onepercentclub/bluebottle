@@ -16,10 +16,11 @@ def successful_donation_fundraiser_mail(instance):
 
     send_mail(
         template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
-        amount=instance.amount,
-        site = 'https://' + Site.objects.get_current().domain,
         subject=_('You received a new donation'),
+        site = 'https://' + Site.objects.get_current().domain,
         to=receiver,
+        amount=instance.amount,
+        #donor_name=donor_name, TODO doesn't work
         link=fundraiser_link,
         first_name=receiver.first_name
     )
@@ -40,11 +41,11 @@ def new_oneoff_donation(instance):
     if donation.project.owner.email:
 
         if donation.anonymous:
-            donor_name = 'Anonymous'
+            donor_name = 'an anonymous person'
         elif donation.order.user:
             donor_name = donation.order.user.first_name
         else:
-            donor_name = 'Guest'
+            donor_name = 'a guest'
 
         # Send email to the project owner.
         send_mail(

@@ -1,18 +1,17 @@
-{% extends "base.mail.html" %}
+{% extends "base.mail.txt" %}
 {% load i18n %}
 
 {% block content %}
 {% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name project_title=task.project.title task_title=task.title site_name=site.name %}
-Dear {{receiver_name}},
 
-Yeah, with your help the task {{ task.title}} from the {{task.project.title}} is realised.
+Hi {{ receiver_name }},
 
-What a great job you did! You’ve contributed to a happier and healthier destination!
-Share your story on the <Bluebottle Project> platform; go to the project you’ve participated in and post your story on the wall. Pictures are worth a 1000 words, so add those lovely images, if you have them.
+You did it! The project owner {{ sender_name }} marked the task '{{ task_title }}' as realized. Good job!
 
-Thanks again and we hope to see you back on <Bluebottle Project> soon… Have a look at the task list for the currently open tasks at <Bluebottle Project>.
-
-Warm regards,
-
+Let’s celebrate with a short comment!
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+{% trans 'Comment' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

@@ -18,8 +18,4 @@ meest populaire projecten. Dat zijn projecten die de meeste donaties hebben verz
 om gerealiseerd te worden. En daar draait het ten slotte om: samen projecten waar maken!
 
 Nogmaals dank voor je trouwe steun!
-
-Groet!
-Liane - 1%Club
-
 {% endblock %}

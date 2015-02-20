@@ -3,17 +3,15 @@
 
 {% block content %}
 {% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title %}
+
 Hi {{ receiver_name }},
-<br /><br />
-Unfortunately the project initiator, {{ sender_name }}, found someone else to perform the task <a href="{{ site }}{{ link }}">'{{ task_title }}'</a>, which you applied for.
-<br /><br />
-No worries, we have some other really cool tasks that might be the perfect match for your skills.
-<br /><br />
-Take a look right here: <a href="{{ site }}{{ task_list }}">{{ site }}{{ task_list }}</a>
-<br /><br />
-Good luck!
-<br /><br />
-{{ site_name }}
+<br><br>
+Unfortunately you weren’t selected for the task <i>{{ task_title }}</i>
+<br><br>
+No worries, have a look at some similar tasks that need your skills.
 {% endblocktrans %}
 {% endblock %}
 
+{% block action %}
+<a href="{{ site }}{{ task_list }}" class="action-email">{% trans 'Browse tasks' context 'email' %}</a>
+{% endblock %}

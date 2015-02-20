@@ -21,7 +21,7 @@ class ProjectWallObserver(WallpostObserver):
         if self.author != project_owner:
             send_mail(
                 template_name='project_wallpost_new.mail',
-                subject=_('%(author)s has left a message on your project page.') % {'author': self.author.get_short_name()},
+                subject=_('%(author)s commented on your project') % {'author': self.author.get_short_name()},
                 to=project_owner,
 
                 project=project,
@@ -53,7 +53,7 @@ class ProjectReactionObserver(ReactionObserver):
             if r.author not in mailed_users:
                 send_mail(
                     template_name='project_wallpost_reaction_same_wallpost.mail',
-                    subject=_('%(author)s commented on a post you reacted on.') % {'author': self.reaction_author.get_short_name()},
+                    subject=_('%(author)s replied on your comment') % {'author': self.reaction_author.get_short_name()},
                     to=r.author,
 
                     project=project,
@@ -68,10 +68,10 @@ class ProjectReactionObserver(ReactionObserver):
             if self.reaction_author not in mailed_users and self.post_author:
                 send_mail(
                     template_name='project_wallpost_reaction_new.mail',
-                    subject=_('%(author)s commented on your post.') % {'author': self.reaction_author.get_short_name()},
+                    subject=_('%(author)s replied on your comment') % {'author': self.reaction_author.get_short_name()},
                     to=self.post_author,
 
-                    project=project, #doesn't look like we need this
+                    project=project,
                     link='/go/projects/{0}'.format(project.slug),
                     site=self.site,
                     author=self.reaction_author,
@@ -84,9 +84,10 @@ class ProjectReactionObserver(ReactionObserver):
             if project_owner not in mailed_users:
                 send_mail(
                     template_name='project_wallpost_reaction_project.mail',
-                    subject=_('%(author)s commented on your project page.') % {'author': self.reaction_author.get_short_name()},
+                    subject=_('%(author)s commented on your project') % {'author': self.reaction_author.get_short_name()},
                     to=project_owner,
 
+                    project=project,
                     site=self.site,
                     link='/go/projects/{0}'.format(project.slug),
                     author=self.reaction_author,

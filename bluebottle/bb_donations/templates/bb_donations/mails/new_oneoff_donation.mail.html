@@ -3,13 +3,15 @@
 
 {% block content %}
 {% blocktrans with amount=amount donor_name=donor_name site=site link=link %}
-Hello {{first_name}},<br/>
-<br/>
-You just received a EUR {{ amount }} donation from {{ donor_name }}!<br/>
-<br/>
-Quickly thank your supporter by posting a personal message on your <a href="{{ site }}{{ link }}">project wall</a>.<br/>
-<br/>
-Cheers,<br/>
-1%Club
+
+Hello {{ first_name }},
+<br><br>
+You received a &euro; {{ amount }} donation from {{ donor_name }}.
+<br><br>
+Quickly thank your supporter by posting a personal message on your project page.
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+<a href="{{ site }}{{ link }}" class="action-email">{% trans 'Say thanks' context 'email' %}!</a>
 {% endblock %}

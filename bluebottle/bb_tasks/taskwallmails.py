@@ -19,7 +19,7 @@ class TaskWallObserver(WallpostObserver):
         # no check if the author is the same of the sender. Look at ProjectWallNotificator
         send_mail(
             template_name='task_wallpost_new.mail',
-            subject=_('%(author)s has left a message on your task page.') % {'author': self.author.get_short_name()},
+            subject=_('%(author)s commented on your task') % {'author': self.author.get_short_name()},
             to=task_owner,
 
             task=task,
@@ -52,7 +52,7 @@ class TaskReactionObserver(ReactionObserver):
         #     if r.author not in mailed_users:
         #         send_mail(
         #             template_name='project_wallpost_reaction_same_wallpost.mail',
-        #             subject=_('%(author)s commented on a post you reacted on.') % {'author': reaction_author.first_name},
+        #             subject=_('%(author)s replied on your comment') % {'author': reaction_author.first_name},
         #             to=r.author,
         #
         #             project=project,
@@ -66,11 +66,11 @@ class TaskReactionObserver(ReactionObserver):
             if self.reaction_author not in mailed_users and self.post_author:
                 send_mail(
                     template_name='task_wallpost_reaction_new.mail',
-                    subject=_('%(author)s commented on your post.') % {'author': self.reaction_author.get_short_name()},
+                    subject=_('%(author)s replied on your comment') % {'author': self.reaction_author.get_short_name()},
                     to=self.post_author,
 
                     site=self.site,
-                    project=task,
+                    task=task,
                     link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
                     author=self.reaction_author,
                     receiver=self.post_author
@@ -82,10 +82,11 @@ class TaskReactionObserver(ReactionObserver):
             if task_author not in mailed_users:
                 send_mail(
                     template_name='task_wallpost_reaction_task.mail',
-                    subject=_('%(author)s commented on your task page.') % {'author': self.reaction_author.get_short_name()},
+                    subject=_('%(author)s commented on your task') % {'author': self.reaction_author.get_short_name()},
                     to=task_author,
 
                     site=self.site,
+                    task=task,
                     link='/go/projects/{0}/tasks/{1}'.format(task.project.slug, task.id),
                     author=self.reaction_author,
                     receiver=task_author

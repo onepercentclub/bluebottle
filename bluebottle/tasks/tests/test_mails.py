@@ -42,5 +42,5 @@ class TestTaskMails(BluebottleTestCase):
         # Task member receives email that he is accepted
         self.assertEquals(len(mail.outbox), 2)
         print mail.outbox[1].subject
-        self.assertNotEquals(mail.outbox[1].subject.find("accepted"), -1)
+        self.assertNotEquals(mail.outbox[1].subject.find("assigned"), -1)
         self.assertEquals(mail.outbox[1].to[0], self.task_member.member.email)

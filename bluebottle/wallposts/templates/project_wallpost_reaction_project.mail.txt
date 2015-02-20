@@ -2,14 +2,14 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=receiver.first_name author_name=author.full_name %}
-Hi {{ receiver_name }},
+{% blocktrans with receiver_name=receiver.first_name author_name=author.first_name project_title=project.title %}
 
-{{ author_name }} left a comment on your campaign page.
+Hello {{ receiver_name }},
 
-Read the comment on our website and continue the conversation:
-{{ site }}{{ link }}
-
-1%Club
+{{ author_name }} just posted a comment on your '{{ project_title }}' wall.
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+{% trans 'View comment' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

@@ -1,7 +1,1 @@
-{% block content %}{% endblock %}
-
--------------------
-1%Club
-'s Gravenhekje 1a
-1011TG Amsterdam
-The Netherlands
+{% block content %}{% endblock %}{% block action %}{% endblock %}

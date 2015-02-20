@@ -3,12 +3,15 @@
 
 {% block content %}
 {% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title motivation=motivation %}
+
 Hello {{ receiver_name }},
-<br/><br/>
-{{ sender_name }} withdrew from the task <a href="{{ site }}{{ link }}">{{ task_title }}</a>.
-<br/><br/>
-The task is now open again for new people to apply.<br/>
-<br/><br/>
-{{ site_name }}
+<br><br>
+Oh no, {{ sender_name }} withdrew from the task <i>{{ task_title }}</i>
+<br><br>
+The task is open again for new volunteers to apply.
 {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+<a href="{{ site }}{{ link }}" class="action">{% trans 'View task' context 'email' %}</a>
 {% endblock %}

@@ -6,7 +6,7 @@
 
 Hello {{ first_name }},
 
-You received a € {{ amount }} donation from {{ donor_name }}.
+You received a EUR {{ amount }} donation from {{ donor_name }}.
 
 Quickly thank your supporter by posting a personal message on your project page.
 {% endblocktrans %}

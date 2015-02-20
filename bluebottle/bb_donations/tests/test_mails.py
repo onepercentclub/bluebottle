@@ -79,7 +79,7 @@ class TestDonationEmails(BluebottleTestCase):
         # Test email to owner
         self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
         self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-        self.assertTrue("{0} donation".format(self.donation.amount) in mail.outbox[0].body)
+        self.assertTrue("EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
 
 
     def test_mail_no_mail_not_one_off(self):
@@ -109,7 +109,7 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], self.fund_owner.email)
         self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-        self.assertTrue("{0} donation".format(self.fund_donation.amount) in mail.outbox[0].body)
+        self.assertTrue("EUR {0}".format(self.fund_donation.amount) in mail.outbox[0].body)
 
 
 

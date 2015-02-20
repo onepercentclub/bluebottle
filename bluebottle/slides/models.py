@@ -9,6 +9,14 @@ from djchoices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_slide', 'change_slide', 'delete_slide',
+        )
+    }
+}
+
 class SlideManager(models.Manager):
 
     def published(self):

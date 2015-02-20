@@ -235,11 +235,13 @@ def get_country_code_by_ip(ip_address=None):
     return gi.country_code_by_name(ip_address)
 
 
-def update_group_permissions(sender, group_perms):
-    for group_name in group_perms.keys():
-        group, _ = Group.objects.get_or_create(name=group_name)
-        for perm_codename in group_perms[group_name]['perms']:
-            perm = Permission.objects.get(codename=perm_codename)
-            group.permissions.add(perm)
+def update_group_permissions(sender):
+    if hasattr(sender, 'GROUP_PERMS'):
+        group_perms = sender.GROUP_PERMS
+        for group_name in group_perms.keys():
+            group, _ = Group.objects.get_or_create(name=group_name)
+            for perm_codename in group_perms[group_name]['perms']:
+                perm = Permission.objects.get(codename=perm_codename)
+                group.permissions.add(perm)
 
-        group.save()
+            group.save()

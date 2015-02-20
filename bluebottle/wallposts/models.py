@@ -20,6 +20,19 @@ WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH', 300)
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_reaction', 'change_reaction', 'delete_reaction',
+            'add_wallpost', 'change_wallpost', 'delete_wallpost',
+            'add_mediawallpost', 'change_mediawallpost', 'delete_mediawallpost',
+            'add_textwallpost', 'change_textwallpost', 'delete_textwallpost',
+            'add_systemwallpost', 'change_systemwallpost', 'delete_systemwallpost',
+            'add_mediawallpostphoto', 'change_mediawallpostphoto', 'delete_mediawallpostphoto',
+        )
+    }
+}
+
 class Wallpost(PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the content of a Wallpost is always defined

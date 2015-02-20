@@ -14,6 +14,14 @@ from bluebottle.utils.models import Address
 from django.core.files.storage import FileSystemStorage
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_organization', 'change_organization', 'delete_organization',
+        )
+    }
+}
+
 class Organization(BaseOrganization):
     """
     Organizations can run Projects. An organization has one or more members.

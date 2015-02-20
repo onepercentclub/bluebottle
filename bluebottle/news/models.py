@@ -15,6 +15,14 @@ from bluebottle.utils.serializers import MLStripper
 from .managers import NewsItemManager
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_newsitem', 'change_newsitem', 'delete_newsitem',
+        )
+    }
+}
+
 class NewsItem(models.Model):
 
     class PostStatus(DjangoChoices):

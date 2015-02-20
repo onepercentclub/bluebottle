@@ -4,11 +4,12 @@ from django.db.models.signals import post_syncdb
 from bluebottle.utils.utils import update_group_permissions
 from .. import models
 
+
 group_perms = {
     'Staff': {
         'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_partnerorganization', 'change_partnerorganization', 'delete_partnerorganization',
+            'add_task', 'change_task', 'delete_task',
+            'add_taskmember', 'change_taskmember', 'delete_taskmember',
         )
     }
 }

@@ -332,5 +332,3 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
     if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance, USER_MODEL) and created:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)
-
-

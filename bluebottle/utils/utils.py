@@ -9,6 +9,9 @@ from django.conf import settings
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
+
 import pygeoip
 import logging
 
@@ -230,3 +233,15 @@ def get_country_code_by_ip(ip_address=None):
 
     gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gi.country_code_by_name(ip_address)
+
+
+def update_group_permissions(sender, group_perms):
+    for group_name in group_perms.keys():
+        print 'adding permissions for {0}'.format(group_name)
+
+        group, _ = Group.objects.get_or_create(name=group_name)
+        for perm_codename in group_perms[group_name]['perms']:
+            perm = Permission.objects.get(codename=perm_codename)
+            group.permissions.add(perm)
+
+        group.save()

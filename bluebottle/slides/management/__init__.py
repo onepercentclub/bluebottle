@@ -7,8 +7,7 @@ from .. import models
 group_perms = {
     'Staff': {
         'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_partnerorganization', 'change_partnerorganization', 'delete_partnerorganization',
+            'add_slide', 'change_slide', 'delete_slide',
         )
     }
 }

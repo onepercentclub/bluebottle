@@ -12,6 +12,9 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from django.utils.importlib import import_module
 
+from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import construct_from_header
+
 from rest_framework import status, views, response, generics, viewsets
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
@@ -163,7 +166,7 @@ class PasswordReset(views.APIView):
             else:
                 site_name = domain = domain_override
             site = 'https://' + domain
-            c = {
+            c = ClientContext({
                 'email': user.email,
                 'site': site,
                 'site_name': site_name,
@@ -171,12 +174,12 @@ class PasswordReset(views.APIView):
                 'user': user,
                 'token': token_generator.make_token(user),
                 'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-            }
+            })
             subject = loader.render_to_string(subject_template_name, c)
             # Email subject *must not* contain newlines
             subject = ''.join(subject.splitlines())
             email = loader.render_to_string(email_template_name, c)
-            user.email_user(subject, email)
+            user.email_user(subject, email, from_email=construct_from_header())
 
     def put(self, request, *args, **kwargs):
         password_reset_form = PasswordResetForm()

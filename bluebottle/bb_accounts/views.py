@@ -179,7 +179,7 @@ class PasswordReset(views.APIView):
             # Email subject *must not* contain newlines
             subject = ''.join(subject.splitlines())
             email = loader.render_to_string(email_template_name, c)
-            user.email_user(subject, email, construct_from_header())
+            user.email_user(subject, email, from_email=construct_from_header())
 
     def put(self, request, *args, **kwargs):
         password_reset_form = PasswordResetForm()

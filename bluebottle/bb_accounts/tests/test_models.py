@@ -213,3 +213,15 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         self.assertEqual(self.user.fundraiser_count, 2)
 
+
+    def test_base_user_fields(self):
+        """ Test that a base user model has all the expected fields """
+        from bluebottle.members.models import Member
+
+        user_fields = set(['email', 'username', 'is_staff', 'is_active', 'date_joined', 'updated', 'deleted', 
+                  'user_type', 'first_name', 'last_name', 'location', 'picture', 'about_me',
+                  'primary_language', 'share_time_knowledge', 'share_money', 'newsletter', 'phone_number',
+                  'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
+
+        self.assertEquals(set(f.name for f in Member._meta.fields) & user_fields, user_fields)
+

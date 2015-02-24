@@ -122,18 +122,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), max_length=100, blank=True)
     last_name = models.CharField(_('last name'), max_length=100, blank=True)
     location = models.CharField(_('location'), max_length=100, blank=True)
-    website = models.URLField(_('website'), blank=True)
+
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
-    about = models.TextField(_('about'), max_length=265, blank=True)
-    why = models.TextField(_('why'), max_length=265, blank=True)
 
-    available_time = models.CharField(_('time available'), max_length=50, null=True, blank=True)
-    # max length is not entirely clear, however over 50 characters throws errors on facebook
-    facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
-    # max length: see https://support.twitter.com/articles/14609-changing-your-username
-    twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
-    skypename = models.CharField(_('skype profile'), max_length=32, blank=True)
+    about_me = models.TextField(_('about me'), max_length=265, blank=True)
 
     # Private Settings
     primary_language = models.CharField(
@@ -149,8 +142,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     disable_token = models.CharField(max_length=32, blank=True, null=True)
 
     campaign_notifications = models.BooleanField(_('Campaign Notifications'), default=True)
-
-    tags = TaggableManager(verbose_name=_("tags"), blank=True)
 
     objects = BlueBottleUserManager()
 

@@ -215,7 +215,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
 
     def test_base_user_fields(self):
-        """ Test that a base user has all the expected fields """
+        """ Test that a base user model has all the expected fields """
         from bluebottle.members.models import Member
 
         user_fields = set(['email', 'username', 'is_staff', 'is_active', 'date_joined', 'updated', 'deleted', 

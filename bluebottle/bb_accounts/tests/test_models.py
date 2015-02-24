@@ -213,3 +213,10 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         self.assertEqual(self.user.fundraiser_count, 2)
 
+
+    def test_base_user_fields(self):
+        """ Test that a base user has all the expected fields """
+        from bluebottle.members.models import Member
+        import pdb;pdb.set_trace()
+
+

@@ -56,11 +56,11 @@ class CurrentUserSerializer(UserPreviewSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name',
-                                                      'available_time', 'last_login', 'date_joined', 'task_count',
-                                                      'project_count', 'donation_count', 'fundraiser_count')
+                                                      'last_login', 'date_joined', 'task_count', 'project_count',
+                                                      'donation_count', 'fundraiser_count')
 
 
-class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -70,7 +70,6 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
     username = serializers.CharField(read_only=True)
 
     website = URLField(required=False)
-    tags = TagSerializer()
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -80,12 +79,10 @@ class UserProfileSerializer(TaggableSerializerMixin, serializers.ModelSerializer
     birthdate = serializers.DateTimeField(required=False)
     email = serializers.EmailField(required=False)
 
-
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
-                  'about', 'why', 'website', 'available_time', 'date_joined', 'location', 'twitter', 'facebook',
-                  'skypename', 'tags', 'email', 'address', 'birthdate', 'gender', 'newsletter')
+                  'about_me', 'date_joined', 'location', 'email', 'address', 'birthdate','gender', 'newsletter')
 
 
 # Thanks to Neamar Tucote for this code:

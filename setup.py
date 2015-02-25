@@ -63,7 +63,7 @@ install_requires = [
     'lxml==3.1.2',
     'unicodecsv==0.9.4',
     'python-dateutil==1.5',
-    'gunicorn==0.14.6',
+    'gunicorn==19.2.1',
     'surlex==0.2.0',
     'django_polymorphic==0.6.1',
     'dnspython',

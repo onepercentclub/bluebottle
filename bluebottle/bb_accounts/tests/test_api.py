@@ -39,8 +39,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Fields taken from the serializer
         serializer_fields = ['id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
-                  'about', 'why', 'website', 'available_time', 'date_joined', 'location', 'twitter', 'facebook',
-                  'skypename', 'tags', 'email', 'address', 'birthdate', 'gender', 'newsletter']
+                  'about_me', 'date_joined', 'location', 'email', 'address', 'birthdate', 'gender', 'newsletter']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)

@@ -246,7 +246,6 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['state'], '')
 
 
-from mock import patch
 from django.test.utils import override_settings
 from django.conf import settings
 from bluebottle.payments.exception import PaymentException
@@ -323,7 +322,7 @@ class DocdataModelTestCase(BluebottleTestCase):
         """ 
             Test that a payment method with absolute fees returns the transaction amount and the 
             payment method fee amount, e.g., the 'transaction' amount plus the 'ideal' amount.   
-         """
+        """
         pm = 'ideal'
 
         payment = DocdataPayment(default_pm=pm)

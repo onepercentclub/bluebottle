@@ -69,15 +69,19 @@ class DocdataPayment(Payment):
         if not hasattr(settings, 'DOCDATA_FEES'):
             raise PaymentException("Missing fee DOCDATA_FEES")
         fees = settings.DOCDATA_FEES
-        if not fees['transaction']:
+        if not fees.get('transaction', None):
             raise PaymentException("Missing fee 'transaction'")
-        if not fees['payment_methods']:
+        if not fees.get('payment_methods', None):
             raise PaymentException("Missing fee 'payment_methods'")
         transaction_fee = fees['transaction']
+
         pm = self.default_pm.lower()
-        if not fees['payment_methods'][pm]:
+
+        try:
+            pm_fee = fees['payment_methods'][pm]
+        except KeyError:
             raise PaymentException("Missing fee {0}".format(pm))
-        pm_fee = fees['payment_methods'][pm]
+
         if '%' in str(pm_fee):
             part = Decimal(pm_fee.replace('%', '')) / 100
             return self.order_payment.amount * part

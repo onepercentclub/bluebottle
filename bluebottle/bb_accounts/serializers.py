@@ -69,8 +69,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(read_only=True)
     username = serializers.CharField(read_only=True)
 
-    website = URLField(required=False)
-
     # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)

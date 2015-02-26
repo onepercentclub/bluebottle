@@ -69,9 +69,9 @@ class DocdataPayment(Payment):
         if not hasattr(settings, 'DOCDATA_FEES'):
             raise PaymentException("Missing fee DOCDATA_FEES")
         fees = settings.DOCDATA_FEES
-        if not fees.get('transaction', None):
+        if not fees.get('transaction'):
             raise PaymentException("Missing fee 'transaction'")
-        if not fees.get('payment_methods', None):
+        if not fees.get('payment_methods'):
             raise PaymentException("Missing fee 'payment_methods'")
         transaction_fee = fees['transaction']
 

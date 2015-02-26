@@ -2,16 +2,16 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=receiver.first_name author_name=author.first_name %}
+{% blocktrans %}
 
-Hello {{ receiver_name }},
+Hello {{ first_name }},
 <br><br>
-{{ author_name }} added a new post on a {{ follow_object }} you follow:
+{{ author }} added a new post on a {{ follow_object }} you follow:
 <br><br>
 <i>{{ wallpost_text }}...</i>
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ here }}" class="action-email">{% trans 'View full update' context 'email' %}</a>
+<a href="{{ link }}" class="action-email">{% trans 'View full update' context 'email' %}</a>
 {% endblock %}

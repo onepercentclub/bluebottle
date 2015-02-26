@@ -6,12 +6,11 @@
 
 Hello {{ receiver_name }},
 
-The deadline of your task '{{ task_title }}'' is reached.
+The deadline of your task is reached.
 
-Is your task realised? Please confirm who participated and start evaluating.
+Is your task realised? Please confirm the participants.
 
-Step 1. Confirm participants
-Step 2. Start evaluation
+Confirm participants at {{ site }}{{ task_link }}
 
 Too early to celebrate? By changing the deadline you can extend the task period. You can also choose to close the task. 
 {% endblocktrans %}

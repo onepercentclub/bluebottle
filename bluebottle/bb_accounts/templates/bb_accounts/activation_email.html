@@ -4,12 +4,13 @@
 {% block content %}
 {% blocktrans %}
 
-Click the link below to confirm your registration.
-<br><br>
-Your activation code will expire in {{ expiration_days }} days.
+<h1>Welcome {{ first_name }}</h1>
+<p class="lead">You’re officially part of {{ site_name }}</p>
+<br>
+[info about the platform]
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}/{{ LANGUAGE_CODE }}/#!/activate/{{ activation_key }}" class="action-email">{% trans 'Activate' context 'email' %}</a>
+<a href="{{ site }}" class="action-email">{% trans "Let's get started" context 'email' %}</a>
 {% endblock %}

@@ -247,5 +247,6 @@ def email_followers(sender, instance, created, **kwargs):
                             to=mailee,
                             link=full_link,
                             follow_object=follow_object,
-                            first_name = mailee.first_name
+                            first_name = mailee.first_name,
+                            author=instance.author.first_name
                         )

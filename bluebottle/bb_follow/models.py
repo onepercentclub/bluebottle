@@ -238,8 +238,10 @@ def email_followers(sender, instance, created, **kwargs):
             site = 'https://' + Site.objects.get_current().domain
 
             full_link = site + link
+
             for mailee in mailers:
                 if mailee.campaign_notifications:
+
                     send_mail(
                             template_name='bb_follow/mails/wallpost_mail.mail',
                             subject=subject,

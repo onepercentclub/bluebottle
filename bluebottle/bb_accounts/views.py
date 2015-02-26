@@ -20,6 +20,7 @@ from rest_framework import status, views, response, generics, viewsets
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.clients import properties
 
 from rest_framework.permissions import IsAuthenticated
 
@@ -59,7 +60,10 @@ class UserCreate(generics.CreateAPIView):
         return "Users"
 
     def pre_save(self, obj):
-        obj.primary_language = self.request.LANGUAGE_CODE[:2]
+        if hasattr(properties, 'DEFAULT_SIGNUP_LANGUAGE'):
+            obj.primary_language = properties.DEFAULT_SIGNUP_LANGUAGE
+        else:
+            obj.primary_language = self.request.LANGUAGE_CODE[:2]
 
     # Overriding the default create so that we can return extra info in the response
     # if there is already a user with the same email address

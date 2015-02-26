@@ -44,7 +44,7 @@ class SubmittedPlans(DashboardModule):
 
 
 class StartedCampaigns(DashboardModule):
-    title = _('Recently Started Campaigns')
+    title = _('Recently Started Projects')
     template = 'admin_tools/dashboard/started_campaigns.html'
     limit = 10
 
@@ -58,7 +58,7 @@ class StartedCampaigns(DashboardModule):
 
         self.children = qs[:self.limit]
         if not len(self.children):
-            self.pre_content = _('No campaigns.')
+            self.pre_content = _('No projects.')
         self._initialized = True
 
 

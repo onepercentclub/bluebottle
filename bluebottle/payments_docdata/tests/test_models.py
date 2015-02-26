@@ -245,3 +245,109 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['house_number_addition'], '')
         self.assertEqual(user_data['state'], '')
 
+
+from django.test.utils import override_settings
+from django.conf import settings
+from bluebottle.payments.exception import PaymentException
+from ..models import DocdataPayment
+
+class DocdataModelTestCase(BluebottleTestCase):
+    
+    @override_settings(DOCDATA_FEES={}) # You must specify the overriden key, even if it will be removed
+    def test_get_fee_no_docdata_fees(self):
+        """ Test raised exception when DOCDATA_FEES is not present """
+        del settings.DOCDATA_FEES
+
+        payment = DocdataPayment()
+        
+        # For some reason, assertRaises wasn't catching this exception, even though it was throwing
+        # it during the test. Therefore I used this try/except block. (This is still OK according to 
+        # the Django docs)
+
+        try:
+            payment.get_fee()
+            self.fail("No PaymentException raised")
+        except PaymentException as e:
+            self.assertEqual(e.message, "Missing fee DOCDATA_FEES")
+
+    @override_settings(DOCDATA_FEES={})
+    def test_get_fee_no_transaction(self):
+        """ Test that a Payment exception is raised when there is no 'transaction' key """
+
+        payment = DocdataPayment()
+
+        try:
+            payment.get_fee()
+            self.fail("No PaymentException raised")
+        except PaymentException as e:
+            self.assertEqual(e.message, "Missing fee 'transaction'")
+
+    @override_settings(DOCDATA_FEES={'transaction': 0.20})
+    def test_get_fee_no_payment_methods(self):
+        """ Test that a Payment exception is raised when there is no 'payment_methods' key """
+
+        payment = DocdataPayment()
+
+        try:
+            payment.get_fee()
+            self.fail("No PaymentException raised")
+        except PaymentException as e:
+            self.assertEqual(e.message, "Missing fee 'payment_methods'")
+
+    @override_settings(DOCDATA_FEES={
+        'transaction': 0.20,
+        'payment_methods': {
+            'ideal': 0.35
+        }
+    })
+    def test_get_fee_no_payment_method(self):
+        """ Test that a missing specific payment method raises a payment exception """
+        pm = 'testpm'
+
+        payment = DocdataPayment(default_pm=pm)
+
+        try:
+            payment.get_fee()
+            self.fail("No PaymentException raised")
+        except PaymentException as e:
+            self.assertEqual(e.message, "Missing fee {0}".format(pm))
+
+    @override_settings(DOCDATA_FEES={
+        'transaction': 0.20,
+        'payment_methods': {
+            'ideal': 0.35
+        }
+    })
+    def test_get_fee_absolute(self):
+        """ 
+            Test that a payment method with absolute fees returns the transaction amount and the 
+            payment method fee amount, e.g., the 'transaction' amount plus the 'ideal' amount.   
+        """
+        pm = 'ideal'
+
+        payment = DocdataPayment(default_pm=pm)
+
+        fee_total = payment.get_fee()
+        self.assertEqual(0.20 + 0.35, fee_total)
+
+    @override_settings(DOCDATA_FEES={
+        'transaction': 0.20,
+        'payment_methods': {
+            'ideal': '1.5%'
+        }
+    })
+    def test_get_fee_absolute(self):
+        """
+            Test that the correct fee is returned given the defined percentage. In this test case the 
+            amount is 100 and the fee percentage is 1.5%, so the result should be 100 * 0.015.
+        """
+
+        order_payment = OrderPaymentFactory.create(amount=1000)
+        docdata_payment = DocdataPaymentFactory.create(order_payment=order_payment,
+                                                       default_pm='ideal',
+                                                       total_gross_amount=1000)
+        order_payment.amount = 100
+        fee_total = docdata_payment.get_fee()
+        self.assertEqual(fee_total, 100 * 0.015)
+
+

@@ -4,8 +4,9 @@
 {% block content %}
 {% blocktrans %}
 
-Welcome
+Welcome {{ first_name }}
 You’re officially part of {{ site_name }}
+
 [info about the platform]
 {% endblocktrans %}
 {% endblock %}

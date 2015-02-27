@@ -57,14 +57,12 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date),
-            'end_goal': 'World peace'
+            'deadline': str(future_date)
         }
         response = self.client.post(self.task_url, some_task_data, token=self.some_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
-        self.assertEquals(response.data['end_goal'], some_task_data['end_goal'])
         self.assertEquals(response.data['location'], some_task_data['location'])
         some_task_url = "{0}{1}".format(self.task_url, response.data['id'])
 
@@ -76,8 +74,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill2.id),
             'location': 'Tiel',
-            'deadline': str(future_date),
-            'end_goal': 'World peace'
+            'deadline': str(future_date)
         }
         response = self.client.post(self.task_url, another_task_data, token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
@@ -95,8 +92,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill3.id),
             'location': 'Tiel',
-            'deadline': str(future_date),
-            'end_goal': 'World peace'
+            'deadline': str(future_date)
         }
         response = self.client.post(self.task_url, another_task_data, token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -111,8 +107,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill4.id),
             'location': 'Tiel',
-            'deadline': str(future_date),
-            'end_goal': 'World peace'
+            'deadline': str(future_date)
         }
         response = self.client.post(self.task_url, third_task_data, token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -139,8 +134,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date),
-            'end_goal': 'World peace'
+            'deadline': str(future_date)
         }
         response = self.client.post(self.task_url, some_task_data, token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -255,7 +249,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         # Fields as defined in the serializer
         serializer_fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', \
-            'tags', 'description', 'end_goal','location', 'deadline', 'time_needed', 'title', \
+            'tags', 'description','location', 'deadline', 'time_needed', 'title', \
             'people_needed', 'meta_data')
 
         for field in serializer_fields:

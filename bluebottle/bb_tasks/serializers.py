@@ -62,7 +62,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'tags', 'description', 'end_goal',
+        fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'tags', 'description',
         'location', 'deadline', 'time_needed', 'title', 'people_needed', 'meta_data')
 
 
@@ -72,7 +72,7 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'end_goal')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed')
 
 
 class MyTaskMemberSerializer(BaseTaskMemberSerializer):
@@ -88,7 +88,7 @@ class MyTasksSerializer(BaseTaskSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'end_goal', 'status')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'status')
 
 # Task Wallpost serializers
 

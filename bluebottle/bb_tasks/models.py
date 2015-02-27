@@ -103,7 +103,6 @@ class BaseTask(models.Model, GetTweetMixin):
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
-    end_goal = models.TextField(_('end_goal'))
     location = models.CharField(_('location'), max_length=200)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 

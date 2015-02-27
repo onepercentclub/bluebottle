@@ -39,7 +39,7 @@ class FundraiserAPITestCase(BluebottleTestCase):
 
         response = self.client.post(reverse('fundraiser-list'), fundraiser_data, token=self.some_token)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(json.loads(response.content).get('deadline', None)[0], _('Fundraiser deadline exceeds campaign deadline.')) 
+        self.assertEqual(json.loads(response.content).get('deadline', None)[0], _('Fundraiser deadline exceeds project deadline.')) 
 
     def test_fundraiser_deadline_not_exceeds_project_deadline(self): 
         future_date = self.some_other_project.deadline - timezone.timedelta(days=5)

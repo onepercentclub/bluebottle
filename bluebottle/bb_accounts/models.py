@@ -141,7 +141,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     disable_token = models.CharField(max_length=32, blank=True, null=True)
 
-    campaign_notifications = models.BooleanField(_('Campaign Notifications'), default=True)
+    campaign_notifications = models.BooleanField(_('Project Notifications'), default=True)
 
     objects = BlueBottleUserManager()
 

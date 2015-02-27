@@ -216,7 +216,7 @@ def email_followers(sender, instance, created, **kwargs):
                 # Send update to all task owners, all fundraisers, all people who donated and all people who are following (i.e. posted to the wall)
                 followers = Follow.objects.filter(content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
-                follow_object = _('campaign')
+                follow_object = _('project')
                 link = '/go/projects/{0}'.format(instance.content_object.slug)
 
             if isinstance(instance.content_object, BaseTask):

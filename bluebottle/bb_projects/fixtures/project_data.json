@@ -94,84 +94,34 @@
         "pk": 1,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "education",
+            "slug": "agriculture",
             "description": "",
-            "name": "Education",
-            "name_nl": "Onderwijs"
+            "name": "Agriculture",
+            "name_nl": "Natuur & Milieu"
         }
     },
     {
         "pk": 2,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "agriculture",
+            "slug": "animal-welfare",
             "description": "",
-            "name": "Agriculture",
-            "name_nl": "Landbouw"
+            "name": "Animal welfare",
+            "name_nl": "Dierenwelzijn"
         }
     },
     {
         "pk": 3,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "health",
+            "slug": "arts-culture",
             "description": "",
-            "name": "Health",
-            "name_nl": "Gezondheid"
+            "name": "Arts & Culture",
+            "name_nl": "Kunst & Cultuur"
         }
     },
     {
         "pk": 5,
-        "model": "bb_projects.projecttheme",
-        "fields": {
-            "slug": "culture",
-            "description": "",
-            "name": "Culture",
-            "name_nl": "Kultuur"
-        }
-    },
-    {
-        "pk": 6,
-        "model": "bb_projects.projecttheme",
-        "fields": {
-            "slug": "sports",
-            "description": "",
-            "name": "Sports",
-            "name_nl": "temp"
-        }
-    },
-    {
-        "pk": 7,
-        "model": "bb_projects.projecttheme",
-        "fields": {
-            "slug": "arts",
-            "description": "",
-            "name": "Arts",
-            "name_nl": "Kunst"
-        }
-    },
-    {
-        "pk": 8,
-        "model": "bb_projects.projecttheme",
-        "fields": {
-            "slug": "training",
-            "description": "",
-            "name": "Training",
-            "name_nl": "Training"
-        }
-    },
-    {
-        "pk": 9,
-        "model": "bb_projects.projecttheme",
-        "fields": {
-            "slug": "tourism",
-            "description": "",
-            "name": "Tourism",
-            "name_nl": "Toerisme"
-        }
-    },
-    {
-        "pk": 10,
         "model": "bb_projects.projecttheme",
         "fields": {
             "slug": "climate",
@@ -181,23 +131,133 @@
         }
     },
     {
-        "pk": 11,
+        "pk": 6,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "social-entrepreneurship",
+            "slug": "community-building",
             "description": "",
-            "name": "Social Entrepreneurship",
-            "name_nl": "Social Entrepreneurship"
+            "name": "Community building",
+            "name_nl": "Leefbaarheid"
         }
     },
     {
-        "pk": 13,
+        "pk": 7,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "education",
+            "description": "",
+            "name": "Education",
+            "name_nl": "Onderwijs"
+        }
+    },
+    {
+        "pk": 8,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "emergency-relief",
+            "description": "",
+            "name": "Emergency relief",
+            "name_nl": "Noodhulp"
+        }
+    },
+    {
+        "pk": 9,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "food",
+            "description": "",
+            "name": "Food",
+            "name_nl": "Voedsel"
+        }
+    },
+    {
+        "pk": 10,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "health",
+            "description": "",
+            "name": "Health",
+            "name_nl": "Gezondheid & Zorg"
+        }
+    },
+    {
+        "pk": 11,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "human-rights",
+            "description": "",
+            "name": "Human rights",
+            "name_nl": "Mensenrechten"
+        }
+    },
+    {
+        "pk": 12,
         "model": "bb_projects.projecttheme",
         "fields": {
             "slug": "ict",
             "description": "",
             "name": "ICT",
             "name_nl": "ICT"
+        }
+    },
+    {
+        "pk": 13,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "media-journalism",
+            "description": "",
+            "name": "Media & Journalism",
+            "name_nl": "Media & Journalistiek"
+        }
+    },
+    {
+        "pk": 14,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "social-entrepreneurship",
+            "description": "",
+            "name": "Social entrepreneurship",
+            "name_nl": "Sociaal Ondernemerschap"
+        }
+    },
+    {
+        "pk": 15,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "sport",
+            "description": "",
+            "name": "Sport",
+            "name_nl": "Sport & Recreatie"
+        }
+    },
+    {
+        "pk": 16,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "tourism",
+            "description": "",
+            "name": "Tourism",
+            "name_nl": "Toerisme"
+        }
+    },
+    {
+        "pk": 17,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "water",
+            "description": "",
+            "name": "Water",
+            "name_nl": "Water"
+        }
+    },
+    {
+        "pk": 18,
+        "model": "bb_projects.projecttheme",
+        "fields": {
+            "slug": "mobility",
+            "description": "",
+            "name": "Mobility",
+            "name_nl": "Mobiliteit"
         }
     }
 ]

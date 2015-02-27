@@ -60,10 +60,14 @@ class UserCreate(generics.CreateAPIView):
         return "Users"
 
     def pre_save(self, obj):
-        if hasattr(properties, 'DEFAULT_SIGNUP_LANGUAGE'):
-            obj.primary_language = properties.DEFAULT_SIGNUP_LANGUAGE
-        else:
+        supported_langauges = [lang_code for (lang_code, lang_name) in getattr(properties, 'LANGUAGES')]
+        
+        # Check if request includes supported language for tenant otherwise
+        # the user is created with the default language.
+        if self.request.LANGUAGE_CODE[:2] in supported_langauges:
             obj.primary_language = self.request.LANGUAGE_CODE[:2]
+        else:
+            obj.primary_language = properties.LANGUAGE_CODE
 
     # Overriding the default create so that we can return extra info in the response
     # if there is already a user with the same email address

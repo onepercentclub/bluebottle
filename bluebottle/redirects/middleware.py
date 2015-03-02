@@ -30,18 +30,26 @@ class RedirectFallbackMiddleware(object):
         if response.status_code != 404:
             return response # No need to check for a redirect for non-404 responses.
 
+        
         full_path = request.get_full_path()
         current_site = get_current_site(request)
         http_host = request.META.get('HTTP_HOST', '')
+        
         if http_host:
             # Crappy workaround for localhost.
             # Always default to https if not on local machine. This will hopefully fix Safari problems.
-            if http_host in ['testserver', 'localhost', 'localhost:8000', 'localhost:8081', '127.0.0.1:8000', '127.0.0.1']:
+
+            if http_host in ['testserver', 'localhost', 'localhost:8000', 'localhost:8081', '127.0.0.1:8000', '127.0.0.1'] or http_host.split(":", 1)[0].endswith("localhost"):
                 http_host = 'http://' + http_host
             else:
                 http_host = 'https://' + http_host
 
         language = translation.get_language()
+
+        def redirect_target(new_path):
+            if new_path.startswith("http:") or new_path.startswith("https:"):
+                return new_path
+            return http_host + '/' + language + new_path
 
         redirects = Redirect.objects.all().order_by('fallback_redirect')
         for redirect in redirects:
@@ -49,7 +57,7 @@ class RedirectFallbackMiddleware(object):
             if redirect.old_path == full_path:
                 redirect.nr_times_visited += 1
                 redirect.save()
-                return http.HttpResponsePermanentRedirect(http_host + '/' + language + redirect.new_path)
+                return http.HttpResponsePermanentRedirect(redirect_target(redirect.new_path))
 
             if settings.APPEND_SLASH and not request.path.endswith('/'):
                 # Try appending a trailing slash.
@@ -59,7 +67,7 @@ class RedirectFallbackMiddleware(object):
                 if redirect.old_path == slashed_full_path:
                     redirect.nr_times_visited += 1
                     redirect.save()
-                    return http.HttpResponsePermanentRedirect(http_host + '/' + language + redirect.new_path)
+                    return http.HttpResponsePermanentRedirect(redirect_target(redirect.new_path))
 
         # Attempt all regular expression redirects
         reg_redirects = Redirect.objects.filter(regular_expression=True).order_by('fallback_redirect')
@@ -77,7 +85,7 @@ class RedirectFallbackMiddleware(object):
                 replaced_path = re.sub(old_path, new_path, full_path)
                 redirect.nr_times_visited += 1
                 redirect.save()
-                return http.HttpResponsePermanentRedirect(http_host + '/' + language + replaced_path)
+                return http.HttpResponsePermanentRedirect(redirect_target(replaced_path))
 
         # No redirect was found. Return the response.
         return response

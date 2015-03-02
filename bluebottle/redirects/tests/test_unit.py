@@ -108,3 +108,21 @@ class RedirectTests(BluebottleTestCase):
         self.assertRedirects(response,
                              '/en/my/project/foo/details',
                              status_code=301, target_status_code=404)
+
+    def test_redirect_external_http(self):
+        Redirect.objects.create(
+            old_path='/external_http', new_path='http://example.com')
+        response = self.client.get('/external_http')
+        # self.assertRedirects() attempts to fetch the external url, which
+        # is not good in this case
+        self.assertEquals(response.status_code, 301)
+        self.assertEquals(response['location'], "http://example.com")
+
+    def test_redirect_external_https(self):
+        Redirect.objects.create(
+            old_path='/external_https', new_path='https://example.com')
+        response = self.client.get('/external_https')
+        # self.assertRedirects() attempts to fetch the external url, which
+        # is not good in this case
+        self.assertEquals(response.status_code, 301)
+        self.assertEquals(response['location'], "https://example.com")

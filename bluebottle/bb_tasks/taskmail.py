@@ -1,12 +1,12 @@
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
-from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import render_to_string
 
 from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.clients.context import ClientContext
+from bluebottle.clients.utils import tenant_url
 
 from bluebottle.clients.mail import EmailMultiAlternatives
 
@@ -24,7 +24,7 @@ class TaskMemberMailSender:
         self.task_member = instance
         self.task = instance.task
         self.task_link = '/go/tasks/{0}'.format(self.task.id)
-        self.site = 'https://' + Site.objects.get_current().domain
+        self.site = tenant_url()
         self.task_list = '/go/tasks'
         self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
 

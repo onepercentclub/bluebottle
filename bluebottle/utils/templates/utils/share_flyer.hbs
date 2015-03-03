@@ -16,11 +16,11 @@
         <div class="share-flyer">
             <div class="row">
                 <div class="col6">
-                    <label for="contactName">{% trans "Recipients name" %}* </label>
+                    <label for="contactName">{% trans "Recipient's name" %}* </label>
                     {{input id="contactName" valueBinding='share_name' type="text" name="share_name" maxlength="254" placeholder=App.translatables.placeholders.share_name classBinding="errorList.share_name.length:error"}}
                 </div>
                 <div class="col6">
-                    <label for="contactEmail">{% trans "Recipients email" %}* </label>
+                    <label for="contactEmail">{% trans "Recipient's email" %}* </label>
                     {{input id="contactEmail" valueBinding='share_email' type="text" name="share_email" maxlength="254" placeholder=App.translatables.placeholders.share_email classBinding="errorList.share_email.length:error"}}
                 </div>
             </div>

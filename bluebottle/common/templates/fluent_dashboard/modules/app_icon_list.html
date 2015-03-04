@@ -1,0 +1,16 @@
+{% extends "admin_tools/dashboard/module.html" %}
+{% load i18n %}
+{% block module_content %}
+        <ul class="">
+        {% for child in module.children %}
+            {% for model in child.models %}
+            {% spaceless %}
+            <li class="{% cycle 'odd' 'even' %}">
+                <a class="fluent-dashboard-icon-caption" href="{{ model.change_url }}">{{ model.title }}</a>
+            </li>
+            {% endspaceless %}
+            {% endfor %}
+        {% endfor %}
+        </ul>
+{% endblock %}
+

@@ -2,7 +2,6 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.contenttypes import generic
 from django.dispatch import receiver
-from django.contrib.sites.models import Site
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 from bluebottle.mail import send_mail
@@ -11,6 +10,7 @@ from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
+from bluebottle.clients.utils import tenant_url
 
 USER_MODEL = get_user_model()
 
@@ -235,7 +235,7 @@ def email_followers(sender, instance, created, **kwargs):
     
             wallpost_text = instance.text
             subject = _("New wallpost on %(name)s") % {'name': instance.content_object.title}
-            site = 'https://' + Site.objects.get_current().domain
+            site = tenant_url()
 
             full_link = site + link
 

@@ -1,9 +1,9 @@
-from django.contrib.sites.models import Site
 from django.template.loader import get_template
 from django.utils import translation
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients.utils import tenant_url
 
 
 def send_mail(template_name, subject, to, **kwargs):
@@ -12,7 +12,7 @@ def send_mail(template_name, subject, to, **kwargs):
 
     kwargs.update({
         'receiver': to,
-        'site': 'https://{0}'.format(Site.objects.get_current().domain)
+        'site': tenant_url()
     })
 
     context = ClientContext(kwargs)

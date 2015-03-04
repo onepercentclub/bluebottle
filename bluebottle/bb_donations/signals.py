@@ -29,7 +29,7 @@ def _order_status_changed(sender, instance, **kwargs):
                 
             # Send mail / create wallposts if status transitions in to 
             # success/pending for the first time.
-            if first_time_success:
+            if first_time_success and instance.order_type == 'one-off':
                 if not donation.anonymous:
                     author = donation.order.user
                 else:

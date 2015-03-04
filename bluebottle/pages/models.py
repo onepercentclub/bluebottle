@@ -17,6 +17,13 @@ GROUP_PERMS = {
     'Staff': {
         'perms': (
             'add_page', 'change_page', 'delete_page',
+            'add_pictureitem', 'change_pictureitem', 'delete_pictureitem',
+            'add_contenttype', 'change_contenttype', 'delete_contenttype', 
+            'add_oembeditem', 'change_oembeditem', 'delete_oembeditem', 
+            'add_rawhtmlitem', 'change_rawhtmlitem', 'delete_rawhtmlitem', 
+            'add_textitem','change_textitem','delete_textitem',
+            'add_placeholder','change_placeholder','delete_placeholder',
+            'add_contentitem','change_contentitem','delete_contentitem'
         )
     }
 }

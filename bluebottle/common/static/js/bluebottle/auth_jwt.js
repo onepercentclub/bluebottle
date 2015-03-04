@@ -226,7 +226,7 @@ App.LogoutJwtMixin = Em.Mixin.create({
  */
 
 App.Router.map(function() {
-    this.resource('loginWith', {path: '/login-with/:token'});
+    this.resource('loginWith', {path: '/login-with/*token'});
     this.resource('logout', {path: '/logout'});
 
 });

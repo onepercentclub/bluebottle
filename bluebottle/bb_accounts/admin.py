@@ -82,13 +82,20 @@ class BlueBottleUserChangeForm(forms.ModelForm):
 
 class BlueBottleUserAdmin(UserAdmin):
     # TODO: this should be easier to override
-    fieldsets = (
+    standard_fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
         (_("Profile"), {'fields': ('user_type', 'picture', 'about_me','location',)}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined', 'deleted')}),
+    )
+
+    staff_fieldsets = (
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'groups')}),
+    )
+
+    superuser_fieldsets = (
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
 
     add_fieldsets = (
@@ -116,6 +123,19 @@ class BlueBottleUserAdmin(UserAdmin):
         return "<a href='/login/user/{0}'>{1}</a>".format(obj.id, 'Login as user')
 
     login_as_user.allow_tags = True
+
+    def change_view(self, request, *args, **kwargs):
+        # for superuser
+        try:
+            if request.user.is_superuser:
+                self.fieldsets = self.standard_fieldsets + self.superuser_fieldsets
+            else:
+                self.fieldsets = self.standard_fieldsets + self.staff_fieldsets
+            response = UserAdmin.change_view(self, request, *args, **kwargs)
+        finally:
+            # Reset fieldsets to its original value
+            self.fieldsets = self.standard_fieldsets
+        return response
 
 
 if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':

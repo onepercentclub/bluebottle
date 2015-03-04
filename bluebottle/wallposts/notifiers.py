@@ -1,5 +1,4 @@
-from django.contrib.sites.models import Site
-
+from bluebottle.clients.utils import tenant_url
 
 class WallpostObserver:
 
@@ -11,7 +10,7 @@ class WallpostObserver:
         # author of the post
         self.author = instance.author
 
-        self.site = 'https://' + Site.objects.get_current().domain
+        self.site = tenant_url()
 
     def notify(self):
         pass
@@ -24,7 +23,7 @@ class ReactionObserver:
         self.post = instance.wallpost
         self.reaction_author = self.reaction.author
         self.post_author = self.post.author
-        self.site = 'https://' + Site.objects.get_current().domain
+        self.site = tenant_url()
 
     def notify(self):
         pass

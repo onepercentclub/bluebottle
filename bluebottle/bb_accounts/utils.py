@@ -1,21 +1,16 @@
 import re
 from django.conf import settings
 from django.template import loader
-from django.contrib.sites.models import Site
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import construct_from_header
+from bluebottle.clients.utils import tenant_url, tenant_name
 
 def send_welcome_mail(user=None):
-    current_site = Site.objects.get_current()
-    site_name = current_site.name
-    domain = current_site.domain
-    site = 'https://' + domain
-
     c = ClientContext({
         'email': user.email,
-        'site': site,
-        'site_name': site_name,
+        'site': tenant_url(),
+        'site_name': tenant_name(),
         'user': user,
         'LANGUAGE_CODE': user.primary_language
     })

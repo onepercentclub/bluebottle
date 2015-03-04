@@ -1,12 +1,11 @@
 from babel.dates import format_date
 from babel.numbers import format_currency
-from django.contrib.sites.models import Site
 from django.template.loader import get_template
 from celery import task
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
-
+from bluebottle.clients.utils import tenant_url
 
 @task
 def mail_monthly_donation_processed_notification(monthly_order):
@@ -18,7 +17,7 @@ def mail_monthly_donation_processed_notification(monthly_order):
                        'receiver_first_name': receiver.first_name.capitalize(),
                        'date': format_date(locale='nl_NL'),
                        'amount': format_currency(monthly_order.amount, 'EUR', locale='nl_NL'),
-                       'site': 'https://' + Site.objects.get_current().domain})
+                       'site': tenant_url()})
 
     subject = "Bedankt voor je maandelijkse support"
     text_content = get_template('monthly_donation.nl.mail.txt').render(context)
@@ -35,7 +34,7 @@ def mail_project_funded_monthly_donor_notification(receiver, project):
                       {'receiver_first_name': receiver.first_name.capitalize(),
                        'project': project,
                        'link': '/go/projects/{0}'.format(project.slug),
-                       'site': 'https://' + Site.objects.get_current().domain})
+                       'site': tenant_url()})
 
     subject = "Gefeliciteerd: project afgerond!"
     text_content = get_template('project_full_monthly_donor.nl.mail.txt').render(context)

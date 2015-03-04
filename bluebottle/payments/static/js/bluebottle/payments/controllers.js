@@ -85,7 +85,7 @@ App.OrderPaymentController = Em.ObjectController.extend({
         if (meta.type == 'success') {
             // Refresh project and donations
             var donation = this.get('order.donations.firstObject');
-            // TODO: Refresh Fundraiser if it's a FundRaisser
+            // TODO: Refresh Fundraiser if it's a Fundraisser
             // TODO: Refresh donation list
             donation.get('project.getProject').reload();
 

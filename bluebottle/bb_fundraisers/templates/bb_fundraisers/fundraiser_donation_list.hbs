@@ -18,10 +18,10 @@
                         </p>
                     </header>
 
-                    {{#if fundRaiseDonations.length}}
+                    {{#if fundraiseDonations.length}}
 
 	                    <table class="fund-history">
-			                {{#each donation in fundRaiseDonations}}
+			                {{#each donation in fundraiseDonations}}
 			                	{{view "App.ProjectDonationView" }}
                             {{/each}}
 			            </table>

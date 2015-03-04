@@ -14,6 +14,8 @@ from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
 from .models import DocdataPayment
 from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_name
+
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +194,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         client = gateway.DocdataClient(testing_mode)
 
-        info_text = _("Bluebottle donation %(payment_id)s") % {'payment_id': self.order_payment.id}
+        info_text = _("%(tenant_name)s donation %(payment_id)s") % {'payment_id': self.order_payment.id, 'tenant_name':tenant_name()}
 
         response = client.create(
             merchant=merchant,

@@ -8,7 +8,7 @@ from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django import http
 from django.utils import translation
-
+from django.db import connection
 from bluebottle.redirects.models import Redirect
 
 
@@ -27,10 +27,15 @@ class RedirectFallbackMiddleware(object):
             )
 
     def process_response(self, request, response):
+
         if response.status_code != 404:
             return response # No need to check for a redirect for non-404 responses.
 
-        
+
+        if connection.tenant.schema_name == 'public':
+            # No tenant selected
+            return response
+
         full_path = request.get_full_path()
         current_site = get_current_site(request)
         http_host = request.META.get('HTTP_HOST', '')

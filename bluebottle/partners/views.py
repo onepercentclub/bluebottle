@@ -1,9 +1,9 @@
 from bluebottle.partners.serializers import PartnerOrganizationSerializer
 from bluebottle.projects.models import Project, PartnerOrganization
-from django.contrib.sites.models import Site
 from django.views.generic.list import ListView
 from rest_framework import generics
 
+from bluebottle.clients.utils import tenant_url
 
 # API view
 
@@ -29,10 +29,6 @@ class MacroMicroListView(ListView):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(MacroMicroListView, self).get_context_data(**kwargs)
-        if Site.objects.get_current().domain in ['localhost:8000', '127.0.0.1:8000']:
-            site = 'http://' + Site.objects.get_current().domain
-        else:
-            site = 'https://' + Site.objects.get_current().domain
-        context['site'] = site
+        context['site'] = tenant_url()
         return context
 

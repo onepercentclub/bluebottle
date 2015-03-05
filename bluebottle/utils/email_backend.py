@@ -1,6 +1,5 @@
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import get_template
@@ -10,6 +9,8 @@ from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients.utils import tenant_url
+
 
 class DKIMBackend(EmailBackend):
     def _send(self, email_message):
@@ -60,7 +61,7 @@ def send_mail(template_name, subject, to, **kwargs):
 
     kwargs.update({
         'receiver': to,
-        'site': 'https://{0}'.format(Site.objects.get_current().domain)
+        'site': tenant_url()
     })
 
     context = ClientContext(kwargs)

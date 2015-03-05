@@ -1,6 +1,7 @@
-from django.contrib.sites.models import Site
 from django.utils.translation import ugettext as _
 from bluebottle.utils.email_backend import send_mail
+
+from bluebottle.clients.utils import tenant_url
 
 
 def successful_donation_fundraiser_mail(instance):
@@ -17,7 +18,7 @@ def successful_donation_fundraiser_mail(instance):
     send_mail(
         template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
         subject=_('You received a new donation'),
-        site = 'https://' + Site.objects.get_current().domain,
+        site = tenant_url(),
         to=receiver,
         amount=instance.amount,
         #donor_name=donor_name, TODO doesn't work

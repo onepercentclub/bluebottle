@@ -25,7 +25,7 @@ class MemberAdmin(BlueBottleUserAdmin):
 
     def login_as_redirect(self, *args, **kwargs):
         user = Member.objects.get(id = kwargs.get('user_id', None))
-        url = "/#!/login-with/{0}".format(user.get_jwt_token())
+        url = "/go/login-with/{0}".format(user.get_jwt_token())
         
         return HttpResponseRedirect(url)
 

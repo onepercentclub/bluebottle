@@ -245,6 +245,27 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['house_number_addition'], '')
         self.assertEqual(user_data['state'], '')
 
+    @patch.object(DocdataClient, 'create')
+    def test_abnormal_address_data(self, mock_client_create):
+        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+        mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
+
+        user = BlueBottleUserFactory()
+        holland = CountryFactory(name='Netherlands', alpha2_code='NL')
+
+        # Update user address with abnormal line1
+        user.address.line1 = '1a'
+        user.address.save()
+
+        self.order = OrderFactory.create(user=user)
+        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',
+                                                        integration_data={'default_pm': 'ideal'})
+
+        self.service = PaymentService(order_payment=self.order_payment)
+
+        user_data = self.service.adapter.get_user_data()
+        self.assertEqual(user_data['street'], 'Unknown')
+
 
 from django.test.utils import override_settings
 from django.conf import settings

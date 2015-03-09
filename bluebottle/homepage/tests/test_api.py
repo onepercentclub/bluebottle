@@ -75,7 +75,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
                 self.order = OrderFactory.create(status=StatusDefinition.SUCCESS)
                 self.donation = DonationFactory.create(amount=1000, order=self.order)
 
-    def test_test(self):
+    def test_homepage_stats(self):
         response = self.client.get(reverse('stats'))
         
         self.assertEqual(response.data['donated'], Decimal('10000.00'))

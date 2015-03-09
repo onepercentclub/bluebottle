@@ -226,15 +226,16 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         client = gateway.DocdataClient(testing_mode)
 
         # Get the language that the user marked as his / her primary language
-        # or fallback on the default LANGUAGE_CODE in settings
+        # or fallback on the default LANGUAGE_CODE in settings (which may be overriden
+        # in client specific properties, e.g. Gent)
         
         user_language = self.order_payment.order.user.primary_language
         
         if user_language:
             client_language = user_language
         else:
-            client_language = settings.LANGUAGE_CODE
-
+            # Language code is a default Django setting. We assume the key exists.
+            client_language = properties.LANGUAGE_CODE
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:

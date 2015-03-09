@@ -11,6 +11,7 @@ from bluebottle.projects.models import PartnerOrganization
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
+from .organizations import OrganizationFactory
 
 PROJECT_MODEL = get_project_model()
 
@@ -37,6 +38,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     FACTORY_FOR = PROJECT_MODEL
 
     owner = factory.SubFactory(BlueBottleUserFactory)
+    organization = factory.SubFactory(OrganizationFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
     status =  factory.SubFactory(ProjectPhaseFactory, name='Plan - New')
     theme = factory.SubFactory(ProjectThemeFactory, name='Education')

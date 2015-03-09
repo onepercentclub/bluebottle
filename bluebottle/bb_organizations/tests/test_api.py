@@ -5,7 +5,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations_factories import (
+from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationMemberFactory, ORGANIZATION_MODEL)
 
 

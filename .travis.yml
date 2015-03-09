@@ -12,6 +12,7 @@ install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links
 - createdb bluebottle_test
+- echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py

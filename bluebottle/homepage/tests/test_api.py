@@ -19,7 +19,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
     Integration tests for the Statistics API.
     """
     def setUp(self):
-        super(StatisticsEndpointTestCase, self).setUp()
+        super(HomepageEndpointTestCase, self).setUp()
         self.init_projects()
 
         self.stats = Statistic.objects.create()

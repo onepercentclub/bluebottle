@@ -1,7 +1,7 @@
 sudo: false
 language: python
 addon:
-  - postgresql: "9.1"
+  postgresql: "9.1"
 cache:
   directories:
   - $HOME/.pip-cache/

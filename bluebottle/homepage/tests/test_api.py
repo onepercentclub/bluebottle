@@ -77,6 +77,9 @@ class HomepageEndpointTestCase(BluebottleTestCase):
                 self.order = OrderFactory.create(status=StatusDefinition.SUCCESS)
                 self.donation = DonationFactory.create(amount=1000, order=self.order)
 
+    def tearDown(self):
+        self.stats.clear_cached()
+
     def test_homepage_stats(self):
         response = self.client.get(reverse('stats'))
         

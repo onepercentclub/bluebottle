@@ -1,6 +1,6 @@
 sudo: false
 language: python
-addon:
+addons:
   postgresql: "9.1"
 cache:
   directories:

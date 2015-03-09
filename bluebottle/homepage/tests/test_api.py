@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.urlresolvers import reverse
 
 from bluebottle.utils.utils import StatusDefinition

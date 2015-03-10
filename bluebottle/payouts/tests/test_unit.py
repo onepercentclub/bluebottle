@@ -2,7 +2,7 @@ from decimal import Decimal
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.payouts.models import ProjectPayout
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.organizations_factories import OrganizationFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.utils.model_dispatcher import get_project_model
 
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory

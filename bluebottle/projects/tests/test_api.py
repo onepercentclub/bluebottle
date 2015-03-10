@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.utils import timezone
-from bluebottle.test.factory_models.organizations_factories import OrganizationFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 from rest_framework import status

@@ -311,7 +311,7 @@ class UserAddress(Address):
     def save(self, *args, **kwargs):
         if not self.country:
             code = getattr(properties, 'DEFAULT_COUNTRY_CODE', None)
-            if Country.objects.fitler(alpha2_code=code).count():
+            if Country.objects.filter(alpha2_code=code).count():
                 self.country = Country.objects.get(alpha2_code=code)
         super(UserAddress, self).save(*args, **kwargs)
 

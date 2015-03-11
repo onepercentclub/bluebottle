@@ -54,7 +54,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     }
 
     def __init__(self, *args, **kwargs):
-        self.live_mode = properties.LIVE_PAYMENTS_ENABLED
+        self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
     def get_user_data(self):
@@ -230,7 +230,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if user_language:
             client_language = user_language
         else:
-            client_language = settings.LANGUAGE_CODE
+            client_language = properties.LANGUAGE_CODE
 
 
         if self.order_payment.payment_method == 'docdataDirectdebit':

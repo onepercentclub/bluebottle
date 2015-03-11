@@ -1,3 +1,4 @@
+from bluebottle.geo.models import Country
 from bluebottle.utils.models import Address
 import os
 import random
@@ -304,6 +305,12 @@ class UserAddress(Address):
     address_type = models.CharField(_("address type"),max_length=10, blank=True, choices=AddressType.choices,
                                     default=AddressType.primary)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name=_("user"), related_name="address")
+
+    def save(self, *args, **kwargs):
+        if not self.country:
+            code = getattr(properties, 'DEFAULT_COUNTRY_CODE', 'NL')
+            self.country = Country.objects.get(alpha2_code=code)
+        super(UserAddress, self).save(*args, **kwargs)
 
     class Meta:
         db_table = 'members_useraddress'

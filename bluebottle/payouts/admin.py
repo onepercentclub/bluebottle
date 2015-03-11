@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.utils import timezone
-from bluebottle.bb_payouts.admin import ProjectPayoutAdmin, OrganizationPayoutAdmin
+from bluebottle.bb_payouts.admin import BaseProjectPayoutAdmin, BaseOrganizationPayoutAdmin
 from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model
 from django.contrib.admin.sites import NotRegistered
 
@@ -16,7 +16,7 @@ PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
 
 
-class OnePercentOrganizationPayoutAdmin(OrganizationPayoutAdmin):
+class OrganizationPayoutAdmin(BaseOrganizationPayoutAdmin):
 
     actions = ('export_sepa', )
 
@@ -40,15 +40,18 @@ try:
     admin.site.unregister(ORGANIZATION_PAYOUT_MODEL)
 except NotRegistered:
     pass
-admin.site.register(ORGANIZATION_PAYOUT_MODEL, OnePercentOrganizationPayoutAdmin)
+admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)
 
 
-class OnePercentProjectPayoutAdmin(ProjectPayoutAdmin):
+class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
 
-    list_filter = ['status', 'organization_fee', 'project__partner_organization']
+    list_filter = ['status', 'payout_rule', 'project__partner_organization']
 
     export_fields = ['project', 'status', 'payout_rule', 'amount_raised', 'organization_fee', 'amount_payable',
                      'created', 'submitted']
+
+    list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
+                    'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
 
     actions = ('change_status_to_new', 'change_status_to_progress', 'change_status_to_settled',
                'export_sepa', 'recalculate_amounts', export_as_csv_action(fields=export_fields))
@@ -68,9 +71,8 @@ class OnePercentProjectPayoutAdmin(ProjectPayoutAdmin):
 
     export_sepa.short_description = "Export SEPA file."
 
-
 try:
     admin.site.unregister(PROJECT_PAYOUT_MODEL)
 except NotRegistered:
     pass
-admin.site.register(PROJECT_PAYOUT_MODEL, OnePercentProjectPayoutAdmin)
+admin.site.register(PROJECT_PAYOUT_MODEL, ProjectPayoutAdmin)

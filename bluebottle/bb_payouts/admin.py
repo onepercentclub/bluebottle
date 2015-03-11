@@ -47,7 +47,7 @@ class ProjectPayoutForm(forms.ModelForm):
         model = PROJECT_PAYOUT_MODEL
 
 
-class ProjectPayoutAdmin(admin.ModelAdmin):
+class BaseProjectPayoutAdmin(admin.ModelAdmin):
     model = PROJECT_PAYOUT_MODEL
     form = ProjectPayoutForm
     inlines = (PayoutLogInline, )
@@ -197,10 +197,10 @@ class ProjectPayoutAdmin(admin.ModelAdmin):
         return dict(PROJECT_PAYOUT_MODEL.PayoutRules.choices)[obj.payout_rule]
 
 
-admin.site.register(PROJECT_PAYOUT_MODEL, ProjectPayoutAdmin)
+admin.site.register(PROJECT_PAYOUT_MODEL, BaseProjectPayoutAdmin)
 
 
-class OrganizationPayoutAdmin(admin.ModelAdmin):
+class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
     inlines = [OrganizationPayoutLogInline]
 
     can_delete = False
@@ -280,6 +280,6 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
     recalculate_amounts.short_description = _("Recalculate amounts for new payouts.")
 
 
-admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)
+admin.site.register(ORGANIZATION_PAYOUT_MODEL, BaseOrganizationPayoutAdmin)
 
 

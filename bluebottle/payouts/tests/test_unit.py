@@ -2,7 +2,7 @@ from decimal import Decimal
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.payouts.models import ProjectPayout
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.test.factory_models.organizations_factories import OrganizationFactory
 from bluebottle.utils.model_dispatcher import get_project_model
 
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
@@ -381,6 +381,39 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
         self.assertEquals(payout.amount_payable, Decimal('30.00'))
+
+        self.assertEquals(payout.amount_pending, Decimal('0.00'))
+        self.assertEquals(payout.amount_safe, Decimal('60.00'))
+        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+
+
+    @override_settings(MINIMAL_PAYOUT_AMOUNT= 60, PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
+    def test_changed_fees_amounts_beneath_threshold(self):
+        """ Test amounts when donations are beneath minimal payout amount. """
+
+        # Setup organization
+        organization = self.project.organization
+        organization.account_name = 'Funny organization'
+        organization.account_iban = 'NL90ABNA0111111111'
+        organization.account_bic = 'ABNANL2A'
+        organization.save()
+
+        # Set status of donation to paid
+        self.donation2.order.locked()
+        self.donation2.order.succeeded()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project_incomplete.status = ProjectPhase.objects.get(slug='done-incomplete')
+        self.project_incomplete.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        # Money is safe now, nothing pending
+        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.payout_rule, 'beneath_threshold')
+        self.assertEquals(payout.amount_payable, Decimal('0.00'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))

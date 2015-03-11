@@ -45,7 +45,7 @@ admin.site.register(ORGANIZATION_PAYOUT_MODEL, OnePercentOrganizationPayoutAdmin
 
 class OnePercentProjectPayoutAdmin(ProjectPayoutAdmin):
 
-    list_filter = ['status', 'payout_rule', 'project__partner_organization']
+    list_filter = ['status', 'organization_fee', 'project__partner_organization']
 
     export_fields = ['project', 'status', 'payout_rule', 'amount_raised', 'organization_fee', 'amount_payable',
                      'created', 'submitted']
@@ -67,6 +67,7 @@ class OnePercentProjectPayoutAdmin(ProjectPayoutAdmin):
         return response
 
     export_sepa.short_description = "Export SEPA file."
+
 
 try:
     admin.site.unregister(PROJECT_PAYOUT_MODEL)

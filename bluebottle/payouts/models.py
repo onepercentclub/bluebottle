@@ -101,14 +101,17 @@ class ProjectPayout(BaseProjectPayout):
         # 1st of January 2014
         start_2014 = timezone.datetime(2014, 1, 1, tzinfo=timezone.utc)
 
+        threshold = properties.MINIMAL_PAYOUT_AMOUNT
+
         if self.project.created >= start_2014:
             # New rules per 2014
 
-            if self.project.amount_donated >= self.project.amount_asked:
-                return self.PayoutRules.fully_funded
-            elif self.project.amount_donated < settings.MINIMAL_PAYOUT_AMOUNT:
+            if self.project.amount_donated <= threshold:
                 # Funding less then minimal payment amount.
-                return self.PayoutRules.hundred
+                return self.PayoutRules.beneath_threshold
+            elif self.project.amount_donated >= self.project.amount_asked:
+                # Fully funded
+                return self.PayoutRules.fully_funded
             else:
                 # Not fully funded
                 return self.PayoutRules.not_fully_funded

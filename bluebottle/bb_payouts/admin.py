@@ -80,8 +80,9 @@ class ProjectPayoutAdmin(admin.ModelAdmin):
             payout.status = StatusDefinition.SETTLED
             payout.save()
 
-    list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
+    list_display = ['payout', 'status', 'admin_project', 'amount_pending', 'amount_raised', 'amount_payable', 'rule',
                     'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
+
 
     list_display_links = ['payout']
 

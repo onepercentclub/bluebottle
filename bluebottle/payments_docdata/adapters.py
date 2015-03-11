@@ -54,6 +54,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     }
 
     def __init__(self, *args, **kwargs):
+        self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
     def get_user_data(self):
@@ -146,8 +147,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if payment.default_pm == 'paypal':
             payment.default_pm = 'paypal_express_checkout'
 
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-
         merchant = gateway.Merchant(name=properties.DOCDATA_MERCHANT_NAME, password=properties.DOCDATA_MERCHANT_PASSWORD)
 
         amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
@@ -196,7 +195,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         bill_to = gateway.Destination(name=name, address=address)
 
-        client = gateway.DocdataClient(testing_mode)
+        client = gateway.DocdataClient(self.live_mode)
 
         info_text = _("%(tenant_name)s donation %(payment_id)s") % {'payment_id': self.order_payment.id, 'tenant_name':tenant_name()}
 
@@ -221,21 +220,18 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def get_authorization_action(self):
 
-        #FIXME: get rid of these testing
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        client = gateway.DocdataClient(testing_mode)
+        client = gateway.DocdataClient(self.live_mode)
 
         # Get the language that the user marked as his / her primary language
-        # or fallback on the default LANGUAGE_CODE in settings (which may be overriden
-        # in client specific properties, e.g. Gent)
+        # or fallback on the default LANGUAGE_CODE in settings
         
         user_language = self.order_payment.order.user.primary_language
         
         if user_language:
             client_language = user_language
         else:
-            # Language code is a default Django setting. We assume the key exists.
             client_language = properties.LANGUAGE_CODE
+
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:
@@ -327,8 +323,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         dd_transaction.save()
 
     def _fetch_status(self):
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        client = gateway.DocdataClient(testing_mode)
+        client = gateway.DocdataClient(self.live_mode)
         response = client.status(self.payment.payment_cluster_key)
 
         return response

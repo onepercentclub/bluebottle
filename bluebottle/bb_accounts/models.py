@@ -1,4 +1,3 @@
-from bluebottle.utils.models import Address
 import os
 import random
 import string
@@ -17,14 +16,18 @@ from django.db.models import Q
 
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
-from sorl.thumbnail import ImageField
-from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model, get_fundraiser_model
-
 from rest_framework_jwt.settings import api_settings
-from bluebottle.utils.utils import StatusDefinition
-
+from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
+
+from bluebottle.bb_accounts.utils import valid_email
+from bluebottle.utils.model_dispatcher import (get_user_model, get_task_model, get_taskmember_model,
+                                               get_donation_model, get_project_model, get_fundraiser_model)
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.clients import properties
+from bluebottle.geo.models import Country
+from bluebottle.utils.models import Address
+
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer', 'current_user_serializer')
 
@@ -304,6 +307,13 @@ class UserAddress(Address):
     address_type = models.CharField(_("address type"),max_length=10, blank=True, choices=AddressType.choices,
                                     default=AddressType.primary)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name=_("user"), related_name="address")
+
+    def save(self, *args, **kwargs):
+        if not self.country:
+            code = getattr(properties, 'DEFAULT_COUNTRY_CODE', None)
+            if Country.objects.filter(alpha2_code=code).count():
+                self.country = Country.objects.get(alpha2_code=code)
+        super(UserAddress, self).save(*args, **kwargs)
 
     class Meta:
         db_table = 'members_useraddress'

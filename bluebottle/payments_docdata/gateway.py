@@ -44,14 +44,14 @@ __all__ = (
 )
 
 
-def get_suds_client(testing_mode=False):
+def get_suds_client(live_mode=False):
     """
     Create the suds client to connect to docdata.
     """
-    if testing_mode:
-        url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_2?wsdl'
-    else:
+    if live_mode:
         url = 'https://secure.docdatapayments.com/ps/services/paymentservice/1_2?wsdl'
+    else:
+        url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_2?wsdl'
 
     # TODO: CACHE THIS object, avoid having to request the WSDL at every instance.
     try:
@@ -89,17 +89,13 @@ class DocdataClient(object):
     PAYMENT_METHOD_ELV = 'ELV'
 
 
-    def __init__(self, testing_mode=None):
+    def __init__(self, live_mode=False):
         """
         Initialize the client.
         """
-        try:
-            testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        except AttributeError:
-            testing_mode = False
 
-        self.client = get_suds_client(testing_mode)
-        self.testing_mode = testing_mode
+        self.client = get_suds_client(live_mode)
+        self.live_mode = live_mode
 
         if not properties.DOCDATA_MERCHANT_NAME:
             raise ImproperlyConfigured("Missing DOCDATA_MERCHANT_NAME setting!")
@@ -317,10 +313,10 @@ class DocdataClient(object):
         }
         args.update(extra_url_args)
 
-        if self.testing_mode:
-            return 'https://test.docdatapayments.com/ps/menu?' + urlencode(args)
-        else:
+        if self.live_mode:
             return 'https://secure.docdatapayments.com/ps/menu?' + urlencode(args)
+        else:
+            return 'https://test.docdatapayments.com/ps/menu?' + urlencode(args)
 
     def convert_to_ascii(self, value):
         """ Normalize / convert unicode characters to ascii equivalents. """

@@ -26,16 +26,15 @@ class Command(BaseCommand):
         self.stdout.write("Checking deadlines for client {0}".format(client.client_name))
 
         try:
-            done_phase = ProjectPhase.objects.get(slug='done')
-            self.stdout.write("Found ProjectPhase model with name 'Done'")
+            done_complete_phase = ProjectPhase.objects.get(slug='done-complete')
+            done_incomplete_phase = ProjectPhase.objects.get(slug='done-incomplete')
         except ProjectPhase.DoesNotExist:
-            raise CommandError("A ProjectPhase with name 'Done' does not exist")
+            raise CommandError("A ProjectPhase with name 'Done-Complete' or 'Done-Incomplete' does not exist")
 
         try:
-            campaign_phase = ProjectPhase.objects.get(slug='running')
-            self.stdout.write("Found ProjectPhase model with name 'Running'")
+            campaign_phase = ProjectPhase.objects.get(slug='campaign')
         except ProjectPhase.DoesNotExist:
-            raise CommandError("A ProjectPhase with name 'Running' does not exist")
+            raise CommandError("A ProjectPhase with name 'Campaign' does not exist")
 
         """
         Projects which have at least the funds asked, are still in campaign phase and have not expired
@@ -51,7 +50,10 @@ class Command(BaseCommand):
         """
         self.stdout.write("Checking Project deadlines...")
         for project in Project.objects.filter(status=campaign_phase, deadline__lte=now()).all():
-            project.status = done_phase
+            if project.amount_donated >= project.amount_asked:
+                project.status = done_complete_phase
+            else:
+                project.status = done_incomplete_phase
             project.campaign_ended = now()
             project.save()
 

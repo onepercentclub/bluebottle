@@ -10,13 +10,23 @@ from django.conf import settings
 from bluebottle.clients import properties
 
 
+def get_fee_percentage(rule):
+    return "{0}%".format(int(properties.PROJECT_PAYOUT_FEES[rule] * 100))
+
+
 class ProjectPayout(BaseProjectPayout):
 
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        beneath_threshold = ChoiceItem('beneath_threshold', label=_("Beneath minimal payout amount"))
-        fully_funded = ChoiceItem('fully_funded', label=_("Fully funded"))
-        not_fully_funded = ChoiceItem('not_fully_funded', label=_("Not fully funded"))
+        beneath_threshold = ChoiceItem('beneath_threshold',
+                                       label="{0} ({1})".format(_("Beneath minimal payout amount"),
+                                                                get_fee_percentage('beneath_threshold')))
+        fully_funded = ChoiceItem('fully_funded',
+                                  label="{0} ({1})".format(_("Fully funded"),
+                                                           get_fee_percentage('fully_funded')))
+        not_fully_funded = ChoiceItem('not_fully_funded',
+                                      label="{0} ({1})".format(_("Not fully funded"),
+                                                               get_fee_percentage('not_fully_funded')))
 
         # Legacy payout rules
         old = ChoiceItem('old', label=_("Legacy: Old 1%/5%"))
@@ -101,14 +111,17 @@ class ProjectPayout(BaseProjectPayout):
         # 1st of January 2014
         start_2014 = timezone.datetime(2014, 1, 1, tzinfo=timezone.utc)
 
+        threshold = properties.MINIMAL_PAYOUT_AMOUNT
+
         if self.project.created >= start_2014:
             # New rules per 2014
 
-            if self.project.amount_donated >= self.project.amount_asked:
-                return self.PayoutRules.fully_funded
-            elif self.project.amount_donated < settings.MINIMAL_PAYOUT_AMOUNT:
+            if self.project.amount_donated <= threshold:
                 # Funding less then minimal payment amount.
-                return self.PayoutRules.hundred
+                return self.PayoutRules.beneath_threshold
+            elif self.project.amount_donated >= self.project.amount_asked:
+                # Fully funded
+                return self.PayoutRules.fully_funded
             else:
                 # Not fully funded
                 return self.PayoutRules.not_fully_funded

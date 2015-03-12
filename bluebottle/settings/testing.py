@@ -1,9 +1,11 @@
+import warnings
+
+from bluebottle.payments_docdata.settings import *
+from bluebottle.payments_mock.settings import MOCK_FEES, MOCK_PAYMENT_METHODS
+
 from .base import *
 from .secrets import *
-from bluebottle.payments_docdata.settings import *
 
-# Supress naive date warnings
-import warnings
 warnings.filterwarnings(
         'ignore', r"DateTimeField received a naive datetime .* while time zone support is active",
         RuntimeWarning, r'django\.db\.models\.fields')
@@ -59,7 +61,6 @@ TENANT_APPS += (
 
 INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('django_nose', 'tenant_schemas',)
 
-from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS, MOCK_FEES
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS
 
 DOCDATA_FEES = {

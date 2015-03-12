@@ -1,8 +1,7 @@
-from django.conf.urls import include, url, patterns
+from bluebottle.views import HomeView
+from django.conf.urls import include, patterns, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-
-from bluebottle.views import HomeView
 
 admin.autodiscover()
 

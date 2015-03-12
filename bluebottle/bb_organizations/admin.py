@@ -1,6 +1,8 @@
+from bluebottle.utils.model_dispatcher import (get_organization_model,
+                                               get_organizationdocument_model,
+                                               get_organizationmember_model)
 from django.contrib import admin
 
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationdocument_model, get_organizationmember_model
 from .forms import OrganizationDocumentForm
 
 ORGANIZATION_MODEL = get_organization_model()

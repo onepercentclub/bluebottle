@@ -1,10 +1,11 @@
 from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.projects.permissions import IsProjectOwner
+from bluebottle.projects.serializers import ProjectBudgetLineSerializer
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.detail import DetailView
 from rest_framework import generics
-from bluebottle.projects.serializers import ProjectBudgetLineSerializer
-from bluebottle.projects.permissions import IsProjectOwner
+
 from .models import Project
 
 

@@ -3,9 +3,10 @@ ContentItem models for custom django-fluent-contents plugins.
 """
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.models import ContentItem
 from sorl.thumbnail import ImageField
+
+from djchoices import ChoiceItem, DjangoChoices
 
 
 class PictureItem(ContentItem):

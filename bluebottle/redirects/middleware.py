@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
 
-import urllib
 import re
+import urllib
 
+from bluebottle.redirects.models import Redirect
+from django import http
 from django.conf import settings
 from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ImproperlyConfigured
-from django import http
-from django.utils import translation
 from django.db import connection
-from bluebottle.redirects.models import Redirect
+from django.utils import translation
 
 
 class RedirectFallbackMiddleware(object):

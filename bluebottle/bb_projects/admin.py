@@ -1,13 +1,12 @@
-from django import forms
 from bluebottle.common.admin_utils import ImprovedModelForm
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_project_phaselog_model)
+from django import forms
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
-
 from sorl.thumbnail.admin import AdminImageMixin
-
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
@@ -73,4 +72,3 @@ class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
 # if you want to display more fields, unregister the model first, define a new admin class
 # (possibly inheriting from BaseProjectAdmin), and then re-register it
 admin.site.register(PROJECT_MODEL, BaseProjectAdmin)
-

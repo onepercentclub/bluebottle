@@ -1,6 +1,7 @@
-from django.core.mail import EmailMultiAlternatives as BaseEmailMultiAlternatives
-
 from bluebottle.clients import properties
+from django.core.mail import \
+    EmailMultiAlternatives as BaseEmailMultiAlternatives
+
 
 def construct_from_header():
     """
@@ -31,4 +32,3 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
             kwargs['from_email'] = tenant_from
 
         super(EmailMultiAlternatives, self).__init__(*args, **kwargs)
-

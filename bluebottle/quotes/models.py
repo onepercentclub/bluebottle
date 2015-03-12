@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from djchoices import DjangoChoices, ChoiceItem
-from django.utils.timezone import now
 from django.db.models import Q
+from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
+
+from djchoices import ChoiceItem, DjangoChoices
 
 
 class QuoteManager(models.Manager):
@@ -45,4 +47,3 @@ class Quote(models.Model):
 
     def __unicode__(self):
         return self.quote
-

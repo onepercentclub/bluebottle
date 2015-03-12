@@ -1,6 +1,9 @@
-from bluebottle.recurring_donations.models import MonthlyDonor, MonthlyDonorProject
-from bluebottle.recurring_donations.permissions import IsOwner, IsDonor, RecurringDonationsEnabled
-from bluebottle.recurring_donations.serializers import MonthlyDonationSerializer, MonthlyDonationProjectSerializer
+from bluebottle.recurring_donations.models import (MonthlyDonor,
+                                                   MonthlyDonorProject)
+from bluebottle.recurring_donations.permissions import (IsDonor, IsOwner,
+                                                        RecurringDonationsEnabled)
+from bluebottle.recurring_donations.serializers import (MonthlyDonationProjectSerializer,
+                                                        MonthlyDonationSerializer)
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
@@ -35,4 +38,3 @@ class MonthlyDonationProjectDetail(generics.RetrieveUpdateDestroyAPIView):
     model = MonthlyDonorProject
     permission_classes = (RecurringDonationsEnabled, IsDonor, )
     serializer_class = MonthlyDonationProjectSerializer
-

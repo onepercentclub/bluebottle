@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.admin.sites import site
-from django.contrib.admin.widgets import ManyToManyRawIdWidget, ForeignKeyRawIdWidget
+from django.contrib.admin.widgets import (ForeignKeyRawIdWidget,
+                                          ManyToManyRawIdWidget)
 from django.core.urlresolvers import reverse
 from django.utils.encoding import smart_unicode
 from django.utils.html import escape
+
 
 """
     Those modules are needed to make raw_id_fields (ForeignKeys, and ManyToManyFields)

@@ -1,14 +1,12 @@
-from django.dispatch import receiver
-from django.db.models.signals import post_save, pre_delete
-from django.utils.translation import ugettext as _
-from django.utils import translation
-from django.template.loader import render_to_string
-
-from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.clients.context import ClientContext
-from bluebottle.clients.utils import tenant_url
-
 from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.model_dispatcher import get_taskmember_model
+from django.db.models.signals import post_save, pre_delete
+from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.utils import translation
+from django.utils.translation import ugettext as _
 
 TASK_MEMBER_MODEL = get_taskmember_model()
 

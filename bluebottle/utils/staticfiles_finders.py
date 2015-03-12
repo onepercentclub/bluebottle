@@ -1,8 +1,9 @@
-from django.utils._os import safe_join
 import os
+
+from bluebottle.clients.models import Client
 from django.conf import settings
 from django.contrib.staticfiles.finders import FileSystemFinder
-from bluebottle.clients.models import Client
+from django.utils._os import safe_join
 
 
 class TenantStaticFilesFinder(FileSystemFinder):

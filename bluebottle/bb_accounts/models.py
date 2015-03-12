@@ -1,30 +1,38 @@
-from bluebottle.utils.models import Address
 import os
 import random
 import string
 import uuid
 
+from bluebottle.bb_accounts.utils import valid_email
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_fundraiser_model,
+                                               get_project_model,
+                                               get_task_model,
+                                               get_taskmember_model,
+                                               get_user_model)
+from bluebottle.utils.models import Address
+from bluebottle.utils.utils import StatusDefinition
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
+                                        PermissionsMixin)
+from django.core import serializers
 from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import options as options
+from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from django.core import serializers
-from django.db.models import Q
-
 from django_extensions.db.fields import ModificationDateTimeField
-from djchoices.choices import DjangoChoices, ChoiceItem
-from sorl.thumbnail import ImageField
-from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, get_donation_model, get_project_model, get_fundraiser_model
-
 from rest_framework_jwt.settings import api_settings
-from bluebottle.utils.utils import StatusDefinition
-
+from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
+
+from djchoices.choices import ChoiceItem, DjangoChoices
+
+from .utils import send_welcome_mail
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer', 'current_user_serializer')
 
@@ -311,10 +319,6 @@ class UserAddress(Address):
         verbose_name_plural = _("user addresses")
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .utils import send_welcome_mail
-from django.conf import settings
 
 @receiver(post_save)
 def send_welcome_mail_callback(sender, instance, created, **kwargs):

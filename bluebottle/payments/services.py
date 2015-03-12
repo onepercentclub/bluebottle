@@ -1,8 +1,9 @@
-from bluebottle.payments.exception import PaymentException
 import re
+
 from bluebottle.clients import properties
-from bluebottle.utils.utils import import_class
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import import_class
 
 
 def get_payment_methods(country=None, amount=None):
@@ -70,4 +71,3 @@ class PaymentService(object):
 
     def check_payment_status(self, **integration_details):
         action = self.adapter.check_payment_status()
-

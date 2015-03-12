@@ -1,15 +1,15 @@
 from decimal import Decimal
-from bluebottle.utils.utils import StatusDefinition
+
+from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
 from django.conf import settings
 from django.db import models
+from django.db.models import options
 from django.db.models.aggregates import Sum
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from sorl.thumbnail import ImageField
-from django.db.models import options
-from bluebottle.utils.utils import GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer','preview_serializer', 'manage_serializer')
 

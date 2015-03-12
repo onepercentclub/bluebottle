@@ -1,7 +1,7 @@
-from bluebottle.payments.models import Payment
-from django.conf import settings
-from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from bluebottle.clients import properties
+from bluebottle.payments.models import Payment
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
+from django.conf import settings
 
 
 class BasePaymentAdapter(object):

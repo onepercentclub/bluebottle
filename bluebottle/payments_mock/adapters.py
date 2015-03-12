@@ -1,10 +1,12 @@
 # coding=utf-8
 import re
-from bluebottle.payments.exception import PaymentException
-from django.core.urlresolvers import reverse
+
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.utils.utils import StatusDefinition
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import StatusDefinition
+from django.core.urlresolvers import reverse
+
 from .models import MockPayment
 
 

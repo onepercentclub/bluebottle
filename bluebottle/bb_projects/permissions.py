@@ -1,6 +1,5 @@
-from rest_framework import permissions
-
 from bluebottle.utils.model_dispatcher import get_project_model
+from rest_framework import permissions
 
 PROJECT_MODEL = get_project_model()
 

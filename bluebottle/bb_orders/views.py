@@ -1,14 +1,15 @@
 import logging
-from django.http import Http404
+
 from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
 from bluebottle.bb_orders.signals import order_requested
 from bluebottle.geo.models import Country
-from bluebottle.utils.utils import StatusDefinition
-from rest_framework import generics
-from bluebottle.utils.model_dispatcher import get_order_model, get_project_model
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.payments.services import PaymentService
+from bluebottle.utils.model_dispatcher import (get_order_model,
+                                               get_project_model)
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.utils import StatusDefinition
+from django.http import Http404
+from rest_framework import generics
 
 ORDER_MODEL = get_order_model()
 PROJECT_MODEL = get_project_model()

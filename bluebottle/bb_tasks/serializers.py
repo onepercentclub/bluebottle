@@ -1,13 +1,16 @@
-from rest_framework import serializers
-
-from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
+from bluebottle.bluebottle_drf2.serializers import (FileSerializer,
+                                                    PrimaryKeyGenericRelatedField,
+                                                    TaggableSerializerMixin,
+                                                    TagSerializer)
+from bluebottle.utils.model_dispatcher import (get_task_model,
+                                               get_task_skill_model,
+                                               get_taskfile_model,
+                                               get_taskmember_model)
+from bluebottle.utils.serializers import MetaField
 from bluebottle.wallposts.serializers import TextWallpostSerializer
-
-from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
-    get_task_skill_model
+from rest_framework import serializers
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()

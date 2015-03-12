@@ -1,4 +1,5 @@
 from rest_framework import generics
+
 from .models import Statistic
 from .serializers import StatisticSerializer
 
@@ -12,4 +13,3 @@ class StatisticDetail(generics.RetrieveAPIView):
     def get_object(self, queryset=None):
         stats = Statistic.objects.order_by('-creation_date').all()[0]
         return stats
-

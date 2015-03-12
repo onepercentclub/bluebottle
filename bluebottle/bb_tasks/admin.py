@@ -1,11 +1,13 @@
-from django.contrib.auth import get_user_model
+from bluebottle.utils.model_dispatcher import (get_task_model,
+                                               get_task_skill_model,
+                                               get_taskfile_model,
+                                               get_taskmember_model,
+                                               get_user_model)
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
-
-from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, \
-    get_taskfile_model, get_task_skill_model
 
 BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()

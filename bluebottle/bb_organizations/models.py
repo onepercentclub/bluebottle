@@ -1,17 +1,17 @@
-from django_iban.fields import IBANField, SWIFTBICField
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.db.models import options
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
-
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from djchoices import DjangoChoices, ChoiceItem
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
+from django_iban.fields import IBANField, SWIFTBICField
 from taggit.managers import TaggableManager
-from django.db.models import options
 
+from djchoices import ChoiceItem, DjangoChoices
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'manage_serializer')
 

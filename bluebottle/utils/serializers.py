@@ -1,22 +1,19 @@
-import sys
 import re
+import sys
+from HTMLParser import HTMLParser
 
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 from django.utils.importlib import import_module
 from django_tools.middlewares import ThreadLocal
-
 from rest_framework import serializers
 from rest_framework.serializers import get_component
 from taggit.managers import _TaggableManager
 
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-
-from .validators import validate_postal_code
 from .models import Address, Language
-
-from HTMLParser import HTMLParser
+from .validators import validate_postal_code
 
 
 class LanguageSerializer(serializers.ModelSerializer):

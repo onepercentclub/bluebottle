@@ -1,9 +1,9 @@
-from decimal import Decimal
 from datetime import timedelta
+from decimal import Decimal
+
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
-
 from django.utils import timezone
 
 

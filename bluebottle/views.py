@@ -1,12 +1,14 @@
 import logging
-logger = logging.getLogger(__name__)
-
-from django.template import RequestContext, Context, loader
-from django.http import HttpResponseServerError
-
-from django.views.generic import TemplateView
 
 from bluebottle.clients import properties
+from django.http import HttpResponseServerError
+from django.template import Context, RequestContext, loader
+from django.views.generic import TemplateView
+
+logger = logging.getLogger(__name__)
+
+
+
 
 def handler500(request, template_name='500.html'):
     """

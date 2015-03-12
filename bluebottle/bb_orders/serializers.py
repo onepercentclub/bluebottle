@@ -1,7 +1,6 @@
 from bluebottle.utils.model_dispatcher import get_order_model
-from rest_framework import serializers
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
-
+from rest_framework import serializers
 
 ORDER_MODEL = get_order_model()
 

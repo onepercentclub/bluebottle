@@ -1,24 +1,26 @@
 import json
-from bluebottle.payments.exception import PaymentException
 
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments.managers import PaymentManager
+from bluebottle.utils.utils import FSMTransition, StatusDefinition
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import options
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from django_extensions.db.fields.json import JSONField
-# from django_fsm import FSMField, transition
-from djchoices import DjangoChoices, ChoiceItem
-from polymorphic.polymorphic_model import PolymorphicModel
-from django.db.models import options
-from django.dispatch import receiver
-from django_fsm.signals import post_transition
 from django_fsm.db.fields import FSMField, transition
-from django.db.models.signals import pre_save, post_save
+from django_fsm.signals import post_transition
+from polymorphic.polymorphic_model import PolymorphicModel
 
-from bluebottle.utils.utils import FSMTransition, StatusDefinition
-from bluebottle.payments.managers import PaymentManager
+import signals
+# from django_fsm import FSMField, transition
+from djchoices import ChoiceItem, DjangoChoices
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
@@ -195,5 +197,3 @@ class Transaction(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
-
-import signals

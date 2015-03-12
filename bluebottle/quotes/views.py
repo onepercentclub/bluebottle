@@ -1,8 +1,9 @@
+from django.db.models import Q
+from django.utils.timezone import now
 from rest_framework import generics
+
 from .models import Quote
 from .serializers import QuoteSerializer
-from django.utils.timezone import now
-from django.db.models import Q
 
 
 # API views
@@ -19,4 +20,3 @@ class QuoteList(generics.ListAPIView):
         qs = qs.filter(publication_date__lte=now)
         qs = qs.filter(Q(publication_end_date__gte=now) | Q(publication_end_date__isnull=True))
         return qs
-

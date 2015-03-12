@@ -1,21 +1,25 @@
-from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.geo.serializers import CountrySerializer
-from rest_framework import serializers
-
-from bluebottle.bluebottle_drf2.serializers import (SorlImageField, SlugGenericRelatedField, PolymorphicSerializer, EuroField,
-                                              TagSerializer, ImageSerializer, TaggableSerializerMixin)
-from bluebottle.geo.models import Country
-from bluebottle.utils.serializers import MetaField
-from bluebottle.bluebottle_drf2.serializers import OEmbedField
-
+from bluebottle.bb_projects.serializers import \
+    ManageProjectSerializer as BaseManageProjectSerializer
+from bluebottle.bb_projects.serializers import \
+    ProjectPreviewSerializer as BaseProjectPreviewSerializer
+from bluebottle.bb_projects.serializers import \
+    ProjectSerializer as BaseProjectSerializer
 from bluebottle.bb_projects.serializers import ProjectThemeSerializer
+from bluebottle.bluebottle_drf2.serializers import (EuroField, ImageSerializer,
+                                                    OEmbedField,
+                                                    PolymorphicSerializer,
+                                                    SlugGenericRelatedField,
+                                                    SorlImageField,
+                                                    TaggableSerializerMixin,
+                                                    TagSerializer)
 from bluebottle.donations.models import Donation
-
+from bluebottle.geo.models import Country
+from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.bb_projects.serializers import (ProjectSerializer as BaseProjectSerializer,
-                                                ManageProjectSerializer as BaseManageProjectSerializer,
-                                                ProjectPreviewSerializer as BaseProjectPreviewSerializer)
+from bluebottle.utils.serializers import MetaField
+from rest_framework import serializers
 
 from bs4 import BeautifulSoup
 
@@ -117,4 +121,3 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('member', 'date_donated', 'amount',)
-

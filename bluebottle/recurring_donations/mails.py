@@ -1,11 +1,11 @@
 from babel.dates import format_date
 from babel.numbers import format_currency
-from django.template.loader import get_template
-from celery import task
-
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
+from celery import task
+from django.template.loader import get_template
+
 
 @task
 def mail_monthly_donation_processed_notification(monthly_order):
@@ -42,4 +42,3 @@ def mail_project_funded_monthly_donor_notification(receiver, project):
     msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
-

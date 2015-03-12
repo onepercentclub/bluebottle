@@ -1,5 +1,7 @@
 import csv
+
 from django.http import HttpResponse
+
 
 # Admin action for a generic "CSV Export"
 # Django snippets: http://djangosnippets.org/snippets/2369/

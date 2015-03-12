@@ -1,16 +1,18 @@
-from django.db import models
-from django.db.models.signals import post_save
-from django.contrib.contenttypes import generic
-from django.dispatch import receiver
-from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import ugettext as _
-from bluebottle.mail import send_mail
-from bluebottle.utils.model_dispatcher import get_user_model, get_fundraiser_model, get_donation_model
-from bluebottle.bb_projects.models import BaseProject
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
+from bluebottle.bb_projects.models import BaseProject
+from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.clients.utils import tenant_url
+from bluebottle.mail import send_mail
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_fundraiser_model,
+                                               get_user_model)
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils.translation import ugettext as _
 
 USER_MODEL = get_user_model()
 

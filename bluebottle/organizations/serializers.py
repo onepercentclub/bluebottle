@@ -1,12 +1,12 @@
-from rest_framework import serializers
-
+from bluebottle.bb_organizations.serializers import \
+    ManageOrganizationSerializer as BaseManageOrganizationSerializer
+from bluebottle.bb_organizations.serializers import \
+    OrganizationSerializer as BaseOrganizationSerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.utils.serializers import AddressSerializer, URLField
+from rest_framework import serializers
 
 from .models import Organization, OrganizationDocument
-
-from bluebottle.bb_organizations.serializers import (OrganizationSerializer as BaseOrganizationSerializer,
-                                                     ManageOrganizationSerializer as BaseManageOrganizationSerializer)
 
 
 class OrganizationSerializer(BaseOrganizationSerializer):
@@ -32,4 +32,3 @@ class ManageOrganizationSerializer(BaseManageOrganizationSerializer):
     class Meta(BaseManageOrganizationSerializer):
         model = BaseManageOrganizationSerializer.Meta.model
         fields = BaseManageOrganizationSerializer.Meta.fields
-        

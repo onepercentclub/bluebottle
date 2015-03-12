@@ -1,5 +1,5 @@
-from django.contrib.sessions import middleware
 from django.conf import settings
+from django.contrib.sessions import middleware
 from django.utils.importlib import import_module
 
 

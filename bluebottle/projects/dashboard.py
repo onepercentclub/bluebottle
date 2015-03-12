@@ -1,10 +1,8 @@
+from admin_tools.dashboard.modules import DashboardModule
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.projects.models import Project
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
-
-
-from admin_tools.dashboard.modules import DashboardModule
-from bluebottle.projects.models import Project
 
 
 class RecentProjects(DashboardModule):
@@ -80,4 +78,3 @@ class EndedProjects(DashboardModule):
         if not len(self.children):
             self.pre_content = _('No recently funded projects.')
         self._initialized = True
-

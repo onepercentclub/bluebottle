@@ -1,12 +1,12 @@
+from bluebottle.bluebottle_drf2.views import (ListCreateAPIView,
+                                              RetrieveUpdateDeleteAPIView)
+from bluebottle.utils.model_dispatcher import (get_fundraiser_model,
+                                               get_project_model)
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from django.db.models.aggregates import Max
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
-
-from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView, ListCreateAPIView
-from rest_framework import permissions, exceptions
-
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
+from rest_framework import exceptions, permissions
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
@@ -59,5 +59,3 @@ class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-

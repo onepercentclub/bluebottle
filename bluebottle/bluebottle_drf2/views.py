@@ -1,7 +1,5 @@
-from rest_framework import generics
 from django.utils import timezone
-from rest_framework import response
-from rest_framework import status
+from rest_framework import generics, response, status
 
 
 class SoftDeleteModelMixin(object):
@@ -48,5 +46,3 @@ class ListAPIView(NonDeletedModelMixin, generics.ListAPIView):
 
 class ListCreateAPIView(NonDeletedModelMixin, generics.ListCreateAPIView):
     pass
-
-

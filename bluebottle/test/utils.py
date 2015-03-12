@@ -1,27 +1,23 @@
+import base64
+import json
+import os
 import time
 import urlparse
-import os
-import json
+
 import requests
-import base64
-
-from bunch import bunchify
-
-from django.db import connection
+from bluebottle.test.factory_models.utils import LanguageFactory
+from bluebottle.utils.models import Language
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.test import LiveServerTestCase
+from django.db import connection
+from django.test import LiveServerTestCase, TestCase
 from django.test.utils import override_settings
-from django.test import TestCase
-
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
-
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 
-from bluebottle.test.factory_models.utils import LanguageFactory
-from bluebottle.utils.models import Language
+from bunch import bunchify
 
 
 def css_dict(style):

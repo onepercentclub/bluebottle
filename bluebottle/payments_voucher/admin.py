@@ -1,9 +1,10 @@
+from bluebottle.payments.models import Payment
 from bluebottle.utils.model_dispatcher import get_donation_model
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-from .models import Voucher, VoucherPayment
-from bluebottle.payments.models import Payment
 from polymorphic.admin import PolymorphicChildModelAdmin
+
+from .models import Voucher, VoucherPayment
 
 DONATION_MODEL = get_donation_model()
 
@@ -51,4 +52,3 @@ class VoucherAdmin(admin.ModelAdmin):
     payment_link.allow_tags = True
 
 admin.site.register(Voucher, VoucherAdmin)
-

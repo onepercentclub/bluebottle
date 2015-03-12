@@ -1,16 +1,15 @@
+import django.db.models.options as options
 from bluebottle.utils.model_dispatcher import get_taskmember_model
+from bluebottle.utils.utils import GetTweetMixin
 from django.conf import settings
 from django.db import models
-import django.db.models.options as options
-
 from django.utils.translation import ugettext as _
-
-from django_extensions.db.fields import (
-    ModificationDateTimeField, CreationDateTimeField)
-from djchoices.choices import DjangoChoices, ChoiceItem
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from taggit.managers import TaggableManager
-from bluebottle.utils.utils import GetTweetMixin
 
+from djchoices.choices import ChoiceItem, DjangoChoices
+from taskwallmails import *
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
@@ -148,6 +147,3 @@ class BaseTask(models.Model, GetTweetMixin):
     def set_in_progress(self):
         self.status = self.TaskStatuses.in_progress
         self.save()
-
-
-from taskwallmails import *

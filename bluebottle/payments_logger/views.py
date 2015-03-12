@@ -1,9 +1,8 @@
-import re
 import logging
-from rest_framework import generics
-from rest_framework import response
-from rest_framework import status
-from bluebottle.payments_logger.models import PaymentLogLevels, PaymentLogEntry
+import re
+
+from bluebottle.payments_logger.models import PaymentLogEntry, PaymentLogLevels
+from rest_framework import generics, response, status
 
 logger = logging.getLogger(__name__)
 

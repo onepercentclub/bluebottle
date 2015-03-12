@@ -1,6 +1,6 @@
+from bluebottle.utils.model_dispatcher import (get_task_model,
+                                               get_taskmember_model)
 from rest_framework import permissions
-
-from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
@@ -75,4 +75,3 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
             return True
 
         return False
-

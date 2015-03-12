@@ -1,11 +1,14 @@
+from decimal import Decimal
+
+from bluebottle.payments.models import Payment
 from bluebottle.utils.model_dispatcher import get_order_model
 from django.conf import settings
 from django.db import models
-from decimal import Decimal
-from bluebottle.payments.models import Payment
-from djchoices.choices import DjangoChoices, ChoiceItem
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
+
+from djchoices.choices import ChoiceItem, DjangoChoices
 
 ORDER_MODEL = get_order_model()
 
@@ -70,4 +73,3 @@ class Voucher(models.Model):
         if self.code:
             code = self.code
         return code
-

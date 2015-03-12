@@ -1,10 +1,11 @@
 import re
-from django.conf import settings
-from django.template import loader
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import construct_from_header
-from bluebottle.clients.utils import tenant_url, tenant_name
+from bluebottle.clients.utils import tenant_name, tenant_url
+from django.conf import settings
+from django.template import loader
+
 
 def send_welcome_mail(user=None):
     c = ClientContext({
@@ -37,4 +38,3 @@ def valid_email(email=None):
     if p.match(email):
         return True
     return False
-    

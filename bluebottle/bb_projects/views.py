@@ -1,14 +1,16 @@
-from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_project_phaselog_model)
+from bluebottle.utils.serializers import (DefaultSerializerMixin,
+                                          ManageSerializerMixin,
+                                          PreviewSerializerMixin)
 from django.db.models.query_utils import Q
-
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
-from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
+from .models import ProjectPhase, ProjectTheme
 from .permissions import IsProjectOwner
-
+from .serializers import (ProjectPhaseLogSerializer, ProjectPhaseSerializer,
+                          ProjectThemeSerializer)
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()

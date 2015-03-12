@@ -1,8 +1,8 @@
-from django.utils.translation import ugettext_lazy as _
-
 from bluebottle.bb_tasks.models import BaseTask
-from bluebottle.wallposts.notifiers import WallpostObserver, ReactionObserver, ObserversContainer
 from bluebottle.mail import send_mail
+from bluebottle.wallposts.notifiers import (ObserversContainer,
+                                            ReactionObserver, WallpostObserver)
+from django.utils.translation import ugettext_lazy as _
 
 
 class TaskWallObserver(WallpostObserver):

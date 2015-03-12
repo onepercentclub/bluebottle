@@ -1,14 +1,15 @@
-from django.utils.translation import ugettext_lazy as _
-from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.authentication import get_authorization_header
-from rest_framework import parsers, renderers
-from rest_framework import status
-from social.apps.django_app.utils import strategy
 #from social_auth.decorators import
 from datetime import datetime
+
+from django.utils.translation import ugettext_lazy as _
+from rest_framework import parsers, renderers, status
+from rest_framework.authentication import get_authorization_header
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from social.apps.django_app.utils import strategy
+
 
 class GetAuthToken(APIView):
     throttle_classes = ()

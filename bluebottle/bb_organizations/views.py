@@ -1,19 +1,21 @@
 import os
 
-from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin
-
+from bluebottle.utils.model_dispatcher import (get_organization_model,
+                                               get_organizationdocument_model,
+                                               get_organizationmember_model)
+from bluebottle.utils.serializers import (DefaultSerializerMixin,
+                                          ManageSerializerMixin)
+from bluebottle.utils.utils import get_client_ip
 from django.http import HttpResponseForbidden
 from django.views.generic.detail import DetailView
-
-from filetransfers.api import serve_file
 from rest_framework import generics
 
-from bluebottle.utils.utils import get_client_ip
-
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationdocument_model, get_organizationmember_model
+from filetransfers.api import serve_file
 
 from .permissions import IsOrganizationMember
-from .serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
+from .serializers import (ManageOrganizationSerializer,
+                          OrganizationDocumentSerializer,
+                          OrganizationSerializer)
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()

@@ -1,18 +1,18 @@
+from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
+from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
+from bluebottle.utils.model_dispatcher import (get_task_model,
+                                               get_task_skill_model,
+                                               get_taskfile_model,
+                                               get_taskmember_model)
+from bluebottle.utils.serializers import DefaultSerializerMixin
 from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
-from bluebottle.utils.serializers import DefaultSerializerMixin
-from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
-
 from .permissions import IsMemberOrAuthorOrReadOnly
-from .serializers import (
-    BaseTaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
-    MyTaskMemberSerializer, SkillSerializer, MyTasksSerializer)
-
-from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
-    get_task_skill_model
+from .serializers import (BaseTaskMemberSerializer, MyTaskMemberSerializer,
+                          MyTasksSerializer, SkillSerializer,
+                          TaskFileSerializer, TaskPreviewSerializer)
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()

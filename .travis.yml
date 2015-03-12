@@ -16,7 +16,7 @@ install:
 - pip install flake8
 - createdb bluebottle_test
 - echo `psql --version`
-- flake8 bluebottle
+- flake8 bluebottle --exit-zero
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py

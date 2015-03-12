@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
+
 from .models import Quote
 
 

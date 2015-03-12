@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from .models import Wallpost, MediaWallpost
+from .models import MediaWallpost, Wallpost
 
 
 # TODO: Add write permission for 1%CREW / Assistants.

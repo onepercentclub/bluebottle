@@ -1,18 +1,19 @@
-from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
+from bluebottle.bb_organizations.models import (BaseOrganization,
+                                                BaseOrganizationDocument,
+                                                BaseOrganizationMember)
+from bluebottle.utils.models import Address
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.utils.translation import ugettext as _
 from django.template.defaultfilters import slugify
-
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django.utils.translation import ugettext as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from django_iban.fields import IBANField, SWIFTBICField
-from djchoices import DjangoChoices, ChoiceItem
 
-from bluebottle.utils.models import Address
-from django.core.files.storage import FileSystemStorage
-
+from djchoices import ChoiceItem, DjangoChoices
 
 GROUP_PERMS = {
     'Staff': {

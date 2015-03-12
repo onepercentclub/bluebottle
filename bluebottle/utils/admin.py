@@ -1,9 +1,11 @@
+import csv
+
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
-from .models import Language
-import csv
 from django.http import HttpResponse
+
+from .models import Language
 
 
 class LanguageAdmin(admin.ModelAdmin):

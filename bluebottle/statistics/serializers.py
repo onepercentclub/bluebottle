@@ -1,6 +1,7 @@
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import EuroField
+from rest_framework import serializers
+
 from .models import Statistic
 
 

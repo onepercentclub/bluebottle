@@ -1,8 +1,10 @@
-from django.contrib import admin
-from bluebottle.payments_logger.admin import PaymentLogEntryInline
-from django.core.urlresolvers import reverse
 from bluebottle.payments.models import Payment
-from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebitPayment, DocdataTransaction
+from bluebottle.payments_docdata.models import (DocdataDirectdebitPayment,
+                                                DocdataPayment,
+                                                DocdataTransaction)
+from bluebottle.payments_logger.admin import PaymentLogEntryInline
+from django.contrib import admin
+from django.core.urlresolvers import reverse
 from polymorphic.admin import PolymorphicChildModelAdmin
 
 

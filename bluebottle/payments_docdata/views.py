@@ -1,18 +1,19 @@
+import logging
+
+from bluebottle.payments.models import OrderPayment
+from bluebottle.payments.services import PaymentService
+from bluebottle.payments_docdata.models import (DocdataPayment,
+                                                DocdataTransaction)
+from bluebottle.payments_logger.adapters import PaymentLogAdapter
+from bluebottle.payments_logger.models import PaymentLogEntry, PaymentLogLevels
+from bluebottle.payments_logger.views import \
+    GenericStatusChangedNotificationView
 from django.http import HttpResponse
 from django.views.generic import View
-from rest_framework import status
-from rest_framework import response
-
-from bluebottle.payments.services import PaymentService
-from bluebottle.payments_docdata.models import DocdataPayment, DocdataTransaction
-from bluebottle.payments_logger.views import GenericStatusChangedNotificationView
-from bluebottle.payments_logger.models import PaymentLogLevels, PaymentLogEntry
-from bluebottle.payments_logger.adapters import PaymentLogAdapter
-from bluebottle.payments.models import OrderPayment
+from rest_framework import response, status
 
 from .models import DocdataPayment
 
-import logging
 logger = logging.getLogger(__name__)
 
 

@@ -1,15 +1,11 @@
-from django.contrib import messages, admin
+from django.conf.urls import patterns, url
+from django.contrib import admin, messages
 from django.contrib.contenttypes.models import ContentType
-
 from django.db import transaction
-
-from django.conf.urls import url, patterns
-from django.shortcuts import render
-
-from django.utils.translation import ugettext_lazy as _
-from django.utils.encoding import force_text
-
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.utils.encoding import force_text
+from django.utils.translation import ugettext_lazy as _
 
 from .utils.admin import ExtendibleModelAdminMixin
 

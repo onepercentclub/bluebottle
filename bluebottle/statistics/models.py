@@ -1,13 +1,11 @@
 import itertools
 
+from bluebottle.utils.utils import StatusDefinition
 from django.core.cache import cache
-from django.db import models
+from django.db import connection, models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField
-from django.db import connection
-
-from bluebottle.utils.utils import StatusDefinition
 
 
 class Statistic(models.Model):
@@ -123,4 +121,3 @@ class Statistic(models.Model):
 
     def __unicode__(self):
         return 'Site Statistics ' + str(self.creation_date)
-

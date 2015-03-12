@@ -1,12 +1,11 @@
-from django.http import Http404, HttpResponseRedirect, HttpResponse
-from django.views.generic import TemplateView
-from django.shortcuts import render_to_response
-from django.template import RequestContext
-from django.views.generic import View
-from django.core.urlresolvers import reverse
-from django.contrib.sites.models import get_current_site
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
+from django.contrib.sites.models import get_current_site
+from django.core.urlresolvers import reverse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.views.generic import TemplateView, View
 
 
 class PaymentMock(TemplateView):
@@ -82,7 +81,3 @@ class PaymentStatusListener(View):
         service.adapter.set_order_payment_new_status(status)
 
         return HttpResponse('success')
-
-
-
-

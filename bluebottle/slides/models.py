@@ -3,11 +3,11 @@ from django.db import models
 from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from djchoices import DjangoChoices, ChoiceItem
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from sorl.thumbnail import ImageField
 
+from djchoices import ChoiceItem, DjangoChoices
 
 GROUP_PERMS = {
     'Staff': {

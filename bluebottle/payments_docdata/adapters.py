@@ -1,21 +1,23 @@
 import logging
-from bluebottle.payments_logger.models import PaymentLogEntry
-import gateway
 
-from django.utils.http import urlencode
+from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_name
+from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.payments_docdata.models import (DocdataDirectdebitPayment,
+                                                DocdataTransaction)
+from bluebottle.payments_logger.models import PaymentLogEntry
+from bluebottle.utils.utils import (StatusDefinition, get_client_ip,
+                                    get_country_code_by_ip, get_current_host)
 from django.conf import settings
+from django.utils.http import urlencode
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import get_language
 
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
-from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
-from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
-from .models import DocdataPayment
-from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_name
+import gateway
 
+from .models import DocdataPayment
 
 logger = logging.getLogger(__name__)
 

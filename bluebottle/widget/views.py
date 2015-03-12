@@ -1,12 +1,11 @@
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.model_dispatcher import get_project_model
-from django.template.loader import render_to_string
-from django.http import HttpResponse
-from django.views.generic import View
-from django.utils import timezone
-from django.utils import translation
 import json
 
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.utils.model_dispatcher import get_project_model
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.utils import timezone, translation
+from django.views.generic import View
 
 PROJECT_MODEL = get_project_model()
 
@@ -64,4 +63,3 @@ class WidgetView(View):
         translation.activate(cur_language)
         response_data = "%s ( {'html': %s } )" % (callback, json.dumps(html))
         return HttpResponse(response_data, content_type="text/javascript")
-

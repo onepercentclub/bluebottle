@@ -1,25 +1,33 @@
 import csv
-import decimal
-
 import datetime
+import decimal
 from decimal import Decimal
+
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_payouts.utils import money_from_cents
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_project_model,
+                                               get_project_payout_model)
 from bluebottle.utils.utils import StatusDefinition
-
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from djchoices.choices import DjangoChoices, ChoiceItem
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 
+from djchoices.choices import ChoiceItem, DjangoChoices
+
+# Connect signals after defining models
+# Ref:  http://stackoverflow.com/a/9851875
+# Note: for newer Django, put this in module initialization code
+# https://docs.djangoproject.com/en/dev/topics/signals/#django.dispatch.receiver
+from .signals import create_payout_finished_project
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
-from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
@@ -606,11 +614,5 @@ class OrganizationPayoutLog(PayoutLogBase):
     payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL, related_name='payout_logs')
 
 
-# Connect signals after defining models
-# Ref:  http://stackoverflow.com/a/9851875
-# Note: for newer Django, put this in module initialization code
-# https://docs.djangoproject.com/en/dev/topics/signals/#django.dispatch.receiver
-from .signals import create_payout_finished_project
 
 post_save.connect(create_payout_finished_project, weak=False, sender=PROJECT_MODEL)
-

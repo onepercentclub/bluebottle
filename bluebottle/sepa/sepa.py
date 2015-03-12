@@ -6,7 +6,6 @@
 import decimal
 
 from django.utils.timezone import datetime
-
 from lxml.etree import Element, SubElement, tostring
 
 

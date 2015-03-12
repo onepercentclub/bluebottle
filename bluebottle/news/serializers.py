@@ -1,11 +1,9 @@
-from fluent_contents.rendering import render_placeholder
-from django.utils.safestring import mark_safe
-
-from rest_framework import serializers
-
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.utils.serializers import MetaField
+from django.utils.safestring import mark_safe
+from fluent_contents.rendering import render_placeholder
+from rest_framework import serializers
 
 from .models import NewsItem
 
@@ -40,4 +38,3 @@ class NewsItemPreviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsItem
         fields = ('id', 'title', 'publication_date')
-

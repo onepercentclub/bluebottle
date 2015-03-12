@@ -3,16 +3,19 @@ The test cases in bluebottle_salesforce are intended to be used for integration
 with Django ORM and Salesforce for Onepercentclub.
 """
 import logging
-from bluebottle.utils.tests.test_unit import UserTestsMixin
-import requests
 from datetime import datetime
+
+import requests
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.tests.test_unit import UserTestsMixin
 from django.conf import settings
 from django.core.management import call_command
-from salesforce import auth
-from requests.exceptions import ConnectionError
 from django.utils import unittest
-from .models import SalesforceOrganization, SalesforceContact, SalesforceDonation, SalesforceProject
+from requests.exceptions import ConnectionError
+from salesforce import auth
+
+from .models import (SalesforceContact, SalesforceDonation,
+                     SalesforceOrganization, SalesforceProject)
 
 logger = logging.getLogger(__name__)
 

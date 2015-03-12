@@ -1,5 +1,6 @@
-from apps.donations.models import MonthlyBatch
 from django.utils.timezone import now, timedelta
+
+from apps.donations.models import MonthlyBatch
 
 
 class MonthlyBatchService(object):

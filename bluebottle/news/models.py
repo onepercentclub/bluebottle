@@ -1,19 +1,20 @@
+from bluebottle.utils.serializers import MLStripper
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
-from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
-
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from djchoices import DjangoChoices, ChoiceItem
+from django.utils.translation import ugettext_lazy as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from fluent_contents.models import PlaceholderField
 from fluent_contents.rendering import render_placeholder
 from sorl.thumbnail import ImageField
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+from taggit_autocomplete_modified.managers import \
+    TaggableManagerAutocomplete as TaggableManager
 
-from bluebottle.utils.serializers import MLStripper
+from djchoices import ChoiceItem, DjangoChoices
+
 from .managers import NewsItemManager
-
 
 GROUP_PERMS = {
     'Staff': {
@@ -58,4 +59,3 @@ class NewsItem(models.Model):
         s = MLStripper()
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
-

@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from .validators import Alpha2CodeValidator, Alpha3CodeValidator, NumericCodeValidator
+
+from .validators import (Alpha2CodeValidator, Alpha3CodeValidator,
+                         NumericCodeValidator)
 
 
 class GeoBaseModel(models.Model):

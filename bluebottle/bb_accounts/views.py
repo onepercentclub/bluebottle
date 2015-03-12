@@ -1,33 +1,30 @@
-from django.contrib.auth import login, get_user_model
-from django.contrib.auth.forms import SetPasswordForm
-from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
-from django import forms
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.sites.models import get_current_site
-from django.conf import settings
-from django.template import loader
-from django.contrib.auth.tokens import default_token_generator
-from django.http import Http404
-from django.utils.http import base36_to_int, int_to_base36
-from django.utils.translation import ugettext_lazy as _
-from django.utils.importlib import import_module
-
+from bluebottle.bluebottle_drf2.permissions import (IsCurrentUser,
+                                                    IsCurrentUserOrReadOnly)
+from bluebottle.clients import properties
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import construct_from_header
-
-from rest_framework import status, views, response, generics, viewsets
-
-from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
-from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.clients import properties
-
+from bluebottle.utils.serializers import DefaultSerializerMixin
+from django import forms
+from django.conf import settings
+from django.contrib.auth import get_user_model, login
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.models import get_current_site
+from django.http import Http404
+from django.template import loader
+from django.utils.http import base36_to_int, int_to_base36
+from django.utils.importlib import import_module
+from django.utils.translation import ugettext_lazy as _
+from rest_framework import generics, response, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 #this belongs now to onepercent should be here in bluebottle
-from .serializers import (
-    CurrentUserSerializer, UserCreateSerializer,
-    PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
+from .serializers import (BB_USER_MODEL, CurrentUserSerializer,
+                          PasswordResetSerializer, PasswordSetSerializer,
+                          UserCreateSerializer)
 
 
 class UserProfileDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):

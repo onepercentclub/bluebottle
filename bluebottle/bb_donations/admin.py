@@ -1,10 +1,13 @@
 from bluebottle.bb_payouts.admin_utils import link_to
-from bluebottle.utils.admin import export_as_csv_action, TotalAmountAdminChangeList
+from bluebottle.utils.admin import (TotalAmountAdminChangeList,
+                                    export_as_csv_action)
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_model_mapping,
+                                               get_order_model)
 from bluebottle.utils.utils import StatusDefinition
+from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
 from django.contrib.admin.templatetags.admin_static import static
-from bluebottle.utils.model_dispatcher import get_donation_model, get_model_mapping, get_order_model
-from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Sum
@@ -172,4 +175,3 @@ class DonationInline(admin.TabularInline):
         return "<a href='{0}'>Donation: {1}</a>".format(str(url), obj.id)
 
     donation_link.allow_tags = True
-

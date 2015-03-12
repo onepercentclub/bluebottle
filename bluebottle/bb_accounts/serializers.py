@@ -1,15 +1,14 @@
 from bluebottle.bb_accounts.models import UserAddress
-from django.conf import settings
+from bluebottle.bluebottle_drf2.serializers import (ImageSerializer,
+                                                    SorlImageField,
+                                                    TaggableSerializerMixin,
+                                                    TagSerializer)
+from bluebottle.utils.serializers import URLField
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
-
-from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
-from bluebottle.utils.serializers import URLField
-
 
 BB_USER_MODEL = get_user_model()
 

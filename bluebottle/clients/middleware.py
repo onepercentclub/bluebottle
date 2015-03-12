@@ -1,7 +1,7 @@
 from threading import local
 
-from django.db import connection
 from django.conf import settings
+from django.db import connection
 from django.utils._os import safe_join
 
 

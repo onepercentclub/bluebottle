@@ -1,14 +1,17 @@
-from rest_framework import serializers
-from django.utils.translation import ugettext as _
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
+from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
+from bluebottle.bluebottle_drf2.serializers import (ImageSerializer,
+                                                    SorlImageField,
+                                                    TaggableSerializerMixin,
+                                                    TagSerializer)
 from bluebottle.geo.models import Country
-
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
-from bluebottle.utils.serializers import MetaField
-from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_project_phaselog_model)
+from bluebottle.utils.serializers import MetaField
+from django.utils.translation import ugettext as _
+from rest_framework import serializers
+
 from bs4 import BeautifulSoup
 
 PROJECT_MODEL = get_project_model()

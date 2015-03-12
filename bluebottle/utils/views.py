@@ -1,14 +1,13 @@
-from django.conf import settings
 import os
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
 from django.views.generic.base import View
+from rest_framework import generics, response, views
+from taggit.models import Tag
 
 from filetransfers.api import serve_file
-from rest_framework import generics
-from rest_framework import views, response
-from taggit.models import Tag
 
 from .serializers import LanguageSerializer
 

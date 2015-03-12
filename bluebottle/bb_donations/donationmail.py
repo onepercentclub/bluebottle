@@ -1,7 +1,6 @@
-from django.utils.translation import ugettext as _
-from bluebottle.utils.email_backend import send_mail
-
 from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.email_backend import send_mail
+from django.utils.translation import ugettext as _
 
 
 def successful_donation_fundraiser_mail(instance):
@@ -69,4 +68,3 @@ def new_oneoff_donation(instance):
     #         to=donation.order.user,
     #         link=project_url
     #     )
-     

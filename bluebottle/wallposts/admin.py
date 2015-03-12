@@ -1,15 +1,13 @@
+from bluebottle.utils.utils import set_author_editor_ip
+from bluebottle.wallposts.models import SystemWallpost
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
-
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from polymorphic.admin import (PolymorphicChildModelAdmin,
+                               PolymorphicParentModelAdmin)
 from sorl.thumbnail.admin.compat import AdminImageMixin
 
-
-from bluebottle.utils.utils import set_author_editor_ip
-
-
-from bluebottle.wallposts.models import SystemWallpost
-from .models import Wallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
+from .models import (MediaWallpost, MediaWallpostPhoto, Reaction, TextWallpost,
+                     Wallpost)
 
 
 class MediaWallpostPhotoInline(AdminImageMixin, admin.StackedInline):

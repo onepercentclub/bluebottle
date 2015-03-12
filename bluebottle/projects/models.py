@@ -1,21 +1,24 @@
 import datetime
 from decimal import Decimal
+
+from bluebottle.bb_projects.models import (BaseProject, BaseProjectPhaseLog,
+                                           ProjectPhase)
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.dispatch import receiver
-from django.utils.http import urlquote
-from django.utils.translation import ugettext as _
-from django.conf import settings
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from sorl.thumbnail import ImageField
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from django.utils.http import urlquote
+from django.utils.translation import ugettext as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
+from sorl.thumbnail import ImageField
+
 from .mails import mail_project_funded_internal
 from .signals import project_funded
-
 
 GROUP_PERMS = {
     'Staff': {

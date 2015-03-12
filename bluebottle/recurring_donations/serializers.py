@@ -1,4 +1,5 @@
-from bluebottle.recurring_donations.models import MonthlyDonor, MonthlyDonorProject
+from bluebottle.recurring_donations.models import (MonthlyDonor,
+                                                   MonthlyDonorProject)
 from rest_framework import serializers
 
 

@@ -17,4 +17,3 @@ class TermsAgreementSerializer(serializers.ModelSerializer):
     class Meta:
         model = TermsAgreement
         fields = ('id', 'terms', 'user', 'created')
-

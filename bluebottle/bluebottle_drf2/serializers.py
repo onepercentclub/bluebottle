@@ -1,11 +1,11 @@
 import decimal
-import logging
-import sys
 import json
-from os.path import isfile
+import logging
 import os
 import re
+import sys
 import types
+from os.path import isfile
 from urllib2 import URLError
 
 from django.conf import settings
@@ -14,15 +14,13 @@ from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
-from django.utils.html import strip_tags, urlize
 from django.utils.encoding import smart_str
-
+from django.utils.html import strip_tags, urlize
 from micawber.contrib.mcdjango import providers
 from micawber.exceptions import ProviderException
-from micawber.parsers import standalone_url_re, full_handler
+from micawber.parsers import full_handler, standalone_url_re
 from rest_framework import serializers
 from sorl.thumbnail.shortcuts import get_thumbnail
-
 
 logger = logging.getLogger(__name__)
 

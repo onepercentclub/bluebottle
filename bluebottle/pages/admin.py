@@ -3,11 +3,10 @@ from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.shortcuts import render
+from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.utils.safestring import mark_safe
-
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 

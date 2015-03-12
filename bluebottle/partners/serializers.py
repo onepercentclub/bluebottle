@@ -1,6 +1,7 @@
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.projects.models import PartnerOrganization
-from bluebottle.projects.serializers import ProjectSerializer, ProjectPreviewSerializer
+from bluebottle.projects.serializers import (ProjectPreviewSerializer,
+                                             ProjectSerializer)
 from rest_framework import serializers
 
 
@@ -14,4 +15,3 @@ class PartnerOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = ('id', 'name', 'projects', 'description', 'image')
-

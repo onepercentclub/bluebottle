@@ -1,5 +1,6 @@
-from django.template import Context
 from bluebottle.clients import properties
+from django.template import Context
+
 
 class ClientContext(Context):
     """

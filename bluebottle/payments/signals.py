@@ -1,11 +1,9 @@
-from django.db.models.signals import post_save
-from django.dispatch import Signal
-from django_fsm.signals import post_transition
-from django.dispatch import receiver
-
-from .models import Payment, OrderPayment
 from bluebottle.payments.models import Payment
+from django.db.models.signals import post_save
+from django.dispatch import Signal, receiver
+from django_fsm.signals import post_transition
 
+from .models import OrderPayment, Payment
 
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
 
@@ -95,4 +93,3 @@ def default_status_check(sender, instance, **kwargs):
                 'target': instance.status
             }
             post_transition.send(**signal_kwargs)
-

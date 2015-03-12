@@ -1,22 +1,20 @@
+import os
+
+from bluebottle.organizations.models import (Organization,
+                                             OrganizationDocument,
+                                             OrganizationMember)
+from bluebottle.organizations.permissions import IsOrganizationMember
+from bluebottle.organizations.serializers import (ManageOrganizationSerializer,
+                                                  OrganizationDocumentSerializer,
+                                                  OrganizationSerializer)
+from bluebottle.utils.utils import get_client_ip
 from django.http import HttpResponseForbidden
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views.generic.detail import DetailView
-
-
-from bluebottle.organizations.models import Organization, OrganizationMember, OrganizationDocument
-from bluebottle.organizations.permissions import IsOrganizationMember
-from bluebottle.organizations.serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
-
-
-from filetransfers.api import serve_file
 from rest_framework import generics
 
-
-from bluebottle.utils.utils import get_client_ip
-
-
-import os
+from filetransfers.api import serve_file
 
 
 class OrganizationList(generics.ListAPIView):

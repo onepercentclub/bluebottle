@@ -1,11 +1,10 @@
+from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from bluebottle.bluebottle_drf2.serializers import (EuroField, ImageSerializer,
+                                                    OEmbedField)
+from bluebottle.utils.model_dispatcher import get_fundraiser_model
+from bluebottle.utils.serializers import MetaField
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
-
-from bluebottle.utils.model_dispatcher import get_fundraiser_model
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.bluebottle_drf2.serializers import EuroField, ImageSerializer, OEmbedField
-from bluebottle.utils.serializers import MetaField
-
 
 FUNDRAISER_MODEL = get_fundraiser_model()
 

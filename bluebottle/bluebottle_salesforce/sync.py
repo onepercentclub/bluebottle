@@ -1,22 +1,30 @@
 import logging
-from bluebottle.recurring_donations.models import MonthlyDonor
-from bluebottle.payments.models import OrderPayment
 import re
-from django.utils import timezone
-from registration.models import RegistrationProfile
-from apps.cowry_docdata.models import payment_method_mapping
-from bluebottle.projects.models import ProjectBudgetLine
-from apps.organizations.models import Organization, OrganizationMember
-from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.donations.models import Donation
-from apps.vouchers.models import Voucher, VoucherStatuses
-from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.projects.models import Project
-from bluebottle.members.models import Member
 
-from apps.bluebottle_salesforce.models import SalesforceOrganization, SalesforceContact, SalesforceProject, \
-    SalesforceDonation, SalesforceProjectBudget, SalesforceTask, SalesforceTaskMembers, SalesforceVoucher, \
-    SalesforceLogItem, SalesforceFundraiser, SalesforceOrganizationMember
+from bluebottle.donations.models import Donation
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.models import Member
+from bluebottle.payments.models import OrderPayment
+from bluebottle.projects.models import Project, ProjectBudgetLine
+from bluebottle.recurring_donations.models import MonthlyDonor
+from bluebottle.tasks.models import Task, TaskMember
+from django.utils import timezone
+
+from apps.bluebottle_salesforce.models import (SalesforceContact,
+                                               SalesforceDonation,
+                                               SalesforceFundraiser,
+                                               SalesforceLogItem,
+                                               SalesforceOrganization,
+                                               SalesforceOrganizationMember,
+                                               SalesforceProject,
+                                               SalesforceProjectBudget,
+                                               SalesforceTask,
+                                               SalesforceTaskMembers,
+                                               SalesforceVoucher)
+from apps.cowry_docdata.models import payment_method_mapping
+from apps.organizations.models import Organization, OrganizationMember
+from apps.vouchers.models import Voucher, VoucherStatuses
+from registration.models import RegistrationProfile
 
 logger = logging.getLogger('bluebottle.salesforce')
 re_email = re.compile("^[A-Z0-9._%+-/!#$%&'*=?^_`{|}~]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$")

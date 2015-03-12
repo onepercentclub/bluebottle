@@ -1,8 +1,10 @@
 # from apps.bluebottle_salesforce.models import ProjectCountry
 from django.db import models
-from salesforce.models import SalesforceModel
-from djchoices import DjangoChoices, ChoiceItem
 from django.utils.translation import ugettext as _
+from salesforce.models import SalesforceModel
+
+from djchoices import ChoiceItem, DjangoChoices
+
 
 # TODO: remove the DjangoChoices or add it if needed to a Helper file.
 

@@ -1,5 +1,6 @@
 from bluebottle.clients.utils import tenant_url
 
+
 class WallpostObserver:
 
     def __init__(self, instance):

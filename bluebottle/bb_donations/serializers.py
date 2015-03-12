@@ -1,10 +1,10 @@
 # coding=utf-8
+from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from bluebottle.bb_projects.serializers import \
+    ProjectPreviewSerializer as BaseProjectPreviewSerializer
+from bluebottle.utils.model_dispatcher import get_donation_model
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from rest_framework import serializers
-
-from bluebottle.utils.model_dispatcher import get_donation_model
-from bluebottle.bb_projects.serializers import ProjectPreviewSerializer as BaseProjectPreviewSerializer
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 
 DONATION_MODEL = get_donation_model()
 

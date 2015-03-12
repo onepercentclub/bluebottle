@@ -225,10 +225,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         # Get the language that the user marked as his / her primary language
         # or fallback on the default LANGUAGE_CODE in settings
         
-        user_language = self.order_payment.order.user.primary_language
-        
-        if user_language:
-            client_language = user_language
+        if self.order_payment.order.user and self.order_payment.order.user.primary_language:
+            client_language = self.order_payment.order.user.primary_language
         else:
             client_language = properties.LANGUAGE_CODE
 

@@ -225,11 +225,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         # Get the language that the user marked as his / her primary language
         # or fallback on the default LANGUAGE_CODE in settings
         
-        if self.order_payment.order.user and self.order_payment.order.user.primary_language:
+        try:
             client_language = self.order_payment.order.user.primary_language
-        else:
+        except AttributeError:
             client_language = properties.LANGUAGE_CODE
-
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:

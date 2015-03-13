@@ -1,6 +1,6 @@
-from .models import BaseOrganization
-
 from rest_framework import permissions
+
+from .models import BaseOrganization
 
 
 class IsOrganizationMember(permissions.BasePermission):

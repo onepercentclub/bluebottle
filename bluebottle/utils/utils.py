@@ -1,19 +1,16 @@
-import socket
+import logging
 import os
+import socket
 
 from django.conf import settings
-from django_fsm.db.fields import TransitionNotAllowed
-from django_tools.middlewares import ThreadLocal
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
-from django.conf import settings
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
+from django_fsm.db.fields import TransitionNotAllowed
+from django_tools.middlewares import ThreadLocal
 
 import pygeoip
-import logging
 
 
 class GetTweetMixin:

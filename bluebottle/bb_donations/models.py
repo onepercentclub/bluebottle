@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.db import models
-from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from django.db.models import options
+from django.utils.translation import ugettext as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
+
+import signals
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
@@ -41,5 +44,3 @@ class BaseDonation(models.Model):
         default_serializer = 'bluebottle.bb_donations.serializers.DefaultDonationSerializer'
         preview_serializer = 'bluebottle.bb_donations.serializers.PreviewDonationSerializer'
         manage_serializer = 'bluebottle.bb_donations.serializers.ManageDonationSerializer'
-
-import signals

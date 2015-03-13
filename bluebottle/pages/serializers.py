@@ -1,11 +1,10 @@
+from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from bluebottle.utils.serializers import MetaField
 from django.template import Context, Template
-
 from django.utils.safestring import mark_safe
 from fluent_contents.rendering import render_placeholder
 from rest_framework import serializers
 
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField
 from .models import Page
 
 

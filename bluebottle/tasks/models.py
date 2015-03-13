@@ -1,5 +1,5 @@
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, BaseSkill
-
+from bluebottle.bb_tasks.models import (BaseSkill, BaseTask, BaseTaskFile,
+                                        BaseTaskMember)
 
 GROUP_PERMS = {
     'Staff': {
@@ -24,4 +24,3 @@ class TaskMember(BaseTaskMember):
 
 class TaskFile(BaseTaskFile):
     pass
-

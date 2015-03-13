@@ -1,5 +1,4 @@
 from django.db.models import DecimalField
-
 from south.modelsinspector import add_introspection_rules
 
 
@@ -20,4 +19,3 @@ class MoneyField(DecimalField):
         return super(MoneyField, self).__init__(*args, **kwargs)
 
 add_introspection_rules([], ["^bluebottle\.bb_projects\.fields\.MoneyField"])
-

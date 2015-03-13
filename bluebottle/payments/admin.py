@@ -1,16 +1,16 @@
+from bluebottle.payments.exception import PaymentAdminException
+from bluebottle.payments.models import OrderPayment, Payment
+from bluebottle.payments_docdata.admin import (DocdataDirectdebitPaymentAdmin,
+                                               DocdataPaymentAdmin)
+from bluebottle.payments_docdata.models import DocdataPayment
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
+from bluebottle.payments_mock.admin import MockPaymentAdmin
+from bluebottle.payments_mock.models import MockPayment
+from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-
-from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments.exception import PaymentAdminException
-from bluebottle.payments_docdata.admin import DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin
-from bluebottle.payments_docdata.models import DocdataPayment
-from bluebottle.payments_mock.admin import MockPaymentAdmin
-from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
-from bluebottle.payments_mock.models import MockPayment
-
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from polymorphic.admin import (PolymorphicChildModelAdmin,
+                               PolymorphicParentModelAdmin)
 
 
 class OrderPaymentAdmin(admin.ModelAdmin):

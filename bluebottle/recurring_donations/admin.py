@@ -1,8 +1,10 @@
 from bluebottle.recurring_donations.models import MonthlyProject
-from .models import MonthlyDonation, MonthlyBatch, MonthlyOrder, MonthlyDonor, MonthlyDonorProject
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
 from django.utils.translation import ugettext as _
+
+from .models import (MonthlyBatch, MonthlyDonation, MonthlyDonor,
+                     MonthlyDonorProject, MonthlyOrder)
 
 
 class MonthlyProjectInline(admin.TabularInline):
@@ -148,4 +150,3 @@ class MonthlyDonationAdmin(admin.ModelAdmin):
     raw_id_fields = ('user', 'project', 'order')
 
 admin.site.register(MonthlyDonation, MonthlyDonationAdmin)
-

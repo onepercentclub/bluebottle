@@ -1,6 +1,6 @@
-from django.core.exceptions import ImproperlyConfigured
 from bluebottle.utils.model_dispatcher import get_model_class
 from bluebottle.utils.utils import import_class
+from django.core.exceptions import ImproperlyConfigured
 
 
 def get_serializer_class(model_name=None, serializer_type='default'):
@@ -39,4 +39,3 @@ def get_serializer_class(model_name=None, serializer_type='default'):
             "installed".format(model_name))
 
     return serializer_model
-

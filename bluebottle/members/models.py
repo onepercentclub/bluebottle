@@ -1,6 +1,5 @@
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 
-
 GROUP_PERMS = {
     'Staff': {
         'perms': (

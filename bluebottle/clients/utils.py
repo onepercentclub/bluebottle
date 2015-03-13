@@ -1,5 +1,7 @@
 from collections import namedtuple
+
 from django.db import connection
+
 
 def tenant_url():
     # workaround for development setups. Assume port 8000

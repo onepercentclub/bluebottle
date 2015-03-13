@@ -5,7 +5,6 @@ from localflavor.de.forms import DEZipCodeField
 from localflavor.fr.forms import FRZipCodeField
 from localflavor.nl.forms import NLZipCodeField
 
-
 # Can safely add more post code form fields here.
 postal_code_mapping = {
     'BE': BEPostalCodeField(),

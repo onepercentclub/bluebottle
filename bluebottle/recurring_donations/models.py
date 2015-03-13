@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.db import models
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from django_iban.fields import IBANField, SWIFTBICField
 from django.utils.translation import ugettext as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
+from django_iban.fields import IBANField, SWIFTBICField
 
 
 class MonthlyDonor(models.Model):
@@ -102,5 +103,3 @@ class MonthlyDonation(models.Model):
     order = models.ForeignKey(MonthlyOrder, related_name='donations')
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
-
-

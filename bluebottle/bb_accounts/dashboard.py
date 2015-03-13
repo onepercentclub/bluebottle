@@ -1,10 +1,9 @@
+from admin_tools.dashboard.modules import DashboardModule
 from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext, ugettext_lazy as _
-
-from admin_tools.dashboard.modules import DashboardModule
-
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext
 
 BB_USER_MODEL = get_user_model()
 

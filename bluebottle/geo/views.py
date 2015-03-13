@@ -1,6 +1,5 @@
-from rest_framework import generics
-
 from bluebottle.utils.model_dispatcher import get_project_model
+from rest_framework import generics
 
 from .serializers import CountrySerializer
 

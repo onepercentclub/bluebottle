@@ -1,6 +1,8 @@
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, OEmbedField
+from bluebottle.bluebottle_drf2.serializers import OEmbedField, SorlImageField
 from rest_framework import serializers
+
 from .models import Slide
+
 
 class SlideSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField()

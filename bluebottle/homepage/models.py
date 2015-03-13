@@ -1,7 +1,6 @@
-from bluebottle.slides.models import Slide
 from bluebottle.quotes.models import Quote
+from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import Statistic
-
 from bluebottle.utils.model_dispatcher import get_project_model
 
 PROJECT_MODEL = get_project_model()
@@ -32,5 +31,3 @@ class HomePage(object):
             self.projects = None
 
         return self
-
-

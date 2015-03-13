@@ -1,16 +1,16 @@
+from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from bluebottle.bluebottle_drf2.serializers import (ContentTextField,
+                                                    OEmbedField,
+                                                    PhotoSerializer,
+                                                    PolymorphicSerializer)
+from bluebottle.utils.model_dispatcher import (get_fundraiser_model,
+                                               get_project_model)
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-
 from rest_framework import serializers
 
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
-from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
-
-from .models import (
-    Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto,
-    Reaction)
+from .models import (MediaWallpost, MediaWallpostPhoto, Reaction,
+                     SystemWallpost, TextWallpost, Wallpost)
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()

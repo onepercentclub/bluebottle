@@ -1,6 +1,6 @@
 from bluebottle.terms.models import Terms, TermsAgreement
-from django.contrib import admin
 from django import forms
+from django.contrib import admin
 from tinymce.widgets import TinyMCE
 
 

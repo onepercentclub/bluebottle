@@ -34,13 +34,11 @@ created Wallpost or Reaction. But, every unique person shall receive at most 1 e
 """
 import logging
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
 from bluebottle.utils.model_dispatcher import get_project_model, get_task_model
 from bluebottle.wallposts.models import Reaction, TextWallpost
 from bluebottle.wallposts.notifiers import ObserversContainer
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # NOTE
 # The following two calls (TASK_MODEL, PROJECT_MODEL )are needed for no clear reason...

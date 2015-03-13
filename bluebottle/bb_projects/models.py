@@ -1,20 +1,19 @@
 from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.utils.utils import StatusDefinition
-from django.db.models.aggregates import Sum
-from django.db.models.query_utils import Q
-from taggit.managers import TaggableManager
+from bluebottle.utils.model_dispatcher import get_project_phaselog_model
+from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
 from django.conf import settings
 from django.db import models
+from django.db.models import options
+from django.db.models.aggregates import Sum
+from django.db.models.query_utils import Q
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
-from django.db.models import options
-
-from django_extensions.db.fields import (
-    ModificationDateTimeField, CreationDateTimeField)
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from sorl.thumbnail import ImageField
+from taggit.managers import TaggableManager
 
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model
-from bluebottle.utils.utils import GetTweetMixin
+from projectwallmails import *
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
@@ -265,6 +264,3 @@ class BaseProjectPhaseLog(models.Model):
 
     class Meta():
         abstract = True
-
-
-from projectwallmails import *

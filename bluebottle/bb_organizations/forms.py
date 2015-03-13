@@ -1,8 +1,7 @@
-from django import forms
-from django.utils.translation import ugettext as _
-from django.utils.html import format_html
-
 from bluebottle.utils.model_dispatcher import get_organizationdocument_model
+from django import forms
+from django.utils.html import format_html
+from django.utils.translation import ugettext as _
 
 DOCUMENT_MODEL = get_organizationdocument_model()
 

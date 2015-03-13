@@ -1,9 +1,9 @@
+from admin_tools.dashboard.modules import DashboardModule
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_project_model)
 from bluebottle.utils.utils import StatusDefinition
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
-
-from admin_tools.dashboard.modules import DashboardModule
-from bluebottle.utils.model_dispatcher import get_donation_model, get_project_model
 
 DONATION_MODEL = get_donation_model()
 PROJECT_MODEL = get_project_model()

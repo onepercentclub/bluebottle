@@ -1,9 +1,10 @@
+from admin_tools.dashboard.modules import DashboardModule
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_project_phaselog_model)
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext, ugettext_lazy as _
-
-from admin_tools.dashboard.modules import DashboardModule
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()

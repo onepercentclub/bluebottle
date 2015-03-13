@@ -1,12 +1,11 @@
+from bluebottle.utils.admin import export_as_csv_action
 from django import forms
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
-
-from bluebottle.utils.admin import export_as_csv_action
 
 BB_USER_MODEL = get_user_model()
 
@@ -140,4 +139,3 @@ class BlueBottleUserAdmin(UserAdmin):
 
 if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':
    admin.site.register(BB_USER_MODEL, BlueBottleUserAdmin)
-

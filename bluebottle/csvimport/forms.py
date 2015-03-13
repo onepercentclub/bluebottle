@@ -1,10 +1,11 @@
-import unicodecsv as csv
-import cStringIO as StringIO
 import codecs
+import cStringIO as StringIO
 import itertools
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
+
+import unicodecsv as csv
 
 from .utils.common import has_duplicate_items
 

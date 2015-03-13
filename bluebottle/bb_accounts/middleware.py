@@ -1,9 +1,9 @@
 "This is locale middleware on top of Django's default LocaleMiddleware."
 
+from django import http
 from django.conf import settings
 from django.middleware.locale import LocaleMiddleware as _LocaleMiddleware
 from django.utils import translation
-from django import http
 
 
 class LocaleMiddleware(object):

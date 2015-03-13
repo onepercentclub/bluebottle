@@ -1,11 +1,13 @@
-from bluebottle.bb_donations.donationmail import successful_donation_fundraiser_mail
-from bluebottle.payments.services import PaymentService
-from django.dispatch import receiver
-from django.db.models.signals import post_save, post_delete
-from django.dispatch.dispatcher import Signal
-from bluebottle.utils.utils import StatusDefinition
+from bluebottle.bb_donations.donationmail import \
+    successful_donation_fundraiser_mail
 from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
+from bluebottle.payments.services import PaymentService
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_order_model)
+from bluebottle.utils.utils import StatusDefinition
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
+from django.dispatch.dispatcher import Signal
 from django_fsm.signals import post_transition
 
 DONATION_MODEL = get_donation_model()
@@ -46,4 +48,3 @@ def _order_requested(sender, order, **kwargs):
         order_payment = OrderPayment.get_latest_by_order(order)
         service = PaymentService(order_payment)
         service.check_payment_status()
-

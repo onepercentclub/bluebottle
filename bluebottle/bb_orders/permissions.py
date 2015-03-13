@@ -1,7 +1,6 @@
 from bluebottle.utils.model_dispatcher import get_order_model
-from rest_framework import permissions
-
 from bluebottle.utils.utils import StatusDefinition
+from rest_framework import permissions
 
 ORDER_MODEL = get_order_model()
 
@@ -131,4 +130,3 @@ class OrderIsNew(permissions.BasePermission):
         if isinstance(obj, ORDER_MODEL):
             return obj.status == StatusDefinition.CREATED
         return obj.order.status == StatusDefinition.CREATED
-

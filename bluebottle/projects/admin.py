@@ -1,12 +1,13 @@
+import logging
 from decimal import Decimal
-from bluebottle.projects.models import ProjectBudgetLine, Project
+
 from bluebottle.bb_projects.admin import BaseProjectAdmin
+from bluebottle.projects.models import Project, ProjectBudgetLine
 from bluebottle.utils.admin import export_as_csv_action
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.core.urlresolvers import reverse
 from sorl.thumbnail.admin import AdminImageMixin
-import logging
 
 from .models import PartnerOrganization
 

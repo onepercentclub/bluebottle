@@ -1,6 +1,7 @@
 from rest_framework import generics
+
 from .models import NewsItem
-from .serializers import NewsItemSerializer, NewsItemPreviewSerializer
+from .serializers import NewsItemPreviewSerializer, NewsItemSerializer
 
 
 class NewsItemPreviewList(generics.ListAPIView):
@@ -37,4 +38,3 @@ class NewsItemDetail(generics.RetrieveAPIView):
         qs = super(NewsItemDetail, self).get_queryset()
         qs = qs.published()
         return qs
-

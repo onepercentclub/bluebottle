@@ -1,13 +1,16 @@
 from decimal import Decimal
-from bluebottle.projects.models import PartnerOrganization
-from bluebottle.sepa.sepa import SepaDocument, SepaAccount
-from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
-from bluebottle.utils.utils import StatusDefinition
-from djchoices.choices import DjangoChoices, ChoiceItem
-from django.utils.translation import ugettext as _
-from django.utils import timezone
-from django.conf import settings
+
+from bluebottle.bb_payouts.models import (BaseOrganizationPayout,
+                                          BaseProjectPayout)
 from bluebottle.clients import properties
+from bluebottle.projects.models import PartnerOrganization
+from bluebottle.sepa.sepa import SepaAccount, SepaDocument
+from bluebottle.utils.utils import StatusDefinition
+from django.conf import settings
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+
+from djchoices.choices import ChoiceItem, DjangoChoices
 
 
 def get_fee_percentage(rule):

@@ -1,6 +1,7 @@
 from bluebottle.bb_projects.models import ProjectPhase
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import permissions
+
 from .models import Project
 
 
@@ -95,6 +96,3 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
 
         # Test for project model object-level permissions.
         return isinstance(obj, Project) and obj.owner == request.user
-
-
-

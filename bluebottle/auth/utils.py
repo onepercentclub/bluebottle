@@ -1,9 +1,10 @@
 import time
 from datetime import datetime
-from requests import request, HTTPError
+
+from bluebottle.bb_accounts.utils import send_welcome_mail, valid_email
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from bluebottle.bb_accounts.utils import valid_email, send_welcome_mail
+from requests import HTTPError, request
 
 USER_MODEL = get_user_model()
 

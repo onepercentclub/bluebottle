@@ -1,11 +1,11 @@
 import os
 import sys
+
 from django import http
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.importlib import import_module
 from django.views.generic.base import TemplateView
-
 
 # The code to create bb_app_template_dirs is from Django templates app loader.
 # https://github.com/django/django/blob/e86e4ce0bd0a538fcde0f9b0c4f26c6810621bb5/django/template/loaders/app_directories.py#L16

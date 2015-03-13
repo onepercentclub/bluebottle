@@ -1,14 +1,17 @@
-from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
+from bluebottle.utils.model_dispatcher import (get_donation_model,
+                                               get_order_model)
+from bluebottle.utils.utils import FSMTransition, StatusDefinition
 from django.conf import settings
 from django.db import models
+from django.db.models import options
 from django.db.models.aggregates import Sum
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from django.db.models import options
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from django_fsm.db.fields import FSMField, transition
 
-from bluebottle.utils.utils import FSMTransition, StatusDefinition
+import signals
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
 
@@ -97,5 +100,3 @@ class BaseOrder(models.Model, FSMTransition):
         default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
         manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
-
-import signals

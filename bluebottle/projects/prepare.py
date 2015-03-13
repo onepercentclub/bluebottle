@@ -25,4 +25,3 @@ def prepare_project_images():
         except Exception:
             # Don't raise errors on corrupt or missing images
             pass
-

@@ -32,5 +32,3 @@ class NewsItemManager(models.Manager):
         Return only published entries
         """
         return self.get_query_set().published()
-
-

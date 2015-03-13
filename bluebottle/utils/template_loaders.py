@@ -1,10 +1,11 @@
 import hashlib
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.db import connection
 from django.template.base import TemplateDoesNotExist
 from django.template.loader import BaseLoader
 from django.utils._os import safe_join
-from django.db import connection
 
 
 class FilesystemLoader(BaseLoader):

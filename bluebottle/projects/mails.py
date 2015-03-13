@@ -1,8 +1,7 @@
-from django.template.loader import get_template
-
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
+from django.template.loader import get_template
 
 
 def mail_project_funded_internal(project):

@@ -1,12 +1,11 @@
+import logging
 from calendar import timegm
 from datetime import datetime
-import logging
 
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.contrib.auth.middleware import AuthenticationMiddleware
-from django.core.urlresolvers import reverse
 from django.conf import settings
-
+from django.contrib.auth.middleware import AuthenticationMiddleware
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.urlresolvers import reverse
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings

@@ -1,23 +1,27 @@
-import logging
-from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model, get_model_mapping
-from bluebottle.utils.utils import StatusDefinition
-
-logger = logging.getLogger(__name__)
-
 import decimal
+import logging
 
+from bluebottle.utils.model_dispatcher import (get_model_mapping,
+                                               get_organization_payout_model,
+                                               get_project_payout_model)
+from bluebottle.utils.utils import StatusDefinition
+from django import forms
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
 from django.utils.text import Truncator
-
-from .models import ProjectPayoutLog, OrganizationPayoutLog
+from django.utils.translation import ugettext as _
 
 from .admin_filters import HasIBANPayoutFilter
 from .admin_utils import link_to
-from django import forms
+from .models import OrganizationPayoutLog, ProjectPayoutLog
+
+logger = logging.getLogger(__name__)
+
+
+
+
 
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
@@ -282,5 +286,3 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ORGANIZATION_PAYOUT_MODEL, BaseOrganizationPayoutAdmin)
-
-

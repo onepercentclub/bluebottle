@@ -1,6 +1,7 @@
 # Django settings for BlueBottle project.
 
-import os, datetime
+import datetime
+import os
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))

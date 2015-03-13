@@ -1,11 +1,9 @@
+from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients.utils import tenant_site, tenant_url
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
-
-from bluebottle.clients.context import ClientContext
-from bluebottle.clients.mail import EmailMultiAlternatives
-
-from bluebottle.clients.utils import tenant_url, tenant_site
 
 
 def send_contact_email(message, contact_email):

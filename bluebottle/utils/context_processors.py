@@ -1,7 +1,7 @@
-from django.db import connection
 import re
 
 from django.conf import settings
+from django.db import connection
 
 
 def sentry_dsn(request):
@@ -35,4 +35,3 @@ def tenant(request):
             'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name, request.LANGUAGE_CODE)
         }
     return {}
-

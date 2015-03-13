@@ -7,15 +7,17 @@ which is Apache licensed, copyright (c) 2013 Diederik van der Boor
 """
 import logging
 import unicodedata
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
-from django.core.exceptions import ImproperlyConfigured
-from django.conf import settings
-from suds.client import Client
-from suds import plugin
-from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
+
 from bluebottle.clients import properties
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.translation import get_language
+
+from suds import plugin
+from suds.client import Client
 
 from .exceptions import DocdataPaymentStatusException
 
@@ -681,4 +683,3 @@ class ElvPayment(Payment):
         node.accountNumber = self.account_number
         node.bankCode = self.bank_code
         return node
-

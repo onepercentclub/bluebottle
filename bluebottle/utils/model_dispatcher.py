@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import get_model
-from django.db import models
 from django.core.management import call_command
+from django.db import models
+from django.db.models import get_model
 
 
 def get_task_skill_model():
@@ -162,4 +162,3 @@ def load_fixture(file_name, orm):
     call_command('loaddata', file_name)
 
     models.get_model = original_get_model
-

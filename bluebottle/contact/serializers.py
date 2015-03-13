@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from rest_framework import serializers
 
 from .models import ContactMessage
 

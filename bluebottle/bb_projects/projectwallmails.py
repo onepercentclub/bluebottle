@@ -1,9 +1,9 @@
+from bluebottle.bb_projects.models import BaseProject
+from bluebottle.mail import send_mail
+from bluebottle.wallposts.notifiers import (ObserversContainer,
+                                            ReactionObserver, WallpostObserver)
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
-
-from bluebottle.bb_projects.models import BaseProject
-from bluebottle.wallposts.notifiers import WallpostObserver, ReactionObserver, ObserversContainer
-from bluebottle.mail import send_mail
 
 
 class ProjectWallObserver(WallpostObserver):

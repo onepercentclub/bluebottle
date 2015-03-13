@@ -1,5 +1,6 @@
-from .models import Region, SubRegion, Country
 from django.contrib import admin
+
+from .models import Country, Region, SubRegion
 
 
 class RegionAdmin(admin.ModelAdmin):

@@ -1,20 +1,17 @@
+from bluebottle.bb_follow.models import Follow
+from django.conf import settings
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from django.conf import settings
-
-
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 from polymorphic import PolymorphicModel
 
-from bluebottle.bb_follow.models import Follow
-
 from .managers import ReactionManager, WallpostManager
-
 
 WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH', 300)
@@ -156,4 +153,3 @@ class Reaction(models.Model):
 #Import the signals for sending mails in case they are present
 if 'bluebottle.tasks' in settings.INSTALLED_APPS and 'bluebottle.projects' in settings.INSTALLED_APPS:
     import mails
-

@@ -1,13 +1,15 @@
+from bluebottle.clients import properties
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
+from django_extensions.db.fields import (CreationDateTimeField,
+                                         ModificationDateTimeField)
 
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from djchoices import DjangoChoices, ChoiceItem
+from djchoices import ChoiceItem, DjangoChoices
 
 from .mails import send_contact_email
-from bluebottle.clients import properties
+
 
 class ContactMessage(models.Model):
     """

@@ -9,6 +9,7 @@ from bluebottle.clients.context import ClientContext
 from bluebottle.clients.utils import tenant_url
 
 from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients import properties
 
 TASK_MEMBER_MODEL = get_taskmember_model()
 
@@ -27,14 +28,29 @@ class TaskMemberMailSender:
         self.site = tenant_url()
         self.task_list = '/go/tasks'
         self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
+        self.cur_language = translation.get_language()
+
+    def activate_language(self, receiver):
+        if self.receiver.primary_language:
+            translation.activate(receiver.primary_language)
+        else: 
+            translation.activate(properties.LANGUAGE_CODE)
+
+    def reset_language(self):
+        translation.activate(self.cur_language)
 
     def send(self):
-        translation.activate(self.receiver.primary_language)
-        text_content = render_to_string('{0}.txt'.format(self.template_mail), context_instance=self.ctx)
-        html_content = render_to_string('{0}.html'.format(self.template_mail), context_instance=self.ctx)
-        msg = EmailMultiAlternatives(subject=self.subject, body=text_content, to=[self.receiver.email])
-        translation.deactivate()
-        msg.attach_alternative(html_content, "text/html")
+
+        self.activate_language(self.receiver)
+
+        try:
+            text_content = render_to_string('{0}.txt'.format(self.template_mail), context_instance=self.ctx)
+            html_content = render_to_string('{0}.html'.format(self.template_mail), context_instance=self.ctx)
+            msg = EmailMultiAlternatives(subject=self.subject, body=text_content, to=[self.receiver.email])
+            msg.attach_alternative(html_content, "text/html")
+        finally:
+            self.reset_language()
+
         msg.send()
 
 
@@ -42,10 +58,9 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
 
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
-
         self.template_mail = 'task_member_applied.mail'
         self.receiver = self.task.author
-        self.subject = _('{0} applied for your task'.format(self.task_member.member.get_short_name()))
+        self.subject = _('%(member)s applied for your task') % {'member': self.task_member.member.get_short_name()}
         self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member, 'link': self.task_link,
                             'site': self.site, 'motivation': self.task_member.motivation})
 
@@ -57,7 +72,7 @@ class TaskMemberRejectMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_rejected.mail'
         self.receiver = self.task_member.member
-        self.subject = _('{0} didn\'t select you for a task'.format(self.task.author.get_short_name()))
+        self.subject = _('%(author)s didn\'t select you for a task') % {'author': self.task.author.get_short_name()}
         self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list})
 
@@ -69,7 +84,7 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_accepted.mail'
         self.receiver = self.task_member.member
-        self.subject = _('{0} assigned you to a task'.format(self.task.author.get_short_name()))
+        self.subject = _('%(author)s assigned you to a task') % {'author': self.task.author.get_short_name()}
         self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site})
 
@@ -81,7 +96,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_realized.mail'
         self.receiver = self.task_member.member
-        self.subject = _('You realised a task!'.format(self.task.project.title))
+        self.subject = _('You realised a task!')
         self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task.author, 'link': self.task_link,
                             'site': self.site, 'task_list': self.task_list,
                             'project_link': self.project_link})
@@ -94,7 +109,7 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_withdrew.mail'
         self.receiver = self.task.author
-        self.subject = _('{0} withdrew from a task').format(self.task_member.member.get_short_name())
+        self.subject = _('%(member)s withdrew from a task') % {'member': self.task_member.member.get_short_name()}
         self.ctx = ClientContext({'task': self.task, 'receiver': self.receiver, 'sender': self.task_member.member,
                             'link': self.task_link, 'site': self.site, 'task_list': self.task_list, 'project_link': self.project_link})
 

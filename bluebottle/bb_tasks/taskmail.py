@@ -29,8 +29,6 @@ class TaskMemberMailSender:
         self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
 
     def send(self):
-        translation.activate(self.receiver.primary_language)
-        translation.deactivate()
         text_content = render_to_string('{0}.txt'.format(self.template_mail), context_instance=self.ctx)
         html_content = render_to_string('{0}.html'.format(self.template_mail), context_instance=self.ctx)
         msg = EmailMultiAlternatives(subject=self.subject, body=text_content, to=[self.receiver.email])

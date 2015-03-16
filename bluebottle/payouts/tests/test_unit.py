@@ -12,8 +12,15 @@ from bluebottle.utils.utils import StatusDefinition
 from bluebottle.test.factory_models.projects import ProjectFactory, PartnerFactory
 from django.test.utils import override_settings
 
+from ..admin import ProjectPayoutAdmin
+
 PROJECT_MODEL = get_project_model()
 
+class PayoutTestAdmin(BluebottleTestCase):
+    """ verify expected fields/behaviour is present """
+    def test_extra_listfields(self):
+        self.failUnless('amount_pending' in ProjectPayoutAdmin.list_display)
+        self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
 
 class PayoutTestCase(BluebottleTestCase):
     """ Test case for Payouts. """

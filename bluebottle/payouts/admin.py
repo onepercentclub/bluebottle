@@ -50,9 +50,6 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     export_fields = ['project', 'status', 'payout_rule', 'amount_raised', 'organization_fee', 'amount_payable',
                      'created', 'submitted']
 
-    list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
-                    'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
-
     actions = ('change_status_to_new', 'change_status_to_progress', 'change_status_to_settled',
                'export_sepa', 'recalculate_amounts', export_as_csv_action(fields=export_fields))
 

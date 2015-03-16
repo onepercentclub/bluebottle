@@ -25,7 +25,7 @@ class TaskWallObserver(WallpostObserver):
             to=task_owner,
 
             task=task,
-            link='/go/tasks/{1}'.format(task.id),
+            link='/go/tasks/{0}'.format(task.id),
             site=self.site,
             author=self.author,
             receiver=task_owner
@@ -77,7 +77,7 @@ class TaskReactionObserver(ReactionObserver):
                     to=self.post_author,
                     site=self.site,
                     task=task,
-                    link='/go/tasks/{1}'.format(task.id),
+                    link='/go/tasks/{0}'.format(task.id),
                     author=self.reaction_author,
                     receiver=self.post_author
                 )
@@ -94,7 +94,7 @@ class TaskReactionObserver(ReactionObserver):
 
                     site=self.site,
                     task=task,
-                    link='/go/tasks/{1}'.format(task.id),
+                    link='/go/tasks/{0}'.format(task.id),
                     author=self.reaction_author,
                     receiver=task_author
                 )

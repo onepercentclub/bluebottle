@@ -44,7 +44,7 @@ class GetTweetMixin:
 
         # {URL} is replaced in Ember to fill in the page url, avoiding the
         # need to provide front-end urls in our Django code.
-        tweet = _(u'{title} {{URL}} via @{twitter_handle}').format(
+        tweet = _(u'{title} {{URL}}').format(
             title=title, twitter_handle=twitter_handle)
         return tweet
 

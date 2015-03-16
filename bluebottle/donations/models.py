@@ -9,7 +9,6 @@ GROUP_PERMS = {
     }
 }
 
-pass
 
 class Donation(BaseDonation):
     pass

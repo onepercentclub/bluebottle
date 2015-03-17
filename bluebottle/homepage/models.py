@@ -12,17 +12,21 @@ class HomePage(object):
 
     def get(self, language):
         self.id = 1
-        self.quotes= Quote.objects.published().filter(language=language)
+        self.quotes = Quote.objects.published().filter(language=language)
         self.slides = Slide.objects.published().filter(language=language)
         stats = Statistic.objects.order_by('-creation_date').all()
+
         if len(stats) > 0:
             self.stats = stats[0]
         else:
             self.stats = None
+
+        projects = PROJECT_MODEL.objects.filter(is_campaign=True,
+                                                status__viewable=True)
         if language == 'en':
-            projects = PROJECT_MODEL.objects.filter(is_campaign=True).filter(language__code=language).order_by('?')
-        else:
-            projects = PROJECT_MODEL.objects.filter(is_campaign=True).order_by('?')
+            projects = projects.filter(language__code=language)
+
+        projects = projects.order_by('?')
 
         if len(projects) > 3:
             self.projects = projects[0:3]
@@ -32,5 +36,3 @@ class HomePage(object):
             self.projects = None
 
         return self
-
-

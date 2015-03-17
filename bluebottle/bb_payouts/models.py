@@ -284,11 +284,9 @@ class BaseProjectPayout(PayoutBase):
         """
         assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
 
-        # Set payout rule if none set.
-        if not self.payout_rule:
-            self.payout_rule = self.get_payout_rule()
-
         self.amount_raised = self.get_amount_raised()
+
+        self.payout_rule = self.get_payout_rule()
 
         calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
         try:

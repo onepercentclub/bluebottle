@@ -24,7 +24,7 @@ class HomePage(object):
         projects = PROJECT_MODEL.objects.filter(is_campaign=True,
                                                 status__viewable=True)
         if language == 'en':
-            projects = projects.filter(language__code=language).order_by('?')
+            projects = projects.filter(language__code=language)
 
         projects = projects.order_by('?')
 

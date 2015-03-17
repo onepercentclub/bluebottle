@@ -50,7 +50,21 @@ class RedirectFallbackMiddleware(object):
             else:
                 http_host = 'https://' + http_host
 
+        # Get the language that's active in the current thread if
+        # its also in our 'allowed' languages propertie in settings
+        # If there's no language, fallback to the LANGUAGE_CODE
+        from django.utils.translation.trans_real import _active
+
         language = properties.LANGUAGE_CODE
+
+        t = getattr(_active, "value", None)
+        if t is not None:
+            try:
+                lan = t.to_language()
+                if [i[0] for i in properties.LANGUAGES if i[0] == lan]:
+                    language = lan
+            except AttributeError:
+                pass
 
         def redirect_target(new_path):
             if new_path.startswith("http:") or new_path.startswith("https:"):
@@ -100,7 +114,8 @@ class RedirectFallbackMiddleware(object):
 
 class RedirectHashCompatMiddleware(object):
     """
-    Compatability middleware to make Safari 6 and Internet Explorer < 10 work with the hash after a redirect.
+    Compatability middleware to make Safari 6 and Internet Explorer < 10 work 
+    with the hash after a redirect.
     """
     def process_response(self, request, response):
         if response.status_code in [301, 302]:

@@ -34,10 +34,13 @@ def get_extra_facebook_data(strategy, user, response, details,
         id, name, first_name, last_name, link, gender, locale, age_range
     """
 
-    user.first_name = response.get('first_name', None)
-    user.last_name = response.get('last_name', None)
+    if not user.first_name:
+        user.first_name = response.get('first_name', '')
+    if not user.last_name:
+        user.last_name = response.get('last_name', '')
     if not user.gender:
         user.gender = response.get('gender', '')
+
     fb_link = response.get('link', None)
 
     birthday = response.get('birthday', None)

@@ -66,6 +66,31 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_failed_success_status(self, mock_fetch_status, mock_transaction):
+        # Check the order can go from failed to success when the payment goes from
+        # cancelled to paid.
+
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response('CANCELED')
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.CANCELLED)
+        self.assert_status(self.order_payment, StatusDefinition.CANCELLED)
+        self.assert_status(self.order, StatusDefinition.FAILED)
+
+
+        # Check that the status propagated through to order
+        mock_fetch_status.return_value = self.create_status_response('PAID')
+        self.service.check_payment_status()
+
+        self.assert_status(self.order_payment, StatusDefinition.SETTLED)
+        self.assert_status(self.order, StatusDefinition.SUCCESS)
+
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_no_payment_method_change(self, mock_fetch_status, mock_transaction):
         self.assertEquals(PaymentLogEntry.objects.count(), 2)
 

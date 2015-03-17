@@ -4,12 +4,12 @@ import urllib
 import re
 
 from django.conf import settings
-from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django import http
-from django.utils import translation
 from django.db import connection
+
 from bluebottle.redirects.models import Redirect
+from bluebottle.clients import properties
 
 
 class RedirectFallbackMiddleware(object):
@@ -29,27 +29,28 @@ class RedirectFallbackMiddleware(object):
     def process_response(self, request, response):
 
         if response.status_code != 404:
-            return response # No need to check for a redirect for non-404 responses.
-
+            # No need to check for a redirect for non-404 responses.
+            return response
 
         if connection.tenant.schema_name == 'public':
             # No tenant selected
             return response
 
         full_path = request.get_full_path()
-        current_site = get_current_site(request)
         http_host = request.META.get('HTTP_HOST', '')
-        
+
         if http_host:
             # Crappy workaround for localhost.
-            # Always default to https if not on local machine. This will hopefully fix Safari problems.
+            # Always default to https if not on local machine.
+            # This will hopefully fix Safari problems.
 
-            if http_host in ['testserver', 'localhost', 'localhost:8000', 'localhost:8081', '127.0.0.1:8000', '127.0.0.1'] or http_host.split(":", 1)[0].endswith("localhost"):
+            if http_host in ['testserver', 'localhost', 'localhost:8000', 'localhost:8081',
+                             '127.0.0.1:8000', '127.0.0.1'] or http_host.split(":", 1)[0].endswith("localhost"):
                 http_host = 'http://' + http_host
             else:
                 http_host = 'https://' + http_host
 
-        language = translation.get_language()
+        language = properties.LANGUAGE_CODE
 
         def redirect_target(new_path):
             if new_path.startswith("http:") or new_path.startswith("https:"):
@@ -80,12 +81,13 @@ class RedirectFallbackMiddleware(object):
             try:
                 old_path = re.compile(redirect.old_path, re.IGNORECASE)
             except re.error:
-                # old_path does not compile into regex, ignore it and move on to the next one
+                # old_path does not compile into regex,
+                # ignore it and move on to the next one
                 continue
-                
+
             if re.match(redirect.old_path, full_path):
-                # Convert $1 into \1 (otherwise users would have to enter \1 via the admin 
-                # which would have to be escaped)
+                # Convert $1 into \1 (otherwise users would have
+                # to enter \1 via the admin which would have to be escaped)
                 new_path = redirect.new_path.replace('$', '\\')
                 replaced_path = re.sub(old_path, new_path, full_path)
                 redirect.nr_times_visited += 1

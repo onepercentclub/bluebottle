@@ -126,3 +126,11 @@ class RedirectTests(BluebottleTestCase):
         # is not good in this case
         self.assertEquals(response.status_code, 301)
         self.assertEquals(response['location'], "https://example.com")
+
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_redirect_language(self):
+        r1 = Redirect.objects.create(
+            old_path='/initial', new_path='/new_target')
+        res = self.client.get('/initial')
+        self.assertEqual(res.url.split('/')[3], 'nl')
+

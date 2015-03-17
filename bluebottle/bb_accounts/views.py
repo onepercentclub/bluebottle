@@ -18,6 +18,7 @@ from bluebottle.clients.mail import construct_from_header
 from rest_framework import status, views, response, generics, viewsets
 
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
+from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.clients import properties
@@ -164,19 +165,18 @@ class PasswordReset(views.APIView):
         # TODO: Create a patch to Django to use user.email_user instead of send_email.
         UserModel = get_user_model()
         email = password_reset_form.cleaned_data["email"]
+
         active_users = UserModel._default_manager.filter(
             email__iexact=email, is_active=True)
         for user in active_users:
             if not domain_override:
-                current_site = get_current_site(request)
-                site_name = current_site.name
-                domain = current_site.domain
+                site_name = tenant_name()
+                domain = tenant_url()
             else:
                 site_name = domain = domain_override
-            site = 'https://' + domain
             c = ClientContext({
                 'email': user.email,
-                'site': site,
+                'site': domain,
                 'site_name': site_name,
                 'uid': int_to_base36(user.pk),
                 'user': user,

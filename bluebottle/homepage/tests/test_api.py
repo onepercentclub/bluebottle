@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.core.urlresolvers import reverse
 
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.models import Language
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -15,6 +16,93 @@ from bluebottle.statistics.models import Statistic
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 
+from ..models import HomePage
+
+class HomepagePreviewProjectsTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(HomepagePreviewProjectsTestCase, self).setUp()
+        self.init_projects()
+        self.user1 = BlueBottleUserFactory.create()
+
+        self.phases = {}
+        for phase in ('plan-new', 'plan-submitted', 'plan-needs-work',
+                      'campaign', 'done-complete', 'done-incomplete',
+                      'closed'):
+            self.phases[phase] = ProjectPhase.objects.get(slug=phase)
+
+        self.en = Language.objects.get(code='en')
+
+    def test_plan_new(self):
+        """ plan_new shouldn't be visible """
+        ProjectFactory.create(title="plan-new project", slug="plan-new",
+                              is_campaign=True,
+                              language=self.en,
+                              status=self.phases['plan-new'])
+        self.assertEquals(HomePage().get('en').projects, None)
+
+    def test_plan_submitted(self):
+        """ plan_submitted shouldn't be visible """
+        ProjectFactory.create(title="plan-submitted project",
+                              is_campaign=True,
+                              slug="plan-submitted",
+                              language=self.en,
+                              status=self.phases['plan-submitted'])
+        self.assertEquals(HomePage().get('en').projects, None)
+
+    def test_plan_needs_work(self):
+        """ plan_needs_work shouldn't be visible """
+        ProjectFactory.create(title="plan-needs-work project",
+                              is_campaign=True,
+                              slug="plan-needs-work",
+                              language=self.en,
+                              status=self.phases['plan-needs-work'])
+        self.assertEquals(HomePage().get('en').projects, None)
+
+    def test_closed(self):
+        """ done_incomplete shouldn't be visible """
+        ProjectFactory.create(title="closed project",
+                              is_campaign=True,
+                              slug="closed",
+                              language=self.en,
+                              status=self.phases['closed'])
+        self.assertEquals(HomePage().get('en').projects, None)
+
+    def test_campaign(self):
+        """ plan_new should be visible """
+        p = ProjectFactory.create(title="campaign project",
+                                  is_campaign=True,
+                                  slug="campaign",
+                                  language=self.en,
+                                  status=self.phases['campaign'])
+        self.assertEquals(HomePage().get('en').projects, [p])
+
+    def test_done_complete(self):
+        """ done-complete should be visible """
+        p = ProjectFactory.create(title="done-complete project",
+                                  is_campaign=True,
+                                  slug="done-complete",
+                                  language=self.en,
+                                  status=self.phases['done-complete'])
+        self.assertEquals(HomePage().get('en').projects, [p])
+
+    def test_done_incomplete(self):
+        """ done_incomplete should be visible """
+        p = ProjectFactory.create(title="done-incomplete project",
+                                  is_campaign=True,
+                                  slug="done-incomplete",
+                                  language=self.en,
+                                  status=self.phases['done-incomplete'])
+        self.assertEquals(HomePage().get('en').projects, [p])
+
+    # test is_campaign
+    def test_not_campaign(self):
+        """ if it's not a campaign, don't show """
+        ProjectFactory.create(title="done-complete project",
+                              is_campaign=False,
+                              slug="done-complete",
+                              language=self.en,
+                              status=self.phases['done-complete'])
+        self.assertEquals(HomePage().get('en').projects, None)
 
 class HomepageEndpointTestCase(BluebottleTestCase):
     """

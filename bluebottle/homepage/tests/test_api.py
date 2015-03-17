@@ -94,7 +94,6 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                                   status=self.phases['done-incomplete'])
         self.assertEquals(HomePage().get('en').projects, [p])
 
-    # test is_campaign
     def test_not_campaign(self):
         """ if it's not a campaign, don't show """
         ProjectFactory.create(title="done-complete project",

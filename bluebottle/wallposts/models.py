@@ -156,4 +156,3 @@ class Reaction(models.Model):
 #Import the signals for sending mails in case they are present
 if 'bluebottle.tasks' in settings.INSTALLED_APPS and 'bluebottle.projects' in settings.INSTALLED_APPS:
     import mails
-

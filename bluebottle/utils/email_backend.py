@@ -1,18 +1,23 @@
+import logging
+import re
+import dkim
+
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
-from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.template.loader import get_template
-from django.utils import translation
-import dkim
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.clients.utils import tenant_url
+from bluebottle.common.tasks import _send_celery_mail
+
+
+logger = logging.getLogger()
 
 
 class DKIMBackend(EmailBackend):
+
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""
         if not email_message.recipients():
@@ -23,7 +28,9 @@ class DKIMBackend(EmailBackend):
                                   settings.DKIM_SELECTOR,
                                   settings.DKIM_DOMAIN,
                                   settings.DKIM_PRIVATE_KEY)
-            self.connection.sendmail(email_message.from_email, email_message.recipients(), signature+message_string)
+            self.connection.sendmail(
+                email_message.from_email, email_message.recipients(),
+                signature + message_string)
         except:
             if not self.fail_silently:
                 raise
@@ -32,6 +39,7 @@ class DKIMBackend(EmailBackend):
 
 
 class TestMailBackend(EmailBackend):
+
     def _send(self, email_message):
         """ Force recipient to the current user."""
         request = ThreadLocal.get_current_request()
@@ -45,35 +53,56 @@ class TestMailBackend(EmailBackend):
                 return False
 
         try:
-            email_message.subject += ' || To: ' + str(email_message.recipients()[0])
+            email_message.subject += ' || To: ' + \
+                str(email_message.recipients()[0])
             message_string = email_message.message().as_string()
 
-            self.connection.sendmail(email_message.from_email, recipient, message_string)
+            self.connection.sendmail(
+                email_message.from_email, recipient, message_string)
         except:
             if not self.fail_silently:
                 raise
             return False
         return True
 
-def send_mail(template_name, subject, to, **kwargs):
-    if hasattr(to, 'primary_language') and to.primary_language:
-        translation.activate(to.primary_language)
 
-    kwargs.update({
-        'receiver': to,
-        'site': tenant_url()
-    })
+# We need a wrapper outside of Celery to prepare the email because
+# Celery is not tenant aware.
+def send_mail(template_name=None, subject=None, to=None, **kwargs):
+    from bluebottle.clients import properties
+    from django.utils.translation import ugettext as _
+
+    # Simple check if email address is valid
+    regex = r'[^@]+@[^@]+\.[^@]+'
+    if not re.match(regex, to.email):
+        logger.error("Trying to send email to invalid email address: {0}"
+                     .format(to.email))
+        return
+
+    if hasattr(to, 'primary_language') and to.primary_language:
+        language = to.primary_language
+    else:
+        language = properties.LANGUAGE_CODE
+
+    translation.activate(language)
 
     context = ClientContext(kwargs)
-    subject = unicode(subject)  # Unlazy the translatable string subject within activated language.
 
-    text_content = get_template('{0}.txt'.format(template_name)).render(context)
-    html_content = get_template('{0}.html'.format(template_name)).render(context)
+    try:
+        text_content = get_template(
+            '{0}.txt'.format(template_name)).render(context)
+        html_content = get_template(
+            '{0}.html'.format(template_name)).render(context)
 
-    if hasattr(to, 'primary_language') and to.primary_language:
+        msg = EmailMultiAlternatives(
+            subject=subject, body=text_content, to=[to.email])
+        msg.attach_alternative(html_content, "text/html")
+    finally:
         translation.deactivate()
 
-    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[to.email])
-    msg.attach_alternative(html_content, "text/html")
-
-    return msg.send()
+    # Explicetly set CELERY usage in settings. Used primarily for
+    # testing purposes.
+    if properties.CELERY_MAIL:
+        _send_celery_mail.delay(msg)
+    else:
+        msg.send()

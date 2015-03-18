@@ -1,7 +1,9 @@
+from django.utils import translation
 from django.utils.translation import ugettext as _
 from bluebottle.utils.email_backend import send_mail
 
 from bluebottle.clients.utils import tenant_url
+from bluebottle.clients import properties
 
 
 def successful_donation_fundraiser_mail(instance):
@@ -24,9 +26,19 @@ def successful_donation_fundraiser_mail(instance):
         else:
             donor_name = _('a guest')
 
+    cur_language = translation.get_language()
+    if receiver and receiver.primary_language:
+        translation.activate(receiver.primary_language)
+    else:
+        translation.acticate(properties.LANGUAGE_CODE)
+
+    subject = _('You received a new donation')
+
+    translation.activate(cur_language)
+
     send_mail(
         template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
-        subject=_('You received a new donation'),
+        subject=subject,
         site=tenant_url(),
         to=receiver,
         amount=instance.amount,
@@ -58,11 +70,24 @@ def new_oneoff_donation(instance):
         else:
             donor_name = _('a guest')
 
+        receiver = donation.project.owner
+
+        cur_language = translation.get_language()
+
+        if receiver and receiver.primary_language:
+            translation.activate(receiver.primary_language)
+        else:
+            translation.acticate(properties.LANGUAGE_CODE)
+
+        subject = _('You received a new donation')
+
+        translation.activate(cur_language)
+
         # Send email to the project owner.
         send_mail(
             template_name='bb_donations/mails/new_oneoff_donation.mail',
-            subject=_('You received a new donation'),
-            to=donation.project.owner,
+            subject=subject,
+            to=receiver,
             amount=donation.amount,
             donor_name=donor_name,
             link=project_url,

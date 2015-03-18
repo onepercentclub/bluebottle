@@ -1,6 +1,7 @@
 from django.contrib.auth import login, get_user_model
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
+from django.utils import translation
 from django import forms
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import get_current_site
@@ -17,6 +18,7 @@ from bluebottle.clients.mail import construct_from_header
 
 from rest_framework import status, views, response, generics, viewsets
 
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly, IsCurrentUser
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.utils.serializers import DefaultSerializerMixin
@@ -24,6 +26,7 @@ from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.clients import properties
 
 from rest_framework.permissions import IsAuthenticated
+
 
 #this belongs now to onepercent should be here in bluebottle
 from .serializers import (
@@ -156,7 +159,7 @@ class PasswordReset(views.APIView):
 
     def save(self, password_reset_form, domain_override=None,
              subject_template_name='bb_accounts/password_reset_subject.txt',
-             email_template_name='bb_accounts/password_reset_email.html', use_https=True,
+             email_template_name='bb_accounts/password_reset_email', use_https=True,
              token_generator=default_token_generator, from_email=None, request=None):
         """
         Generates a one-use only link for resetting password and sends to the user. This has been ported from the
@@ -174,7 +177,8 @@ class PasswordReset(views.APIView):
                 domain = tenant_url()
             else:
                 site_name = domain = domain_override
-            c = ClientContext({
+
+            c = {
                 'email': user.email,
                 'site': domain,
                 'site_name': site_name,
@@ -182,10 +186,26 @@ class PasswordReset(views.APIView):
                 'user': user,
                 'token': token_generator.make_token(user),
                 'LANGUAGE_CODE': self.request.LANGUAGE_CODE[:2]
-            })
+            }
+
+            cur_language = translation.get_language()
+
+            if user.primary_language:
+                translation.activate(user.primary_language)
+            else:
+                translation.activate(properties.LANGUAGE_CODE)
+
             subject = loader.render_to_string(subject_template_name, c)
             # Email subject *must not* contain newlines
             subject = ''.join(subject.splitlines())
+
+            translation.activate(cur_language)
+
+            send_mail(
+                template_name=email_template_name,
+                to=user,
+                subject=subject,
+                **c)
             email = loader.render_to_string(email_template_name, c)
             user.email_user(subject, email, from_email=construct_from_header())
 

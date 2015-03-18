@@ -398,6 +398,8 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
+CELERY_MAIL = False
+
 EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key', 'git_commit', \
                              'debug', 'compress_templates', 'facebook_auth_id', 'installed_apps', \
                              'bb_apps', ]

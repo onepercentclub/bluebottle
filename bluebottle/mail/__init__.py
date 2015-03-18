@@ -1,3 +1,7 @@
+import smtplib
+import logging
+import sys
+
 from django.template.loader import get_template
 from django.utils import translation
 
@@ -5,6 +9,7 @@ from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 
+logger = logging.getLogger(__name__)
 
 def send_mail(template_name, subject, to, **kwargs):
     if hasattr(to, 'primary_language') and to.primary_language:
@@ -27,4 +32,7 @@ def send_mail(template_name, subject, to, **kwargs):
     msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[to.email])
     msg.attach_alternative(html_content, "text/html")
 
-    return msg.send()
+    try:
+        return msg.send()
+    except smtplib.SMTPException:
+        logger.error('Failed to send mail to {0}'.format(to.email), exc_info=sys.exc_info())

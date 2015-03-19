@@ -346,4 +346,6 @@ class SendMailTestCase(BluebottleTestCase):
                        CELERY_MAIL=False)
     def test_no_celery_mail(self, email_alternatives):
         send_mail(to=self.user, template_name='utils/test')
-        self.assertTrue(email_alternatives.send.called)
+        self.assertEqual(email_alternatives.call_count, 1)
+        self.assertEqual(str(email_alternatives.mock_calls[-1]),
+                         'call().send()')

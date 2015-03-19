@@ -103,6 +103,7 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
     except Exception as e:
         msg = None
         logger.error("Exception while rendering email template: {0}".format(e))
+        return
     finally:
         translation.deactivate()
 
@@ -115,5 +116,4 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
             msg.send()
         except Exception as e:
             logger.error("Exception sending synchronous email: {0}".format(e))
-    else:
-        return False
+            return

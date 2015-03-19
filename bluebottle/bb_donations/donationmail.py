@@ -30,7 +30,7 @@ def successful_donation_fundraiser_mail(instance):
     if receiver and receiver.primary_language:
         translation.activate(receiver.primary_language)
     else:
-        translation.acticate(properties.LANGUAGE_CODE)
+        translation.activate(properties.LANGUAGE_CODE)
 
     subject = _('You received a new donation')
 
@@ -77,7 +77,7 @@ def new_oneoff_donation(instance):
         if receiver and receiver.primary_language:
             translation.activate(receiver.primary_language)
         else:
-            translation.acticate(properties.LANGUAGE_CODE)
+            translation.activate(properties.LANGUAGE_CODE)
 
         subject = _('You received a new donation')
 

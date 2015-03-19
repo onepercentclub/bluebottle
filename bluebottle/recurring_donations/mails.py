@@ -2,13 +2,11 @@ from babel.dates import format_date
 from babel.numbers import format_currency
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-from celery import task
 
 from bluebottle.clients import properties
 from bluebottle.utils.email_backend import send_mail
 
 
-@task
 def mail_monthly_donation_processed_notification(monthly_order):
 
     receiver = monthly_order.user
@@ -34,7 +32,6 @@ def mail_monthly_donation_processed_notification(monthly_order):
     )
 
 
-@task
 def mail_project_funded_monthly_donor_notification(receiver, project):
 
     cur_language = translation.get_language()

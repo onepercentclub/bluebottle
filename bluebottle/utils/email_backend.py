@@ -99,6 +99,7 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
         msg = EmailMultiAlternatives(subject=subject,
                                      body=text_content,
                                      to=[to.email])
+        msg.activated_language = translation.get_language()
         msg.attach_alternative(html_content, "text/html")
     except Exception as e:
         msg = None

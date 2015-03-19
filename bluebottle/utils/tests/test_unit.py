@@ -1,7 +1,6 @@
 import json
 import uuid
 import mock
-from mock import Mock
 
 from django.utils import unittest
 from django.test import TestCase

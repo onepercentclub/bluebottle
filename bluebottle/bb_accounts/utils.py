@@ -33,7 +33,7 @@ def send_welcome_mail(user=None):
     send_mail(
         template_name='bb_accounts/activation_email',
         subject=subject,
-        to=user.email,
+        to=user,
         **c
     )
 

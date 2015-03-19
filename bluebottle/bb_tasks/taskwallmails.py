@@ -18,12 +18,13 @@ class TaskWallObserver(WallpostObserver):
 
         if self.author != task_owner:
             self.activate_language(task_owner)
-
+            subject = _('%(author)s commented on your task') % {
+                'author': self.author.get_short_name()}
+            self.deactivate_language()
             site = self.site
             send_mail(
                 template_name='task_wallpost_new.mail',
-                subject=_('%(author)s commented on your task') % {
-                    'author': self.author.get_short_name()},
+                subject=subject,
                 to=task_owner,
                 task=task,
                 link='/go/tasks/{0}'.format(task.id),
@@ -31,7 +32,6 @@ class TaskWallObserver(WallpostObserver):
                 author=self.author,
                 receiver=task_owner
             )
-            self.deactivate_language()
 
 
 class TaskReactionObserver(ReactionObserver):
@@ -75,10 +75,12 @@ class TaskReactionObserver(ReactionObserver):
         if self.reaction_author != self.post_author:
             if self.reaction_author not in mailed_users and self.post_author:
                 self.activate_language(self.post_author)
+                subject = _('%(author)s replied on your comment') % {
+                    'author': self.reaction_author.get_short_name()}
+                self.deactivate_language()
                 send_mail(
                     template_name='task_wallpost_reaction_new.mail',
-                    subject=_('%(author)s replied on your comment') % {
-                        'author': self.reaction_author.get_short_name()},
+                    subject=subject,
                     to=self.post_author,
                     site=self.site,
                     task=task,
@@ -86,7 +88,6 @@ class TaskReactionObserver(ReactionObserver):
                     author=self.reaction_author,
                     receiver=self.post_author
                 )
-                self.deactivate_language()
                 mailed_users.add(self.post_author)
 
         # Implement 2a: send email to Object owner, if Reaction author is not
@@ -94,19 +95,20 @@ class TaskReactionObserver(ReactionObserver):
         if self.reaction_author != task_author:
             if task_author not in mailed_users:
                 self.activate_language(task_author)
+                subject = _('%(author)s commented on your task') % {
+                    'author': self.reaction_author.get_short_name()}
+                self.deactivate_language()
+
                 send_mail(
                     template_name='task_wallpost_reaction_task.mail',
-                    subject=_('%(author)s commented on your task') % {
-                        'author': self.reaction_author.get_short_name()},
+                    subject=subject,
                     to=task_author,
-
                     site=self.site,
                     task=task,
                     link='/go/tasks/{0}'.format(task.id),
                     author=self.reaction_author,
                     receiver=task_author
                 )
-                self.deactivate_language()
 
 ObserversContainer().register(TaskWallObserver)
 ObserversContainer().register(TaskReactionObserver)

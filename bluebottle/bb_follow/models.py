@@ -5,13 +5,13 @@ from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 from django.utils import translation
-from bluebottle.mail import send_mail
 from bluebottle.utils.model_dispatcher import get_user_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
 
 

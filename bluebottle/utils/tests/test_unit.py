@@ -22,7 +22,7 @@ from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from ..email_backend import send_mail
+from ..email_backend import send_mail, create_message
 
 
 BB_USER_MODEL = get_user_model()
@@ -340,11 +340,24 @@ class SendMailTestCase(BluebottleTestCase):
         send_mail(to=self.user, template_name='utils/test')
         self.assertTrue(celery_mail.delay.called)
 
-    @mock.patch('bluebottle.clients.mail.EmailMultiAlternatives')
-    @override_settings(LANGUAGE_CODE='nl',
-                       CELERY_MAIL=False)
-    def test_no_celery_mail(self, email_alternatives):
+    @mock.patch('bluebottle.utils.email_backend.create_message')
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_no_celery_mail(self, create_message):
         send_mail(to=self.user, template_name='utils/test')
-        self.assertEqual(email_alternatives.call_count, 1)
-        self.assertEqual(str(email_alternatives.mock_calls[-1]),
+        self.assertEqual(create_message.call_count, 1)
+        # Bit of a hack to check if our instance of the Mock class actually
+        # does a call to .send()
+        self.assertEqual(str(create_message.mock_calls[-1]),
                          'call().send()')
+
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_activated_language_no_primary_language(self):
+        self.user.primary_language = ''
+        msg = create_message(to=self.user, template_name='utils/test')
+        self.assertEqual(msg.activated_language, 'nl')
+
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_activated_language_primary_language(self):
+        self.user.primary_language = 'en'
+        msg = create_message(to=self.user, template_name='utils/test')
+        self.assertEqual(msg.activated_language, 'en')

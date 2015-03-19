@@ -9,6 +9,8 @@ from django.template.loader import get_template
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
+from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients import properties
 
 
 logger = logging.getLogger()
@@ -64,12 +66,32 @@ class TestMailBackend(EmailBackend):
         return True
 
 
+def create_message(template_name=None, to=None, subject=None, **kwargs):
+
+    if hasattr(to, 'primary_language') and to.primary_language:
+        language = to.primary_language
+    else:
+        language = properties.LANGUAGE_CODE
+
+    translation.activate(language)
+
+    c = ClientContext(kwargs)
+    text_content = get_template(
+        '{0}.txt'.format(template_name)).render(c)
+    html_content = get_template(
+        '{0}.html'.format(template_name)).render(c)
+    msg = EmailMultiAlternatives(subject=subject,
+                                 body=text_content,
+                                 to=[to.email])
+    msg.activated_language = translation.get_language()
+    msg.attach_alternative(html_content, "text/html")
+    return msg
+
+
 # We need a wrapper outside of Celery to prepare the email because
 # Celery is not tenant aware.
 def send_mail(template_name=None, subject=None, to=None, **kwargs):
-    from bluebottle.clients import properties
     from bluebottle.common.tasks import _send_celery_mail
-    from bluebottle.clients.mail import EmailMultiAlternatives
 
     if not to:
         logger.error("No recipient specified")
@@ -82,25 +104,11 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
                      .format(to.email))
         return
 
-    if hasattr(to, 'primary_language') and to.primary_language:
-        language = to.primary_language
-    else:
-        language = properties.LANGUAGE_CODE
-
-    translation.activate(language)
-
-    context = ClientContext(kwargs)
-
     try:
-        text_content = get_template(
-            '{0}.txt'.format(template_name)).render(context)
-        html_content = get_template(
-            '{0}.html'.format(template_name)).render(context)
-        msg = EmailMultiAlternatives(subject=subject,
-                                     body=text_content,
-                                     to=[to.email])
-        msg.activated_language = translation.get_language()
-        msg.attach_alternative(html_content, "text/html")
+        msg = create_message(template_name=template_name,
+                             to=to,
+                             subject=subject,
+                             **kwargs)
     except Exception as e:
         msg = None
         logger.error("Exception while rendering email template: {0}".format(e))

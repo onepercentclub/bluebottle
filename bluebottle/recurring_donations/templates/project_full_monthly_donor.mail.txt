@@ -2,20 +2,13 @@
 {% load i18n %}
 
 {% block content %}
-
 Hi {{ receiver_first_name }},
 
-Fantastisch nieuws: mede dankzij jouw 1% is {{ project }} nu helemaal gefinancierd! Whihoe!
+Great news! Thanks to your support {{ project }} is now fully funded and ready for take off.
 
 {{ site }}{{ link }}
 
-Dat betekent dat het project nu echt gerealiseerd gaat worden. En dat betekent ook dat je nu een nieuw project kunt
-kiezen om maandelijks een duwtje in de rug te geven! Je vindt [hier een overzicht] van alle projecten die jouw steun
-goed kunnen gebruiken.
+Let’s do some more good! Choose a new project you’d like to support [overzicht] or make it easy on yourself and let us equally divide your monthly donation on the three most likely to be fully funded projects. 
 
-Je kan het jezelf ook makkelijk maken en de keuze aan ons overlaten. Dan verdelen wij jouw maandelijkse 1% over de drie
-meest populaire projecten. Dat zijn projecten die de meeste donaties hebben verzameld, en daardoor de meeste kans maken
-om gerealiseerd te worden. En daar draait het ten slotte om: samen projecten waar maken!
-
-Nogmaals dank voor je trouwe steun!
+Thanks for you loyal support! 
 {% endblock %}

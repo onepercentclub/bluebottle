@@ -9,8 +9,6 @@ from django.template.loader import get_template
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
-from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.common.tasks import _send_celery_mail
 
 
 logger = logging.getLogger()
@@ -70,7 +68,12 @@ class TestMailBackend(EmailBackend):
 # Celery is not tenant aware.
 def send_mail(template_name=None, subject=None, to=None, **kwargs):
     from bluebottle.clients import properties
-    from django.utils.translation import ugettext as _
+    from bluebottle.common.tasks import _send_celery_mail
+    from bluebottle.clients.mail import EmailMultiAlternatives
+
+    if not to:
+        logger.error("No recipient specified")
+        return
 
     # Simple check if email address is valid
     regex = r'[^@]+@[^@]+\.[^@]+'
@@ -93,16 +96,24 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
             '{0}.txt'.format(template_name)).render(context)
         html_content = get_template(
             '{0}.html'.format(template_name)).render(context)
-
-        msg = EmailMultiAlternatives(
-            subject=subject, body=text_content, to=[to.email])
+        msg = EmailMultiAlternatives(subject=subject,
+                                     body=text_content,
+                                     to=[to.email])
         msg.attach_alternative(html_content, "text/html")
+    except Exception as e:
+        msg = None
+        logger.error("Exception while rendering email template: {0}".format(e))
     finally:
         translation.deactivate()
 
     # Explicetly set CELERY usage in settings. Used primarily for
     # testing purposes.
-    if properties.CELERY_MAIL:
+    if msg and properties.CELERY_MAIL:
         _send_celery_mail.delay(msg)
+    elif msg:
+        try:
+            msg.send()
+        except Exception as e:
+            logger.error("Exception sending synchronous email: {0}".format(e))
     else:
-        msg.send()
+        return False

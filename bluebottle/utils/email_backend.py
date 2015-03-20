@@ -10,6 +10,7 @@ from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
+from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
 
@@ -103,6 +104,11 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
         logger.error("Trying to send email to invalid email address: {0}"
                      .format(to.email))
         return
+
+    if not kwargs.get('site'):
+        kwargs.update({
+            'site': tenant_url()
+        })
 
     try:
         msg = create_message(template_name=template_name,

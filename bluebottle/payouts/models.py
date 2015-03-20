@@ -1,13 +1,18 @@
 from decimal import Decimal
-from bluebottle.projects.models import PartnerOrganization
-from bluebottle.sepa.sepa import SepaDocument, SepaAccount
+
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
-from bluebottle.utils.utils import StatusDefinition
-from djchoices.choices import DjangoChoices, ChoiceItem
-from django.utils.translation import ugettext as _
-from django.utils import timezone
-from django.conf import settings
 from bluebottle.clients import properties
+from bluebottle.journals.models import update_related_model_when_journal_is_saved
+from bluebottle.sepa.sepa import SepaDocument, SepaAccount
+from bluebottle.utils.utils import StatusDefinition
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+from django.conf import settings
+
+from djchoices.choices import DjangoChoices, ChoiceItem
 
 
 class ProjectPayout(BaseProjectPayout):
@@ -202,3 +207,7 @@ class OrganizationPayout(BaseOrganizationPayout):
             )
 
         return sepa.as_xml()
+
+@receiver(post_save, weak=False, sender=ProjectPayout)
+def create_donation_journal_after_donation_is_changed(sender, instance, created, **kwargs):
+    update_related_model_when_journal_is_saved(sender=sender, instance=instance, created=created)

@@ -1,5 +1,6 @@
 import json
 import uuid
+import mock
 
 from django.utils import unittest
 from django.test import TestCase
@@ -20,6 +21,9 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from ..email_backend import send_mail, create_message
+
 
 BB_USER_MODEL = get_user_model()
 
@@ -33,8 +37,10 @@ def generate_random_email():
 
 
 class CustomSettingsTestCase(TestCase):
+
     """
-    A TestCase which makes extra models available in the Django project, just for testing.
+    A TestCase which makes extra models available in the Django project, just
+    for testing.
     Based on http://djangosnippets.org/snippets/1011/ in Django 1.4 style.
     """
     new_settings = {}
@@ -60,9 +66,11 @@ class CustomSettingsTestCase(TestCase):
 
 
 class HashTagTestCase(unittest.TestCase):
+
     def test_clean_text_for_hashtag(self):
         """
-        Test that non-alphanumeric characters are excluded and proper joining is done
+        Test that non-alphanumeric characters are excluded and proper joining
+        is done
         """
         text = 'foo bar'
         self.assertEqual('FooBar', clean_for_hashtag(text))
@@ -75,19 +83,21 @@ class HashTagTestCase(unittest.TestCase):
 
 
 class MetaTestCase(BluebottleTestCase):
+
     def setUp(self):
         """
         The complex work is using the fluent_contents stuff.
 
         Setting the 'contents' of the MetaDataModel requires setting the
-        PictureItem, TextItem, OEmbedItem manually and creating a Placeholder to
-        group these ContentItems on the parent.
+        PictureItem, TextItem, OEmbedItem manually and creating a Placeholder
+        to group these ContentItems on the parent.
         """
 
         super(MetaTestCase, self).setUp()
 
         # Create the MetaDataModel instance
-        self.object = MetaDataModel.objects.create(title='Wow. Such meta. Amaze.')
+        self.object = MetaDataModel.objects.create(
+            title='Wow. Such meta. Amaze.')
 
         # Add in a placeholder
         self.ph = Placeholder.objects.create(
@@ -142,7 +152,9 @@ class MetaTestCase(BluebottleTestCase):
 
         items = self.object.contents.get_content_items()
 
-        self.assertEqual(len(items), 4, 'Error in the setUp function: not all items are correctly created.')
+        self.assertEqual(len(
+            items), 4,
+            'Error in the setUp function: not all items arecorrectly created.')
 
     def test_return_metadata(self):
         """
@@ -159,7 +171,8 @@ class MetaTestCase(BluebottleTestCase):
 
         # verify that indeed the title is the same and attribute lookups are ok
         self.assertEqual(item['title'], meta_data['title'])
-        self.assertEqual(item['title'], meta_data['fb_title']) # fb title falls back to default title
+        # fb title falls back to default title
+        self.assertEqual(item['title'], meta_data['fb_title'])
 
         # verify that callables work
         img1 = 'images/kitten_snow.jpg'
@@ -197,13 +210,16 @@ class MetaTestCase(BluebottleTestCase):
 
         self.assertIn('{URL}', meta_data['tweet'])
 
+
 class UserTestsMixin(object):
+
     """ Mixin base class for tests requiring users. """
 
     def create_user(self, email=None, password=None, **extra_fields):
         """ Create, save and return a new user. """
 
-        # If email is set and not unique, it will raise a clearly interpretable IntegrityError.
+        # If email is set and not unique, it will raise a clearly
+        # interpretable IntegrityError.
         # If auto-generated, make sure it's unique.
         if not email:
             email = generate_random_email()
@@ -223,31 +239,40 @@ class UserTestsMixin(object):
 import mock
 from django.core.exceptions import SuspiciousFileOperation
 
+
 class TenantAwareStorageTest(unittest.TestCase):
-        
+
     def test_location_with_tenant(self):
-        """ Test that the proper location path is generated when a tenant is specified """
+        """
+        Test that the proper location path is generated when a tenant is
+        specified
+        """
         # The storage must be imported after the db connection is mocked
         with mock.patch("django.db.connection") as connection:
             from ..storage import TenantFileSystemStorage
 
             name = 'testname'
-            
-            connection.tenant.schema_name  = 'dummy_schema_name'
+
+            connection.tenant.schema_name = 'dummy_schema_name'
             storage = TenantFileSystemStorage()
 
             res = storage.path(name=name)
 
             self.assertEqual(res.split('/')[-1], name)
-            self.assertEqual(res.split('/')[-4:-1], ['static', 'media', 'dummy_schema_name'])
+            self.assertEqual(
+                res.split('/')[-4:-1],
+                ['static', 'media', 'dummy_schema_name'])
 
     def test_location_without_tenant(self):
-        """ Test that there is no tenant location path when there is no tenant specified """ 
+        """
+        Test that there is no tenant location path when there is no tenant
+        specified
+        """
         with mock.patch("django.db.connection") as connection:
             from ..storage import TenantFileSystemStorage
-            
+
             name = 'testname'
-            
+
             connection.tenant = None
             connection.location = "/"
 
@@ -258,19 +283,81 @@ class TenantAwareStorageTest(unittest.TestCase):
             self.assertEqual(res.split("/")[-3:-1], ['static', 'media'])
 
     def test_raise_suspicious_error(self):
-        """ Test that a SuspiciousFileOperation is raised when the location path is generated """
+        """
+        Test that a SuspiciousFileOperation is raised when the location
+        path is generated
+        """
         with mock.patch("django.utils._os.safe_join") as safe_join, \
-             mock.patch("django.db.connection") as connection:
+                mock.patch("django.db.connection") as connection:
 
             from ..storage import TenantFileSystemStorage
-            
-            connection.tenant = None # Make sure that the 2nd safe_join is called in the storage code
+
+            # Make sure that the 2nd safe_join is called in the storage code
+            connection.tenant = None
 
             name = 'testname_join'
-            
+
             safe_join.side_effect = ValueError
 
             storage = TenantFileSystemStorage()
 
             self.assertRaises(SuspiciousFileOperation, storage.path, name=name)
 
+
+class SendMailTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create(email="testuser@example.com")
+
+    @mock.patch('bluebottle.utils.email_backend.logger')
+    def test_no_recipient(self, logger):
+        send_mail()
+        self.assertTrue(logger.error.called)
+        self.assertEqual(logger.error.call_args[0][0],
+                         'No recipient specified')
+
+    @mock.patch('bluebottle.utils.email_backend.logger')
+    def test_invalid_email(self, logger):
+        self.user.email = 'testuser'
+        self.user.save()
+        send_mail(to=self.user)
+        self.assertTrue(logger.error.called)
+        self.assertEqual(logger.error.call_args[0][0],
+                         'Trying to send email to invalid email address: {0}'.
+                         format(self.user.email))
+
+    @mock.patch('bluebottle.utils.email_backend.logger')
+    def test_no_template(self, logger):
+        send_mail(to=self.user)
+        self.assertTrue(logger.error.called)
+        self.assertEqual(logger.error.call_args[0][0],
+                         'Exception while rendering email template: None.txt')
+
+    @mock.patch('bluebottle.common.tasks._send_celery_mail')
+    @override_settings(LANGUAGE_CODE='nl',
+                       CELERY_MAIL=True)
+    def test_celery_mail(self, celery_mail):
+        send_mail(to=self.user, template_name='utils/test')
+        self.assertTrue(celery_mail.delay.called)
+
+    @mock.patch('bluebottle.utils.email_backend.create_message')
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_no_celery_mail(self, create_message):
+        send_mail(to=self.user, template_name='utils/test')
+        self.assertEqual(create_message.call_count, 1)
+        # Bit of a hack to check if our instance of the Mock class actually
+        # does a call to .send()
+        self.assertEqual(str(create_message.mock_calls[-1]),
+                         'call().send()')
+
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_activated_language_no_primary_language(self):
+        self.user.primary_language = ''
+        msg = create_message(to=self.user, template_name='utils/test')
+        self.assertEqual(msg.activated_language, 'nl')
+
+    @override_settings(LANGUAGE_CODE='nl')
+    def test_activated_language_primary_language(self):
+        self.user.primary_language = 'en'
+        msg = create_message(to=self.user, template_name='utils/test')
+        self.assertEqual(msg.activated_language, 'en')

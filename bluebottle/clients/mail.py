@@ -20,6 +20,7 @@ def construct_from_header():
 
     return "{0} <{1}>".format(mail_name, mail_address)
 
+
 class EmailMultiAlternatives(BaseEmailMultiAlternatives):
     """
     A tenant-aware emailer. Replaces the from_email by the tenant's
@@ -27,8 +28,9 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
     """
     def __init__(self, from_email=None, *args, **kwargs):
         tenant_from = construct_from_header()
+        activated_language = None
+
         if from_email is None and tenant_from:
             kwargs['from_email'] = tenant_from
 
         super(EmailMultiAlternatives, self).__init__(*args, **kwargs)
-

@@ -119,7 +119,10 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
     # Explicetly set CELERY usage in settings. Used primarily for
     # testing purposes.
     if msg and properties.CELERY_MAIL:
-        _send_celery_mail.delay(msg)
+        if properties.SEND_MAIL:
+            _send_celery_mail.delay(msg, send=True)
+        else:
+            _send_celery_mail.delay(msg)
     elif msg:
         try:
             msg.send()

@@ -15,7 +15,7 @@ changes = ''
 dependency_links = [
     'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
     'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
-    'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.0.zip#egg=bb_salesforce-1.1.0',
+    'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.0.zip#egg=django-bb-salesforce-1.1.0',
 ]
 
 

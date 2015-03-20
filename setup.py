@@ -25,6 +25,7 @@ install_requires = [
     'South==1.0',
     'Sphinx==1.2b1',
     'bunch==1.0.1',
+    'celery==3.1.17',
     'django-celery==3.0.17',
     'django-apptemplates==0.0.1',
     'django-choices==1.1.11',

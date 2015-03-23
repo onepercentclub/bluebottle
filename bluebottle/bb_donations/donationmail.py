@@ -22,7 +22,10 @@ def successful_donation_fundraiser_mail(instance):
         if instance.anonymous:
             donor_name = _('an anonymous person')
         elif instance.order.user:
-            donor_name = instance.order.user.first_name
+            if instance.order.user.first_name:
+                donor_name = instance.order.user.first_name
+            else:
+                donor_name = instance.order.user.email
         else:
             donor_name = _('a guest')
 

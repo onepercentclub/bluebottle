@@ -5,6 +5,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.bb_accounts.models import UserAddress
 
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -80,6 +81,13 @@ class BlueBottleUserChangeForm(forms.ModelForm):
         return self.initial["password"]
 
 
+class UserAddressInline(admin.StackedInline):
+    model = UserAddress
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class BlueBottleUserAdmin(UserAdmin):
     # TODO: this should be easier to override
     standard_fieldsets = (
@@ -104,6 +112,8 @@ class BlueBottleUserAdmin(UserAdmin):
             'fields': ('email', 'password1', 'password2')}
         ),
     )
+
+    inlines = [UserAddressInline]
 
     readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
 

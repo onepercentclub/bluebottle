@@ -125,7 +125,11 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
             _send_celery_mail.delay(msg)
     elif msg:
         try:
-            msg.send()
+            if properties.SEND_MAIL:
+                msg.send()
+            else:
+                logger.info("Tried to send async email, but mail sending is\
+                            turned off. ")
         except Exception as e:
             logger.error("Exception sending synchronous email: {0}".format(e))
             return

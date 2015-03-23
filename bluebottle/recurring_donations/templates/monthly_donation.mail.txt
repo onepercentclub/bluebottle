@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-
+{% blocktrans %}
 Hi {{ receiver_first_name }},
 
 Thanks for you monthly do-good donation. You’re contribution makes a world of difference. 
@@ -14,5 +14,5 @@ On {{ date }} you contributed {{ amount }}. Below you’ll find an overview of t
 {%  endfor %}
 
 Thanks to your support we were able to realize so many projects.
-
+{% endblocktrans %}
 {% endblock %}

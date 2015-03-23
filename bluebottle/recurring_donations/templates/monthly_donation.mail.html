@@ -2,6 +2,7 @@
 {% load i18n %}
 
 {% block content %}
+{% blocktrans %}
 Hi {{ receiver_first_name }},<br/>
 <br/>
 
@@ -18,10 +19,5 @@ On {{ date }} you contributed {{ amount }}. Below you’ll find an overview of t
 <br/><br/>
 
 Thanks to your support we were able to realize so many projects.
-
+{% endblocktrans %}
 {% endblock %}
-
-{% extends "base.mail.txt" %}
-{% load i18n %}
-
-{% block content %}

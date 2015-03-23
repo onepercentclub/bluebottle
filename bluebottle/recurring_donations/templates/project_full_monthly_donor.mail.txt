@@ -2,6 +2,7 @@
 {% load i18n %}
 
 {% block content %}
+{% blocktrans %}
 Hi {{ receiver_first_name }},
 
 Great news! Thanks to your support {{ project }} is now fully funded and ready for take off.
@@ -11,4 +12,5 @@ Great news! Thanks to your support {{ project }} is now fully funded and ready f
 Let’s do some more good! Choose a new project you’d like to support [overzicht] or make it easy on yourself and let us equally divide your monthly donation on the three most likely to be fully funded projects. 
 
 Thanks for you loyal support! 
+{% endblocktrans %}
 {% endblock %}

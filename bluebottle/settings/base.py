@@ -209,7 +209,6 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
-    'bluebottle.bluebottle_salesforce',
 
     # Plain Bluebottle apps
     'bluebottle.wallposts',

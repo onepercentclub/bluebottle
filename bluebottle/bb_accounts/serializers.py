@@ -8,6 +8,8 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer)
 
+from bluebottle.clients import properties
+
 
 BB_USER_MODEL = get_user_model()
 
@@ -89,6 +91,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     address = UserAddressSerializer(source='address', required=False)
     birthdate = serializers.DateTimeField(required=False)
     email = serializers.EmailField(required=False)
+    primary_language = serializers.CharField(required=False,
+                                             default=properties.LANGUAGE_CODE)
 
     class Meta:
         model = BB_USER_MODEL

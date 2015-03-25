@@ -29,27 +29,30 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_password_reset_api_url = '/api/users/passwordreset'
         self.user_password_set_api_url = '/api/users/passwordset/'
 
-
     def test_user_profile_returned_fields(self):
-        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.user_1.id)
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url,
+                                           self.user_1.id)
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         self.assertEqual(response.data['id'], self.user_1.id)
 
         # Fields taken from the serializer
-        serializer_fields = ['id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
-                  'about_me', 'date_joined', 'location', 'email', 'address', 'birthdate', 'gender', 'newsletter']
+        serializer_fields = ['id', 'url', 'username', 'first_name',
+                             'last_name', 'full_name', 'short_name', 'picture',
+                             'about_me', 'date_joined', 'location', 'email',
+                             'address', 'birthdate', 'gender', 'newsletter',
+                             'primary_language']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
-
 
     def test_user_profile_retrieve_and_update(self):
         """
         Test retrieving a public user profile by id.
         """
-        user_profile_url = "{0}{1}".format(self.user_profile_api_url, self.user_1.id)
+        user_profile_url = "{0}{1}".format(self.user_profile_api_url,
+                                           self.user_1.id)
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user_1.id)

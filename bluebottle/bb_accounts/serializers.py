@@ -1,5 +1,4 @@
 from bluebottle.bb_accounts.models import UserAddress
-from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
@@ -7,8 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
-from bluebottle.utils.serializers import URLField
+    SorlImageField, ImageSerializer)
+
+from bluebottle.clients import properties
 
 
 BB_USER_MODEL = get_user_model()
@@ -18,13 +18,17 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserAddress
-        fields = ('id', 'line1','line2', 'address_type', 'city', 'state', 'country', 'postal_code')
+        fields = ('id', 'line1', 'line2', 'address_type',
+                  'city', 'state', 'country', 'postal_code')
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):
+
     """
-    Serializer for a subset of a member's public profile. This is usually embedded into other serializers.
+    Serializer for a subset of a member's public profile. This is usually
+    embedded into other serializers.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs['read_only'] = True
         super(UserPreviewSerializer, self).__init__(*args, **kwargs)
@@ -37,15 +41,19 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username', 'avatar', 'full_name', 'short_name')
+        fields = ('id', 'first_name', 'last_name', 'username',
+                  'avatar', 'full_name', 'short_name')
 
 
 class CurrentUserSerializer(UserPreviewSerializer):
+
     """
-    Serializer for the current authenticated user. This is the same as the serializer for the member preview with the
+    Serializer for the current authenticated user. This is the same as the
+    serializer for the member preview with the
     addition of id_for_ember.
     """
-    # This is a hack to work around an issue with Ember-Data keeping the id as 'current'.
+    # This is a hack to work around an issue with Ember-Data keeping the id as
+    # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.Field(source='get_full_name')
     task_count = serializers.Field(source='task_count')
@@ -55,12 +63,19 @@ class CurrentUserSerializer(UserPreviewSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember', 'primary_language', 'email', 'full_name',
-                                                      'last_login', 'date_joined', 'task_count', 'project_count',
-                                                      'donation_count', 'fundraiser_count')
+        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember',
+                                                      'primary_language',
+                                                      'email', 'full_name',
+                                                      'last_login',
+                                                      'date_joined',
+                                                      'task_count',
+                                                      'project_count',
+                                                      'donation_count',
+                                                      'fundraiser_count')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+
     """
     Serializer for a member's public profile.
     """
@@ -76,16 +91,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
     address = UserAddressSerializer(source='address', required=False)
     birthdate = serializers.DateTimeField(required=False)
     email = serializers.EmailField(required=False)
+    primary_language = serializers.CharField(required=False,
+                                             default=properties.LANGUAGE_CODE)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'username', 'first_name', 'last_name', 'full_name', 'short_name', 'picture',
-                  'about_me', 'date_joined', 'location', 'email', 'address', 'birthdate','gender', 'newsletter')
+        fields = ('id', 'url', 'username', 'first_name', 'last_name',
+                  'full_name', 'short_name', 'picture',
+                  'primary_language', 'about_me', 'date_joined', 'location',
+                  'email', 'address', 'birthdate', 'gender', 'newsletter')
 
 
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
 class PasswordField(serializers.CharField):
+
     """ Special field to update a password field. """
     widget = forms.widgets.PasswordInput
     hidden_password_string = '********'
@@ -104,12 +124,15 @@ class PasswordField(serializers.CharField):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+
     """
-    Serializer for creating users. This can only be used for creating users (POST) and should not be used for listing,
+    Serializer for creating users. This can only be used for creating
+    users (POST) and should not be used for listing,
     editing or viewing users.
     """
     email = serializers.EmailField(required=True, max_length=254)
-    email_confirmation = serializers.EmailField(label=_('password_confirmation'), max_length=254)
+    email_confirmation = serializers.EmailField(
+        label=_('password_confirmation'), max_length=254)
     password = PasswordField(required=True, max_length=128)
     username = serializers.CharField(read_only=True)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
@@ -128,13 +151,16 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'jwt_token')
+        fields = ('id', 'username', 'first_name', 'last_name',
+                  'email', 'password', 'jwt_token')
         non_native_fields = ('email_confirmation',)
-        
+
 
 class PasswordResetSerializer(serializers.Serializer):
+
     """
-    Password reset request serializer that uses the email validation from the Django PasswordResetForm.
+    Password reset request serializer that uses the email validation from the
+    Django PasswordResetForm.
     """
     email = serializers.EmailField(required=True, max_length=254)
 
@@ -146,21 +172,26 @@ class PasswordResetSerializer(serializers.Serializer):
         super(PasswordResetSerializer, self).__init__(*args, **kwargs)
 
     def validate_email(self, attrs, source):
-        if attrs is not None:  # Don't need this check in newer versions of DRF2.
+        # Don't need this check in newer versions of DRF2.
+        if attrs is not None:
             value = attrs[source]
             self.password_reset_form.cleaned_data = {"email": value}
             return self.password_reset_form.clean_email()
 
 
 class PasswordSetSerializer(serializers.Serializer):
+
     """
-    A serializer that lets a user change set his/her password without entering the old password. This uses the
-    validation from the Django SetPasswordForm.
+    A serializer that lets a user change set his/her password without entering
+    the old password. This uses the validation from the Django SetPasswordForm.
     """
-    # We can't use the PasswordField here because it hashes the passwords with a salt which means we can't compare the
+    # We can't use the PasswordField here because it hashes the passwords with
+    # a salt which means we can't compare the
     # two passwords to see if they are the same.
-    new_password1 = serializers.CharField(required=True, max_length=128, widget=forms.widgets.PasswordInput)
-    new_password2 = serializers.CharField(required=True, max_length=128, widget=forms.widgets.PasswordInput)
+    new_password1 = serializers.CharField(
+        required=True, max_length=128, widget=forms.widgets.PasswordInput)
+    new_password2 = serializers.CharField(
+        required=True, max_length=128, widget=forms.widgets.PasswordInput)
 
     class Meta:
         fields = ('new_password1', 'new_password2')
@@ -171,7 +202,10 @@ class PasswordSetSerializer(serializers.Serializer):
 
     def validate_new_password2(self, attrs, source):
 
-        if attrs is not None:  # Don't need this check in newer versions of DRF2.
+        # Don't need this check in newer versions of DRF2.
+        if attrs is not None:
             value = attrs[source]
-            self.password_set_form.cleaned_data = {"new_password1": attrs['new_password1'], "new_password2": value}
+            self.password_set_form.cleaned_data = {
+                "new_password1": attrs['new_password1'],
+                "new_password2": value}
             return self.password_set_form.clean_new_password2()

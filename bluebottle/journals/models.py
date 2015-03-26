@@ -4,7 +4,10 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import CreationDateTimeField
+
 from bluebottle.bb_projects.fields import MoneyField
+
+from decimal import Decimal
 
 
 class BaseJournal(models.Model):
@@ -18,7 +21,7 @@ class BaseJournal(models.Model):
     Each subclass from this BaseJournal should have these properties:
     - related_model_field_name, for example 'donation'
       which is used to determine the related model self.donation
-    - related_model_amount_key, for example 'amount', which is used
+    - related_model_amount_field_name, for example 'amount', which is used
       to determine the total amount in the related model, that should equal with
       the total amount of all Journals that are related to that model.
 
@@ -34,13 +37,8 @@ class BaseJournal(models.Model):
     class Meta:
         abstract = True
 
-    @property
-    def related_model_field_name(self):
-        raise NotImplementedError
-
-    @property
-    def related_model_amount_key(self):
-        raise NotImplementedError
+    related_model_field_name = None
+    related_model_amount_field_name = None
 
     @property
     def related_model(self):
@@ -48,14 +46,14 @@ class BaseJournal(models.Model):
 
     def get_related_model_amount(self):
         related_model = self.related_model
-        return getattr(related_model, self.related_model_amount_key)
+        return getattr(related_model, self.related_model_amount_field_name)
 
     def get_user_reference(self):
         return ''
 
     def get_journal_total(self):
         """
-        Return the total amount for all DonationJournals
+        Return the total amount for all Journals
         belonging to the current Donation, ProjectPayout or OrganizationPayout,
         """
         related_model_name = self.related_model_field_name  # 'donation'
@@ -76,13 +74,8 @@ class DonationJournal(BaseJournal):
     donation = models.ForeignKey('donations.Donation',
                                 related_name='journal_set',)
 
-    @property
-    def related_model_field_name(self):
-        return 'donation'
-
-    @property
-    def related_model_amount_key(self):
-        return 'amount'
+    related_model_field_name = 'donation'
+    related_model_amount_field_name = 'amount'
 
     def get_user_reference(self):
         return self.donation.user.email # user is property on Donation
@@ -92,26 +85,16 @@ class OrganizationPayoutJournal(BaseJournal):
     payout = models.ForeignKey('payouts.OrganizationPayout',
                                related_name='journal_set',)
 
-    @property
-    def related_model_field_name(self):
-        return 'payout'
-
-    @property
-    def related_model_amount_key(self):
-        return 'payable_amount_incl'  # excl or vat
+    related_model_field_name = 'payout'
+    related_model_amount_field_name = 'payable_amount_incl'
 
 
 class ProjectPayoutJournal(BaseJournal):
     payout = models.ForeignKey('payouts.ProjectPayout',
                                related_name='journal_set',)
 
-    @property
-    def related_model_field_name(self):
-        return 'payout'
-
-    @property
-    def related_model_amount_key(self):
-        return 'amount_payable'  # amount_raised or 'amount_safe'
+    related_model_field_name = 'payout'
+    related_model_amount_field_name = 'amount_payable' # or amount raised
 
 
 @receiver(post_save, sender=DonationJournal)
@@ -123,7 +106,7 @@ def update_related_model_when_journal_is_saved(sender, instance, created, **kwar
     might need to be updated with the correction that is added via this new
     Journal.
 
-    the value of 'related_model_amount_key' on the related model should
+    the value of 'related_model_amount_field_name' on the related model should
     be the same as the total of all Journals that belong to that model.
     """
     journal_total = instance.get_journal_total()
@@ -131,46 +114,37 @@ def update_related_model_when_journal_is_saved(sender, instance, created, **kwar
 
     if journal_total != related_model_total:
         related_model = instance.related_model
-        amount_key = instance.related_model_amount_key
+        amount_key = instance.related_model_amount_field_name
 
         setattr(related_model, amount_key, journal_total) # journal total is leading
         related_model.save()
-
-
-from decimal import Decimal
 
 
 def create_journal_for_sender(sender, instance, created):
     from bluebottle.donations.models import Donation
     from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
 
-    # TODO: make this better
+    MAPPING = {
+        Donation: DonationJournal,
+        ProjectPayout: ProjectPayoutJournal,
+        OrganizationPayout: OrganizationPayoutJournal,
+    }
+    journal_class = MAPPING.get(sender)
 
-    if sender == Donation:
-        amount_string = 'amount'
-        related_model_name = 'donation'
-        journal_class = DonationJournal
-    else:
-        amount_string = 'amount_payable'
-        related_model_name = 'payout'
-        if sender == ProjectPayout:
-            journal_class = ProjectPayoutJournal
-        elif sender == OrganizationPayout:
-            journal_class = OrganizationPayoutJournal
-
-    amount_instance = getattr(instance, amount_string)
+    related_model_name = journal_class.related_model_field_name
+    amount_instance = getattr(instance, journal_class.related_model_amount_field_name)
     journals = instance.journal_set.all()
 
     if (not created) and journals.exists():
         # instance is created already, and there is at least one journal already
-        # so it is a modified Payout, we have to check if the amount was changed and then add
-        # another journal with the corrected amount
-        journal = journals[0]  # even when there are more, the get_journal_total will return the correct value
+        # so it is a modified Payout or Donation, check if the amount was changed,
+        # and add the correction when needed
+        journal = journals.first()  # even when there are more, the get_journal_total will return the correct value
         journal_amount = journal.get_journal_total()
 
         diff = amount_instance - journal_amount
         if diff == Decimal():
-            return  # dont do a save  # or do we want to save 0 journals
+            return  # dont save, or should a new journal be made when amount is not changed?
         journal_date = instance.updated
         journal_amount = diff
     else:

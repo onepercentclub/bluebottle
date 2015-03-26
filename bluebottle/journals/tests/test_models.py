@@ -1,18 +1,16 @@
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.members.models import Member
-from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
+from bluebottle.payouts.models import ProjectPayout
+from bluebottle.donations.models import Donation # can not be imported befor ProjectPayout
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, \
-    ProjectPhaseFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-
-
-from bluebottle.donations.models import Donation
+from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
+
 from ..models import DonationJournal, ProjectPayoutJournal
-from decimal import Decimal
+
 from datetime import date
+from decimal import Decimal
 
 
 class JournalModelTests(BluebottleTestCase):
@@ -36,10 +34,6 @@ class JournalModelTests(BluebottleTestCase):
 
         journals = DonationJournal.objects.all()
         self.assertEqual(journals.count(), 0)
-
-    def _check_nr_of_records_in_db(self, model_name, expected_number):
-        qs = model_name.objects.all()
-        self.assertEqual(qs.count(), expected_number)
 
     def _get_only_one_from_db(self, model_name):
         objects = model_name.objects.all()
@@ -66,7 +60,7 @@ class JournalModelTests(BluebottleTestCase):
         Then create a Journal, and check if the Donation is updated.
         Do this also for a negative value
         """
-        self._check_nr_of_records_in_db(DonationJournal, 0)
+        self.assertEqual(DonationJournal.objects.all().count(), 0)
 
         self.assertEqual(Member.objects.count(), 2)  # self.user and self.project_owner
         # creates another user for fundraiser
@@ -88,7 +82,7 @@ class JournalModelTests(BluebottleTestCase):
         journal = DonationJournal.objects.create(donation = self.donation,
                                                  amount = Decimal('50'))
         new_journal_pk = journal.pk
-        self._check_nr_of_records_in_db(DonationJournal, 2)
+        self.assertEqual(DonationJournal.objects.all().count(), 2)
         new_journal_from_db = DonationJournal.objects.get(pk=new_journal_pk)
 
         self.assertEqual(new_journal_from_db.user_reference, 'te@st.nl')  # should be auto filled with donation user
@@ -106,7 +100,7 @@ class JournalModelTests(BluebottleTestCase):
         # Change the Donation, and check if a new Journal is created
         donation_from_db.amount = Decimal('145')
         donation_from_db.save()
-        self._check_nr_of_records_in_db(DonationJournal, 3)
+        self.assertEqual(DonationJournal.objects.all().count(), 3)
         new_journal = DonationJournal.objects.all().last()  # the latest is the newest
         self.assertEqual(new_journal.amount, Decimal('-5'))
 
@@ -115,17 +109,17 @@ class JournalModelTests(BluebottleTestCase):
 
         # Change the donation without changing the amount, no journal should be created.
         donation_from_db = self._get_only_one_from_db(Donation)
-        self._check_nr_of_records_in_db(DonationJournal, 3)
+        self.assertEqual(DonationJournal.objects.all().count(), 3)
         donation_from_db.completed = date.today()
         donation_from_db.save()
-        self._check_nr_of_records_in_db(DonationJournal, 3)
+        self.assertEqual(DonationJournal.objects.all().count(), 3)
 
     def test_journal_created_when_project_project_payout_is_made(self):
         """
         same as test_journal_created_when_donation_is_made, only
         with a ProjectPayout instead of a Donation.
         """
-        self._check_nr_of_records_in_db(ProjectPayoutJournal, 0)
+        self.assertEqual(ProjectPayoutJournal.objects.all().count(), 0)
         self.assertEqual(ProjectPayout.objects.count(), 0)
         self.payout = ProjectPayoutFactory.create(project=self.project,
                                                   amount_raised=Decimal('110'),
@@ -144,7 +138,7 @@ class JournalModelTests(BluebottleTestCase):
         journal = ProjectPayoutJournal.objects.create(payout=self.payout,
                                                       amount=Decimal('50'))
         new_journal_pk = journal.pk
-        self._check_nr_of_records_in_db(ProjectPayoutJournal, 2)
+        self.assertEqual(ProjectPayoutJournal.objects.all().count(), 2)
         new_journal_from_db = ProjectPayoutJournal.objects.get(pk=new_journal_pk)
 
         self.assertEqual(new_journal_from_db.user_reference, '')  # should be auto filled with donation user
@@ -161,7 +155,7 @@ class JournalModelTests(BluebottleTestCase):
         # Change the payout, and check if a new Journal is created
         payout_from_db.amount_payable = Decimal('145')
         payout_from_db.save()
-        self._check_nr_of_records_in_db(ProjectPayoutJournal, 3)
+        self.assertEqual(ProjectPayoutJournal.objects.all().count(), 3)
         new_journal = ProjectPayoutJournal.objects.all()[2]  # the latest is the newest
         self.assertEqual(new_journal.amount, Decimal('-5'))
 
@@ -170,7 +164,7 @@ class JournalModelTests(BluebottleTestCase):
 
         # Change the payout without changing the amount, no journal should be created.
         payout_from_db = self._get_only_one_from_db(ProjectPayout)
-        self._check_nr_of_records_in_db(ProjectPayoutJournal, 3)
+        self.assertEqual(ProjectPayoutJournal.objects.all().count(), 3)
         payout_from_db.sender_account_number = 'some number'
         payout_from_db.save()
-        self._check_nr_of_records_in_db(ProjectPayoutJournal, 3)
+        self.assertEqual(ProjectPayoutJournal.objects.all().count(), 3)

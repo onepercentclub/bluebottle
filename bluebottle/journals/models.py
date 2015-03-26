@@ -178,9 +178,8 @@ def create_journal_for_sender(sender, instance, created):
         journal_amount = amount_instance
 
     kwargs = {
-        related_model_name: instance,  # make this generic
+        related_model_name: instance,
         'amount': journal_amount,
-        #user_reference='ja', # fix this   instance.user,
         'date': journal_date
     }
     journal_class.objects.create(**kwargs)

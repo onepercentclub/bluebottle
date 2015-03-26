@@ -55,7 +55,7 @@ class JournalModelTests(BluebottleTestCase):
     def _get_only_one_from_db(self, model_name):
         objects = model_name.objects.all()
         self.assertEqual(objects.count(), 1)
-        return objects[0]
+        return objects.first()
 
     def _check_if_journal_total_equals_value(self, journal, value=None):
         """
@@ -93,10 +93,11 @@ class JournalModelTests(BluebottleTestCase):
 
         self.assertEqual(journal_from_db.donation, donation_from_db)
         self.assertEqual(donation_from_db.amount, Decimal('100'))
+        self.assertEqual(journal_from_db.amount, Decimal('100'))
 
         # #### Create a Journal, check if it results in an updated Donation ##### #
         journal = DonationJournal.objects.create(donation = self.donation,
-                                                 amount = Decimal(50))
+                                                 amount = Decimal('50'))
         new_journal_pk = journal.pk
         self._check_nr_of_records_in_db(DonationJournal, 2)
         new_journal_from_db = DonationJournal.objects.get(pk=new_journal_pk)
@@ -105,6 +106,7 @@ class JournalModelTests(BluebottleTestCase):
         self.assertEqual(new_journal_from_db.description, '')  # should be blank
 
         self.assertEqual(new_journal_from_db.date.date(), date.today())  # date today
+        self.assertEqual(new_journal_from_db.amount, Decimal('50'))
 
         # the donation should be updated with the amount added via the journal
         donation_from_db = self._get_only_one_from_db(Donation)
@@ -116,7 +118,7 @@ class JournalModelTests(BluebottleTestCase):
         donation_from_db.amount = Decimal('145')
         donation_from_db.save()
         self._check_nr_of_records_in_db(DonationJournal, 3)
-        new_journal = DonationJournal.objects.all()[2]  # the latest is the newest
+        new_journal = DonationJournal.objects.all().last()  # the latest is the newest
         self.assertEqual(new_journal.amount, Decimal('-5'))
 
         # mastercheck to see if Donation and related Journals addup

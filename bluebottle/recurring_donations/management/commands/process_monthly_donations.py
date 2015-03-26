@@ -28,7 +28,7 @@ DONATION_MODEL = get_donation_model()
 ORDER_MODEL = get_order_model()
 PROJECT_MODEL = get_project_model()
 
-logger = logging.getLogger('console')
+logger = logging.getLogger(__name__)
 
 
 #

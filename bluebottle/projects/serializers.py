@@ -45,17 +45,35 @@ class ProjectCountrySerializer(CountrySerializer):
         fields = ('id', 'name', 'subregion', 'code')
 
 
+class ProjectBudgetLineSerializer(serializers.ModelSerializer):
+    amount = EuroField()
+    project = serializers.SlugRelatedField(slug_field='slug')
+
+    class Meta:
+        model = ProjectBudgetLine
+        fields = ('id', 'project', 'description', 'amount')
+
+
+class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
+    amount = EuroField()
+
+    class Meta:
+        model = ProjectBudgetLine
+        fields = ('description', 'amount')
+
+
 class ProjectSerializer(BaseProjectSerializer):
     task_count = serializers.IntegerField(source='task_count')
     country = ProjectCountrySerializer(source='country')
     story = StoryField()
+    budget_lines = BasicProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
 
     class Meta(BaseProjectSerializer):
         model = BaseProjectSerializer.Meta.model
         fields = BaseProjectSerializer.Meta.fields + ('allow_overfunding', 'task_count', 'amount_asked', 'amount_donated', 'amount_needed',
-                                                      'story', 'status', 'deadline', 'latitude', 'longitude', 'video_url', 'video_html', 'partner')
+                                                      'story', 'budget_lines', 'status', 'deadline', 'latitude', 'longitude', 'video_url', 'video_html', 'partner')
 
 
 class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
@@ -68,16 +86,6 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
         fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count', 'allow_overfunding',
                   'latitude', 'longitude', 'is_campaign', 'amount_asked', 'amount_donated', 'amount_needed',
                   'deadline', 'status', 'owner', 'partner')
-
-
-class ProjectBudgetLineSerializer(serializers.ModelSerializer):
-
-    amount = EuroField()
-    project = serializers.SlugRelatedField(slug_field='slug')
-
-    class Meta:
-        model = ProjectBudgetLine
-        fields = ('id', 'project', 'description', 'amount')
 
 
 class ManageProjectSerializer(BaseManageProjectSerializer):

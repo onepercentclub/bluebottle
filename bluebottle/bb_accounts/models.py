@@ -134,7 +134,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     # Private Settings
     primary_language = models.CharField(
         _('primary language'), max_length=5, help_text=_('Language used for website and emails.'),
-        choices=settings.LANGUAGES)
+        choices=properties.LANGUAGES, default=properties.LANGUAGE_CODE)
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=False)

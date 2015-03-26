@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
-from bluebottle.journals.models import update_related_model_when_journal_is_saved
+from bluebottle.journals.models import create_journal_for_sender
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
 from bluebottle.utils.utils import StatusDefinition
 
@@ -210,4 +210,4 @@ class OrganizationPayout(BaseOrganizationPayout):
 
 @receiver(post_save, weak=False, sender=ProjectPayout)
 def create_donation_journal_after_donation_is_changed(sender, instance, created, **kwargs):
-    update_related_model_when_journal_is_saved(sender=sender, instance=instance, created=created)
+    create_journal_for_sender(sender=sender, instance=instance, created=created)

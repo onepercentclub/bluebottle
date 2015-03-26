@@ -117,7 +117,7 @@ class ProjectPayoutJournal(BaseJournal):
 @receiver(post_save, sender=DonationJournal)
 @receiver(post_save, sender=OrganizationPayoutJournal)
 @receiver(post_save, sender=ProjectPayoutJournal)
-def create_donation_journal_after_donation_is_changed(sender, instance, created, **kwargs):
+def update_related_model_when_journal_is_saved(sender, instance, created, **kwargs):
     """
     After a journal is saved, the related model (a Donation or Payout)
     might need to be updated with the correction that is added via this new
@@ -139,7 +139,8 @@ def create_donation_journal_after_donation_is_changed(sender, instance, created,
 
 from decimal import Decimal
 
-def update_related_model_when_journal_is_saved(sender, instance, created):
+
+def create_journal_for_sender(sender, instance, created):
     from bluebottle.donations.models import Donation
     from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
 

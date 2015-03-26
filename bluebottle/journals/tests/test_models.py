@@ -129,7 +129,7 @@ class JournalModelTests(BluebottleTestCase):
         donation_from_db.save()
         self._check_nr_of_records_in_db(DonationJournal, 3)
 
-    def test_journal_created_when_project_payout_is_made(self):
+    def test_journal_created_when_project_project_payout_is_made(self):
         """
         same as test_journal_created_when_donation_is_made, only
         with a ProjectPayout instead of a Donation.

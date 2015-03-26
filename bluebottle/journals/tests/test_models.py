@@ -22,26 +22,15 @@ class JournalModelTests(BluebottleTestCase):
     will be tested in journal/tests/test_admin
     """
 
-    def _populate_project_phases(self):
-        """
-        Project.save() does several ProjectPhase.objects.get(slug='something')
-        So here I make sure they exists. (could be put in a fixture..)
-        """
-        for name in [
-            #"plan-new",  # is already made in the setUp,
-            "plan-needs-work", "plan-submitted", "campaign", "done-complete", "done-incomplete", "done-stopped"]:
-            ProjectPhaseFactory.create(name=name)
-            # check here if the behaviour in the Project.save() will work
-            self.assertEqual(ProjectPhase.objects.filter(slug=name).count(), 1)
-
     def setUp(self):
         super(JournalModelTests, self).setUp()
+        self.init_projects() # loads fixture for project phases
+
         self.assertEqual(Member.objects.count(), 0)
 
         self.project_owner = BlueBottleUserFactory.create(email='projectowner@example.com', primary_language='en')
         self.assertEqual(Member.objects.count(), 1)
 
-        self._populate_project_phases()
         self.project = ProjectFactory.create(amount_asked=500, owner=self.project_owner)
         self.user = BlueBottleUserFactory.create(first_name='Jane', email='te@st.nl')
 

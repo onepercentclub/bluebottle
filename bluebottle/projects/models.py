@@ -341,7 +341,10 @@ class Project(BaseProject):
         if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
                                                            Q(slug="done-incomplete") |
                                                            Q(slug="done-stopped")) and self.deadline < timezone.now():
-            self.status = ProjectPhase.objects.get(slug="done-incomplete")
+            if self.amount_donated >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+            else:
+                self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
 
         if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |

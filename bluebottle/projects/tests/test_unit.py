@@ -27,7 +27,10 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.init_projects()
         self.incomplete = ProjectPhase.objects.get(slug="done-incomplete")
         self.complete = ProjectPhase.objects.get(slug="done-complete")
-        self.expired_project = ProjectFactory.create(amount_asked=5000, deadline=timezone.now() - timedelta(days=1) )
+        self.campaign = ProjectPhase.objects.get(slug="campaign")
+        self.expired_project = ProjectFactory.create(amount_asked=5000,
+                                                     status=self.campaign)
+        self.expired_project.deadline = timezone.now() - timedelta(days=1)
 
     def test_expired_too_little(self):
         """ Not enough donated - status done incomplete """

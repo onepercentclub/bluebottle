@@ -38,13 +38,13 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.incomplete)
 
-    def test_expired_too_exact(self):
+    def test_expired_exact(self):
         """ Exactly the amount requested - status done complete """
         self.expired_project.amount_donated = 5000
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)
 
-    def test_expired_too_more_than_enough(self):
+    def test_expired_more_than_enough(self):
         """ More donated than requested - status done complete """
         self.expired_project.amount_donated = 5001
         self.expired_project.save()

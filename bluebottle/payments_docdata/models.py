@@ -15,8 +15,6 @@ class AbstractDocdataPayment(Payment):
     class Meta(Payment.Meta):
         abstract = True
         ordering = ('-created', '-updated')
-        verbose_name = _("Docdata Payment")
-        verbose_name_plural = _("Docdata Payments")
 
     merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
 
@@ -41,6 +39,17 @@ class AbstractDocdataPayment(Payment):
     total_captured = models.IntegerField(_("Total captured"), default=0)
     total_refunded = models.IntegerField(_("Total refunded"), default=0)
     total_charged_back = models.IntegerField(_("Total charged back"), default=0)
+
+    # Track received information
+    # Additional fields from the existing Docdata data. This data comes from the existing DocDataPaymentOrder model that is migrated.
+    customer_id = models.PositiveIntegerField(default=0)  # Defaults to 0 for anonymous.
+    email = models.EmailField(max_length=254, default='')
+    first_name = models.CharField(max_length=200, default='')
+    last_name = models.CharField(max_length=200, default='')
+    address = models.CharField(max_length=200, default='')
+    postal_code = models.CharField(max_length=20, default='')
+    city = models.CharField(max_length=200, default='')
+    ip_address = models.CharField(max_length=200, default='')
 
     def get_method_name(self):
         """ Return the payment method name.
@@ -83,19 +92,9 @@ class DocdataPayment(AbstractDocdataPayment):
 
     This class is used to store all payments except direct debit.
     """
-    # Track received information
-    # Additional fields from the existing Docdata data. This data comes from the existing DocDataPaymentOrder model that is migrated.
-    customer_id = models.PositiveIntegerField(default=0)  # Defaults to 0 for anonymous.
-    email = models.EmailField(max_length=254, default='')
-    first_name = models.CharField(max_length=200, default='')
-    last_name = models.CharField(max_length=200, default='')
-    address = models.CharField(max_length=200, default='')
-    postal_code = models.CharField(max_length=20, default='')
-    city = models.CharField(max_length=200, default='')
-    ip_address = models.CharField(max_length=200, default='')
-
     class Meta(AbstractDocdataPayment.Meta):
-        pass
+        verbose_name = _("Docdata Payment")
+        verbose_name_plural = _("Docdata Payments")
 
 
 class DocdataDirectdebitPayment(AbstractDocdataPayment):

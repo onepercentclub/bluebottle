@@ -16,20 +16,17 @@ class DocdataTransactionInline(admin.TabularInline):
     return False
 
   class Media:
-          css = {"all": ("css/admin/hide_admin_original.css",)}  
+          css = {"all": ("css/admin/hide_admin_original.css",)}
 
 
-class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
+class AbstractDocdataPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
-    model = DocdataPayment
-
     inlines = (PaymentLogEntryInline, DocdataTransactionInline)
 
-    readonly_fields = ('order_payment_link', 'merchant_order_id', 'payment_cluster_link', 'payment_cluster_key',
-                       'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency', 'ip_address',
-                        'customer_id', 'email', 'first_name', 'last_name', 'address', 'postal_code', 'city', 'country',)
-
-    fields = ('status', ) + readonly_fields
+    readonly_fields = (
+        'order_payment_link', 'merchant_order_id', 'payment_cluster_link',
+        'payment_cluster_key', 'ideal_issuer_id', 'default_pm', 'total_gross_amount',
+        'currency')
 
     def order_payment_link(self, obj):
         object = obj.order_payment
@@ -44,28 +41,26 @@ class DocdataPaymentAdmin(PolymorphicChildModelAdmin):
         return '{1} <a href="{0}" target="docdata">[Docdata Backoffice]</a>'.format(url, obj.payment_cluster_id)
 
     payment_cluster_link.allow_tags = True
-    
 
 
-class DocdataDirectdebitPaymentAdmin(PolymorphicChildModelAdmin):
-    base_model = Payment
+class DocdataPaymentAdmin(AbstractDocdataPaymentAdmin):
+    model = DocdataPayment
+
+    readonly_fields = AbstractDocdataPaymentAdmin.readonly_fields + (
+        'ip_address', 'customer_id', 'email', 'first_name', 'last_name',
+        'address', 'postal_code', 'city', 'country',
+    )
+
+    fields = ('status', ) + readonly_fields
+
+
+class DocdataDirectdebitPaymentAdmin(AbstractDocdataPaymentAdmin):
     model = DocdataDirectdebitPayment
 
-    readonly_fields = ('order_payment_link', 'payment_cluster_id', 'payment_cluster_key', 'status',
-                       'ideal_issuer_id', 'default_pm', 'total_gross_amount', 'currency',
-                       'total_registered', 'total_shopper_pending',
-                       'total_acquirer_pending', 'total_acquirer_approved',
-                       'total_captured', 'total_refunded', 'total_charged_back',
-                        'iban', 'bic', 'agree', 'account_name', 'account_city')
+    readonly_fields = AbstractDocdataPaymentAdmin.readonly_fields + (
+        'total_registered', 'total_shopper_pending', 'total_acquirer_pending',
+        'total_acquirer_approved', 'total_captured', 'total_refunded',
+        'total_charged_back', 'iban', 'bic', 'agree', 'account_name', 'account_city')
 
     fields = readonly_fields
 
-    def order_payment_link(self, obj):
-        object = obj.order_payment
-        print object._meta.app_label
-        print object._meta.module_name
-        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        print url
-        return "<a href='{0}'>Order Payment: {1}</a>".format(str(url), object.id)
-
-    order_payment_link.allow_tags = True

@@ -6,6 +6,8 @@ from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.tasks.models import Task
 from django.utils import timezone
 
 
@@ -123,4 +125,24 @@ class TestStatusMC(BluebottleTestCase):
         self.assertEqual(project.status, self.complete)
 
     def test_task_status_changed(self):
-        pass
+        """
+        Test that tasks with (only) status 'in progress' and that are passed
+        their deadline get the status 'realized'
+        """
+        now = timezone.now()
+
+        task = TaskFactory.create(title='task1', status='in progress',
+                                  deadline=now - timezone.timedelta(days=5))
+        task2 = TaskFactory.create(title='task2', status='open',
+                                   deadline=now - timezone.timedelta(days=5))
+
+        self.assertEqual(task.status, 'in progress')
+        self.assertEqual(task2.status, 'open')
+
+        call_command('cron_status_realised', 'test')
+
+        task1 = Task.objects.get(title='task1')
+        task2 = Task.objects.get(title='task2')
+
+        self.assertEqual(task1.status, 'realized')
+        self.assertEqual(task2.status, 'open')

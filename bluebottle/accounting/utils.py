@@ -1,20 +1,84 @@
 from django.db.models import Sum, Count
+from django.db.models.query import QuerySet
 from django.utils import timezone
-from django.utils.datastructures import SortedDict
-from django.utils.translation import ugettext_lazy as _
-from django.views.generic import FormView
-from django import forms
-
-from bluebottle.payments.models import OrderPayment
-from bluebottle.donations.models import Donation
 
 from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory
-from bluebottle.payouts.models import ProjectPayout
-
 from .enum import BANK_ACCOUNTS
 
+from decimal import Decimal
+
+
+def add_up(first, second):
+    """
+    Addition of two objects.
+
+    Distinguish addition of dictionaries and numbers.
+
+    return None when both are None
+    if one of the two is None, return the other one which is not None
+
+    if both are dictionaries, add them up with the custom mydict.__add__
+
+    if both are convertable to a Decimal, return the addition of the numbers
+
+    in other cases, return 'first' if it is equal to 'second' without caring about the type
+    and when they are not equal, return None because we dont know how to handle that
+    """
+    if not first:
+        return second
+    elif not second:
+        return first
+    else:
+        if isinstance(first, mydict) and isinstance(second, mydict):
+            return first + second
+        elif isinstance(first, mylist) and isinstance(second, mylist):
+            return first.add(second)
+        elif isinstance(first, QuerySet) and isinstance(second, QuerySet):
+            return None # first | second
+        else:
+            try:
+                result = Decimal(first) + Decimal(second)
+                return result
+            except:
+                if first == second:  # if both are some Class like a DjangoModel
+                    return first
+                else:
+                    # both are NOT None, they are different and are not a dict and not numeric
+                    print 'Could not handle addition of {} and {}'.format(type(first), type(second))
+                    return None
+
+
+class mydict(dict):
+
+    def __add__(self, dict2):
+        if self == mydict():
+            return dict2
+
+        keys = self.keys()
+        assert set(keys) == set(dict2.keys())
+
+        new_dict = mydict()
+        for key in keys:
+            new_dict[key] = add_up(self[key], dict2[key])
+
+        return new_dict
+
+
+class mylist(list):
+
+    def add(self, list2):
+        length = len(self)
+        assert length == len(list2)
+
+        return mylist([add_up(self[i], list2[i]) for i in range(length)])
+
+
 def get_datefiltered_qs(start, stop):
-    data = {}
+    from bluebottle.donations.models import Donation
+    from bluebottle.payments.models import OrderPayment
+    from bluebottle.payouts.models import ProjectPayout
+
+    data = mydict()
     data['transactions'] = BankTransaction.objects.filter(book_date__gte=start, book_date__lte=stop)
     data['order_payments'] = OrderPayment.objects.filter(created__gte=start, created__lte=stop)
     data['remote_docdata_payments'] = RemoteDocdataPayment.objects.filter(remote_payout__payout_date__gte=start, remote_payout__payout_date__lte=stop)
@@ -64,7 +128,7 @@ def get_dashboard_values(start, stop):
     return data
 
 def get_accounting_statistics(start, stop):
-    statistics = {}
+    statistics = mydict()
     data = get_datefiltered_qs(start, stop)
 
     order_payments = data['order_payments'].filter(status__in=['settled', 'charged_back', 'refunded'])
@@ -83,80 +147,81 @@ def get_accounting_statistics(start, stop):
 
     donations = data['donations'].filter(order__status='success')
 
-    statistics.update({
-            'orders': {
-                'total_amount': order_payments_aggregated['amount__sum'] or 0,
-                'transaction_fee': order_payments_aggregated['transaction_fee__sum'] or 0,
-                'count': order_payments.count(),
-                },
-            # 'donations': {
-            #     'total_amount': donations.aggregate(Sum('amount'))['amount__sum'],
-            #     'count': donations.count(),
-            # },
-            'bank': [],
-            'docdata': {
-                'payment': {
-                    'total_amount': remote_docdata_payments_aggregated['amount_collected__sum'] or 0,
-                    'docdata_fee': remote_docdata_payments_aggregated['docdata_fee__sum'] or 0,
-                    'third_party': remote_docdata_payments_aggregated['tpci__sum'] or 0,
-                    'count': remote_docdata_payments.count()
-                    },
-                'payout': {
-                    'total_amount': remote_docdata_payouts_aggregated['payout_amount__sum'] or 0,
-                    'count': remote_docdata_payouts.count()
-                    },
-                },
-            'project_payouts': {
-                'per_payout_rule': project_payouts.order_by('payout_rule').values('payout_rule').annotate(
+    statistics.update(
+        mydict(
+            orders=mydict(
+            total_amount=order_payments_aggregated['amount__sum'] or 0,
+            transaction_fee=order_payments_aggregated['transaction_fee__sum'] or 0,
+            count=order_payments.count()
+            ),
+            donations= mydict(
+                total_amount=donations.aggregate(Sum('amount'))['amount__sum'],
+                count=donations.count()
+            ),
+            bank=mylist(),
+            docdata=mydict(
+                payment=mydict(
+                    total_amount=remote_docdata_payments_aggregated['amount_collected__sum'] or 0,
+                    docdata_fee=remote_docdata_payments_aggregated['docdata_fee__sum'] or 0,
+                    third_party=remote_docdata_payments_aggregated['tpci__sum'] or 0,
+                    count=remote_docdata_payments.count()
+                ),
+                payout=mydict(
+                    total_amount=remote_docdata_payouts_aggregated['payout_amount__sum'] or 0,
+                    count=remote_docdata_payouts.count()
+                ),
+            ),
+            project_payouts=mydict(
+                per_payout_rule=project_payouts.order_by('payout_rule').values('payout_rule').annotate(
                     raised=Sum('amount_raised'),
                     payable=Sum('amount_payable'),
                     organization_fee=Sum('organization_fee'),
                     count=Count('payout_rule'),
                     ),
-                'raised': project_payouts_aggregated['amount_raised__sum'] or 0,
-                'payable': project_payouts_aggregated['amount_payable__sum'] or 0,
-                'organization_fee': project_payouts_aggregated['organization_fee__sum'] or 0,
-                'count': project_payouts.count()
-                },
-            })
+                raised=project_payouts_aggregated['amount_raised__sum'] or 0,
+                payable=project_payouts_aggregated['amount_payable__sum'] or 0,
+                organization_fee=project_payouts_aggregated['organization_fee__sum'] or 0,
+                count=project_payouts.count()
+            ),
+        )
+    )
 
 
     # Tpci (third party costs)
     # Tdf (docdata fee)
 
-    bank_accounts = SortedDict(BANK_ACCOUNTS)
+    bank_accounts = mydict(BANK_ACCOUNTS)
 
     for sender_account, name in bank_accounts.items():
         if sender_account:
             qs = bank_transactions.filter(sender_account=sender_account)
         else:
             qs = bank_transactions
-
-            categories = []
+            categories = mylist()
 
             for category in [None] + list(BankTransactionCategory.objects.all()):
                 credit = qs.filter(category=category, credit_debit='C').aggregate(Sum('amount'))['amount__sum']
                 debit = qs.filter(category=category, credit_debit='D').aggregate(Sum('amount'))['amount__sum']
 
-                categories.append({
-                        'category': category,
-                        'credit': credit,
-                        'debit': debit,
-                        'balance': (credit or 0) - (debit or 0),
-                        })
+                categories.append(mydict(
+                        category=category,
+                        credit=credit,
+                        debit=debit,
+                        balance=(credit or 0) - (debit or 0),
+                        ))
 
                 credit = qs.filter(credit_debit='C').aggregate(Sum('amount'))['amount__sum']
                 debit = qs.filter(credit_debit='D').aggregate(Sum('amount'))['amount__sum']
 
-                statistics['bank'].append({
-                        'per_category': categories,
-                        'account_number': sender_account,
-                        'name': name,
-                        'credit': credit,  # in
-                        'debit': debit,    # out
-                        'balance': (credit or 0 ) - (debit or 0),
-                        'count': qs.count(),
-                        })
+                statistics['bank'].append(mydict(
+                        per_category=categories,
+                        account_number=sender_account,
+                        name=name,
+                        credit=credit,  # in
+                        debit=debit,    # out
+                        balance=(credit or 0 ) - (debit or 0),
+                        count=qs.count(),
+                ))
 
             statistics['docdata']['pending_orders'] = \
                 statistics['orders']['total_amount'] - \

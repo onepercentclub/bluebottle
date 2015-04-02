@@ -31,6 +31,41 @@ class TestStatusMC(BluebottleTestCase):
 
         some_project = ProjectFactory.create(title='test',
                                              amount_asked=500,
+                                             campaign_started=now - timezone.
+                                             timedelta(days=15),
+                                             deadline=now - timezone.
+                                             timedelta(days=5))
+
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=some_project,
+            order=order,
+            amount=20
+        )
+        donation.save()
+
+        # Set status of donation to paid
+        donation.order.locked()
+        donation.order.succeeded()
+        donation.order.save()
+
+        some_project.status = self.campaign
+        some_project.save()
+
+        call_command('cron_status_realised', 'test')
+
+        project = Project.objects.get(title='test')
+        self.assertEqual(project.status, self.closed)
+
+    def test_no_campaign_started_date(self):
+        """
+        Test that a campaign that never started gets the phase stopped.
+        """
+        now = timezone.now()
+
+        some_project = ProjectFactory.create(title='test',
+                                             amount_asked=500,
                                              deadline=now - timezone.
                                              timedelta(days=5))
 
@@ -58,13 +93,15 @@ class TestStatusMC(BluebottleTestCase):
 
     def test_more_than_20_not_fully_funded(self):
         """
-        Test that a campaign with more than 20 euros but is not fully funded, 
+        Test that a campaign with more than 20 euros but is not fully funded,
         and hits the deadline gets the status done-incomplete
         """
         now = timezone.now()
 
         some_project = ProjectFactory.create(title='test',
                                              amount_asked=500,
+                                             campaign_started=now - timezone.
+                                             timedelta(days=15),
                                              deadline=now - timezone.
                                              timedelta(days=5))
 
@@ -99,6 +136,8 @@ class TestStatusMC(BluebottleTestCase):
 
         some_project = ProjectFactory.create(title='test',
                                              amount_asked=500,
+                                             campaign_started=now - timezone.
+                                             timedelta(days=15),
                                              deadline=now - timezone.
                                              timedelta(days=5))
 

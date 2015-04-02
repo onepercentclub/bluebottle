@@ -57,7 +57,7 @@ class Command(BaseCommand):
         for project in Project.objects.filter(status=campaign_phase, deadline__lte=now()):
             if project.amount_donated >= project.amount_asked:
                 project.status = done_complete_phase
-            elif project.amount_donated <= 20:
+            elif project.amount_donated <= 20 or not project.campaign_started:
                 project.status = closed_phase
             else:
                 project.status = done_incomplete_phase

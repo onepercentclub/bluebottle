@@ -1,21 +1,23 @@
 from decimal import Decimal
+from django.test.utils import override_settings
 from django.utils import timezone
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.payouts.models import ProjectPayout
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_donation_model)
 
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.test.factory_models.projects import ProjectFactory, PartnerFactory
-from django.test.utils import override_settings
 
 from ..admin import ProjectPayoutAdmin
 
 PROJECT_MODEL = get_project_model()
+DONATION_MODEL = get_donation_model()
 
 
 class PayoutTestAdmin(BluebottleTestCase):
@@ -461,3 +463,71 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
+    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
+                                            'fully_funded': .1,
+                                            'not_fully_funded': .5})
+    def test_beneath_threshold_status_completed(self):
+        """
+        Test that a payout with payout rule 'beneath_threshold' and no
+        pending donations gets the status 'settled'.
+        """
+        self.assertFalse(ProjectPayout.objects.exists())
+
+        project = ProjectFactory.create(amount_asked=100)
+        project.status = ProjectPhase.objects.get(slug='done-incomplete')
+        project.save()
+
+        # Fetch payout
+        self.assertEquals(ProjectPayout.objects.count(), 1)
+        payout = ProjectPayout.objects.all()[0]
+        self.assertEquals(payout.payout_rule, 'beneath_threshold')
+        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEqual(DONATION_MODEL.objects.filter(project=project)
+                         .count(), 0)
+        self.assertEqual(payout.completed, timezone.now().date())
+        self.assertEqual(payout.status, 'settled')
+        self.assertTrue(payout.completed)
+
+    @override_settings(MINIMAL_PAYOUT_AMOUNT=10,
+                       PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
+                                            'fully_funded': .1,
+                                            'not_fully_funded': .5})
+    def test_beneath_threshold_status_not_completed_pending_payments(self):
+        """
+        Test that a payout with rule 'beneath_threshold' but with pending
+        donations does not get the status 'settled'.
+        """
+        self.assertFalse(ProjectPayout.objects.exists())
+
+        project = ProjectFactory.create(amount_asked=100)
+        project.save()
+
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=project,
+            order=order,
+            amount=1
+        )
+        donation.save()
+
+        # Set status of donation to pending
+        donation.order.locked()
+        donation.order.pending()
+        donation.order.save()
+
+        self.assertEqual(donation.status, 'pending')
+
+        project.status = ProjectPhase.objects.get(slug='done-incomplete')
+        project.save()
+
+        # Fetch payout
+        self.assertEquals(ProjectPayout.objects.count(), 1)
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEquals(payout.payout_rule, 'beneath_threshold')
+        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEqual(DONATION_MODEL.objects.filter(project=project)
+                         .count(), 1)
+        self.assertEqual(payout.status, 'new')
+        self.assertTrue(not payout.completed)

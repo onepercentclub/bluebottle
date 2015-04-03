@@ -36,6 +36,11 @@ class Command(BaseCommand):
         except ProjectPhase.DoesNotExist:
             raise CommandError("A ProjectPhase with name 'Campaign' does not exist")
 
+        try:
+            closed_phase = ProjectPhase.objects.get(slug='closed')
+        except ProjectPhase.DoesNotExist:
+            raise CommandError("A ProjectPhase with slug 'closed' does not exist")
+
         """
         Projects which have at least the funds asked, are still in campaign phase and have not expired
         need the campaign funded date set to now.
@@ -49,9 +54,11 @@ class Command(BaseCommand):
         Projects which are still in campaign phase but have expired need to be set to 'done'.
         """
         self.stdout.write("Checking Project deadlines...")
-        for project in Project.objects.filter(status=campaign_phase, deadline__lte=now()).all():
+        for project in Project.objects.filter(status=campaign_phase, deadline__lte=now()):
             if project.amount_donated >= project.amount_asked:
                 project.status = done_complete_phase
+            elif project.amount_donated <= 20 or not project.campaign_started:
+                project.status = closed_phase
             else:
                 project.status = done_incomplete_phase
             project.campaign_ended = now()

@@ -78,8 +78,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'organization', 'description', 'owner',
                   'status', 'meta_data', 'image', 'country', 'theme', 'tags',
-                  'meta_data', 'language', 'amount_asked', 'amount_donated', 'amount_needed',
-                  'latitude', 'longitude')
+                  'meta_data', 'language', 'latitude', 'longitude',
+                  'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra'
+                  )
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
@@ -93,7 +94,8 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch', 'theme', 'owner',
-                  'amount_asked', 'amount_donated', 'amount_needed', 'deadline', 'latitude', 'longitude')
+                  'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
+                  'deadline', 'latitude', 'longitude')
 
 
 class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializer):

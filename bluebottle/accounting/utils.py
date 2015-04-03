@@ -12,7 +12,7 @@ def add_up(first, second):
     """
     Addition of two objects.
 
-    Distinguish addition of dictionaries and numbers.
+    Distinguish addition of dictionaries, list, querysets and numbers.
 
     return None when both are None
     if one of the two is None, return the other one which is not None
@@ -22,7 +22,7 @@ def add_up(first, second):
     if both are convertable to a Decimal, return the addition of the numbers
 
     in other cases, return 'first' if it is equal to 'second' without caring about the type
-    and when they are not equal, return None because we dont know how to handle that
+    and when they are not equal, return None because we don't know how to handle that
     """
     if not first:
         return second
@@ -37,7 +37,7 @@ def add_up(first, second):
             return None # first | second
         else:
             try:
-                result = Decimal(first) + Decimal(second)
+                result = Decimal(str(first)) + Decimal(str(second))
                 return result
             except:
                 if first == second:  # if both are some Class like a DjangoModel

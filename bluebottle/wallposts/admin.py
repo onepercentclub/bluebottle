@@ -19,11 +19,12 @@ class MediaWallpostPhotoInline(AdminImageMixin, admin.StackedInline):
 
 
 class MediaWallpostAdmin(PolymorphicChildModelAdmin):
-    base_model = Wallpost
+    base_model = MediaWallpost
     readonly_fields = ('ip_address', 'deleted')
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'video_url', 'photos', 'author')
-
+    list_filter = ('created', 'updated', 'deleted')
+    search_fields = ('text', 'author__username', 'author__email', 'author__first_name', 'author__last_name', 'ip_address')
     readonly_fields = ('view_online', )
 
     ordering = ('-created', )
@@ -57,11 +58,13 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
-    base_model = Wallpost
+    base_model = TextWallpost
     readonly_fields = ('ip_address', 'deleted')
     list_display = ('created', 'author', 'content_type', 'text')
+    list_filter = ('created', 'updated', 'deleted')
     raw_id_fields = ('author', 'editor')
     ordering =  ('-created', )
+    search_fields = ('text', 'author__username', 'author__email', 'author__first_name', 'author__last_name', 'ip_address')
     readonly_fields = ('wallpost_link', )
 
     def wallpost_link(self, obj):
@@ -80,10 +83,12 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
 
 
 class SystemWallpostAdmin(PolymorphicChildModelAdmin):
-    base_model = Wallpost
+    base_model = SystemWallpost
     readonly_fields = ('ip_address', 'deleted')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text')
+    list_filter = ('created', 'updated', 'deleted')
     raw_id_fields = ('author', 'editor')
+    search_fields = ('text', 'author__username', 'author__email', 'author__first_name', 'author__last_name', 'ip_address')
     ordering = ('-created', )
 
 
@@ -91,6 +96,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
     base_model = Wallpost
     list_display = ('created', 'author', 'content_type')
+    list_filter = ('created', 'updated', 'deleted')
     ordering = ('-created', )
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),

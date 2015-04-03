@@ -98,32 +98,45 @@ def get_dashboard_values(start, stop):
 
     # Mismatches
     data['invalid_transactions'] = data['transactions'].exclude(status=BankTransaction.IntegrityStatus.Valid)
+    data['invalid_transactions_count'] = data['invalid_transactions'].count()
     data['invalid_transactions_amount'] = data['invalid_transactions'].aggregate(Sum('amount'))['amount__sum'] or 0
     data['invalid_order_payments'] = data['order_payments'].filter(payment=None)
     invalid_payments = data['invalid_order_payments'].aggregate(Sum('amount'), Sum('transaction_fee'))
     data['invalid_order_payments_amount'] = invalid_payments['amount__sum'] or 0
+    data['invalid_order_payments_count'] = data['invalid_order_payments'].count()
     data['invalid_order_payments_transaction_fee'] = invalid_payments['transaction_fee__sum'] or 0
 
     data['donations_failed'] = data['donations'].filter(order__status='failed')
     data['donations_failed_amount'] = data['donations_failed'].aggregate(Sum('amount'))['amount__sum'] or 0
+    data['donations_failed_count'] = data['donations_failed'].count()
 
     # Aggregated totals
     data['transactions_amount'] = data['transactions'].aggregate(Sum('amount'))['amount__sum'] or 0
+    data['transactions_count'] = data['transactions'].count()
     data['order_payments_amount'] = data['order_payments'].aggregate(Sum('amount'))['amount__sum'] or 0
+    data['order_payments_count'] = data['order_payments'].count()
     data['remote_docdata_payments_amount'] = data['remote_docdata_payments'].aggregate(Sum('amount_collected'))['amount_collected__sum'] or 0
+    data['remote_docdata_payments_count'] = data['remote_docdata_payments'].count()
     data['remote_docdata_payouts_amount'] = data['remote_docdata_payouts'].aggregate(Sum('payout_amount'))['payout_amount__sum'] or 0
+    data['remote_docdata_payouts_count'] = data['remote_docdata_payouts'].count()
     data['project_payouts_amount'] = data['project_payouts'].aggregate(Sum('amount_raised'))['amount_raised__sum'] or 0
+    data['project_payouts_count'] = data['project_payouts'].count()
     data['project_payouts_pending'] = data['project_payouts'].exclude(status='settled')
     data['project_payouts_pending_amount'] = data['project_payouts_pending'].aggregate(Sum('amount_raised'))['amount_raised__sum'] or 0
     data['project_payouts_settled'] = data['project_payouts'].filter(status='settled')
     data['project_payouts_settled_amount'] = data['project_payouts_settled'].aggregate(Sum('amount_raised'))['amount_raised__sum'] or 0
+    data['project_payouts_settled_count'] = data['project_payouts_settled'].count()
     data['project_payouts_pending_new'] = data['project_payouts'].filter(status='new')
     data['project_payouts_pending_new_amount'] = data['project_payouts_pending_new'].aggregate(Sum('amount_raised'))['amount_raised__sum'] or 0
+    data['project_payouts_pending_new_count'] = data['project_payouts_pending_new'].count()
     data['project_payouts_pending_in_progress'] = data['project_payouts'].filter(status='in_progress')
     data['project_payouts_pending_in_progress_amount'] = data['project_payouts_pending_in_progress'].aggregate(Sum('amount_raised'))['amount_raised__sum'] or 0
+    data['project_payouts_pending_in_progress_count'] = data['project_payouts_pending_in_progress'].count()
+    data['donations_count'] = data['donations'].count()
     data['donations_amount'] = data['donations'].aggregate(Sum('amount'))['amount__sum'] or 0
     data['donations_settled'] = data['donations'].filter(order__status='success')
     data['donations_settled_amount'] = data['donations_settled'].aggregate(Sum('amount'))['amount__sum'] or 0
+    data['donations_settled_count'] = data['donations_settled'].count()
 
     return data
 

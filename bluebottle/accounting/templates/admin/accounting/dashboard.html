@@ -115,30 +115,30 @@
             <table>
                 <tbody>
                     <tr><td><a href="{% url 'admin:accounting_banktransaction_changelist' %}?integrity=invalid">
-                                {{ data.invalid_transactions.count }} {% trans "invalid bank transactions" %} -
+                                {{ data.invalid_transactions_count }} {% trans "invalid bank transactions" %} -
                                 amount: {{ data.invalid_transactions_amount|numberformat }}
                             </a>
                     </td></tr>
                     <tr><td><a href="{% url 'admin:payments_orderpayment_changelist' %}?integrity=invalid">
-                                {{ data.invalid_order_payments.count }} {% trans "invalid order payments" %} -
+                                {{ data.invalid_order_payments_count }} {% trans "invalid order payments" %} -
                                 amount: {{ data.invalid_order_payments_amount|numberformat }},
                                 transaction fee: {{ data.invalid_order_payments_transaction_fee|numberformat }}
                             </a>
                     </td></tr>
                     <tr><td><a href="{% url 'admin:donations_donation_changelist' %}?status__exact=failed">
-                                {{ data.donations_failed.count }} {% trans "failed donations" %} -
+                                {{ data.donations_failed_count }} {% trans "failed donations" %} -
                                 amount: {{ data.donations_failed_amount|numberformat }}
                             </a>
                     </td></tr>
                     {% if request.user.is_superuser %}
-                        <tr><td><a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=in_progress">
-                            {{ data.project_payouts_pending_in_progress.count }} {% trans "pending project payouts" %} -
+                        <tr><td><a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=in_progress">SUPERUSER
+                            {{ data.project_payouts_pending_in_progress_count }} {% trans "pending project payouts" %} -
                             amount: {{ data.project_payouts_pending_in_progress_amount|numberformat }}
                         </a>
                         </td></tr>
                     {% elif request.user.is_staff %}
-                        <tr><td><a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=new">
-                            {{ data.project_payouts_pending_new.count }} {% trans "pending project payouts" %} -
+                        <tr><td><a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=new">STAFF
+                            {{ data.project_payouts_pending_new_count }} {% trans "pending project payouts" %} -
                                 amount: {{ data.project_payouts_pending_new_amount|numberformat }}
                             </a>
                         </td></tr>
@@ -159,42 +159,42 @@
                 <tbody>
                     <tr>
                         <th>Bank transactions</th>
-                        <td><a href="{% url 'admin:accounting_banktransaction_changelist' %}">{{ data.transactions.count }}</a></td>
+                        <td><a href="{% url 'admin:accounting_banktransaction_changelist' %}">{{ data.transactions_count }}</a></td>
                         <td>{{ data.transactions_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Order payments</th>
-                        <td><a href="{% url 'admin:payments_orderpayment_changelist' %}">{{ data.order_payments.count }}</a></td>
+                        <td><a href="{% url 'admin:payments_orderpayment_changelist' %}">{{ data.order_payments_count }}</a></td>
                         <td>{{ data.order_payments_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Remote docdata payments</th>
-                        <td><a href="{% url 'admin:accounting_remotedocdatapayment_changelist' %}">{{ data.remote_docdata_payments.count }}</a></td>
+                        <td><a href="{% url 'admin:accounting_remotedocdatapayment_changelist' %}">{{ data.remote_docdata_payments_count }}</a></td>
                         <td>{{ data.remote_docdata_payments_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Remote docdata payouts</th>
-                        <td><a href="{% url 'admin:accounting_remotedocdatapayout_changelist' %}">{{ data.remote_docdata_payouts.count }}</a></td>
+                        <td><a href="{% url 'admin:accounting_remotedocdatapayout_changelist' %}">{{ data.remote_docdata_payouts_count }}</a></td>
                         <td>{{ data.remote_docdata_payouts_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Project payouts</th>
-                        <td><a href="{% url 'admin:payouts_projectpayout_changelist' %}">{{ data.project_payouts.count }}</a></td>
+                        <td><a href="{% url 'admin:payouts_projectpayout_changelist' %}">{{ data.project_payouts_count }}</a></td>
                         <td>{{ data.project_payouts_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Project payouts (settled)</th>
-                        <td><a href="{% url 'admin:payouts_projectpayout_changelist' %}">{{ data.project_payouts_settled.count }}</a></td>
+                        <td><a href="{% url 'admin:payouts_projectpayout_changelist' %}">{{ data.project_payouts_settled_count }}</a></td>
                         <td>{{ data.project_payouts_settled_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Donations</th>
-                        <td><a href="{% url 'admin:donations_donation_changelist' %}">{{ data.donations.count }}</a></td>
+                        <td><a href="{% url 'admin:donations_donation_changelist' %}">{{ data.donations_count }}</a></td>
                         <td>{{ data.donations_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Donations (settled)</th>
-                        <td><a href="{% url 'admin:donations_donation_changelist' %}?status__exact=pending_or_success">{{ data.donations_settled.count }}</a></td>
+                        <td><a href="{% url 'admin:donations_donation_changelist' %}?status__exact=pending_or_success">{{ data.donations_settled_count }}</a></td>
                         <td>{{ data.donations_settled_amount|numberformat }}</td>
                     </tr>
                 </tbody>

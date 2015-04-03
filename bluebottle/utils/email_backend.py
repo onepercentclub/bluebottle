@@ -3,7 +3,6 @@ import re
 import dkim
 
 from django.core.mail.backends.smtp import EmailBackend
-from django.conf import settings
 from django.utils import translation
 from django.template.loader import get_template
 from django_tools.middlewares import ThreadLocal
@@ -26,9 +25,9 @@ class DKIMBackend(EmailBackend):
         try:
             message_string = email_message.message().as_string()
             signature = dkim.sign(message_string,
-                                  settings.DKIM_SELECTOR,
-                                  settings.DKIM_DOMAIN,
-                                  settings.DKIM_PRIVATE_KEY)
+                                  properties.DKIM_SELECTOR,
+                                  properties.DKIM_DOMAIN,
+                                  properties.DKIM_PRIVATE_KEY)
             self.connection.sendmail(
                 email_message.from_email, email_message.recipients(),
                 signature + message_string)
@@ -122,7 +121,7 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
     finally:
         translation.deactivate()
 
-    # Explicetly set CELERY usage in settings. Used primarily for
+    # Explicetly set CELERY usage in properties. Used primarily for
     # testing purposes.
     if msg and properties.CELERY_MAIL:
         if properties.SEND_MAIL:

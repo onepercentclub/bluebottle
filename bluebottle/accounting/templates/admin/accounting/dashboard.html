@@ -92,13 +92,18 @@
 
                 <fieldset class="module aligned">
                         <div class="form-row">
-                            {% trans "Start" %}: {{ form.start }} {% trans "Stop" %}: {{ form.stop }} <input class="default" style="float: none;" type="submit" value="{% trans 'Go' %}" />
+                            {% trans "Start" %}: {{ form.start }} {% trans "Stop" %}: {{ form.stop }}
+
+                            {% if 'tenant' in form.fields %}
+                                {% trans "Select tenant" %}: {{ form.tenant }}
+                            {% endif %}
+
+                            <input class="default" style="float: none;" type="submit" value="{% trans 'Go' %}" />
                         </div>
                     {% for field in form.hidden_fields %}
                         {{ field }}
                     {% endfor %}
                 </fieldset>
- 
             </div>
         </form>
 

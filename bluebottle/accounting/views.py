@@ -1,20 +1,26 @@
-import datetime
-
+from django import forms
+from django.db import connection
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
 from django.views.generic import FormView
-from django import forms
 
-from django.db.models import Sum, Count
-from django.utils.datastructures import SortedDict
-from bluebottle.payments.models import OrderPayment
-from bluebottle.donations.models import Donation
-from bluebottle.accounting.models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory
-from bluebottle.payouts.models import ProjectPayout
-
-from .utils import get_accounting_statistics, get_dashboard_values
 from .enum import BANK_ACCOUNTS
+from .utils import get_accounting_statistics, get_dashboard_values, mydict
+
+import datetime
+from tenant_schemas.utils import get_tenant_model
+
+
+class InitialDatesMixin(object):
+    def get_initial(self):
+        initial = super(InitialDatesMixin, self).get_initial()
+        today = datetime.date.today()
+        self.selected_start = datetime.date(today.year, 1, 1)
+        self.selected_stop = today
+        initial['start'] = self.selected_start
+        initial['stop'] = self.selected_stop
+        return initial
+
 
 class PeriodForm(forms.Form):
     start = forms.DateField()
@@ -40,7 +46,11 @@ class PeriodForm(forms.Form):
         return timezone.datetime(stop.year, stop.month, stop.day, 12, 59, 59, tzinfo=timezone.utc)
 
 
-class AccountingOverviewView(FormView):
+class PeriodTenantForm(PeriodForm):
+    tenant = forms.ModelChoiceField(queryset=get_tenant_model().objects.all(), empty_label=_('All tenants'), required=False)
+
+
+class AccountingOverviewView(InitialDatesMixin, FormView):
     template_name = 'admin/accounting/overview.html'
     form_class = PeriodForm
 
@@ -66,26 +76,16 @@ class AccountingOverviewView(FormView):
         return context
 
 
-class AccountingDashboardView(FormView):
+class AccountingDashboardView(InitialDatesMixin, FormView):
     template_name = 'admin/accounting/dashboard.html'
     form_class = PeriodForm
 
     def form_valid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
-    def get_initial(self):
-        initial = super(AccountingDashboardView, self).get_initial()
-        today = datetime.date.today()
-        self.selected_start = datetime.date(today.year, 1, 1)
-        self.selected_stop = today
-        initial['start'] = self.selected_start
-        initial['stop'] = self.selected_stop
-        return initial
-
     def get_context_data(self, **kwargs):
         form = kwargs.get('form')
 
-        statistics = {}
         if form and form.is_valid():
             self.selected_start = form.get_start()
             self.selected_stop = form.get_stop()
@@ -103,4 +103,111 @@ class AccountingDashboardView(FormView):
              'stop': self.selected_stop,
              'bank_accounts': BANK_ACCOUNTS
         })
+        return context
+
+
+class MultiTenantAccountingOverviewView(InitialDatesMixin, FormView):
+    """
+    Same as AccountingOverviewView but context data will contain
+    totals for all tenants (or just one).
+
+    Could subclass from other view, but make sure there is no way
+    that the 'normal' AccountingOverviewView can contain data for multiple tenants.
+    """
+    template_name = 'admin/accounting/overview.html'
+    form_class = PeriodTenantForm
+
+    def form_valid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_context_data(self, **kwargs):
+        form = kwargs.get('form')
+
+        if form and form.is_valid():
+            start = form.get_start()
+            stop = form.get_stop()
+            tenant = form.cleaned_data.get('tenant', None)
+
+            if tenant:
+                connection.set_tenant(tenant)
+                header = ' - {}'.format(tenant.name)
+                statistics = get_accounting_statistics(start, stop)
+            else:
+                header = ' - All tenants'
+                statistics = mydict()
+
+                for tenant in get_tenant_model().objects.all():
+                    connection.set_tenant(tenant)
+                    statistics += get_accounting_statistics(start, stop)
+        else:
+            header = ''
+            statistics = {}
+
+        context = super(MultiTenantAccountingOverviewView, self).get_context_data(**kwargs)
+
+        context.update({
+             'app_label': 'accounting',
+             'title': _('Accountancy Overview') + header,
+             'statistics': statistics,
+        })
+        return context
+
+
+class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
+    """
+    Same as AccountingDashboardView, but for multiple tenants.
+    Could be subclassed, but the distinction should be very clear,
+    this view can contain data from all tenants, the other view can NOT.
+    """
+    template_name = 'admin/accounting/dashboard.html'
+    form_class = PeriodTenantForm
+
+    def form_valid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_context_data(self, **kwargs):
+        """
+        Get the statistics data for the selected tenant, or for all tenants.
+        In the last case, the connection will be switched for each tenant,
+        and the data for each tenant will be added to the total.
+        """
+        form = kwargs.get('form')
+
+        if form and form.is_valid():
+            self.selected_start = form.get_start()
+            self.selected_stop = form.get_stop()
+            tenant = form.cleaned_data.get('tenant', None)
+
+            if tenant:
+                connection.set_tenant(tenant)
+                statistics = get_accounting_statistics(self.selected_start, self.selected_stop)
+                totals = get_dashboard_values(self.selected_start, self.selected_stop)
+
+                header = ' - {}'.format(tenant.name)
+            else:
+                header = ' - All tenants'
+                statistics = mydict()
+                totals = mydict()
+
+                for tenant in get_tenant_model().objects.all():
+                    connection.set_tenant(tenant)
+
+                    statistics += get_accounting_statistics(self.selected_start, self.selected_stop)
+                    totals += get_dashboard_values(self.selected_start, self.selected_stop)
+        else:
+            header = ''
+            statistics, totals = {}, {}
+
+        context = super(MultiTenantAccountingDashboardView, self).get_context_data(**kwargs)
+
+        context.update({
+             'statistics': statistics,
+             'data': totals,
+             'app_label': 'accounting',
+             'title': _('Finance Dashboard') + header,
+             'start': self.selected_start,
+             'stop': self.selected_stop,
+             'bank_accounts': BANK_ACCOUNTS
+        })
+
         return context

@@ -298,7 +298,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 dd_payment = response_payment
 
         status = self.get_status_mapping(dd_payment.authorization.status)
-        payment_method = dd_payment.paymentMethod
+        payment_method = getattr(dd_payment, 'paymentMethod', '')
 
         totals = response.approximateTotals
         if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
@@ -313,11 +313,12 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
             self.payment.status = status
-            self.payment.default_pm = payment_method
+            if payment_method:
+                self.payment.default_pm = payment_method
+                self.order_payment.payment_method = self.get_method_mapping(payment_method)
+                self.order_payment.save()
             self.payment.save()
 
-            self.order_payment.payment_method = self.get_method_mapping(payment_method)
-            self.order_payment.save()
 
         for transaction in response.payment:
            self._store_payment_transaction(transaction)

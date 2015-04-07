@@ -129,11 +129,15 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         user_data['vat_number'] = ''
         user_data['house_number_addition'] = ''
         user_data['state'] = ''
+
         return user_data
 
 
     def get_status_mapping(self, external_payment_status):
         return self.STATUS_MAPPING.get(external_payment_status)
+
+    def get_method_mapping(self, external_payment_method):
+        return self.PAYMENT_METHODS.get(external_payment_method)
 
     def create_payment(self):
         if self.order_payment.payment_method == 'docdataDirectdebit':
@@ -284,7 +288,17 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if not hasattr(response, 'payment'):
             return None
 
-        status = self.get_status_mapping(response.payment[0].authorization.status)
+        # Get the first payment from the response
+        dd_payment = response.payment[0]
+        for response_payment in response.payment:
+            response_status = self.get_status_mapping(response_payment.authorization.status)
+            if response_status in [
+                StatusDefinition.AUTHORIZED, StatusDefinition.PAID,
+                StatusDefinition.CHARGED_BACK, StatusDefinition.REFUNDED]:
+                dd_payment = response_payment
+
+        status = self.get_status_mapping(dd_payment.authorization.status)
+        payment_method = dd_payment.paymentMethod
 
         totals = response.approximateTotals
         if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
@@ -299,11 +313,14 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
             self.payment.status = status
+            self.payment.default_pm = payment_method
             self.payment.save()
 
-        # FIXME: Saving transactions fails...
-        # for transaction in response.payment:
-        #    self._store_payment_transaction(transaction)
+            self.order_payment.payment_method = self.get_method_mapping(payment_method)
+            self.order_payment.save()
+
+        for transaction in response.payment:
+           self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)

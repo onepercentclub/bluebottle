@@ -55,7 +55,7 @@ class Statistic(models.Model):
         if self._get_cached('people-involved-total'):
             return self._get_cached('people-involved-total')
         
-        donator_ids = Order.objects.filter(status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)).order_by('user__id').distinct('user').values_list('user_id', flat=True)
+        donator_ids = Order.objects.filter(order_type='one-off', status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)).order_by('user__id').distinct('user').values_list('user_id', flat=True)
         fundraiser_owner_ids = Fundraiser.objects.order_by('owner__id').distinct('owner').values_list('owner_id', flat=True)
         project_owner_ids = Project.objects.filter(status__slug__in=('campaign', 'done-complete', 'done-incomplete',)).order_by('owner__id').distinct('owner').values_list('owner_id', flat=True)
         task_member_ids = TaskMember.objects.order_by('member__id').distinct('member').values_list('member_id', flat=True)
@@ -67,6 +67,10 @@ class Statistic(models.Model):
         seen = set()
         seen_add = seen.add
         people_count = len([item for item in list(itertools.chain(*items)) if item and not (item in seen or seen_add(item))])
+
+        # Add the guest donators
+        guest_donators = Order.objects.filter(user=None, status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)).count()
+        people_count += guest_donators
 
         self._set_cached('people-involved-total', people_count)
         

@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.conf import settings
+from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
@@ -16,6 +17,7 @@ from ..csvimport.admin import IncrementalCSVImportMixin
 from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout
 from .forms import BankTransactionImportForm, DocdataPaymentImportForm, update_remote_docdata_status, bulk_update_remote_docdata_spanning_multiple_weeks
 from .admin_extra import DocdataPaymentMatchedListFilter, OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter, IntegrityStatusListFilter
+from .admin_views import UnknownTransactionView
 
 
 admin.site.register(BankTransactionCategory)
@@ -34,8 +36,8 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
     ]
 
     list_display = [
-        'book_date', 'counter_name','counter_account', 'credit_debit', 'amount', 'status',
-        'status_remarks', 'category'
+        'book_date', 'counter_name', 'counter_account', 'credit_debit', 'amount', 'status',
+        'status_remarks', 'show_actions', 'category',
     ]
 
     list_filter = [
@@ -49,7 +51,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                        'description1', 'description2', 'description3',
                        'description4', 'description5', 'description6',
                        'credit_debit', 'currency', 'book_code', 'book_date', 'interest_date',
-                       'amount', 'filler', 'end_to_end_id', 'id_recipient', 'mandate_id')
+                       'amount', 'filler', 'end_to_end_id', 'id_recipient', 'mandate_id',)
 
     fieldsets = (
         (None, {
@@ -84,11 +86,40 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         return "<a href='%s'>%s</a> Amount collected %s" % (str(url), object, object.amount_collected)
     remote_payout_link.allow_tags = True
 
+    def show_actions(self, obj):
+        """
+        Collect the possible actions depending on ``obj.status``.
+        """
+        actions = {
+            # 'amount_mismatch': '<a href="#">%s</a>' % _('todo'),
+            BankTransaction.IntegrityStatus.UnknownTransaction: (
+                '<a href="%s">%s</a>' % (
+                    reverse('admin:banktransaction-unknown', kwargs={'pk': obj.pk}),
+                    _('manual entry')
+                ),
+            )
+        }
+        return "&bull;".join(actions.get(obj.status) or [])
+    show_actions.allow_tags = True
+    show_actions.short_description = _('actions')
+
     def find_matches(self, request, queryset):
         #
         for transaction in queryset.all():
             match_transaction_with_payout(transaction)
     find_matches.short_description = _("Try to match with payouts.")
+
+    def get_urls(self):
+        urls = super(BankTransactionAdmin, self).get_urls()
+        action_urls = patterns(
+            '',
+            url(
+                r'^(?P<pk>\d+)/unknown_transaction/$',
+                self.admin_site.admin_view(UnknownTransactionView.as_view()),
+                name='banktransaction-unknown'
+            ),
+        )
+        return action_urls + urls
 
 
 class DocdataPaymentInline(admin.TabularInline):

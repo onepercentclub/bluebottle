@@ -54,7 +54,7 @@ class BaseOrder(models.Model, FSMTransition):
         # TODO: add locked state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.LOCKED, target=StatusDefinition.PENDING)
+    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.FAILED], target=StatusDefinition.PENDING)
     def pending(self):
         self.confirmed = now()
 

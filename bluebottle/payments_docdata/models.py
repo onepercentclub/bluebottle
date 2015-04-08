@@ -141,7 +141,10 @@ class DocdataTransaction(Transaction):
 
     capture_status = models.CharField(max_length=60, default='', blank=True)
     capture_amount = models.IntegerField(_("Amount in cents"), null=True)
-    capture_currency = models.CharField(max_length=10, default='', blank=True)
+    chargeback_amount = models.IntegerField(_("Charge back amount in cents"), null=True)
+    refund_amount = models.IntegerField(_("Refund amount in cents"), null=True)
+    capture_currency = models.CharField(max_length=10, default='', null=True)
+    raw_response = models.TextField(blank=True)
 
     def __unicode__(self):
         return self.id

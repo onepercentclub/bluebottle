@@ -10,6 +10,8 @@ from ..admin import OrderStatusFilter, BaseOrderAdmin
 ORDER_MODEL = get_order_model()
 
 def generate_order_test(id):
+    """ Generate a test for a specific order state id and return it """
+
     def generated_test(self):
         """ if a valid state is passed, it must become part of the query """
         filter = OrderStatusFilter(None, {'status__exact':id},
@@ -24,6 +26,9 @@ def generate_order_test(id):
     return generated_test
 
 class OrderTestMeta(type):
+    """ Test the filter on all Order states by iterating over STATUS_CHOICES
+        and create an individual test case for each state """
+
     def __init__(cls, what, bases=None, dict=None):
         super(OrderTestMeta, cls).__init__(what, bases, dict)
 
@@ -31,5 +36,7 @@ class OrderTestMeta(type):
             setattr(cls, 'test_query_state_' + id, generate_order_test(id))
 
 class OrderTestAdmin(BluebottleTestCase):
+    """ Test all states in Order. The actual test methods are created in the
+        meta class """
     __metaclass__ = OrderTestMeta
 

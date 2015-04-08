@@ -1,12 +1,17 @@
 from decimal import Decimal
-from bluebottle.projects.models import ProjectBudgetLine, Project
-from bluebottle.bb_projects.admin import BaseProjectAdmin
-from bluebottle.utils.admin import export_as_csv_action
+
+import logging
+
+from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.core.urlresolvers import reverse
+
 from sorl.thumbnail.admin import AdminImageMixin
-import logging
+
+from bluebottle.projects.models import ProjectBudgetLine, Project
+from bluebottle.bb_projects.admin import BaseProjectAdmin
+from bluebottle.utils.admin import export_as_csv_action
 
 from .models import PartnerOrganization
 
@@ -36,6 +41,15 @@ class ProjectAdmin(BaseProjectAdmin):
 
     export_fields = ['title', 'owner', 'created', 'status', 'deadline', 'amount_asked', 'amount_donated']
     actions = (export_as_csv_action(fields=export_fields), )
+
+    fieldsets = (
+        (_('Main'), {'fields': ('owner', 'organization', 'status', 'title', 'slug', 'pitch',
+                                'theme', 'favorite', 'deadline', 'image', 'video_url', 
+                                'country', 'language', 'latitude', 'longitude', 'amount_asked', 'reach', 
+                                'is_campaign', 'skip_monthly', 'allow_overfunding', 'story', 'date_submitted',
+                                'campaign_started', 'campaign_ended', 'campaign_funded', 'tags',
+                                'amount_donated', 'amount_needed', 'popularity')}),
+    )
 
     def owner_link(self, obj):
         object = obj.owner

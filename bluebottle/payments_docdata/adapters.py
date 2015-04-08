@@ -39,6 +39,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     }
 
     STATUS_MAPPING = {
+        # FIXME: these do not match the documentation
         'NEW':                            StatusDefinition.STARTED,
         'STARTED':                        StatusDefinition.STARTED,
         'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # Is this mapping correct?
@@ -85,7 +86,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             street = user.address.line1.split(' ')
             if street[-1] and any(char.isdigit() for char in street[-1]):
                 user_data['house_number'] = street.pop(-1)
-                street_name = ' '.join(street)
                 if len(street):
                     user_data['street'] = ' '.join(street)
                 else:
@@ -224,7 +224,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         # Get the language that the user marked as his / her primary language
         # or fallback on the default LANGUAGE_CODE in settings
-        
+
         try:
             client_language = self.order_payment.order.user.primary_language
         except AttributeError:
@@ -232,7 +232,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:
-                reply = client.start_remote_payment(
+                client.start_remote_payment(
                     order_key=self.payment.payment_cluster_key,
                     payment=self.payment,
                     payment_method='SEPA_DIRECT_DEBIT'
@@ -252,7 +252,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         except DocdataPaymentException as i:
             raise PaymentException(i)
 
-        integration_data = self.order_payment.integration_data
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True
@@ -271,9 +270,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             default_act = True
 
         params = {
-             'default_pm': self.payment.default_pm,
-             'ideal_issuer_id': self.payment.ideal_issuer_id,
-             'default_act': default_act
+            'default_pm': self.payment.default_pm,
+            'ideal_issuer_id': self.payment.ideal_issuer_id,
+            'default_act': default_act
         }
         url += '&' + urlencode(params)
         return {'type': 'redirect', 'method': 'get', 'url': url}
@@ -291,7 +290,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
             status = StatusDefinition.SETTLED
 
-        if self.payment.status <> status:
+        if self.payment.status != status:
             self.payment.total_registered = totals.totalRegistered
             self.payment.total_shopper_pending = totals.totalShopperPending
             self.payment.total_acquirer_pending = totals.totalAcquirerPending

@@ -5,12 +5,14 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib import admin
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
-from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
+from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction
 
 
@@ -152,7 +154,16 @@ class CreateDonationView(BaseManualEntryView):
 
     def form_valid(self, form):
         transaction = form.transaction
+        Order = get_order_model()
         with db_transaction.atomic():
+            # create an order
+            order = Order.objects.create(
+                status=StatusDefinition.SUCCESS,  # completed
+                order_type='manual_entry_unmatched_banktransaction',
+                total=form.cleaned_data['amount'],
+                completed=timezone.now()
+            )
+            form.instance.order = order
             response = super(CreateDonationView, self).form_valid(form)
             transaction.status = BankTransaction.IntegrityStatus.Valid
             transaction.save()

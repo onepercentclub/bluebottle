@@ -38,6 +38,7 @@ class UnknownTransactionView(SingleObjectMixin, FormView):
         return {
             'amount': self.object.amount,
             'user_reference': self.request.user.email,
+            'description': 'Entry for bank transaction %d that could not be matched automatically' % self.object.id,
         }
 
     def get_form_data(self, form_class):

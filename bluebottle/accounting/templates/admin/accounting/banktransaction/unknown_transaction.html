@@ -11,12 +11,30 @@
     margin-left: 0.5%;
     margin-right: 0.5%;
 }
+
+h1 > small {
+    opacity: 0.5;
+}
 </style>
 {% endblock extrahead %}
 
 
 {% block content %}
 <div style="margin-top: 25px;"></div>
+
+<h1>{{ transaction }} <small>{% trans "manual entry" %}</small></h1>
+
+<p>
+    {% trans "Choose one action to resolve this unknown transaction:" %}
+    <ul>
+        <li>{% trans "Create a new donation: adds a donation record to the project and/or fundraiser." %}</li>
+        <li>{% blocktrans %}Add a project/organization payout journal entry:
+            the linked payout will be updated with the difference you enter here (=amount).
+            {% endblocktrans %}
+        </li>
+    </ul>
+</p>
+
 {% for form in form %}
     <form action="#" method="post" class="col {% if forloop.last %}last{% endif %}">{% csrf_token %}
         <fieldset class="module aligned">

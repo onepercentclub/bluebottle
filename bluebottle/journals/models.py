@@ -78,7 +78,10 @@ class DonationJournal(BaseJournal):
     related_model_amount_field_name = 'amount'
 
     def get_user_reference(self):
-        return self.donation.user.email # user is property on Donation
+        try:
+            return self.donation.user.email # user is property on Donation
+        except AttributeError:
+            return ''
 
 
 class OrganizationPayoutJournal(BaseJournal):

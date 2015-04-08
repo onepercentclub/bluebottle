@@ -112,7 +112,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         user_data['vat_number'] = ''
         user_data['house_number_addition'] = ''
         user_data['state'] = ''
+
         return user_data
+
+    def get_method_mapping(self, external_payment_method):
+        return self.PAYMENT_METHODS.get(external_payment_method)
 
     def create_payment(self):
         if self.order_payment.payment_method == 'docdataDirectdebit':
@@ -304,10 +308,21 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
             self.payment.status = status
+
+            try:
+                payment_method = [payment.authorization.paymentMethod for payment in response.payment
+                                  if payment.authorization.method == 'AUTHORIZED'][0]
+            except (AttributeError, IndexError):
+                payment_method = None
+
+            if payment_method:
+                self.payment.default_pm = payment_method
+                self.order_payment.payment_method = self.get_method_mapping(payment_method)
+                self.order_payment.save()
             self.payment.save()
 
         for transaction in response.payment:
-            self._store_payment_transaction(transaction)
+           self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, _created = DocdataTransaction.objects.get_or_create(

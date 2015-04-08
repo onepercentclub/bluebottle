@@ -17,7 +17,10 @@ from ..csvimport.admin import IncrementalCSVImportMixin
 from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout
 from .forms import BankTransactionImportForm, DocdataPaymentImportForm, update_remote_docdata_status, bulk_update_remote_docdata_spanning_multiple_weeks
 from .admin_extra import DocdataPaymentMatchedListFilter, OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter, IntegrityStatusListFilter
-from .admin_views import UnknownTransactionView
+from .admin_views import (
+    UnknownTransactionView, CreateDonationView, CreateProjectPayoutJournalView,
+    CreateOrganizationPayoutJournalView
+)
 
 
 admin.site.register(BankTransactionCategory)
@@ -110,6 +113,9 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
     find_matches.short_description = _("Try to match with payouts.")
 
     def get_urls(self):
+        """
+        Extra urls to save manual entries.
+        """
         urls = super(BankTransactionAdmin, self).get_urls()
         action_urls = patterns(
             '',
@@ -117,6 +123,21 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 r'^(?P<pk>\d+)/unknown_transaction/$',
                 self.admin_site.admin_view(UnknownTransactionView.as_view()),
                 name='banktransaction-unknown'
+            ),
+            url(
+                r'^(?P<pk>\d+)/unknown_transaction/donation/$',
+                self.admin_site.admin_view(CreateDonationView.as_view()),
+                name='banktransaction-add-donation'
+            ),
+            url(
+                r'^(?P<pk>\d+)/unknown_transaction/projectpayout/$',
+                self.admin_site.admin_view(CreateProjectPayoutJournalView.as_view()),
+                name='banktransaction-add-projectpayoutjournal'
+            ),
+            url(
+                r'^(?P<pk>\d+)/unknown_transaction/organization_payout/$',
+                self.admin_site.admin_view(CreateOrganizationPayoutJournalView.as_view()),
+                name='banktransaction-add-organizationpayoutjournal'
             ),
         )
         return action_urls + urls

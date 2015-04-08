@@ -15,6 +15,10 @@
 h1 > small {
     opacity: 0.5;
 }
+strong > label {
+    color: #333;
+    font-weight: bold !important;
+}
 </style>
 {% endblock extrahead %}
 
@@ -36,15 +40,17 @@ h1 > small {
 </p>
 
 {% for form in form %}
-    <form action="#" method="post" class="col {% if forloop.last %}last{% endif %}">{% csrf_token %}
+    <form action="{% url form.url_name pk=transaction.pk %}" method="post" class="col {% if forloop.last %}last{% endif %}">{% csrf_token %}
         <fieldset class="module aligned">
             <h2>{{ form.title|capfirst }}</h2>
             {% for field in form %}
                 <div class="form-row{% if field.errors %} errors{% endif %}">
-                    {{ field.errors }}
                     <div class="{% if not field.is_readonly and field.errors %} errors{% endif %}">
                         {% if not field.is_readonly %}{{ field.errors }}{% endif %}
-                        {{ field.label_tag }} {{ field }}
+                        {% if field.field.required %}<strong>{% endif %}
+                        {{ field.label_tag }}
+                        {% if field.field.required %}</strong>{% endif %}
+                        {{ field }}
                         {% if field.help_text %}
                             <p class="help">{{ field.help_text|safe }}</p>
                         {% endif %}

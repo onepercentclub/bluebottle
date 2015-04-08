@@ -72,8 +72,11 @@ class ProjectSerializer(BaseProjectSerializer):
 
     class Meta(BaseProjectSerializer):
         model = BaseProjectSerializer.Meta.model
-        fields = BaseProjectSerializer.Meta.fields + ('allow_overfunding', 'task_count', 'amount_asked', 'amount_donated', 'amount_needed',
-                                                      'story', 'budget_lines', 'status', 'deadline', 'latitude', 'longitude', 'video_url', 'video_html', 'partner')
+        fields = BaseProjectSerializer.Meta.fields + (
+            'allow_overfunding', 'task_count',
+            'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra'
+            'story', 'budget_lines', 'status', 'deadline',
+            'latitude', 'longitude', 'video_url', 'video_html', 'partner')
 
 
 class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
@@ -83,8 +86,9 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
-        fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count', 'allow_overfunding',
-                  'latitude', 'longitude', 'is_campaign', 'amount_asked', 'amount_donated', 'amount_needed',
+        fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count',
+                  'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
+                  'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
                   'deadline', 'status', 'owner', 'partner')
 
 

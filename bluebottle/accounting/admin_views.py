@@ -1,9 +1,8 @@
-from django import forms
+
 from django.db import transaction as db_transaction
 from django.contrib import messages
 from django.core.urlresolvers import reverse_lazy
-from django.contrib import admin
-from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -11,57 +10,10 @@ from django.views.generic import FormView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
-from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
+from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction
-
-
-def journalform_factory(model, rel_field):
-    """
-    ModelFormFactory for the journal models
-    """
-    form_class = forms.models.modelform_factory(
-        model,
-        fields=('amount', 'user_reference', 'description', rel_field),
-        widgets={
-            rel_field: ForeignKeyRawIdWidget(model._meta.get_field(rel_field).rel, admin.site)
-        }
-    )
-    form_class.title = model._meta.verbose_name
-    form_class.url_name = 'admin:banktransaction-add-%s' % model._meta.model_name
-    return form_class
-
-
-class BaseDonationModelForm(forms.ModelForm):
-
-    def __init__(self, *args, **kwargs):
-        self.transaction = kwargs.pop('transaction')
-        super(BaseDonationModelForm, self).__init__(*args, **kwargs)
-
-    def clean_amount(self):
-        amount = self.cleaned_data.get('amount')
-        if amount and amount != self.transaction.amount:
-            raise forms.ValidationError(_('The amount must be exactly equal to the transaction amount'))
-        return amount
-
-
-def donationform_factory():
-    Donation = get_donation_model()
-    widgets = {
-        'project': ForeignKeyRawIdWidget(Donation._meta.get_field('project').rel, admin.site),
-        'fundraiser': ForeignKeyRawIdWidget(Donation._meta.get_field('fundraiser').rel, admin.site),
-        'order': ForeignKeyRawIdWidget(Donation._meta.get_field('order').rel, admin.site),
-        'anonymous': forms.HiddenInput(),
-    }
-    ModelForm = forms.models.modelform_factory(
-        Donation,
-        form=BaseDonationModelForm,
-        fields=('amount', 'project', 'fundraiser', 'order', 'anonymous'),
-        widgets=widgets
-    )
-    ModelForm.title = Donation._meta.verbose_name
-    ModelForm.url_name = 'admin:banktransaction-add-donation'
-    return ModelForm
+from .admin_forms import journalform_factory, donationform_factory
 
 
 class UnknownTransactionView(SingleObjectMixin, FormView):
@@ -83,7 +35,10 @@ class UnknownTransactionView(SingleObjectMixin, FormView):
         return super(UnknownTransactionView, self).get(request, *args, **kwargs)
 
     def get_initial(self):
-        return {'amount': self.object.amount}
+        return {
+            'amount': self.object.amount,
+            'user_reference': self.request.user.email,
+        }
 
     def get_form_data(self, form_class):
         if not hasattr(self, '_form_data'):
@@ -96,6 +51,7 @@ class UnknownTransactionView(SingleObjectMixin, FormView):
 
     def get_form_kwargs(self, form_class):
         kwargs = super(UnknownTransactionView, self).get_form_kwargs()
+        kwargs['transaction'] = self.object
         if self.get_form_data(form_class) is not None:
             kwargs['data'] = self.get_form_data(form_class)
         return kwargs
@@ -133,6 +89,11 @@ class BaseManualEntryView(CreateView):
     def get_transaction(self):
         return self.get_object(queryset=BankTransaction.objects.all())
 
+    def get_form_kwargs(self):
+        kwargs = super(BaseManualEntryView, self).get_form_kwargs()
+        kwargs['transaction'] = self.get_transaction()
+        return kwargs
+
     def form_invalid(self, form):
         """
         Store the form data in the session and show the errors on the originating page.
@@ -147,17 +108,14 @@ class CreateDonationView(BaseManualEntryView):
     def get_form_class(self):
         return donationform_factory()
 
-    def get_form_kwargs(self):
-        kwargs = super(CreateDonationView, self).get_form_kwargs()
-        kwargs['transaction'] = self.get_transaction()
-        return kwargs
-
     def form_valid(self, form):
         transaction = form.transaction
         Order = get_order_model()
         with db_transaction.atomic():
-            # create an order
+            # create an order. we specify the user, because the donation itself
+            # is marked as anonymous
             order = Order.objects.create(
+                user=self.request.user,
                 status=StatusDefinition.SUCCESS,  # completed
                 order_type='manual_entry_unmatched_banktransaction',
                 total=form.cleaned_data['amount'],
@@ -167,15 +125,40 @@ class CreateDonationView(BaseManualEntryView):
             response = super(CreateDonationView, self).form_valid(form)
             transaction.status = BankTransaction.IntegrityStatus.Valid
             transaction.save()
-        messages.success(self.request, _('Created a new donation and manually resolved transaction'))
+        messages.success(
+            self.request,
+            _('Created a new donation and manually resolved transaction "%s"') % transaction
+        )
         return response
 
 
-class CreateProjectPayoutJournalView(BaseManualEntryView):
+class JournalCreateMixin(object):
+
+    """
+    Mixin that provides a ModelForm factory and form_valid handler.
+    """
+
+    def get_form_class(self):
+        return journalform_factory(self.model, 'payout')
+
+    def form_valid(self, form):
+        transaction = form.transaction
+        with db_transaction.atomic():
+            response = super(JournalCreateMixin, self).form_valid(form)
+            transaction.status = BankTransaction.IntegrityStatus.Valid
+            transaction.save()
+            messages.success(
+                self.request,
+                _('A journal entry was created to resolve transaction "%s"') % transaction
+            )
+        return response
+
+
+class CreateProjectPayoutJournalView(JournalCreateMixin, BaseManualEntryView):
     model = ProjectPayoutJournal
     fields = ('amount', 'user_reference', 'description', 'payout')
 
 
-class CreateOrganizationPayoutJournalView(BaseManualEntryView):
+class CreateOrganizationPayoutJournalView(JournalCreateMixin, BaseManualEntryView):
     model = OrganizationPayoutJournal
     fields = ('amount', 'user_reference', 'description', 'payout')

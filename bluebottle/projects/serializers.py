@@ -74,7 +74,7 @@ class ProjectSerializer(BaseProjectSerializer):
         model = BaseProjectSerializer.Meta.model
         fields = BaseProjectSerializer.Meta.fields + (
             'allow_overfunding', 'task_count',
-            'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra'
+            'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
             'story', 'budget_lines', 'status', 'deadline',
             'latitude', 'longitude', 'video_url', 'video_html', 'partner')
 

@@ -1,4 +1,7 @@
 from django import forms
+from django.db import transaction as db_transaction
+from django.contrib import messages
+from django.core.urlresolvers import reverse_lazy
 from django.contrib import admin
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.shortcuts import redirect
@@ -46,6 +49,7 @@ def donationform_factory():
         'project': ForeignKeyRawIdWidget(Donation._meta.get_field('project').rel, admin.site),
         'fundraiser': ForeignKeyRawIdWidget(Donation._meta.get_field('fundraiser').rel, admin.site),
         'order': ForeignKeyRawIdWidget(Donation._meta.get_field('order').rel, admin.site),
+        'anonymous': forms.HiddenInput(),
     }
     ModelForm = forms.models.modelform_factory(
         Donation,
@@ -98,7 +102,9 @@ class UnknownTransactionView(SingleObjectMixin, FormView):
         form_class = donationform_factory()
         if self.get_form_data(form_class) is not None:
             kwargs.setdefault('data', self.get_form_data(form_class))
-        form = form_class(initial=self.get_initial(), transaction=self.object, **kwargs)
+        initial = self.get_initial()
+        initial['anonymous'] = True
+        form = form_class(initial=initial, transaction=self.object, **kwargs)
         return form
 
     def get_form_class(self):
@@ -120,6 +126,7 @@ class BaseManualEntryView(CreateView):
     """
     Base view that holds the common logic for manual entries
     """
+    success_url = reverse_lazy('admin:accounting_banktransaction_changelist')
 
     def get_transaction(self):
         return self.get_object(queryset=BankTransaction.objects.all())
@@ -145,7 +152,12 @@ class CreateDonationView(BaseManualEntryView):
 
     def form_valid(self, form):
         transaction = form.transaction
-        import bpdb; bpdb.set_trace()
+        with db_transaction.atomic():
+            response = super(CreateDonationView, self).form_valid(form)
+            transaction.status = BankTransaction.IntegrityStatus.Valid
+            transaction.save()
+        messages.success(self.request, _('Created a new donation and manually resolved transaction'))
+        return response
 
 
 class CreateProjectPayoutJournalView(BaseManualEntryView):

@@ -43,7 +43,7 @@ strong > label {
     <form action="{% url form.url_name pk=transaction.pk %}" method="post" class="col {% if forloop.last %}last{% endif %}">{% csrf_token %}
         <fieldset class="module aligned">
             <h2>{{ form.title|capfirst }}</h2>
-            {% for field in form %}
+            {% for field in form.visible_fields %}
                 <div class="form-row{% if field.errors %} errors{% endif %}">
                     <div class="{% if not field.is_readonly and field.errors %} errors{% endif %}">
                         {% if not field.is_readonly %}{{ field.errors }}{% endif %}
@@ -57,6 +57,7 @@ strong > label {
                     </div>
                 </div>
             {% endfor %}
+            {% for field in form.hidden_fields %}{{ field }}{% endfor %}
         </fieldset>
 
         <div class="submit-row">

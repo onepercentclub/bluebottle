@@ -13,7 +13,7 @@ GROUP_PERMS = {
 class Donation(BaseDonation):
 
     def __unicode__(self):
-        return '{} for {}'.format(self.amount, self.project)
+        return u'{} for {}'.format(self.amount, self.project)
 
 
 from .signals import *

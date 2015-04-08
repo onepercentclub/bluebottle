@@ -22,11 +22,11 @@ class DonationJournalAdmin(JournalAdmin):
 
     def donation_link(self, obj):
         donation_url = reverse('admin:donations_donation_change', args=[obj.donation.id])
-        return '<a href="{}">{}</a>'.format(donation_url, obj.donation)
+        return u'<a href="{}">{}</a>'.format(donation_url, obj.donation)
 
     def project(self, obj):
         project_url = reverse('admin:projects_project_change', args=[obj.donation.project.id])
-        return '<a href="{}">{}</a>'.format(project_url, obj.donation.project)
+        return u'<a href="{}">{}</a>'.format(project_url, obj.donation.project)
 
     donation_link.allow_tags = True
     project.allow_tags = True
@@ -40,7 +40,7 @@ class OrganizationPayoutJournalAdmin(JournalAdmin):
 
     def payout_link(self, obj):
         payout_url = reverse('admin:payouts_organizationpayout_change', args=[obj.payout.id])
-        return '<a href="{}">{}</a>'.format(payout_url, obj.payout)
+        return u'<a href="{}">{}</a>'.format(payout_url, obj.payout)
 
     payout_link.allow_tags = True
 
@@ -53,11 +53,11 @@ class ProjectPayoutJournalAdmin(JournalAdmin):
 
     def payout_link(self, obj):
         payout_url = reverse('admin:payouts_projectpayout_change', args=[obj.payout.id])
-        return '<a href="{}">{}</a>'.format(payout_url, obj.payout)
+        return u'<a href="{}">{}</a>'.format(payout_url, obj.payout)
 
     def project(self, obj):
         project_url = reverse('admin:projects_project_change', args=[obj.payout.project.id])
-        return '<a href="{}">{}</a>'.format(project_url, obj.payout.project)
+        return u'<a href="{}">{}</a>'.format(project_url, obj.payout.project)
 
     payout_link.allow_tags = True
     project.allow_tags = True

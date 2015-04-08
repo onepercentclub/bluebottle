@@ -120,22 +120,39 @@ def update_related_model_when_journal_is_saved(sender, instance, created, **kwar
         related_model.save()
 
 
-def create_journal_for_sender(sender, instance, created):
-    from bluebottle.donations.models import Donation
-    from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
+def create_journal_for_sender(sender, instance, created, data_migration=None):
+    """
+    data_migration contains a dictionary when this function is called from
+    a data migration, because there is no way to get the related names as
+    properties form the Django model.
 
-    MAPPING = {
-        Donation: DonationJournal,
-        ProjectPayout: ProjectPayoutJournal,
-        OrganizationPayout: OrganizationPayoutJournal,
-    }
-    journal_class = MAPPING.get(sender)
+    in all other cases it should stay None
+    """
+    if data_migration:
+        journal_class = data_migration.get('journal_class')
+        related_model_name = data_migration.get('related_model_name')
+        related_model_amount_field_name = data_migration.get('related_model_amount_field_name')
+    else:
+        from bluebottle.donations.models import Donation
+        from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
 
-    related_model_name = journal_class.related_model_field_name
-    amount_instance = getattr(instance, journal_class.related_model_amount_field_name)
+        MAPPING = {
+            Donation: DonationJournal,
+            ProjectPayout: ProjectPayoutJournal,
+            OrganizationPayout: OrganizationPayoutJournal,
+        }
+        journal_class = MAPPING.get(sender)
+        related_model_name = journal_class.related_model_field_name
+        related_model_amount_field_name = journal_class.related_model_amount_field_name
+
+    amount_instance = getattr(instance, related_model_amount_field_name)
     journals = instance.journal_set.all()
 
     if (not created) and journals.exists():
+        if data_migration:
+            # never add journals from datamigration when there already exists one
+            return
+
         # instance is created already, and there is at least one journal already
         # so it is a modified Payout or Donation, check if the amount was changed,
         # and add the correction when needed

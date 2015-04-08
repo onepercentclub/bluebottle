@@ -54,10 +54,12 @@ class mydict(dict):
         if self == mydict():
             return dict2
 
-        keys = self.keys()
-        assert set(keys) == set(dict2.keys())
-
         new_dict = mydict()
+
+        keys = self.keys()
+        if set(keys) != set(dict2.keys()):
+            return new_dict
+
         for key in keys:
             new_dict[key] = add_up(self[key], dict2[key])
 
@@ -68,7 +70,8 @@ class mylist(list):
 
     def add(self, list2):
         length = len(self)
-        assert length == len(list2)
+        if length != len(list2):
+            return mylist()
 
         return mylist([add_up(self[i], list2[i]) for i in range(length)])
 

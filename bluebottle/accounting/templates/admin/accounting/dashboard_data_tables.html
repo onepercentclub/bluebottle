@@ -1,37 +1,36 @@
 {% load i18n accounting %}
 
 <div class="column">
-            <hr>
             <h2>{% trans "Warnings" %}</h2>
             <table>
                 <tbody>
                     <tr><td>{% if show_links %}<a href="{% url 'admin:accounting_banktransaction_changelist' %}?integrity=invalid">{% endif %}
-                                {{ data.invalid_transactions_count }} {% trans "invalid bank transactions" %} -
-                                amount: {{ data.invalid_transactions_amount|numberformat }}
+                                {{ data_dict.invalid_transactions_count }} {% trans "invalid bank transactions" %} -
+                                amount: {{ data_dict.invalid_transactions_amount|numberformat }}
                             {% if show_links %}</a>{% endif %}
                     </td></tr>
                     <tr><td>{% if show_links %}<a href="{% url 'admin:payments_orderpayment_changelist' %}?integrity=invalid">{% endif %}
-                                {{ data.invalid_order_payments_count }} {% trans "invalid order payments" %} -
-                                amount: {{ data.invalid_order_payments_amount|numberformat }},
-                                transaction fee: {{ data.invalid_order_payments_transaction_fee|numberformat }}
+                                {{ data_dict.invalid_order_payments_count }} {% trans "invalid order payments" %} -
+                                amount: {{ data_dict.invalid_order_payments_amount|numberformat }},
+                                transaction fee: {{ data_dict.invalid_order_payments_transaction_fee|numberformat }}
                             {% if show_links %}</a>{% endif %}
                     </td></tr>
                     <tr><td>{% if show_links %}<a href="{% url 'admin:donations_donation_changelist' %}?status__exact=failed">{% endif %}
-                                {{ data.donations_failed_count }} {% trans "failed donations" %} -
-                                amount: {{ data.donations_failed_amount|numberformat }}
+                                {{ data_dict.donations_failed_count }} {% trans "failed donations" %} -
+                                amount: {{ data_dict.donations_failed_amount|numberformat }}
                             {% if show_links %}</a>{% endif %}
                     </td></tr>
 
         {# {% if request.user.is_superuser %} #}
                     <tr><td>{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=in_progress">{% endif %}
-                        {{ data.project_payouts_pending_in_progress_count }} {% trans "pending project payouts (in progress)" %} -
-                        amount: {{ data.project_payouts_pending_in_progress_amount|numberformat }}
+                        {{ data_dict.project_payouts_pending_in_progress_count }} {% trans "pending project payouts (in progress)" %} -
+                        amount: {{ data_dict.project_payouts_pending_in_progress_amount|numberformat }}
                     {% if show_links %}</a>{% endif %}
                     </td></tr>
         {# {% elif request.user.is_staff %} #}
                     <tr><td>{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=new">{% endif %}
-                        {{ data.project_payouts_pending_new_count }} {% trans "pending project payouts (new)" %} -
-                            amount: {{ data.project_payouts_pending_new_amount|numberformat }}
+                        {{ data_dict.project_payouts_pending_new_count }} {% trans "pending project payouts (new)" %} -
+                            amount: {{ data_dict.project_payouts_pending_new_amount|numberformat }}
                         {% if show_links %}</a>{% endif %}
                     </td></tr>
         {# {% endif %} #}
@@ -50,43 +49,43 @@
                 <tbody>
                     <tr>
                         <th>Bank transactions</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:accounting_banktransaction_changelist' %}">{% endif %}{{ data.transactions_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.transactions_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:accounting_banktransaction_changelist' %}">{% endif %}{{ data_dict.transactions_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.transactions_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Order payments</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:payments_orderpayment_changelist' %}">{% endif %}{{ data.order_payments_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.order_payments_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:payments_orderpayment_changelist' %}">{% endif %}{{ data_dict.order_payments_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.order_payments_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Remote docdata payments</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:accounting_remotedocdatapayment_changelist' %}">{% endif %}{{ data.remote_docdata_payments_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.remote_docdata_payments_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:accounting_remotedocdatapayment_changelist' %}">{% endif %}{{ data_dict.remote_docdata_payments_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.remote_docdata_payments_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Remote docdata payouts</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:accounting_remotedocdatapayout_changelist' %}">{% endif %}{{ data.remote_docdata_payouts_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.remote_docdata_payouts_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:accounting_remotedocdatapayout_changelist' %}">{% endif %}{{ data_dict.remote_docdata_payouts_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.remote_docdata_payouts_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Project payouts</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ data.project_payouts_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.project_payouts_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ data_dict.project_payouts_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.project_payouts_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Project payouts (settled)</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ data.project_payouts_settled_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.project_payouts_settled_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ data_dict.project_payouts_settled_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.project_payouts_settled_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Donations</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:donations_donation_changelist' %}">{% endif %}{{ data.donations_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.donations_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:donations_donation_changelist' %}">{% endif %}{{ data_dict.donations_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.donations_amount|numberformat }}</td>
                     </tr>
                     <tr>
                         <th>Donations (settled)</th>
-                        <td>{% if show_links %}<a href="{% url 'admin:donations_donation_changelist' %}?status__exact=pending_or_success">{% endif %}{{ data.donations_settled_count }}{% if show_links %}</a>{% endif %}</td>
-                        <td>{{ data.donations_settled_amount|numberformat }}</td>
+                        <td>{% if show_links %}<a href="{% url 'admin:donations_donation_changelist' %}?status__exact=pending_or_success">{% endif %}{{ data_dict.donations_settled_count }}{% if show_links %}</a>{% endif %}</td>
+                        <td>{{ data_dict.donations_settled_amount|numberformat }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -98,20 +97,20 @@
                     <tr>
                         <th>{% trans "Balance of pending orders" %}</th>
                         <td class="financial">
-                            {% if show_links %}<a href="#">{% endif %}{{ statistics.docdata.pending_orders|numberformat }}{% if show_links %}</a>{% endif %}
+                            {% if show_links %}<a href="#">{% endif %}{{ statistics_dict.docdata.pending_orders|numberformat }}{% if show_links %}</a>{% endif %}
                         </td>
                     </tr>
                     <tr>
                         <th>{% trans "Balance of pending service fees to Docdata" %}</th>
                         <td class="financial">
-                            {% if show_links %}<a href="#">{% endif %}{{ statistics.docdata.pending_service_fee|numberformat }}{% if show_links %}</a>{% endif %}
+                            {% if show_links %}<a href="#">{% endif %}{{ statistics_dict.docdata.pending_service_fee|numberformat }}{% if show_links %}</a>{% endif %}
                         </td>
                     </tr>
 
                     <tr>
                         <th>{% trans "Balance of pending payouts by Docdata to 1%Club" %}</th>
                         <td class="financial">
-                            {% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ statistics.docdata.pending_payout|numberformat }}{% if show_links %}</a>{% endif %}
+                            {% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ statistics_dict.docdata.pending_payout|numberformat }}{% if show_links %}</a>{% endif %}
                         </td>
                     </tr>
                 </tbody>
@@ -129,7 +128,7 @@
                 </thead>
                 <tbody>
                     <tr class="sum add">
-                        {% with entry=statistics.project_payouts %}
+                        {% with entry=statistics_dict.project_payouts %}
                             <td>{{ entry.count }}</td>
                             <td class="financial">{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ entry.raised|numberformat }}{% if show_links %}</a>{% endif %}</td>
                             <td class="financial">{% if show_links %}<a href="{% url 'admin:payouts_projectpayout_changelist' %}">{% endif %}{{ entry.payable|numberformat }}{% if show_links %}</a>{% endif %}</td>
@@ -163,4 +162,5 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <br>
         </div>

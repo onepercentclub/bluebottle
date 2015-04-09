@@ -51,6 +51,10 @@
         .total {
             border-top: 3px double black;
         }
+        .tenant-details {
+            border: 1px solid black;
+            margin-top: 10px;
+        }
         .help-text {
             display: block;
             font-weight: normal;
@@ -102,7 +106,7 @@
             {% if all_tenants %}
                {% include 'admin/accounting/dashboard_data_tables_all_tenants.html' %}
             {% else %}
-                {% include 'admin/accounting/dashboard_data_tables.html' with show_links=True %}
+                {% include 'admin/accounting/dashboard_data_tables.html' with show_links=True data_dict=data statistics_dict=statistics %}
             {% endif %}
 
         {% endif %}

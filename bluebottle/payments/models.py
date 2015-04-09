@@ -57,13 +57,6 @@ class Payment(PolymorphicModel):
     def get_method_name(self):
         return 'unknown'
 
-    @property
-    def method_icon(self):
-        return self.get_method_icon()
-
-    def get_method_icon(self):
-        return 'images/payments/icons/icon-payment.svg'
-
     def get_fee(self):
         if not isinstance(self, Payment):
             raise PaymentException("get_fee() not implemented for {0}".format(self.__class__.__name__))

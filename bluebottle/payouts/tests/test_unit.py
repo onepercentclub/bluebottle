@@ -482,8 +482,10 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertFalse(ProjectPayout.objects.exists())
 
         project = ProjectFactory.create(amount_asked=100)
+        project.campaign_started = timezone.now() - timezone.timedelta(days=10)
         project.status = ProjectPhase.objects.get(slug='done-incomplete')
         project.save()
+
 
         # Fetch payout
         self.assertEquals(ProjectPayout.objects.count(), 1)
@@ -508,6 +510,7 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertFalse(ProjectPayout.objects.exists())
 
         project = ProjectFactory.create(amount_asked=100)
+        project.campaign_started = timezone.now() - timezone.timedelta(days=10)
         project.save()
 
         order = OrderFactory.create()

@@ -202,7 +202,7 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
                     statistics += stats
                     totals += tots
 
-                    all_tenants['tenant.name'] = {
+                    all_tenants[tenant.name] = {
                         'statistics': stats,
                         'totals': tots,
                         }

@@ -17,7 +17,6 @@ from django.db.models import Q
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
-from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
 
 from bluebottle.bb_accounts.utils import valid_email
@@ -28,6 +27,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Country
 from bluebottle.utils.models import Address
 
+from bluebottle.utils.fields import ImageField
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer', 'current_user_serializer')
 

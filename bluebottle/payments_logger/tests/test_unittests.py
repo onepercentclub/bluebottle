@@ -51,7 +51,7 @@ class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
 
         # Check that the status change was logged
         self.assertEqual(last_log.payment_id, self.order_payment.payment.id)
-        self.assertEqual(last_log.message, 'DocdataPayment object - a new payment status started')
+        self.assertEqual(last_log.message, 'DocdataPayment object - a new payment status authorized')
         self.assertEqual(last_log.level, 'INFO')
 
 

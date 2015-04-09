@@ -18,7 +18,7 @@ class DonationJournalAdmin(JournalAdmin):
     model = DonationJournal
     form = DonationJournalForm
     raw_id_fields = ('donation',)
-    list_display = ('amount', 'donation_link', 'project', 'user_reference')
+    list_display = ('amount', 'date', 'donation_link', 'project', 'user_reference')
 
     def donation_link(self, obj):
         donation_url = reverse('admin:donations_donation_change', args=[obj.donation.id])
@@ -36,7 +36,7 @@ class OrganizationPayoutJournalAdmin(JournalAdmin):
     model = OrganizationPayoutJournal
     form = OrganizationPayoutJournalForm
     raw_id_fields = ("payout",)
-    list_display = ('amount', 'payout_link', 'user_reference')
+    list_display = ('amount', 'date', 'payout_link', 'user_reference')
 
     def payout_link(self, obj):
         payout_url = reverse('admin:payouts_organizationpayout_change', args=[obj.payout.id])
@@ -49,7 +49,7 @@ class ProjectPayoutJournalAdmin(JournalAdmin):
     model = ProjectPayoutJournal
     form = ProjectPayoutJournalForm
     raw_id_fields = ("payout",)
-    list_display = ('amount', 'payout_link', 'project', 'user_reference')
+    list_display = ('amount', 'date', 'payout_link', 'project', 'user_reference')
 
     def payout_link(self, obj):
         payout_url = reverse('admin:payouts_projectpayout_change', args=[obj.payout.id])

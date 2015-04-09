@@ -1,7 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.conf import settings
 from django.utils.translation import ugettext as _
+
+import sorl.thumbnail
+from django import forms
 
 
 # Validation references:
@@ -34,6 +38,32 @@ class DutchBankAccountField(models.CharField):
         kwargs.setdefault('max_length', 10)
         super(DutchBankAccountField, self).__init__(*args, **kwargs)
         self.validators.append(DutchBankAccountFieldValidator())
+
+
+class ImageField(sorl.thumbnail.fields.ImageField):
+    """ Image field that only allow certain mime-types.
+
+    Overriden from sorl.thumbnail.fields.ImageField.
+
+    The list of valid mime-types can be set using the IMAGE_ALLOWED_MIME_TYPES setting.
+    """
+    def formfield(self, **kwargs):
+        defaults = {'form_class': RestrictedImageFormField}
+        defaults.update(kwargs)
+        return super(ImageField, self).formfield(**defaults)
+
+
+class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
+    """ Actual FormField that does the validation of the mime-types."""
+    def to_python(self, data):
+        """
+        Checks that the file-upload field data contains a valid image (GIF,
+        JPG, PNG, possibly others -- whatever the engine supports).
+        """
+        if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+            raise forms.ValidationError(self.error_messages['invalid_image'])
+        return super(RestrictedImageFormField, self).to_python(data)
+
 
 
 # If south is installed, ensure that DutchBankAccountField will be introspected just like a normal CharField

@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 
 
 GROUP_PERMS = {

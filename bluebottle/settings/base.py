@@ -413,3 +413,5 @@ FACEBOOK_AUTH_ID = ''
 
 CELERY_MAIL = False
 SEND_MAIL = True
+
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', )

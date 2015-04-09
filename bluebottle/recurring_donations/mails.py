@@ -13,11 +13,6 @@ def mail_monthly_donation_processed_notification(monthly_order):
     receiver = monthly_order.user
     cur_language = translation.get_language()
 
-    if receiver.primary_language:
-        translation.activate(receiver.primary_language)
-    else:
-        translation.activate(properties.LANGUAGE_CODE)
-
     subject = _("Thank you for your monthly support")
 
     translation.activate(receiver.primary_language)

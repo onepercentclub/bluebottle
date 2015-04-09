@@ -132,18 +132,19 @@
                             </a>
                     </td></tr>
 
+        {# {% if request.user.is_superuser %} #}
                     <tr><td><a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=in_progress">
                         {{ data.project_payouts_pending_in_progress_count }} {% trans "pending project payouts (in progress)" %} -
                         amount: {{ data.project_payouts_pending_in_progress_amount|numberformat }}
                     </a>
                     </td></tr>
-
+        {# {% elif request.user.is_staff %} #}
                     <tr><td><a href="{% url 'admin:payouts_projectpayout_changelist' %}?status__exact=new">
                         {{ data.project_payouts_pending_new_count }} {% trans "pending project payouts (new)" %} -
                             amount: {{ data.project_payouts_pending_new_amount|numberformat }}
                         </a>
                     </td></tr>
-
+        {# {% endif %} #}
                 </tbody>
             </table>
 

@@ -160,6 +160,7 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
     this view can contain data from all tenants, the other view can NOT.
     """
     template_name = 'admin/accounting/dashboard.html'
+    #template_name = 'admin/accounting/multiadmin/multi_tenant_dashboard.html'
     form_class = PeriodTenantForm
 
     def form_valid(self, form):
@@ -172,6 +173,8 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
         and the data for each tenant will be added to the total.
         """
         form = kwargs.get('form')
+
+        all_tenants = None
 
         if form and form.is_valid():
             self.selected_start = form.get_start()
@@ -188,12 +191,21 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
                 header = ' - All tenants'
                 statistics = mydict()
                 totals = mydict()
+                all_tenants = {}  # contains data for each tenant when all are selected
 
                 for tenant in get_tenant_model().objects.all():
                     connection.set_tenant(tenant)
 
-                    statistics += get_accounting_statistics(self.selected_start, self.selected_stop)
-                    totals += get_dashboard_values(self.selected_start, self.selected_stop)
+                    stats = get_accounting_statistics(self.selected_start, self.selected_stop)
+                    tots = get_dashboard_values(self.selected_start, self.selected_stop)
+
+                    statistics += stats
+                    totals += tots
+
+                    all_tenants['tenant.name'] = {
+                        'statistics': stats,
+                        'totals': tots,
+                        }
         else:
             header = ''
             statistics, totals = {}, {}
@@ -202,6 +214,7 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
 
         context.update({
              'statistics': statistics,
+             'all_tenants': all_tenants,  # is None in all cases when not 'all tenants' are selected in the multi admin view
              'data': totals,
              'app_label': 'accounting',
              'title': _('Finance Dashboard') + header,

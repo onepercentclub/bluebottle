@@ -19,6 +19,8 @@ from django.db.models.signals import pre_save, post_save
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 from bluebottle.payments.managers import PaymentManager
+from bluebottle import clients
+
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
@@ -180,6 +182,19 @@ class OrderPayment(models.Model, FSMTransition):
 
         if save:
             self.save()
+
+    @property
+    def info_text(self):
+        """ The description on the payment receipt.
+        """
+        tenant_url = clients.utils.tenant_site().domain
+
+        if tenant_url == 'onepercentclub.com':
+            info_text = _('%(tenant_url)s donation %(payment_id)s')
+        else:
+            info_text = _('%(tenant_url)s via onepercentclub %(payment_id)s')
+
+        return info_text % {'tenant_url': tenant_url, 'payment_id': self.id}
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.full_clean()

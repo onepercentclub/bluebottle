@@ -154,6 +154,9 @@ class BaseProject(models.Model, GetTweetMixin):
     amount_asked = MoneyField(default=0, null=True, blank=True)
     amount_donated = MoneyField(default=0)
     amount_needed = MoneyField(default=0)
+    amount_extra = MoneyField(default=0, null=True, blank=True,
+                              help_text=_("Amount pledged by organisation (matching fund)."))
+
 
     @property
     def is_realised(self):

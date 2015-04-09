@@ -3,19 +3,21 @@ import decimal
 
 import datetime
 from decimal import Decimal
-from bluebottle.bb_payouts.exceptions import PayoutException
-from bluebottle.bb_payouts.utils import money_from_cents
-from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import StatusDefinition
-
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
+from bluebottle.bb_payouts.exceptions import PayoutException
+from bluebottle.bb_payouts.utils import money_from_cents
+from bluebottle.bb_projects.fields import MoneyField
+from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import StatusDefinition
+
+
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
@@ -230,7 +232,7 @@ class BaseProjectPayout(PayoutBase):
     receiver_account_iban = models.CharField(max_length=100, blank=True)
     receiver_account_bic = models.CharField(max_length=100, blank=True)
     receiver_account_name = models.CharField(max_length=100)
-    receiver_account_city = models.CharField(max_length=100)
+    receiver_account_name_city = models.CharField(max_length=100)
     receiver_account_country = models.CharField(max_length=100, null=True)
 
     description_line1 = models.CharField(max_length=100, blank=True, default="")
@@ -298,6 +300,10 @@ class BaseProjectPayout(PayoutBase):
             raise PayoutException(message)
 
         self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
+
+        if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
+            self.status = StatusDefinition.SETTLED
+
         self.organization_fee = self.amount_raised - self.amount_payable
 
         if save:

@@ -32,7 +32,8 @@ def journalform_factory(model, rel_field):
                 model._meta.get_field(rel_field).rel,
                 admin.site,
                 # attrs={'id': 'id_%s_payout' % model._meta.model_name}  # doesn't work because lookup_id is hardcoded
-            )
+            ),
+            'user_reference': forms.TextInput(attrs={'readonly':'readonly'}),
         }
     )
     form_class.title = model._meta.verbose_name

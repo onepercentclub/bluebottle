@@ -1,11 +1,14 @@
 from django.conf.urls import patterns
 from surlex.dj import surl
-from .views import AccountingOverviewView, AccountingDashboardView
+from .views import (
+    AccountingOverviewView, AccountingDashboardView, MultiTenantAccountingDashboardView,
+    MultiTenantAccountingOverviewView)
 
 
 urlpatterns = patterns('',
     surl(r'^overview/$', AccountingOverviewView.as_view(), name='admin-accounting-overview'),
     surl(r'^dashboard/$', AccountingDashboardView.as_view(), name='admin-accounting-dashboard'),
-)
 
-# NOTE:  multi admin urls are registered in the url root
+    surl(r'^multiadmin/$', MultiTenantAccountingDashboardView.as_view(), name='multiadmin-accounting-dashboard'),
+    surl(r'^multiadmin/overview/$', MultiTenantAccountingOverviewView.as_view(), name='multiadmin-accounting-overview'),
+)

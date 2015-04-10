@@ -26,12 +26,6 @@ urlpatterns = patterns(
     # Other modules that need URLs exposed
     url(r'^admin/accounting/', include('bluebottle.accounting.urls')),
 
-    # multiadmin views
-    surl(r'^multiadmin/$', MultiTenantAccountingDashboardView.as_view(), name='multiadmin-accounting-dashboard'),
-    surl(r'^multiadmin/overview/$', MultiTenantAccountingOverviewView.as_view(), name='multiadmin-accounting-overview'),
-
-    #url(r'^multiadmin/', include('bluebottle.multi_tenant_admin.urls')),
-
     url(r'^admin/utils/taggit-autocomplete/', include('taggit_autocomplete_modified.urls')),
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),
     url(r'^admin/utils/admintools/', include('admin_tools.urls')),

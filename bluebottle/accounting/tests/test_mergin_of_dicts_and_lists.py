@@ -82,9 +82,7 @@ class DictTests(TestCase):
 
         -addition of decimals with integer or floats
 
-        -addition of some Model with a Decimal equals None, and should not error
-
-        # TODO: add QuerySet handling
+        -addition of some Model with a Decimal equals None instead of error
         """
 
         dict1 = mydict(
@@ -119,13 +117,12 @@ class DictTests(TestCase):
             b=11,
             c=20,
             d=mylist([1, 2]),
-            # NOTE: when comparing float with Decimal 10.5 == Decimal('10.5') and 10.6 != Decimal('10.6')
             e=mylist([Decimal('10.5'), Decimal('10.6'), Decimal('10.5')]),
             f=None,
             g=None,
             h=None,
-            i=self.model111,
-            j=None,  # MyModel(1, 1, 1) == MyModel(1, 1, 2)
+            i=None,
+            j=None,
         )
 
         self.assertEqual(totals, expected)
@@ -134,36 +131,19 @@ class DictTests(TestCase):
         dict1 = mydict(a=1, b=2)
         dict2 = mydict(a=3)
 
-        addition_failed = False
-        try:
-            totals = dict1 + dict2
-        except AssertionError:
-            addition_failed = True
-
-        self.assertTrue(addition_failed)
+        totals = dict1 + dict2
+        self.assertEqual(totals, mydict())
 
         # dictionary keys are equal, but lists in the dict have different length
         dict3 = mydict(a=1, b=mylist([2, 3]))
         dict4 = mydict(a=3, b=mylist([3, 2, 5]))
 
-        addition_failed = False
-        try:
-            totals = dict3 + dict4
-        except AssertionError:
-            addition_failed = True
-
-        self.assertTrue(addition_failed)
+        totals = dict3 + dict4
+        self.assertEqual(totals, mydict(a=4, b=mylist()))
 
         # just repeat above logic for a good case to see if it passes
         dict5 = mydict(a=1, b=mylist([2, 3, 0]))
         dict6 = mydict(a=3, b=mylist([3, 2, 5]))
-
-        addition_failed = False
-        try:
-            totals = dict5 + dict6
-        except AssertionError:
-            addition_failed = True
-            totals = []
-
-        self.assertFalse(addition_failed)
+        totals = dict5 + dict6
+        self.assertIsNotNone(totals)
         self.assertEqual(totals.get('b'), mylist([5, 5, 5]))

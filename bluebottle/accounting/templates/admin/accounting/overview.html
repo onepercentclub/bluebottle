@@ -1,17 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load i18n humanize accounting %}
 
-{#{% block content %}#}
-{#  <div id="content-main">#}
-{#    <div class="module{% if cl.has_filters %} filtered{% endif %}" id="changelist">#}
-{##}
-{#      <form id="changelist-form" action="" method="post">#}
-{#        {% csrf_token %}#}
-{#        {{ form }}#}
-{#      </form>#}
-{#    </div>#}
-{#  </div>#}
-{#{% endblock %}#}
 {% block breadcrumbs %}
     {% if not is_popup %}
         <div class="breadcrumbs">
@@ -108,7 +97,7 @@
             <hr>
 
             {% for account in statistics.bank %}
-                <h2>{% trans "Bank transactions" %}: {{ account.name }} ({{ account.account_number }})</h2>
+                <h2>{% trans "Bank transactions" %}: {{ account.name }} {% if account.account_number %}({{ account.account_number }}){% endif %}</h2>
                 <table>
                     <thead>
                         <tr>
@@ -269,14 +258,6 @@
                     </tr>
                 </tbody>
             </table>
-
-{##}
-{#            {% for title, data in statistics.items %}#}
-{#                <h2>{{ title }}</h2>#}
-{#                {% for k, v in data.items %}#}
-{#                    <p><strong>{{ k }}</strong>: {{ v|intcomma }}{% if k != 'count' %},<small>{{ v|floatformat:2|slice:"-2:" }}</small>{% endif %}</p>#}
-{#                {% endfor %}#}
-{#            {% endfor %}#}
 
         {% endif %}
 

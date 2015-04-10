@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from bluebottle.geo.models import Location
 
 from .models import Country
 
@@ -10,3 +11,10 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ('id', 'name', 'code', 'oda')
+
+
+class LocationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Location
+        fields = ('id', 'name', 'latitude', 'longitude')

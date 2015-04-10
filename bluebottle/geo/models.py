@@ -77,3 +77,14 @@ class Country(GeoBaseModel):
         ordering = ['name']
         verbose_name = _("country")
         verbose_name_plural = _("countries")
+
+
+class Location(models.Model):
+
+    name = models.CharField(_('name'), max_length=255)
+
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
+

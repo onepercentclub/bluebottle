@@ -12,17 +12,17 @@ def add_up(first, second):
     """
     Addition of two objects.
 
-    Distinguish addition of dictionaries, list, querysets and numbers.
+    Distinguish addition of dictionaries, list and numbers.
 
     return None when both are None
     if one of the two is None, return the other one which is not None
 
-    if both are dictionaries, add them up with the custom mydict.__add__
+    if both are mydicts, add them up with the custom mydict.__add__
+    if both are mylists, add them up with the .add method
 
     if both are convertable to a Decimal, return the addition of the numbers
 
-    in other cases, return 'first' if it is equal to 'second' without caring about the type
-    and when they are not equal, return None because we don't know how to handle that
+    in other cases, return None
     """
     if not first:
         return second
@@ -33,19 +33,11 @@ def add_up(first, second):
             return first + second
         elif isinstance(first, mylist) and isinstance(second, mylist):
             return first.add(second)
-        elif isinstance(first, QuerySet) and isinstance(second, QuerySet):
-            return None # first | second
         else:
             try:
-                result = Decimal(str(first)) + Decimal(str(second))
-                return result
+                return Decimal(str(first)) + Decimal(str(second))
             except:
-                if first == second:  # if both are some Class like a DjangoModel
-                    return first
-                else:
-                    # both are NOT None, they are different and are not a dict and not numeric
-                    print 'Could not handle addition of {} and {}'.format(type(first), type(second))
-                    return None
+                return None
 
 
 class mydict(dict):
@@ -207,54 +199,55 @@ def get_accounting_statistics(start, stop):
     # Tdf (docdata fee)
 
     bank_accounts = mydict(BANK_ACCOUNTS)
+    categories_list = [None] + list(BankTransactionCategory.objects.all())
+    # BankTransactionCategory can differ per tenant. structure of the dict can be different,
+    # when merging it can result in None
 
     for sender_account, name in bank_accounts.items():
         if sender_account:
             qs = bank_transactions.filter(sender_account=sender_account)
         else:
             qs = bank_transactions
-            categories = mylist()
 
-            for category in [None] + list(BankTransactionCategory.objects.all()):
-                credit = qs.filter(category=category, credit_debit='C').aggregate(Sum('amount'))['amount__sum']
-                debit = qs.filter(category=category, credit_debit='D').aggregate(Sum('amount'))['amount__sum']
+        categories = mylist()
 
-                categories.append(mydict(
-                        category=category,
-                        credit=credit,
-                        debit=debit,
-                        balance=(credit or 0) - (debit or 0),
-                        ))
+        for category in categories_list:
+            credit = qs.filter(category=category, credit_debit='C').aggregate(Sum('amount'))['amount__sum'] or 0
+            debit = qs.filter(category=category, credit_debit='D').aggregate(Sum('amount'))['amount__sum'] or 0
 
-                credit = qs.filter(credit_debit='C').aggregate(Sum('amount'))['amount__sum']
-                debit = qs.filter(credit_debit='D').aggregate(Sum('amount'))['amount__sum']
+            categories.append(mydict(
+                    category=category,
+                    credit=credit,
+                    debit=debit,
+                    balance=credit - debit,
+                    ))
 
-                statistics['bank'].append(mydict(
-                        per_category=categories,
-                        account_number=sender_account,
-                        name=name,
-                        credit=credit,  # in
-                        debit=debit,    # out
-                        balance=(credit or 0 ) - (debit or 0),
-                        count=qs.count(),
-                ))
+        credit = qs.filter(credit_debit='C').aggregate(Sum('amount'))['amount__sum'] or 0
+        debit = qs.filter(credit_debit='D').aggregate(Sum('amount'))['amount__sum'] or 0
 
-            statistics['docdata']['pending_orders'] = \
-                statistics['orders']['total_amount'] - \
-                statistics['docdata']['payout']['total_amount']
+        statistics['bank'].append(mydict(
+                per_category=categories,
+                account_number=sender_account,
+                name=name,
+                credit=credit,  # in
+                debit=debit,    # out
+                balance=credit - debit,
+                count=qs.count(),
+        ))
 
-            statistics['docdata']['pending_service_fee'] = \
-                statistics['orders']['transaction_fee'] - \
-                statistics['docdata']['payment']['docdata_fee'] - \
-                statistics['docdata']['payment']['third_party']
+        statistics['docdata']['pending_orders'] = statistics['orders']['total_amount'] - \
+                                                  statistics['docdata']['payout']['total_amount']
 
-            statistics['docdata']['pending_payout'] = \
-                statistics['docdata']['payment']['total_amount'] - \
-                sum([entry['balance'] for entry in statistics['bank'][0]['per_category'] if entry['category'] and entry['category'].pk == 2])
+        statistics['docdata']['pending_service_fee'] = statistics['orders']['transaction_fee'] - \
+                                                       statistics['docdata']['payment']['docdata_fee'] - \
+                                                       statistics['docdata']['payment']['third_party']
 
-            statistics['docdata']['payout']['other_costs'] = \
-                statistics['docdata']['payment']['total_amount'] - \
-                statistics['docdata']['payment']['docdata_fee'] - \
-                statistics['docdata']['payment']['third_party'] - \
-                statistics['docdata']['payout']['total_amount']
+        statistics['docdata']['pending_payout'] = statistics['docdata']['payment']['total_amount'] - \
+                                                  sum([entry['balance'] for entry in statistics['bank'][0]['per_category'] if entry['category'] and entry['category'].pk == 2])
+
+        statistics['docdata']['payout']['other_costs'] = statistics['docdata']['payment']['total_amount'] - \
+                                                         statistics['docdata']['payment']['docdata_fee'] - \
+                                                         statistics['docdata']['payment']['third_party'] - \
+                                                         statistics['docdata']['payout']['total_amount']
+
     return statistics

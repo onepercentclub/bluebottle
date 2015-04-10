@@ -23,7 +23,7 @@ def mail_monthly_donation_processed_notification(monthly_order):
         site=tenant_url(),
         to=receiver,
         order=monthly_order,
-        first_name=receiver.first_name.capitalize(),
+        receiver_first_name=receiver.first_name.capitalize(),
         date=format_date(locale='nl_NL'),
         amount=format_currency(monthly_order.amount, 'EUR', locale='nl_NL'),
     )

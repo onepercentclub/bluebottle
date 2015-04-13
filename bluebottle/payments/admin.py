@@ -73,7 +73,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             return tuple((cls, globals()['{0}Admin'.format(cls.__name__)]) for cls in Payment.__subclasses__())
         except KeyError as e:
             raise PaymentAdminException('Class not found: {0}. Classes extending Payment need a corresponding Admin class.'.format(e.message))
-        
+
     def order_payment_amount(self, instance):
         return instance.order_payment.amount
 

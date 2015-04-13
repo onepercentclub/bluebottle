@@ -232,7 +232,7 @@ class BaseProjectPayout(PayoutBase):
     receiver_account_iban = models.CharField(max_length=100, blank=True)
     receiver_account_bic = models.CharField(max_length=100, blank=True)
     receiver_account_name = models.CharField(max_length=100)
-    receiver_account_name_city = models.CharField(max_length=100)
+    receiver_account_city = models.CharField(max_length=100)
     receiver_account_country = models.CharField(max_length=100, null=True)
 
     description_line1 = models.CharField(max_length=100, blank=True, default="")

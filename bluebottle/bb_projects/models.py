@@ -157,10 +157,13 @@ class BaseProject(models.Model, GetTweetMixin):
     amount_extra = MoneyField(default=0, null=True, blank=True,
                               help_text=_("Amount pledged by organisation (matching fund)."))
 
-
     @property
     def is_realised(self):
         return self.status == ProjectPhase.objects.get(slug='done-complete')
+
+    @property
+    def is_closed(self):
+        return self.status == ProjectPhase.objects.get(slug='closed')
 
     @property
     def amount_pending(self):

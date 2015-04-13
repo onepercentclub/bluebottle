@@ -88,3 +88,10 @@ class Location(models.Model):
     longitude = models.DecimalField(
         _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
 
+    zoom_level = models.IntegerField(null=True, blank=True)
+
+    class Meta(GeoBaseModel.Meta):
+        ordering = ['name']
+
+    def __unicode__(self):
+        return self.name

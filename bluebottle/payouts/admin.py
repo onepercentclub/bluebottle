@@ -29,7 +29,18 @@ class PayoutListFilter(admin.SimpleListFilter):
         rules = getattr(properties, 'PROJECT_PAYOUT_FEES', {})
         rule_choices = ProjectPayout.PayoutRules.choices
 
-        return tuple(sorted(((k, "{0}% ({1})".format(int(v*100), k)) for k, v in rules.iteritems()), key=lambda x: int(re.search(r'\d+', x[1]).group(0))))
+        def _value(label):
+            import ipdb; ipdb.set_trace()
+            value = re.search(r'\d+', label)
+            try:
+                return int(value.group(0))
+            except:
+                return None
+
+        def _label(v, k):
+            return "{0}% ({1})".format(int(v*100), k)
+
+        return tuple(sorted(((k, _label(v,k)) for k, v in rules.iteritems()), key=lambda x: _value(x[1])))
 
     def queryset(self, request, queryset):
         if not self.value():
@@ -86,7 +97,7 @@ admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)
 
 
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
-    
+
     export_fields = ['project', 'status', 'payout_rule', 'amount_raised', 'organization_fee', 'amount_payable',
                      'created', 'submitted']
 

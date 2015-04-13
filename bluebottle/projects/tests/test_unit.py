@@ -1,20 +1,23 @@
 from datetime import timedelta
 from decimal import Decimal
-from bluebottle.utils.utils import StatusDefinition
 from django.test import TestCase
+from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_project_model
 
 from bluebottle.test.factory_models.projects import ProjectFactory
-
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
-from django.utils import timezone
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+
 
 PROJECT_MODEL = get_project_model()
+
 
 class TestProjectStatusUpdate(BluebottleTestCase):
     """
@@ -25,30 +28,72 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         super(TestProjectStatusUpdate, self).setUp()
 
         self.init_projects()
+
+        now = timezone.now()
+
         self.incomplete = ProjectPhase.objects.get(slug="done-incomplete")
         self.complete = ProjectPhase.objects.get(slug="done-complete")
         self.campaign = ProjectPhase.objects.get(slug="campaign")
         self.expired_project = ProjectFactory.create(amount_asked=5000,
+                                                     campaign_started=now -
+                                                     timezone.
+                                                     timedelta(days=15),
                                                      status=self.campaign)
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
 
     def test_expired_too_little(self):
         """ Not enough donated - status done incomplete """
-        self.expired_project.amount_donated = 4999
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=4999
+        )
+        donation.save()
+
+        order.locked()
+        order.succeeded()
+        order.save()
+
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.incomplete)
 
     def test_expired_exact(self):
         """ Exactly the amount requested - status done complete """
-        self.expired_project.amount_donated = 5000
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=5000
+        )
+        donation.save()
+
+        order.locked()
+        order.succeeded()
+        order.save()
+
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)
 
     def test_expired_more_than_enough(self):
         """ More donated than requested - status done complete """
-        self.expired_project.amount_donated = 5001
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=5001
+        )
+        donation.save()
+
+        order.locked()
+        order.succeeded()
+        order.save()
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)
+
 
 class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
 

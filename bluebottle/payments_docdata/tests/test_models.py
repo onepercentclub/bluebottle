@@ -15,8 +15,8 @@ from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 
 
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory, DocdataTransactionFactory
-from bluebottle.payments.models import OrderPayment 
+from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory, DocdataTransactionFactory, DocdataDirectdebitPaymentFactory
+from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -148,7 +148,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         self.assertEquals(PaymentLogEntry.objects.filter(payment=docdata_payment).count(), 5) # The status changes triggers the
                                                                                               # creation of more payment log entries
         log = PaymentLogEntry.objects.all()[0]
-        self.assertEqual(log.message, 
+        self.assertEqual(log.message,
             "{0} - Payment method changed for payment with id {1} and order payment with id {2}.".format(docdata_payment, docdata_payment.id,
                                                                                                     docdata_payment.order_payment.id))
         self.assertEqual(log.payment.id, docdata_payment.id)
@@ -199,7 +199,6 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
 
 
 class AdapterTestCase(BluebottleTestCase):
-
     @patch.object(DocdataClient, 'create')
     def test_incomplete_userdata(self, mock_client_create):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
@@ -297,17 +296,17 @@ from django.conf import settings
 from bluebottle.payments.exception import PaymentException
 from ..models import DocdataPayment
 
+
 class DocdataModelTestCase(BluebottleTestCase):
-    
     @override_settings(DOCDATA_FEES={}) # You must specify the overriden key, even if it will be removed
     def test_get_fee_no_docdata_fees(self):
         """ Test raised exception when DOCDATA_FEES is not present """
         del settings.DOCDATA_FEES
 
         payment = DocdataPayment()
-        
+
         # For some reason, assertRaises wasn't catching this exception, even though it was throwing
-        # it during the test. Therefore I used this try/except block. (This is still OK according to 
+        # it during the test. Therefore I used this try/except block. (This is still OK according to
         # the Django docs)
 
         try:
@@ -365,9 +364,9 @@ class DocdataModelTestCase(BluebottleTestCase):
         }
     })
     def test_get_fee_absolute(self):
-        """ 
-            Test that a payment method with absolute fees returns the transaction amount and the 
-            payment method fee amount, e.g., the 'transaction' amount plus the 'ideal' amount.   
+        """
+            Test that a payment method with absolute fees returns the transaction amount and the
+            payment method fee amount, e.g., the 'transaction' amount plus the 'ideal' amount.
         """
         pm = 'ideal'
 
@@ -382,9 +381,10 @@ class DocdataModelTestCase(BluebottleTestCase):
             'ideal': '1.5%'
         }
     })
+
     def test_get_fee_absolute(self):
         """
-            Test that the correct fee is returned given the defined percentage. In this test case the 
+            Test that the correct fee is returned given the defined percentage. In this test case the
             amount is 100 and the fee percentage is 1.5%, so the result should be 100 * 0.015.
         """
 
@@ -396,4 +396,21 @@ class DocdataModelTestCase(BluebottleTestCase):
         fee_total = docdata_payment.get_fee()
         self.assertEqual(fee_total, 100 * 0.015)
 
+    def test_direct_debit_wrong_pm(self):
+        """
+        Test that a direct debit payments raises an exception if the default_pm
+        is not 'sepa_direct_debit'.
+        """
+        order_payment = OrderPaymentFactory.create(amount=1000)
+        try:
+            docdata_payment = DocdataDirectdebitPaymentFactory.create(
+                order_payment=order_payment,
+                default_pm='ideal',
+                total_gross_amount=1000
+            )
+            self.fail('Direct debit payments must have \'sepa_direct_debit\' as default_pm')
+        except PaymentException, e:
+            self.assertEqual(
+                e.message, 'Direct debit payment method should be: \'sepa_direct_debit\''
+            )
 

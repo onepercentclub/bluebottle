@@ -8,7 +8,7 @@ from django_extensions.db.fields import CreationDateTimeField, ModificationDateT
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.models import PlaceholderField
 from fluent_contents.rendering import render_placeholder
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
 
 from bluebottle.utils.serializers import MLStripper

@@ -11,7 +11,7 @@ from django.db.models import options
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 
 from bluebottle.utils.model_dispatcher import get_project_phaselog_model
 from bluebottle.utils.utils import GetTweetMixin

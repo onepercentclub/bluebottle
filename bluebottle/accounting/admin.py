@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.db.models.aggregates import Sum
+from django.utils.http import urlencode
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 
@@ -363,13 +364,22 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         integrity = self._get_integrity_status(obj)
         if integrity == OrderPaymentIntegrityStatuses.missing_remote_docdata:
             actions = [
-                '<a href="%s" title="%s">%s</a>' % (
+                u'<a href="%s" title="%s">%s</a>' % (
                     reverse('admin:accounting_remotedocdatapayment_import'),
                     _('Needs to be settled by importing the payments and matching them.'),
                     _('Keep')
+                ),
+                u'<a href="%s?%s">%s</a>' % (
+                    reverse('admin:journals_orderpaymentjournal_add'),
+                    urlencode({
+                        'amount': obj.amount,
+                        'order_payment': obj.pk,
+                        'description': 'remote docdata payment not found'
+                    }),
+                    _('Manual entry'),
                 )
             ]
-        return '&bull;'.join(actions)
+        return ' &bull; '.join(actions)
     show_actions.allow_tags = True
 
 

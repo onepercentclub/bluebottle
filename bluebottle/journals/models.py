@@ -72,14 +72,14 @@ class BaseJournal(models.Model):
 
 class DonationJournal(BaseJournal):
     donation = models.ForeignKey('donations.Donation',
-                                related_name='journal_set',)
+                                 related_name='journal_set',)
 
     related_model_field_name = 'donation'
     related_model_amount_field_name = 'amount'
 
     def get_user_reference(self):
         try:
-            return self.donation.user.email # user is property on Donation
+            return self.donation.user.email  # user is property on Donation
         except AttributeError:
             return ''
 
@@ -97,7 +97,22 @@ class ProjectPayoutJournal(BaseJournal):
                                related_name='journal_set',)
 
     related_model_field_name = 'payout'
-    related_model_amount_field_name = 'amount_payable' # or amount raised
+    related_model_amount_field_name = 'amount_payable'  # or amount raised
+
+
+class OrderPaymentJournal(models.Model):
+
+    """
+    Journal that's used only to report something odd.
+
+    Do not inherit from BaseJournal, because we don't want the signal behaviour.
+    """
+    amount = MoneyField(_("amount"))
+    user_reference = models.CharField('user reference', max_length=100,  blank=True, editable=False)
+    description = models.CharField(max_length=400, blank=True)
+    order_payment = models.ForeignKey('payments.OrderPayment', related_name='journals')
+
+    date = CreationDateTimeField(_("Created"))
 
 
 @receiver(post_save, sender=DonationJournal)
@@ -119,7 +134,7 @@ def update_related_model_when_journal_is_saved(sender, instance, created, **kwar
         related_model = instance.related_model
         amount_key = instance.related_model_amount_field_name
 
-        setattr(related_model, amount_key, journal_total) # journal total is leading
+        setattr(related_model, amount_key, journal_total)  # journal total is leading
         related_model.save()
 
 

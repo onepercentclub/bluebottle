@@ -1,7 +1,11 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-from .models import DonationJournal, OrganizationPayoutJournal, ProjectPayoutJournal
-from .forms import DonationJournalForm, OrganizationPayoutJournalForm, ProjectPayoutJournalForm
+from .models import (
+    DonationJournal, OrganizationPayoutJournal, ProjectPayoutJournal,
+    OrderPaymentJournal
+)
+
+from .forms import journalform_factory
 
 
 class JournalAdmin(admin.ModelAdmin):
@@ -16,7 +20,7 @@ class JournalAdmin(admin.ModelAdmin):
 
 class DonationJournalAdmin(JournalAdmin):
     model = DonationJournal
-    form = DonationJournalForm
+    form = journalform_factory(DonationJournal)
     raw_id_fields = ('donation',)
     list_display = ('amount', 'date', 'donation_link', 'project', 'user_reference')
 
@@ -34,7 +38,7 @@ class DonationJournalAdmin(JournalAdmin):
 
 class OrganizationPayoutJournalAdmin(JournalAdmin):
     model = OrganizationPayoutJournal
-    form = OrganizationPayoutJournalForm
+    form = journalform_factory(OrganizationPayoutJournal)
     raw_id_fields = ("payout",)
     list_display = ('amount', 'date', 'payout_link', 'user_reference')
 
@@ -47,7 +51,7 @@ class OrganizationPayoutJournalAdmin(JournalAdmin):
 
 class ProjectPayoutJournalAdmin(JournalAdmin):
     model = ProjectPayoutJournal
-    form = ProjectPayoutJournalForm
+    form = journalform_factory(ProjectPayoutJournal)
     raw_id_fields = ("payout",)
     list_display = ('amount', 'date', 'payout_link', 'project', 'user_reference')
 
@@ -63,6 +67,16 @@ class ProjectPayoutJournalAdmin(JournalAdmin):
     project.allow_tags = True
 
 
+class OrderPaymentJournalAdmin(JournalAdmin):
+    form = journalform_factory(OrderPaymentJournal)
+    raw_id_fields = ('order_payment',)
+
+    def order_payment_link(self, obj):
+        url = reverse('admin:payments_orderpayment_change', args=[obj.order_payment.pk])
+        return u'<a href="{}">{}</a>'.format(url, obj.order_payment)
+
+
 admin.site.register(DonationJournal, DonationJournalAdmin)
 admin.site.register(OrganizationPayoutJournal, OrganizationPayoutJournalAdmin)
 admin.site.register(ProjectPayoutJournal, ProjectPayoutJournalAdmin)
+admin.site.register(OrderPaymentJournal, OrderPaymentJournalAdmin)

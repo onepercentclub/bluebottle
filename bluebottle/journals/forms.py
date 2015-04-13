@@ -1,20 +1,5 @@
-from django.forms import ModelForm
-from .models import DonationJournal, ProjectPayoutJournal, OrganizationPayoutJournal
+from django.forms.models import modelform_factory
 
 
-class DonationJournalForm(ModelForm):
-    class Meta:
-        model = DonationJournal
-        exclude = ('user_reference', )
-
-
-class ProjectPayoutJournalForm(ModelForm):
-    class Meta:
-        model = ProjectPayoutJournal
-        exclude = ('user_reference', )
-
-
-class OrganizationPayoutJournalForm(ModelForm):
-    class Meta:
-        model = OrganizationPayoutJournal
-        exclude = ('user_reference', )
+def journalform_factory(model):
+    return modelform_factory(model, exclude=('user_reference',))

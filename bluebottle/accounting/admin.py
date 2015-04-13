@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.conf.urls import patterns, url
 from django.contrib import admin
-from django.db.models.aggregates import Sum
+from django.db.models.aggregates import Sum, Count
 from django.utils.http import urlencode
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
@@ -309,7 +309,8 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
     def queryset(self, request):
         return super(OrderPaymentAdmin, self).queryset(request).select_related('payment').annotate(
-            rdp_amount_collected=Sum('payment__remotedocdatapayment__amount_collected')
+            rdp_amount_collected=Sum('payment__remotedocdatapayment__amount_collected'),
+            n_journals=Count('journals')
         )
 
     def triple_deal_reference(self, obj):
@@ -328,6 +329,10 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     payment_link.allow_tags = True
 
     def remote_payment_link(self, obj):
+        if obj.n_journals:
+            url = 'admin:journals_orderpaymentjournal_change'
+            return u', '.join('<a href="%s">%s</a>' % (reverse(url, args=[journal.pk]), _('journal'))
+                              for journal in obj.journals.all())
         if self.matched(obj):
             object = obj.payment.remotedocdatapayment_set.all()[0]
             url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
@@ -335,7 +340,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     remote_payment_link.allow_tags = True
 
     def matched(self, obj):
-        if obj.payment and obj.payment.remotedocdatapayment_set.exists():
+        if obj.payment and (obj.payment.remotedocdatapayment_set.exists() or obj.n_journals):
             return True
         return False
     matched.boolean = True
@@ -344,12 +349,12 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         if not hasattr(obj, '_integrity_status'):
             if not obj.payment:
                 obj._integrity_status = OrderPaymentIntegrityStatuses.missing_docdata
-            elif not obj.payment.remotedocdatapayment_set.exists():
+            elif not obj.payment.remotedocdatapayment_set.exists() and not obj.n_journals:
                 obj._integrity_status = OrderPaymentIntegrityStatuses.missing_remote_docdata
             # The line below is done via annotate.
             # amount_collected = obj.payment.remotedocdatapayment_set.aggregate(
             #     Sum('amount_collected'))['amount_collected__sum']
-            elif obj.amount == obj.rdp_amount_collected:
+            elif obj.amount == obj.rdp_amount_collected or obj.n_journals:
                 obj._integrity_status = OrderPaymentIntegrityStatuses.valid
             else:
                 obj._integrity_status = OrderPaymentIntegrityStatuses.amount_mismatch

@@ -16,7 +16,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     project = instance
     now = timezone.now()
 
-    if project.is_realised and project.amount_asked:
+    if (project.is_realised or project.is_closed) and project.amount_asked:
 
         if now.day <= 15:
             next_date = timezone.datetime(now.year, now.month, 15)

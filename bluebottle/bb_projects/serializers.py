@@ -157,4 +157,4 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
         model = PROJECT_MODEL
         fields = ('id', 'title', 'description', 'editable', 'viewable',
                   'status', 'image', 'pitch', 'slug', 'tags', 'created',
-                  'url', 'country', 'location', 'theme', 'organization', 'language')
+                  'url', 'country', 'location', 'place', 'theme', 'organization', 'language')

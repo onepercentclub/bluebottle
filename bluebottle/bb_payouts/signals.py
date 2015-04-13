@@ -48,6 +48,11 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 # Calculate amounts
                 payout.calculate_amounts()
 
+                if project.is_closed:
+                    payout.status = StatusDefinition.SETTLED
+
+                payout.save()
+
                 # Set payment details
                 organization = project.organization
                 payout.receiver_account_bic = organization.account_bic

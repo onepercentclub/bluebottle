@@ -40,5 +40,40 @@
     "fields": {
         "name": "Docdata payment"
     }
+},
+{
+    "pk": 7,
+    "model": "accounting.banktransactioncategory",
+    "fields": {
+        "name": "Bank costs"
+    }
+},
+{
+    "pk": 8,
+    "model": "accounting.banktransactioncategory",
+    "fields": {
+        "name": "Donations to be transferred"
+    }
+},
+{
+    "pk": 9,
+    "model": "accounting.banktransactioncategory",
+    "fields": {
+        "name": "Interest"
+    }
+},
+{
+    "pk": 10,
+    "model": "accounting.banktransactioncategory",
+    "fields": {
+        "name": "Settle Bank costs"
+    }
+},
+{
+    "pk": 11,
+    "model": "accounting.banktransactioncategory",
+    "fields": {
+        "name": "Total"
+    }
 }
 ]

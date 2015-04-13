@@ -6,6 +6,8 @@ from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 
+from djchoices import DjangoChoices, ChoiceItem
+
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_docdata.models import DocdataPayment
@@ -283,6 +285,13 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
     find_matches.short_description = _("Try to match with backoffice.")
 
 
+class OrderPaymentIntegrityStatuses(DjangoChoices):
+    missing_docdata = ChoiceItem('missing_docdata', _('Invalid: Missing docdata payment'))
+    missing_remote_docdata = ChoiceItem('missing_remote_docdata', _('Invalid: Missing remote docdata payment'))
+    amount_mismatch = ChoiceItem('amount_mismatch', _('Invalid: Amount mismatch ({0} != {1})'))
+    valid = ChoiceItem('valid', _('Valid'))
+
+
 class OrderPaymentAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     raw_id_fields = ('user', )
@@ -290,8 +299,11 @@ class OrderPaymentAdmin(admin.ModelAdmin):
                        'authorization_action', 'amount', 'integration_data',
                        'payment_method', 'transaction_fee', 'status', 'created', 'closed')
     fields = ('user',) + readonly_fields
-    list_display = ('created', 'user', 'status', 'amount', 'payment_method', 'transaction_fee', 'triple_deal_reference', 'matched', 'integrity_status')
-    list_filter = ('status', 'created', 'payment_method', OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter)
+    list_display = ('created', 'user', 'status', 'amount', 'payment_method',
+                    'transaction_fee', 'triple_deal_reference', 'matched',
+                    'integrity_status', 'show_actions')
+    list_filter = ('status', 'created', 'payment_method',
+                   OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter)
     ordering = ('-created',)
 
     def queryset(self, request):
@@ -322,26 +334,43 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     remote_payment_link.allow_tags = True
 
     def matched(self, obj):
-        if obj.payment and obj.payment.remotedocdatapayment_set.count():
+        if obj.payment and obj.payment.remotedocdatapayment_set.exists():
             return True
         return False
     matched.boolean = True
 
+    def _get_integrity_status(self, obj):
+        if not hasattr(obj, '_integrity_status'):
+            if not obj.payment:
+                obj._integrity_status = OrderPaymentIntegrityStatuses.missing_docdata
+            elif not obj.payment.remotedocdatapayment_set.exists():
+                obj._integrity_status = OrderPaymentIntegrityStatuses.missing_remote_docdata
+            # The line below is done via annotate.
+            # amount_collected = obj.payment.remotedocdatapayment_set.aggregate(
+            #     Sum('amount_collected'))['amount_collected__sum']
+            elif obj.amount == obj.rdp_amount_collected:
+                obj._integrity_status = OrderPaymentIntegrityStatuses.valid
+            else:
+                obj._integrity_status = OrderPaymentIntegrityStatuses.amount_mismatch
+        return obj._integrity_status
+
     def integrity_status(self, obj):
-        if not obj.payment:
-            return _('Invalid: Missing docdata payment')
-        if not obj.payment.remotedocdatapayment_set.count():
-            return _('Invalid: Missing remote docdata payment')
+        integrity = self._get_integrity_status(obj)
+        return OrderPaymentIntegrityStatuses.labels[integrity].format(obj.amount, obj.rdp_amount_collected)
 
-        # This seems incorrectly stated.
-        # if obj.amount in obj.payment.remotedocdatapayment_set.values_list('amount_collected', flat=True):
-        #     return _('Valid: Multiple remote payments')
-
-        # The line below is done via annotate.
-        # amount_collected = obj.payment.remotedocdatapayment_set.aggregate(Sum('amount_collected'))['amount_collected__sum']
-        if obj.amount == obj.rdp_amount_collected:
-            return _('Valid')
-        return _('Invalid: Amount mismatch ({0} != {1})').format(obj.amount, obj.rdp_amount_collected)
+    def show_actions(self, obj):
+        actions = []  # empty list by default
+        integrity = self._get_integrity_status(obj)
+        if integrity == OrderPaymentIntegrityStatuses.missing_remote_docdata:
+            actions = [
+                '<a href="%s" title="%s">%s</a>' % (
+                    reverse('admin:accounting_remotedocdatapayment_import'),
+                    _('Needs to be settled by importing the payments and matching them.'),
+                    _('Keep')
+                )
+            ]
+        return '&bull;'.join(actions)
+    show_actions.allow_tags = True
 
 
 admin.site.unregister(OrderPayment)

@@ -137,7 +137,8 @@ class BaseProject(models.Model, GetTweetMixin):
     tags = TaggableManager(blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
-
+    location = models.ForeignKey('geo.Location', null=True, blank=True)
+    place = models.CharField(help_text=_('Geographical location'), max_length=100, null=True, blank=True)
 
     # Extended Description
     description = models.TextField(_('why, what and how'), help_text=_('Blow us away with the details!'), blank=True)
@@ -274,3 +275,4 @@ class BaseProjectPhaseLog(models.Model):
 
 
 from projectwallmails import *
+

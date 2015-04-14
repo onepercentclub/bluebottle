@@ -105,6 +105,7 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
     status = serializers.PrimaryKeyRelatedField(required=False)
+    location = serializers.PrimaryKeyRelatedField(required=False)
     image = ImageSerializer(required=False)
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
@@ -154,5 +155,6 @@ class ManageProjectSerializer(TaggableSerializerMixin, serializers.ModelSerializ
 
     class Meta:
         model = PROJECT_MODEL
-        fields = ('id', 'title', 'description', 'editable', 'viewable', 'status', 'image', 'pitch',
-                  'slug', 'tags', 'created', 'url', 'country', 'theme', 'organization', 'language')
+        fields = ('id', 'title', 'description', 'editable', 'viewable',
+                  'status', 'image', 'pitch', 'slug', 'tags', 'created',
+                  'url', 'country', 'location', 'place', 'theme', 'organization', 'language')

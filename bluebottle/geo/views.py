@@ -1,4 +1,6 @@
 from rest_framework import generics
+from bluebottle.geo.models import Location
+from bluebottle.geo.serializers import LocationSerializer
 
 from bluebottle.utils.model_dispatcher import get_project_model
 
@@ -31,3 +33,10 @@ class UsedCountryList(CountryList):
         project_country_ids = PROJECT_MODEL.objects.filter(status__viewable=True).values_list('country', flat=True).distinct()
 
         return qs.filter(id__in=project_country_ids)
+
+
+class LocationList(generics.ListAPIView):
+    serializer_class = LocationSerializer
+    model = Location
+
+

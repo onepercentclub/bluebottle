@@ -14,6 +14,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.geo import CountryFactory
 
 
 PROJECT_MODEL = get_project_model()
@@ -34,11 +35,13 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.incomplete = ProjectPhase.objects.get(slug="done-incomplete")
         self.complete = ProjectPhase.objects.get(slug="done-complete")
         self.campaign = ProjectPhase.objects.get(slug="campaign")
+
         self.expired_project = ProjectFactory.create(amount_asked=5000,
                                                      campaign_started=now -
                                                      timezone.
                                                      timedelta(days=15),
                                                      status=self.campaign)
+
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
 
     def test_expired_too_little(self):

@@ -1,7 +1,6 @@
-import datetime
 from datetime import timedelta
+
 from django.utils import timezone
-from django.utils.timezone import now
 
 import factory
 
@@ -40,7 +39,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     organization = factory.SubFactory(OrganizationFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
-    status =  factory.SubFactory(ProjectPhaseFactory, name='Plan - New')
+    status = factory.SubFactory(ProjectPhaseFactory, name='Plan - New')
     theme = factory.SubFactory(ProjectThemeFactory, name='Education')
     country = factory.SubFactory(CountryFactory)
 
@@ -48,6 +47,21 @@ class ProjectFactory(factory.DjangoModelFactory):
     amount_needed = 100
     amount_asked = 100
     allow_overfunding = True
+
+    account_iban = 'NL18ABNA0484869868'
+    account_bic = 'ABNANL2A'
+    account_number = '123456789'
+    account_bank_name = 'Duck bank'
+    account_bank_address = 'Ducklane 12'
+    account_bank_postal_code = '1234AB'
+    account_bank_country = factory.SubFactory(CountryFactory)
+    account_bank_city = 'Duckstad'
+    account_other = 'Other info'
+    account_holder_name = 'test name'
+    account_holder_address = 'test'
+    account_holder_postal_code = '1234ab'
+    account_holder_city = 'test'
+    account_holder_country = factory.SubFactory(CountryFactory)
 
 
 class PartnerFactory(factory.DjangoModelFactory):

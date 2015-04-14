@@ -129,6 +129,11 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         country = CountryFactory.create()
 
         project = ProjectFactory.create(title='test project',
+                                        account_holder_name='test name',
+                                        account_holder_address='test address',
+                                        account_holder_postal_code='12345AC',
+                                        account_holder_city='Amsterdam',
+                                        account_holder_country=country,
                                         account_iban='NL18ABNA0484869868',
                                         account_bic='ABNANL2A',
                                         account_number='123456789',
@@ -156,6 +161,12 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.data['account_bank_country'], country.id)
         self.assertEquals(response.data['account_bank_city'], 'Duckstad')
         self.assertEquals(response.data['account_other'], 'Other info')
+
+        self.assertEquals(response.data['account_holder_name'], 'test name')
+        self.assertEquals(response.data['account_holder_address'], 'test address')
+        self.assertEquals(response.data['account_holder_postal_code'], '12345AC')
+        self.assertEquals(response.data['account_holder_city'], 'Amsterdam')
+        self.assertEquals(response.data['account_holder_country'], country.id)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
@@ -339,7 +350,12 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             'account_bank_postal_code': '1234AB',
             'account_bank_city': 'Duckstad',
             'account_bank_country': country.pk,
-            'account_other': 'Other info'
+            'account_other': 'Other info',
+            'account_holder_name': 'blabla',
+            'account_holder_address': 'howdy',
+            'account_holder_postal_code': '12334',
+            'account_holder_city': 'yada yada',
+            'account_holder_country': country.pk
         }
 
         response = self.client.post(self.manage_projects_url, project_data,
@@ -352,7 +368,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         bank_detail_fields = ['account_iban', 'account_bic', 'account_number',
                               'account_bank_name', 'account_bank_address',
                               'account_bank_postal_code', 'account_bank_city',
-                              'account_bank_country', 'account_other']
+                              'account_bank_country', 'account_other',
+                              'account_holder_name', 'account_holder_address',
+                              'account_holder_postal_code',
+                              'account_holder_city',
+                              'account_holder_country']
 
         for field in bank_detail_fields:
             self.assertEqual(response.data[field], project_data[field])

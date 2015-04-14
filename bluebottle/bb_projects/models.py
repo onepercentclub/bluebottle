@@ -11,11 +11,8 @@ from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
-<<<<<<< Updated upstream
-from bluebottle.utils.fields import ImageField
-=======
->>>>>>> Stashed changes
 
+from bluebottle.utils.fields import ImageField
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.model_dispatcher import get_project_phaselog_model
@@ -210,7 +207,7 @@ class BaseProject(models.Model, GetTweetMixin):
         _("account bank city"), max_length=255, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
-        related_name="projcet_account_bank_country")
+        related_name="project_account_bank_country")
     account_other = models.CharField(
         _("account information that doesn't fit in the other field"),
         max_length=255, blank=True)

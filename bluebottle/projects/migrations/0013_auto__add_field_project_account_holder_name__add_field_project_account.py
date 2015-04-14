@@ -70,7 +70,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Project.account_bank_country'
         db.add_column(u'projects_project', 'account_bank_country',
-                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='projcet_account_bank_country', null=True, to=orm['geo.Country']),
+                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='project_account_bank_country', null=True, to=orm['geo.Country']),
                       keep_default=False)
 
         # Adding field 'Project.account_other'
@@ -78,6 +78,12 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
                       keep_default=False)
 
+
+        # Changing field 'Project.image'
+        db.alter_column(u'projects_project', 'image', self.gf('bluebottle.utils.fields.ImageField')(max_length=255))
+
+        # Changing field 'PartnerOrganization.image'
+        db.alter_column('projects_partnerorganization', 'image', self.gf('bluebottle.utils.fields.ImageField')(max_length=255, null=True))
 
     def backwards(self, orm):
         # Deleting field 'Project.account_holder_name'
@@ -122,6 +128,12 @@ class Migration(SchemaMigration):
         # Deleting field 'Project.account_other'
         db.delete_column(u'projects_project', 'account_other')
 
+
+        # Changing field 'Project.image'
+        db.alter_column(u'projects_project', 'image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255))
+
+        # Changing field 'PartnerOrganization.image'
+        db.alter_column('projects_partnerorganization', 'image', self.gf('sorl.thumbnail.fields.ImageField')(max_length=255, null=True))
 
     models = {
         u'auth.group': {
@@ -174,6 +186,14 @@ class Migration(SchemaMigration):
             'oda_recipient': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'subregion': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.SubRegion']"})
         },
+        u'geo.location': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Location'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'zoom_level': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
         u'geo.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -209,7 +229,7 @@ class Migration(SchemaMigration):
             'newsletter': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'picture': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '100', 'blank': 'True'}),
+            'picture': ('bluebottle.utils.fields.ImageField', [], {'max_length': '100', 'blank': 'True'}),
             'primary_language': ('django.db.models.fields.CharField', [], {'default': "'en'", 'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -259,7 +279,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'PartnerOrganization'},
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'image': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'})
         },
@@ -267,7 +287,7 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "['title']", 'object_name': 'Project'},
             'account_bank_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'projcet_account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
+            'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'project_account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
             'account_bank_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'account_bank_postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'account_bic': ('django_iban.fields.SWIFTBICField', [], {'max_length': '11', 'blank': 'True'}),
@@ -297,15 +317,17 @@ class Migration(SchemaMigration):
             'for_who': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'future': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'image': ('sorl.thumbnail.fields.ImageField', [], {'max_length': '255', 'blank': 'True'}),
+            'image': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'blank': 'True'}),
             'is_campaign': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'language': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['utils.Language']", 'null': 'True', 'blank': 'True'}),
             'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
+            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Location']", 'null': 'True', 'blank': 'True'}),
             'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'organization'", 'null': 'True', 'to': u"orm['organizations.Organization']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'owner'", 'to': u"orm['members.Member']"}),
             'partner_organization': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.PartnerOrganization']", 'null': 'True', 'blank': 'True'}),
             'pitch': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'place': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'popularity': ('django.db.models.fields.FloatField', [], {'default': '0'}),
             'reach': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'skip_monthly': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

@@ -30,7 +30,6 @@ class PayoutListFilter(admin.SimpleListFilter):
         rule_choices = ProjectPayout.PayoutRules.choices
 
         def _value(label):
-            import ipdb; ipdb.set_trace()
             value = re.search(r'\d+', label)
             try:
                 return int(value.group(0))

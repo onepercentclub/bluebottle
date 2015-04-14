@@ -93,6 +93,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
+    location = serializers.PrimaryKeyRelatedField(required=False)
 
     class Meta:
         model = BB_USER_MODEL

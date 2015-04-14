@@ -124,7 +124,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     # Public Profile
     first_name = models.CharField(_('first name'), max_length=100, blank=True)
     last_name = models.CharField(_('last name'), max_length=100, blank=True)
-    location = models.CharField(_('location'), max_length=100, blank=True)
+    place = models.CharField(_('Location your at now'), max_length=100, blank=True)
+    location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
+
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)

@@ -1,10 +1,10 @@
+import json
+
 from random import randint
 from datetime import datetime, timedelta
 
-from django.test import TestCase, RequestFactory
-from django.contrib.contenttypes.models import ContentType
+from django.test import RequestFactory
 from django.core.urlresolvers import reverse
-from django.db.models import Q
 from django.utils import timezone
 
 from rest_framework import status
@@ -16,6 +16,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.geo import CountryFactory
 
 from ..models import Project
 
@@ -255,6 +256,92 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(project_url, token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
+
+    def test_create_project_contains_empty_bank_details(self):
+        """ Create project with bank details. Ensure they are returned """
+        project_data = {
+            'title': 'Project with bank details'
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_iban', 'account_bic', 'account_number',
+                              'account_bank_name', 'account_bank_address',
+                              'account_bank_postal_code', 'account_bank_city',
+                              'account_bank_country', 'account_other']
+
+        for field in bank_detail_fields:
+            self.assertIn(field, response.data)
+
+    def test_set_bank_details(self):
+        """ Set bank details in new project """
+
+        country = CountryFactory.create()
+
+        project_data = {
+            'title': 'Project with bank details',
+            'account_iban': 'NL18ABNA0484869868',
+            'account_bic': 'ABNANL2A',
+            'account_number': '',
+            'account_bank_name': 'Duck ,bank',
+            'account_bank_address': 'Ducklane 12',
+            'account_bank_postal_code': '1234AB',
+            'account_bank_city': 'Duckstad',
+            'account_bank_country': country.pk,
+            'account_other': 'Other info'
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_iban', 'account_bic', 'account_number',
+                              'account_bank_name', 'account_bank_address',
+                              'account_bank_postal_code', 'account_bank_city',
+                              'account_bank_country', 'account_other']
+
+        for field in bank_detail_fields:
+            self.assertEqual(response.data[field], project_data[field])
+
+    def test_set_invalid_iban(self):
+        """ Set invalid iban bank detail """
+
+        project_data = {
+            'title': 'Project with bank details',
+            'account_iban': 'NL18ABNA0484fesewf869868',
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(json.loads(response.content)['account_iban'][0],
+                          'Wrong IBAN length for country code NL.')
+
+    def test_set_invalid_bic(self):
+        """ Set invalid bic bank detail """
+
+        project_data = {
+            'title': 'Project with bank details',
+            'account_bic': 'vlkengkewngklw',
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(json.loads(response.content)['account_bic'][0],
+                          'Ensure this value has at most 11 characters (it has 14).')
 
     def test_project_budgetlines_crud(self):
         project_data = {"title": "Some project with a goal & budget"}

@@ -132,13 +132,13 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     tags = TagSerializer()
 
     def validate_account_iban(self, attrs, source):
-        value = attrs[source]
+        value = attrs.get(source)
         if value:
             iban_validator(value)
         return attrs
 
     def validate_account_bic(self, attrs, source):
-        value = attrs[source]
+        value = attrs.get(source)
         if value:
             swift_bic_validator(value)
         return attrs

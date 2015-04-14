@@ -28,9 +28,6 @@ class BaseOrganizationMember(models.Model):
     organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL, related_name="members")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
-
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     class Meta:

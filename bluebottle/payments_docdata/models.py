@@ -148,3 +148,4 @@ class DocdataTransaction(Transaction):
 
     def __unicode__(self):
         return self.id
+

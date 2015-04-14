@@ -114,6 +114,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         return user_data
 
+    def get_method_mapping(self, external_payment_method):
+        return self.PAYMENT_METHODS.get(external_payment_method)
+
     def create_payment(self):
         if self.order_payment.payment_method == 'docdataDirectdebit':
             payment = DocdataDirectdebitPayment(order_payment=self.order_payment, **self.order_payment.integration_data)
@@ -268,6 +271,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             # No payment has been authorized
             statuses = {payment.authorization.status for payment in response.payment}
 
+<<<<<<< HEAD
+=======
+            if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION', 'AUTHENTICATED', 'RISK_CHECK_OK'} & statuses:
+>>>>>>> 7ebe0040a5be87944435e6ed9eaab2229031d419
                 # All these statuses belong are considered new
                 status = StatusDefinition.STARTED
             elif statuses == {'CANCELED', }:
@@ -303,6 +310,13 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
             self.payment.status = status
+
+            try:
+                payment_method = [payment.authorization.paymentMethod for payment in response.payment
+                                  if payment.authorization.method == 'AUTHORIZED'][0]
+            except (AttributeError, IndexError):
+                payment_method = None
+
             if payment_method:
                 self.payment.default_pm = payment_method
                 self.order_payment.payment_method = self.get_method_mapping(payment_method)

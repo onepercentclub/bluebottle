@@ -142,7 +142,7 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 
 SHARED_APPS = (
-    'bluebottle.clients', # you must list the app where your tenant model resides in
+    'bluebottle.clients',  # you must list the app where your tenant model resides in
     'bluebottle.accounting',
     # Django apps
     'south',
@@ -228,6 +228,8 @@ TENANT_APPS = (
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
     'bluebottle.journals',
+    'bluebottle.accounting',
+    'bluebottle.csvimport',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',

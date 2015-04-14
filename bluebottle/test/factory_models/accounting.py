@@ -45,7 +45,7 @@ class RemoteDocdataPaymentFactory(factory.DjangoModelFactory):
 
 
 class BankTransactionCategoryFactory(factory.DjangoModelFactory):
-    FACTORY_FOR =BankTransactionCategory
+    FACTORY_FOR = BankTransactionCategory
     FACTORY_DJANGO_GET_OR_CREATE = ('name', )
 
     name = factory.Sequence(lambda n: 'Category_{0}'.format(n))
@@ -63,7 +63,7 @@ class BankTransactionFactory(factory.DjangoModelFactory):
     sender_account = 'NL24RABO0133443493'
     currency = DEFAULT_CURRENCY
     interest_date = TODAY + timedelta(days=30)
-    credit_debit = 'C' # or 'D'
+    credit_debit = 'C'  # or 'D'
     amount = Decimal('100')
 
     counter_account = 'NL91ABNA0417164300'
@@ -71,5 +71,5 @@ class BankTransactionFactory(factory.DjangoModelFactory):
     book_date = TODAY
     book_code = 'bg'
 
-    status = 'valid' # or 'unknown', 'mismatch'  # BankTransaction.IntegrityStatus.choices
-    #description1 (t/m description6), end_to_end_id, id_recipient, mandate_id, status_remarks, filler
+    status = 'valid'  # or 'unknown', 'mismatch'  # BankTransaction.IntegrityStatus.choices
+    # description1 (t/m description6), end_to_end_id, id_recipient, mandate_id, status_remarks, filler

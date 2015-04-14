@@ -6,6 +6,9 @@ from django.db import models
 
 
 class Migration(DataMigration):
+    depends_on = (
+        ('journals', '0001_initial'),
+    )
 
     def forwards(self, orm):
         """

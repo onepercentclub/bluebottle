@@ -108,6 +108,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertContains(transaction_list, _('create donation'), count=4)
 
         # pick the action 'create donation' for each transaction
+        url = reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': self.transactions[0].pk})
+        donation_form = self.app.get(url, user=self.superuser)
+        self.assertEqual(donation_form.status_code, 200)
 
         # verify that a donation is created
         # verify that an order exists

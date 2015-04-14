@@ -163,3 +163,7 @@ class CreateProjectPayoutJournalView(JournalCreateMixin, BaseManualEntryView):
 class CreateOrganizationPayoutJournalView(JournalCreateMixin, BaseManualEntryView):
     model = OrganizationPayoutJournal
     fields = ('amount', 'user_reference', 'description', 'payout')
+
+
+class CreateManualDonationView(CreateView):
+    pass

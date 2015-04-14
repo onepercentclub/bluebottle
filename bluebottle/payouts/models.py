@@ -10,23 +10,13 @@ from django.conf import settings
 from bluebottle.clients import properties
 
 
-def get_fee_percentage(rule):
-    return "{0}%".format(int(properties.PROJECT_PAYOUT_FEES[rule] * 100))
-
-
 class ProjectPayout(BaseProjectPayout):
 
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        beneath_threshold = ChoiceItem('beneath_threshold',
-                                       label="{0} ({1})".format(_("Beneath minimal payout amount"),
-                                                                get_fee_percentage('beneath_threshold')))
-        fully_funded = ChoiceItem('fully_funded',
-                                  label="{0} ({1})".format(_("Fully funded"),
-                                                           get_fee_percentage('fully_funded')))
-        not_fully_funded = ChoiceItem('not_fully_funded',
-                                      label="{0} ({1})".format(_("Not fully funded"),
-                                                               get_fee_percentage('not_fully_funded')))
+        beneath_threshold = ChoiceItem('beneath_threshold', label=_("Beneath minimal payout amount"))
+        fully_funded = ChoiceItem('fully_funded', label=_("Fully funded"))
+        not_fully_funded = ChoiceItem('not_fully_funded', label=_("Not fully funded"))
 
         # Legacy payout rules
         old = ChoiceItem('old', label=_("Legacy: Old 1%/5%"))

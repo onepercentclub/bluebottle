@@ -49,6 +49,13 @@ class ProjectAdmin(BaseProjectAdmin):
                                 'reach', 'is_campaign', 'skip_monthly', 'allow_overfunding', 'story',
                                 'date_submitted', 'campaign_started', 'campaign_ended', 'campaign_funded', 'tags',
                                 'amount_donated', 'amount_needed', 'popularity')}),
+        (_('Bank details'), {'fields': ('account_holder_name',
+                                        'account_holder_address', 'account_holder_postal_code',
+                                        'account_holder_city', 'account_holder_country',
+                                        'account_iban', 'account_bic', 'account_number',
+                                        'account_bank_name', 'account_bank_address',
+                                        'account_bank_postal_code', 'account_bank_city',
+                                        'account_bank_country', 'account_other')})
     )
 
     def owner_link(self, obj):

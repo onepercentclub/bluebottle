@@ -55,7 +55,5 @@ class ManageOrganizationSerializer(OrganizationSerializer):
 
     class Meta:
         model = ORGANIZATION_MODEL
-        fields = ORGANIZATION_FIELDS + ( 'account_holder_name', 'account_holder_address', 'account_holder_postal_code', 
-                    'account_holder_city', 'account_holder_country', 'account_iban', 'account_bic', 'account_number', 'account_bank_name',
-                    'account_bank_address', 'account_bank_postal_code', 'account_bank_city', 'account_bank_country', 'account_other',
-                    'partner_organizations', 'created', 'updated' ) 
+        fields = ORGANIZATION_FIELDS + ('partner_organizations',
+                                        'created', 'updated')

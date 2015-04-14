@@ -12,8 +12,10 @@ ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()
 DOCUMENT_MODEL = get_organizationdocument_model()
 
-ORGANIZATION_FIELDS = ( 'id', 'name', 'slug', 'address_line1', 'address_line2', 'city', 'state', 'country', 
-                       'postal_code', 'phone_number', 'website', 'email', 'twitter', 'facebook', 'skype', 'documents' )
+ORGANIZATION_FIELDS = ( 'id', 'name', 'slug', 'address_line1', 'address_line2',
+                        'city', 'state', 'country', 'postal_code', 'phone_number',
+                        'website', 'email', 'twitter', 'facebook', 'skype', 'documents',
+                        'person')
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:

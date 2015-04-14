@@ -49,9 +49,10 @@ class BaseOrganizationDocument(models.Model):
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+
+    person = models.BooleanField(_('Person'), help_text=_('Is person or a full organisation.'),
+                                 default=True)
 
     class Meta:
         verbose_name = _('organization document')

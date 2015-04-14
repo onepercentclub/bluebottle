@@ -201,4 +201,10 @@ class ManageProjectSerializer(TaggableSerializerMixin,
         fields = ('id', 'title', 'description', 'editable', 'viewable',
                   'status', 'image', 'pitch', 'slug', 'tags', 'created',
                   'url', 'country', 'location', 'place', 'theme',
-                  'organization', 'language')
+                  'organization', 'language', 'account_holder_name',
+                  'account_holder_address', 'account_holder_postal_code',
+                  'account_holder_city', 'account_holder_country',
+                  'account_iban', 'account_bic', 'account_number',
+                  'account_bank_name', 'account_bank_address',
+                  'account_bank_postal_code', 'account_bank_city',
+                  'account_bank_country', 'account_other')

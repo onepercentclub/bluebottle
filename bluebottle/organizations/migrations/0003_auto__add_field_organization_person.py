@@ -8,15 +8,15 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'OrganizationDocument.person'
-        db.add_column(u'organizations_organizationdocument', 'person',
+        # Adding field 'Organization.person'
+        db.add_column(u'organizations_organization', 'person',
                       self.gf('django.db.models.fields.BooleanField')(default=True),
                       keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting field 'OrganizationDocument.person'
-        db.delete_column(u'organizations_organizationdocument', 'person')
+        # Deleting field 'Organization.person'
+        db.delete_column(u'organizations_organization', 'person')
 
 
     models = {
@@ -130,6 +130,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'partner_organizations': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'person': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
             'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'registration': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
@@ -148,7 +149,6 @@ class Migration(SchemaMigration):
             'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'documents'", 'to': u"orm['organizations.Organization']"}),
-            'person': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         u'organizations.organizationmember': {

@@ -51,9 +51,6 @@ class BaseOrganizationDocument(models.Model):
 
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
-    person = models.BooleanField(_('Person'), help_text=_('Is person or a full organisation.'),
-                                 default=True)
-
     class Meta:
         verbose_name = _('organization document')
         verbose_name_plural = _('organization documents')
@@ -76,6 +73,8 @@ class BaseOrganization(models.Model):
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    person = models.BooleanField(_('Person'), default=True,
+                                  help_text=_('Is person or a full organisation.'))
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

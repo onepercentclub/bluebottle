@@ -7,6 +7,20 @@ from bluebottle.utils.utils import StatusDefinition
 from django.utils import timezone
 
 
+def _set_properties():
+    # If this signal is being triggered from a cron job then 
+    # the tenant properties will not be loaded. Check below
+    # and setup the tenant properties if required.
+    from bluebottle.clients import properties
+    from django.db import connection
+    
+    try:
+        tenant = properties.tenant 
+    except AttributeError:
+        tenant = connection.tenant
+        properties.set_tenant(tenant)
+
+
 def create_payout_finished_project(sender, instance, created, **kwargs):
     """
     Create or update Payout for finished projects.
@@ -30,6 +44,8 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             payout = PROJECT_PAYOUT_MODEL.objects.get(project=project)
 
             if payout.status == StatusDefinition.NEW:
+                _set_properties()
+
                 # Update planned payout date for new Payouts
                 payout.calculate_amounts()
                 payout.planned = next_date
@@ -38,6 +54,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
         except PROJECT_PAYOUT_MODEL.DoesNotExist:
 
             if project.campaign_started:
+                _set_properties()
 
                 # Create new Payout
                 payout = PROJECT_PAYOUT_MODEL(

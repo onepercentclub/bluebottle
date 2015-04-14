@@ -1,5 +1,9 @@
-from rest_framework import serializers
 from django.utils.translation import ugettext as _
+
+from django_iban.validators import iban_validator, swift_bic_validator
+from rest_framework import serializers
+from bs4 import BeautifulSoup
+
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
@@ -10,7 +14,6 @@ from bluebottle.utils.model_dispatcher import (get_project_model,
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.serializers import CountrySerializer
-from bs4 import BeautifulSoup
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
@@ -127,6 +130,18 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
+
+    def validate_account_iban(self, attrs, source):
+        value = attrs[source]
+        if value:
+            iban_validator(value)
+        return attrs
+
+    def validate_account_bic(self, attrs, source):
+        value = attrs[source]
+        if value:
+            swift_bic_validator(value)
+        return attrs
 
     def validate_status(self, attrs, source):
         value = attrs.get(source, None)

@@ -8,76 +8,79 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        db.rename_table('accounting_docdatapayment', 'accounting_remotedocdatapayment')
-        db.rename_table('accounting_docdatapayout', 'accounting_remotedocdatapayout')
+        try:
+            db.rename_table('accounting_docdatapayment', 'accounting_remotedocdatapayment')
+            db.rename_table('accounting_docdatapayout', 'accounting_remotedocdatapayout')
 
 
 
-        db.alter_column(u'accounting_banktransaction', 'payout_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['payouts.ProjectPayout'], null=True))
+            db.alter_column(u'accounting_banktransaction', 'payout_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['payouts.ProjectPayout'], null=True))
 
-        db.add_column(u'accounting_remotedocdatapayment', 'local_payment',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['payments.Payment'], null=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayment', 'local_payment',
+                          self.gf('django.db.models.fields.related.ForeignKey')(to=orm['payments.Payment'], null=True),
+                          keep_default=False)
 
-        db.alter_column(u'accounting_remotedocdatapayment', 'triple_deal_reference', self.gf('django.db.models.fields.CharField')(max_length=40))
+            db.alter_column(u'accounting_remotedocdatapayment', 'triple_deal_reference', self.gf('django.db.models.fields.CharField')(max_length=40))
 
-        db.delete_column(u'accounting_remotedocdatapayment', 'currency_amount_registered')
+            db.delete_column(u'accounting_remotedocdatapayment', 'currency_amount_registered')
 
-        db.delete_column(u'accounting_remotedocdatapayment', 'amount_registered')
+            db.delete_column(u'accounting_remotedocdatapayment', 'amount_registered')
 
-        db.delete_column(u'accounting_remotedocdatapayout', 'period_id')
+            db.delete_column(u'accounting_remotedocdatapayout', 'period_id')
 
-        db.delete_column(u'accounting_remotedocdatapayout', 'total')
+            db.delete_column(u'accounting_remotedocdatapayout', 'total')
 
-        db.add_column(u'accounting_remotedocdatapayout', 'payout_reference',
-                      self.gf('django.db.models.fields.CharField')(default=None, unique=True, max_length=100),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayout', 'payout_reference',
+                          self.gf('django.db.models.fields.CharField')(default=None, unique=True, max_length=100),
+                          keep_default=False)
 
-        db.add_column(u'accounting_remotedocdatapayout', 'payout_date',
-                      self.gf('django.db.models.fields.DateField')(default=None, db_index=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayout', 'payout_date',
+                          self.gf('django.db.models.fields.DateField')(default=None, db_index=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_remotedocdatapayout', 'collected_amount',
-                      self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=14, decimal_places=2, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayout', 'collected_amount',
+                          self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=14, decimal_places=2, blank=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_remotedocdatapayout', 'payout_amount',
-                      self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=14, decimal_places=2, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayout', 'payout_amount',
+                          self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=14, decimal_places=2, blank=True),
+                          keep_default=False)
 
-        db.alter_column(u'accounting_remotedocdatapayout', 'end_date', self.gf('django.db.models.fields.DateField')(null=True))
+            db.alter_column(u'accounting_remotedocdatapayout', 'end_date', self.gf('django.db.models.fields.DateField')(null=True))
 
-        db.alter_column(u'accounting_remotedocdatapayout', 'payout_date', self.gf('django.db.models.fields.DateField')(null=True))
+            db.alter_column(u'accounting_remotedocdatapayout', 'payout_date', self.gf('django.db.models.fields.DateField')(null=True))
 
-        db.alter_column(u'accounting_remotedocdatapayout', 'start_date', self.gf('django.db.models.fields.DateField')(null=True))
+            db.alter_column(u'accounting_remotedocdatapayout', 'start_date', self.gf('django.db.models.fields.DateField')(null=True))
 
-        db.add_column(u'accounting_remotedocdatapayment', 'remote_payout',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounting.RemoteDocdataPayout'], null=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayment', 'remote_payout',
+                          self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounting.RemoteDocdataPayout'], null=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_banktransaction', 'remote_payout',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounting.RemoteDocdataPayout'], null=True, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_banktransaction', 'remote_payout',
+                          self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounting.RemoteDocdataPayout'], null=True, blank=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_banktransaction', 'remote_payment',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounting.RemoteDocdataPayment'], null=True, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_banktransaction', 'remote_payment',
+                          self.gf('django.db.models.fields.related.ForeignKey')(to=orm['accounting.RemoteDocdataPayment'], null=True, blank=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_banktransaction', 'status',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=30, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_banktransaction', 'status',
+                          self.gf('django.db.models.fields.CharField')(default='', max_length=30, blank=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_banktransaction', 'status_remarks',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=250, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_banktransaction', 'status_remarks',
+                          self.gf('django.db.models.fields.CharField')(default='', max_length=250, blank=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_remotedocdatapayment', 'status',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=30, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayment', 'status',
+                          self.gf('django.db.models.fields.CharField')(default='', max_length=30, blank=True),
+                          keep_default=False)
 
-        db.add_column(u'accounting_remotedocdatapayment', 'status_remarks',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=250, blank=True),
-                      keep_default=False)
+            db.add_column(u'accounting_remotedocdatapayment', 'status_remarks',
+                          self.gf('django.db.models.fields.CharField')(default='', max_length=250, blank=True),
+                          keep_default=False)
+        except:
+            print 'Aborted due to database error, verify manually if everyting is ok'
 
 
     def backwards(self, orm):

@@ -33,9 +33,6 @@ class BaseOrganizationMember(models.Model):
                                      related_name="members")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
-
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     class Meta:
@@ -57,8 +54,6 @@ class BaseOrganizationDocument(models.Model):
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     class Meta:
@@ -87,6 +82,8 @@ class BaseOrganization(models.Model):
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    person = models.BooleanField(_('Person'), default=True,
+                                  help_text=_('Is person or a full organisation.'))
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

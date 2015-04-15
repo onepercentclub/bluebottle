@@ -88,7 +88,10 @@ tests_requires = [
     'mock==1.0.1',
     'nose==1.3.4',
     'pylint==1.1.0',
-    'tdaemon==0.1.1'
+    'tdaemon==0.1.1',
+    'WebTest==2.0.18',
+    'django-webtest==1.7.7',
+    'pyquery==1.2.9'
 ]
 
 dev_requires = [

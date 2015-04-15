@@ -22,7 +22,7 @@ from .forms import BankTransactionImportForm, DocdataPaymentImportForm, update_r
 from .admin_extra import DocdataPaymentMatchedListFilter, OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter, IntegrityStatusListFilter
 from .admin_views import (
     UnknownTransactionView, CreateDonationView, CreateProjectPayoutJournalView,
-    CreateOrganizationPayoutJournalView
+    CreateOrganizationPayoutJournalView, CreateManualDonationView
 )
 
 
@@ -103,9 +103,13 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                     reverse('admin:banktransaction-unknown', kwargs={'pk': obj.pk}),
                     _('manual entry')
                 ),
+                '<a href="%s">%s</a>' % (
+                    reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': obj.pk}),
+                    _('create donation')
+                ),
             )
         }
-        return "&bull;".join(actions.get(obj.status) or [])
+        return " &bull; ".join(actions.get(obj.status) or [])
     show_actions.allow_tags = True
     show_actions.short_description = _('actions')
 
@@ -141,6 +145,11 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 r'^(?P<pk>\d+)/unknown_transaction/organization_payout/$',
                 self.admin_site.admin_view(CreateOrganizationPayoutJournalView.as_view()),
                 name='banktransaction-add-organizationpayoutjournal'
+            ),
+            url(
+                r'^(?P<pk>\d+)/unknown_transaction/manual_donation/$',
+                self.admin_site.admin_view(CreateManualDonationView.as_view()),
+                name='banktransaction-add-manualdonation',
             ),
         )
         return action_urls + urls

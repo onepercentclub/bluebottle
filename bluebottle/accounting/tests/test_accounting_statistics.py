@@ -15,12 +15,8 @@ from bluebottle.bb_payouts.models import *
 from bluebottle.payments_docdata.models import *
 
 from ..models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory
-from ..utils import get_accounting_statistics, get_dashboard_values, get_datefiltered_qs
+from ..utils import get_accounting_statistics, get_dashboard_values
 
-# in settings.testing is DOCDATA_FEES
-# but  @override_settings(DOCDATA_FEES={'transaction': 0.33,
-#                                   'payment_methods': {'ideal': 0.33}})
-# does not work
 
 class AccountingStatisticsTests(BluebottleTestCase):
     fixtures = ('initial_data', 'project_data')

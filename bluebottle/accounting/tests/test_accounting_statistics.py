@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from django.test.utils import override_settings
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounting import (
@@ -30,7 +29,11 @@ class AccountingStatisticsTests(BluebottleTestCase):
         self.last_year = date(last_year, 1, 1)
         self.middle_date = date(last_year, 6, 1) # june 1st
 
-        self.bankcategories = BankTransactionCategory.objects.all()
+        # other categories from the fixtures are [u'Checking to savings', u'Savings to checking',
+        # u'Bank costs', u'Donations to be transferred', u'Interest', u'Settle Bank costs', u'Total']
+        self.CAMPAIGN_PAYOUT = BankTransactionCategory.objects.get(name='Campaign Payout')
+        self.DOCDATA_PAYOUT = BankTransactionCategory.objects.get(name='Docdata payout')
+        self.DOCDATA_PAYMENT = BankTransactionCategory.objects.get(name='Docdata payment')
 
         self.status = BankTransaction.IntegrityStatus # .Valid .UnknownTransaction .AmountMismatch
         self.creditdebit = BankTransaction.CreditDebit # .credit  .debit
@@ -95,7 +98,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
 
         # create some banktransactions
         BankTransactionFactory.create(amount=Decimal('1000'),
-                                      category=self.bankcategories.first(),
+                                      category=self.CAMPAIGN_PAYOUT,
                                       credit_debit=self.creditdebit.credit,
                                       status=self.status.Valid,
                                       payout__project=self.project2,
@@ -341,3 +344,263 @@ class AccountingStatisticsTests(BluebottleTestCase):
         self.assertFalse(invalid_transactions.exists()) # empty QuerySet
         self.assertEqual(invalid_transactions_count, 0)
         self.assertEqual(invalid_transactions_amount, Decimal())
+
+    def test_statistics_more_complex_case(self):
+        """
+        Besides all orders, donations and transactions that are created in the SetUp,
+        this test creates:
+
+        - two more BankTransactions (one remotePayout and one remotePayment)
+        - one extra donation that belongs to an failed order
+        - one order payment that has no payment, its should appear in the invalid_order_payments
+        - one transaction that has IntegretyStatus mismatch
+        - one project_payouts with status = 'in_progress'
+
+        and all these cases are checked to appear correctly in the statistics ouput
+        """
+        # ##### EXTRA BANK TRANSACTIONS (RemotePayout and RemotePayment) ##### #
+        remoteDDPayout1 = RemoteDocdataPayoutFactory.create(collected_amount=Decimal('1.11'),
+                                                            payout_amount=Decimal('1.11'))
+        BankTransactionFactory.create(amount=Decimal('1.11'), category=self.DOCDATA_PAYOUT,
+                                      credit_debit=self.creditdebit.credit, status=self.status.Valid,
+                                      payout=None,
+                                      remote_payout=remoteDDPayout1,
+                                      remote_payment=None)
+        remoteDDPayout2 = RemoteDocdataPayoutFactory.create(collected_amount=Decimal('0.14'),
+                                                                payout_amount=Decimal('0.14'))
+        remoteDDPayment = RemoteDocdataPaymentFactory.create(remote_payout=remoteDDPayout2,
+                                                             local_payment=self.payment,
+                                                             amount_collected=Decimal('0.14'),
+                                                             docdata_fee=Decimal('0.02'))
+        BankTransactionFactory.create(amount=Decimal('0.14'), category=self.DOCDATA_PAYMENT,
+                                      credit_debit=self.creditdebit.credit, status=self.status.Valid,
+                                      payout=None,
+                                      remote_payout=None,
+                                      remote_payment=remoteDDPayment)
+
+        # ##### EXTRA DONATION ##### #
+        failed_order = OrderFactory.create(user=self.person2, status='failed')
+        failed_donation = DonationFactory(order=failed_order, project=self.project1, amount=33000)
+
+        # ##### EXTRA ORDER PAYMENT ##### #
+        order = OrderFactory.create(user=self.person2)
+        self.assertEqual(order.status, 'created')
+
+        order_payment = OrderPaymentFactory.create(order=order, amount=Decimal('77'))
+        self.assertEqual(OrderPayment.objects.filter(payment=None).first().pk, order_payment.pk)
+        self.assertEqual(order_payment.amount, Decimal()) # because it has no payment
+
+        # ##### EXTRA BANKTRANSACTIONS  ##### #
+        BankTransactionFactory.create(amount=Decimal('77'),
+                                      category=self.CAMPAIGN_PAYOUT,
+                                      credit_debit=self.creditdebit.credit,
+                                      status=self.status.UnknownTransaction, # or .AmountMismatch
+                                      payout=None,
+                                      remote_payout=None,
+                                      remote_payment=None,
+                                      )
+
+        # ##### EXTRA PROJECT_PAYOUT ##### #
+        self.project1_payout = ProjectPayoutFactory.create(
+            completed=self.middle_date, status=StatusDefinition.IN_PROGRESS, project=self.project1,
+            amount_raised=444, organization_fee=0, amount_payable=444)
+
+        #
+        # #### TEST STATISTICS #### #
+        #
+        stats = get_accounting_statistics(self.last_year, self.today + timedelta(days=1))
+        stats_keys = stats.keys()
+        self.assertEqual(set(stats_keys), {'project_payouts', 'donations', 'docdata', 'bank', 'orders'})
+
+        # ##### DONATIONS ##### #
+        # only donations that have an order with status 'success' appear in the donations stats
+        stats_donations = stats['donations']
+        self.assertEqual(stats_donations.get('count'), 3)
+        self.assertEqual(stats_donations.get('total_amount'), Decimal('1333'))  # 333 for project 1 and 1000 for project 2
+
+        # ##### ORDER PAYMENTS ##### #
+        # only project 1 is added to an order payment
+        stats_orders = stats['orders']
+        self.assertEqual(stats_orders.get('count'), 1)
+        self.assertEqual(stats_orders.get('total_amount'), Decimal('333.00'))
+        self.assertEqual(stats_orders.get('transaction_fee'), Decimal())
+
+        # ##### PROJECT PAYOUTS ##### #
+        stats_project_payouts = stats['project_payouts']
+        self.assertEqual(stats_project_payouts.get('count'), 3) # includes one in progress
+        self.assertEqual(stats_project_payouts.get('organization_fee'), Decimal('50'))
+        self.assertEqual(stats_project_payouts.get('payable'),Decimal('1727')) # 1333 + 444 - 50
+        self.assertEqual(stats_project_payouts.get('raised'), Decimal('1777')) # 1333 + 444
+
+        # ##### DOCDATA ##### #
+        stats_docdata = stats['docdata']
+        self.assertEqual(stats_docdata.get('pending_orders'), Decimal('311.75')) # = 333 - 20 - 1.11 - 0.14
+        self.assertEqual(stats_docdata.get('pending_payout'), Decimal('122.48')) #  123.45 + 0.14 - 1.11
+        self.assertEqual(stats_docdata.get('pending_service_fee'), Decimal('-0.35')) # 0.33 + 0.02
+
+        stats_docdata_payment = stats_docdata['payment']
+        self.assertEqual(stats_docdata_payment.get('count'), 2)
+        self.assertEqual(stats_docdata_payment.get('docdata_fee'), Decimal('0.35')) # 0.33 + 0.22
+        self.assertEqual(stats_docdata_payment.get('third_party'), Decimal())
+        self.assertEqual(stats_docdata_payment.get('total_amount'), Decimal('123.59')) # 123.45 + 0.14
+
+        stats_docdata_payout = stats_docdata['payout']
+        self.assertEqual(stats_docdata_payout.get('count'), 3)
+        self.assertEqual(stats_docdata_payout.get('other_costs'), Decimal('101.99')) # = 123.45 - (20+ 0.33) -(1.11 + 0.02)
+        self.assertEqual(stats_docdata_payout.get('total_amount'),Decimal('21.25')) # 20 + 1.11 + 0.14
+
+        # ##### BANK ##### #
+        stats_bank = stats['bank']
+
+        # ##### BANK ALL ##### #
+        stats_bank_all = stats_bank[0]
+        self.assertEqual(stats_bank_all.get('name'), 'All')
+        self.assertEqual(stats_bank_all.get('account_number'), '')
+        self.assertEqual(stats_bank_all.get('balance'), Decimal('1078.25')) # 1000 + 1.11 + 0.14 + 77 (mismatch transactioN)
+        self.assertEqual(stats_bank_all.get('count'), 4)
+        self.assertEqual(stats_bank_all.get('credit'), Decimal('1078.25'))
+        self.assertEqual(stats_bank_all.get('debit'), Decimal())
+
+        per_category = stats_bank_all['per_category']
+        for cat_dict in per_category:
+            if cat_dict.get('category') == self.CAMPAIGN_PAYOUT:
+                self.assertEqual(cat_dict.get('credit'), Decimal('1077')) # includes 77 from mismatch transaction
+                self.assertEqual(cat_dict.get('debit'), Decimal())
+                self.assertEqual(cat_dict.get('balance'), Decimal('1077'))
+            elif cat_dict.get('category') == self.DOCDATA_PAYOUT:
+                self.assertEqual(cat_dict.get('credit'), Decimal('1.11'))
+                self.assertEqual(cat_dict.get('debit'), Decimal())
+                self.assertEqual(cat_dict.get('balance'), Decimal('1.11'))
+            elif cat_dict.get('category') == self.DOCDATA_PAYMENT:
+                self.assertEqual(cat_dict.get('credit'), Decimal('0.14'))
+                self.assertEqual(cat_dict.get('debit'), Decimal())
+                self.assertEqual(cat_dict.get('balance'), Decimal('0.14'))
+            else: # all other categories should have zero
+                self.assertEqual(cat_dict.get('credit'), 0)
+                self.assertEqual(cat_dict.get('debit'), 0)
+                self.assertEqual(cat_dict.get('balance'), 0)
+
+        # ##### BANK CHECKINGS##### #
+        stats_bank_checking = stats_bank[1]
+        self.assertEqual(stats_bank_checking.get('name'), 'Checking account')
+        self.assertEqual(stats_bank_checking.get('balance'), Decimal())
+        self.assertEqual(stats_bank_checking.get('count'), 0)
+        self.assertEqual(stats_bank_checking.get('credit'), Decimal())
+        self.assertEqual(stats_bank_checking.get('debit'), 0)
+
+        # ##### BANK SAVINGS##### #
+        stats_bank_savings = stats_bank[2]
+        self.assertEqual(stats_bank_savings.get('name'), 'Savings account')
+        self.assertEqual(stats_bank_savings.get('balance'), Decimal())
+        self.assertEqual(stats_bank_savings.get('count'), 0)
+        self.assertEqual(stats_bank_savings.get('credit'), Decimal())
+        self.assertEqual(stats_bank_savings.get('debit'), 0)
+
+        #
+        # ##### TEST DASHBOARD VALUES ##### #
+        #
+        values = get_dashboard_values(self.last_year, self.today + timedelta(days=1))
+
+        # ##### DONATIONS ##### #
+        donations = values.get('donations')
+        donations_count = values.get('donations_count')
+        donations_amount = values.get('donations_amount')
+        self.assertTrue(donations.exists())
+        self.assertEqual(donations_count, 4) # also includes failed order
+        self.assertEqual(donations_amount, Decimal('34333')) # 33000 failed donation + 1000 + 333
+
+        donations_settled = values.get('donations_settled')
+        donations_settled_count = values.get('donations_settled_count')
+        donations_settled_amount = values.get('donations_settled_amount')
+        self.assertTrue(donations_settled.exists())
+        self.assertEqual(donations_settled_count, 3)
+        self.assertEqual(donations_settled_amount, Decimal('1333'))
+
+        donations_failed = values.get('donations_failed')
+        donations_failed_count = values.get('donations_failed_count')
+        donations_failed_amount = values.get('donations_failed_amount')
+        self.assertTrue(donations_failed.exists())
+        self.assertEqual(donations_failed_count, 1)
+        self.assertEqual(donations_failed_amount, Decimal(33000))
+
+        # ##### PROJECT PAYOUTS ##### #
+        project_payouts = values.get('project_payouts')
+        project_payouts_count = values.get('project_payouts_count')
+        project_payouts_amount = values.get('project_payouts_amount')
+        self.assertTrue(project_payouts.exists())
+        self.assertEqual(project_payouts_count, 4) # includes in progress payout
+        self.assertEqual(project_payouts_amount, Decimal('2777')) # 2333 + 444
+        # PENDING
+        project_payouts_pending = values.get('project_payouts_pending')
+        project_payouts_pending_amount = values.get('project_payouts_pending_amount')
+        self.assertTrue(project_payouts_pending.exists())
+        self.assertEqual(project_payouts_pending_amount, Decimal('1444')) # 1000 + 444 in progress pending project payou
+        # PENDING NEW
+        project_payouts_pending_new = values.get('project_payouts_pending_new')
+        project_payouts_pending_new_count = values.get('project_payouts_pending_new_count')
+        project_payouts_pending_new_amount = values.get('project_payouts_pending_new_amount')
+        self.assertTrue(project_payouts_pending_new.exists())
+        self.assertEqual(project_payouts_pending_new_count, 1)
+        self.assertEqual(project_payouts_pending_new_amount, Decimal('1000'))
+        # PENDING IN PROGRESS
+        project_payouts_pending_in_progress = values.get('project_payouts_pending_in_progress')
+        project_payouts_pending_in_progress_amount = values.get('project_payouts_pending_in_progress_amount')
+        project_payouts_pending_in_progress_count = values.get('project_payouts_pending_in_progress_count')
+        self.assertTrue(project_payouts_pending_in_progress.exists())
+        self.assertEqual(project_payouts_pending_in_progress_count, 1)
+        self.assertEqual(project_payouts_pending_in_progress_amount, Decimal('444'))
+        # PENDING SETTLED
+        project_payouts_settled = values.get('project_payouts_settled')
+        project_payouts_settled_count = values.get('project_payouts_settled_count')
+        project_payouts_settled_amount = values.get('project_payouts_settled_amount')
+        self.assertTrue(project_payouts_settled.exists())
+        self.assertEqual(project_payouts_settled_count, 2)
+        self.assertEqual(project_payouts_settled_amount, Decimal('1333'))
+
+        # ##### ORDER PAYMENTS ##### #
+        order_payments = values.get('order_payments')
+        order_payments_count = values.get('order_payments_count')
+        order_payments_amount = values.get('order_payments_amount')
+        self.assertTrue(order_payments.exists())
+        self.assertEqual(order_payments_count, 2) # the valid one and the failed one
+        self.assertEqual(order_payments_amount, Decimal('333')) # 333 + 0 (failed one does not have value)
+
+        invalid_order_payments = values.get('invalid_order_payments')
+        invalid_order_payments_count = values.get('invalid_order_payments_count')
+        invalid_order_payments_amount = values.get('invalid_order_payments_amount')
+        invalid_order_payments_transaction_fee = values.get('invalid_order_payments_transaction_fee')
+        self.assertTrue(invalid_order_payments.exists())
+        self.assertEqual(invalid_order_payments_count, 1)
+        self.assertEqual(invalid_order_payments_amount, Decimal()) # failed one has not 0
+        self.assertEqual(invalid_order_payments_transaction_fee, Decimal())
+
+        # ##### DOCDATA PAYMENTS ##### #
+        remote_docdata_payments = values.get('remote_docdata_payments')
+        remote_docdata_payments_count = values.get('remote_docdata_payments_count')
+        remote_docdata_payments_amount = values.get('remote_docdata_payments_amount')
+        self.assertTrue(remote_docdata_payments.exists())
+        self.assertEqual(remote_docdata_payments_count, 2)
+        self.assertEqual(remote_docdata_payments_amount, Decimal('123.59')) # 123.45 + 0.14
+
+        # ##### DOCDATA PAYOUTS ##### #
+        remote_docdata_payouts = values.get('remote_docdata_payouts')
+        remote_docdata_payouts_count = values.get('remote_docdata_payouts_count')
+        remote_docdata_payouts_amount = values.get('remote_docdata_payouts_amount')
+        self.assertTrue(remote_docdata_payouts.exists())
+        self.assertEqual(remote_docdata_payouts_count, 3)
+        self.assertEqual(remote_docdata_payouts_amount, Decimal('21.25')) # 20 + 0.14 + 1.11
+
+        # ##### BANK TRANSACTIONS ##### #
+        transactions = values.get('transactions')
+        transactions_count = values.get('transactions_count')
+        transactions_amount = values.get('transactions_amount')
+        self.assertTrue(transactions.exists())
+        self.assertEqual(transactions_count, 4)
+        self.assertEqual(transactions_amount, Decimal('1078.25')) # + 77 from the mismatch banktransaction
+
+        invalid_transactions = values.get('invalid_transactions')
+        invalid_transactions_count = values.get('invalid_transactions_count')
+        invalid_transactions_amount = values.get('invalid_transactions_amount')
+        self.assertTrue(invalid_transactions.exists())
+        self.assertEqual(invalid_transactions_count, 1)
+        self.assertEqual(invalid_transactions_amount, Decimal('77'))

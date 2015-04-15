@@ -68,6 +68,10 @@ class Statistic(models.Model):
         seen_add = seen.add
         people_count = len([item for item in list(itertools.chain(*items)) if item and not (item in seen or seen_add(item))])
 
+        # Add anonymous donators
+        anonymous_donators = Order.objects.filter(user_id=None, status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)).count()
+        people_count += anonymous_donators
+
         self._set_cached('people-involved-total', people_count)
         
         return people_count    

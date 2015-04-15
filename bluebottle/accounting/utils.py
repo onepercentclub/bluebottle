@@ -1,5 +1,4 @@
 from django.db.models import Sum, Count
-from django.db.models.query import QuerySet
 from django.utils import timezone
 
 from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory
@@ -76,17 +75,17 @@ def get_datefiltered_qs(start, stop):
     data = mydict()
     data['transactions'] = BankTransaction.objects.filter(book_date__gte=start, book_date__lte=stop)
     data['order_payments'] = OrderPayment.objects.filter(created__gte=start, created__lte=stop)
-    data['remote_docdata_payments'] = RemoteDocdataPayment.objects.filter(remote_payout__payout_date__gte=start, remote_payout__payout_date__lte=stop)
+    data['remote_docdata_payments'] = RemoteDocdataPayment.objects.filter(remote_payout__payout_date__gte=start,
+                                                                          remote_payout__payout_date__lte=stop)
     data['remote_docdata_payouts'] = RemoteDocdataPayout.objects.filter(payout_date__gte=start, payout_date__lte=stop)
 
-    exluded_date = timezone.datetime(2014, 7, 8)
-
-    data['project_payouts'] = ProjectPayout.objects.exclude(
-        created__gte=exluded_date,
-        created__lt=exluded_date + timezone.timedelta(days=1),
-        )
+    # on this date there was an import of old data that should not appear in the statistics
+    excluded_date = timezone.datetime(2014, 7, 8)
+    data['project_payouts'] = ProjectPayout.objects.exclude(created__gte=excluded_date,
+                                                            created__lt=excluded_date + timezone.timedelta(days=1))
     data['donations'] = Donation.objects.filter(created__gte=start, created__lte=stop)
     return data
+
 
 def get_dashboard_values(start, stop):
     data = get_datefiltered_qs(start, stop)
@@ -134,6 +133,7 @@ def get_dashboard_values(start, stop):
     data['donations_settled_count'] = data['donations_settled'].count()
 
     return data
+
 
 def get_accounting_statistics(start, stop):
     statistics = mydict()
@@ -242,8 +242,12 @@ def get_accounting_statistics(start, stop):
                                                        statistics['docdata']['payment']['docdata_fee'] - \
                                                        statistics['docdata']['payment']['third_party']
 
+        # pending payout is the total amount of docdata payment MINUS sum of all banktransactions of category DocdataPayout
+        # NOTE: this was matched by pk before, the line below makes clear that this should be the specific BankTransactionCategory 'Docdata payout'
+        # TODO: BankTransactionCategory can be filled in admin and can be different for multiple tenants, so this should be improved
+        dd_payout_category = BankTransactionCategory.objects.get(pk=2, name='Docdata payout')
         statistics['docdata']['pending_payout'] = statistics['docdata']['payment']['total_amount'] - \
-                                                  sum([entry['balance'] for entry in statistics['bank'][0]['per_category'] if entry['category'] and entry['category'].pk == 2])
+                                                  sum([entry['balance'] for entry in statistics['bank'][0]['per_category'] if entry['category'] == dd_payout_category])
 
         statistics['docdata']['payout']['other_costs'] = statistics['docdata']['payment']['total_amount'] - \
                                                          statistics['docdata']['payment']['docdata_fee'] - \

@@ -10,7 +10,7 @@ from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from .payments import PaymentFactory
 
 
-DEFAULT_CURRENCY = 'eur'
+DEFAULT_CURRENCY = 'EUR'
 TODAY = date.today()
 
 
@@ -69,7 +69,7 @@ class BankTransactionFactory(factory.DjangoModelFactory):
     counter_account = 'NL91ABNA0417164300'
     counter_name = 'Counter name'
     book_date = TODAY
-    book_code = '10'  # ?
+    book_code = 'bg'
 
     status = 'valid' # or 'unknown', 'mismatch'  # BankTransaction.IntegrityStatus.choices
     #description1 (t/m description6), end_to_end_id, id_recipient, mandate_id, status_remarks, filler

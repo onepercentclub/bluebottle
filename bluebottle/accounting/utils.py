@@ -1,9 +1,7 @@
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils import timezone
 
-from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory
-from .enum import BANK_ACCOUNTS
-
+from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory, BankAccount
 from decimal import Decimal
 
 
@@ -106,6 +104,7 @@ def get_dashboard_values(start, stop):
 
     # Aggregated totals
     data['transactions_amount'] = data['transactions'].aggregate(Sum('amount'))['amount__sum'] or 0
+    # above item is not used anywhere, and does not make a lot of sense since it adds up both credit and debit transactions
     data['transactions_count'] = data['transactions'].count()
     data['order_payments_amount'] = data['order_payments'].aggregate(Sum('amount'))['amount__sum'] or 0
     data['order_payments_count'] = data['order_payments'].count()
@@ -197,15 +196,13 @@ def get_accounting_statistics(start, stop):
 
     # Tpci (third party costs)
     # Tdf (docdata fee)
-
-    bank_accounts = mydict(BANK_ACCOUNTS)
     categories_list = [None] + list(BankTransactionCategory.objects.all())
     # BankTransactionCategory can differ per tenant. structure of the dict can be different,
     # when merging it can result in None
 
-    for sender_account, name in bank_accounts.items():
-        if sender_account:
-            qs = bank_transactions.filter(sender_account=sender_account)
+    for account in BankAccount.objects.all():
+        if account.account_nr:
+            qs = bank_transactions.filter(sender_account=account.account_nr)
         else:
             qs = bank_transactions
 
@@ -227,8 +224,8 @@ def get_accounting_statistics(start, stop):
 
         statistics['bank'].append(mydict(
                 per_category=categories,
-                account_number=sender_account,
-                name=name,
+                account_number=account.account_nr,
+                name=account.account_name,
                 credit=credit,  # in
                 debit=debit,    # out
                 balance=credit - debit,
@@ -253,5 +250,42 @@ def get_accounting_statistics(start, stop):
                                                          statistics['docdata']['payment']['docdata_fee'] - \
                                                          statistics['docdata']['payment']['third_party'] - \
                                                          statistics['docdata']['payout']['total_amount']
-
     return statistics
+
+
+def get_bank_account_info():
+    """
+    Only accounts that are in bluebottle.accounting.models.BankAccounts will be matched
+    """
+    bank_accounts = []
+    for account in BankAccount.objects.all():
+        if account.account_nr:
+            transactions = BankTransaction.objects.filter(Q(sender_account=account.account_nr) | \
+                                                          Q(counter_account=account.account_nr))
+            credit_transactions = transactions.filter(credit_debit='C').order_by('-book_date')
+            debit_transactions = transactions.filter(credit_debit='D').order_by('-book_date')
+            credit_transaction = credit_transactions.first() if credit_transactions.exists() else None
+            debit_transaction = debit_transactions.first() if debit_transactions.exists() else None
+
+            # this block is needed to determine a correct link, filter on transactions
+            # by either sender_account=account_nr or counter_account=account_nr
+            credit_sender_counter = 'sender'
+            if credit_transaction and credit_transaction.sender_account != account.account_nr:
+                    credit_sender_counter = 'counter'
+
+            debit_sender_counter = 'counter'
+            if debit_transaction and debit_transaction.counter_account != account.account_nr:
+                    debit_sender_counter = 'sender'
+
+            bank_accounts.append({
+                'account_name': account.account_name,
+                'account_nr': account.account_nr,
+                'last_credit_transaction_date': credit_transaction.book_date if credit_transaction else '',
+                'last_credit_transaction_name': str(credit_transaction)[:40] if credit_transaction else '',
+                'credit_sender_counter': credit_sender_counter,
+                'debit_sender_counter': debit_sender_counter,
+                'last_debit_transaction_date': debit_transaction.book_date if debit_transaction else '',
+                'last_debit_transaction_name': str(debit_transaction)[:40] if debit_transaction else '',
+                })
+
+    return bank_accounts

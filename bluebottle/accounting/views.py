@@ -4,8 +4,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
 
-from .enum import BANK_ACCOUNTS
-from .utils import get_accounting_statistics, get_dashboard_values, mydict
+from .utils import get_accounting_statistics, get_dashboard_values, mydict, get_bank_account_info
 
 import datetime
 from tenant_schemas.utils import get_tenant_model
@@ -101,7 +100,7 @@ class AccountingDashboardView(InitialDatesMixin, FormView):
              'data': data,
              'start': self.selected_start,
              'stop': self.selected_stop,
-             'bank_accounts': BANK_ACCOUNTS
+             'bank_accounts': get_bank_account_info(),
         })
         return context
 
@@ -205,6 +204,7 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
                     all_tenants[tenant.name] = {
                         'statistics': stats,
                         'totals': tots,
+                        'bank_accounts': get_bank_account_info()
                         }
         else:
             header = ''
@@ -220,7 +220,6 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
              'title': _('Finance Dashboard') + header,
              'start': self.selected_start,
              'stop': self.selected_stop,
-             'bank_accounts': BANK_ACCOUNTS
         })
 
         return context

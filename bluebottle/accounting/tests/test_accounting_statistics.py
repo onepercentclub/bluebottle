@@ -20,7 +20,6 @@ from ..utils import get_accounting_statistics, get_dashboard_values
 class AccountingStatisticsTests(BluebottleTestCase):
     fixtures = ('initial_data', 'project_data')
 
-
     def setUp(self):
         super(AccountingStatisticsTests, self).setUp()
 
@@ -241,6 +240,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         donations = values.get('donations')
         donations_count = values.get('donations_count')
         donations_amount = values.get('donations_amount')
+        # count is another item in the dict, so when checking a positive count, it does not
+        # guarantee that the other item contains an existing queryset, so always check both
         self.assertTrue(donations.exists())
         self.assertEqual(donations_count, 3)
         self.assertEqual(donations_amount, Decimal('1333'))
@@ -407,11 +408,11 @@ class AccountingStatisticsTests(BluebottleTestCase):
                                       )
 
         # ##### EXTRA PROJECT_PAYOUT ##### #
-        extra_project_payout1 = ProjectPayoutFactory.create(
+        ProjectPayoutFactory.create(
             completed=self.middle_date, status=StatusDefinition.IN_PROGRESS, project=self.project1,
             amount_raised=444, organization_fee=0, amount_payable=444)
 
-        extra_project_payout2 = ProjectPayoutFactory.create(
+        ProjectPayoutFactory.create(
             completed=self.middle_date, status=StatusDefinition.NEW, project=self.project1,
             amount_raised=Decimal('22.95'), organization_fee=0, amount_payable=Decimal('22.95'))
 
@@ -517,7 +518,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         donations_amount = values.get('donations_amount')
         self.assertTrue(donations.exists())
         self.assertEqual(donations_count, 4) # also includes failed order
-        self.assertEqual(donations_amount, Decimal('34333')) # 33000 failed donation + 1000 + 222 + 111
+        self.assertEqual(donations_amount, Decimal('34333')) # 33000 (failed order) + 1000 + 222 + 111
 
         donations_settled = values.get('donations_settled')
         donations_settled_count = values.get('donations_settled_count')

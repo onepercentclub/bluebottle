@@ -1,4 +1,4 @@
-from bluebottle.bb_donations.signals import donation_status_changed
+from bluebottle.donations.signals import donation_status_changed
 from django.dispatch import Signal
 
 # This signal indicates that the supplied project has been funded.

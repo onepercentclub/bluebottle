@@ -1,4 +1,4 @@
-from bluebottle.bb_donations.admin import DonationInline
+from bluebottle.donations.admin import DonationInline
 from bluebottle.payments.admin import OrderPaymentInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList
 from bluebottle.utils.utils import StatusDefinition

@@ -355,6 +355,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         - one order payment that has no payment, its should appear in the invalid_order_payments
         - one transaction that has IntegretyStatus mismatch
         - one project_payouts with status = 'in_progress'
+        - one more bank transaction (not connected to any payout or payment) that is debit
 
         and all these cases are checked to appear correctly in the statistics ouput
         """
@@ -395,6 +396,14 @@ class AccountingStatisticsTests(BluebottleTestCase):
                                       category=self.CAMPAIGN_PAYOUT,
                                       credit_debit=self.creditdebit.credit,
                                       status=self.status.UnknownTransaction, # or .AmountMismatch
+                                      payout=None,
+                                      remote_payout=None,
+                                      remote_payment=None,
+                                      )
+        BankTransactionFactory.create(amount=Decimal('500'),
+                                      category=self.CAMPAIGN_PAYOUT,
+                                      credit_debit=self.creditdebit.debit,
+                                      status=self.status.Valid,
                                       payout=None,
                                       remote_payout=None,
                                       remote_payment=None,
@@ -456,17 +465,17 @@ class AccountingStatisticsTests(BluebottleTestCase):
         stats_bank_all = stats_bank[0]
         self.assertEqual(stats_bank_all.get('name'), 'All')
         self.assertEqual(stats_bank_all.get('account_number'), '')
-        self.assertEqual(stats_bank_all.get('balance'), Decimal('1078.25')) # 1000 + 1.11 + 0.14 + 77 (mismatch transactioN)
-        self.assertEqual(stats_bank_all.get('count'), 4)
+        self.assertEqual(stats_bank_all.get('balance'), Decimal('578.25')) # 1000 + 1.11 + 0.14 + 77 (mismatch transactioN) - 500 debit transaction
+        self.assertEqual(stats_bank_all.get('count'), 5)
         self.assertEqual(stats_bank_all.get('credit'), Decimal('1078.25'))
-        self.assertEqual(stats_bank_all.get('debit'), Decimal())
+        self.assertEqual(stats_bank_all.get('debit'), Decimal('500'))
 
         per_category = stats_bank_all['per_category']
         for cat_dict in per_category:
             if cat_dict.get('category') == self.CAMPAIGN_PAYOUT:
                 self.assertEqual(cat_dict.get('credit'), Decimal('1077')) # includes 77 from mismatch transaction
-                self.assertEqual(cat_dict.get('debit'), Decimal())
-                self.assertEqual(cat_dict.get('balance'), Decimal('1077'))
+                self.assertEqual(cat_dict.get('debit'), Decimal('500'))
+                self.assertEqual(cat_dict.get('balance'), Decimal('577'))
             elif cat_dict.get('category') == self.DOCDATA_PAYOUT:
                 self.assertEqual(cat_dict.get('credit'), Decimal('1.11'))
                 self.assertEqual(cat_dict.get('debit'), Decimal())
@@ -595,8 +604,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         transactions_count = values.get('transactions_count')
         transactions_amount = values.get('transactions_amount')
         self.assertTrue(transactions.exists())
-        self.assertEqual(transactions_count, 4)
-        self.assertEqual(transactions_amount, Decimal('1078.25')) # + 77 from the mismatch banktransaction
+        self.assertEqual(transactions_count, 5)
+        self.assertEqual(transactions_amount, Decimal('1578.25')) # + 77 from the mismatch banktransaction + 500 debit
 
         invalid_transactions = values.get('invalid_transactions')
         invalid_transactions_count = values.get('invalid_transactions_count')

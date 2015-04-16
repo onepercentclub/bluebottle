@@ -43,7 +43,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         self.project1_owner = BlueBottleUserFactory(username='proj1_owner', email='owner@proj1.nl', password='proj1')
         self.project2_owner = BlueBottleUserFactory(username='proj2_owner', email='owner@proj2.nl', password='proj2')
 
-         # deadline defaults to timezone.now() + timedelta(days=100) # allow_overfunding defaults to  True
+         # deadline defaults to timezone.now() + timedelta(days=100) # allow_overfunding defaults to True
         self.project1 =  ProjectFactory(owner=self.project1_owner, organization=self.organization,
                                         title='Project 1', amount_needed=1111, amount_asked=1111)
         self.project2 = ProjectFactory(owner=self.project2_owner, organization=self.organization,
@@ -60,7 +60,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         self.order2 = OrderFactory.create(user=self.person2, status='success')
         self.donation1_person2 = DonationFactory(order=self.order2, project=self.project1, amount=1000)
 
-        # #####
+        # ##### ORDER PAYMENT AND PAYMENT ##### #
         self.assertEqual(self.order1.status, 'created')
         self.order_payment = OrderPaymentFactory.create(order=self.order1)
         self.assertEqual(self.order1.status, 'locked')
@@ -96,17 +96,13 @@ class AccountingStatisticsTests(BluebottleTestCase):
             completed=self.middle_date, status = StatusDefinition.SETTLED, project=self.project2,
             amount_raised=1000, organization_fee=50, amount_payable=950)
 
-        # create some banktransactions
         BankTransactionFactory.create(amount=Decimal('1000'),
                                       category=self.CAMPAIGN_PAYOUT,
                                       credit_debit=self.creditdebit.credit,
                                       status=self.status.Valid,
-                                      payout__project=self.project2,
-                                      payout__organization_fee=50,
-                                      payout__amount_raised=Decimal('1000'),
-                                      payout__amount_payable=Decimal('50'), # completed, status, planned
-                                      remote_payout=None, # RemoteDocdataPayoutFactory,
-                                      remote_payment=None, # RemoteDocdataPaymentFactory,
+                                      payout=self.project2_payout,
+                                      remote_payout=None,
+                                      remote_payment=None,
                                       )
 
     def test_get_accounting_statistics(self):
@@ -118,8 +114,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         # ##### DONATIONS ##### #
         # only donations that have an order with status 'success' appear in the donations stats
         stats_donations = stats['donations']
-        self.assertEqual(stats_donations.get('count'), 3)
-        self.assertEqual(stats_donations.get('total_amount'), Decimal('1333'))  # 333 for project 1 and 1000 for project 2
+        self.assertEqual(stats_donations.get('count'), 3) # 111 + 222 + 1000
+        self.assertEqual(stats_donations.get('total_amount'), Decimal('1333'))
 
         # ##### ORDER PAYMENTS ##### #
         # only project 1 is added to an order payment
@@ -132,8 +128,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         stats_project_payouts = stats['project_payouts']
         self.assertEqual(stats_project_payouts.get('count'), 2)
         self.assertEqual(stats_project_payouts.get('organization_fee'), Decimal('50'))
-        self.assertEqual(stats_project_payouts.get('payable'),Decimal('1283')) # 1333 -50
-        self.assertEqual(stats_project_payouts.get('raised'), Decimal('1333'))
+        self.assertEqual(stats_project_payouts.get('raised'), Decimal('1333')) # 1000 + 333
+        self.assertEqual(stats_project_payouts.get('payable'),Decimal('1283')) # 1333 -50 (organization fee)
         # stats_project_payouts.get('per_payout_rule')
 
         # ##### DOCDATA ##### #
@@ -268,20 +264,20 @@ class AccountingStatisticsTests(BluebottleTestCase):
         project_payouts_count = values.get('project_payouts_count')
         project_payouts_amount = values.get('project_payouts_amount')
         self.assertTrue(project_payouts.exists())
-        self.assertEqual(project_payouts_count, 3)
-        self.assertEqual(project_payouts_amount, Decimal('2333'))
+        self.assertEqual(project_payouts_count, 2)
+        self.assertEqual(project_payouts_amount, Decimal('1333'))
         # PENDING
         project_payouts_pending = values.get('project_payouts_pending')
         project_payouts_pending_amount = values.get('project_payouts_pending_amount')
-        self.assertTrue(project_payouts_pending.exists())
-        self.assertEqual(project_payouts_pending_amount, Decimal('1000'))
+        self.assertFalse(project_payouts_pending.exists())
+        self.assertEqual(project_payouts_pending_amount, Decimal())
         # PENDING NEW
         project_payouts_pending_new = values.get('project_payouts_pending_new')
         project_payouts_pending_new_count = values.get('project_payouts_pending_new_count')
         project_payouts_pending_new_amount = values.get('project_payouts_pending_new_amount')
-        self.assertTrue(project_payouts_pending_new.exists())
-        self.assertEqual(project_payouts_pending_new_count, 1)
-        self.assertEqual(project_payouts_pending_new_amount, Decimal('1000'))
+        self.assertFalse(project_payouts_pending_new.exists())
+        self.assertEqual(project_payouts_pending_new_count, 0)
+        self.assertEqual(project_payouts_pending_new_amount, Decimal())
         # PENDING IN PROGRESS
         project_payouts_pending_in_progress = values.get('project_payouts_pending_in_progress')
         project_payouts_pending_in_progress_amount = values.get('project_payouts_pending_in_progress_amount')
@@ -309,7 +305,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         invalid_order_payments_count = values.get('invalid_order_payments_count')
         invalid_order_payments_amount = values.get('invalid_order_payments_amount')
         invalid_order_payments_transaction_fee = values.get('invalid_order_payments_transaction_fee')
-        self.assertFalse(invalid_order_payments.exists())  # empty queryset
+        self.assertFalse(invalid_order_payments.exists()) # empty queryset
         self.assertEqual(invalid_order_payments_count, 0)
         self.assertEqual(invalid_order_payments_amount, Decimal())
         self.assertEqual(invalid_order_payments_transaction_fee, Decimal())
@@ -355,6 +351,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         - one order payment that has no payment, its should appear in the invalid_order_payments
         - one transaction that has IntegretyStatus mismatch
         - one project_payouts with status = 'in_progress'
+        - one project_payout with status = 'new'
         - one more bank transaction (not connected to any payout or payment) that is debit
 
         and all these cases are checked to appear correctly in the statistics ouput
@@ -395,7 +392,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         BankTransactionFactory.create(amount=Decimal('77'),
                                       category=self.CAMPAIGN_PAYOUT,
                                       credit_debit=self.creditdebit.credit,
-                                      status=self.status.UnknownTransaction, # or .AmountMismatch
+                                      status=self.status.UnknownTransaction,
                                       payout=None,
                                       remote_payout=None,
                                       remote_payment=None,
@@ -410,9 +407,13 @@ class AccountingStatisticsTests(BluebottleTestCase):
                                       )
 
         # ##### EXTRA PROJECT_PAYOUT ##### #
-        self.project1_payout = ProjectPayoutFactory.create(
+        extra_project_payout1 = ProjectPayoutFactory.create(
             completed=self.middle_date, status=StatusDefinition.IN_PROGRESS, project=self.project1,
             amount_raised=444, organization_fee=0, amount_payable=444)
+
+        extra_project_payout2 = ProjectPayoutFactory.create(
+            completed=self.middle_date, status=StatusDefinition.NEW, project=self.project1,
+            amount_raised=Decimal('22.95'), organization_fee=0, amount_payable=Decimal('22.95'))
 
         #
         # #### TEST STATISTICS #### #
@@ -424,8 +425,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         # ##### DONATIONS ##### #
         # only donations that have an order with status 'success' appear in the donations stats
         stats_donations = stats['donations']
-        self.assertEqual(stats_donations.get('count'), 3)
-        self.assertEqual(stats_donations.get('total_amount'), Decimal('1333'))  # 333 for project 1 and 1000 for project 2
+        self.assertEqual(stats_donations.get('count'), 3) # 111 + 222 for project 1 and 1000 for project 2
+        self.assertEqual(stats_donations.get('total_amount'), Decimal('1333'))
 
         # ##### ORDER PAYMENTS ##### #
         # only project 1 is added to an order payment
@@ -436,10 +437,10 @@ class AccountingStatisticsTests(BluebottleTestCase):
 
         # ##### PROJECT PAYOUTS ##### #
         stats_project_payouts = stats['project_payouts']
-        self.assertEqual(stats_project_payouts.get('count'), 3) # includes one in progress
+        self.assertEqual(stats_project_payouts.get('count'), 4) # includes one in progress, and one pending
         self.assertEqual(stats_project_payouts.get('organization_fee'), Decimal('50'))
-        self.assertEqual(stats_project_payouts.get('payable'),Decimal('1727')) # 1333 + 444 - 50
-        self.assertEqual(stats_project_payouts.get('raised'), Decimal('1777')) # 1333 + 444
+        self.assertEqual(stats_project_payouts.get('raised'), Decimal('1799.95')) # 1000 + 333 + 444 + 22.95
+        self.assertEqual(stats_project_payouts.get('payable'),Decimal('1749.95')) # above - 50
 
         # ##### DOCDATA ##### #
         stats_docdata = stats['docdata']
@@ -449,13 +450,13 @@ class AccountingStatisticsTests(BluebottleTestCase):
 
         stats_docdata_payment = stats_docdata['payment']
         self.assertEqual(stats_docdata_payment.get('count'), 2)
-        self.assertEqual(stats_docdata_payment.get('docdata_fee'), Decimal('0.35')) # 0.33 + 0.22
+        self.assertEqual(stats_docdata_payment.get('docdata_fee'), Decimal('0.35')) # 0.33 + 0.02
         self.assertEqual(stats_docdata_payment.get('third_party'), Decimal())
         self.assertEqual(stats_docdata_payment.get('total_amount'), Decimal('123.59')) # 123.45 + 0.14
 
         stats_docdata_payout = stats_docdata['payout']
         self.assertEqual(stats_docdata_payout.get('count'), 3)
-        self.assertEqual(stats_docdata_payout.get('other_costs'), Decimal('101.99')) # = 123.45 - (20+ 0.33) -(1.11 + 0.02)
+        self.assertEqual(stats_docdata_payout.get('other_costs'), Decimal('101.99')) # = 123.45 - (20 + 0.33) -(1.11 + 0.02)
         self.assertEqual(stats_docdata_payout.get('total_amount'),Decimal('21.25')) # 20 + 1.11 + 0.14
 
         # ##### BANK ##### #
@@ -465,15 +466,15 @@ class AccountingStatisticsTests(BluebottleTestCase):
         stats_bank_all = stats_bank[0]
         self.assertEqual(stats_bank_all.get('name'), 'All')
         self.assertEqual(stats_bank_all.get('account_number'), '')
-        self.assertEqual(stats_bank_all.get('balance'), Decimal('578.25')) # 1000 + 1.11 + 0.14 + 77 (mismatch transactioN) - 500 debit transaction
         self.assertEqual(stats_bank_all.get('count'), 5)
-        self.assertEqual(stats_bank_all.get('credit'), Decimal('1078.25'))
+        self.assertEqual(stats_bank_all.get('credit'), Decimal('1078.25')) # 1000 + 77 (mismatch) + 1.11 + 0.14
         self.assertEqual(stats_bank_all.get('debit'), Decimal('500'))
+        self.assertEqual(stats_bank_all.get('balance'), Decimal('578.25'))
 
         per_category = stats_bank_all['per_category']
         for cat_dict in per_category:
             if cat_dict.get('category') == self.CAMPAIGN_PAYOUT:
-                self.assertEqual(cat_dict.get('credit'), Decimal('1077')) # includes 77 from mismatch transaction
+                self.assertEqual(cat_dict.get('credit'), Decimal('1077')) # 1000 + 77 (mismatch)
                 self.assertEqual(cat_dict.get('debit'), Decimal('500'))
                 self.assertEqual(cat_dict.get('balance'), Decimal('577'))
             elif cat_dict.get('category') == self.DOCDATA_PAYOUT:
@@ -516,7 +517,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         donations_amount = values.get('donations_amount')
         self.assertTrue(donations.exists())
         self.assertEqual(donations_count, 4) # also includes failed order
-        self.assertEqual(donations_amount, Decimal('34333')) # 33000 failed donation + 1000 + 333
+        self.assertEqual(donations_amount, Decimal('34333')) # 33000 failed donation + 1000 + 222 + 111
 
         donations_settled = values.get('donations_settled')
         donations_settled_count = values.get('donations_settled_count')
@@ -537,20 +538,20 @@ class AccountingStatisticsTests(BluebottleTestCase):
         project_payouts_count = values.get('project_payouts_count')
         project_payouts_amount = values.get('project_payouts_amount')
         self.assertTrue(project_payouts.exists())
-        self.assertEqual(project_payouts_count, 4) # includes in progress payout
-        self.assertEqual(project_payouts_amount, Decimal('2777')) # 2333 + 444
+        self.assertEqual(project_payouts_count, 4) # includes in 'progress' and 'new' payout
+        self.assertEqual(project_payouts_amount, Decimal('1799.95')) # 1000 + 333 + 444 + 22.95
         # PENDING
         project_payouts_pending = values.get('project_payouts_pending')
         project_payouts_pending_amount = values.get('project_payouts_pending_amount')
         self.assertTrue(project_payouts_pending.exists())
-        self.assertEqual(project_payouts_pending_amount, Decimal('1444')) # 1000 + 444 in progress pending project payou
+        self.assertEqual(project_payouts_pending_amount, Decimal('466.95')) # 444 + 22.95
         # PENDING NEW
         project_payouts_pending_new = values.get('project_payouts_pending_new')
         project_payouts_pending_new_count = values.get('project_payouts_pending_new_count')
         project_payouts_pending_new_amount = values.get('project_payouts_pending_new_amount')
         self.assertTrue(project_payouts_pending_new.exists())
         self.assertEqual(project_payouts_pending_new_count, 1)
-        self.assertEqual(project_payouts_pending_new_amount, Decimal('1000'))
+        self.assertEqual(project_payouts_pending_new_amount, Decimal('22.95'))
         # PENDING IN PROGRESS
         project_payouts_pending_in_progress = values.get('project_payouts_pending_in_progress')
         project_payouts_pending_in_progress_amount = values.get('project_payouts_pending_in_progress_amount')
@@ -564,7 +565,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         project_payouts_settled_amount = values.get('project_payouts_settled_amount')
         self.assertTrue(project_payouts_settled.exists())
         self.assertEqual(project_payouts_settled_count, 2)
-        self.assertEqual(project_payouts_settled_amount, Decimal('1333'))
+        self.assertEqual(project_payouts_settled_amount, Decimal('1333')) # 1000 + 333
 
         # ##### ORDER PAYMENTS ##### #
         order_payments = values.get('order_payments')
@@ -580,7 +581,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
         invalid_order_payments_transaction_fee = values.get('invalid_order_payments_transaction_fee')
         self.assertTrue(invalid_order_payments.exists())
         self.assertEqual(invalid_order_payments_count, 1)
-        self.assertEqual(invalid_order_payments_amount, Decimal()) # failed one has not 0
+        self.assertEqual(invalid_order_payments_amount, Decimal()) # failed one has no value
         self.assertEqual(invalid_order_payments_transaction_fee, Decimal())
 
         # ##### DOCDATA PAYMENTS ##### #
@@ -604,8 +605,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         transactions_count = values.get('transactions_count')
         transactions_amount = values.get('transactions_amount')
         self.assertTrue(transactions.exists())
-        self.assertEqual(transactions_count, 5)
-        self.assertEqual(transactions_amount, Decimal('1578.25')) # + 77 from the mismatch banktransaction + 500 debit
+        self.assertEqual(transactions_count, 5) # 1000 + 1.11 + 0.14 + 77 (mismatch) + 500 (debit transaction)
+        self.assertEqual(transactions_amount, Decimal('1578.25'))
 
         invalid_transactions = values.get('invalid_transactions')
         invalid_transactions_count = values.get('invalid_transactions_count')

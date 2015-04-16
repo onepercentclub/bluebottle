@@ -138,29 +138,38 @@
                 </tbody>
             </table>
         </div>
-        <div class="column">
-            <h2>{% trans "Bank account balances" %}</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>{% trans "Bank account" %}</th>
-                        <th>{% trans "IBAN" %}</th>
-                        <th>{% trans "Last transaction" %}</th>
-                        <th>{% trans "Balance" %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for bank_account_name, bank_account_nr in bank_accounts %}
-                    {% if bank_account_name %}
-                    <tr>
-                        <td>{{ bank_account_name }}</td>
-                        <td>{{ bank_account_nr }}</th>
-                        <td>...</td>
-                        <td class="financial">...</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-            <br>
-        </div>
+        {% if bank_accounts_list %}
+            <div class="column">
+                <h2>{% trans "Bank account balances" %}</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{% trans "Bank account" %}</th>
+                            <th>{% trans "Last credit transaction" %}</th>
+                            <th>{% trans "Last debit transaction" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bank_account in bank_accounts_list %}
+                            <tr>
+                                <td>{{ bank_account.account_name }}<br>
+                                    {{ bank_account.account_nr }}</td>
+                                <td>
+                                    {% if show_links %}<a href="{% url 'admin:accounting_banktransaction_changelist' %}?credit_debit=C&{{ bank_account.credit_sender_counter }}_account={{ bank_account.account_nr }}&o=-1">{% endif %}
+                                        {{ bank_account.last_credit_transaction_date }}<br>
+                                        {{ bank_account.last_credit_transaction_name }}
+                                    {% if show_links %}</a>{% endif %}
+                                </td>
+                                <td>
+                                    {% if show_links %}<a href="{% url 'admin:accounting_banktransaction_changelist' %}?credit_debit=D&{{ bank_account.debit_sender_counter }}_account={{ bank_account.account_nr }}&o=-1">{% endif %}
+                                        {{ bank_account.last_debit_transaction_date }}<br>
+                                        {{ bank_account.last_debit_transaction_name }}
+                                    {% if show_links %}</a>{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+            </div>
+        {% endif %}

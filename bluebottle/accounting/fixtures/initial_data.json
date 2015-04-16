@@ -75,5 +75,29 @@
     "fields": {
         "name": "Total"
     }
+},
+{
+    "pk": 1,
+    "model": "accounting.bankaccount",
+    "fields": {
+        "account_nr": "",
+        "account_name": "All"
+    }
+},
+{
+    "pk": 2,
+    "model": "accounting.bankaccount",
+    "fields": {
+       "account_nr": "NL45RABO0132207044",
+       "account_name": "Checking account"
+    }
+},
+{
+    "pk": 3,
+    "model": "accounting.bankaccount",
+    "fields": {
+        "account_nr": "NL38RABO1513237977",
+        "account_name": "Savings account"
+    }
 }
 ]

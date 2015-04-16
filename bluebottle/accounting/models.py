@@ -4,6 +4,11 @@ from django.utils.translation import ugettext as _
 from djchoices import DjangoChoices, ChoiceItem
 
 
+class BankAccount(models.Model):
+    account_nr = models.CharField(_('account number'), max_length=35, blank=True)
+    account_name = models.CharField(_('account name'), max_length=50)
+
+
 class BankTransactionCategory(models.Model):
 
     name = models.CharField(_('Name'), max_length=100)

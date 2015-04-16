@@ -10,7 +10,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from .mails import mail_project_funded_internal
@@ -339,7 +339,7 @@ class Project(BaseProject):
 
         if self.amount_asked:
             self.update_amounts(False)
-            
+
         #Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
                                                            Q(slug="done-incomplete") |

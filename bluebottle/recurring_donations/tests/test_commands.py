@@ -22,7 +22,9 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.projects = []
 
         for amount in [500, 100, 1500, 300, 200]:
-            self.projects.append(ProjectFactory.create(amount_asked=amount, status=self.phase_campaign))
+            self.projects.append(
+                ProjectFactory.create(amount_asked=amount,
+                                      status=self.phase_campaign))
 
         # Some donations to get the popularity going
         # Top 3 after this should be projects 4, 3, 0
@@ -39,7 +41,8 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         order.locked()
         order.succeeded()
 
-        # Since we force the transitions update_amounts isn't triggered by signal, so we run it manually here.
+        # Since we force the transitions update_amounts isn't triggered by
+        # signal, so we run it manually here.
         for project in self.projects:
             project.update_amounts()
 
@@ -49,12 +52,14 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
     def test_prepare(self):
         # Create a monthly donor with a preferred project
         monthly_donor1 = MonthlyDonorFactory(user=self.user1, amount=25)
-        monthly_donor1_project = MonthlyDonorProjectFactory(donor=monthly_donor1, project=self.projects[0])
+        monthly_donor1_project = MonthlyDonorProjectFactory(
+            donor=monthly_donor1, project=self.projects[0])
 
         # Create a monthly donor without preferred projects
         monthly_donor2 = MonthlyDonorFactory(user=self.user2, amount=100)
 
-        call_command('process_monthly_donations', prepare=True)
+        call_command('process_monthly_donations', prepare=True,
+                     tenant='test')
 
         # Now check that we have 2 prepared donations.
         self.assertEqual(MonthlyOrder.objects.count(), 2)

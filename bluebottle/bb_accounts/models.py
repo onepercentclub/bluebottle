@@ -17,7 +17,6 @@ from django.db.models import Q
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
-from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
 
 from bluebottle.bb_accounts.utils import valid_email
@@ -28,6 +27,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Country
 from bluebottle.utils.models import Address
 
+from bluebottle.utils.fields import ImageField
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer', 'current_user_serializer')
 
@@ -124,7 +124,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     # Public Profile
     first_name = models.CharField(_('first name'), max_length=100, blank=True)
     last_name = models.CharField(_('last name'), max_length=100, blank=True)
-    location = models.CharField(_('location'), max_length=100, blank=True)
+    place = models.CharField(_('Location your at now'), max_length=100, blank=True)
+    location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
+
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)

@@ -1,18 +1,12 @@
-from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember, BaseOrganizationDocument
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext as _
 from django.template.defaultfilters import slugify
-
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from django_iban.fields import IBANField, SWIFTBICField
-from djchoices import DjangoChoices, ChoiceItem
-
-from bluebottle.utils.models import Address
 from django.core.files.storage import FileSystemStorage
 
+from bluebottle.bb_organizations.models import (BaseOrganization,
+                                                BaseOrganizationMember,
+                                                BaseOrganizationDocument)
 
 GROUP_PERMS = {
     'Staff': {
@@ -22,11 +16,16 @@ GROUP_PERMS = {
     }
 }
 
+
 class Organization(BaseOrganization):
     """
     Organizations can run Projects. An organization has one or more members.
     """
-    registration = models.FileField(upload_to='organizations/registrations', storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT), null=True, blank=True)
+    registration = models.FileField(upload_to='organizations/registrations',
+                                    storage=FileSystemStorage(
+                                        location=settings.PRIVATE_MEDIA_ROOT),
+                                    null=True,
+                                    blank=True)
 
     def __unicode__(self):
         return self.name

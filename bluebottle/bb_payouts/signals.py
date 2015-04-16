@@ -16,7 +16,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     project = instance
     now = timezone.now()
 
-    if project.is_realised and project.amount_asked:
+    if (project.is_realised or project.is_closed) and project.amount_asked:
 
         if now.day <= 15:
             next_date = timezone.datetime(now.year, now.month, 15)
@@ -37,23 +37,24 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
         except PROJECT_PAYOUT_MODEL.DoesNotExist:
 
-            # Create new Payout
-            payout = PROJECT_PAYOUT_MODEL(
-                planned=next_date,
-                project=project
-            )
+            if project.campaign_started:
 
-            # Calculate amounts
-            payout.calculate_amounts()
+                # Create new Payout
+                payout = PROJECT_PAYOUT_MODEL(
+                    planned=next_date,
+                    project=project
+                )
 
-            # Set payment details
-            organization = project.organization
-            payout.receiver_account_bic = organization.account_bic
-            payout.receiver_account_iban = organization.account_iban
-            payout.receiver_account_number = organization.account_number
-            payout.receiver_account_name = organization.account_holder_name
-            payout.receiver_account_city = organization.account_holder_city
-            payout.receiver_account_country = organization.account_bank_country
+                # Calculate amounts
+                payout.calculate_amounts()
 
-            # Generate invoice reference, saves twice
-            payout.update_invoice_reference(auto_save=True)
+                # Set payment details
+                payout.receiver_account_bic = project.account_bic
+                payout.receiver_account_iban = project.account_iban
+                payout.receiver_account_number = project.account_number
+                payout.receiver_account_name = project.account_holder_name
+                payout.receiver_account_city = project.account_holder_city
+                payout.receiver_account_country = project.account_bank_country
+
+                # Generate invoice reference, saves twice
+                payout.update_invoice_reference(auto_save=True)

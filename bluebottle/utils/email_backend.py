@@ -13,7 +13,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
 
-logger = logging.getLogger()
+logger = logging.getLogger('console')
 
 
 class DKIMBackend(EmailBackend):

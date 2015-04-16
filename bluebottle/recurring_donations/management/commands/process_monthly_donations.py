@@ -1,21 +1,23 @@
 from decimal import Decimal
 import math
+import sys
 import logging
 from collections import namedtuple
 from optparse import make_option
-from bluebottle.payments.exception import PaymentException
 
+from django.utils.timezone import now
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from django.db import connection
+
+from bluebottle.clients.models import Client
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
-
 from bluebottle.recurring_donations.models import MonthlyProject
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model, get_project_model
 from bluebottle.utils.utils import StatusDefinition
-from django.utils.timezone import now
-
-from django.core.management.base import BaseCommand
-from django.utils import timezone
 from bluebottle.payments.services import PaymentService
 
 from ...models import MonthlyDonor, MonthlyDonation, MonthlyOrder, MonthlyBatch
@@ -49,6 +51,9 @@ class Command(BaseCommand):
     }
 
     option_list = BaseCommand.option_list + (
+        make_option('--tenant', '-t', action='store', dest='tenant',
+                help="The tenant to run the recurring donations for."),
+
         make_option('--no-email', action='store_true', dest='no_email', default=False,
                 help="Don't send the monthly donation email to users (when processing)."),
 
@@ -67,9 +72,21 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Setup the log level for root logger.
         loglevel = self.verbosity_loglevel.get(options['verbosity'])
+
+        logger = logging.getLogger('console')
+
         logger.setLevel(loglevel)
 
         send_email = not options['no_email']
+
+        try:
+            tenant = Client.objects.get(client_name=options['tenant'])
+            connection.set_tenant(tenant)
+        except Client.DoesNotExist:
+            logger.error("You must specify a valid tenant with -t or --tenant.")
+            tenants = Client.objects.all().values_list('client_name', flat=True)
+            logger.info("Valid tenants are: {0}".format(", ".join(tenants)))
+            sys.exit(1)
 
         if options['prepare']:
             prepare_monthly_donations()

@@ -7,7 +7,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 from django.db.models import options
 from bluebottle.utils.utils import GetTweetMixin
 

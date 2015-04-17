@@ -101,14 +101,13 @@
         </form>
 
         {% if statistics %}
-        <h1>{{ start }} - {{ stop }}</h1>
+            <h1>{{ start }} - {{ stop }}</h1>
 
             {% if all_tenants %}
                {% include 'admin/accounting/dashboard_data_tables_all_tenants.html' %}
             {% else %}
                 {% include 'admin/accounting/dashboard_data_tables.html' with show_links=True data_dict=data statistics_dict=statistics bank_accounts_list=bank_accounts %}
             {% endif %}
-
         {% endif %}
 
     </div>

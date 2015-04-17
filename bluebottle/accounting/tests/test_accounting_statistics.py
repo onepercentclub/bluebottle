@@ -607,6 +607,9 @@ class AccountingStatisticsTests(BluebottleTestCase):
         transactions_amount = values.get('transactions_amount')
         self.assertTrue(transactions.exists())
         self.assertEqual(transactions_count, 5) # 1000 + 1.11 + 0.14 + 77 (mismatch) + 500 (debit transaction)
+        # NOTE: amount below is currently not used in the admin
+        # when decided to use it, verify if it makes sense to add the debit and credit together
+        # maybe credit - debit is expected, and the value should be 578.25 in that case
         self.assertEqual(transactions_amount, Decimal('1578.25'))
 
         invalid_transactions = values.get('invalid_transactions')

@@ -140,6 +140,5 @@ def change_payout_status_with_matched_transaction(sender, instance, created, **k
 
     if transaction.payout:
         payout = transaction.payout
-        payout.status = StatusDefinition.SETTLED
-        payout.completed = transaction.book_date
+        payout.settled(completed=transaction.book_date)
         payout.save()

@@ -1,23 +1,17 @@
+import decimal
 import logging
+
+from django import forms
+from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
+
 from bluebottle.utils.model_dispatcher import get_project_payout_model, get_organization_payout_model, get_model_mapping
 from bluebottle.utils.utils import StatusDefinition
+from .admin_utils import link_to
+from .models import ProjectPayoutLog, OrganizationPayoutLog
 
 logger = logging.getLogger(__name__)
 
-import decimal
-
-from django.contrib import admin
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
-from django.utils import timezone
-from django.utils.translation import ugettext as _
-from django.utils.text import Truncator
-
-from .models import ProjectPayoutLog, OrganizationPayoutLog
-
-from .admin_filters import HasIBANPayoutFilter
-from .admin_utils import link_to
-from django import forms
 
 PROJECT_PAYOUT_MODEL = get_project_payout_model()
 ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
@@ -65,27 +59,20 @@ class ProjectPayoutAdmin(admin.ModelAdmin):
     actions = ['change_status_to_new', 'change_status_to_progress', 'change_status_to_settled',
                'recalculate_amounts']
 
-    def change_status_to_new(self, request, queryset):
-        for payout in queryset.all():
-            payout.status = StatusDefinition.NEW
-            payout.save()
-
     def change_status_to_progress(self, request, queryset):
-        for payout in queryset.all():
-            payout.status = StatusDefinition.IN_PROGRESS
-            payout.save()
+        for payout in queryset.filter(status=StatusDefinition.NEW):
+            payout.in_progress()  # transition to in progress
 
     def change_status_to_settled(self, request, queryset):
-        for payout in queryset.all():
-            payout.status = StatusDefinition.SETTLED
-            payout.save()
+        for payout in queryset.filter(status=StatusDefinition.IN_PROGRESS):
+            payout.settled()
 
     list_display = ['payout', 'status', 'admin_project', 'amount_payable', 'rule',
                     'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
 
     list_display_links = ['payout']
 
-    readonly_fields = ['admin_project', 'admin_organization', 'created', 'updated']
+    readonly_fields = ['admin_project', 'admin_organization', 'created', 'updated', 'status']
 
     fieldsets = (
         (None, {
@@ -221,7 +208,7 @@ class OrganizationPayoutAdmin(admin.ModelAdmin):
         'invoice_reference', 'organization_fee_excl', 'organization_fee_vat', 'organization_fee_incl',
         'psp_fee_excl', 'psp_fee_vat', 'psp_fee_incl',
         'payable_amount_excl', 'payable_amount_vat', 'payable_amount_incl',
-        'other_costs_vat'
+        'other_costs_vat', 'status'
     ]
 
     fieldsets = (

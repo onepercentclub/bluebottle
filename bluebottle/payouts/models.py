@@ -185,12 +185,8 @@ class OrganizationPayout(BaseOrganizationPayout):
             message_identification=batch_id, payment_info_id=batch_id)
         sepa.set_initiating_party(name=settings.BANK_ACCOUNT_DONATIONS['name'])
 
-        now = timezone.now()
-
         for payout in qs.all():
-            payout.status = StatusDefinition.IN_PROGRESS
-            payout.submitted = now
-            payout.save()
+            payout.in_progress()
             creditor = SepaAccount(
                 name=settings.BANK_ACCOUNT_ORGANISATION['name'],
                 iban=settings.BANK_ACCOUNT_ORGANISATION['iban'],

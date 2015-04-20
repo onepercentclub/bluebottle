@@ -1,10 +1,8 @@
-import csv
 import decimal
 
 import datetime
 from decimal import Decimal
 from bluebottle.bb_payouts.exceptions import PayoutException
-from bluebottle.bb_payouts.utils import money_from_cents
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
@@ -14,16 +12,19 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
-from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+
 from djchoices.choices import DjangoChoices, ChoiceItem
+from django_fsm.db.fields import FSMField, transition
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
+from bluebottle.utils.utils import FSMTransition
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
+
 
 class InvoiceReferenceMixin(models.Model):
     """
@@ -93,7 +94,7 @@ class CompletedDateTimeMixin(models.Model):
         super(CompletedDateTimeMixin, self).save(*args, **kwargs)
 
 
-class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
+class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FSMTransition):
     """
     Common abstract base class for ProjectPayout and OrganizationPayout.
     """
@@ -105,7 +106,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
 
     planned = models.DateField(_("Planned"), help_text=_("Date on which this batch should be processed."))
 
-    status = models.CharField(_("status"), max_length=20, choices=STATUS_CHOICES, default=StatusDefinition.NEW)
+    status = FSMField(_("status"), max_length=20, default=StatusDefinition.NEW, choices=STATUS_CHOICES, protected=True)
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
@@ -157,6 +158,14 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
         self._log_status_change()
 
         return result
+
+    @transition(field=status, save=True, source=StatusDefinition.NEW, target=StatusDefinition.IN_PROGRESS)
+    def in_progress(self):
+        self.submitted = timezone.now()
+
+    @transition(field=status, save=True, source=StatusDefinition.IN_PROGRESS, target=StatusDefinition.SETTLED)
+    def settled(self, completed=None):
+        self.completed = completed
 
 
 class PayoutLogBase(models.Model):

@@ -258,6 +258,8 @@ class CreateManualDonationView(BaseManualEntryView):
                         _('Created a manual donation and updated project payout %r') % updateable
                     )
 
+            # TODO FIXME: organization payouts!
+
         return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):

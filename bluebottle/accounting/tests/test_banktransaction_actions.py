@@ -182,3 +182,5 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertTrue(project3.is_realised)
         self.assertTrue(project3.amount_asked)
         project3.save()  # triggers bb_payouts.signals.create_payout_finished_project
+
+        # TODO: test organization payouts!

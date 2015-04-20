@@ -12,7 +12,7 @@ payment_status_fetched = Signal(providing_args=['new_authorized_status'])
 @receiver(post_save, weak=False, sender=OrderPayment, dispatch_uid='order_payment_model')
 def order_payment_changed(sender, instance, **kwargs):
     # Send status change notification when record first created
-    # This is to ensure any components listening for a status 
+    # This is to ensure any components listening for a status
     # on an OrderPayment will also receive the initial status.
 
     # Get the default status for the status field on OrderPayment
@@ -46,7 +46,7 @@ def payment_status_changed(sender, instance, **kwargs):
     """
     if not isinstance(instance, Payment): return
 
-    # Get the Order from the Signal 
+    # Get the Order from the Signal
     order_payment = instance.order_payment
 
     # Set the fee on OrderPayment
@@ -54,7 +54,7 @@ def payment_status_changed(sender, instance, **kwargs):
 
     # Get the mapped status OrderPayment to Order
     new_order_payment_status = order_payment.get_status_mapping(instance.status)
-    
+
     # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)
 
@@ -64,7 +64,7 @@ def default_status_check(sender, instance, **kwargs):
     if not (isinstance(instance, Payment) or isinstance(instance, OrderPayment)): return
 
     # Send status change notification when record first created
-    # This is to ensure any components listening for a status 
+    # This is to ensure any components listening for a status
     # on the Sender will also receive the initial status.
 
     # Get the default status for the status field on Sender

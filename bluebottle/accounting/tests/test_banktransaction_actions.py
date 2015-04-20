@@ -12,6 +12,7 @@ from bluebottle.test.factory_models.accounting import BankTransactionFactory
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
 
 
@@ -32,33 +33,19 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.project3 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
         self.project4 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
 
-        # create payout for project 2 & 3, no donations exist yet so just make it zero/empty
+        # update payout for project 2 & 3, no donations exist yet so just make it zero/empty
         # adding a new donation (for a closed payout) should create a new payout
-        ProjectPayoutFactory.create(
-            project=self.project2,
-            amount_raised=0,
-            organization_fee=0,
-            amount_payable=0,
-            status=StatusDefinition.SETTLED
-        )
+        payout2 = self.project2.projectpayout_set.first()
+        payout2.status = StatusDefinition.SETTLED
+        payout2.save()
 
-        # should be left alone
-        ProjectPayoutFactory.create(
-            project=self.project3,
-            amount_raised=0,
-            organization_fee=0,
-            amount_payable=0,
-            status=StatusDefinition.PENDING
-        )
+        payout3 = self.project3.projectpayout_set.first()
+        payout3.status = StatusDefinition.PENDING
+        payout3.save()
 
         # should be updated with new donation
-        ProjectPayoutFactory.create(
-            project=self.project4,
-            amount_raised=0,
-            organization_fee=0,
-            amount_payable=0,
-            status=StatusDefinition.NEW
-        )
+        payout4 = self.project4.projectpayout_set.first()
+        self.assertEqual(payout4.status, StatusDefinition.NEW)
 
         # create a bank transaction to resolve. It's unmatched with anything.
         self.transactions = BankTransactionFactory.create_batch(
@@ -108,21 +95,46 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertContains(transaction_list, _('create donation'), count=4)
 
         # pick the action 'create donation' for each transaction
+        for i, transaction in enumerate(self.transactions):
+            project = getattr(self, 'project%d' % (i+1))
+            url = reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': transaction.pk})
+            donation_form = self.app.get(url, user=self.superuser)
+            self.assertEqual(donation_form.status_code, 200)
+            form = donation_form.forms[1]
 
-        url = reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': self.transactions[0].pk})
-        donation_form = self.app.get(url, user=self.superuser)
-        self.assertEqual(donation_form.status_code, 200)
-        form = donation_form.forms[1]
+            # fill in the form and submit
+            form['project'] = project.pk
+            response = form.submit()
+            self.assertRedirects(response, admin_url)
+            self.assertEqual(response.follow().status_code, 200)
 
-        # fill in the form and submit
-        form['project'] = self.project1.pk
-        response = form.submit().follow_redirect()
-        self.assertEqual(response.status_code, 200)
-        import bpdb; bpdb.set_trace()
-        self.assertEqual(self.app.url, admin_url)
+            # verify that a donation is created
+            self.assertEqual(project.donation_set.count(), 1)
+            donation = project.donation_set.first()
+            self.assertTrue(donation.anonymous)
+            self.assertEqual(donation.amount, Decimal(75))
+            self.assertEqual(donation.user, self.superuser)
+            self.assertEqual(donation.project, project)
 
-        # verify that a donation is created
+            # verify that an order exists
+            self.assertIsNotNone(donation.order)
+            order = donation.order
+            self.assertEqual(order.order_payments.count(), 1)
+            order_payment = order.order_payments.first()
+            self.assertEqual(order.status, StatusDefinition.SUCCESS)
+            self.assertEqual(order_payment.status, StatusDefinition.SETTLED)
+            self.assertEqual(order_payment.amount, Decimal(75))
+            self.assertEqual(order.user, self.superuser)
+            self.assertEqual(order_payment.user, self.superuser)
+            self.assertEqual(order_payment.transaction_fee, Decimal(0))
 
-        # verify that an order exists
-        # verify that a exists and isisinstance of ManualPayment (Polymorphic Payment)
+            # verify that a payment exists and isisinstance of ManualPayment (Polymorphic Payment)
+            payment = order_payment.payment
+            self.assertIsInstance(payment, ManualPayment)
+            self.assertEqual(payment.user, self.superuser)
+            self.assertEqual(payment.amount, Decimal(75))
+            self.assertEqual(payment.status, StatusDefinition.SETTLED)
+
         # verify that the projectpayout is correctly dealt with
+        payouts1 = self.project1.projectpayout_set.count()
+        self.assertEqual(payouts1, 0)

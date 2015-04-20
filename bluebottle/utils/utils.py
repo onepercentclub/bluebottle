@@ -90,8 +90,8 @@ class FSMTransition:
             # TODO: should we raise exception here?
             raise TransitionNotAllowed(
                 "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
-         
-        # Get the function method on the instance 
+
+        # Get the function method on the instance
         instance_method = getattr(self, transition_method.__name__)
 
         # Call state transition method
@@ -202,13 +202,13 @@ class InvalidIpError(Exception):
 
 
 def get_country_by_ip(ip_address=None):
-    """ 
+    """
     Returns the country associated with the IP address. Uses pygeoip library which is based on
     the popular Maxmind's GeoIP C API
     """
     if not ip_address:
         return None
-    
+
     try:
         socket.inet_aton(ip_address)
     except socket.error:
@@ -216,7 +216,7 @@ def get_country_by_ip(ip_address=None):
 
     gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gi.country_name_by_addr(ip_address)
-    
+
 
 def get_country_code_by_ip(ip_address=None):
     """

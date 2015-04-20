@@ -10,6 +10,8 @@ from django.views.generic import FormView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
+from bluebottle.payments.models import OrderPayment
+from bluebottle.payments_manual.models import ManualPayment
 from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model
 from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction
@@ -180,7 +182,36 @@ class CreateManualDonationView(BaseManualEntryView):
         return initial
 
     def form_valid(self, form):
-        import bpdb; bpdb.set_trace()
+        with db_transaction.atomic():
+            order = get_order_model().objects.create(
+                user=self.request.user,
+                order_type='manual',
+                total=form.cleaned_data['amount']
+            )
+
+            form.instance.order = order
+            form.instance.anonymous = True
+            self.object = donation = form.save()
+
+            order_payment = OrderPayment.objects.create(
+                user=self.request.user,
+                order=order,
+                amount=donation.amount,
+                payment_method='manual'
+            )
+            payment = ManualPayment.objects.create(
+                amount=donation.amount,
+                transaction=self.transaction,
+                user=self.request.user,
+                order_payment=order_payment
+            )
+
+            # pull us through the statuses to consider it done
+            payment.status = StatusDefinition.AUTHORIZED
+            payment.save()
+            payment.status = StatusDefinition.SETTLED
+            payment.save()
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         kwargs['transaction'] = self.transaction

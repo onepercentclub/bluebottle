@@ -44,7 +44,7 @@ class ProjectAdmin(BaseProjectAdmin):
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization', 'status', 'title', 'slug', 'pitch',
-                                'theme', 'favorite', 'deadline', 'image', 'video_url', 
+                                'theme', 'favorite', 'deadline', 'image', 'video_url', 'partner_organization'
                                 'country', 'language', 'latitude', 'longitude', 'amount_asked', 'amount_extra',
                                 'reach', 'is_campaign', 'skip_monthly', 'allow_overfunding', 'story',
                                 'date_submitted', 'campaign_started', 'campaign_ended', 'campaign_funded', 'tags',

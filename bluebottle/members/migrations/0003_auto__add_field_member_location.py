@@ -7,6 +7,10 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('geo', '0002_auto__add_location'),
+    )
+
     def forwards(self, orm):
         # Adding field 'Member.location'
         db.add_column(u'members_member', 'location',

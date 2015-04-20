@@ -41,7 +41,10 @@ class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_check_authorized_status_logged(self, mock_fetch_status, mock_transaction):
         # Mock the status check with docdata
-        mock_fetch_status.return_value = self.create_status_response('AUTHORIZED')
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalAcquirerApproved': '1000', 'totalRegistered': '1000'}
+        )
         self.service.check_payment_status()
 
         last_log = PaymentLogEntry.objects.all().order_by('-timestamp')[:1][0]
@@ -50,7 +53,7 @@ class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
         self.assertEqual(last_log.payment_id, self.order_payment.payment.id)
         self.assertEqual(last_log.message, 'DocdataPayment object - a new payment status authorized')
         self.assertEqual(last_log.level, 'INFO')
-        
+
 
 class TestPaymentLoggerAdapter(BluebottleTestCase):
 

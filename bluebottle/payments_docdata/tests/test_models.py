@@ -16,7 +16,8 @@ from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory, DocdataTransactionFactory, DocdataDirectdebitPaymentFactory
-from bluebottle.payments.models import OrderPayment
+from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory, DocdataTransactionFactory
+from bluebottle.payments.models import OrderPayment, Transaction
 from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -44,7 +45,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 
         # Mock create payment
-        mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
+        patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
 
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='docdataIdeal',
@@ -55,7 +56,10 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_check_authorized_status(self, mock_fetch_status, mock_transaction):
         # Mock the status check with docdata
-        mock_fetch_status.return_value = self.create_status_response('AUTHORIZED')
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalAcquirerApproved': '1000', 'totalRegistered': '1000'}
+        )
 
         self.service.check_payment_status()
 
@@ -63,6 +67,214 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         self.assert_status(self.order_payment.payment, StatusDefinition.AUTHORIZED)
         self.assert_status(self.order_payment, StatusDefinition.AUTHORIZED)
         self.assert_status(self.order, StatusDefinition.PENDING)
+
+        mock_transaction.assert_called_once_with(mock_fetch_status.return_value.payment[0])
+
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_transaction(self, mock_fetch_status):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalAcquirerApproved': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.AUTHORIZED)
+        self.assert_status(self.order_payment, StatusDefinition.AUTHORIZED)
+        self.assert_status(self.order, StatusDefinition.PENDING)
+
+        transaction = Transaction.objects.get()
+        self.assertEqual(transaction.authorization_amount, 1000)
+        self.assertEqual(transaction.raw_response, str(mock_fetch_status.return_value.payment[0]))
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_new(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response('NEW')
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.STARTED)
+        self.assert_status(self.order_payment, StatusDefinition.STARTED)
+        self.assert_status(self.order, StatusDefinition.LOCKED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_redirected(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response('REDIRECTED_FOR_AUTHORIZATION')
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.STARTED)
+        self.assert_status(self.order_payment, StatusDefinition.STARTED)
+        self.assert_status(self.order, StatusDefinition.LOCKED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_authenticated(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response('AUTHENTICATED')
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.STARTED)
+        self.assert_status(self.order_payment, StatusDefinition.STARTED)
+        self.assert_status(self.order, StatusDefinition.LOCKED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_error(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response('AUTHORIZATION_FAILED')
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.FAILED)
+        self.assert_status(self.order_payment, StatusDefinition.FAILED)
+        self.assert_status(self.order, StatusDefinition.FAILED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_settled(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.SETTLED)
+        self.assert_status(self.order_payment, StatusDefinition.SETTLED)
+        self.assert_status(self.order, StatusDefinition.SUCCESS)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_chargeback(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000', 'totalChargedback': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.CHARGED_BACK)
+        self.assert_status(self.order_payment, StatusDefinition.CHARGED_BACK)
+        self.assert_status(self.order, StatusDefinition.FAILED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_refund(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000', 'totalRefunded': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.REFUNDED)
+        self.assert_status(self.order_payment, StatusDefinition.REFUNDED)
+        self.assert_status(self.order, StatusDefinition.FAILED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_chargeback_refund(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000', 'totalRefunded': '500', 'totalChargedback': '500'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.REFUNDED)
+        self.assert_status(self.order_payment, StatusDefinition.REFUNDED)
+        self.assert_status(self.order, StatusDefinition.FAILED)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_two_payments(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            payments=[{
+                'id': '1234',
+                'status': 'FAILED',
+                'amount': '1000',
+                'paymentMethod': 'MASTERCARD'
+            }, {
+                'id': '12345',
+                'status': 'AUTHORIZED',
+                'amount': '1000',
+                'paymentMethod': 'MASTERCARD'
+            }],
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.SETTLED)
+        self.assert_status(self.order_payment, StatusDefinition.SETTLED)
+        self.assert_status(self.order, StatusDefinition.SUCCESS)
+
+    @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
+    @patch.object(DocdataPaymentAdapter, '_fetch_status')
+    def test_check_partially_settled(self, mock_fetch_status, mock_transaction):
+        # Mock the status check with docdata
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '500', 'totalRegistered': '1000'}
+        )
+
+        self.service.check_payment_status()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment.payment, StatusDefinition.UNKNOWN)
+        self.assert_status(self.order_payment, StatusDefinition.UNKNOWN)
+        self.assert_status(self.order, StatusDefinition.FAILED)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
@@ -80,9 +292,11 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         self.assert_status(self.order_payment, StatusDefinition.CANCELLED)
         self.assert_status(self.order, StatusDefinition.FAILED)
 
-
         # Check that the status propagated through to order
-        mock_fetch_status.return_value = self.create_status_response('PAID')
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalCaptured': '1000', 'totalRegistered': '1000'}
+        )
         self.service.check_payment_status()
 
         self.assert_status(self.order_payment, StatusDefinition.SETTLED)
@@ -202,7 +416,7 @@ class AdapterTestCase(BluebottleTestCase):
     @patch.object(DocdataClient, 'create')
     def test_incomplete_userdata(self, mock_client_create):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
-        mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
+        patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
 
         user = BlueBottleUserFactory()
         self.order = OrderFactory.create(user=user)
@@ -232,7 +446,7 @@ class AdapterTestCase(BluebottleTestCase):
     @patch.object(DocdataClient, 'create')
     def test_normal_userdata(self, mock_client_create):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
-        mock_create_payment = patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
+        patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
 
         user = BlueBottleUserFactory()
         holland = CountryFactory(name='Netherlands', alpha2_code='NL')

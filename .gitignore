@@ -88,3 +88,9 @@ bower_components
 
 # GeoIP.dat
 GeoIP.dat
+
+# vim
+*.swp
+
+#autoenv
+/.env

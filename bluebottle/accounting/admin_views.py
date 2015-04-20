@@ -12,7 +12,9 @@ from django.views.generic.detail import SingleObjectMixin
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_manual.models import ManualPayment
-from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model
+from bluebottle.utils.model_dispatcher import (
+    get_order_model, get_donation_model, get_project_payout_model
+)
 from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction
 from .admin_forms import journalform_factory, donationform_factory
@@ -211,6 +213,51 @@ class CreateManualDonationView(BaseManualEntryView):
             payment.save()
             payment.status = StatusDefinition.SETTLED
             payment.save()
+
+            # update/create the required payout
+            ProjectPayout = get_project_payout_model()
+            project = donation.project
+            project.update_amounts()
+            payouts = ProjectPayout.objects.filter(project=project)
+
+            # check the payouts and only update 'new' payouts, else create a new payout
+            if not payouts.exists():
+                # if no payouts exist yet, it's because the project is not finished yet.
+                # the donations will be collected when the project finishes
+                pass
+            else:
+                updateable = payouts.filter(status=StatusDefinition.NEW).first()  # only new payouts can be updated
+                if updateable is None:
+                    rules = payouts.values_list('payout_rule', flat=True).distinct()
+                    if len(rules) == 1:
+                        rule = rules[0]
+                        _message = messages.success
+                        msg = _('Created a new project payout with payment rule {rule}')
+                    else:
+                        _message = messages.warning
+                        msg = _('There were {n} payout rules, the choosen rule was: \'{rule}\'')
+
+                    # create a new payout, since the other payouts are on their way for processing and can't be altered
+                    payout = ProjectPayout(
+                        planned=ProjectPayout.get_next_planned_date(),
+                        project=project,
+                        payout_rule=rule
+                    )
+
+                    # we need to manually calculate the amounts, else all project donations will be taken into account
+                    # FIXME: this needs to be refactored on the BB_PAYOUT level!
+                    calculator = payout.get_calculator()
+                    payout.calculate_payable_and_fee(calculator, donation.amount)
+                    payout.save()
+                    rule = dict(ProjectPayout.PayoutRules.choices)[rule]
+                    _message(self.request, msg.format(n=len(rules), rule=rule))
+                else:
+                    updateable.calculate_amounts()
+                    messages.success(
+                        self.request,
+                        _('Created a manual donation and updated project payout %r') % updateable
+                    )
+
         return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):

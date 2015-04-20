@@ -1,10 +1,5 @@
-from decimal import Decimal
-from datetime import timedelta
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
-
-from django.utils import timezone
 
 
 def create_payout_finished_project(sender, instance, created, **kwargs):
@@ -14,16 +9,10 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     """
 
     project = instance
-    now = timezone.now()
 
     if project.is_realised and project.amount_asked:
-
-        if now.day <= 15:
-            next_date = timezone.datetime(now.year, now.month, 15)
-        else:
-            next_date = timezone.datetime(now.year, now.month, 1) + timedelta(days=20)
-
         PROJECT_PAYOUT_MODEL = get_project_payout_model()
+        next_date = PROJECT_PAYOUT_MODEL.get_next_planned_date()
 
         try:
             # Update existing Payout

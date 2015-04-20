@@ -11,6 +11,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.accounting import BankTransactionFactory
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
+from bluebottle.bb_payouts.models import BaseProjectPayout
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
@@ -36,15 +37,19 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         # update payout for project 2 & 3, no donations exist yet so just make it zero/empty
         # adding a new donation (for a closed payout) should create a new payout
         payout2 = self.project2.projectpayout_set.first()
+        payout2.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
         payout2.status = StatusDefinition.SETTLED
         payout2.save()
 
         payout3 = self.project3.projectpayout_set.first()
+        payout3.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
         payout3.status = StatusDefinition.PENDING
         payout3.save()
 
         # should be updated with new donation
         payout4 = self.project4.projectpayout_set.first()
+        payout4.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
+        payout4.save()
         self.assertEqual(payout4.status, StatusDefinition.NEW)
 
         # create a bank transaction to resolve. It's unmatched with anything.
@@ -134,7 +139,46 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
             self.assertEqual(payment.user, self.superuser)
             self.assertEqual(payment.amount, Decimal(75))
             self.assertEqual(payment.status, StatusDefinition.SETTLED)
+            self.assertEqual(payment.transaction, transaction)
 
         # verify that the projectpayout is correctly dealt with
         payouts1 = self.project1.projectpayout_set.count()
         self.assertEqual(payouts1, 0)
+        project1 = self.project1.__class__.objects.get(pk=self.project1.pk)
+        self.assertEqual(project1.amount_donated, Decimal(75))
+
+        payouts2 = self.project2.projectpayout_set.all()
+        self.assertEqual(payouts2.count(), 2)  # a new one must be created
+        # check that the sum and status are correct
+        new_payout = payouts2.first()  # order by created
+        self.assertEqual(new_payout.amount_raised, Decimal(75))
+        project2 = self.project2.__class__.objects.get(pk=self.project2.pk)
+        self.assertEqual(project2.amount_donated, Decimal(75))
+        self.assertEqual(new_payout.amount_raised, Decimal(75))
+        self.assertEqual(new_payout.amount_payable, Decimal('71.25'))
+        self.assertEqual(new_payout.organization_fee, Decimal('3.75'))
+
+        # similar to case 3
+        payouts3 = self.project3.projectpayout_set.all()
+        self.assertEqual(payouts3.count(), 2)  # a new one must be created
+        # check that the sum and status are correct
+        new_payout = payouts3.first()  # order by created
+        self.assertEqual(new_payout.amount_raised, Decimal(75))
+        project3 = self.project3.__class__.objects.get(pk=self.project3.pk)
+        self.assertEqual(project3.amount_donated, Decimal(75))
+        self.assertEqual(new_payout.amount_raised, Decimal(75))
+        self.assertEqual(new_payout.amount_payable, Decimal('71.25'))
+        self.assertEqual(new_payout.organization_fee, Decimal('3.75'))
+
+        # payout 4 is new and should just be updated
+        payouts4 = self.project4.projectpayout_set.all()
+        self.assertEqual(payouts4.count(), 1)
+        payout = payouts4.first()
+        self.assertEqual(payout.amount_raised, Decimal(75))
+        self.assertEqual(payout.amount_payable, Decimal('71.25'))
+        self.assertEqual(payout.organization_fee, Decimal('3.75'))
+
+        # make sure that the project signal is not broken
+        self.assertTrue(project3.is_realised)
+        self.assertTrue(project3.amount_asked)
+        project3.save()  # triggers bb_payouts.signals.create_payout_finished_project

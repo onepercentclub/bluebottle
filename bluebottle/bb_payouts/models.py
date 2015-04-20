@@ -14,6 +14,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -243,6 +244,15 @@ class BaseProjectPayout(PayoutBase):
         ordering = ['-created']
         abstract = True
 
+    @staticmethod
+    def get_next_planned_date():
+        now = timezone.now()
+        if now.day <= 15:
+            next_date = timezone.datetime(now.year, now.month, 15)
+        else:
+            next_date = timezone.datetime(now.year, now.month, 1) + datetime.timedelta(days=20)
+        return next_date
+
     @property
     def amount_pending(self):
         return self.get_amount_pending()
@@ -288,20 +298,25 @@ class BaseProjectPayout(PayoutBase):
         if not self.payout_rule:
             self.payout_rule = self.get_payout_rule()
 
-        self.amount_raised = self.get_amount_raised()
+        calculator = self.get_calculator()
+        self.calculate_payable_and_fee(calculator, self.get_amount_raised())
 
+        if save:
+            self.save()
+
+    def get_calculator(self):
         calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
         try:
             calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
         except AttributeError:
             message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
             raise PayoutException(message)
+        return calculator
 
-        self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
-        self.organization_fee = self.amount_raised - self.amount_payable
-
-        if save:
-            self.save()
+    def calculate_payable_and_fee(self, calculator, amount_raised):
+        self.amount_raised = amount_raised
+        self.amount_payable = Decimal(round(calculator(amount_raised), 2))
+        self.organization_fee = amount_raised - self.amount_payable
 
     def generate_invoice_reference(self):
         """

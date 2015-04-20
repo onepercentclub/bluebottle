@@ -10,7 +10,7 @@ from django.views.generic import FormView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
-from bluebottle.utils.model_dispatcher import get_order_model
+from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model
 from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction
 from .admin_forms import journalform_factory, donationform_factory
@@ -165,5 +165,24 @@ class CreateOrganizationPayoutJournalView(JournalCreateMixin, BaseManualEntryVie
     fields = ('amount', 'user_reference', 'description', 'payout')
 
 
-class CreateManualDonationView(CreateView):
-    pass
+class CreateManualDonationView(BaseManualEntryView):
+    model = get_donation_model()
+    form_class = donationform_factory(fields=('amount', 'project', 'fundraiser'))
+    template_name = 'admin/accounting/banktransaction/manual_donation.html'
+
+    def dispatch(self, *args, **kwargs):
+        self.transaction = self.get_transaction()
+        return super(CreateManualDonationView, self).dispatch(*args, **kwargs)
+
+    def get_initial(self):
+        initial = super(CreateManualDonationView, self).get_initial()
+        initial['amount'] = self.transaction.amount
+        return initial
+
+    def form_valid(self, form):
+        import bpdb; bpdb.set_trace()
+
+    def get_context_data(self, **kwargs):
+        kwargs['transaction'] = self.transaction
+        kwargs['opts'] = self.model._meta
+        return super(CreateManualDonationView, self).get_context_data(**kwargs)

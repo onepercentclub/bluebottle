@@ -225,6 +225,7 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_logger',
+    'bluebottle.payments_manual',
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
     'bluebottle.journals',

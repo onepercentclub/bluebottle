@@ -2,12 +2,9 @@ from decimal import Decimal as D, Decimal
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.db import models
-from django.db.models.signals import pre_save, post_save, post_delete
-from django_countries.fields import CountryField
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, Transaction
-from bluebottle.payments_logger.models import PaymentLogEntry
 
 
 payment_method_icon_mapping = {

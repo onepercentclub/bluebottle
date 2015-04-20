@@ -41,7 +41,7 @@ def journalform_factory(model, rel_field):
     return form_class
 
 
-def donationform_factory():
+def donationform_factory(fields=None):
     Donation = get_donation_model()
     widgets = {
         'project': ForeignKeyRawIdWidget(Donation._meta.get_field('project').rel, admin.site),
@@ -52,7 +52,7 @@ def donationform_factory():
     ModelForm = forms.models.modelform_factory(
         Donation,
         form=BaseManualEntryModelForm,
-        fields=('amount', 'project', 'fundraiser', 'order', 'anonymous'),
+        fields=fields or ('amount', 'project', 'fundraiser', 'order', 'anonymous'),
         widgets=widgets
     )
     ModelForm.title = Donation._meta.verbose_name

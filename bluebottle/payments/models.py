@@ -123,7 +123,7 @@ class OrderPayment(models.Model, FSMTransition):
         # TODO: add started state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.STARTED, target=StatusDefinition.AUTHORIZED)
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.CANCELLED], target=StatusDefinition.AUTHORIZED)
     def authorized(self):
         # TODO: add authorized state behaviour here
         pass
@@ -145,11 +145,11 @@ class OrderPayment(models.Model, FSMTransition):
     def charged_back(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.REFUNDED)
+    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED], target=StatusDefinition.REFUNDED)
     def refunded(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED], target=StatusDefinition.UNKNOWN)
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED], target=StatusDefinition.UNKNOWN)
     def unknown(self):
         # TODO: add unknown state behaviour here
         pass
@@ -163,11 +163,10 @@ class OrderPayment(models.Model, FSMTransition):
         if self.id:
             # If the payment method has changed we should recalculate the fee.
             previous = OrderPayment.objects.get(id=self.id)
-            if previous.payment_method != self.payment_method:
-                try:
-                    self.transaction_fee = self.payment.get_fee()
-                except ObjectDoesNotExist:
-                    pass
+            try:
+                self.transaction_fee = self.payment.get_fee()
+            except ObjectDoesNotExist:
+                pass
 
     def set_authorization_action(self, action, save=True):
         self.authorization_action = OrderPaymentAction(**action)

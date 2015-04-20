@@ -145,11 +145,11 @@ class OrderPayment(models.Model, FSMTransition):
     def charged_back(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=StatusDefinition.AUTHORIZED, target=StatusDefinition.REFUNDED)
+    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED], target=StatusDefinition.REFUNDED)
     def refunded(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED], target=StatusDefinition.UNKNOWN)
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED], target=StatusDefinition.UNKNOWN)
     def unknown(self):
         # TODO: add unknown state behaviour here
         pass

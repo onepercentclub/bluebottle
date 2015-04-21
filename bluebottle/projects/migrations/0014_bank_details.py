@@ -14,14 +14,11 @@ class Migration(DataMigration):
         # Note: Don't use "from appname.models import ModelName".
         # Use orm.ModelName to refer to models in this application,
         # and orm['appname.ModelName'] for models in other applications.
-        print "GKENSGKENGKFLNLNWLFNLKESNFGKLENLKEW************"
         for organization in orm['organizations.Organization'].objects.all():
-            print "Organization", organization.name
             # Get the project, we use a strange related_name
             # value (organization) on the Project model that
             # we need to work with.
             for project in organization.organization.all():
-                print "PROJECT", project.title
                 project.account_holder_name = organization.account_holder_name
                 project.account_holder_address = organization.account_holder_address
                 project.account_holder_postal_code = organization.account_holder_postal_code
@@ -38,8 +35,6 @@ class Migration(DataMigration):
                 project.account_other = organization.account_other
 
                 project.save()
-            print "---"
-        print '*****'
 
     def backwards(self, orm):
         "Write your backwards methods here."

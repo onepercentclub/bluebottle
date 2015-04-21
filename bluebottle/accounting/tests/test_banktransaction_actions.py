@@ -10,6 +10,7 @@ from django_webtest import WebTestMixin
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.accounting import BankTransactionFactory
+from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.bb_payouts.models import BaseProjectPayout
 from bluebottle.utils.model_dispatcher import get_organization_payout_model
@@ -74,24 +75,19 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         )
         self.org_payout.save()
 
-    def test_manual_donation(self):
+    def _match_banktransactions(self, expected_action, n_transactions):
         """
-        Test that an unmatched bank transaction can be resolved by creating a
-        donation.
+        Fetches the list and executes the list action to match the bank transactions.
 
-        Creating a donation means that an order with ManualPayment has to be
-        created. The full amount (=no fees) goes to the project. The donated
-        amount must enter the payout flow so the project receives the donation.
+        :param expected_action: string as expected to be visible.
         """
-        self._initialize_unmatched_transactions()
-
         admin_url = reverse('admin:accounting_banktransaction_changelist')
 
         # verify that the transactions are visible
         transaction_list = self.app.get(admin_url, user=self.superuser)
         self.assertEqual(transaction_list.status_code, 200)
         # one for each transaction
-        self.assertEqual(transaction_list.pyquery('.action-checkbox').length, 4)
+        self.assertEqual(transaction_list.pyquery('.action-checkbox').length, n_transactions)
 
         # 'try' to match them and check that they have the appropriate statuses and actions in the admin
 
@@ -104,10 +100,23 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
 
         # all transactions must be marked as 'unknown'
         transactions = BankTransaction.objects.filter(status=BankTransaction.IntegrityStatus.UnknownTransaction)
-        self.assertEqual(transactions.count(), 4)
+        self.assertEqual(transactions.count(), n_transactions)
 
         # verify that the action 'create donation' is visible
-        self.assertContains(transaction_list, _('create donation'), count=4)
+        self.assertContains(transaction_list, expected_action, count=4)
+
+    def test_manual_donation(self):
+        """
+        Test that an unmatched bank transaction can be resolved by creating a
+        donation.
+
+        Creating a donation means that an order with ManualPayment has to be
+        created. The full amount (=no fees) goes to the project. The donated
+        amount must enter the payout flow so the project receives the donation.
+        """
+        admin_url = reverse('admin:accounting_banktransaction_changelist')
+        self._initialize_unmatched_transactions()
+        self._match_banktransactions(_('create donation'), 4)
 
         # pick the action 'create donation' for each transaction
         for i, transaction in enumerate(self.transactions):
@@ -214,24 +223,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         """
         Test that multiple manual donations correctly update a protected ProjectPayout
         """
-        self._initialize_unmatched_transactions()
-
         admin_url = reverse('admin:accounting_banktransaction_changelist')
-
-        # verify that the transactions are visible
-        transaction_list = self.app.get(admin_url, user=self.superuser)
-        self.assertEqual(transaction_list.status_code, 200)
-        # one for each transaction
-        self.assertEqual(transaction_list.pyquery('.action-checkbox').length, 4)
-
-        # 'try' to match them and check that they have the appropriate statuses and actions in the admin
-
-        # check the checkboxes and submit the action
-        form = transaction_list.forms['changelist-form']
-        form['action'].select('find_matches')
-        for i in range(0, len(self.transactions)):
-            form.get('_selected_action', index=i).checked = True
-        transaction_list = form.submit().follow()
+        self._initialize_unmatched_transactions()
+        self._match_banktransactions(_('create donation'), 4)
 
         # pick the action 'create donation' for each transaction
         project = self.project2  # project with settled payout -> creates a new payout
@@ -285,3 +279,73 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertEqual(aggregated['amount_raised__sum'], 4*Decimal('75'))
         self.assertEqual(aggregated['amount_payable__sum'], 4*Decimal('71.25'))
         self.assertEqual(aggregated['organization_fee__sum'], 4*Decimal('3.75'))
+
+    def test_payout_retry(self):
+        """
+        Test the scenario where a payout bounces and the payout is retried.
+
+        The admin action is to match it with an existing payout. The existing
+        payout needs updating - the status has to be set to 'retry' and must
+        be available for export again. The amount_payable can be lowered with
+        bank costs that have to be entered manually (transaction costs).
+        """
+        # initialize some data
+        self._initialize_unmatched_transactions()
+        project = self.project2
+        transaction = self.transactions[0]  # for convenience, they're all the same
+
+        # create one donation, this payout will bounce
+        donation = DonationFactory.create(project=project, amount=80)
+        donation.order.locked()
+        donation.order.pending()
+        donation.order.save()
+
+        payouts = project.projectpayout_set.all()
+        self.assertEqual(payouts.count(), 1)
+        payout = payouts.first()
+        payout.amount_raised = 80
+        payout.organization_fee = 4
+        payout.amount_payable = 76
+        payout.planned = date.today() - timedelta(days=3)
+        payout.save()
+
+        original_date = payout.planned
+        original_completed = payout.completed
+
+        # assert that the 'retry payout' action is visible
+        self._match_banktransactions(_('retry payout'), 4)
+
+        # enter the retry payout form
+        admin_url = reverse('admin:banktransaction-retry-payout', kwargs={'pk': transaction.pk})
+        retry_form = self.app.get(admin_url, user=self.superuser)
+        self.assertEqual(retry_form.status_code, 200)
+
+        form = retry_form.forms[1]
+        form['payout'] = payout.pk
+        form['amount'] = 5
+        response = form.submit()
+
+        redirect_url = reverse('admin:payouts_projectpayout_change', args=[payout.pk])
+        self.assertRedirects(response, redirect_url)
+
+        # assert that the payout is protected
+        payout = payout.__class__.objects.get(pk=payout.pk)
+        self.assertTrue(payout.protected)
+        self.assertTrue(payout.status, StatusDefinition.RETRY)
+
+        # assert that the amount_payable is lowered with the bank costs (-5 euro)
+        self.assertEqual(payout.amount_raised, 80)
+        self.assertEqual(payout.amount_payable, 71)
+        self.assertEqual(payout.organization_fee, 4)
+
+        # assert that the payout has a valid next date
+        self.assertNotEqual(payout.planned, original_date)
+        self.assertGreaterEqual(payout.planned, date.today())
+
+        # the completed date needs to be the same, else it's collected again in organization payout
+        self.assertEqual(payout.completed, original_completed)
+
+        # assert that the bank transaction is resolved/valid
+        transaction = BankTransaction.objects.get(pk=transaction.pk)
+        self.assertEqual(transaction.status, BankTransaction.IntegrityStatus.Valid)
+        self.assertEqual(transaction.payout, payout)

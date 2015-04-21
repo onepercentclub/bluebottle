@@ -28,7 +28,8 @@ from .admin_extra import (
 )
 from .admin_views import (
     UnknownTransactionView, CreateProjectPayoutJournalView,
-    CreateOrganizationPayoutJournalView, CreateManualDonationView
+    CreateOrganizationPayoutJournalView, CreateManualDonationView,
+    RetryPayoutView
 )
 
 
@@ -102,6 +103,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         """
         Collect the possible actions depending on ``obj.status``.
         """
+        is_credit = obj.credit_debit == BankTransaction.CreditDebit.credit
         actions = {
             # 'amount_mismatch': '<a href="#">%s</a>' % _('todo'),
             BankTransaction.IntegrityStatus.UnknownTransaction: (
@@ -112,7 +114,11 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 '<a href="%s">%s</a>' % (
                     reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': obj.pk}),
                     _('create donation')
-                ) if obj.credit_debit == BankTransaction.CreditDebit.credit else None,
+                ) if is_credit else None,
+                '<a href="%s">%s</a>' % (
+                    reverse('admin:banktransaction-retry-payout', kwargs={'pk': obj.pk}),
+                    _('retry payout')
+                ) if is_credit else None
             )
         }
         actions = [a for a in (actions.get(obj.status) or []) if a is not None]
@@ -153,6 +159,11 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 self.admin_site.admin_view(CreateManualDonationView.as_view()),
                 name='banktransaction-add-manualdonation',
             ),
+            url(
+                r'^(?P<pk>\d+)/unknown_transaction/retry_payout/$',
+                self.admin_site.admin_view(RetryPayoutView.as_view()),
+                name='banktransaction-retry-payout'
+            )
         )
         return action_urls + urls
 

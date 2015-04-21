@@ -1,7 +1,7 @@
 
 from django.db import transaction as db_transaction
 from django.contrib import messages
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse, reverse_lazy
 
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
@@ -12,14 +12,32 @@ from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJ
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_manual.models import ManualPayment
 from bluebottle.utils.model_dispatcher import (
-    get_order_model, get_donation_model, get_project_payout_model
+    get_order_model, get_donation_model, get_project_payout_model, get_model_mapping
 )
 from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction
-from .admin_forms import journalform_factory, donationform_factory
+from .admin_forms import journalform_factory, donationform_factory, RetryPayoutForm
 
 
-class UnknownTransactionView(SingleObjectMixin, FormView):
+class AdminOptsMixin(object):
+    def get_context_data(self, **kwargs):
+        kwargs.setdefault('opts', self.model._meta)
+        return super(AdminOptsMixin, self).get_context_data(**kwargs)
+
+
+class TransactionMixin(SingleObjectMixin):
+    object = None
+
+    def get_transaction(self):
+        qs = BankTransaction.objects.filter(status=BankTransaction.IntegrityStatus.UnknownTransaction)
+        return self.get_object(queryset=qs)
+
+    def get_context_data(self, **kwargs):
+        kwargs.setdefault('transaction', self.get_transaction())
+        return super(TransactionMixin, self).get_context_data(**kwargs)
+
+
+class UnknownTransactionView(AdminOptsMixin, SingleObjectMixin, FormView):
 
     """
     Show the three forms at once, each one submittable to its own url/handler
@@ -66,20 +84,13 @@ class UnknownTransactionView(SingleObjectMixin, FormView):
     def get_form(self, form_classes):
         return [form_class(**self.get_form_kwargs(form_class)) for form_class in form_classes]
 
-    def get_context_data(self, **kwargs):
-        kwargs['opts'] = self.model._meta
-        return super(UnknownTransactionView, self).get_context_data(**kwargs)
 
-
-class BaseManualEntryView(CreateView):
+class BaseManualEntryView(TransactionMixin, CreateView):
 
     """
     Base view that holds the common logic for manual entries
     """
     success_url = reverse_lazy('admin:accounting_banktransaction_changelist')
-
-    def get_transaction(self):
-        return self.get_object(queryset=BankTransaction.objects.all())
 
     def get_form_kwargs(self):
         kwargs = super(BaseManualEntryView, self).get_form_kwargs()
@@ -127,7 +138,7 @@ class CreateOrganizationPayoutJournalView(JournalCreateMixin, BaseManualEntryVie
     fields = ('amount', 'user_reference', 'description', 'payout')
 
 
-class CreateManualDonationView(BaseManualEntryView):
+class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
     model = get_donation_model()
     form_class = donationform_factory(fields=('amount', 'project', 'fundraiser'))
     template_name = 'admin/accounting/banktransaction/manual_donation.html'
@@ -239,7 +250,34 @@ class CreateManualDonationView(BaseManualEntryView):
 
         return redirect(self.get_success_url())
 
-    def get_context_data(self, **kwargs):
-        kwargs['transaction'] = self.transaction
-        kwargs['opts'] = self.model._meta
-        return super(CreateManualDonationView, self).get_context_data(**kwargs)
+
+class RetryPayoutView(TransactionMixin, AdminOptsMixin, FormView):
+    template_name = 'admin/accounting/banktransaction/retry_payout.html'
+    model = get_project_payout_model()
+    form_class = RetryPayoutForm
+
+    def get_form_kwargs(self):
+        kwargs = super(RetryPayoutView, self).get_form_kwargs()
+        kwargs['transaction'] = self.get_transaction()
+        return kwargs
+
+    def form_valid(self, form):
+        with db_transaction.atomic():
+            form.instance.user_reference = self.request.user.email
+            journal = form.save(commit=False)
+            journal.amount = -journal.amount  # we need to subtract instead of add
+            journal.save()
+            journal.payout.retry()
+
+            transaction = self.get_transaction()
+            transaction.status = BankTransaction.IntegrityStatus.Valid
+            transaction.payout = journal.payout  # make the link
+            transaction.save()
+
+        messages.success(self.request, _('The payout is scheduled for retry. Please verify the data.'))
+        return redirect(self.get_success_url(journal.payout))
+
+    def get_success_url(self, payout):
+        model_mapping = get_model_mapping()
+        admin_url_name = model_mapping['project_payout']['model_lower'].replace('.', '_')
+        return reverse('admin:%s_change' % admin_url_name, args=[payout.pk])

@@ -4,6 +4,8 @@ from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.journals.models import ProjectPayoutJournal
+from bluebottle.bb_payouts.models import PayoutBase
 
 
 class BaseManualEntryModelForm(forms.ModelForm):
@@ -33,7 +35,7 @@ def journalform_factory(model, rel_field):
                 admin.site,
                 # attrs={'id': 'id_%s_payout' % model._meta.model_name}  # doesn't work because lookup_id is hardcoded
             ),
-            'user_reference': forms.TextInput(attrs={'readonly':'readonly'}),
+            'user_reference': forms.TextInput(attrs={'readonly': 'readonly'}),
         }
     )
     form_class.title = model._meta.verbose_name
@@ -58,3 +60,23 @@ def donationform_factory(fields=None):
     ModelForm.title = Donation._meta.verbose_name
     ModelForm.url_name = 'admin:banktransaction-add-donation'
     return ModelForm
+
+
+class RetryPayoutForm(forms.ModelForm):
+    class Meta:
+        model = ProjectPayoutJournal
+        fields = ('payout', 'amount', 'description')
+        widgets = {
+            'payout': ForeignKeyRawIdWidget(ProjectPayoutJournal._meta.get_field('payout').rel, admin.site),
+        }
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('initial', {})
+        transaction = kwargs.pop('transaction')
+        kwargs['initial']['description'] = _('Retry bounced payout (%r, <pk %d>)') % (transaction, transaction.pk)
+        super(RetryPayoutForm, self).__init__(*args, **kwargs)
+        self.fields['payout'].queryset = self.fields['payout'].queryset.filter(status=PayoutBase.Statuses.SETTLED)
+        self.fields['amount'].label = _('Bank costs')
+        self.fields['amount'].help_text = _('Bank costs to compensate. This will be deducted from the payable amount')
+
+RetryPayoutForm.title = _('Select payout to retry')

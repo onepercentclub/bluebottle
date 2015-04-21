@@ -66,6 +66,7 @@ class StatusDefinition:
     REFUNDED = 'refunded'
     PAID = 'paid'
     FAILED = 'failed'
+    RETRY = 'retry'
     UNKNOWN = 'unknown'
 
 class FSMTransition:

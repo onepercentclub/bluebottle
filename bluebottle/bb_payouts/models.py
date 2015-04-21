@@ -98,15 +98,16 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
     """
     Common abstract base class for ProjectPayout and OrganizationPayout.
     """
-    STATUS_CHOICES = (
-        (StatusDefinition.NEW, _('New')),
-        (StatusDefinition.IN_PROGRESS, _('In progress')),
-        (StatusDefinition.SETTLED, _('Settled')),
-    )
+
+    class Statuses(DjangoChoices):
+        NEW = ChoiceItem(StatusDefinition.NEW, _('New'))
+        IN_PROGRESS = ChoiceItem(StatusDefinition.IN_PROGRESS, _('In progress'))
+        SETTLED = ChoiceItem(StatusDefinition.SETTLED, _('Settled'))
+        RETRY = ChoiceItem(StatusDefinition.RETRY, _('Retry'))
 
     planned = models.DateField(_("Planned"), help_text=_("Date on which this batch should be processed."))
 
-    status = FSMField(_("status"), max_length=20, default=StatusDefinition.NEW, choices=STATUS_CHOICES, protected=True)
+    status = FSMField(_("status"), max_length=20, default=Statuses.NEW, choices=Statuses.choices, protected=True)
     protected = models.BooleanField(
         _("protected"), default=False,
         help_text=_('If a payout is protected, the amounts can only be updated via journals.'))
@@ -162,13 +163,28 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
 
         return result
 
+    @staticmethod
+    def get_next_planned_date():
+        now = timezone.now()
+        if now.day <= 15:
+            next_date = timezone.datetime(now.year, now.month, 15)
+        else:
+            next_date = timezone.datetime(now.year, now.month, 1) + datetime.timedelta(days=20)
+        return next_date
+
     @transition(field=status, save=True, source=StatusDefinition.NEW, target=StatusDefinition.IN_PROGRESS)
     def in_progress(self):
         self.submitted = timezone.now()
 
-    @transition(field=status, save=True, source=StatusDefinition.IN_PROGRESS, target=StatusDefinition.SETTLED)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.IN_PROGRESS, StatusDefinition.RETRY], target=StatusDefinition.SETTLED)
     def settled(self, completed=None):
         self.completed = completed
+
+    @transition(field=status, save=True, source=StatusDefinition.SETTLED, target=StatusDefinition.RETRY)
+    def retry(self):
+        self.protected = True
+        self.planned = self.__class__.get_next_planned_date()
 
 
 class PayoutLogBase(models.Model):
@@ -255,15 +271,6 @@ class BaseProjectPayout(PayoutBase):
         get_latest_by = 'created'
         ordering = ['-created']
         abstract = True
-
-    @staticmethod
-    def get_next_planned_date():
-        now = timezone.now()
-        if now.day <= 15:
-            next_date = timezone.datetime(now.year, now.month, 15)
-        else:
-            next_date = timezone.datetime(now.year, now.month, 1) + datetime.timedelta(days=20)
-        return next_date
 
     @property
     def amount_pending(self):

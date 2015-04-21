@@ -228,20 +228,25 @@ class OrderPayment(models.Model, FSMTransition):
         """ The description on the payment receipt.
         """
         tenant_url = clients.utils.tenant_site().domain
+
         docdata_max_length = 50
+
         if tenant_url == 'onepercentclub.com':
             info_text = _('%(tenant_url)s donation %(payment_id)s')
             # 10 chars for ' donation ' and 6 chars for the payment id
             max_tenant_chars = docdata_max_length - 10 - len(str(self.id))
         else:
             info_text = _('%(tenant_url)s via onepercentclub %(payment_id)s')
-            # 20 chars for ' via onepercentclub ' and 6 chars for the payment
-            # id
+            # 20 chars for ' via onepercentclub ' and 6 chars
+            # for the payment id
             max_tenant_chars = docdata_max_length - 20 - len(str(self.id))
 
         length = len(tenant_url)
 
         if length > max_tenant_chars:
+            # Note that trimming the url will change the translation string
+            # This change will occur when the payment id adds a number, so
+            # every now and then we'll need to update the transstring.
             tenant_url = trim_tenant_url(max_tenant_chars, tenant_url)
 
         return info_text % {'tenant_url': tenant_url, 'payment_id': self.id}

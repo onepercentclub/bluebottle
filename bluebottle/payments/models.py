@@ -23,6 +23,22 @@ from bluebottle import clients
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
 
 
+def trim_tenant_url(max_length, tenant_url):
+    """
+    Trims the url of a tenant so that it does not exceed max_length
+    and includes three dots in the middle
+    """
+    length = len(tenant_url)
+
+    # We add three dots
+    diff = abs(max_length - length - 3)
+    split_at = length / 2 - (diff / 2) - 3
+    tenant_url = ''.join((tenant_url[:split_at],
+                          '...',
+                          tenant_url[split_at + diff:]))
+    return tenant_url
+
+
 class Payment(PolymorphicModel):
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
@@ -226,12 +242,7 @@ class OrderPayment(models.Model, FSMTransition):
         length = len(tenant_url)
 
         if length > max_tenant_chars:
-            # We add three dots
-            diff = abs(max_tenant_chars - length - 3)
-            split_at = length / 2 - (diff / 2) - 3
-            tenant_url = ''.join((tenant_url[:split_at],
-                                  '...',
-                                  tenant_url[split_at + diff:]))
+            tenant_url = trim_tenant_url(max_tenant_chars, tenant_url)
 
         return info_text % {'tenant_url': tenant_url, 'payment_id': self.id}
 

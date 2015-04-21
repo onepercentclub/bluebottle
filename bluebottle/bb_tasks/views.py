@@ -97,7 +97,13 @@ class MyTaskList(generics.ListAPIView):
             return BB_TASK_MODEL.objects.filter(author=self.request.user)
         return BB_TASK_MODEL.objects.none()
 
+
 class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
+    model = BB_TASK_MODEL
+    permission_classes = (IsAuthorOrReadOnly, )
+
+
+class MyTaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateDestroyAPIView):
     model = BB_TASK_MODEL
     permission_classes = (IsAuthorOrReadOnly, )
 

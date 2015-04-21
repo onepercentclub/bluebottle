@@ -11,6 +11,7 @@ from bluebottle.geo.models import Country
 
 from bluebottle.utils.model_dispatcher import (get_project_model,
                                                get_project_phaselog_model)
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.serializers import CountrySerializer
@@ -131,6 +132,8 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
 
+    tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True, source='task_set', read_only=True)
+
     def validate_account_iban(self, attrs, source):
         value = attrs.get(source)
         if value:
@@ -207,4 +210,4 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                   'account_iban', 'account_bic', 'account_number',
                   'account_bank_name', 'account_bank_address',
                   'account_bank_postal_code', 'account_bank_city',
-                  'account_bank_country', 'account_other')
+                  'account_bank_country', 'account_other', 'tasks')

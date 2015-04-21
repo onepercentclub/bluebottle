@@ -385,3 +385,39 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
+    def test_protected_payout(self):
+        """
+        Test that a protected payout cannot be recalculated and does not return
+        the `project` amounts.
+        """
+        self.donation.order.locked()
+        self.donation.order.pending()
+        self.donation.order.save()
+
+        self._reload_project()
+        self.assertEqual(self.project.amount_donated, Decimal(60))
+
+        payout1 = ProjectPayoutFactory.create(
+            project=self.project,
+            status=StatusDefinition.NEW,
+            protected=False
+        )
+        payout1 = payout1.__class__.objects.get(pk=payout1.pk)
+        payout1.calculate_amounts()
+        self.assertEqual(payout1.amount_raised, Decimal(60))
+
+        payout2 = ProjectPayoutFactory.create(
+            completed=None,
+            status=StatusDefinition.NEW,
+            protected=True,
+            amount_raised=Decimal(10),
+            amount_payable=Decimal(10),
+            organization_fee=0
+        )
+        self.assertEqual(payout2.get_amount_raised(), Decimal(10))
+        self.assertEqual(payout2.get_amount_safe(), Decimal(10))
+        self.assertEqual(payout2.get_amount_pending(), 0)
+        self.assertEqual(payout2.get_amount_failed(), 0)
+
+        with self.assertRaises(AssertionError):
+            payout2.calculate_amounts()

@@ -9,7 +9,6 @@ from django_webtest import WebTestMixin
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.accounting import BankTransactionFactory
-from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.bb_payouts.models import BaseProjectPayout
 from bluebottle.utils.utils import StatusDefinition
@@ -140,6 +139,10 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
             self.assertEqual(payment.status, StatusDefinition.SETTLED)
             self.assertEqual(payment.transaction, transaction)
 
+            # assert that the transaction is now valid
+            transaction = BankTransaction.objects.get(pk=transaction.pk)
+            self.assertEqual(transaction.status, BankTransaction.IntegrityStatus.Valid)
+
         # verify that the projectpayout is correctly dealt with
         payouts1 = self.project1.projectpayout_set.count()
         self.assertEqual(payouts1, 0)
@@ -150,6 +153,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertEqual(payouts2.count(), 2)  # a new one must be created
         # check that the sum and status are correct
         new_payout = payouts2.first()  # order by created
+        self.assertTrue(new_payout.protected)
         self.assertEqual(new_payout.amount_raised, Decimal(75))
         project2 = self.project2.__class__.objects.get(pk=self.project2.pk)
         self.assertEqual(project2.amount_donated, Decimal(75))
@@ -162,6 +166,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertEqual(payouts3.count(), 2)  # a new one must be created
         # check that the sum and status are correct
         new_payout = payouts3.first()  # order by created
+        self.assertTrue(new_payout.protected)
         self.assertEqual(new_payout.amount_raised, Decimal(75))
         project3 = self.project3.__class__.objects.get(pk=self.project3.pk)
         self.assertEqual(project3.amount_donated, Decimal(75))
@@ -173,6 +178,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         payouts4 = self.project4.projectpayout_set.all()
         self.assertEqual(payouts4.count(), 1)
         payout = payouts4.first()
+        self.assertTrue(new_payout.protected)
         self.assertEqual(payout.amount_raised, Decimal(75))
         self.assertEqual(payout.amount_payable, Decimal('71.25'))
         self.assertEqual(payout.organization_fee, Decimal('3.75'))

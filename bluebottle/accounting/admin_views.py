@@ -241,7 +241,8 @@ class CreateManualDonationView(BaseManualEntryView):
                     payout = ProjectPayout(
                         planned=ProjectPayout.get_next_planned_date(),
                         project=project,
-                        payout_rule=rule
+                        payout_rule=rule,
+                        protected=True
                     )
 
                     # we need to manually calculate the amounts, else all project donations will be taken into account
@@ -252,13 +253,17 @@ class CreateManualDonationView(BaseManualEntryView):
                     rule = dict(ProjectPayout.PayoutRules.choices)[rule]
                     _message(self.request, msg.format(n=len(rules), rule=rule))
                 else:
+                    # there is a payout that is still 'new', update that one
                     updateable.calculate_amounts()
                     messages.success(
                         self.request,
                         _('Created a manual donation and updated project payout %r') % updateable
                     )
 
-            # TODO FIXME: organization payouts!
+            self.transaction.status = BankTransaction.IntegrityStatus.Valid
+            self.transaction.save()
+
+            # TODO FIXME: organization payouts?! recalculate?
 
         return redirect(self.get_success_url())
 

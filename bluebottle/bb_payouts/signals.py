@@ -16,7 +16,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
         try:
             # Update existing Payout
-            payout = PROJECT_PAYOUT_MODEL.objects.get(project=project)
+            payout = PROJECT_PAYOUT_MODEL.objects.get(project=project, protected=False)
 
             if payout.status == StatusDefinition.NEW:
                 # Update planned payout date for new Payouts

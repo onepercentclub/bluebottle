@@ -107,6 +107,9 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
     planned = models.DateField(_("Planned"), help_text=_("Date on which this batch should be processed."))
 
     status = FSMField(_("status"), max_length=20, default=StatusDefinition.NEW, choices=STATUS_CHOICES, protected=True)
+    protected = models.BooleanField(
+        _("protected"), default=False,
+        help_text=_('If a payout is protected, the amounts can only be updated via journals.'))
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
@@ -302,6 +305,7 @@ class BaseProjectPayout(PayoutBase):
         Should only be called for Payouts with status 'new'.
         """
         assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
+        assert not self.protected, 'Can only recalculate for un-protected payouts'
 
         # Set payout rule if none set.
         if not self.payout_rule:
@@ -323,6 +327,9 @@ class BaseProjectPayout(PayoutBase):
         return calculator
 
     def calculate_payable_and_fee(self, calculator, amount_raised):
+        """
+        Given a calculator, calculate the amount payable and organization fee.
+        """
         self.amount_raised = amount_raised
         self.amount_payable = Decimal(round(calculator(amount_raised), 2))
         self.organization_fee = amount_raised - self.amount_payable
@@ -341,18 +348,24 @@ class BaseProjectPayout(PayoutBase):
         """
         Real time amount of raised ('paid', 'pending') donations.
         """
+        if self.protected:
+            return self.amount_raised
         return self.project.amount_donated
 
     def get_amount_safe(self):
         """
         Real time amount of safe ('paid') donations.
         """
+        if self.protected:
+            return self.amount_raised
         return self.project.amount_safe
 
     def get_amount_pending(self):
         """
         Real time amount of pending donations.
         """
+        if self.protected:
+            return 0
         return self.project.amount_pending
 
     def get_amount_failed(self):
@@ -361,6 +374,9 @@ class BaseProjectPayout(PayoutBase):
 
         Note: amount_raised is the saved property, other values are real time.
         """
+
+        if self.protected:
+            return 0
 
         amount_safe = self.get_amount_safe()
         amount_pending = self.get_amount_pending()
@@ -532,10 +548,10 @@ class BaseOrganizationPayout(PayoutBase):
             self.other_costs_incl = self.other_costs_excl + self.other_costs_vat
 
         # Calculate payable amount
-        self.payable_amount_excl =  (
+        self.payable_amount_excl = (
             self.organization_fee_excl - self.psp_fee_excl - self.other_costs_excl
         )
-        self.payable_amount_vat =  (
+        self.payable_amount_vat = (
             self.organization_fee_vat - self.psp_fee_vat - self.other_costs_vat
         )
         self.payable_amount_incl = (

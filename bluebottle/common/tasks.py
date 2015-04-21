@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import logging
 
+from django.core.management import call_command
+
 from celery import shared_task
 
 logger = logging.getLogger()
@@ -50,3 +52,18 @@ def _send_celery_mail(msg, send=False):
                     .format(msg.to, msg.from_email,
                             subject,
                             body))
+
+
+@shared_task
+def update_salesforce(tenant=None,
+                      synchronize=False,
+                      updated=None,
+                      csv_export=False,
+                      verbosity=3):
+    logger.info("Updating Salesforce")
+    call_command('sync_salesforce',
+                 tenant=tenant,
+                 synchronize=synchronize,
+                 updated=updated,
+                 verbosity=verbosity)
+    logger.info("Finished updating Salesforce")

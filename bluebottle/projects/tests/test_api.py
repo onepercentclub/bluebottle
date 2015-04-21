@@ -335,6 +335,32 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         for field in bank_detail_fields:
             self.assertIn(field, response.data)
 
+    def test_project_create_invalid_image(self):
+        """
+        Tests for Project Create
+        """
+
+        # Check that a new user doesn't have any projects to manage
+        response = self.client.get(
+            self.manage_projects_url, token=self.some_user_token)
+        self.assertEquals(response.data['count'], 0)
+
+        # Let's throw a pitch (create a project really)
+        image_filename = './bluebottle/projects/test_images/circle.eps'
+        image = open(image_filename, mode='rb')
+
+        response = self.client.post(self.manage_projects_url,
+                                    {
+                                        'title': 'This is my smart idea',
+                                        'image': image
+                                    },
+                                    token=self.some_user_token, format='multipart')
+        self.assertContains(
+            response,
+            "Upload a valid image",
+            status_code=400
+        )
+
     def test_set_bank_details(self):
         """ Set bank details in new project """
 

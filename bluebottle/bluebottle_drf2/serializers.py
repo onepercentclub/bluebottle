@@ -27,7 +27,18 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 logger = logging.getLogger(__name__)
 
 
-class SorlImageField(serializers.ImageField):
+class RestrictedImageField(serializers.ImageField):
+    def from_native(self, data):
+        if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+            # We restrict images to a fixed set of mimetypes.
+            # This prevents users from uploading broken eps files (for example),
+            # that bring the application down.
+            raise ValidationError(self.error_messages['invalid_image'])
+
+        return super(RestrictedImageField, self).from_native(data)
+
+
+class SorlImageField(RestrictedImageField):
     def __init__(self, source, geometry_string, **kwargs):
         self.crop = kwargs.pop('crop', 'center')
         self.colorspace = kwargs.pop('colorspace', 'RGB')
@@ -271,7 +282,7 @@ class FileSerializer(serializers.FileField):
                     'size': ''}
 
 
-class ImageSerializer(serializers.ImageField):
+class ImageSerializer(RestrictedImageField):
 
     crop = 'center'
 
@@ -305,7 +316,7 @@ class ImageSerializer(serializers.ImageField):
         return {'full': full, 'large': large, 'small': small, 'square': square}
 
 
-class PhotoSerializer(serializers.ImageField):
+class PhotoSerializer(RestrictedImageField):
 
     crop = 'center'
 
@@ -398,7 +409,7 @@ class TaggableSerializerMixin(object):
             tags = getattr(obj, 'tags')
         except AttributeError:
             return
-            
+
         if hasattr(self, 'tag_list'):
             tags.clear()
             if type(self.tag_list) == types.UnicodeType:

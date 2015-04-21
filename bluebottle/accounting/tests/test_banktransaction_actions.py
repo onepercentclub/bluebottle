@@ -38,13 +38,12 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         # adding a new donation (for a closed payout) should create a new payout
         payout2 = self.project2.projectpayout_set.first()
         payout2.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
-        payout2.status = StatusDefinition.SETTLED
-        payout2.save()
+        payout2.in_progress()
+        payout2.settled()
 
         payout3 = self.project3.projectpayout_set.first()
         payout3.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
-        payout3.status = StatusDefinition.PENDING
-        payout3.save()
+        payout3.in_progress()
 
         # should be updated with new donation
         payout4 = self.project4.projectpayout_set.first()

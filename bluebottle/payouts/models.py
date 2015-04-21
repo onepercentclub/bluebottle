@@ -3,7 +3,6 @@ from decimal import Decimal
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
-from bluebottle.utils.utils import StatusDefinition
 
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -140,12 +139,8 @@ class ProjectPayout(BaseProjectPayout):
         sepa.set_info(message_identification=batch_id, payment_info_id=batch_id)
         sepa.set_initiating_party(name=settings.BANK_ACCOUNT_DONATIONS['name'])
 
-        now = timezone.now()
-
         for payout in qs.all():
-            payout.status = StatusDefinition.IN_PROGRESS
-            payout.submitted = now
-            payout.save()
+            payout.in_progress()
             creditor = SepaAccount(
                 name=payout.receiver_account_name,
                 iban=payout.receiver_account_iban,

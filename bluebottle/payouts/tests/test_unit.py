@@ -81,8 +81,7 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertFalse(payout.completed)
 
         # Change status to settled
-        payout.status = StatusDefinition.SETTLED
-        payout.save()
+        payout.settled()
 
         # Completed date should now be set
         self.assertTrue(payout.completed)

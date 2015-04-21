@@ -80,7 +80,7 @@ install_requires = [
     # Github requirements
     'django-taggit-autocomplete-modified<=0.1.1',
     'django-fluent-contents<=1.0c3',
-    'django-bb-salesforce<=1.1.6',
+    'django-bb-salesforce==1.1.6',
 ]
 
 tests_requires = [

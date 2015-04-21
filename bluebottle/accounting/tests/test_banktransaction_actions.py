@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.db.models import Sum
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 
@@ -11,6 +12,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.accounting import BankTransactionFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.bb_payouts.models import BaseProjectPayout
+from bluebottle.utils.model_dispatcher import get_organization_payout_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
@@ -61,6 +63,16 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
             book_date=date.today() - timedelta(days=3),
             description1='Unmatched donation'
         )
+
+        # create an organization payout
+        now = date.today()
+        OrganizationPayout = get_organization_payout_model()
+        self.org_payout = OrganizationPayout(
+            start_date=now - timedelta(days=7),
+            end_date=now + timedelta(days=7),
+            planned=now + timedelta(days=8)
+        )
+        self.org_payout.save()
 
     def test_manual_donation(self):
         """
@@ -161,7 +173,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertEqual(new_payout.amount_payable, Decimal('71.25'))
         self.assertEqual(new_payout.organization_fee, Decimal('3.75'))
 
-        # similar to case 3
+        # similar to case 2
         payouts3 = self.project3.projectpayout_set.all()
         self.assertEqual(payouts3.count(), 2)  # a new one must be created
         # check that the sum and status are correct
@@ -188,4 +200,88 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertTrue(project3.amount_asked)
         project3.save()  # triggers bb_payouts.signals.create_payout_finished_project
 
-        # TODO: test organization payouts!
+        # verify that organization payouts update correctly
+        self.org_payout.calculate_amounts()
+        self.assertEqual(self.org_payout.payable_amount_excl, 0)
+        # advance a manual donation payout to settled
+        payout = payouts3.first()
+        payout.in_progress()
+        payout.settled()
+        self.org_payout.calculate_amounts()
+        self.assertEqual(self.org_payout.payable_amount_incl, Decimal('3.75'))
+
+    def test_multiple_manual_donations(self):
+        """
+        Test that multiple manual donations correctly update a protected ProjectPayout
+        """
+        self._initialize_unmatched_transactions()
+
+        admin_url = reverse('admin:accounting_banktransaction_changelist')
+
+        # verify that the transactions are visible
+        transaction_list = self.app.get(admin_url, user=self.superuser)
+        self.assertEqual(transaction_list.status_code, 200)
+        # one for each transaction
+        self.assertEqual(transaction_list.pyquery('.action-checkbox').length, 4)
+
+        # 'try' to match them and check that they have the appropriate statuses and actions in the admin
+
+        # check the checkboxes and submit the action
+        form = transaction_list.forms['changelist-form']
+        form['action'].select('find_matches')
+        for i in range(0, len(self.transactions)):
+            form.get('_selected_action', index=i).checked = True
+        transaction_list = form.submit().follow()
+
+        # pick the action 'create donation' for each transaction
+        project = self.project2  # project with settled payout -> creates a new payout
+        for i, transaction in enumerate(self.transactions):
+            url = reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': transaction.pk})
+            donation_form = self.app.get(url, user=self.superuser)
+            self.assertEqual(donation_form.status_code, 200)
+            form = donation_form.forms[1]
+
+            # fill in the form and submit
+            form['project'] = project.pk
+            response = form.submit()
+            self.assertRedirects(response, admin_url)
+            self.assertEqual(response.follow().status_code, 200)
+
+            # verify that a donation is created
+            self.assertEqual(project.donation_set.count(), i+1)
+            donation = project.donation_set.all()[i]
+            self.assertTrue(donation.anonymous)
+            self.assertEqual(donation.amount, Decimal(75))
+            self.assertEqual(donation.user, self.superuser)
+            self.assertEqual(donation.project, project)
+
+            # verify that an order exists
+            self.assertIsNotNone(donation.order)
+            order = donation.order
+            self.assertEqual(order.order_payments.count(), 1)
+            order_payment = order.order_payments.first()
+            self.assertEqual(order.status, StatusDefinition.SUCCESS)
+            self.assertEqual(order_payment.status, StatusDefinition.SETTLED)
+            self.assertEqual(order_payment.amount, Decimal(75))
+            self.assertEqual(order.user, self.superuser)
+            self.assertEqual(order_payment.user, self.superuser)
+            self.assertEqual(order_payment.transaction_fee, Decimal(0))
+
+            # verify that a payment exists and isisinstance of ManualPayment (Polymorphic Payment)
+            payment = order_payment.payment
+            self.assertIsInstance(payment, ManualPayment)
+            self.assertEqual(payment.user, self.superuser)
+            self.assertEqual(payment.amount, Decimal(75))
+            self.assertEqual(payment.status, StatusDefinition.SETTLED)
+            self.assertEqual(payment.transaction, transaction)
+
+            # assert that the transaction is now valid
+            transaction = BankTransaction.objects.get(pk=transaction.pk)
+            self.assertEqual(transaction.status, BankTransaction.IntegrityStatus.Valid)
+
+        payouts = project.projectpayout_set.all()
+        self.assertEqual(payouts.count(), 2)
+        aggregated = payouts.aggregate(Sum('amount_raised'), Sum('amount_payable'), Sum('organization_fee'))
+        self.assertEqual(aggregated['amount_raised__sum'], 4*Decimal('75'))
+        self.assertEqual(aggregated['amount_payable__sum'], 4*Decimal('71.25'))
+        self.assertEqual(aggregated['organization_fee__sum'], 4*Decimal('3.75'))

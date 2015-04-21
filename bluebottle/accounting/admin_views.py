@@ -254,7 +254,16 @@ class CreateManualDonationView(BaseManualEntryView):
                     _message(self.request, msg.format(n=len(rules), rule=rule))
                 else:
                     # there is a payout that is still 'new', update that one
-                    updateable.calculate_amounts()
+                    if updateable.protected is False:
+                        updateable.calculate_amounts()
+                    else:
+                        # this is already an 'irregular' payout, so add the diff
+                        # manually. There should be a journal entry for the modification
+                        updateable.amount_raised += donation.amount
+                        calculator = updateable.get_calculator()
+                        updateable.calculate_payable_and_fee(calculator, updateable.get_amount_raised())
+                        updateable.save()
+
                     messages.success(
                         self.request,
                         _('Created a manual donation and updated project payout %r') % updateable

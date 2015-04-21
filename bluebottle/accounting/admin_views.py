@@ -227,6 +227,11 @@ class CreateManualDonationView(BaseManualEntryView):
                         _('Created a manual donation and updated project payout %r') % updateable
                     )
 
+                # NOTE theoretically there is a situation where the only updateable
+                # payout is a payout for an open project and the payout is protected
+                # It would then theoretically be possible to make a new donation via
+                # the web interface and the project payout will not be re-calculateable
+
             self.transaction.status = BankTransaction.IntegrityStatus.Valid
             self.transaction.save()
 

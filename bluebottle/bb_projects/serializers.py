@@ -132,7 +132,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
 
-    tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True, source='task_set')
+    tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True, source='task_set', read_only=True)
 
     def validate_account_iban(self, attrs, source):
         value = attrs.get(source)

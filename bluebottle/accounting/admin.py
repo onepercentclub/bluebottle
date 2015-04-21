@@ -9,19 +9,25 @@ from django.core.urlresolvers import reverse
 
 from djchoices import DjangoChoices, ChoiceItem
 
-from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments_docdata.models import DocdataPayment
 
 from .models import BankTransactionCategory
 from .signals import match_transaction_with_payout
 from ..csvimport.admin import IncrementalCSVImportMixin
 
 from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout
-from .forms import BankTransactionImportForm, DocdataPaymentImportForm, update_remote_docdata_status, bulk_update_remote_docdata_spanning_multiple_weeks
-from .admin_extra import DocdataPaymentMatchedListFilter, OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter, IntegrityStatusListFilter
+from .forms import (
+    BankTransactionImportForm, DocdataPaymentImportForm,
+    update_remote_docdata_status,
+    bulk_update_remote_docdata_spanning_multiple_weeks
+)
+from .admin_extra import (
+    DocdataPaymentMatchedListFilter, OrderPaymentMatchedListFilter,
+    OrderPaymentIntegrityListFilter, IntegrityStatusListFilter
+)
 from .admin_views import (
-    UnknownTransactionView, CreateDonationView, CreateProjectPayoutJournalView,
+    UnknownTransactionView, CreateProjectPayoutJournalView,
     CreateOrganizationPayoutJournalView, CreateManualDonationView
 )
 
@@ -106,10 +112,11 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 '<a href="%s">%s</a>' % (
                     reverse('admin:banktransaction-add-manualdonation', kwargs={'pk': obj.pk}),
                     _('create donation')
-                ),
+                ) if obj.credit_debit == BankTransaction.CreditDebit.credit else None,
             )
         }
-        return " &bull; ".join(actions.get(obj.status) or [])
+        actions = [a for a in (actions.get(obj.status) or []) if a is not None]
+        return " &bull; ".join(actions)
     show_actions.allow_tags = True
     show_actions.short_description = _('actions')
 
@@ -130,11 +137,6 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 r'^(?P<pk>\d+)/unknown_transaction/$',
                 self.admin_site.admin_view(UnknownTransactionView.as_view()),
                 name='banktransaction-unknown'
-            ),
-            url(
-                r'^(?P<pk>\d+)/unknown_transaction/donation/$',
-                self.admin_site.admin_view(CreateDonationView.as_view()),
-                name='banktransaction-add-donation'
             ),
             url(
                 r'^(?P<pk>\d+)/unknown_transaction/projectpayout/$',

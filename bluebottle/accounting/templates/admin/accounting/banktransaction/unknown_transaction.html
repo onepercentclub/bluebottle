@@ -6,7 +6,7 @@
 <script src="{% static "admin/js/admin/RelatedObjectLookups.js" %}"></script>
 <style type="text/css">
 .col {
-    width: 32%;
+    width: 49%;
     float: left;
     margin-left: 0.5%;
     margin-right: 0.5%;
@@ -31,7 +31,9 @@ strong > label {
 <p>
     {% trans "Choose one action to resolve this unknown transaction:" %}
     <ul>
-        <li>{% trans "Create a new donation: adds a donation record to the project and/or fundraiser." %}</li>
+        {% if transaction.credit_debit == transaction.CreditDebit.credit %}
+            <li><a href="{% url 'admin:banktransaction-add-manualdonation' pk=transaction.pk %}">{% trans "Create a new donation" %}</a></li>
+        {% endif %}
         <li>{% blocktrans %}Add a project/organization payout journal entry:
             the linked payout will be updated with the difference you enter here (=amount).
             {% endblocktrans %}

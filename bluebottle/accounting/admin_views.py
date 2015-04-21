@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.core.urlresolvers import reverse_lazy
 
 from django.shortcuts import redirect
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView, CreateView
 from django.views.generic.detail import SingleObjectMixin
@@ -61,23 +60,11 @@ class UnknownTransactionView(SingleObjectMixin, FormView):
             kwargs['data'] = self.get_form_data(form_class)
         return kwargs
 
-    def get_donation_form(self, **kwargs):
-        form_class = donationform_factory()
-        if self.get_form_data(form_class) is not None:
-            kwargs.setdefault('data', self.get_form_data(form_class))
-        initial = self.get_initial()
-        initial['anonymous'] = True
-        form = form_class(initial=initial, transaction=self.object, **kwargs)
-        return form
-
     def get_form_class(self):
         return [journalform_factory(model, rel_field) for (model, rel_field) in self.related_models]
 
     def get_form(self, form_classes):
-        return (
-            [self.get_donation_form()] +
-            [form_class(**self.get_form_kwargs(form_class)) for form_class in form_classes]
-        )
+        return [form_class(**self.get_form_kwargs(form_class)) for form_class in form_classes]
 
     def get_context_data(self, **kwargs):
         kwargs['opts'] = self.model._meta
@@ -106,35 +93,6 @@ class BaseManualEntryView(CreateView):
         self.request.session['form_class'] = form.__class__.__name__
         self.request.session['form_data'] = form.data
         return redirect('admin:banktransaction-unknown', pk=form.transaction.pk)
-
-
-class CreateDonationView(BaseManualEntryView):
-
-    def get_form_class(self):
-        return donationform_factory()
-
-    def form_valid(self, form):
-        transaction = form.transaction
-        Order = get_order_model()
-        with db_transaction.atomic():
-            # create an order. we specify the user, because the donation itself
-            # is marked as anonymous
-            order = Order.objects.create(
-                user=self.request.user,
-                status=StatusDefinition.SUCCESS,  # completed
-                order_type='manual_entry_unmatched_banktransaction',
-                total=form.cleaned_data['amount'],
-                completed=timezone.now()
-            )
-            form.instance.order = order
-            response = super(CreateDonationView, self).form_valid(form)
-            transaction.status = BankTransaction.IntegrityStatus.Valid
-            transaction.save()
-        messages.success(
-            self.request,
-            _('Created a new donation and manually resolved transaction "%s"') % transaction
-        )
-        return response
 
 
 class JournalCreateMixin(object):

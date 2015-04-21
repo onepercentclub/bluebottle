@@ -156,3 +156,15 @@ class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
         self.order_payment.save()
         self.assertEqual(self.order_payment.transaction_fee, 1.95)
 
+
+class UtilsTestCase(BluebottleTestCase):
+
+    def test_trim_url(self):
+        from ..models import trim_tenant_url
+
+        tenant_url = 'www.holycrapthisisareallyreallylongurl.com'
+        max_length = 30
+
+        new_url = trim_tenant_url(max_length, tenant_url)
+        self.assertEqual(len(new_url), max_length)
+        self.assertTrue('...' in new_url)

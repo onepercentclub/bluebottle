@@ -1,5 +1,4 @@
 from bluebottle.projects.models import ProjectBudgetLine
-from bluebottle.tasks.models import Task
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.geo.serializers import CountrySerializer
 from rest_framework import serializers

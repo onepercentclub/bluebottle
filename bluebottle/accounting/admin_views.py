@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse, reverse_lazy
 
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import FormView, CreateView
+from django.views.generic import FormView, CreateView, DetailView
 from django.views.generic.detail import SingleObjectMixin
 
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
@@ -15,7 +15,7 @@ from bluebottle.utils.model_dispatcher import (
     get_order_model, get_donation_model, get_project_payout_model, get_model_mapping
 )
 from bluebottle.utils.utils import StatusDefinition
-from .models import BankTransaction
+from .models import BankTransaction, RemoteDocdataPayment
 from .admin_forms import journalform_factory, donationform_factory, RetryPayoutForm
 
 
@@ -281,3 +281,90 @@ class RetryPayoutView(TransactionMixin, AdminOptsMixin, FormView):
         model_mapping = get_model_mapping()
         admin_url_name = model_mapping['project_payout']['model_lower'].replace('.', '_')
         return reverse('admin:%s_change' % admin_url_name, args=[payout.pk])
+
+
+class RDPTakeCutView(AdminOptsMixin, DetailView):
+    model = RemoteDocdataPayment
+    template_name = 'admin/accounting/remotedocdatapayment/take_cut.html'
+
+    def get_queryset(self):
+        """
+        Ensure that only the complex 'take cut' RDP's are considered.
+
+        Exclude RDP's that only have payouts that are new and unprotected, as
+        these will automatically be updated by re-calculating the payout.
+        """
+        queryset = RemoteDocdataPayment.objects.filter(
+            status=RemoteDocdataPayment.IntegrityStatus.InconsistentChargeback,
+        ).exclude(
+            local_payment__order_payment__order__donations__project__projectpayout=None
+        )
+
+        payout_ids = list(queryset.values_list(
+            'local_payment__order_payment__order__donations__project__projectpayout', flat=True
+        ).distinct())
+
+        ProjectPayout = get_project_payout_model()
+        payouts_to_ignore = list(ProjectPayout.objects.filter(id__in=payout_ids).exclude(
+            status=StatusDefinition.NEW,
+            protected=False
+        ).values_list('id', flat=True))
+
+        for pk in payouts_to_ignore:
+            payout_ids.remove(pk)
+
+        return queryset.filter(
+            local_payment__order_payment__order__donations__project__projectpayout__id__in=payout_ids
+        ).distinct()
+
+    def get_affected_records(self):
+        """
+        Retrieve the donations and payouts that will be affected by taking a cut.
+        """
+        ProjectPayout = get_project_payout_model()
+        affected = {}
+
+        donations = self.object.local_payment.order_payment.order.donations.select_related(
+            'project', 'project__projectpayout'
+        )
+
+        for donation in donations:
+            payouts = donation.project.projectpayout_set.all()
+            in_progress_payout, updateable_payout, new_payout, new_status = None, None, None, False  # defaults
+
+            if not payouts.exists():
+                new_status = donation.order.get_status_mapping(self.object.payment_type)
+            else:
+                updateable_payout = payouts.filter(status=StatusDefinition.NEW, protected=False).first()
+                if updateable_payout is not None:
+                    new_status = donation.order.get_status_mapping(self.object.payment_type)
+                else:
+                    # figure out if we can take cut from an unprocessed payout
+                    in_progress_payout = payouts.filter(status=StatusDefinition.IN_PROGRESS).first()
+                    if in_progress_payout is None:
+                        new_payout = ProjectPayout(
+                            project=donation.project,
+                            protected=True,
+                            amount_raised=0,
+                            amount_payable=0,
+                            organization_fee=-donation.amount,
+                            planned=ProjectPayout.get_next_planned_date(),
+                            description_line1='Taking cut from organization fees',
+                            description_line2='from failed payment %d' % self.object.local_payment.pk,
+                        )
+
+            affected[donation] = {
+                'new_status': new_status,
+                'updateable_payout': updateable_payout,
+                'in_progress_payout': in_progress_payout,
+                'new_payout': new_payout
+            }
+
+        return affected
+
+    def get_context_data(self, **kwargs):
+        context = super(RDPTakeCutView, self).get_context_data(**kwargs)
+        context['affected'] = self.get_affected_records()
+        model_mapping = get_model_mapping()
+        context['admin_payout'] = u'admin:%s_change' % model_mapping['project_payout']['model_lower'].replace('.', '_')
+        return context

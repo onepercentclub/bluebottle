@@ -29,7 +29,7 @@ from .admin_extra import (
 from .admin_views import (
     UnknownTransactionView, CreateProjectPayoutJournalView,
     CreateOrganizationPayoutJournalView, CreateManualDonationView,
-    RetryPayoutView
+    RetryPayoutView, RDPTakeCutView
 )
 
 
@@ -319,7 +319,7 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                     _('mark donations failed')
                 ) if not obj.has_problematic_payouts else None,
                 '<a href="%s">%s</a>' % (
-                    reverse('admin:banktransaction-unknown', kwargs={'pk': obj.pk}),
+                    reverse('admin:accounting_remotedocdatapayment_take_cut', kwargs={'pk': obj.pk}),
                     _('take cut from organization fees')
                 ) if obj.has_problematic_payouts else None,
             )
@@ -328,6 +328,21 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         return " &bull; ".join(actions)
     show_actions.allow_tags = True
     show_actions.short_description = _('actions')
+
+    def get_urls(self):
+        """
+        Extra urls to save manual entries.
+        """
+        urls = super(DocdataPaymentAdmin, self).get_urls()
+        action_urls = patterns(
+            '',
+            url(
+                r'^(?P<pk>\d+)/take_cut/$',
+                self.admin_site.admin_view(RDPTakeCutView.as_view()),
+                name='accounting_remotedocdatapayment_take_cut'
+            ),
+        )
+        return action_urls + urls
 
 
 class OrderPaymentIntegrityStatuses(DjangoChoices):

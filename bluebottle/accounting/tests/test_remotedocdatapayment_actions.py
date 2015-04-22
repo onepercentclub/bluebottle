@@ -217,3 +217,6 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
         # for payment2|3, chargedback|refund and has payouts
         for rdp in self.rdp_list[1:2]:
             self.assertTrue(rdp.has_problematic_payouts)
+            url = reverse('admin:accounting_remotedocdatapayment_take_cut', args=[rdp.pk])
+            confirmation = self.app.get(url, user=self.superuser)
+            self.assertEqual(confirmation.status_code, 200)

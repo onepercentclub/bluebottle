@@ -1,3 +1,4 @@
+from datetime import timedelta
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils import timezone
 
@@ -123,6 +124,22 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
 
+    def test_create_task_incorrect_deadline(self):
+        # Create a task with an invalid deadline
+        some_task_data = {
+            'project': self.some_project.slug,
+            'title': 'A nice task!',
+            'description': 'Well, this is nice',
+            'time_needed': 5,
+            'skill': '{0}'.format(self.skill1.id),
+            'location': 'Overthere',
+            'deadline': str(self.some_project.deadline + timedelta(hours=1))
+        }
+        response = self.client.post(self.task_url, some_task_data, token=self.some_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertTrue('deadline' in response.data)
+
     def test_apply_for_task(self):
         future_date = timezone.now() + timezone.timedelta(days=60)
 
@@ -222,7 +239,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.assertEquals(task.members.count(), 1)
 
-        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 
+        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id),
                         token=self.some_token)
 
         self.assertEquals(task.members.count(),0)
@@ -234,7 +251,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.assertEquals(task.members.count(), 1)
 
-        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id), 
+        response = self.client.delete('{0}{1}'.format(self.task_members_url, task_member.id),
                                         token=self.some_token)
 
         self.assertEquals(task.members.count(),1)
@@ -245,7 +262,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         task = TaskFactory.create()
 
-        response = self.client.get('{0}{1}'.format(self.task_url, task.id), token=self.some_token)  
+        response = self.client.get('{0}{1}'.format(self.task_url, task.id), token=self.some_token)
 
         # Fields as defined in the serializer
         serializer_fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', \

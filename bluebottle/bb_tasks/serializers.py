@@ -65,9 +65,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     def validate_deadline(self, task, field):
         if task['project'].deadline and task['deadline'] > task['project'].deadline:
             raise serializers.ValidationError(
-                _('The deadline must be before the project deadline {deadline}').format(
-                    deadline=task['project'].deadline
-                )
+                _('The deadline must be before the project deadline')
             )
 
         return task

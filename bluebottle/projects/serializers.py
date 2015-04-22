@@ -1,4 +1,5 @@
 from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.tasks.models import Task
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.geo.serializers import CountrySerializer
 from rest_framework import serializers
@@ -62,11 +63,17 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
         fields = ('description', 'amount')
 
 
+class ProjectTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+
+
 class ProjectSerializer(BaseProjectSerializer):
     task_count = serializers.IntegerField(source='task_count')
     country = ProjectCountrySerializer(source='country')
     story = StoryField()
     budget_lines = BasicProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
+    tasks = ProjectTaskSerializer(many=True, source='task_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
 
@@ -75,7 +82,7 @@ class ProjectSerializer(BaseProjectSerializer):
         fields = BaseProjectSerializer.Meta.fields + (
             'allow_overfunding', 'task_count',
             'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
-            'story', 'budget_lines', 'status', 'deadline',
+            'story', 'budget_lines', 'tasks', 'status', 'deadline',
             'latitude', 'longitude', 'video_url', 'video_html', 'partner')
 
 
@@ -97,6 +104,7 @@ class ManageProjectSerializer(BaseManageProjectSerializer):
     amount_donated = serializers.CharField(read_only=True)
     amount_needed = serializers.CharField(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
+    tasks = ProjectTaskSerializer(many=True, source='task_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     story = StoryField(required=False)
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization', required=False)
@@ -105,7 +113,7 @@ class ManageProjectSerializer(BaseManageProjectSerializer):
         model = BaseManageProjectSerializer.Meta.model
         fields = BaseManageProjectSerializer.Meta.fields + ('amount_asked', 'amount_donated', 'amount_needed',
                                                             'video_url', 'video_html', 'partner',
-                                                            'story', 'budget_lines', 'deadline', 'latitude', 'longitude')
+                                                            'story', 'budget_lines', 'tasks', 'deadline', 'latitude', 'longitude')
 
 
 class ProjectSupporterSerializer(serializers.ModelSerializer):

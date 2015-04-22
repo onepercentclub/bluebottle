@@ -110,6 +110,7 @@ class RemoteDocdataPayment(models.Model):
     """ Docdata payment as incrementally imported from CSV. """
     class IntegrityStatus(DjangoChoices):
         Valid = ChoiceItem('valid', _('Valid'))
+        InconsistentChargeback = ChoiceItem('inconsistent_chargeback', _('Invalid: inconsistent chargeback'))
         MissingBackofficeRecord = ChoiceItem('missing', _('Invalid: Missing backoffice record'))
         AmountMismatch = ChoiceItem('mismatch', _('Invalid: Amount mismatch'))
 

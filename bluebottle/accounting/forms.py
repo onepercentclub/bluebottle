@@ -14,6 +14,7 @@ from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebi
 
 from bluebottle.csvimport.utils.common import has_duplicate_items
 from bluebottle.csvimport.forms import CSVImportForm
+from bluebottle.utils.utils import StatusDefinition
 from .fields import MultiFileField
 from .models import RemoteDocdataPayout, RemoteDocdataPayment
 
@@ -21,6 +22,15 @@ from .dialects import DocdataDialect
 
 
 logger = logging.getLogger(__name__)
+
+
+LEGIT_REFUND_STATUSES = [
+    StatusDefinition.CANCELLED,
+    StatusDefinition.CHARGED_BACK,
+    StatusDefinition.REFUNDED,
+    StatusDefinition.FAILED,
+    StatusDefinition.UNKNOWN
+]
 
 
 class BankTransactionImportForm(CSVImportForm):
@@ -96,18 +106,29 @@ def update_remote_docdata_status(instance):
         if local_payment:
             instance.local_payment = local_payment
             amount_collected = Decimal(instance.amount_collected)
+            expected_amount = local_payment.order_payment.amount
 
-            if instance.payment_type in ['chargedback', 'refund'] and \
-                                    amount_collected * -1 == local_payment.order_payment.amount:
-                instance.status = RemoteDocdataPayment.IntegrityStatus.Valid
-            elif amount_collected == local_payment.order_payment.amount:
+            if instance.payment_type in ['chargedback', 'refund']:
+                amount_correct = (amount_collected == -expected_amount)
+
+                # check if the corresponding payment is adequately marked already or not
+                if local_payment.status in LEGIT_REFUND_STATUSES:
+                    if amount_correct:
+                        instance.status = RemoteDocdataPayment.IntegrityStatus.Valid
+                    else:
+                        instance.status = RemoteDocdataPayment.IntegrityStatus.AmountMismatch
+                        instance.status_remarks = '{0} != {1}'.format(amount_collected, expected_amount)
+                else:
+                    instance.status = RemoteDocdataPayment.IntegrityStatus.InconsistentChargeback
+                    if not amount_correct:
+                        instance.status_remarks = '{0} != {1}'.format(amount_collected, -expected_amount)
+            elif amount_collected == expected_amount:
                 instance.status = RemoteDocdataPayment.IntegrityStatus.Valid
             else:
                 # Case missing: multiple payments (even in different payouts). Mark as invalid now, and
                 # check afterwards.
                 instance.status = RemoteDocdataPayment.IntegrityStatus.AmountMismatch
-                instance.status_remarks = '{0} != {1}'.format(amount_collected,
-                                                              local_payment.order_payment.amount)
+                instance.status_remarks = '{0} != {1}'.format(amount_collected, expected_amount)
         else:
             instance.status = RemoteDocdataPayment.IntegrityStatus.MissingBackofficeRecord
 

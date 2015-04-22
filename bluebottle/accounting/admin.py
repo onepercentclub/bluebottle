@@ -285,7 +285,8 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
     def payment_link(self, obj):
         payment = obj.local_payment
         if payment:
-            url = reverse('admin:%s_%s_change' % (payment._meta.app_label, payment._meta.module_name), args=[payment.id])
+            url = reverse('admin:%s_%s_change' % (
+                payment._meta.app_label, payment._meta.module_name), args=[payment.id])
             return "<a href='%s'>%s</a>" % (str(url), payment)
         return '-'
     payment_link.allow_tags = True

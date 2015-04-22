@@ -82,8 +82,6 @@ class BaseOrganization(models.Model):
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    person = models.BooleanField(_('Person'), default=True,
-                                  help_text=_('Is person or a full organisation.'))
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

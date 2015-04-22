@@ -36,10 +36,10 @@ Are you sure you want to take a cut from the organization fees? The following do
         </li>
     {% endif %}
 
-    {% if data.updateable_payout %}
+    {% if data.new_payout %}
         <li>
             {% blocktrans with payout=data.new_payout %}
-                A dummy payout will be created with zero payable amount and negative organizationf ee:
+                A dummy payout will be created with zero payable amount and negative organization fee:
                 {{ payout }}
             {% endblocktrans %}
         </li>

@@ -104,12 +104,8 @@ class BaseOrganization(models.Model):
     # Contact
     phone_number = models.CharField(_('phone number'), max_length=40,
                                     blank=True)
-    website = models.URLField(_('website'), blank=True)
 
     email = models.EmailField(blank=True)
-    twitter = models.CharField(_('twitter'), max_length=255, blank=True)
-    facebook = models.CharField(_('facebook'), max_length=255, blank=True)
-    skype = models.CharField(_('skype'), max_length=255, blank=True)
 
     tags = TaggableManager(blank=True, verbose_name=_('tags'))
 

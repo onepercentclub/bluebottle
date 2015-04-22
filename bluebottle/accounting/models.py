@@ -1,7 +1,10 @@
-from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebitPayment
 from django.db import models
 from django.utils.translation import ugettext as _
+
 from djchoices import DjangoChoices, ChoiceItem
+
+from bluebottle.payments_docdata.models import DocdataPayment, DocdataDirectdebitPayment
+from bluebottle.utils.utils import StatusDefinition
 
 
 class BankAccount(models.Model):
@@ -171,3 +174,31 @@ class RemoteDocdataPayment(models.Model):
 
     class Meta:
         ordering = ('-remote_payout__payout_date', )
+
+    @property
+    def has_problematic_payouts(self):
+        """
+        Figure out if the payment is connected to processed payouts.
+
+        If it is, a cut can be taken from organization fees, else the donation
+        order can be marked as failed.
+        """
+
+        if not hasattr(self, '_has_problematic_payouts'):
+            # performance -> only calculate this for potentially problematic payments
+            if not self.local_payment:
+                self._has_problematic_payouts = False
+                return False
+
+            paid_out_donations = self.local_payment.order_payment.order.donations.exclude(
+                # this is a payout that will correctly re-calculate based on the donations,
+                # thus marking the donation as failed is enough
+                project__projectpayout__status=StatusDefinition.NEW,
+                project__projectpayout__protected=False
+            ).exclude(
+                # left join, so orders with no projectpayouts do return something
+                # we only want to find the donations that have processed payouts attached to them
+                project__projectpayout=None
+            )
+            self._has_problematic_payouts = paid_out_donations.exists()
+        return self._has_problematic_payouts

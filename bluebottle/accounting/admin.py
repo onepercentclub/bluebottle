@@ -247,7 +247,7 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
 
     list_display = [
         'triple_deal_reference', 'payout_date', 'merchant_reference', 'payment_type',
-        'payment_link', 'matched', 'status', 'status_remarks',
+        'payment_link', 'matched', 'status', 'status_remarks', 'show_actions'
     ]
 
     list_filter = ['payment_type', DocdataPaymentMatchedListFilter, IntegrityStatusListFilter]
@@ -307,6 +307,27 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
             rdp.save()
         bulk_update_remote_docdata_spanning_multiple_weeks(queryset.all())
     find_matches.short_description = _("Try to match with backoffice.")
+
+    def show_actions(self, obj):
+        """
+        Collect the possible actions depending on ``obj.status``.
+        """
+        actions = {
+            RemoteDocdataPayment.IntegrityStatus.InconsistentChargeback: (
+                '<a href="%s">%s</a>' % (
+                    reverse('admin:banktransaction-unknown', kwargs={'pk': obj.pk}),
+                    _('mark donations failed')
+                ) if not obj.has_problematic_payouts else None,
+                '<a href="%s">%s</a>' % (
+                    reverse('admin:banktransaction-unknown', kwargs={'pk': obj.pk}),
+                    _('take cut from organization fees')
+                ) if obj.has_problematic_payouts else None,
+            )
+        }
+        actions = [a for a in (actions.get(obj.status) or []) if a is not None]
+        return " &bull; ".join(actions)
+    show_actions.allow_tags = True
+    show_actions.short_description = _('actions')
 
 
 class OrderPaymentIntegrityStatuses(DjangoChoices):

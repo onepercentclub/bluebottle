@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
+from dateutil.relativedelta import relativedelta
 from djchoices.choices import DjangoChoices, ChoiceItem
 from django_fsm.db.fields import FSMField, transition
 
@@ -169,7 +170,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
         if now.day <= 15:
             next_date = timezone.datetime(now.year, now.month, 15)
         else:
-            next_date = timezone.datetime(now.year, now.month, 1) + datetime.timedelta(days=20)
+            next_date = timezone.datetime(now.year, now.month, 1) + relativedelta(months=1)
         return next_date
 
     @transition(field=status, save=True, source=StatusDefinition.NEW, target=StatusDefinition.IN_PROGRESS)

@@ -69,7 +69,7 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
 
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
-            qs = qs.filter(Q(title__icontains=text) | 
+            qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
@@ -98,7 +98,7 @@ class MyTaskList(generics.ListAPIView):
         return BB_TASK_MODEL.objects.none()
 
 
-class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
+class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateDestroyAPIView):
     model = BB_TASK_MODEL
     permission_classes = (IsAuthorOrReadOnly, )
 
@@ -137,7 +137,7 @@ class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (IsMemberOrAuthorOrReadOnly, )
-    
+
 
 class TaskFileList(generics.ListCreateAPIView):
     model = BB_TASKFILE_MODEL

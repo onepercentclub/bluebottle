@@ -119,11 +119,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             'country': self.organization_1.country.pk,
             'postal_code': '1011TG',
             'phone_number': '(+31) 20 715 8980',
-            'website': 'http://onepercentclub.com',
             'email': 'info@onepercentclub.com',
-            'twitter': '@1percentclub',
-            'facebook': '/onepercentclub',
-            'skype': 'onepercentclub',
         }
 
         response = self.client.post(
@@ -146,11 +142,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(organization.country.pk, post_data['country'])
         self.assertEqual(organization.postal_code, post_data['postal_code'])
         self.assertEqual(organization.phone_number, post_data['phone_number'])
-        self.assertEqual(organization.website, post_data['website'])
         self.assertEqual(organization.email, post_data['email'])
-        self.assertEqual(organization.twitter, post_data['twitter'])
-        self.assertEqual(organization.facebook, post_data['facebook'])
-        self.assertEqual(organization.skype, post_data['skype'])
 
 
 class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
@@ -210,11 +202,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
             'country': self.organization_1.country.pk,
             'postal_code': '3581WJ',
             'phone_number': '(+31) 20 123 4567',
-            'website': 'http://www.utrecht.nl',
             'email': 'info@utrecht.nl',
-            'twitter': 'utrecht',
-            'facebook': '/utrecht',
-            'skype': 'utrecht',
         }
 
         response = self.client.put(
@@ -236,8 +224,4 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(organization.country.pk, put_data['country'])
         self.assertEqual(organization.postal_code, put_data['postal_code'])
         self.assertEqual(organization.phone_number, put_data['phone_number'])
-        self.assertEqual(organization.website, put_data['website'])
         self.assertEqual(organization.email, put_data['email'])
-        self.assertEqual(organization.twitter, put_data['twitter'])
-        self.assertEqual(organization.facebook, put_data['facebook'])
-        self.assertEqual(organization.skype, put_data['skype'])

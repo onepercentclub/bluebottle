@@ -82,8 +82,6 @@ class BaseOrganization(models.Model):
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    person = models.BooleanField(_('Person'), default=True,
-                                  help_text=_('Is person or a full organisation.'))
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -104,12 +102,8 @@ class BaseOrganization(models.Model):
     # Contact
     phone_number = models.CharField(_('phone number'), max_length=40,
                                     blank=True)
-    website = models.URLField(_('website'), blank=True)
 
     email = models.EmailField(blank=True)
-    twitter = models.CharField(_('twitter'), max_length=255, blank=True)
-    facebook = models.CharField(_('facebook'), max_length=255, blank=True)
-    skype = models.CharField(_('skype'), max_length=255, blank=True)
 
     tags = TaggableManager(blank=True, verbose_name=_('tags'))
 

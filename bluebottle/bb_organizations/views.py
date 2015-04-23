@@ -50,7 +50,7 @@ class ManageOrganizationList(ManageSerializerMixin, generics.ListCreateAPIView):
             member.save()
 
 
-class ManageOrganizationDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
+class ManageOrganizationDetail(ManageSerializerMixin, generics.RetrieveUpdateDestroyAPIView):
     model = ORGANIZATION_MODEL
     serializer_class = ManageOrganizationSerializer
     permission_classes = (IsOrganizationMember, )

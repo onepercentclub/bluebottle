@@ -14,8 +14,8 @@ DOCUMENT_MODEL = get_organizationdocument_model()
 
 ORGANIZATION_FIELDS = ( 'id', 'name', 'slug', 'address_line1', 'address_line2',
                         'city', 'state', 'country', 'postal_code', 'phone_number',
-                        'website', 'email', 'twitter', 'facebook', 'skype', 'documents',
-                        'person')
+                        'email', 'documents')
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,11 +38,7 @@ class ManageOrganizationSerializer(OrganizationSerializer):
         many=True, source='documents', read_only=True)
 
     name = serializers.CharField(required=True)
-    website = URLField(required=False)
     email = serializers.EmailField(required=False)
-    twitter = serializers.CharField(required=False)
-    facebook = serializers.CharField(required=False)
-    skype = serializers.CharField(required=False)
 
     class Meta:
         model = ORGANIZATION_MODEL

@@ -35,7 +35,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     inlines = (OrganizationMemberInline, OrganizationDocumentInline)
 
-    list_display = ('name', 'created', 'person')
+    list_display = ('name', 'created')
 
     search_fields = ('name',)
 

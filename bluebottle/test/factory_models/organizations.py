@@ -22,12 +22,7 @@ class OrganizationFactory(factory.DjangoModelFactory):
 
     # Contact
     phone_number = '(+31) 20 715 8980'
-    website = 'http://onepercentclub.com'
-
     email = 'info@onepercentclub.com'
-    twitter = '@1percentclub'
-    facebook = '/onepercentclub'
-    skype = 'onepercentclub'
 
 
 class OrganizationMemberFactory(factory.DjangoModelFactory):

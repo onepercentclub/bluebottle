@@ -38,16 +38,13 @@ class DefaultDonationSerializer(PreviewDonationSerializer):
         fields = PreviewDonationSerializer.Meta.fields + ('amount',)
 
 
-
-
 class LatestDonationProjectSerializer(ProjectPreviewSerializer):
-    task_count = serializers.IntegerField(source='task_count')
     owner = UserPreviewSerializer(source='owner')
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
 
     class Meta(ProjectPreviewSerializer):
         model = ProjectPreviewSerializer.Meta.model
-        fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count',
+        fields = ('id', 'title', 'image', 'status', 'pitch', 'country',
                   'amount_asked', 'amount_donated', 'amount_needed',
                   'deadline', 'status', 'owner')
 

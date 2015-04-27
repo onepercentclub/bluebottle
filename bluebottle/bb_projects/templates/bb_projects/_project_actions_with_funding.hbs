@@ -109,7 +109,12 @@
             </a>
         </div>
         <div class="project-supporters">
-            <strong><em>{% trans "Supporters" %}</em></strong>
+            <strong>
+                <em>
+                    {{projectDonations.meta.total}}
+                    {% trans "Supporters" %}
+                </em>
+            </strong>
             {{simple-project-supporters supporters=recentSupporters showProfile="showProfile" limit=13}}
         </div>
     </div>

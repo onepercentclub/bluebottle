@@ -39,6 +39,8 @@ class WallpostList(ListAPIView):
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(PROJECT_MODEL)
+        elif parent_type == 'fundraiser':
+            content_type = ContentType.objects.get_for_model(FUNDRAISER_MODEL)
         else:
             white_listed_apps = ['projects', 'tasks', 'fundraisers']
             content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(name=parent_type)

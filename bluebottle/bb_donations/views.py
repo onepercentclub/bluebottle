@@ -36,6 +36,7 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
+    paginate_by = 10
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'preview')
 
     def get_queryset(self):

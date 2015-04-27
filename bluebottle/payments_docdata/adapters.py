@@ -194,7 +194,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         client = gateway.DocdataClient(testing_mode)
 
-        info_text = _("Bluebottle donation %(payment_id)s") % {'payment_id': self.order_payment.id}
+        info_text = _("Booking Cares via onepercentclub %(payment_id)s") % {'payment_id': self.order_payment.id}
 
         response = client.create(
             merchant=merchant,

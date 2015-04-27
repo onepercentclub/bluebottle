@@ -152,6 +152,7 @@ INSTALLED_APPS = (
     'compressor',
     'registration',
     'rest_framework',
+    'rest_framework.authtoken',
     'taggit',
     'south',
     'sorl.thumbnail',

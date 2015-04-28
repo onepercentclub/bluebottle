@@ -21,3 +21,7 @@ On {{ date }} you contributed {{ amount }}. Below you’ll find an overview of t
 Thanks to your support we were able to realize so many projects.
 {% endblocktrans %}
 {% endblock %}
+
+{% block action %}
+<a href="{{ site }}" class="action-email">{% trans "Go to homepage" context 'recurring donation email' %}</a>
+{% endblock %}

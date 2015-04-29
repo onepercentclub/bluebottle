@@ -75,9 +75,9 @@ class IncrementalCSVImportMixin(ExtendibleModelAdminMixin):
                 # Success notification
                 messages.success(
                     request, _(
-                        '%d new records have been imported, '
-                        '%d have been already imported and have been ignored.'
-                    ) % (new_records, ignored_records)
+                        '{new} new records have been imported, '
+                        '{ignored} have been already imported and have been ignored.'
+                    ).format(new_records=new_records, ignored_records=ignored_records)
                 )
 
                 # Redirect after POST

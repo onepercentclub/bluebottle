@@ -6,7 +6,7 @@
 
 Hi {{ receiver_name }},
 
-Unfortunately you weren’t selected for the task '{{ task_title }}'
+Unfortunately you weren't selected for the task '{{ task_title }}'
 
 No worries, have a look at some similar tasks that need your skills.
 {% endblocktrans %}

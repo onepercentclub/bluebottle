@@ -11,11 +11,9 @@ from bluebottle.utils.email_backend import send_mail
 def mail_monthly_donation_processed_notification(monthly_order):
 
     receiver = monthly_order.user
-    cur_language = translation.get_language()
+    translation.activate(receiver.primary_language)
 
     subject = _("Thank you for your monthly support")
-
-    translation.activate(receiver.primary_language)
 
     send_mail(
         template_name='recurring_donations/mails/monthly_donation.mail',

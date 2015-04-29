@@ -91,13 +91,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'description', 'owner', 'status', 'meta_data', 'image',
                   'country', 'theme', 'tags', 'meta_data', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
-                  'amount_needed', 'amount_extra', 'account_holder_name',
-                  'account_holder_address', 'account_holder_postal_code',
-                  'account_holder_city', 'account_holder_country',
-                  'account_iban', 'account_bic', 'account_number',
-                  'account_bank_name', 'account_bank_address',
-                  'account_bank_postal_code', 'account_bank_city',
-                  'account_bank_country', 'account_other',
+                  'amount_needed', 'amount_extra'
                   )
 
 
@@ -207,7 +201,5 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                   'organization', 'language', 'account_holder_name',
                   'account_holder_address', 'account_holder_postal_code',
                   'account_holder_city', 'account_holder_country',
-                  'account_iban', 'account_bic', 'account_number',
-                  'account_bank_name', 'account_bank_address',
-                  'account_bank_postal_code', 'account_bank_city',
-                  'account_bank_country', 'account_other', 'tasks')
+                  'account_number', 'account_bic',
+                  'account_bank_country', 'tasks')

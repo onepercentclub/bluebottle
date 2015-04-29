@@ -10,7 +10,7 @@ from bluebottle.utils.email_backend import send_mail
 
 def mail_monthly_donation_processed_notification(monthly_order):
 
-	cur_language = translation.get_language()
+    cur_language = translation.get_language()
     receiver = monthly_order.user
     translation.activate(receiver.primary_language)
 

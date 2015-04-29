@@ -15,24 +15,34 @@ def _send_celery_mail(msg, send=False):
         Async function to send emails or do logging. For the logging we encode
         to utf_8 so we don't get Unicode errors.
     """
+    body = msg.body
+    if isinstance(body, unicode):
+        body = msg.body.encode('utf_8')
+
+    subject = msg.subject
+    if isinstance(subject, unicode):
+        subject = msg.subject.encode('utf_8')
+
     if send:
         try:
             logger.info("Trying to send mail to:\n\
                         recipients: {0}\n\
                         from: {1}\n\
                         subject: {2}\n\n".format(msg.to, msg.from_email,
-                                                 msg.subject.encode('utf_8')))
+                                                 subject))
             msg.send()
+
             logger.info("Succesfully sent mail:\n\
                         recipients: {0} \n\
                         from: {1}\n\
                         subject: {2} \n\
                         body:{3} \n\n"
                         .format(msg.to, msg.from_email,
-                                msg.subject.encode('utf_8'),
-                                msg.body.encode('utf_8')))
+                                subject,
+                                body))
         except Exception as e:
             logger.error("Error sending mail: {0}".format(e))
+            raise e
     else:
         logger.info("Sending mail off. Mail task received for msg:\n\
                     recipients: {0} \n\
@@ -40,8 +50,8 @@ def _send_celery_mail(msg, send=False):
                     subject: {2} \n\
                     body:{3} \n\n"
                     .format(msg.to, msg.from_email,
-                            msg.subject.encode('utf_8'),
-                            msg.body.encode('utf_8')))
+                            subject,
+                            body))
 
 
 @shared_task

@@ -14,7 +14,32 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 
 
-# ('donated', 'projects_online', 'projects_realized', 'tasks_realized', 'people_involved')
+
+class InitialStatisticsTest(BluebottleTestCase):
+
+    def setUp(self):
+        super(InitialStatisticsTest, self).setUp()
+
+        self.stats = Statistic.objects.create()
+
+        # Required by Project model save method
+        self.init_projects()
+
+        self.some_user = BlueBottleUserFactory.create()
+
+        self.some_project = ProjectFactory.create(amount_asked=5000, owner=self.some_user)
+
+    def tearDown(self):
+        self.stats.clear_cached()
+
+    def test_initial_stats(self):
+        self.assertEqual(self.stats.projects_online, 0)
+        self.assertEqual(self.stats.projects_realized, 0)
+        self.assertEqual(self.stats.tasks_realized, 0)
+        self.assertEqual(self.stats.people_involved, 0)
+        self.assertEqual(self.stats.donated, '000')
+
+
 class StatisticsTest(BluebottleTestCase):
 
     def setUp(self):
@@ -28,6 +53,8 @@ class StatisticsTest(BluebottleTestCase):
         self.some_user = BlueBottleUserFactory.create()
         self.another_user = BlueBottleUserFactory.create()
 
+        self.campaign_status = ProjectPhase.objects.get(slug='campaign')
+
         self.some_project = ProjectFactory.create(amount_asked=5000, owner=self.some_user)
         self.task = None
         self.donation = None
@@ -36,18 +63,13 @@ class StatisticsTest(BluebottleTestCase):
     def tearDown(self):
         self.stats.clear_cached()
 
-    def test_initial_stats(self):
-        self.assertEqual(self.stats.projects_online, 0)
-        self.assertEqual(self.stats.projects_realized, 0)
-        self.assertEqual(self.stats.tasks_realized, 0)
-        self.assertEqual(self.stats.people_involved, 0)
-        self.assertEqual(self.stats.donated, '000')
-
     def test_project_campaign_stats(self):
-        self.some_project.status = ProjectPhase.objects.get(slug='campaign')
+        self.some_project.status = self.campaign_status
         self.some_project.save()
 
         self.assertEqual(self.stats.projects_online, 1)
+        # People involved:
+        # - campaigner
         self.assertEqual(self.stats.people_involved, 1)
 
     def test_project_complete_stats(self):
@@ -56,13 +78,15 @@ class StatisticsTest(BluebottleTestCase):
 
         self.assertEqual(self.stats.projects_online, 0)
         self.assertEqual(self.stats.projects_realized, 1)
+        # People involved:
+        # - campaigner
         self.assertEqual(self.stats.people_involved, 1)
 
     def test_task_stats(self):
         self.assertEqual(self.stats.tasks_realized, 0)
         
         # project is in campaign phase
-        self.some_project.status = ProjectPhase.objects.get(slug='campaign')
+        self.some_project.status = self.campaign_status
         self.some_project.save()
 
         # Create a task and add other user as member
@@ -70,11 +94,37 @@ class StatisticsTest(BluebottleTestCase):
         TaskMemberFactory.create(task=self.task, member=self.another_user)
 
         self.assertEqual(self.stats.tasks_realized, 1)
+        # People involved:
+        # - campaigner
+        # - task member (another_user)
         self.assertEqual(self.stats.people_involved, 2)
         
     def test_donation_stats(self):
+        self.some_project.status = self.campaign_status
+        self.some_project.save()
+
         self.order = OrderFactory.create(user=self.another_user, status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=1000, order=self.order)
+        self.donation = DonationFactory.create(amount=1000, order=self.order, project=self.some_project, fundraiser=None)
 
         self.assertEqual(self.stats.donated, 1000)
+        # People involved:
+        # - campaigner
+        # - donator (another_user)
         self.assertEqual(self.stats.people_involved, 2)
+
+    def test_donation_total_stats(self):
+        self.some_project.status = self.campaign_status
+        self.some_project.save()
+
+        self.order1 = OrderFactory.create(user=self.another_user, status=StatusDefinition.SUCCESS)
+        self.donation1 = DonationFactory.create(amount=1000, order=self.order1, project=self.some_project, fundraiser=None)
+
+        self.order2 = OrderFactory.create(user=None, status=StatusDefinition.SUCCESS)
+        self.donation2 = DonationFactory.create(amount=1000, order=self.order2, project=self.some_project, fundraiser=None)
+
+        self.assertEqual(self.stats.donated, 2000)
+        # People involved:
+        # - campaigner
+        # - donator (another_user)
+        # - donator (anon)
+        self.assertEqual(self.stats.people_involved, 3)

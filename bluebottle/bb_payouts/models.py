@@ -257,6 +257,12 @@ class BaseProjectPayout(PayoutBase):
     def amount_failed(self):
         return self.get_amount_failed()
 
+    @property
+    def percent(self):
+        if not self.amount_payable: return "-"
+        
+        return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised)*100, 1))
+    
     def get_payout_rule(self):
         """
         Override this if you want different payout rules for different circumstances.

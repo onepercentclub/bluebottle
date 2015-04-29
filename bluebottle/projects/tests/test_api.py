@@ -61,6 +61,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
             project.save()
 
         self.projects_url = reverse('project_list')
+        self.manage_projects_url = reverse('project_manage_list')
 
 
 class ProjectApiIntegrationTest(ProjectEndpointTestCase):
@@ -129,38 +130,25 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         country = CountryFactory.create()
 
         project = ProjectFactory.create(title='test project',
+                                        owner=self.user,
                                         account_holder_name='test name',
                                         account_holder_address='test address',
                                         account_holder_postal_code='12345AC',
                                         account_holder_city='Amsterdam',
                                         account_holder_country=country,
-                                        account_iban='NL18ABNA0484869868',
-                                        account_bic='ABNANL2A',
-                                        account_number='123456789',
-                                        account_bank_name='Duck bank',
-                                        account_bank_address='Ducklane 12',
-                                        account_bank_postal_code='1234AB',
-                                        account_bank_country=country,
-                                        account_bank_city='Duckstad',
-                                        account_other='Other info'
+                                        account_number='NL18ABNA0484869868',
+                                        account_bank_country=country
                                         )
         project.save()
 
-        response = self.client.get(self.projects_url + str(project.slug),
+        response = self.client.get(self.manage_projects_url + str(project.slug),
                                    token=self.user_token)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
-
         self.assertEquals(response.data['title'], 'test project')
-        self.assertEquals(response.data['account_iban'], 'NL18ABNA0484869868')
+        self.assertEquals(response.data['account_number'], 'NL18ABNA0484869868')
         self.assertEquals(response.data['account_bic'], 'ABNANL2A')
-        self.assertEquals(response.data['account_number'], '123456789')
-        self.assertEquals(response.data['account_bank_name'], 'Duck bank')
-        self.assertEquals(response.data['account_bank_address'], 'Ducklane 12')
-        self.assertEquals(response.data['account_bank_postal_code'], '1234AB')
         self.assertEquals(response.data['account_bank_country'], country.id)
-        self.assertEquals(response.data['account_bank_city'], 'Duckstad')
-        self.assertEquals(response.data['account_other'], 'Other info')
 
         self.assertEquals(response.data['account_holder_name'], 'test name')
         self.assertEquals(response.data['account_holder_address'], 'test address')
@@ -327,10 +315,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_iban', 'account_bic', 'account_number',
-                              'account_bank_name', 'account_bank_address',
-                              'account_bank_postal_code', 'account_bank_city',
-                              'account_bank_country', 'account_other']
+        bank_detail_fields = ['account_number', 'account_bic', 'account_bank_country']
 
         for field in bank_detail_fields:
             self.assertIn(field, response.data)
@@ -368,15 +353,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         project_data = {
             'title': 'Project with bank details',
-            'account_iban': 'NL18ABNA0484869868',
+            'account_number': 'NL18ABNA0484869868',
             'account_bic': 'ABNANL2A',
-            'account_number': '',
-            'account_bank_name': 'Duck ,bank',
-            'account_bank_address': 'Ducklane 12',
-            'account_bank_postal_code': '1234AB',
-            'account_bank_city': 'Duckstad',
             'account_bank_country': country.pk,
-            'account_other': 'Other info',
             'account_holder_name': 'blabla',
             'account_holder_address': 'howdy',
             'account_holder_postal_code': '12334',
@@ -391,10 +370,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_iban', 'account_bic', 'account_number',
-                              'account_bank_name', 'account_bank_address',
-                              'account_bank_postal_code', 'account_bank_city',
-                              'account_bank_country', 'account_other',
+        bank_detail_fields = ['account_number', 'account_bic', 'account_bank_country',
                               'account_holder_name', 'account_holder_address',
                               'account_holder_postal_code',
                               'account_holder_city',
@@ -408,16 +384,16 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         project_data = {
             'title': 'Project with bank details',
-            'account_iban': 'NL18ABNA0484fesewf869868',
+            'account_number': 'NL18ABNA0484fesewf869868',
         }
 
         response = self.client.post(self.manage_projects_url, project_data,
                                     token=self.some_user_token)
 
+        # This will just pass now because we removed Iban check
+        # because the field can hold a non-Iban account too.
         self.assertEquals(response.status_code,
-                          status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(json.loads(response.content)['account_iban'][0],
-                          'Wrong IBAN length for country code NL.')
+                          status.HTTP_201_CREATED)
 
     def test_set_invalid_bic(self):
         """ Set invalid bic bank detail """

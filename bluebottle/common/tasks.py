@@ -57,7 +57,7 @@ def _send_celery_mail(msg, send=False):
 @shared_task
 def update_salesforce(tenant=None,
                       synchronize=False,
-                      updated=60,
+                      updated=False,
                       csv_export=False,
                       verbosity='3'):
     logger.info("Updating Salesforce")

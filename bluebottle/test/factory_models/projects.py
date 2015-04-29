@@ -48,15 +48,10 @@ class ProjectFactory(factory.DjangoModelFactory):
     amount_asked = 100
     allow_overfunding = True
 
-    account_iban = 'NL18ABNA0484869868'
     account_bic = 'ABNANL2A'
-    account_number = '123456789'
-    account_bank_name = 'Duck bank'
-    account_bank_address = 'Ducklane 12'
-    account_bank_postal_code = '1234AB'
+    account_number = 'NL18ABNA0484869868'
     account_bank_country = factory.SubFactory(CountryFactory)
-    account_bank_city = 'Duckstad'
-    account_other = 'Other info'
+
     account_holder_name = 'test name'
     account_holder_address = 'test'
     account_holder_postal_code = '1234ab'

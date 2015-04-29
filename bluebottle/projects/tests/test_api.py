@@ -393,7 +393,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # This will just pass now because we removed Iban check
         # because the field can hold a non-Iban account too.
         self.assertEquals(response.status_code,
-                          status.HTTP_200_OK)
+                          status.HTTP_201_CREATED)
 
     def test_set_invalid_bic(self):
         """ Set invalid bic bank detail """

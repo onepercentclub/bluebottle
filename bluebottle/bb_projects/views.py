@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
 from .models import ProjectTheme, ProjectPhase
 from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
-from .permissions import IsProjectOwner
+from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 
 PROJECT_MODEL = get_project_model()
@@ -131,7 +131,7 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
         self.current_status = object.status
 
         return object
-        
+
 
 class ProjectThemeList(generics.ListAPIView):
     model = ProjectTheme

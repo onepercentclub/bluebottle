@@ -52,7 +52,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
         Tests that the list of project phases can be obtained from its
         endpoint.
         """
-        
+
         response = self.client.get(reverse('project_phase_list'))
 
         self.assertEqual(response.status_code, 200)
@@ -72,7 +72,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
             self.assertIn('active', item)
             self.assertIn('editable', item)
             self.assertIn('viewable', item)
-    
+
 
 class TestProjectList(ProjectEndpointTestCase):
     """
@@ -102,7 +102,7 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('meta_data', item)
             self.assertIn('owner', item)
             self.assertIn('status', item)
-            
+
             #Ensure that non-viewable status are filtered out
             phase = ProjectPhase.objects.get(id=item['status'])
             self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
@@ -373,3 +373,19 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('country', data)
         self.assertIn('editable', data)
+
+    def test_api_manage_project_detail_check_not_editable(self):
+        """
+        Test successful request for a logged in user over the API endpoint for
+        manage Project detail.
+        """
+        self.project_1.set_status('campaign')
+
+        response = self.client.put(
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            token=self.user_token, data={'title': 'test-new'})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue('permission' in response.content)
+
+

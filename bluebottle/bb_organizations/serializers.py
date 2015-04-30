@@ -1,9 +1,4 @@
-from django_iban.validators import iban_validator, swift_bic_validator
-
 from rest_framework import serializers
-
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.utils.serializers import URLField
 
 from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
 
@@ -13,7 +8,7 @@ MEMBER_MODEL = get_organizationmember_model()
 
 ORGANIZATION_FIELDS = ( 'id', 'name', 'slug', 'address_line1', 'address_line2',
                         'city', 'state', 'country', 'postal_code', 'phone_number',
-                        'email', 'documents')
+                        'email', 'person')
 
 
 class OrganizationSerializer(serializers.ModelSerializer):

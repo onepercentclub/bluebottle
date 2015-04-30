@@ -24,6 +24,17 @@ class IsOwner(permissions.BasePermission):
         return isinstance(obj, PROJECT_MODEL) and obj.owner == request.user
 
 
+class IsEditableOrReadOnly(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request, so we'll always allow
+        # GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return obj.status.editable
+
+
 class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     """
     Permissions class used to allow access only to project owner for those

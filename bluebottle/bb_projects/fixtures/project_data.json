@@ -46,7 +46,7 @@
             "slug": "campaign",
             "name": "Campaign",
             "sequence": 6,
-            "editable": true,
+            "editable": false,
             "active": true,
             "description": ""
         }

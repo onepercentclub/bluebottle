@@ -261,13 +261,13 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
         self.assertEquals(response.data['status'], self.phase_submitted.id)
 
-        # Changing the slug for this project should just reset it to the
+        # Changing the project should be impossible now
         # previous value
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
-        self.assertEquals(response_2.data['slug'], response.data[
-                          'slug'], 'changing the slug should not be possible')
+        self.assertEquals(response_2.data['detail'], 'You do not have permission to perform this action.')
+        self.assertEquals(response_2.status_code, 403)
 
         # Set the project to plan phase from the backend
         project = Project.objects.get(slug=response.data.get('slug'))

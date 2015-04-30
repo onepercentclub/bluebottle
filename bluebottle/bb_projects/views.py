@@ -7,10 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
 from bluebottle.utils.utils import get_client_ip
 from .models import ProjectTheme, ProjectPhase
-from .serializers import (
-    ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer, ProjectDocumentSerializer
-)
-from .permissions import IsProjectOwner
+from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer,
+                          ProjectDocumentSerializer)
+from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 
 PROJECT_MODEL = get_project_model()
@@ -125,7 +124,7 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
 
 class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL
-    permission_classes = (IsProjectOwner, )
+    permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
 
     def get_object(self):
         # Call the superclass

@@ -7,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
 from bluebottle.utils.utils import get_client_ip
 from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
+from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer,
+                          ProjectDocumentSerializer)
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 

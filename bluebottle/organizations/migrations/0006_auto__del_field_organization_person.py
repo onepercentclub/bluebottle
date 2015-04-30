@@ -6,6 +6,9 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
+    depends_on = (
+        ("projects", "0019_move_documents_to_project"),
+    )
 
     def forwards(self, orm):
         # Deleting field 'Organization.person'

@@ -121,7 +121,7 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
 
 class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL
-    permission_classes = (IsProjectOwner, )
+    permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
 
     def get_object(self):
         # Call the superclass

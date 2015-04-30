@@ -367,6 +367,7 @@ LOGGING = {
 AUTH_USER_MODEL = 'members.Member'
 
 PROJECTS_PROJECT_MODEL = 'projects.Project'
+PROJECT_DOCUMENT_MODEL = 'projects.ProjectDocument'
 PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
 
 FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'

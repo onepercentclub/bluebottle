@@ -12,7 +12,6 @@ from taggit.managers import TaggableManager
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 
-from bluebottle.utils.fields import ImageField
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.model_dispatcher import get_project_phaselog_model
@@ -121,6 +120,40 @@ class BaseProjectManager(models.Manager):
             qs = queryset
 
         return qs
+
+
+class BaseProjectDocument(models.Model):
+
+    """ Document for an Project """
+
+    file = models.FileField(
+        upload_to='projects/documents')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+                               verbose_name=_('author'), blank=True, null=True)
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
+                                     related_name="documents")
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
+
+    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('project document')
+        verbose_name_plural = _('project documents')
+        abstract = True
+
+    @property
+    def document_url(self):
+        from bluebottle.utils.model_dispatcher import get_organizationdocument_model
+        document_model = get_organizationdocument_model()
+        content_type = ContentType.objects.get_for_model(document_model).id
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None:
+            return reverse('document_download_detail',
+                           kwargs={'content_type': content_type,
+                                   'pk': self.pk or 1})
+        return None
 
 
 class BaseProject(models.Model, GetTweetMixin):

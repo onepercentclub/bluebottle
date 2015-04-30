@@ -103,7 +103,7 @@ class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
 class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
     model = PROJECT_MODEL
     permission_classes = (IsAuthenticated, )
-    paginate_by = 10
+    paginate_by = 100
 
     def get_queryset(self):
         """

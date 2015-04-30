@@ -6,20 +6,24 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
-    depends_on = (
-        ("projects", "0019_move_documents_to_project"),
-    )
 
     def forwards(self, orm):
-        # Deleting field 'Organization.person'
-        db.delete_column(u'organizations_organization', 'person')
+        # Deleting model 'OrganizationDocument'
+        db.delete_table(u'organizations_organizationdocument')
 
 
     def backwards(self, orm):
-        # Adding field 'Organization.person'
-        db.add_column(u'organizations_organization', 'person',
-                      self.gf('django.db.models.fields.BooleanField')(default=True),
-                      keep_default=False)
+        # Adding model 'OrganizationDocument'
+        db.create_table(u'organizations_organizationdocument', (
+            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
+            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['members.Member'], null=True, blank=True)),
+            ('deleted', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
+            ('organization', self.gf('django.db.models.fields.related.ForeignKey')(related_name='documents', to=orm['organizations.Organization'])),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+        ))
+        db.send_create_signal(u'organizations', ['OrganizationDocument'])
 
 
     models = {
@@ -123,16 +127,6 @@ class Migration(SchemaMigration):
             'registration': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
             'state': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
-        },
-        u'organizations.organizationdocument': {
-            'Meta': {'object_name': 'OrganizationDocument'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['members.Member']", 'null': 'True', 'blank': 'True'}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'organization': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'documents'", 'to': u"orm['organizations.Organization']"}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         u'organizations.organizationmember': {

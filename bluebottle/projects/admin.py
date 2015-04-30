@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.projects.models import ProjectBudgetLine, Project
-from bluebottle.bb_projects.admin import BaseProjectAdmin
+from bluebottle.bb_projects.admin import BaseProjectAdmin, ProjectDocumentInline
 from bluebottle.utils.admin import export_as_csv_action
 
 from .models import PartnerOrganization
@@ -29,7 +29,7 @@ class ProjectBudgetLineInline(admin.TabularInline):
 
 
 class ProjectAdmin(BaseProjectAdmin):
-    inlines = (ProjectBudgetLineInline, )
+    inlines = (ProjectBudgetLineInline, ProjectDocumentInline)
 
     list_filter = BaseProjectAdmin.list_filter + \
         ('is_campaign', 'theme', 'partner_organization')

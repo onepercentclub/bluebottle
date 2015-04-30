@@ -8,38 +8,14 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Deleting field 'Organization.twitter'
-        db.delete_column(u'organizations_organization', 'twitter')
-
-        # Deleting field 'Organization.skype'
-        db.delete_column(u'organizations_organization', 'skype')
-
-        # Deleting field 'Organization.website'
-        db.delete_column(u'organizations_organization', 'website')
-
-        # Deleting field 'Organization.facebook'
-        db.delete_column(u'organizations_organization', 'facebook')
+        # Deleting field 'Organization.person'
+        db.delete_column(u'organizations_organization', 'person')
 
 
     def backwards(self, orm):
-        # Adding field 'Organization.twitter'
-        db.add_column(u'organizations_organization', 'twitter',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Organization.skype'
-        db.add_column(u'organizations_organization', 'skype',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Organization.website'
-        db.add_column(u'organizations_organization', 'website',
-                      self.gf('django.db.models.fields.URLField')(default='', max_length=200, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Organization.facebook'
-        db.add_column(u'organizations_organization', 'facebook',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
+        # Adding field 'Organization.person'
+        db.add_column(u'organizations_organization', 'person',
+                      self.gf('django.db.models.fields.BooleanField')(default=True),
                       keep_default=False)
 
 
@@ -139,7 +115,6 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'partner_organizations': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'person': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
             'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'registration': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),

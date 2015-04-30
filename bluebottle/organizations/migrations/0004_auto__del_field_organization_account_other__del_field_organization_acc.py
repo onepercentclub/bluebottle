@@ -215,6 +215,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'partner_organizations': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'person': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
             'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'registration': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),

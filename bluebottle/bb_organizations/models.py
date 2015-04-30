@@ -1,7 +1,5 @@
 from django_iban.fields import IBANField, SWIFTBICField
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
@@ -39,40 +37,6 @@ class BaseOrganizationMember(models.Model):
         verbose_name = _('organization member')
         verbose_name_plural = _('organization members')
         abstract = True
-
-
-class BaseOrganizationDocument(models.Model):
-
-    """ Document for an Organization """
-
-    file = models.FileField(
-        upload_to='organizations/documents')
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), blank=True, null=True)
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL,
-                                     related_name="documents")
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
-
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
-
-    class Meta:
-        verbose_name = _('organization document')
-        verbose_name_plural = _('organization documents')
-        abstract = True
-
-    @property
-    def document_url(self):
-        from bluebottle.utils.model_dispatcher import get_organizationdocument_model
-        document_model = get_organizationdocument_model()
-        content_type = ContentType.objects.get_for_model(document_model).id
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None:
-            return reverse('document_download_detail',
-                           kwargs={'content_type': content_type,
-                                   'pk': self.pk or 1})
-        return None
 
 
 class BaseOrganization(models.Model):

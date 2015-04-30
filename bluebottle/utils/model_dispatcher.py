@@ -54,10 +54,6 @@ def get_organizationmember_model():
     return get_model_class('ORGANIZATIONS_MEMBER_MODEL')
 
 
-def get_organizationdocument_model():
-    return get_model_class('ORGANIZATIONS_DOCUMENT_MODEL')
-
-
 def get_payment_logger_model():
     return get_model_class('PAYMENT_LOGGER_MODEL')
 

@@ -378,7 +378,6 @@ TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
 TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
 
 ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-ORGANIZATIONS_DOCUMENT_MODEL = 'organizations.OrganizationDocument'
 ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
 
 ORDERS_ORDER_MODEL = 'orders.Order'

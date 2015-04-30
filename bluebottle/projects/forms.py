@@ -1,10 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext as _
-from django.utils.html import format_html
 
-from bluebottle.utils.model_dispatcher import get_organizationdocument_model
+from .models import ProjectDocument
 
-DOCUMENT_MODEL = get_organizationdocument_model()
 
 # Widgets
 class UploadWidget(forms.FileInput):
@@ -23,13 +21,13 @@ class UploadWidget(forms.FileInput):
 
 
 # Forms
-class OrganizationDocumentForm(forms.ModelForm):
+class ProjectDocumentForm(forms.ModelForm):
     class Meta:
-        model = DOCUMENT_MODEL
+        model = ProjectDocument
         widgets = {
             'file': UploadWidget()
         }
 
     def __init__(self, *args, **kwargs):
-        super(OrganizationDocumentForm, self).__init__(*args, **kwargs)
+        super(ProjectDocumentForm, self).__init__(*args, **kwargs)
         self.fields['file'].required = False

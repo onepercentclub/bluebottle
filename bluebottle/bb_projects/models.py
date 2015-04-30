@@ -6,6 +6,8 @@ from django.db.models import options
 from django_iban.fields import IBANField, SWIFTBICField
 from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
+from django.core.urlresolvers import reverse
+from django.contrib.contenttypes.models import ContentType
 
 from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
@@ -144,8 +146,8 @@ class BaseProjectDocument(models.Model):
 
     @property
     def document_url(self):
-        from bluebottle.utils.model_dispatcher import get_organizationdocument_model
-        document_model = get_organizationdocument_model()
+        from bluebottle.utils.model_dispatcher import get_project_document_model
+        document_model = get_project_document_model()
         content_type = ContentType.objects.get_for_model(document_model).id
         # pk may be unset if not saved yet, in which case no url can be
         # generated.

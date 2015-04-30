@@ -80,7 +80,7 @@ class ProjectManager(models.Manager):
         return queryset
 
 
-class Projectdocument(BaseProjectDocument):
+class ProjectDocument(BaseProjectDocument):
     pass
 
 

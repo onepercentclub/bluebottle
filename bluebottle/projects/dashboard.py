@@ -38,6 +38,7 @@ class SubmittedPlans(DashboardModule):
         qs = qs.filter(status=ProjectPhase.objects.get(slug="plan-submitted"))
 
         self.children = qs[:self.limit]
+        import ipdb; ipdb.set_trace()
         if not len(self.children):
             self.pre_content = _('No submitted plans.')
         self._initialized = True

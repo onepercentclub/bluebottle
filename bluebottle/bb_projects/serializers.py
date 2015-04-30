@@ -6,11 +6,12 @@ from bs4 import BeautifulSoup
 
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer)
+    SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
 from bluebottle.geo.models import Country
 
 from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_project_phaselog_model)
+                                               get_project_phaselog_model,
+                                               get_project_document_model)
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -18,6 +19,8 @@ from bluebottle.geo.serializers import CountrySerializer
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
+
+PROJECT_DOCUMENT_MODEL = get_project_document_model()
 
 
 class StoryField(serializers.WritableField):
@@ -64,6 +67,14 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
+
+
+class ProjectDocumentSerializer(serializers.ModelSerializer):
+    file = PrivateFileSerializer()
+
+    class Meta:
+        model = PROJECT_DOCUMENT_MODEL
+        fields = ('id', 'project', 'file')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -127,6 +138,9 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     tags = TagSerializer()
 
     tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True, source='task_set', read_only=True)
+    documents = ProjectDocumentSerializer(
+        many=True, source='documents', read_only=True)
+
 
     def validate_account_iban(self, attrs, source):
         value = attrs.get(source)

@@ -1,28 +1,9 @@
 from django.contrib import admin
 
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationdocument_model, get_organizationmember_model
-from .forms import OrganizationDocumentForm
+from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()
-DOCUMENT_MODEL = get_organizationdocument_model()
-
-
-class OrganizationDocumentInline(admin.StackedInline):
-    model = DOCUMENT_MODEL
-    form = OrganizationDocumentForm
-    extra = 0
-    raw_id_fields = ('author', )
-    readonly_fields = ('download_url',)
-    fields = readonly_fields + ('file', 'author')
-
-    def download_url(self, obj):
-        url = obj.document_url
-
-        if url is not None:
-            return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
-        return '(None)'
-    download_url.allow_tags = True
 
 
 class OrganizationMemberInline(admin.StackedInline):
@@ -33,7 +14,7 @@ class OrganizationMemberInline(admin.StackedInline):
 
 class OrganizationAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
-    inlines = (OrganizationMemberInline, OrganizationDocumentInline)
+    inlines = (OrganizationMemberInline, )
 
     list_display = ('name', 'created')
 

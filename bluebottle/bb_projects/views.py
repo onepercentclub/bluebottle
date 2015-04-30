@@ -4,14 +4,18 @@ from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
+from bluebottle.utils.utils import get_client_ip
 from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
+from .serializers import (
+    ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer, ProjectDocumentSerializer
+)
 from .permissions import IsProjectOwner
 
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
+PROJECT_DOCUMENT_MODEL = get_project_document_model()
 
 
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
@@ -131,7 +135,7 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
         self.current_status = object.status
 
         return object
-        
+
 
 class ProjectThemeList(generics.ListAPIView):
     model = ProjectTheme
@@ -148,3 +152,25 @@ class ProjectUsedThemeList(ProjectThemeList):
 class ProjectThemeDetail(generics.RetrieveAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
+
+
+class ManageProjectDocumentList(generics.ListCreateAPIView):
+    model = PROJECT_DOCUMENT_MODEL
+    serializer_class = ProjectDocumentSerializer
+    paginate_by = 20
+    filter = ('project', )
+
+    def pre_save(self, obj):
+        obj.author = self.request.user
+        obj.ip_address = get_client_ip(self.request)
+
+
+class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
+    model = PROJECT_DOCUMENT_MODEL
+    serializer_class = ProjectDocumentSerializer
+    paginate_by = 20
+    filter = ('project', )
+
+    def pre_save(self, obj):
+        obj.author = self.request.user
+        obj.ip_address = get_client_ip(self.request)

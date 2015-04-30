@@ -23,7 +23,7 @@ class UploadWidget(forms.FileInput):
         return html
 
 
-class OrganizationDocumentForm(forms.ModelForm):
+class ProjectDocumentForm(forms.ModelForm):
     class Meta:
         model = DOCUMENT_MODEL
         widgets = {
@@ -31,5 +31,5 @@ class OrganizationDocumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(OrganizationDocumentForm, self).__init__(*args, **kwargs)
+        super(ProjectDocumentForm, self).__init__(*args, **kwargs)
         self.fields['file'].required = False

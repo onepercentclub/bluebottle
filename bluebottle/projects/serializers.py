@@ -4,7 +4,7 @@ from bluebottle.geo.serializers import CountrySerializer
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (SorlImageField, SlugGenericRelatedField, PolymorphicSerializer, EuroField,
-                                              TagSerializer, ImageSerializer, TaggableSerializerMixin)
+                                              TagSerializer, ImageSerializer, TaggableSerializerMixin, PrivateFileSerializer)
 from bluebottle.geo.models import Country
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bluebottle_drf2.serializers import OEmbedField
@@ -12,7 +12,7 @@ from bluebottle.bluebottle_drf2.serializers import OEmbedField
 from bluebottle.bb_projects.serializers import ProjectThemeSerializer
 from bluebottle.donations.models import Donation
 
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_document_model
 from bluebottle.bb_projects.serializers import (ProjectSerializer as BaseProjectSerializer,
                                                 ManageProjectSerializer as BaseManageProjectSerializer,
                                                 ProjectPreviewSerializer as BaseProjectPreviewSerializer)
@@ -20,6 +20,8 @@ from bluebottle.bb_projects.serializers import (ProjectSerializer as BaseProject
 from bs4 import BeautifulSoup
 
 PROJECT_MODEL = get_project_model()
+PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
 
 class StoryField(serializers.WritableField):
     def to_native(self, value):
@@ -60,6 +62,14 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectBudgetLine
         fields = ('description', 'amount')
+
+
+class ProjectDocumentSerializer(serializers.ModelSerializer):
+    file = PrivateFileSerializer()
+
+    class Meta:
+        model = PROJECT_DOCUMENT_MODEL
+        fields = ('id', 'project', 'file')
 
 
 class ProjectSerializer(BaseProjectSerializer):

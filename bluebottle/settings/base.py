@@ -367,6 +367,7 @@ LOGGING = {
 AUTH_USER_MODEL = 'members.Member'
 
 PROJECTS_PROJECT_MODEL = 'projects.Project'
+PROJECT_DOCUMENT_MODEL = 'projects.ProjectDocument'
 PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
 
 FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
@@ -377,7 +378,6 @@ TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
 TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
 
 ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-ORGANIZATIONS_DOCUMENT_MODEL = 'organizations.OrganizationDocument'
 ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
 
 ORDERS_ORDER_MODEL = 'orders.Order'

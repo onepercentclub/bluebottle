@@ -1,7 +1,6 @@
 import datetime
-from decimal import Decimal
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog
+from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -79,6 +78,10 @@ class ProjectManager(models.Manager):
         elif ordering:
             queryset = queryset.order_by(ordering)
         return queryset
+
+
+class ProjectDocument(BaseProjectDocument):
+    pass
 
 
 class Project(BaseProject):

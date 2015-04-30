@@ -30,6 +30,10 @@ def get_project_phaselog_model():
     return get_model_class('PROJECTS_PHASELOG_MODEL')
 
 
+def get_project_document_model():
+    return get_model_class('PROJECT_DOCUMENT_MODEL')
+
+
 def get_donation_model():
     return get_model_class('DONATIONS_DONATION_MODEL')
 
@@ -48,10 +52,6 @@ def get_organization_model():
 
 def get_organizationmember_model():
     return get_model_class('ORGANIZATIONS_MEMBER_MODEL')
-
-
-def get_organizationdocument_model():
-    return get_model_class('ORGANIZATIONS_DOCUMENT_MODEL')
 
 
 def get_payment_logger_model():
@@ -142,7 +142,7 @@ def get_model_mapping():
         + _map_model('fundraiser', 'FUNDRAISERS_FUNDRAISER_MODEL').items()
         + _map_model('organization', 'ORGANIZATIONS_ORGANIZATION_MODEL').items()
         + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()
-        + _map_model('organization_document', 'ORGANIZATIONS_DOCUMENT_MODEL').items()
+        + _map_model('project_document', 'PROJECT_DOCUMENT_MODEL').items()
         + _map_model('client', 'TENANT_MODEL').items()
     )
     return map

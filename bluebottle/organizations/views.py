@@ -4,18 +4,13 @@ from django.shortcuts import get_object_or_404
 from django.views.generic.detail import DetailView
 
 
-from bluebottle.organizations.models import Organization, OrganizationMember, OrganizationDocument
+from bluebottle.organizations.models import Organization, OrganizationMember
 from bluebottle.organizations.permissions import IsOrganizationMember
-from bluebottle.organizations.serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
+from bluebottle.organizations.serializers import OrganizationSerializer, ManageOrganizationSerializer
 
 
 from filetransfers.api import serve_file
 from rest_framework import generics
-
-
-from bluebottle.utils.utils import get_client_ip
-
-
 import os
 
 
@@ -54,33 +49,9 @@ class ManageOrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsOrganizationMember, )
 
 
-class ManageOrganizationDocumentList(generics.ListCreateAPIView):
-    model = OrganizationDocument
-    serializer_class = OrganizationDocumentSerializer
-    paginate_by = 20
-    filter = ('organization', )
-
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
-
-
-class ManageOrganizationDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = OrganizationDocument
-    serializer_class = OrganizationDocumentSerializer
-    paginate_by = 20
-    filter = ('organization', )
-
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
-
-
-
 # Non API views
 
 # Download private documents
-# OrganizationDocument handled by Bluebottle view
 
 class RegistrationDocumentDownloadView(DetailView):
     model = Organization

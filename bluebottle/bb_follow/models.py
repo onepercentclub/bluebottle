@@ -139,6 +139,11 @@ def create_follow(sender, instance, created, **kwargs):
     elif isinstance(instance, BaseDonation):
         # Create a Follow to the specific Project or Task if a donation was
         # made
+
+        # Don't setup following for monthly donation.
+        if instance.order.order_type == 'recurring':
+            return
+
         user = instance.user
         followed_object = instance.fundraiser or instance.project
 

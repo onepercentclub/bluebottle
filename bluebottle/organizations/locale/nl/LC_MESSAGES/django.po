@@ -159,6 +159,10 @@ msgstr "partner organisaties"
 msgid "phone number"
 msgstr "telefoonnummer"
 
+#: /Users/aethem/Documents/SWTR/onepercent/onepercentclub-site/env-2.7/src/bluebottle/bluebottle/bb_organizations/models.py:90
+msgid "website"
+msgstr "website"
+
 #: /Users/aethem/Documents/SWTR/onepercent/onepercentclub-site/env-2.7/src/bluebottle/bluebottle/bb_organizations/models.py:97
 msgid "tags"
 msgstr "trefwoorden"

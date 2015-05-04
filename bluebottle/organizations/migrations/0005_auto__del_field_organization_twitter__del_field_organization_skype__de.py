@@ -14,9 +14,6 @@ class Migration(SchemaMigration):
         # Deleting field 'Organization.skype'
         db.delete_column(u'organizations_organization', 'skype')
 
-        # Deleting field 'Organization.website'
-        db.delete_column(u'organizations_organization', 'website')
-
         # Deleting field 'Organization.facebook'
         db.delete_column(u'organizations_organization', 'facebook')
 
@@ -32,16 +29,10 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
                       keep_default=False)
 
-        # Adding field 'Organization.website'
-        db.add_column(u'organizations_organization', 'website',
-                      self.gf('django.db.models.fields.URLField')(default='', max_length=200, blank=True),
-                      keep_default=False)
-
         # Adding field 'Organization.facebook'
         db.add_column(u'organizations_organization', 'facebook',
                       self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
                       keep_default=False)
-
 
     models = {
         u'auth.group': {

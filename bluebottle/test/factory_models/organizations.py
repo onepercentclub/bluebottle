@@ -22,6 +22,8 @@ class OrganizationFactory(factory.DjangoModelFactory):
 
     # Contact
     phone_number = '(+31) 20 715 8980'
+    website = 'http://onepercentclub.com'
+
     email = 'info@onepercentclub.com'
 
 
@@ -31,4 +33,3 @@ class OrganizationMemberFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
     function = 'owner'
     organization = factory.SubFactory(OrganizationFactory)
-

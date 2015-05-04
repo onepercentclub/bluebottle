@@ -66,6 +66,7 @@ class BaseOrganization(models.Model):
     # Contact
     phone_number = models.CharField(_('phone number'), max_length=40,
                                     blank=True)
+    website = models.URLField(_('website'), blank=True)
 
     email = models.EmailField(blank=True)
 

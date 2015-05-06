@@ -10,6 +10,7 @@ from bluebottle.utils.email_backend import send_mail
 
 def mail_monthly_donation_processed_notification(monthly_order):
 
+    receiver = monthly_order.user
     subject = _("Thank you for your monthly support")
 
     send_mail(

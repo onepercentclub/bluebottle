@@ -13,7 +13,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
-
+from django.utils.encoding import force_unicode
 
 logger = logging.getLogger('console')
 
@@ -81,7 +81,10 @@ def create_message(template_name=None, to=None, subject=None, **kwargs):
             '{0}.txt'.format(template_name)).render(c)
         html_content = get_template(
             '{0}.html'.format(template_name)).render(c)
-        msg = EmailMultiAlternatives(subject=subject,
+
+        # Calling force_unicode on the subject below in case the subject
+        # is being translated using ugettext_lazy.
+        msg = EmailMultiAlternatives(subject=force_unicode(subject),
                                      body=text_content,
                                      to=[to.email])
         msg.activated_language = translation.get_language()

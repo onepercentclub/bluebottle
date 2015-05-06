@@ -1,6 +1,8 @@
+from django.db import connection
 from django.core.mail import EmailMultiAlternatives as BaseEmailMultiAlternatives
 
 from bluebottle.clients import properties
+
 
 def construct_from_header():
     """
@@ -8,6 +10,15 @@ def construct_from_header():
         None if no sender data (address) is available, which shoud result
         in the system default being used.
     """
+
+    # The tenant properties will not be set if the call to this method
+    # does not come via a django request => we need to setup the tenant
+    # properties first. 
+    # properties.tenant_properties will be an empty dict if the tenant
+    # properties has not be initialised yet.
+    if not properties.tenant_properties and connection.tenant:
+        properties.set_tenant(connection.tenant)
+
     mail_address = properties.TENANT_MAIL_PROPERTIES.get('address')
     mail_name = properties.TENANT_MAIL_PROPERTIES.get('sender')
     if not mail_name:

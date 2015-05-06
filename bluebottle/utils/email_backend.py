@@ -9,8 +9,10 @@ from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.clients.utils import tenant_url, tenant_language
+from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
+
+from tenant_extras.utils import TenantLanguage
 
 
 logger = logging.getLogger('console')
@@ -73,7 +75,7 @@ def create_message(template_name=None, to=None, subject=None, **kwargs):
     else:
         language = properties.LANGUAGE_CODE
 
-    with tenant_language(language):
+    with TenantLanguage(language):
         c = ClientContext(kwargs)
         text_content = get_template(
             '{0}.txt'.format(template_name)).render(c)

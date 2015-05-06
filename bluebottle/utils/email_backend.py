@@ -9,7 +9,7 @@ from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.clients.utils import tenant_url
+from bluebottle.clients.utils import tenant_url, tenant_language
 from bluebottle.clients import properties
 
 
@@ -73,19 +73,18 @@ def create_message(template_name=None, to=None, subject=None, **kwargs):
     else:
         language = properties.LANGUAGE_CODE
 
-    translation.activate(language)
-
-    c = ClientContext(kwargs)
-    text_content = get_template(
-        '{0}.txt'.format(template_name)).render(c)
-    html_content = get_template(
-        '{0}.html'.format(template_name)).render(c)
-    msg = EmailMultiAlternatives(subject=subject,
-                                 body=text_content,
-                                 to=[to.email])
-    msg.activated_language = translation.get_language()
-    msg.attach_alternative(html_content, "text/html")
-    return msg
+    with tenant_language(language):
+        c = ClientContext(kwargs)
+        text_content = get_template(
+            '{0}.txt'.format(template_name)).render(c)
+        html_content = get_template(
+            '{0}.html'.format(template_name)).render(c)
+        msg = EmailMultiAlternatives(subject=subject,
+                                     body=text_content,
+                                     to=[to.email])
+        msg.activated_language = translation.get_language()
+        msg.attach_alternative(html_content, "text/html")
+        return msg
 
 
 # We need a wrapper outside of Celery to prepare the email because
@@ -118,8 +117,6 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
         msg = None
         logger.error("Exception while rendering email template: {0}".format(e))
         return
-    finally:
-        translation.deactivate()
 
     # Explicetly set CELERY usage in properties. Used primarily for
     # testing purposes.

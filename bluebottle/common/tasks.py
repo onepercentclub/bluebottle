@@ -57,16 +57,19 @@ def _send_celery_mail(msg, send=False):
 @shared_task
 def update_salesforce(tenant=None,
                       synchronize=False,
-                      updated=None,
+                      updated=False,
                       csv_export=False,
-                      verbosity=3):
+                      verbosity='3'):
     logger.info("Updating Salesforce")
+
     try:
         call_command('sync_salesforce',
                      tenant=tenant,
                      synchronize=synchronize,
                      updated=updated,
-                     verbosity=verbosity)
+                     verbosity=verbosity,
+                     csv_export=csv_export)
     except Exception as e:
         logger.error("Error running salesforce celery task: {0}".format(e))
+
     logger.info("Finished updating Salesforce")

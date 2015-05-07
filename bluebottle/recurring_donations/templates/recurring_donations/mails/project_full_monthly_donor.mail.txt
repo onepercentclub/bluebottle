@@ -14,3 +14,7 @@ Let's do some more good! Choose a new project you'd like to support or make it e
 Thanks for you loyal support! 
 {% endblocktrans %}
 {% endblock %}
+
+{% block action %}
+    {% trans 'Browse all projects' context 'email' %}: {{ site }}{{ link }}
+{% endblock %}

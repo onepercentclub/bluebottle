@@ -16,8 +16,8 @@ dependency_links = [
     'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
     'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
     'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.12.zip#egg=django-bb-salesforce-1.1.12',
+    'https://github.com/onepercentclub/django-tenant-extras/archive/1.7.5.zip#egg=django-tenant-extras-1.7.5'
 ]
-
 
 install_requires = [
     'Babel==1.3',
@@ -76,6 +76,7 @@ install_requires = [
     'djangorestframework-jwt==1.1.1',
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
+    'django-tenant-extras==1.7.5',
 
     # Github requirements
     'django-taggit-autocomplete-modified<=0.1.1',

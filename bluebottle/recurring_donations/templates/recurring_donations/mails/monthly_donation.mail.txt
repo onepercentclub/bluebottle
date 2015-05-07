@@ -19,5 +19,5 @@ Thanks to your support we were able to realize so many projects.
 {% endblock %}
 
 {% block action %}
-    {% trans 'Browse all projects' context 'email' %}: {{ site }}{{ link }}
+    {% trans 'Browse all projects' %}: {{ site }}{{ link }}
 {% endblock %}

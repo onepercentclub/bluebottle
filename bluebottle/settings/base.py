@@ -257,6 +257,7 @@ TENANT_APPS = (
 INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)
 
 TENANT_MODEL = "clients.Client"
+TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SOUTH_DATABASE_ADAPTERS = {
     'default': 'south.db.postgresql_psycopg2',
@@ -425,6 +426,8 @@ HTML_ACTIVATION_EMAIL = True
 SEND_WELCOME_MAIL = False
 
 TENANT_MAIL_PROPERTIES = {}
+
+MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'clients')
 
 TENANT_BASE = os.path.join(PROJECT_ROOT, 'static', 'media')
 

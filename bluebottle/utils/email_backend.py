@@ -12,6 +12,8 @@ from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
+from tenant_extras.utils import TenantLanguage
+from django.utils.encoding import force_unicode
 
 logger = logging.getLogger('console')
 
@@ -73,19 +75,21 @@ def create_message(template_name=None, to=None, subject=None, **kwargs):
     else:
         language = properties.LANGUAGE_CODE
 
-    translation.activate(language)
+    with TenantLanguage(language):
+        c = ClientContext(kwargs)
+        text_content = get_template(
+            '{0}.txt'.format(template_name)).render(c)
+        html_content = get_template(
+            '{0}.html'.format(template_name)).render(c)
 
-    c = ClientContext(kwargs)
-    text_content = get_template(
-        '{0}.txt'.format(template_name)).render(c)
-    html_content = get_template(
-        '{0}.html'.format(template_name)).render(c)
-    msg = EmailMultiAlternatives(subject=subject,
-                                 body=text_content,
-                                 to=[to.email])
-    msg.activated_language = translation.get_language()
-    msg.attach_alternative(html_content, "text/html")
-    return msg
+        # Calling force_unicode on the subject below in case the subject
+        # is being translated using ugettext_lazy.
+        msg = EmailMultiAlternatives(subject=force_unicode(subject),
+                                     body=text_content,
+                                     to=[to.email])
+        msg.activated_language = translation.get_language()
+        msg.attach_alternative(html_content, "text/html")
+        return msg
 
 
 # We need a wrapper outside of Celery to prepare the email because
@@ -118,8 +122,6 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
         msg = None
         logger.error("Exception while rendering email template: {0}".format(e))
         return
-    finally:
-        translation.deactivate()
 
     # Explicetly set CELERY usage in properties. Used primarily for
     # testing purposes.

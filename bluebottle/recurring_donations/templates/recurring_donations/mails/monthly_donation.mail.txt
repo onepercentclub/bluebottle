@@ -17,3 +17,7 @@ On {{ date }} you contributed {{ amount }}. Below you'll find an overview of the
 Thanks to your support we were able to realize so many projects.
 {% endblocktrans %}
 {% endblock %}
+
+{% block action %}
+    {% trans 'Browse all projects' context 'email' %}: {{ site }}{{ link }}
+{% endblock %}

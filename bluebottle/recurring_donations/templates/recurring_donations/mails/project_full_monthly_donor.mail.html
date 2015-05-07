@@ -15,3 +15,9 @@ Thanks for you loyal support!
 <br/><br/>
 {% endblocktrans %}
 {% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ link }}" class="action">
+        {% trans 'Browse all project' context 'email' %}
+    </a>
+{% endblock %}

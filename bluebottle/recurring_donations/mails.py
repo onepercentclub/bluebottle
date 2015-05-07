@@ -12,8 +12,6 @@ def mail_monthly_donation_processed_notification(monthly_order):
 
     cur_language = translation.get_language()
     receiver = monthly_order.user
-    translation.activate(receiver.primary_language)
-
     subject = _("Thank you for your monthly support")
 
     translation.activate(cur_language)
@@ -21,10 +19,10 @@ def mail_monthly_donation_processed_notification(monthly_order):
     send_mail(
         template_name='recurring_donations/mails/monthly_donation.mail',
         subject=subject,
-        site=tenant_url(),
         to=receiver,
         order=monthly_order,
         receiver_first_name=receiver.first_name.capitalize(),
+        link='/go/projects',
         date=format_date(locale='nl_NL'),
         amount=format_currency(monthly_order.amount, 'EUR', locale='nl_NL')
     )
@@ -32,16 +30,7 @@ def mail_monthly_donation_processed_notification(monthly_order):
 
 def mail_project_funded_monthly_donor_notification(receiver, project):
 
-    cur_language = translation.get_language()
-
-    if receiver.primary_language:
-        translation.activate(receiver.primary_language)
-    else:
-        translation.activate(properties.LANGUAGE_CODE)
-
     subject = _("Congratulations: project completed!")
-
-    translation.activate(cur_language)
 
     send_mail(
         template_name='recurring_donations/mails/project_full_monthly_donor.mail',

@@ -1,10 +1,16 @@
 from decimal import Decimal
 from datetime import timedelta
+import logging
+
+from django.core.exceptions import ValidationError
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
+from localflavor.generic.validators import IBANValidator
 
 from django.utils import timezone
+
+logger = logging.getLogger()
 
 
 def _set_properties():
@@ -13,7 +19,7 @@ def _set_properties():
     # and setup the tenant properties if required.
     from bluebottle.clients import properties
     from django.db import connection
-    
+
     try:
         tenant = properties.tenant 
     except AttributeError:
@@ -71,8 +77,13 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 payout.save()
 
                 # Set payment details
+                try:
+                    IBANValidator()(project.account_number)
+                    payout.receiver_account_iban = project.account_number
+                except ValidationError as e:
+                    logger.info("IBAN error for payout id {0} and project id: {1}: {2}".format(payout.id, project.id, e.message))
+
                 payout.receiver_account_bic = project.account_bic
-                payout.receiver_account_iban = project.account_number
                 payout.receiver_account_number = project.account_number
                 payout.receiver_account_name = project.account_holder_name
                 payout.receiver_account_city = project.account_holder_city

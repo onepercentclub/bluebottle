@@ -543,7 +543,10 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertTrue(not payout.completed)
 
     def test_invalid_iban(self):
-        """ Test that the iban field is not populated if the account number is not IBAN """
+        """
+        Test that the iban field is not populated if the account number
+        is not a valid IBAN
+        """
         self.project.account_number = "nefwkjfnwkflewblablabla"
         self.project.save()
 
@@ -605,4 +608,5 @@ class PayoutTestCase(BluebottleTestCase):
         # Fetch payout
         payout = ProjectPayout.objects.all()[0]
 
-        self.assertEqual(payout.receiver_account_iban, 'DE89370400440532013000')
+        self.assertEqual(payout.receiver_account_iban,
+                         'DE89370400440532013000')

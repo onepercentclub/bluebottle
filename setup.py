@@ -36,7 +36,7 @@ install_requires = [
     'django-extensions==1.1.1',
     'django-filter==0.6',
     'django-iban==0.2.1',
-    'django-localflavor==1.0',
+    'django-localflavor==1.1',
     'django-social-auth==0.7.23',
     'django-taggit==0.12.1',
     'django-templatetag-handlebars==1.2.0',

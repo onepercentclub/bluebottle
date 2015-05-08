@@ -542,3 +542,71 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEqual(payout.status, 'new')
         self.assertTrue(not payout.completed)
 
+    def test_invalid_iban(self):
+        """
+        Test that the iban field is not populated if the account number
+        is not a valid IBAN
+        """
+        self.project.account_number = "nefwkjfnwkflewblablabla"
+        self.project.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+        self.donation.order.save()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEqual(payout.receiver_account_iban, '')
+
+    def test_valid_iban_nl(self):
+        """
+        Test that the iban field is populated if the account number is
+        valid Dutch account
+        """
+        self.project.account_number = "NL91ABNA0417164300"
+        self.project.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+        self.donation.order.save()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEqual(payout.receiver_account_iban, 'NL91ABNA0417164300')
+
+    def test_valid_iban_de(self):
+        """
+        Test that the iban field is populated if the account number
+        is a valid German account"""
+        self.project.account_number = "DE89370400440532013000"
+        self.project.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+        self.donation.order.save()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEqual(payout.receiver_account_iban,
+                         'DE89370400440532013000')

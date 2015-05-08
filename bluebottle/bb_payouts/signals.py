@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
-from localflavor.generic.validators import IBANValidator
 
 from django.utils import timezone
 
@@ -32,6 +31,8 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     Create or update Payout for finished projects.
     Project finish when deadline is hit or when it's changed manually in admin.
     """
+    from localflavor.generic.validators import IBANValidator
+
 
     project = instance
     now = timezone.now()
@@ -76,7 +77,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
                 payout.save()
 
-                # Set payment details
+                # # Set payment details
                 try:
                     IBANValidator()(project.account_number)
                     payout.receiver_account_iban = project.account_number

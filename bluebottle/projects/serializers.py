@@ -93,13 +93,17 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
     task_count = serializers.IntegerField(source='task_count')
     owner = UserPreviewSerializer(source='owner')
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
+    is_funding = serializers.Field()
+    people_needed = serializers.Field()
+    people_registered = serializers.Field()
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
         fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count',
                   'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
                   'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
-                  'deadline', 'status', 'owner', 'partner')
+                  'deadline', 'status', 'owner', 'partner', 'is_funding', 'people_needed',
+                  'people_registered')
 
 
 class ManageProjectSerializer(BaseManageProjectSerializer):

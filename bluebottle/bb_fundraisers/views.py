@@ -8,6 +8,8 @@ from rest_framework import permissions, exceptions
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
 
@@ -17,7 +19,7 @@ FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL', 'de
 class FundraiserListView(ListCreateAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
     paginate_by = 10
     paginate_by_param = 'page_size'
 
@@ -58,6 +60,6 @@ class FundraiserListView(ListCreateAPIView):
 class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
 
 

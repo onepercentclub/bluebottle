@@ -343,6 +343,11 @@ class Project(BaseProject):
         if self.amount_asked:
             self.update_amounts(False)
 
+        # make sure the deadline is set to the end of the day
+        self.deadline = datetime.datetime.combine(
+            self.deadline, datetime.time(23, 59, 59, tzinfo=self.deadline.tzinfo)
+        )
+
         #Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
                                                            Q(slug="done-incomplete") |

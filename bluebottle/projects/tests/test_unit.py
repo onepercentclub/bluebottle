@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, time
 from decimal import Decimal
 from django.test import TestCase
 from django.utils import timezone
@@ -43,6 +43,14 @@ class TestProjectStatusUpdate(BluebottleTestCase):
                                                      status=self.campaign)
 
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
+
+    def test_deadline_end_of_day(self):
+        self.expired_project.save()
+
+        self.assertTrue(
+            self.expired_project.deadline.time() == time(23, 59, 59),
+            'Project deadlines are always at the end of the day'
+        )
 
     def test_expired_too_little(self):
         """ Not enough donated - status done incomplete """

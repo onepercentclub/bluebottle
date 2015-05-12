@@ -11,6 +11,7 @@ from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, Projec
                           ProjectDocumentSerializer)
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
@@ -101,7 +102,7 @@ class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
 
 class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
     model = PROJECT_MODEL
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
     paginate_by = 100
 
     def get_queryset(self):

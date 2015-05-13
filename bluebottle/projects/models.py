@@ -1,4 +1,5 @@
 import datetime
+import pytz
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
@@ -340,13 +341,16 @@ class Project(BaseProject):
         if not self.deadline:
             self.deadline = timezone.now() + datetime.timedelta(days=30)
 
+        # make sure the deadline is set to the end of the day, amsterdam time
+        tz = pytz.timezone('Europe/Amsterdam')
+        local_time = self.deadline.astimezone(tz)
+        if local_time.time() != datetime.time(23, 59, 59):
+            self.deadline = tz.localize(
+                datetime.datetime.combine(local_time.date(), datetime.time(23, 59, 59))
+            )
+
         if self.amount_asked:
             self.update_amounts(False)
-
-        # make sure the deadline is set to the end of the day
-        self.deadline = datetime.datetime.combine(
-            self.deadline, datetime.time(23, 59, 59, tzinfo=self.deadline.tzinfo)
-        )
 
         #Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
@@ -364,7 +368,6 @@ class Project(BaseProject):
                                                            Q(slug="done-incomplete") |
                                                            Q(slug="done-stopped")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
-
 
         super(Project, self).save(*args, **kwargs)
 

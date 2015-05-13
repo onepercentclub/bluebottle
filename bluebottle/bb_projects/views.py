@@ -26,7 +26,7 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     def get_queryset(self):
         query = self.request.QUERY_PARAMS
         qs = PROJECT_MODEL.objects.search(query=query)
-        qs = qs.annotate(people_needed=Sum('task__people_needed'))
+        qs = qs.annotate(people_requested=Sum('task__people_needed'))
         qs = qs.annotate(people_registered=Count('task__members'))
 
         return qs.filter(status__viewable=True)
@@ -37,7 +37,7 @@ class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
-        qs = qs.annotate(people_needed=Sum('task__people_needed'))
+        qs = qs.annotate(people_requested=Sum('task__people_needed'))
         qs = qs.annotate(people_registered=Count('task__members'))
 
         return qs

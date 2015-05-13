@@ -100,7 +100,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'url', 'username', 'first_name', 'last_name',
                   'full_name', 'short_name', 'picture',
                   'primary_language', 'about_me', 'date_joined', 'location',
-                  'email', 'address', 'birthdate', 'gender', 'newsletter')
+                  'email', 'address', 'birthdate', 'gender', 'newsletter',
+                  'campaign_notifications')
 
 
 # Thanks to Neamar Tucote for this code:

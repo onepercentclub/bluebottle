@@ -354,10 +354,10 @@ class PrivateFileSerializer(FileSerializer):
             return None
         content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
         pk = obj.pk
-        url = reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': pk})
+        url = reverse('document_download_detail',
+                      kwargs={'content_type': content_type, 'pk': pk})
         return {'name': os.path.basename(value.name),
-                'url': url,
-                'size': defaultfilters.filesizeformat(value.size)}
+                'url': url}
 
 
 #TODO: PROBABLY THOSE TAG SERIALIZER ARE NOT USED ANYMORE, WAITING TO CLEAN ALL APPS FOR DELETING THEM

@@ -212,7 +212,7 @@ class Project(BaseProject):
 
     @property
     def is_funding(self):
-        return self.amount_asked == 0
+        return self.amount_asked > 0
 
     def supporters_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API

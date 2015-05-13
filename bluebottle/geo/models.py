@@ -90,6 +90,10 @@ class Location(models.Model):
 
     zoom_level = models.IntegerField(null=True, blank=True)
 
+    city = models.CharField(_('city'), blank=True, null=True, max_length=255)
+
+    country = models.ForeignKey('geo.Country', blank=True, null=True)
+
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
 

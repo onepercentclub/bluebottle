@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.core import serializers
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -282,6 +282,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return qs.count()
 
     @property
+    def time_spent(self):
+        """ Returns the number of donations a user has made """
+        qs = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized'])
+        return qs.aggregate(Sum('time_spent'))['time_spent__sum']
+
+    @property
     def project_count(self):
         """ Return the number of projects a user started / is owner of """
         return get_project_model().objects.filter(owner=self).count()
@@ -289,7 +295,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def fundraiser_count(self):
         return get_fundraiser_model().objects.filter(owner=self).count()
-
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)

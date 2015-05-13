@@ -211,6 +211,10 @@ class Project(BaseProject):
     def is_realised(self):
         return self.status in ProjectPhase.objects.filter(slug__in=['done-complete', 'done-incomplete', 'realised']).all()
 
+    @property
+    def is_funding(self):
+        return self.amount_asked > 0
+
     def supporters_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations

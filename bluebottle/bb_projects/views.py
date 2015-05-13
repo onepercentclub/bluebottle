@@ -1,5 +1,6 @@
 from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin
 from django.db.models.query_utils import Q
+from django.db.models import Count, Sum
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
@@ -26,7 +27,10 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     def get_queryset(self):
         query = self.request.QUERY_PARAMS
         qs = PROJECT_MODEL.objects.search(query=query)
-        return qs.filter(status__viewable=True).all()
+        qs = qs.annotate(people_requested=Sum('task__people_needed'))
+        qs = qs.annotate(people_registered=Count('task__members'))
+
+        return qs.filter(status__viewable=True)
 
 
 class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
@@ -34,6 +38,9 @@ class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
+        qs = qs.annotate(people_requested=Sum('task__people_needed'))
+        qs = qs.annotate(people_registered=Count('task__members'))
+
         return qs
 
 

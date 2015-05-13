@@ -150,6 +150,17 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     objects = BlueBottleUserManager()
 
+    # The Fields are back again...
+
+    website = models.URLField(_('website'), blank=True)
+
+    facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
+
+    twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
+
+    skypename = models.CharField(_('skype profile'), max_length=32, blank=True)
+
+
     USERNAME_FIELD = 'email'
     # Only email and password is required to create a user account but this is how you'd require other fields.
     # REQUIRED_FIELDS = ['first_name', 'last_name']

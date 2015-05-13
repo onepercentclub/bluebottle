@@ -95,13 +95,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
                                              default=properties.LANGUAGE_CODE)
     location = serializers.PrimaryKeyRelatedField(required=False)
 
+    project_count = serializers.Field()
+    donation_count = serializers.Field()
+    fundraiser_count = serializers.Field()
+    time_spent = serializers.Field()
+
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'username', 'first_name', 'last_name',
                   'full_name', 'short_name', 'picture',
                   'primary_language', 'about_me', 'date_joined', 'location',
                   'email', 'address', 'birthdate', 'gender', 'newsletter',
-                  'campaign_notifications')
+                  'campaign_notifications', 'project_count', 'donation_count',
+                  'fundraiser_count', 'time_spent')
 
 
 # Thanks to Neamar Tucote for this code:

@@ -4,23 +4,57 @@ from datetime import date, timedelta
 from django.test import TestCase
 from rest_framework import status
 
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
 
-from bluebottle.test.utils import InitProjectDataMixin
 from bluebottle.suggestions.models import Suggestion
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
-class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
+
+class PublicSuggestionsListIntegrationTest(BluebottleTestCase):
+    """
+    Integration tests for the public suggestion api
+    """
+    def setUp(self):
+        super(PublicSuggestionsListIntegrationTest, self).setUp()
+        self.user = ProjectThemeFactory.create()
+        self.suggestion_list_url = "/api/suggestions/public/"
+
+    def test_retrieve_not_allowed(self):
+        response = self.client.get(self.suggestion_list_url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_create_unauthorized(self):
+        response = self.client.post(
+            self.suggestion_list_url,
+            data={
+                'title': 'test',
+                'pitch': 'test pitch',
+                'org_name': 'test_org',
+                'org_website': 'http://example.com',
+                'org_email': 'test@example.com',
+                'org_phone': '+31612345678',
+                'org_contactname': 'test',
+                'deadline': datetime.datetime.now() + datetime.timedelta(days=1),
+                'theme': ProjectTheme.objects.all()[0].pk,
+                'destination': 'test destination'
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class SuggestionsListIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Suggestion API.
     """
     def setUp(self):
-        self.init_projects()
-
+        super(SuggestionsListIntegrationTest, self).setUp()
         self.user_1 = BlueBottleUserFactory.create()
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
+        self.init_projects()
         self.suggestion = SuggestionFactory.create()
         self.suggestion_list_url = "/api/suggestions/"
 
@@ -33,7 +67,7 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
     #     """ Test that unauthenticated users get a 403 forbidden response """
     #     self.pass()
     #     response = self.client.get(self.suggestion_list_url)
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)    
+    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_retrieve_suggestion_list_status(self):
         """
@@ -66,16 +100,16 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = json.loads(response.content)
-        # We still have the original initialized Suggestion, so 1 instead of 0 
+        # We still have the original initialized Suggestion, so 1 instead of 0
         self.assertEqual(len(data), 1)
 
     def test_retrieve_only_suggestions_with_destination(self):
         """
-        Test the destination filter on the API endpoint. 
+        Test the destination filter on the API endpoint.
         """
         destination = 'amsterdam'
 
-        suggestion_amsterdam_1 = SuggestionFactory.create(destination="Amsterdam")        
+        suggestion_amsterdam_1 = SuggestionFactory.create(destination="Amsterdam")
         suggestion_amsterdam_2 = SuggestionFactory.create(destination="amsterdam")
 
         response = self.client.get(self.suggestion_list_url, {'destination': destination},
@@ -89,11 +123,11 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
 
     def test_retrieve_only_suggestions_with_status(self):
         """
-        Test the status filter on the API endpoint. 
+        Test the status filter on the API endpoint.
         """
         status = 'accepted'
-        
-        suggestion_accepted_1 = SuggestionFactory.create(status=status)        
+
+        suggestion_accepted_1 = SuggestionFactory.create(status=status)
         suggestion_accepted_2 = SuggestionFactory.create(status=status)
         suggestion_other = SuggestionFactory.create(status='other')
 
@@ -112,7 +146,7 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
         Test the project slug filter on the API endpoint. Should return one suggestion
         """
         project = ProjectFactory.create()
-        suggestion_accepted_1 = SuggestionFactory.create(project=project)        
+        suggestion_accepted_1 = SuggestionFactory.create(project=project)
 
         response = self.client.get(self.suggestion_list_url, {'project_slug': project.slug},
                                     HTTP_AUTHORIZATION=self.user_1_token)
@@ -127,7 +161,7 @@ class SuggestionsIntegrationTest(InitProjectDataMixin, TestCase):
         Test the project slug filter on the API endpoint. Shouldn't return any suggestions
         """
         project = ProjectFactory.create()
-        suggestion_accepted_1 = SuggestionFactory.create(project=project)        
+        suggestion_accepted_1 = SuggestionFactory.create(project=project)
 
         response = self.client.get(self.suggestion_list_url, {'project_slug': "non-existing-slug"},
                                     HTTP_AUTHORIZATION=self.user_1_token)

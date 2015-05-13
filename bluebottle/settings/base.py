@@ -242,6 +242,7 @@ TENANT_APPS = (
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
+    'bluebottle.suggestions',
 
     # CMS page contents
     'fluent_contents',

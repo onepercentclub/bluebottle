@@ -10,11 +10,15 @@ logger = logging.getLogger()
 
 
 @shared_task
-def _send_celery_mail(msg, send=False):
+def _send_celery_mail(msg, tenant=None, send=False):
     """
         Async function to send emails or do logging. For the logging we encode
         to utf_8 so we don't get Unicode errors.
     """
+    from bluebottle.clients import properties
+    if tenant:
+        properties.set_tenant(tenant)
+
     body = msg.body
     if isinstance(body, unicode):
         body = msg.body.encode('utf_8')

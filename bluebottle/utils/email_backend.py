@@ -15,21 +15,31 @@ from bluebottle.clients import properties
 from tenant_extras.utils import TenantLanguage
 from django.utils.encoding import force_unicode
 
+from django.db import connection
+
 logger = logging.getLogger('console')
 
 
-class DKIMBackend(EmailBackend):
-
+class TenantAwareDKIMOptionalBackend(EmailBackend):
+    """
+        Support per-tenant smtp configuration and optionally
+        sign the message with a DKIM key, if present.
+    """
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""
         if not email_message.recipients():
             return False
         try:
             message_string = email_message.message().as_string()
-            signature = dkim.sign(message_string,
-                                  properties.DKIM_SELECTOR,
-                                  properties.DKIM_DOMAIN,
-                                  properties.DKIM_PRIVATE_KEY)
+            signature = ""
+            try:
+                signature = dkim.sign(message_string,
+                                      properties.DKIM_SELECTOR,
+                                      properties.DKIM_DOMAIN,
+                                      properties.DKIM_PRIVATE_KEY)
+            except AttributeError:
+                pass
+
             self.connection.sendmail(
                 email_message.from_email, email_message.recipients(),
                 signature + message_string)
@@ -39,6 +49,7 @@ class DKIMBackend(EmailBackend):
             return False
         return True
 
+DKIMBackend = TenantAwareDKIMOptionalBackend
 
 class TestMailBackend(EmailBackend):
 
@@ -125,11 +136,16 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
 
     # Explicetly set CELERY usage in properties. Used primarily for
     # testing purposes.
+    try:
+        tenant = connection.tenant
+    except AttributeError:
+        tenant = None
+
     if msg and properties.CELERY_MAIL:
         if properties.SEND_MAIL:
-            _send_celery_mail.delay(msg, send=True)
+            _send_celery_mail.delay(msg, tenant, send=True)
         else:
-            _send_celery_mail.delay(msg)
+            _send_celery_mail.delay(msg, tenant)
     elif msg:
         try:
             if properties.SEND_MAIL:

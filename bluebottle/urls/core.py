@@ -62,6 +62,9 @@ urlpatterns = patterns('',
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
 
+    url(r'token/', include('token_auth.urls')),
+
+
 )
 
 # Nicely parse 500 errors so we get semantic messages in tests.

@@ -14,6 +14,8 @@ from .serializers import TextWallpostSerializer, MediaWallpostSerializer, MediaW
 from .models import Wallpost, Reaction
 from .serializers import ReactionSerializer, WallpostSerializer
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
 
@@ -62,7 +64,7 @@ class TextWallpostList(ListCreateAPIView):
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     paginate_by = 5
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, )
 
     def get_queryset(self):
         queryset = super(TextWallpostList, self).get_queryset()
@@ -97,7 +99,7 @@ class MediaWallpostList(TextWallpostList):
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
     model = Wallpost
     serializer_class = WallpostSerializer
-    permission_classes = (IsAuthorOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, )
 
 
 class MediaWallpostPhotoList(ListCreateAPIView):
@@ -140,14 +142,14 @@ class MediaWallpostPhotoList(ListCreateAPIView):
 class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
     model = MediaWallpostPhoto
     serializer_class = MediaWallpostPhotoSerializer
-    permission_classes = (IsAuthorOrReadOnly, IsConnectedWallpostAuthorOrReadOnly)
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, IsConnectedWallpostAuthorOrReadOnly)
 
 
 class ReactionList(ListCreateAPIView):
     # model = Reaction
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
     paginate_by = 10
     filter_fields = ('wallpost',)
 
@@ -158,7 +160,7 @@ class ReactionList(ListCreateAPIView):
 class ReactionDetail(RetrieveUpdateDeleteAPIView):
     model = Reaction
     serializer_class = ReactionSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 
     def pre_save(self, obj):
         set_author_editor_ip(self.request, obj)

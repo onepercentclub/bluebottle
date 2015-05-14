@@ -9,11 +9,27 @@ from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.projects.models import ProjectBudgetLine, Project
 from bluebottle.bb_projects.admin import BaseProjectAdmin, ProjectDocumentInline
+from bluebottle.bb_tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 
 from .models import PartnerOrganization
 
 logger = logging.getLogger(__name__)
+
+
+class FundingFilter(admin.SimpleListFilter):
+    title = _('Funding')
+    parameter_name = 'funding'
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('Funding')),
+            ('no', _('Not funding')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(amount_asked__gt=0)
+        return queryset
 
 
 class PartnerOrganizationAdmin(AdminImageMixin, admin.ModelAdmin):
@@ -29,10 +45,10 @@ class ProjectBudgetLineInline(admin.TabularInline):
 
 
 class ProjectAdmin(BaseProjectAdmin):
-    inlines = (ProjectBudgetLineInline, ProjectDocumentInline)
+    inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline)
 
     list_filter = BaseProjectAdmin.list_filter + \
-        ('is_campaign', 'theme', 'partner_organization')
+        ('is_campaign', 'theme', 'partner_organization', FundingFilter)
     list_display = BaseProjectAdmin.list_display + \
         ('is_campaign', 'deadline', 'donated_percentage')
     list_editable = ('is_campaign', )

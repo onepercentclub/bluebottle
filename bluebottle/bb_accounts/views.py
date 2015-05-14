@@ -25,11 +25,12 @@ from .serializers import (UserCreateSerializer,
                           PasswordResetSerializer, PasswordSetSerializer,
                           BB_USER_MODEL)
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 class UserProfileDetail(DefaultSerializerMixin,
                         generics.RetrieveUpdateAPIView):
     model = BB_USER_MODEL
-    permission_classes = (IsCurrentUserOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, IsCurrentUserOrReadOnly,)
 
 
 class CurrentUser(generics.RetrieveAPIView):

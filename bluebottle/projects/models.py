@@ -1,4 +1,5 @@
 import datetime
+import pytz
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
@@ -210,6 +211,10 @@ class Project(BaseProject):
     def is_realised(self):
         return self.status in ProjectPhase.objects.filter(slug__in=['done-complete', 'done-incomplete', 'realised']).all()
 
+    @property
+    def is_funding(self):
+        return self.amount_asked > 0
+
     def supporters_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations
@@ -340,6 +345,14 @@ class Project(BaseProject):
         if not self.deadline:
             self.deadline = timezone.now() + datetime.timedelta(days=30)
 
+        # make sure the deadline is set to the end of the day, amsterdam time
+        tz = pytz.timezone('Europe/Amsterdam')
+        local_time = self.deadline.astimezone(tz)
+        if local_time.time() != datetime.time(23, 59, 59):
+            self.deadline = tz.localize(
+                datetime.datetime.combine(local_time.date(), datetime.time(23, 59, 59))
+            )
+
         if self.amount_asked:
             self.update_amounts(False)
 
@@ -359,7 +372,6 @@ class Project(BaseProject):
                                                            Q(slug="done-incomplete") |
                                                            Q(slug="done-stopped")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
-
 
         super(Project, self).save(*args, **kwargs)
 

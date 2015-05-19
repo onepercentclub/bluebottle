@@ -19,6 +19,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
 from taggit.managers import TaggableManager
 
+from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.utils.model_dispatcher import (get_user_model, get_task_model, get_taskmember_model,
                                                get_donation_model, get_project_model, get_fundraiser_model)
@@ -126,8 +127,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('last name'), max_length=100, blank=True)
     place = models.CharField(_('Location your at now'), max_length=100, blank=True)
     location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
-
-
+    favourite_themes = models.ManyToManyField(ProjectTheme, blank=True, null=True)
+    skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True, null=True)
+    
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
 

@@ -8,39 +8,19 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Member.website'
-        db.add_column(u'members_member', 'website',
-                      self.gf('django.db.models.fields.URLField')(default='', max_length=200, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Member.facebook'
-        db.add_column(u'members_member', 'facebook',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Member.twitter'
-        db.add_column(u'members_member', 'twitter',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=15, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Member.skypename'
-        db.add_column(u'members_member', 'skypename',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=32, blank=True),
-                      keep_default=False)
+        # Adding M2M table for field skills on 'Member'
+        m2m_table_name = db.shorten_name(u'members_member_skills')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('member', models.ForeignKey(orm[u'members.member'], null=False)),
+            ('skill', models.ForeignKey(orm[u'tasks.skill'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['member_id', 'skill_id'])
 
 
     def backwards(self, orm):
-        # Deleting field 'Member.website'
-        db.delete_column(u'members_member', 'website')
-
-        # Deleting field 'Member.facebook'
-        db.delete_column(u'members_member', 'facebook')
-
-        # Deleting field 'Member.twitter'
-        db.delete_column(u'members_member', 'twitter')
-
-        # Deleting field 'Member.skypename'
-        db.delete_column(u'members_member', 'skypename')
+        # Removing M2M table for field skills on 'Member'
+        db.delete_table(db.shorten_name(u'members_member_skills'))
 
 
     models = {
@@ -57,6 +37,14 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
+        u'bb_projects.projecttheme': {
+            'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
+            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
+            'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'})
+        },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
             'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
@@ -64,13 +52,38 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
+        u'geo.country': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Country'},
+            'alpha2_code': ('django.db.models.fields.CharField', [], {'max_length': '2', 'blank': 'True'}),
+            'alpha3_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
+            'oda_recipient': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'subregion': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.SubRegion']"})
+        },
         u'geo.location': {
             'Meta': {'ordering': "['name']", 'object_name': 'Location'},
+            'city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'country': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Country']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
             'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'zoom_level': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        u'geo.region': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Region'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'})
+        },
+        u'geo.subregion': {
+            'Meta': {'ordering': "['name']", 'object_name': 'SubRegion'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
+            'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
         u'members.checkedtoken': {
             'Meta': {'ordering': "('timestamp', 'user__username')", 'object_name': 'CheckedToken'},
@@ -89,6 +102,7 @@ class Migration(SchemaMigration):
             'disable_token': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
             'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
+            'favourite_themes': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['bb_projects.ProjectTheme']", 'null': 'True', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
@@ -107,6 +121,7 @@ class Migration(SchemaMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'default': "'en'", 'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'skills': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['tasks.Skill']", 'null': 'True', 'blank': 'True'}),
             'skypename': ('django.db.models.fields.CharField', [], {'max_length': '32', 'blank': 'True'}),
             'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
@@ -114,6 +129,13 @@ class Migration(SchemaMigration):
             'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),
             'username': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
+        },
+        u'tasks.skill': {
+            'Meta': {'ordering': "('id',)", 'object_name': 'Skill'},
+            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
+            'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'})
         }
     }
 

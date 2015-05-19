@@ -365,8 +365,6 @@ class SendMailTestCase(BluebottleTestCase):
 
 from bluebottle.utils.email_backend import TenantAwareBackend
 from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.common.tasks import _send_celery_mail
-from bluebottle.clients.middleware import TenantProperties
 
 class TestTenantAwareMailServer(unittest.TestCase):
     @override_settings(
@@ -416,13 +414,3 @@ class TestTenantAwareMailServer(unittest.TestCase):
             self.assertTrue(smtp.called)
             self.assertEquals(smtp.call_args[0], ('tenanthost', 4242))
             self.assertTrue(connection.sendmail.called)
-
-    def test_tenant_setup_celery(self):
-        """ verify that, if passed, a tenant is setup in a celery task """
-        with mock.patch("bluebottle.clients.properties", new=TenantProperties()) as properties:
-            msg = mock.Mock()
-            tenant = mock.Mock()
-
-            _send_celery_mail(msg, tenant, send=False)
-
-            self.assertTrue(properties.tenant is tenant)

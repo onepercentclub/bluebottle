@@ -9,21 +9,21 @@ class TestCeleryMailTenant(unittest.TestCase):
 
     def test_tenant_setup_celery(self):
         """ verify that, once send() is called, a tenant has been setup """
-        # we can't assign to a variable in a nested scope but we can
-        # append to a list from a higher scope
-        tenant_during_send = []
 
-        msg = mock.Mock()
+        class interceptor(object):
+            tenant = None
+
+            def __call__(self, *kw, **args):
+                self.tenant = properties.tenant
+
+        intercept_send = interceptor()
+
+        msg = mock.Mock(send=intercept_send)
         tenant = mock.Mock()
-
-        def intercept_send(*kw, **args):
-            tenant_during_send.append(properties.tenant)
-
-        msg.send = intercept_send
 
         _send_celery_mail(msg, tenant, send=True)
 
-        self.assertTrue(tenant_during_send[0] is tenant)
+        self.assertTrue(intercept_send.tenant is tenant)
 
     def test_tenant_setup_celery_reset(self):
         """ after _send_celery_mail finishes, the tenant should be cleared

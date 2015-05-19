@@ -361,3 +361,57 @@ class SendMailTestCase(BluebottleTestCase):
         self.user.primary_language = 'en'
         msg = create_message(to=self.user, template_name='utils/test')
         self.assertEqual(msg.activated_language, 'en')
+
+
+from bluebottle.utils.email_backend import TenantAwareBackend
+from bluebottle.clients.mail import EmailMultiAlternatives
+
+
+class TestTenantAwareMailServer(unittest.TestCase):
+    @override_settings(
+       EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
+       EMAIL_HOST='somehost',
+       EMAIL_PORT=1337)
+    @mock.patch("smtplib.SMTP")
+    def test_settings_config(self, smtp):
+        """ Test simple / traditional case where config comes from settings """
+        be = TenantAwareBackend()
+        msg = EmailMultiAlternatives(subject="test", body="test", to=["test@example.com"])
+
+        # open the connection explicitly so we can get the
+        # connection reference. It will be cleared once closed
+        # in send_messages
+        be.open()
+        connection = be.connection
+
+        be.send_messages([msg])
+
+        self.assertTrue(smtp.called)
+        self.assertEquals(smtp.call_args[0], ('somehost', 1337))
+        self.assertTrue(connection.sendmail.called)
+
+    @override_settings(
+       EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
+       EMAIL_HOST='somehost',
+       EMAIL_PORT=1337)
+    @mock.patch("smtplib.SMTP")
+    def test_tenant_config(self, smtp):
+        """ test setup where tenant config differs from global settings """
+
+        with mock.patch("bluebottle.utils.email_backend.properties", new=mock.Mock([])) as properties:
+            properties.MAIL_CONFIG = {'HOST':'tenanthost', 'PORT':4242}
+
+            be = TenantAwareBackend()
+            msg = EmailMultiAlternatives(subject="test", body="test", to=["test@example.com"])
+
+            # open the connection explicitly so we can get the
+            # connection reference. It will be cleared once closed
+            # in send_messages
+            be.open()
+            connection = be.connection
+
+            be.send_messages([msg])
+
+            self.assertTrue(smtp.called)
+            self.assertEquals(smtp.call_args[0], ('tenanthost', 4242))
+            self.assertTrue(connection.sendmail.called)

@@ -20,11 +20,28 @@ from django.db import connection
 logger = logging.getLogger('console')
 
 
-class TenantAwareDKIMOptionalBackend(EmailBackend):
+class TenantAwareBackend(EmailBackend):
     """
         Support per-tenant smtp configuration and optionally
         sign the message with a DKIM key, if present.
     """
+
+    def open(self):
+        tenant_mail_config = getattr(properties, 'MAIL_CONFIG', None)
+
+        if tenant_mail_config:
+            # clear everything that was initialized from settings in __init__
+            # that is, use the same defaults as django
+            self.host = tenant_mail_config.get('HOST', 'localhost')
+            self.port = tenant_mail_config.get('PORT', 25)
+            self.username = tenant_mail_config.get('USERNAME', '')
+            self.password = tenant_mail_config.get('PASSWORD', '')
+            self.use_tls = tenant_mail_config.get('TLS', False)
+            self.use_ssl = tenant_mail_config.get('SSL', False)
+
+        return super(TenantAwareBackend, self).open()
+
+
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""
         if not email_message.recipients():
@@ -49,7 +66,7 @@ class TenantAwareDKIMOptionalBackend(EmailBackend):
             return False
         return True
 
-DKIMBackend = TenantAwareDKIMOptionalBackend
+DKIMBackend = TenantAwareBackend
 
 class TestMailBackend(EmailBackend):
 

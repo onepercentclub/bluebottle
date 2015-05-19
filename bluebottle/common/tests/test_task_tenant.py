@@ -10,20 +10,18 @@ class TestCeleryMailTenant(unittest.TestCase):
     def test_tenant_setup_celery(self):
         """ verify that, once send() is called, a tenant has been setup """
 
-        class interceptor(object):
+        class interceptor(mock.Mock):
             tenant = None
 
-            def __call__(self, *kw, **args):
+            def send(self, *kw, **args):
                 self.tenant = properties.tenant
 
-        intercept_send = interceptor()
-
-        msg = mock.Mock(send=intercept_send)
+        msg = interceptor()
         tenant = mock.Mock()
 
         _send_celery_mail(msg, tenant, send=True)
 
-        self.assertTrue(intercept_send.tenant is tenant)
+        self.assertTrue(msg.tenant is tenant)
 
     def test_tenant_setup_celery_reset(self):
         """ after _send_celery_mail finishes, the tenant should be cleared

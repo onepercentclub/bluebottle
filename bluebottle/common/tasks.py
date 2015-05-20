@@ -9,49 +9,70 @@ from celery import shared_task
 logger = logging.getLogger()
 
 
+class LocalTenant(object):
+    def __init__(self, tenant):
+        self.tenant = tenant
+
+    def __enter__(self):
+        from bluebottle.clients import properties
+        if self.tenant:
+            properties.set_tenant(self.tenant)
+
+    def __exit__(self, type, value, traceback):
+        from bluebottle.clients import properties
+        if self.tenant:
+            del properties.tenant
+            del properties.tenant_properties
+
+
+
 @shared_task
-def _send_celery_mail(msg, send=False):
+def _send_celery_mail(msg, tenant=None, send=False):
     """
         Async function to send emails or do logging. For the logging we encode
         to utf_8 so we don't get Unicode errors.
     """
-    body = msg.body
-    if isinstance(body, unicode):
-        body = msg.body.encode('utf_8')
+    with LocalTenant(tenant):
+        #if tenant:
+        #    properties.set_tenant(tenant)
 
-    subject = msg.subject
-    if isinstance(subject, unicode):
-        subject = msg.subject.encode('utf_8')
+        body = msg.body
+        if isinstance(body, unicode):
+            body = msg.body.encode('utf_8')
 
-    if send:
-        try:
-            logger.info("Trying to send mail to:\n\
-                        recipients: {0}\n\
-                        from: {1}\n\
-                        subject: {2}\n\n".format(msg.to, msg.from_email,
-                                                 subject))
-            msg.send()
+        subject = msg.subject
+        if isinstance(subject, unicode):
+            subject = msg.subject.encode('utf_8')
 
-            logger.info("Succesfully sent mail:\n\
+        if send:
+            try:
+                logger.info("Trying to send mail to:\n\
+                            recipients: {0}\n\
+                            from: {1}\n\
+                            subject: {2}\n\n".format(msg.to, msg.from_email,
+                                                     subject))
+                msg.send()
+
+                logger.info("Succesfully sent mail:\n\
+                            recipients: {0} \n\
+                            from: {1}\n\
+                            subject: {2} \n\
+                            body:{3} \n\n"
+                            .format(msg.to, msg.from_email,
+                                    subject,
+                                    body))
+            except Exception as e:
+                logger.error("Error sending mail: {0}".format(e))
+                raise e
+        else:
+            logger.info("Sending mail off. Mail task received for msg:\n\
                         recipients: {0} \n\
-                        from: {1}\n\
+                        from: {1} \n\
                         subject: {2} \n\
                         body:{3} \n\n"
                         .format(msg.to, msg.from_email,
                                 subject,
                                 body))
-        except Exception as e:
-            logger.error("Error sending mail: {0}".format(e))
-            raise e
-    else:
-        logger.info("Sending mail off. Mail task received for msg:\n\
-                    recipients: {0} \n\
-                    from: {1} \n\
-                    subject: {2} \n\
-                    body:{3} \n\n"
-                    .format(msg.to, msg.from_email,
-                            subject,
-                            body))
 
 
 @shared_task

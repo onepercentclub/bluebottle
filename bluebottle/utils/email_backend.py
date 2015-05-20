@@ -15,10 +15,32 @@ from bluebottle.clients import properties
 from tenant_extras.utils import TenantLanguage
 from django.utils.encoding import force_unicode
 
+from django.db import connection
+
 logger = logging.getLogger('console')
 
 
-class DKIMBackend(EmailBackend):
+class TenantAwareBackend(EmailBackend):
+    """
+        Support per-tenant smtp configuration and optionally
+        sign the message with a DKIM key, if present.
+    """
+
+    def open(self):
+        tenant_mail_config = getattr(properties, 'MAIL_CONFIG', None)
+
+        if tenant_mail_config:
+            # clear everything that was initialized from settings in __init__
+            # that is, use the same defaults as django
+            self.host = tenant_mail_config.get('HOST', 'localhost')
+            self.port = tenant_mail_config.get('PORT', 25)
+            self.username = tenant_mail_config.get('USERNAME', '')
+            self.password = tenant_mail_config.get('PASSWORD', '')
+            self.use_tls = tenant_mail_config.get('TLS', False)
+            self.use_ssl = tenant_mail_config.get('SSL', False)
+
+        return super(TenantAwareBackend, self).open()
+
 
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""
@@ -26,10 +48,15 @@ class DKIMBackend(EmailBackend):
             return False
         try:
             message_string = email_message.message().as_string()
-            signature = dkim.sign(message_string,
-                                  properties.DKIM_SELECTOR,
-                                  properties.DKIM_DOMAIN,
-                                  properties.DKIM_PRIVATE_KEY)
+            signature = ""
+            try:
+                signature = dkim.sign(message_string,
+                                      properties.DKIM_SELECTOR,
+                                      properties.DKIM_DOMAIN,
+                                      properties.DKIM_PRIVATE_KEY)
+            except AttributeError:
+                pass
+
             self.connection.sendmail(
                 email_message.from_email, email_message.recipients(),
                 signature + message_string)
@@ -39,6 +66,7 @@ class DKIMBackend(EmailBackend):
             return False
         return True
 
+DKIMBackend = TenantAwareBackend
 
 class TestMailBackend(EmailBackend):
 
@@ -125,11 +153,16 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
 
     # Explicetly set CELERY usage in properties. Used primarily for
     # testing purposes.
+    try:
+        tenant = connection.tenant
+    except AttributeError:
+        tenant = None
+
     if msg and properties.CELERY_MAIL:
         if properties.SEND_MAIL:
-            _send_celery_mail.delay(msg, send=True)
+            _send_celery_mail.delay(msg, tenant, send=True)
         else:
-            _send_celery_mail.delay(msg)
+            _send_celery_mail.delay(msg, tenant)
     elif msg:
         try:
             if properties.SEND_MAIL:

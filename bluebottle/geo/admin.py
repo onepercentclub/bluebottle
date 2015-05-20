@@ -2,7 +2,6 @@ from django.contrib import admin
 from django import forms
 
 from geoposition.widgets import GeopositionWidget
-from bluebottle.geo.fields import LocationField, LocationWidget
 
 from bluebottle.geo.models import Location
 

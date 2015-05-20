@@ -19,4 +19,4 @@ class PublicSuggestionSerializer(serializers.ModelSerializer):
 
 
 class SuggestionSerializer(PublicSuggestionSerializer):
-    project = serializers.SlugRelatedField(slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug', required=False)

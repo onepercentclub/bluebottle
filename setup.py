@@ -35,6 +35,7 @@ install_requires = [
     'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
     'django-filter==0.6',
+    ''
     'django-iban==0.2.1',
     'django-localflavor==1.1',
     'django-social-auth==0.7.23',
@@ -45,6 +46,7 @@ install_requires = [
     'django-wysiwyg==0.5.1',
     'django-dynamic-fixture==1.8.0',
     'django-fluent-dashboard==0.3.2',
+    'django-geoposition==0.2.2',
     'djangorestframework==2.3.14',
     'dkimpy==0.5.4',
     'html5lib==0.95',

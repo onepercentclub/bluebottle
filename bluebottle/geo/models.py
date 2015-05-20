@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from geoposition.fields import GeopositionField
+
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, NumericCodeValidator
+
 
 
 class GeoBaseModel(models.Model):
@@ -82,13 +85,7 @@ class Country(GeoBaseModel):
 class Location(models.Model):
 
     name = models.CharField(_('name'), max_length=255)
-
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-
-    zoom_level = models.IntegerField(null=True, blank=True)
+    position = GeopositionField(null=True)
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']

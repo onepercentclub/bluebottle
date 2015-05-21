@@ -1,6 +1,11 @@
-from bluebottle.geo.models import Location
-from .models import Region, SubRegion, Country
 from django.contrib import admin
+from django import forms
+
+from geoposition.widgets import GeopositionWidget
+
+from bluebottle.geo.models import Location
+
+from .models import Region, SubRegion, Country
 
 
 class RegionAdmin(admin.ModelAdmin):
@@ -25,6 +30,7 @@ admin.site.register(Country, CountryAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', )
+    list_display = ('name', 'position')
+    model = Location
 
 admin.site.register(Location, LocationAdmin)

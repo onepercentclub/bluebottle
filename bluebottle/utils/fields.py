@@ -60,7 +60,7 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         Checks that the file-upload field data contains a valid image (GIF,
         JPG, PNG, possibly others -- whatever the engine supports).
         """
-        if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+        if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
         return super(RestrictedImageFormField, self).to_python(data)
 

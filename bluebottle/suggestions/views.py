@@ -1,6 +1,8 @@
 from datetime import date
-from rest_framework import generics
+from rest_framework import generics, status, response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import action
+
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.suggestions.serializers import SuggestionSerializer # , PublicSuggestionSerializer
 
@@ -32,9 +34,21 @@ class SuggestionList(generics.ListCreateAPIView):
         return qs.order_by('deadline')
 
 
-
 class SuggestionDetail(generics.RetrieveUpdateAPIView):
     model = Suggestion
     permission_classes = (IsAuthenticated, )
     serializer_class = SuggestionSerializer
 
+
+class SuggestionToken(generics.RetrieveUpdateAPIView):
+    model = Suggestion
+    permission_classes = (IsAuthenticated, )
+    serializer_class = SuggestionSerializer
+    lookup_field = 'token'
+
+    def update(self, request, *args, **kwargs):
+        suggestion = self.get_object()
+
+        if suggestion.confirm():
+            return response.Response({'status':'validated'}, status=status.HTTP_200_OK)
+        return response.Response({'status':'not validated'}, status=status.HTTP_400_BAD_REQUEST)

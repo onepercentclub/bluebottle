@@ -21,9 +21,15 @@ class DateField(serializers.CharField):
 # class SuggestionSerializer(PublicSuggestionSerializer):
 #     project = serializers.SlugRelatedField(slug_field='slug', required=False)
 
+import uuid
+
+def generate_token():
+    return str(uuid.uuid4())
+
 class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suggestion
 
     deadline = DateField()
+    token = serializers.CharField(required=False, default=generate_token)
     project = serializers.SlugRelatedField(slug_field='slug', required=False)

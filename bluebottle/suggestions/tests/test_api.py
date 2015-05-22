@@ -1,7 +1,9 @@
 import datetime
 import json
+import uuid
 from datetime import date, timedelta
 from django.test import TestCase
+from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
@@ -43,6 +45,84 @@ from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 #            }
 #        )
 #        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class SuggestionsTokenTest(BluebottleTestCase):
+    def setUp(self):
+        super(SuggestionsTokenTest, self).setUp()
+        self.init_projects()
+        self.user_1 = BlueBottleUserFactory.create()
+        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
+
+        self.suggestion_list_url = reverse('suggestion_list')
+
+    def test_token_generated(self):
+        """ if no token is specified, one will be generated """
+        response = self.client.post(
+            self.suggestion_list_url,
+            HTTP_AUTHORIZATION=self.user_1_token,
+            data={
+                'title': 'test',
+                'pitch': 'test pitch',
+                'org_name': 'test_org',
+                'org_website': 'http://example.com',
+                'org_email': 'test@example.com',
+                'org_phone': '+31612345678',
+                'org_contactname': 'test',
+                'deadline': datetime.datetime.now() + datetime.timedelta(days=1),
+                'theme': ProjectTheme.objects.all()[0].pk,
+                'destination': 'test destination'
+            }
+        )
+        data = json.loads(response.content)
+
+        self.assertTrue(data.get('token'))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_token_validate_unauthorized(self):
+        """ validate a suggesting by its token (authorized) """
+        token = str(uuid.uuid4())
+        suggestion = SuggestionFactory.create(token=token, status='unconfirmed')
+
+        response = self.client.put(
+            reverse('suggestion_token_validate', kwargs={'token':token}))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        suggestion = Suggestion.objects.get(pk=suggestion.pk)
+
+        self.assertEquals(suggestion.status, 'unconfirmed')
+
+    def test_token_validate_authorized(self):
+        """ validate a suggesting by its token (authorized) """
+        token = str(uuid.uuid4())
+        suggestion = SuggestionFactory.create(token=token, status='unconfirmed')
+
+        response = self.client.put(
+            reverse('suggestion_token_validate', kwargs={'token':token}),
+            HTTP_AUTHORIZATION=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        suggestion = Suggestion.objects.get(pk=suggestion.pk)
+
+        self.assertEquals(suggestion.status, 'draft')
+
+    def test_token_validate_already_validated(self):
+        """ validate a suggesting by its token (authorized) """
+        token = str(uuid.uuid4())
+        suggestion = SuggestionFactory.create(token=token, status='draft')
+
+        response = self.client.put(
+            reverse('suggestion_token_validate', kwargs={'token':token}),
+            HTTP_AUTHORIZATION=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        suggestion = Suggestion.objects.get(pk=suggestion.pk)
+
+        self.assertEquals(suggestion.status, 'draft')
 
 
 class SuggestionsListIntegrationTest(BluebottleTestCase):

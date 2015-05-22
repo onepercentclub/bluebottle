@@ -21,9 +21,8 @@ class GeoTestCase(BluebottleTestCase):
 
         self.init_projects()
 
-        self.country_1 = Country.objects.get(name="Afghanistan")
-        self.country_2 = Country.objects.get(name="Belgium")
-
+        self.country_1 = Country.objects.get(name="Abkhazia")
+\
 
 class CountryListTestCase(GeoTestCase):
     """
@@ -38,7 +37,7 @@ class CountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('country-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 242)
+        self.assertEqual(len(response.data), 245)
 
 
     def test_api_country_list_data(self):
@@ -48,10 +47,9 @@ class CountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('country-list'))
 
         country = response.data[0]
-        self.assertEqual(country['id'], 1)
-        self.assertEqual(country['name'], 'Afghanistan')
-        self.assertEqual(country['oda'], True)
-        self.assertEqual(country['code'], 'AF')
+        self.assertEqual(country['id'], self.country_1.id)
+        self.assertEqual(country['name'], self.country_1.name)
+        self.assertEqual(country['code'], 'GE')
 
 
 class UsedCountryListTestCase(GeoTestCase):

@@ -8,7 +8,6 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
 
-
 urlpatterns = patterns('',
     # The api urls are in the / url namespace so that they're not redirected to /en/.
     url(r'^api/users/', include('bluebottle.bb_accounts.urls.api')),
@@ -62,7 +61,11 @@ urlpatterns = patterns('',
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
 
+    url(r'token/', include('token_auth.urls')),
+
+
 )
+
 
 # Nicely parse 500 errors so we get semantic messages in tests.
 def handler500(request):

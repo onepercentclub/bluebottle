@@ -15,6 +15,9 @@ class CountrySerializer(serializers.ModelSerializer):
 
 class LocationSerializer(serializers.ModelSerializer):
 
+    latitude = serializers.DecimalField(source='position.latitude')
+    longitude = serializers.DecimalField(source='position.longitude')
+
     class Meta:
         model = Location
-        fields = ('id', 'name', 'latitude', 'longitude', 'zoom_level')
+        fields = ('id', 'name', 'latitude', 'longitude')

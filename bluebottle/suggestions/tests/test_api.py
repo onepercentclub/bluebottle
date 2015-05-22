@@ -13,36 +13,36 @@ from bluebottle.suggestions.models import Suggestion
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
 
-class PublicSuggestionsListIntegrationTest(BluebottleTestCase):
-    """
-    Integration tests for the public suggestion api
-    """
-    def setUp(self):
-        super(PublicSuggestionsListIntegrationTest, self).setUp()
-        self.user = ProjectThemeFactory.create()
-        self.suggestion_list_url = "/api/suggestions/public/"
-
-    def test_retrieve_not_allowed(self):
-        response = self.client.get(self.suggestion_list_url)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_create_unauthorized(self):
-        response = self.client.post(
-            self.suggestion_list_url,
-            data={
-                'title': 'test',
-                'pitch': 'test pitch',
-                'org_name': 'test_org',
-                'org_website': 'http://example.com',
-                'org_email': 'test@example.com',
-                'org_phone': '+31612345678',
-                'org_contactname': 'test',
-                'deadline': datetime.datetime.now() + datetime.timedelta(days=1),
-                'theme': ProjectTheme.objects.all()[0].pk,
-                'destination': 'test destination'
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#class PublicSuggestionsListIntegrationTest(BluebottleTestCase):
+#    """
+#    Integration tests for the public suggestion api
+#    """
+#    def setUp(self):
+#        super(PublicSuggestionsListIntegrationTest, self).setUp()
+#        self.user = ProjectThemeFactory.create()
+#        self.suggestion_list_url = "/api/suggestions/public/"
+#
+#    def test_retrieve_not_allowed(self):
+#        response = self.client.get(self.suggestion_list_url)
+#        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+#
+#    def test_create_unauthorized(self):
+#        response = self.client.post(
+#            self.suggestion_list_url,
+#            data={
+#                'title': 'test',
+#                'pitch': 'test pitch',
+#                'org_name': 'test_org',
+#                'org_website': 'http://example.com',
+#                'org_email': 'test@example.com',
+#                'org_phone': '+31612345678',
+#                'org_contactname': 'test',
+#                'deadline': datetime.datetime.now() + datetime.timedelta(days=1),
+#                'theme': ProjectTheme.objects.all()[0].pk,
+#                'destination': 'test destination'
+#            }
+#        )
+#        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class SuggestionsListIntegrationTest(BluebottleTestCase):

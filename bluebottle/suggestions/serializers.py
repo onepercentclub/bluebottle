@@ -10,13 +10,20 @@ class DateField(serializers.CharField):
         except IndexError:
             return value
 
-class PublicSuggestionSerializer(serializers.ModelSerializer):
-    deadline = DateField()
+# class PublicSuggestionSerializer(serializers.ModelSerializer):
+#     deadline = DateField()
+#
+#     class Meta:
+#         model = Suggestion
+#         exclude = ('token', )
+#
+#
+# class SuggestionSerializer(PublicSuggestionSerializer):
+#     project = serializers.SlugRelatedField(slug_field='slug', required=False)
 
+class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suggestion
-        exclude = ('token', )
 
-
-class SuggestionSerializer(PublicSuggestionSerializer):
+    deadline = DateField()
     project = serializers.SlugRelatedField(slug_field='slug', required=False)

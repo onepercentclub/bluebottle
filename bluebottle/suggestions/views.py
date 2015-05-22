@@ -2,13 +2,13 @@ from datetime import date
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from bluebottle.suggestions.models import Suggestion
-from bluebottle.suggestions.serializers import SuggestionSerializer, PublicSuggestionSerializer
+from bluebottle.suggestions.serializers import SuggestionSerializer # , PublicSuggestionSerializer
 
 
-class PublicSuggestionList(generics.CreateAPIView):
-    model = Suggestion
-    permission_classes = (AllowAny, )
-    serializer_class = PublicSuggestionSerializer
+#class PublicSuggestionList(generics.CreateAPIView):
+#    model = Suggestion
+#    permission_classes = (AllowAny, )
+#    serializer_class = PublicSuggestionSerializer
 
 
 class SuggestionList(generics.ListCreateAPIView):

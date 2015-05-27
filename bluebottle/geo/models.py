@@ -87,6 +87,10 @@ class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
     position = GeopositionField(null=True)
 
+    city = models.CharField(_('city'), blank=True, null=True, max_length=255)
+
+    country = models.ForeignKey('geo.Country', blank=True, null=True)
+
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
 

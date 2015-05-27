@@ -3140,5 +3140,41 @@
         "subregion": 16, 
         "oda_recipient": true
     }
+},
+{
+    "pk": 245, 
+    "model": "geo.country", 
+    "fields": {
+        "name": "Abkhazia", 
+        "alpha2_code": "GE", 
+        "alpha3_code": "GEO", 
+        "numeric_code": "", 
+        "subregion": 13, 
+        "oda_recipient": true
+    }
+},
+{
+    "pk": 246, 
+    "model": "geo.country", 
+    "fields": {
+        "name": "Taiwan", 
+        "alpha2_code": "TW", 
+        "alpha3_code": "TWN", 
+        "numeric_code": "158", 
+        "subregion": 22, 
+        "oda_recipient": false
+    }
+},
+{
+    "pk": 247, 
+    "model": "geo.country", 
+    "fields": {
+        "name": "Cocos (Keeling) Islands", 
+        "alpha2_code": "CC", 
+        "alpha3_code": "CCK", 
+        "numeric_code": "166", 
+        "subregion": 18, 
+        "oda_recipient": false
+    }
 }
 ]

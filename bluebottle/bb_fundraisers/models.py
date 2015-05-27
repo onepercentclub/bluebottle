@@ -31,6 +31,8 @@ class BaseFundraiser(models.Model, GetTweetMixin):
     updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 
+    location = models.ForeignKey('geo.Location', null=True, blank=True)
+
     def __unicode__(self):
         return self.title
 

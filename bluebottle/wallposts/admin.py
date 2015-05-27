@@ -1,5 +1,8 @@
+import urlparse
+
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import render_to_string
 
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 from sorl.thumbnail.admin.compat import AdminImageMixin
@@ -11,20 +14,36 @@ from bluebottle.utils.utils import set_author_editor_ip
 from bluebottle.wallposts.models import SystemWallpost
 from .models import Wallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
+from sorl.thumbnail.shortcuts import get_thumbnail
 
-class MediaWallpostPhotoInline(AdminImageMixin, admin.StackedInline):
+
+class MediaWallpostPhotoInline(admin.TabularInline):
     model = MediaWallpostPhoto
     extra = 0
     raw_id_fields = ('author', 'editor')
 
+    readonly_fields = ('image_tag',)
+
+    fields = ('image_tag', 'photo')
+
+    def image_tag(self, obj):
+        data = {}
+        if obj.photo:
+            data['image_full_url'] = obj.photo.url
+            data['image_thumb_url'] = get_thumbnail(obj.photo, "120x120", crop="center").url
+
+        return render_to_string("admin/wallposts/mediawallpost_photoinline.html", data)
+
+    image_tag.short_description = 'Preview'
+    image_tag.allow_tags = True
 
 class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted')
+    readonly_fields = ('ip_address', 'deleted', 'view_online', 'gallery')
     raw_id_fields = ('author', 'editor')
-    list_display = ('created', 'view_online', 'get_text', 'video_url', 'photos', 'author')
+    list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author')
 
-    readonly_fields = ('view_online', )
+    extra_fields = ('gallery', )
 
     ordering = ('-created', )
     inlines = (MediaWallpostPhotoInline,)
@@ -34,11 +53,29 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
             return u'<span title="{text}">{short_text} [...]</span>'.format(text=obj.text, short_text=obj.text[:145])
     get_text.allow_tags = True
 
-    def photos(self, obj):
+    def thumbnail(self, obj):
+        data = {}
+        if obj.video_url:
+            data['video_url'] = obj.video_url
+            if 'youtube.com' in obj.video_url:
+                try:
+                    urlparts = urlparse.urlparse(obj.video_url)
+                    data['youtubeid'] = urlparse.parse_qs(urlparts.query)['v'][0]
+                except (ValueError, IndexError):
+                    pass
+
         photos = MediaWallpostPhoto.objects.filter(mediawallpost=obj)
+        data['count'] = len(photos)
+        data['remains'] = max(0, data['count'] - 1)
+
         if len(photos):
-            return len(photos)
-        return '-'
+            data['firstimage'] = get_thumbnail(photos[0].photo, "120x120",
+                                               crop="center").url
+            data['firstimage_url'] = photos[0].photo.url
+
+        return render_to_string("admin/wallposts/preview_thumbnail.html", data)
+
+    thumbnail.allow_tags = True
 
     def view_online(self, obj):
         if obj.content_object is None:
@@ -47,13 +84,21 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         if obj.content_type.name == 'project':
             return u'<a href="/go/projects/{slug}">{title}</a>'.format(slug=obj.content_object.slug, title=obj.content_object.title)
         if obj.content_type.name == 'task':
-            return u'<a href="/go/projects/{slug}/tasks/{task_id}">{title}</a>'.format(slug=obj.content_object.project.slug, task_id=obj.content_object.id, title=obj.content_object.project.title)
+            if obj.content_object:
+                return u'<a href="/go/tasks/{task_id}">{title}</a>'.format(slug=obj.content_object.project.slug, task_id=obj.content_object.id, title=obj.content_object.project.title)
         if obj.content_type.name == 'fundraiser':
             return u'<a href="/go/fundraisers/{id}">{title}</a>'.format(id=obj.content_object.id, title=obj.content_object.title)
         return '---'
 
     view_online.allow_tags = True
 
+    def gallery(self, obj):
+        data = {}
+        data['images'] = [dict(full=p.photo.url, thumb=get_thumbnail(p.photo, "120x120", crop="center").url)
+                          for p in obj.photos.all()]
+
+        return render_to_string("admin/wallposts/mediawallpost_gallery.html", data)
+    gallery.allow_tags = True
 
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):

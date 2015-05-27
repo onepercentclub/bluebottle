@@ -283,7 +283,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 # Yes, docdata uses "CANCELED"
                 status = StatusDefinition.FAILED
             else:
-                status = StatusDefinition.UNKOWN
+                status = StatusDefinition.UNKNOWN
         else:
             # We have some authorized payments
             if int(totals.totalChargedback) == int(totals.totalRegistered):

@@ -4,13 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 
 from bluebottle.suggestions.models import Suggestion
-from bluebottle.suggestions.serializers import SuggestionSerializer # , PublicSuggestionSerializer
-
-
-#class PublicSuggestionList(generics.CreateAPIView):
-#    model = Suggestion
-#    permission_classes = (AllowAny, )
-#    serializer_class = PublicSuggestionSerializer
+from bluebottle.suggestions.serializers import SuggestionSerializer
 
 
 class SuggestionList(generics.ListCreateAPIView):
@@ -50,5 +44,7 @@ class SuggestionToken(generics.RetrieveUpdateAPIView):
         suggestion = self.get_object()
 
         if suggestion.confirm():
-            return response.Response({'status':'validated'}, status=status.HTTP_200_OK)
-        return response.Response({'status':'not validated'}, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response({'status':'validated'},
+                                     status=status.HTTP_200_OK)
+        return response.Response({'status':'not validated'},
+                                 status=status.HTTP_400_BAD_REQUEST)

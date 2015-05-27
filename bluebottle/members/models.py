@@ -23,7 +23,7 @@ class CheckedToken(models.Model):
     """
     token = models.CharField(max_length=300)
     timestamp = models.DateTimeField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="used_tokens")
 
     class Meta:
         ordering = ('timestamp', 'user__username')

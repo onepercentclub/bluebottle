@@ -161,14 +161,14 @@ class OrderPayment(models.Model, FSMTransition):
         pass
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                StatusDefinition.CANCELLED],
+                StatusDefinition.CANCELLED, StatusDefinition.FAILED],
                 target=StatusDefinition.AUTHORIZED)
     def authorized(self):
         # TODO: add authorized state behaviour here
         pass
 
     @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                StatusDefinition.STARTED, StatusDefinition.CANCELLED, StatusDefinition.FAILED],
+                StatusDefinition.STARTED, StatusDefinition.CANCELLED, StatusDefinition.FAILED, StatusDefinition.UNKNOWN],
                 target=StatusDefinition.SETTLED)
     def settled(self):
         self.closed = now()

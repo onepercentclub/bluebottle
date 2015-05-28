@@ -271,15 +271,19 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             # No payment has been authorized
             statuses = {payment.authorization.status for payment in response.payment}
 
-            if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION', 'AUTHENTICATED', 'RISK_CHECK_OK'} & statuses:
+            if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION', 'AUTHENTICATED', 'RISK_CHECK_OK', 'AUTHORIZED'} & statuses:
                 # All these statuses belong are considered new
                 status = StatusDefinition.STARTED
             elif statuses == {'CANCELED', }:
                 # If all of them are cancelled, the whole payment is cancelled
                 # Yes, docdata uses "CANCELED"
                 status = StatusDefinition.CANCELLED
-            else:
+            elif {'RISK_CHECK_FAILED', 'AUTHORIZATION_ERROR', 'AUTHORIZATION_FAILED'} & statuses:
+                # If all of them are cancelled, the whole payment is cancelled
+                # Yes, docdata uses "CANCELED"
                 status = StatusDefinition.FAILED
+            else:
+                status = StatusDefinition.UNKOWN
         else:
             # We have some authorized payments
             if int(totals.totalChargedback) == int(totals.totalRegistered):

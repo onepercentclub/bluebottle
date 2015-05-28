@@ -10,13 +10,16 @@ class DateField(serializers.CharField):
         except IndexError:
             return value
 
-class PublicSuggestionSerializer(serializers.ModelSerializer):
-    deadline = DateField()
 
+import uuid
+
+def generate_token():
+    return str(uuid.uuid4())
+
+class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suggestion
-        exclude = ('token', )
 
-
-class SuggestionSerializer(PublicSuggestionSerializer):
-    project = serializers.SlugRelatedField(slug_field='slug')
+    deadline = DateField()
+    token = serializers.CharField(required=False, default=generate_token)
+    project = serializers.SlugRelatedField(slug_field='slug', required=False)

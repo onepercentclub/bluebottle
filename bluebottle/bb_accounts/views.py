@@ -15,22 +15,27 @@ from django.utils.importlib import import_module
 from rest_framework import status, views, response, generics
 
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.bluebottle_drf2.permissions import IsCurrentUserOrReadOnly
+from bluebottle.bluebottle_drf2.permissions import IsCurrentUser
 from bluebottle.clients.utils import tenant_url, tenant_name
-from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.clients import properties
 
 # this belongs now to onepercent should be here in bluebottle
-from .serializers import (UserCreateSerializer,
-                          PasswordResetSerializer, PasswordSetSerializer,
-                          BB_USER_MODEL)
+from .serializers import (UserCreateSerializer, UserPrivateProfileSerializer, UserProfileSerializer,
+                          PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
-class UserProfileDetail(DefaultSerializerMixin,
-                        generics.RetrieveUpdateAPIView):
+
+class UserProfileDetail(generics.RetrieveAPIView):
     model = BB_USER_MODEL
-    permission_classes = (TenantConditionalOpenClose, IsCurrentUserOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, )
+    serializer_class = UserProfileSerializer
+
+
+class UserPrivateProfileDetail(generics.RetrieveUpdateAPIView):
+    model = BB_USER_MODEL
+    permission_classes = (TenantConditionalOpenClose, IsCurrentUser, )
+    serializer_class = UserPrivateProfileSerializer
 
 
 class CurrentUser(generics.RetrieveAPIView):

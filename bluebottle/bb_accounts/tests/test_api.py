@@ -25,6 +25,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
         self.user_profile_api_url = '/api/users/profiles/'
+        self.user_private_profile_api_url = '/api/users/private-profiles/'
         self.user_activation_api_url = '/api/users/activate/'
         self.user_password_reset_api_url = '/api/users/passwordreset'
         self.user_password_set_api_url = '/api/users/passwordset/'
@@ -38,11 +39,43 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['id'], self.user_1.id)
 
         # Fields taken from the serializer
-        serializer_fields = ['id', 'url', 'username', 'first_name',
-                             'last_name', 'full_name', 'short_name', 'picture',
-                             'about_me', 'date_joined', 'location', 'email',
-                             'address', 'birthdate', 'gender', 'newsletter',
-                             'primary_language']
+        serializer_fields = ['id', 'url', 'full_name', 'short_name', 'picture',
+                             'primary_language', 'about_me', 'location',
+                             'project_count', 'donation_count', 'date_joined',
+                             'fundraiser_count', 'task_count', 'time_spent',
+                             'website', 'twitter', 'facebook', 'skypename', ]
+
+        for field in serializer_fields:
+            self.assertTrue(field in response.data)
+
+        excluded_fields = ['email', 'address', 'newsletter', 'campaign_notifications',
+                           'birthdate', 'gender', 'first_name', 'last_name', 'username', 'password']
+
+        for field in excluded_fields:
+            self.assertFalse(field in response.data)
+
+    def test_user_profile_unauthenticated(self):
+        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
+                                           self.user_1.id)
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_private_user_profile_returned_fields(self):
+        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
+                                           self.user_1.id)
+        response = self.client.get(user_profile_url, token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['id'], self.user_1.id)
+
+        # Fields taken from the serializer
+        serializer_fields = ['id', 'url', 'full_name', 'short_name', 'picture',
+                             'primary_language', 'about_me', 'location',
+                             'project_count', 'donation_count', 'date_joined',
+                             'fundraiser_count', 'task_count', 'time_spent',
+                             'website', 'twitter', 'facebook', 'skypename', 'email',
+                             'address', 'newsletter', 'campaign_notifications',
+                             'birthdate', 'gender', 'first_name', 'last_name', 'username']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -51,9 +84,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         Test retrieving a public user profile by id.
         """
-        user_profile_url = "{0}{1}".format(self.user_profile_api_url,
+        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
                                            self.user_1.id)
-        response = self.client.get(user_profile_url)
+        response = self.client.get(user_profile_url, token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user_1.id)
 

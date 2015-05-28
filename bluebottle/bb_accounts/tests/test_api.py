@@ -25,7 +25,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.current_user_api_url = '/api/users/current'
         self.user_create_api_url = '/api/users/'
         self.user_profile_api_url = '/api/users/profiles/'
-        self.user_private_profile_api_url = '/api/users/private-profiles/'
+        self.user_private_profile_api_url = '/api/users/profiles/manage/'
         self.user_activation_api_url = '/api/users/activate/'
         self.user_password_reset_api_url = '/api/users/passwordreset'
         self.user_password_set_api_url = '/api/users/passwordset/'

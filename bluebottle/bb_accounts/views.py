@@ -20,7 +20,7 @@ from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.clients import properties
 
 # this belongs now to onepercent should be here in bluebottle
-from .serializers import (UserCreateSerializer, UserPrivateProfileSerializer, UserProfileSerializer,
+from .serializers import (UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
                           PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
@@ -32,10 +32,10 @@ class UserProfileDetail(generics.RetrieveAPIView):
     serializer_class = UserProfileSerializer
 
 
-class UserPrivateProfileDetail(generics.RetrieveUpdateAPIView):
+class ManageProfileDetail(generics.RetrieveUpdateAPIView):
     model = BB_USER_MODEL
     permission_classes = (TenantConditionalOpenClose, IsCurrentUser, )
-    serializer_class = UserPrivateProfileSerializer
+    serializer_class = ManageProfileSerializer
 
 
 class CurrentUser(generics.RetrieveAPIView):

@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url, include
 from rest_framework.routers import DefaultRouter
 
 from ..views import (
-    UserPrivateProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
+    ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
     PasswordReset, PasswordSet, DisableAccount)
 
 # Public User API:
@@ -27,9 +27,8 @@ urlpatterns = patterns(
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
     url(r'^passwordset/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})$',
         PasswordSet.as_view(), name='password-set'),
+    url(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
+        name='manage-profile'),
     url(r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),
         name='user-profile-detail'),
-    url(r'^private-profiles/(?P<pk>\d+)$', UserPrivateProfileDetail.as_view(),
-        name='user-profile-private-detail')
-
 )

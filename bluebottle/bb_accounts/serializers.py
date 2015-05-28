@@ -109,7 +109,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'website', 'twitter', 'facebook', 'skypename', )
 
 
-class UserPrivateProfileSerializer(UserProfileSerializer):
+class ManageProfileSerializer(UserProfileSerializer):
     """
     Serializer for the a member's private profile.
     """

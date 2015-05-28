@@ -271,7 +271,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             # No payment has been authorized
             statuses = {payment.authorization.status for payment in response.payment}
 
-            if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION', 'AUTHENTICATED', 'RISK_CHECK_OK', 'AUTHORIZED'} & statuses:
+            if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION', 'AUTHORIZATION_REQUESTED', 'AUTHENTICATED', 'RISK_CHECK_OK', 'AUTHORIZED'} & statuses:
                 # All these statuses belong are considered new
                 status = StatusDefinition.STARTED
             elif statuses == {'CANCELED', }:

@@ -75,7 +75,6 @@ class CurrentUserSerializer(UserPreviewSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-
     """
     Serializer for a member's public profile.
     """
@@ -103,13 +102,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'username', 'first_name', 'last_name',
-                  'full_name', 'short_name', 'picture',
-                  'primary_language', 'about_me', 'date_joined', 'location',
-                  'email', 'address', 'birthdate', 'gender', 'newsletter',
-                  'campaign_notifications', 'project_count', 'donation_count',
+        fields = ('id', 'url', 'full_name', 'short_name', 'picture',
+                  'primary_language', 'about_me', 'location',
+                  'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
                   'website', 'twitter', 'facebook', 'skypename', )
+
+
+class ManageProfileSerializer(UserProfileSerializer):
+    """
+    Serializer for the a member's private profile.
+    """
+    class Meta:
+        model = BB_USER_MODEL
+        fields = UserProfileSerializer.Meta.fields + (
+            'email', 'address', 'newsletter', 'campaign_notifications',
+            'birthdate', 'gender', 'first_name', 'last_name', 'username'
+        )
 
 
 # Thanks to Neamar Tucote for this code:

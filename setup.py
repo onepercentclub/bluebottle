@@ -80,11 +80,11 @@ install_requires = [
     'django-admin-tools==0.5.2',
 
     # Github requirements
-    'django-taggit-autocomplete-modified<=0.1.1',
-    'django-fluent-contents<=1.0c3',
-    'django-bb-salesforce<=1.1.12',
-    'django-tenant-extras<=1.8.2',
-    'django-token-auth<=0.1.1'
+    'django-taggit-autocomplete-modified==0.1.1',
+    'django-fluent-contents==1.0c3',
+    'django-bb-salesforce==1.1.12',
+    'django-tenant-extras==1.8.2',
+    'django-token-auth==0.1.1'
 ]
 
 tests_requires = [

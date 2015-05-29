@@ -108,7 +108,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'primary_language', 'about_me', 'date_joined', 'location',
                   'email', 'address', 'birthdate', 'gender', 'newsletter',
                   'campaign_notifications', 'project_count', 'donation_count',
-                  'fundraiser_count', 'task_count', 'time_spent')
+                  'fundraiser_count', 'task_count', 'time_spent',
+                  'website', 'twitter', 'facebook', 'skypename', )
 
 
 # Thanks to Neamar Tucote for this code:

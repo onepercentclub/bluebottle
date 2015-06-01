@@ -117,7 +117,6 @@ class ProjectAdmin(BaseProjectAdmin):
         return "{0} %".format(percentage)
 
 
-
 # We wrapped this in a try because sometimes Project hasn't got registered
 # before it hits this.
 try:

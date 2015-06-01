@@ -238,7 +238,6 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
         self.assertEqual(len(data), 16)
 
-
         for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)

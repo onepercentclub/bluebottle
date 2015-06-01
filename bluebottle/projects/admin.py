@@ -1,5 +1,6 @@
 import logging
 
+from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
@@ -13,6 +14,7 @@ from bluebottle.bb_tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 
 from .models import PartnerOrganization
+from bluebottle.bb_projects.models import ProjectTheme
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,12 @@ class ProjectBudgetLineInline(admin.TabularInline):
     extra = 0
 
 
+class ProjectAdminForm(forms.ModelForm):
+    theme = forms.ModelChoiceField(queryset=ProjectTheme.objects.all().filter(disabled=False))
+
 class ProjectAdmin(BaseProjectAdmin):
+    form = ProjectAdminForm
+
     inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline)
 
     list_filter = BaseProjectAdmin.list_filter + \

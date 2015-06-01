@@ -88,16 +88,20 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     def pre_save(self, obj):
         obj.author = self.request.user
 
-class MyTaskList(generics.ListAPIView):
+class MyTaskList(generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
     filter_fields = ('author',)
+    permission_classes = (IsProjectOwnerOrReadOnly, )
     serializer_class = MyTasksSerializer
 
     def get_queryset(self):
         if self.request.user.is_authenticated():
             return BB_TASK_MODEL.objects.filter(author=self.request.user)
         return BB_TASK_MODEL.objects.none()
+
+    def pre_save(self, obj):
+        obj.author = self.request.user
 
 
 class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):

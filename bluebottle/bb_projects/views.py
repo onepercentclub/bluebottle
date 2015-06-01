@@ -147,6 +147,7 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
 class ProjectThemeList(generics.ListAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
+    queryset = ProjectTheme.objects.all().filter(disabled=False)
 
 
 class ProjectUsedThemeList(ProjectThemeList):

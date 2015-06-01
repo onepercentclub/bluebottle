@@ -220,6 +220,29 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             self.assertIn('id', item)
             self.assertIn('name', item)
 
+    def test_api_project_theme_list_endpoint_disabled(self):
+        """
+        Test the API endpoint for Project theme list. Verify that disabled
+        themes are not returned
+        """
+        all_themes = list(ProjectTheme.objects.all())
+        disabled = all_themes[0]
+        disabled.disabled = True
+        disabled.save()
+
+        response = self.client.get(reverse('project_theme_list'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(len(data), 16)
+
+
+        for item in data:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertNotEquals(item['id'], disabled.id)
 
 class TestProjectThemeDetail(ProjectEndpointTestCase):
     """

@@ -11,10 +11,19 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_project_pha
 
 from .forms import ProjectDocumentForm
 
+from .models import ProjectTheme
+
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
+class ProjectThemeAdmin(admin.ModelAdmin):
+    list_display = admin.ModelAdmin.list_display + \
+        ('slug', 'disabled',)
+
+
+admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
 class ProjectDocumentInline(admin.StackedInline):

@@ -612,19 +612,13 @@ class DocdataModelTestCase(BluebottleTestCase):
 
     def test_direct_debit_wrong_pm(self):
         """
-        Test that a direct debit payments raises an exception if the default_pm
-        is not 'sepa_direct_debit'.
+        Test that a direct debit payments default_pm will be forced
+        to 'sepa_direct_debit'.
         """
         order_payment = OrderPaymentFactory.create(amount=1000)
-        try:
-            docdata_payment = DocdataDirectdebitPaymentFactory.create(
-                order_payment=order_payment,
-                default_pm='ideal',
-                total_gross_amount=1000
-            )
-            self.fail('Direct debit payments must have \'sepa_direct_debit\' as default_pm')
-        except PaymentException, e:
-            self.assertEqual(
-                e.message, 'Direct debit payment method should be: \'sepa_direct_debit\''
-            )
-
+        docdata_payment = DocdataDirectdebitPaymentFactory.create(
+            order_payment=order_payment,
+            default_pm='ideal',
+            total_gross_amount=1000
+        )
+        self.assertEqual(docdata_payment.default_pm, 'sepa_direct_debit')

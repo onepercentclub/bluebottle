@@ -47,8 +47,8 @@ class BaseTaskMember(models.Model):
     time_spent = models.PositiveSmallIntegerField(
         _('time spent'), default=0, help_text=_('Time spent executing this task.'))
 
-    #externals = models.PositiveSmallIntegerField(
-    #    _('Externals'), default=0, help_text=_('External people helping for this task'))
+    externals = models.PositiveSmallIntegerField(
+        _('Externals'), default=0, help_text=_('External people helping for this task'))
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

@@ -34,6 +34,7 @@ class ProjectTheme(models.Model):
     name_nl = models.CharField(_('name NL'), max_length=100, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
 
     class Meta:
         ordering = ['name']

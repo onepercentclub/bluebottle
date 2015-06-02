@@ -46,10 +46,7 @@ class Migration(SchemaMigration):
         u'bb_projects.projecttheme': {
             'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-<<<<<<< HEAD
             'disabled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-=======
->>>>>>> origin/saas
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
             'name_nl': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
@@ -224,11 +221,7 @@ class Migration(SchemaMigration):
             'deadline': ('django.db.models.fields.DateTimeField', [], {}),
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-<<<<<<< HEAD
-            'location': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
-=======
             'location': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True'}),
->>>>>>> origin/saas
             'people_needed': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
             'skill': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['tasks.Skill']", 'null': 'True'}),

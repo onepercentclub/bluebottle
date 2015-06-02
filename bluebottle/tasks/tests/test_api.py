@@ -11,7 +11,7 @@ BB_PROJECT_MODEL = get_project_model()
 
 
 class TaskApiTestcase(BluebottleTestCase):
-    """ Tests for Tasks in Booking """
+    """ Tests tasks api """
 
     def setUp(self):
         super(TaskApiTestcase, self).setUp()

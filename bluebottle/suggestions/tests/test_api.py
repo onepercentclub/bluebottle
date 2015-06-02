@@ -2,18 +2,18 @@ import datetime
 import json
 import uuid
 from datetime import date, timedelta
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.bb_projects.models import ProjectTheme
 
+from bluebottle.projects.models import Project
 
 class SuggestionsTokenTest(BluebottleTestCase):
     def setUp(self):
@@ -218,4 +218,44 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         self.assertEqual(len(data), 0)
 
 
+class AdoptTestCase(BluebottleTestCase):
+    """
+    Simulate the adoption of a suggestion
+    """
+    def setUp(self):
+        super(AdoptTestCase, self).setUp()
+        self.user_1 = BlueBottleUserFactory.create()
+        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
+        self.init_projects()
+        self.suggestion_list_url = "/api/suggestions/"
+
+    def test_suggestion_project_link(self):
+        SuggestionFactory.create(title="Adoptable",
+                                 destination="Amsterdam",
+                                 status="accepted",
+                                 project=None,
+                                 token='x',
+                                 org_name='Acme Inc.',
+                                 org_email='test@example.com',
+                                 org_website='http://example.com',
+                                 org_phone='123123123',
+                                 org_contactname='John Doe',
+                                 pitch='Eat more cheese'
+                                 )
+        response = self.client.get(self.suggestion_list_url,
+                      {'destination': "Amsterdam", status: "accepted"},
+                      HTTP_AUTHORIZATION=self.user_1_token)
+
+        data = json.loads(response.content)[0]
+        project = ProjectFactory.create(title="Adopting project")
+
+        data['project'] = project.slug
+
+        r = self.client.put(reverse('suggestion_detail',
+                                    kwargs={'pk':data['id']}),
+                            HTTP_AUTHORIZATION=self.user_1_token,
+                            data=data)
+
+        suggestion = Suggestion.objects.get(pk=data['id'])
+        self.assertEquals(Project.objects.get(pk=project.pk), suggestion.project)

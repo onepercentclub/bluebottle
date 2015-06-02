@@ -2,14 +2,13 @@ import datetime
 import json
 import uuid
 from datetime import date, timedelta
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.bb_projects.models import ProjectTheme
@@ -231,7 +230,7 @@ class AdoptTestCase(BluebottleTestCase):
         self.init_projects()
         self.suggestion_list_url = "/api/suggestions/"
 
-    def test_something(self):
+    def test_suggestion_project_link(self):
         SuggestionFactory.create(title="Adoptable",
                                  destination="Amsterdam",
                                  status="accepted",

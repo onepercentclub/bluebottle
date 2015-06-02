@@ -168,8 +168,8 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
             if properties.SEND_MAIL:
                 msg.send()
             else:
-                logger.info("Tried to send async email, but mail sending is\
-                            turned off. ")
+                logger.info("Tried to send async email, " +
+                            "but mail sending is turned off.")
         except Exception as e:
             logger.error("Exception sending synchronous email: {0}".format(e))
             return

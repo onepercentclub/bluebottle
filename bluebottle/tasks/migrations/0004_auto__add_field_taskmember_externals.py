@@ -8,14 +8,16 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding field 'TaskMember.externals'
+        db.add_column(u'tasks_taskmember', 'externals',
+                      self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=0),
+                      keep_default=False)
 
-        # Changing field 'Task.location'
-        db.alter_column(u'tasks_task', 'location', self.gf('django.db.models.fields.CharField')(max_length=200, null=True))
 
     def backwards(self, orm):
+        # Deleting field 'TaskMember.externals'
+        db.delete_column(u'tasks_taskmember', 'externals')
 
-        # Changing field 'Task.location'
-        db.alter_column(u'tasks_task', 'location', self.gf('django.db.models.fields.CharField')(default='', max_length=200))
 
     models = {
         u'auth.group': {
@@ -221,7 +223,7 @@ class Migration(SchemaMigration):
             'deadline': ('django.db.models.fields.DateTimeField', [], {}),
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'location': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True'}),
+            'location': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
             'people_needed': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
             'skill': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['tasks.Skill']", 'null': 'True'}),
@@ -244,6 +246,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'TaskMember'},
             'comment': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'externals': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '0'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'member': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'tasks_taskmember_related'", 'to': u"orm['members.Member']"}),
             'motivation': ('django.db.models.fields.TextField', [], {'blank': 'True'}),

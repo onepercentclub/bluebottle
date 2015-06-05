@@ -116,10 +116,7 @@ class DocdataDirectdebitPayment(AbstractDocdataPayment):
         """Make sure the payment method is always direct debit.
         """
         if self.default_pm != 'sepa_direct_debit':
-            raise PaymentException(
-                "Direct debit payment method should be: 'sepa_direct_debit'"
-            )
-
+            self.default_pm = 'sepa_direct_debit'
         super(DocdataDirectdebitPayment, self).save(*args, **kwargs)
 
 

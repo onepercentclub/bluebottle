@@ -1,9 +1,12 @@
 import time
 from datetime import datetime
 from requests import request, HTTPError
+
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+
 from bluebottle.bb_accounts.utils import valid_email, send_welcome_mail
+from bluebottle.clients import properties
 
 USER_MODEL = get_user_model()
 
@@ -24,6 +27,24 @@ def save_profile_picture(strategy, user, response, details,
                 user.picture.save('{0}_fb_social.jpg'.format(user.username),
                                   ContentFile(response.content))
                 user.save()
+
+
+def set_language(strategy, user, response, details,
+                         is_new=False, *args, **kwargs):
+
+    supported_langauges = [
+        lang_code for (lang_code, lang_name) in getattr(properties,
+                                                        'LANGUAGES')]
+
+    # Check if request includes supported language for tenant otherwise
+    # the user is created with the default language.
+    language = kwargs['request'].LANGUAGE_CODE[:2]
+    if language in supported_langauges:
+        user.primary_language = language
+    else:
+        user.primary_language = properties.LANGUAGE_CODE
+
+    user.save()
 
 
 def get_extra_facebook_data(strategy, user, response, details,

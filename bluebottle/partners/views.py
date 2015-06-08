@@ -15,6 +15,7 @@ class PartnerDetail(generics.RetrieveAPIView):
 
 class PartnerList(generics.ListAPIView):
     model = PartnerOrganization
+    serializer_class = PartnerOrganizationSerializer
 
 
 # Django view

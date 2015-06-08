@@ -100,7 +100,7 @@ class MyTasksSerializer(BaseTaskSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'skill', 'project', 'time_needed',
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'people_needed',
                   'status', 'deadline', 'description', 'location')
 
 # Task Wallpost serializers

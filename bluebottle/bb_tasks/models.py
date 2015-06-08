@@ -159,5 +159,9 @@ class BaseTask(models.Model, GetTweetMixin):
         self.status = self.TaskStatuses.in_progress
         self.save()
 
+    @property
+    def people_applied(self):
+        return self.members.count()
+
 
 from taskwallmails import *

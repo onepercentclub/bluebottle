@@ -5,11 +5,16 @@ from rest_framework import generics
 
 from bluebottle.clients.utils import tenant_url
 
+
 # API view
 
 class PartnerDetail(generics.RetrieveAPIView):
     model = PartnerOrganization
     serializer_class = PartnerOrganizationSerializer
+
+
+class PartnerList(generics.ListAPIView):
+    model = PartnerOrganization
 
 
 # Django view
@@ -31,4 +36,3 @@ class MacroMicroListView(ListView):
         context = super(MacroMicroListView, self).get_context_data(**kwargs)
         context['site'] = tenant_url()
         return context
-

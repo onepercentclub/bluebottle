@@ -10,6 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
 
         # Changing field 'Task.time_needed'
+        # Uses a direct db call, since we need to cast to double precision.
         db.execute(
             'ALTER TABLE "tasks_task" '
             'ALTER COLUMN "time_needed" SET NOT NULL, '

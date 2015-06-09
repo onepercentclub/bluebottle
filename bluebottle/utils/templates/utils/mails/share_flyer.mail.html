@@ -1,0 +1,25 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans %}
+        Hi {{share_name}}<br/>
+
+
+        {{sender_name}} ({{sender_email}}) wants to share a project with you:
+
+        <br/>
+        {{share_motivation}}
+        <br/>
+----- project flyer ------<br/>
+
+        <figure class="project-image">
+           <img src="{{project_image}}" width="100%" alt="Photo" />
+        </figure>
+
+        <h1>{{project_title}}</h1>
+        <p class="project-description">
+        {{project_pitch}}
+        </p>
+    {% endblocktrans %}
+{% endblock %}

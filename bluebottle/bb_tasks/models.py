@@ -131,9 +131,9 @@ class BaseTask(models.Model, GetTweetMixin):
     objects = models.Manager()
 
     # required resources
-    time_needed = models.CharField(
-        _('time_needed'), max_length=200,
-        help_text=_('Estimated number of hours needed to perform this task.'))
+    time_needed = models.FloatField(
+        _('time_needed'), help_text=_('Estimated number of hours needed to perform this task.'))
+
     skill = models.ForeignKey(settings.TASKS_SKILL_MODEL, verbose_name=_('Skill needed'), null=True)
 
     # internal usage

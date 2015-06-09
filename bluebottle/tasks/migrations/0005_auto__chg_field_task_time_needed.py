@@ -10,7 +10,12 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
 
         # Changing field 'Task.time_needed'
-        db.alter_column(u'tasks_task', 'time_needed', self.gf('django.db.models.fields.FloatField')())
+        db.execute(
+            'ALTER TABLE "tasks_task" '
+            'ALTER COLUMN "time_needed" SET NOT NULL, '
+            'ALTER COLUMN "time_needed" DROP DEFAULT, '
+            'ALTER COLUMN "time_needed" TYPE double precision USING trim(time_needed)::double precision'
+        )
 
     def backwards(self, orm):
 

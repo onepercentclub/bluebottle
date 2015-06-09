@@ -54,6 +54,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices,
                                      default=BB_TASK_MODEL.TaskStatuses.open)
     tags = TagSerializer()
+    time_needed = serializers.DecimalField(min_value=0.0)
 
     meta_data = MetaField(
         title='get_meta_title',

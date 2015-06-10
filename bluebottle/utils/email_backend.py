@@ -96,12 +96,13 @@ class TestMailBackend(EmailBackend):
         return True
 
 
-def create_message(template_name=None, to=None, subject=None, **kwargs):
+def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None, from_email=None, **kwargs):
 
     if hasattr(to, 'primary_language') and to.primary_language:
         language = to.primary_language
     else:
         language = properties.LANGUAGE_CODE
+
 
     with TenantLanguage(language):
         c = ClientContext(kwargs)
@@ -110,11 +111,18 @@ def create_message(template_name=None, to=None, subject=None, **kwargs):
         html_content = get_template(
             '{0}.html'.format(template_name)).render(c)
 
+        args = dict(subject=subject, body=text_content, to=[to.email])
+        if cc:
+            args['cc'] = cc
+        if bcc:
+            args['bcc'] = bcc
+
+        # even if it's None
+        args['from_email'] = from_email
+
         # Calling force_unicode on the subject below in case the subject
         # is being translated using ugettext_lazy.
-        msg = EmailMultiAlternatives(subject=force_unicode(subject),
-                                     body=text_content,
-                                     to=[to.email])
+        msg = EmailMultiAlternatives(**args)
         msg.activated_language = translation.get_language()
         msg.attach_alternative(html_content, "text/html")
         return msg

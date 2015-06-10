@@ -43,5 +43,7 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
 
         if from_email is None and tenant_from:
             kwargs['from_email'] = tenant_from
+        elif from_email:
+            kwargs['from_email'] = from_email
 
         super(EmailMultiAlternatives, self).__init__(*args, **kwargs)

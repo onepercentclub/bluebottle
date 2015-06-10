@@ -94,6 +94,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
                                              default=properties.LANGUAGE_CODE)
     location = serializers.PrimaryKeyRelatedField(required=False)
 
+    avatar = SorlImageField('picture', '133x133', crop='center',
+                            required=False)
+
     project_count = serializers.Field()
     donation_count = serializers.Field()
     fundraiser_count = serializers.Field()
@@ -103,7 +106,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'full_name', 'short_name', 'picture',
-                  'primary_language', 'about_me', 'location',
+                  'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
                   'website', 'twitter', 'facebook', 'skypename', )

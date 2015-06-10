@@ -19,10 +19,11 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.clients.context import ClientContext
 
-PROJECT_MODEL = get_project_model()
-
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
+
+
+PROJECT_MODEL = get_project_model()
 
 
 class TagList(views.APIView):

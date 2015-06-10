@@ -1,15 +1,27 @@
 from django.conf import settings
+from collections import namedtuple
 import os
 
 from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
 from django.views.generic.base import View
+from django.template.loader import render_to_string
+from django.utils.translation import ugettext as _
+
+from sorl.thumbnail.shortcuts import get_thumbnail
 
 from filetransfers.api import serve_file
 from rest_framework import generics
-from rest_framework import views, response
+from rest_framework import views, response, status
 from taggit.models import Tag
 
+from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.clients.context import ClientContext
+
+PROJECT_MODEL = get_project_model()
+
+from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
 
 
@@ -40,18 +52,10 @@ class TagSearch(views.APIView):
         data = [tag.name for tag in Tag.objects.filter(name__startswith=search).all()[:20]]
         return response.Response(data)
 
-from bluebottle.utils.email_backend import send_mail
-from django.utils.translation import ugettext as _
-from collections import namedtuple
-
-from django.template.loader import render_to_string
-from bluebottle.utils.model_dispatcher import get_project_model
-from sorl.thumbnail.shortcuts import get_thumbnail
-from bluebottle.clients.context import ClientContext
-
-PROJECT_MODEL = get_project_model()
 
 class ShareFlyer(views.APIView):
+    serializer_class = ShareSerializer
+
     def project_args(self, projectid):
         try:
             project = PROJECT_MODEL.objects.get(slug=projectid)
@@ -70,7 +74,7 @@ class ShareFlyer(views.APIView):
 
         return args
 
-    def get(self, request, slug=None):
+    def get(self, request, slug):
         """
             return the bare email as preview. We do not (always) have access to the
             logged in user so use fake data
@@ -82,8 +86,12 @@ class ShareFlyer(views.APIView):
 
         args['share_name'] = "John Doe"
         args['share_email'] = "john@example.com"
-        args['sender_name'] = "Jane Doe"
-        args['sender_email'] = "jane@example.com"
+        if self.request.user.is_authenticated():
+            args['sender_name'] = self.request.user.get_full_name() or self.request.user.username
+            args['sender_email'] = self.request.user.email
+        else:
+            args['sender_name'] = "John Doe"
+            args['sender_email'] = "john.doe@exampe.com"
 
         args['share_motivation'] = """(sample motivation) Great to see you again this afternoon. Attached you'll find a project flyer for the big event next friday. If you care to join in, please let me know, I'll add you as my +1 on the attendee list.
 
@@ -92,15 +100,21 @@ class ShareFlyer(views.APIView):
         Cheers,
 
         Jane"""
-        # strip outer <html> stuff??
+
         result = render_to_string('utils/mails/share_flyer.mail.html', {},
                                   ClientContext(args))
         return response.Response({'preview': result})
 
-    def post(self, request, slug=None, **data):
+    def post(self, request, slug):
         """ Let's assume a user has to be logged in in order to share a flyer -
             it can't be done anonymously (in which case we'd have to ask for
             personal details """
+
+        serializer = ShareSerializer(data=request.DATA)
+
+        if not serializer.is_valid():
+            return response.Response(serializer.errors,
+                                     status=status.HTTP_400_BAD_REQUEST)
 
         args = self.project_args(slug)
 
@@ -109,10 +123,10 @@ class ShareFlyer(views.APIView):
 
         sender_name = self.request.user.get_full_name() or self.request.user.username
         sender_email = self.request.user.email
-        share_name = data.get('share_name', None)
-        share_email = data.get('share_email', None)
-        share_motivation = data.get('share_motivation', None)
-        share_cc = data.get('share_cc', 'false') == 'true'
+        share_name = serializer.object.get('share_name', None)
+        share_email = serializer.object.get('share_email', None)
+        share_motivation = serializer.object.get('share_motivation', None)
+        share_cc = serializer.object.get('share_cc', 'false') == 'true'
 
         args.update(dict(
             template_name='utils/mails/share_flyer.mail',

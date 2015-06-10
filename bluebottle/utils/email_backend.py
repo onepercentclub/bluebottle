@@ -103,7 +103,6 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
     else:
         language = properties.LANGUAGE_CODE
 
-
     with TenantLanguage(language):
         c = ClientContext(kwargs)
         text_content = get_template(

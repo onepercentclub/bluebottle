@@ -63,10 +63,13 @@ class ShareFlyer(views.APIView):
         except PROJECT_MODEL.DoesNotExist:
             return None
 
-        ## make sure url is tenant aware
-        project_image = self.request.build_absolute_uri(
-                        settings.MEDIA_URL + unicode(get_thumbnail(project.image,
-                                                                   "400x380")))
+        if project.image:
+            project_image = self.request.build_absolute_uri(
+                            settings.MEDIA_URL + unicode(get_thumbnail(project.image,
+                                                                       "400x380")))
+        else:
+            project_image = None
+
         args = dict(
             project_title=project.title,
             project_pitch=project.pitch,
@@ -127,7 +130,7 @@ class ShareFlyer(views.APIView):
         share_name = serializer.object.get('share_name', None)
         share_email = serializer.object.get('share_email', None)
         share_motivation = serializer.object.get('share_motivation', None)
-        share_cc = serializer.object.get('share_cc', 'false') == 'true'
+        share_cc = serializer.object.get('share_cc')
 
         args.update(dict(
             template_name='utils/mails/share_flyer.mail',
@@ -145,7 +148,7 @@ class ShareFlyer(views.APIView):
 
         result = send_mail(**args)
 
-        return response.Response(result, status=200)
+        return response.Response({}, status=200)
 
 # Non API views
 # Download private documents based on content_type (id) and pk

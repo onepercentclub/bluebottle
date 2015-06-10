@@ -94,7 +94,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
                                              default=properties.LANGUAGE_CODE)
     location = serializers.PrimaryKeyRelatedField(required=False)
 
-    avatar = SorlImageField('picture', '133x133', crop='center')
+    avatar = SorlImageField('picture', '133x133', crop='center',
+                            required=False)
 
     project_count = serializers.Field()
     donation_count = serializers.Field()

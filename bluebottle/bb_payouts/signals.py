@@ -13,14 +13,14 @@ logger = logging.getLogger()
 
 
 def _set_properties():
-    # If this signal is being triggered from a cron job then 
+    # If this signal is being triggered from a cron job then
     # the tenant properties will not be loaded. Check below
     # and setup the tenant properties if required.
     from bluebottle.clients import properties
     from django.db import connection
 
     try:
-        tenant = properties.tenant 
+        tenant = properties.tenant
     except AttributeError:
         tenant = connection.tenant
         properties.set_tenant(tenant)
@@ -75,8 +75,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 if project.is_closed:
                     payout.status = StatusDefinition.SETTLED
 
-                payout.save()
-
                 # # Set payment details
                 try:
                     IBANValidator()(project.account_number)
@@ -90,5 +88,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 payout.receiver_account_city = project.account_holder_city
                 payout.receiver_account_country = project.account_bank_country
 
-                # Generate invoice reference, saves twice
-                payout.update_invoice_reference(auto_save=True)
+                payout.save()
+
+

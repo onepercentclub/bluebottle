@@ -141,7 +141,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         choices=properties.LANGUAGES, default=properties.LANGUAGE_CODE)
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
-    newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=False)
+    newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=True)
     phone_number = models.CharField(_('phone number'), max_length=50, blank=True)
     gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
     birthdate = models.DateField(_('birthdate'), null=True, blank=True)

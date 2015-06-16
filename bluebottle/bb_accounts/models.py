@@ -286,35 +286,19 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         taskmember_count = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized']).count()
         return task_count + taskmember_count
 
-    def get_donations_qs(self):
-        qs = get_donation_model().objects.filter(order__user=self)
-        return qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
-
     @property
     def donation_count(self):
         """ Returns the number of donations a user has made """
-        return self.get_donations_qs().count()
+        qs = get_donation_model().objects.filter(order__user=self)
+        qs = qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
 
-    @property
-    def funding(self):
-        """ Returns the number of projects a user has donated to """
-        return self.get_donations_qs().distinct('project').count()
-
-    def get_tasks_qs(self):
-        return get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized'])
+        return qs.count()
 
     @property
     def time_spent(self):
         """ Returns the number of donations a user has made """
-        return self.get_tasks_qs().aggregate(Sum('time_spent'))['time_spent__sum']
-
-    @property
-    def sourcing(self):
-        return self.get_tasks_qs().distinct('task__project').count()
-
-    @property
-    def projects_supported(self):
-        return self.funding + self.sourcing
+        qs = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized'])
+        return qs.aggregate(Sum('time_spent'))['time_spent__sum']
 
     @property
     def project_count(self):

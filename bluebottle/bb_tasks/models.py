@@ -55,8 +55,10 @@ class BaseTaskMember(models.Model):
 
     _initial_status = None
 
-    #objects = models.Manager()
+    # objects = models.Manager()
 
+    class Meta:
+        abstract = True
 
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
@@ -81,12 +83,16 @@ class BaseTaskMember(models.Model):
         if self.member.email:
             return self.member.email
         return _("No email address for this user")
-
     get_member_email.admin_order_field = 'member__email'
     get_member_email.short_description = "Member Email"
 
-    class Meta:
-        abstract = True
+    @property
+    def partners(self):
+        """
+        Get the amount of partners for this task
+        """
+        accepted = get_taskmember_model().objects.filter(task=self.task, status='accepted')
+        return max(accepted.count() - 1, 0)
 
 
 class BaseTaskFile(models.Model):
@@ -158,6 +164,10 @@ class BaseTask(models.Model, GetTweetMixin):
     def set_in_progress(self):
         self.status = self.TaskStatuses.in_progress
         self.save()
+
+    @property
+    def people_applied(self):
+        return self.members.count()
 
 
 from taskwallmails import *

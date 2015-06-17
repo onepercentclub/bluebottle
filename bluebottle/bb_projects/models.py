@@ -16,7 +16,7 @@ from django_extensions.db.fields import (
 
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_phaselog_model, get_taskmember_model
 from bluebottle.utils.utils import GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
@@ -344,6 +344,27 @@ class BaseProject(models.Model, GetTweetMixin):
         if save:
             self.save()
 
+    @property
+    def funding(self):
+        """
+        Return the amount of people funding this project
+        """
+        return self.donation_set.filter(
+            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        ).distinct('order__user').count()
+
+    @property
+    def sourcing(self):
+        taskmembers = get_taskmember_model().objects.filter(
+            task__project=self,
+            status__in=['applied', 'accepted', 'realized']
+        ).distinct('member')
+        return taskmembers.count()
+
+    @property
+    def supporters(self):
+        return self.funding + self.sourcing
+
 
 class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
@@ -356,4 +377,3 @@ class BaseProjectPhaseLog(models.Model):
 
 
 from projectwallmails import *
-

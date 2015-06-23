@@ -80,7 +80,8 @@ def update_salesforce(tenant=None,
                       synchronize=False,
                       updated=False,
                       csv_export=False,
-                      verbosity='3'):
+                      verbosity='3',
+                      log_to_salesforce=False):
     logger.info("Updating Salesforce")
 
     try:
@@ -89,7 +90,8 @@ def update_salesforce(tenant=None,
                      synchronize=synchronize,
                      updated=updated,
                      verbosity=verbosity,
-                     csv_export=csv_export)
+                     csv_export=csv_export,
+                     log_to_salesforce=log_to_salesforce)
     except Exception as e:
         logger.error("Error running salesforce celery task: {0}".format(e))
 

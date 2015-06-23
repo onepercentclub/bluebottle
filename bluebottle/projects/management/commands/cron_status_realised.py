@@ -84,8 +84,8 @@ class Command(BaseCommand):
         self.stdout.write("Checking Task deadlines...\n\n")
         for task in Task.objects.filter(status='in progress',
                                         deadline__lt=now()).all():
-            task.status = 'realized'
-            task.save()
+
+            task.deadline_reached()
 
         self.stdout.write(
             "Successfully updated the status of expired Project and Task \

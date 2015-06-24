@@ -54,7 +54,7 @@ install_requires = [
     'micawber==0.2.6',
     'requests==2.3.0',
     'sorl-thumbnail==11.12',
-    'transifex-client==0.9.1',
+    'transifex-client==0.11b3',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz==1.2',

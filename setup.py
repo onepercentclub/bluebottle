@@ -16,7 +16,7 @@ dependency_links = [
     'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
     'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
     'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.13.zip#egg=django-bb-salesforce-1.1.13',
-    'https://github.com/onepercentclub/django-tenant-extras/archive/feature/BB-3929-cache-busting-filenames#egg=django-tenant-extras-1.8.6',
+    'https://github.com/onepercentclub/django-tenant-extras/f1a26ae928a6f600e476a5d1b8a1073de832cae2.zip#egg=django-tenant-extras-1.8.6',
     'https://github.com/onepercentclub/django-token-auth/archive/0.1.2.zip#egg=django-token-auth-0.1.2'
 ]
 

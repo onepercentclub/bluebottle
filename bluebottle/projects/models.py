@@ -1,5 +1,6 @@
 import datetime
 import pytz
+from django.utils.timezone import now
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
@@ -385,6 +386,26 @@ class Project(BaseProject):
         if new_status == status_incomplete:
             mail_project_incomplete(self)
 
+    def deadline_reached(self):
+        # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
+        from bluebottle.utils.model_dispatcher import get_task_model
+        TASK_MODEL = get_task_model()
+
+        if self.is_funding:
+            if self.amount_donated >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+            elif self.amount_donated <= 20 or not self.campaign_started:
+                self.status = ProjectPhase.objects.get(slug="closed")
+            else:
+                self.status = ProjectPhase.objects.get(slug="done-incomplete")
+            self.campaign_ended = now()
+            self.save()
+        else:
+            if self.task_set.filter(status__in=[TASK_MODEL.TaskStatus.in_progress,
+                                                TASK_MODEL.TaskStatuses.open]).count() > 0:
+                self.status = ProjectPhase.objects.get(slug="done-incomplete")
+            else:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
 
 
 class ProjectBudgetLine(models.Model):

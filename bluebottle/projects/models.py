@@ -377,18 +377,12 @@ class Project(BaseProject):
         super(Project, self).save(*args, **kwargs)
 
     def status_changed(self, old_status, new_status):
-        print "Status changed from {0} to {1}".format(old_status, new_status)
-
-        ## find done-complete, done-incomplete states, check against status,
-        ## send relevant mail
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
 
         if new_status == status_complete:
-            print u"{0} is now complete".format(self.title).encode('utf8')
             mail_project_complete(self)
         if new_status == status_incomplete:
-            print u"{0} is now incomplete".format(self.title).encode('utf8')
             mail_project_incomplete(self)
 
 

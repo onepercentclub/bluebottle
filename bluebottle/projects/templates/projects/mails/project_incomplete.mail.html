@@ -1,0 +1,15 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with receiver_name=to.short_name  %}
+
+Hello {{receiver_name}}
+<br><br>
+Bummer! Your project "{{title}}" has expired!<br>
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+<a href="{{ site }}{{ link }}" class="action-email">{% trans 'Check your project' context 'email' %}</a>
+{% endblock %}`

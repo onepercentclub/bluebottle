@@ -443,13 +443,28 @@ def email_project_team_project_funded(sender, instance, first_time_funded, **kwa
 
 @receiver(post_init, sender=Project, dispatch_uid="bluebottle.projects.Project.post_init")
 def project_post_init(sender, instance, **kwargs):
-    instance._init_status = instance.status
+    try:
+        instance._init_status = instance.status
+    except ProjectPhase.DoesNotExist:
+        instance._init_status = None
 
 @receiver(post_save, sender=Project, dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
     try:
-        if instance._init_status != instance.status:
-            instance.status_changed(instance._init_status, instance.status)
+        init_status, current_status = None, None
+
+        try:
+            init_status = instance._init_status
+        except ProjectPhase.DoesNotExist:
+            pass
+
+        try:
+            current_status = instance.status
+        except ProjectPhase.DoesNotExist:
+            pass
+
+        if init_status != current_status:
+            instance.status_changed(init_status, current_status)
     except AttributeError:
         pass
 

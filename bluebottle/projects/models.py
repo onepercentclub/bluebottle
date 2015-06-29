@@ -398,15 +398,14 @@ class Project(BaseProject):
                 self.status = ProjectPhase.objects.get(slug="closed")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            self.campaign_ended = now()
-            self.save()
         else:
-            if self.task_set.filter(status__in=[TASK_MODEL.TaskStatus.in_progress,
+            if self.task_set.filter(status__in=[TASK_MODEL.TaskStatuses.in_progress,
                                                 TASK_MODEL.TaskStatuses.open]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
-
+        self.campaign_ended = now()
+        self.save()
 
 class ProjectBudgetLine(models.Model):
     """

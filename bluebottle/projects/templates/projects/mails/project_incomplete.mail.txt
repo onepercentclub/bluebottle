@@ -4,13 +4,14 @@
 {% block content %}
 {% blocktrans with receiver_name=to.short_name  %}
 
-Hello {{receiver_name}}
+Hi {{receiver_name}},
 
-Bummer! Your project "{{title}}" has expired!<br>
-Please be sure to confirm all participants.
+The deadline of your project "{{title}}" has expired!
+
+Don't wait any longer. Let your supporters know about your next steps.
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-{% trans 'Check your project' context 'email' %} {{ site }}{{ link }}
+{% trans 'Share an update' context 'email' %} {{ site }}{{ link }}
 {% endblock %}`

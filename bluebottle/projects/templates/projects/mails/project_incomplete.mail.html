@@ -4,12 +4,14 @@
 {% block content %}
 {% blocktrans with receiver_name=to.short_name  %}
 
-Hello {{receiver_name}}
+Hi {{receiver_name}},
 <br><br>
-Bummer! Your project "{{title}}" has expired!<br>
+The deadline of your project "{{title}}" has expired!<br>
+<br>
+Don't wait any longer. Let your supporters know about your next steps.<br>
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}{{ link }}" class="action-email">{% trans 'Check your project' context 'email' %}</a>
+<a href="{{ site }}{{ link }}" class="action-email">{% trans 'Share an update' context 'email' %}</a>
 {% endblock %}`

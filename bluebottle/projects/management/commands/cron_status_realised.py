@@ -28,11 +28,11 @@ class Command(BaseCommand):
         self.stdout.write("Checking deadlines for client {0}".
                           format(client.client_name))
 
+        # we no longer need the actual phases (moved to project)
+        # but verify they exist, just to be sure
         try:
-            done_complete_phase = ProjectPhase.objects.get(
-                slug='done-complete')
-            done_incomplete_phase = ProjectPhase.objects.get(
-                slug='done-incomplete')
+            ProjectPhase.objects.get(slug='done-complete')
+            ProjectPhase.objects.get(slug='done-incomplete')
         except ProjectPhase.DoesNotExist:
             raise CommandError(
                 "A ProjectPhase with name 'Done-Complete' or 'Done-Incomplete' \
@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 "A ProjectPhase with name 'Campaign' does not exist")
 
         try:
-            closed_phase = ProjectPhase.objects.get(slug='closed')
+            ProjectPhase.objects.get(slug='closed')
         except ProjectPhase.DoesNotExist:
             raise CommandError(
                 "A ProjectPhase with slug 'closed' does not exist")
@@ -68,14 +68,7 @@ class Command(BaseCommand):
         self.stdout.write("Checking Project deadlines...")
         for project in Project.objects.filter(status=campaign_phase,
                                               deadline__lte=now()):
-            if project.amount_donated >= project.amount_asked:
-                project.status = done_complete_phase
-            elif project.amount_donated <= 20 or not project.campaign_started:
-                project.status = closed_phase
-            else:
-                project.status = done_incomplete_phase
-            project.campaign_ended = now()
-            project.save()
+            project.deadline_reached()
 
         """
         Iterate over tasks and save them one by one so the receivers get a

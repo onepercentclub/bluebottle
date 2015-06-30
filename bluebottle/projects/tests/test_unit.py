@@ -1,6 +1,5 @@
 from datetime import timedelta, time
 from decimal import Decimal
-from django.test import TestCase
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -14,7 +13,6 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import CountryFactory
 
 
 PROJECT_MODEL = get_project_model()

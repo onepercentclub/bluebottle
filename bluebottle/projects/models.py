@@ -73,13 +73,13 @@ class ProjectManager(models.Manager):
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.order_by('-campaign_started')
-            queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'popularity':
             queryset = queryset.order_by('-popularity')
             if status == 5:
                 queryset = queryset.filter(amount_needed__gt=0)
         elif ordering:
             queryset = queryset.order_by(ordering)
+
         return queryset
 
 

@@ -1,17 +1,22 @@
 from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin
 from django.db.models.query_utils import Q
+from django.db.models import Count, Sum
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
+from bluebottle.utils.utils import get_client_ip
 from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer)
-from .permissions import IsProjectOwner
+from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer,
+                          ProjectDocumentSerializer)
+from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
+PROJECT_DOCUMENT_MODEL = get_project_document_model()
 
 
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
@@ -22,7 +27,10 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
     def get_queryset(self):
         query = self.request.QUERY_PARAMS
         qs = PROJECT_MODEL.objects.search(query=query)
-        return qs.filter(status__viewable=True).all()
+        qs = qs.annotate(people_requested=Sum('task__people_needed'))
+        qs = qs.annotate(people_registered=Count('task__members'))
+
+        return qs.filter(status__viewable=True)
 
 
 class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
@@ -30,6 +38,9 @@ class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
+        qs = qs.annotate(people_requested=Sum('task__people_needed'))
+        qs = qs.annotate(people_registered=Count('task__members'))
+
         return qs
 
 
@@ -101,8 +112,8 @@ class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
 
 class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
     model = PROJECT_MODEL
-    permission_classes = (IsAuthenticated, )
-    paginate_by = 10
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
+    paginate_by = 100
 
     def get_queryset(self):
         """
@@ -124,7 +135,7 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
 
 class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL
-    permission_classes = (IsProjectOwner, )
+    permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
 
     def get_object(self):
         # Call the superclass
@@ -134,11 +145,12 @@ class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView)
         self.current_status = object.status
 
         return object
-        
+
 
 class ProjectThemeList(generics.ListAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
+    queryset = ProjectTheme.objects.all().filter(disabled=False)
 
 
 class ProjectUsedThemeList(ProjectThemeList):
@@ -151,3 +163,25 @@ class ProjectUsedThemeList(ProjectThemeList):
 class ProjectThemeDetail(generics.RetrieveAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
+
+
+class ManageProjectDocumentList(generics.ListCreateAPIView):
+    model = PROJECT_DOCUMENT_MODEL
+    serializer_class = ProjectDocumentSerializer
+    paginate_by = 20
+    filter = ('project', )
+
+    def pre_save(self, obj):
+        obj.author = self.request.user
+        obj.ip_address = get_client_ip(self.request)
+
+
+class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
+    model = PROJECT_DOCUMENT_MODEL
+    serializer_class = ProjectDocumentSerializer
+    paginate_by = 20
+    filter = ('project', )
+
+    def pre_save(self, obj):
+        obj.author = self.request.user
+        obj.ip_address = get_client_ip(self.request)

@@ -1,9 +1,0 @@
-{% load templatetag_handlebars %}
-{% load i18n %}
-{% load static %}
-
-{% tplhandlebars "components/bb-text-field-disabled" %}
-    {{#bb-form-field hint=hint label=label errors=errors contentBinding='content'}}
-        {{view Em.TextField nameBinding=name valueBinding='value' disabled='disabled'}}
-    {{/bb-form-field}}
-{% endtplhandlebars %}

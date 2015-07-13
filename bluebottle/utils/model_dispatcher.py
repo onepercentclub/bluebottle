@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import get_model
+from django.db import models
+from django.core.management import call_command
 
 
 def get_task_skill_model():
@@ -28,6 +30,10 @@ def get_project_phaselog_model():
     return get_model_class('PROJECTS_PHASELOG_MODEL')
 
 
+def get_project_document_model():
+    return get_model_class('PROJECT_DOCUMENT_MODEL')
+
+
 def get_donation_model():
     return get_model_class('DONATIONS_DONATION_MODEL')
 
@@ -48,10 +54,6 @@ def get_organizationmember_model():
     return get_model_class('ORGANIZATIONS_MEMBER_MODEL')
 
 
-def get_organizationdocument_model():
-    return get_model_class('ORGANIZATIONS_DOCUMENT_MODEL')
-
-
 def get_payment_logger_model():
     return get_model_class('PAYMENT_LOGGER_MODEL')
 
@@ -62,6 +64,10 @@ def get_project_payout_model():
 
 def get_organization_payout_model():
     return get_model_class('PAYOUTS_ORGANIZATIONPAYOUT_MODEL')
+
+
+def get_client_model():
+    return get_model_class('TENANT_MODEL')
 
 
 def get_auth_user_model():
@@ -136,6 +142,24 @@ def get_model_mapping():
         + _map_model('fundraiser', 'FUNDRAISERS_FUNDRAISER_MODEL').items()
         + _map_model('organization', 'ORGANIZATIONS_ORGANIZATION_MODEL').items()
         + _map_model('organization_member', 'ORGANIZATIONS_MEMBER_MODEL').items()
-        + _map_model('organization_document', 'ORGANIZATIONS_DOCUMENT_MODEL').items()
+        + _map_model('project_document', 'PROJECT_DOCUMENT_MODEL').items()
+        + _map_model('client', 'TENANT_MODEL').items()
     )
     return map
+
+
+def load_fixture(file_name, orm):
+    original_get_model = models.get_model
+
+    def get_model_southern_style(*args):
+        try:
+            return orm['.'.join(args)]
+        except:
+            return original_get_model(*args)
+
+    models.get_model = get_model_southern_style
+
+    call_command('loaddata', file_name)
+
+    models.get_model = original_get_model
+

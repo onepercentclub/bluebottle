@@ -1,12 +1,10 @@
-from bluebottle.test.utils import BluebottleTestCase
 from django.core.urlresolvers import reverse
-
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-
-from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.geo.models import Country
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -16,11 +14,15 @@ class GeoTestCase(BluebottleTestCase):
     The testing classes for ``slide`` module related to the API must
     subclass this.
     """
+    fixtures = ['geo_data.json']
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
-        self.country_1 = CountryFactory.create(name="Afghanistan")
-        self.country_2 = CountryFactory.create(name="Albania")
 
+        self.init_projects()
+
+        self.country_1 = Country.objects.get(name="Abkhazia")
+\
 
 class CountryListTestCase(GeoTestCase):
     """
@@ -35,7 +37,7 @@ class CountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('country-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 245)
 
 
     def test_api_country_list_data(self):
@@ -45,16 +47,18 @@ class CountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('country-list'))
 
         country = response.data[0]
-        self.assertEqual(country['id'], 1)
-        self.assertEqual(country['name'], 'Afghanistan')
-        self.assertEqual(country['oda'], False)
-        self.assertEqual(country['code'], '')
+        self.assertEqual(country['id'], self.country_1.id)
+        self.assertEqual(country['name'], self.country_1.name)
+        self.assertEqual(country['code'], 'GE')
+
 
 class UsedCountryListTestCase(GeoTestCase):
 
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
-        self.project = ProjectFactory.create(country=self.country_1)
+
+        campaign_status = ProjectPhase.objects.get(slug='campaign')
+        self.project = ProjectFactory.create(country=self.country_1, status=campaign_status)
 
     """
     Test case for ``CountryList`` API view.

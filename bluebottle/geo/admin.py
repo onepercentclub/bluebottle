@@ -1,5 +1,11 @@
-from .models import Region, SubRegion, Country
 from django.contrib import admin
+from django import forms
+
+from geoposition.widgets import GeopositionWidget
+
+from bluebottle.geo.models import Location
+
+from .models import Region, SubRegion, Country
 
 
 class RegionAdmin(admin.ModelAdmin):
@@ -21,3 +27,10 @@ class CountryAdmin(admin.ModelAdmin):
     search_fields = ('name', 'alpha2_code', 'alpha3_code')
 
 admin.site.register(Country, CountryAdmin)
+
+
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'position')
+    model = Location
+
+admin.site.register(Location, LocationAdmin)

@@ -22,7 +22,7 @@ class Suggestion(models.Model):
 
     created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'), help_text=_('When this project was updated.'))
-    
+
     title = models.TextField() ## description
     pitch = models.TextField() ## requirements
     deadline = models.DateField() ## date
@@ -35,10 +35,11 @@ class Suggestion(models.Model):
     org_phone = models.CharField(max_length=64)
     org_website = models.URLField()
 
-    status = models.CharField(_("status"), choices=Statuses.choices, max_length=64, default="unconfirmed")
+    status = models.CharField(_("status"), choices=Statuses.choices, max_length=64,
+                              default="unconfirmed")
     token = models.CharField(max_length=100)
 
-    project = models.ForeignKey(PROJECT_MODEL, related_name="suggestions", 
+    project = models.ForeignKey(PROJECT_MODEL, related_name="suggestions",
                                 null=True, blank=True)
 
     def confirm(self):

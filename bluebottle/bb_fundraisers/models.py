@@ -7,7 +7,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 from django.db.models import options
 from bluebottle.utils.utils import GetTweetMixin
 
@@ -30,6 +30,8 @@ class BaseFundraiser(models.Model, GetTweetMixin):
     created = CreationDateTimeField(_("created"), help_text=_("When this fundraiser was created."))
     updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
+
+    location = models.ForeignKey('geo.Location', null=True, blank=True)
 
     def __unicode__(self):
         return self.title

@@ -1,5 +1,7 @@
 from django.test import TestCase
 from mock import patch
+
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.payments.services import PaymentService
@@ -10,10 +12,12 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import FsmTestMixin
 
 
-class TestPaymentLogger(TestCase, FsmTestMixin):
+class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
 
     @patch.object(DocdataClient, 'create')
     def setUp(self, mock_client_create):
+        super(TestPaymentLogger, self).setUp()
+
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 
         self.order = OrderFactory.create(total=35)
@@ -37,7 +41,10 @@ class TestPaymentLogger(TestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_check_authorized_status_logged(self, mock_fetch_status, mock_transaction):
         # Mock the status check with docdata
-        mock_fetch_status.return_value = self.create_status_response('AUTHORIZED')
+        mock_fetch_status.return_value = self.create_status_response(
+            'AUTHORIZED',
+            totals={'totalAcquirerApproved': '1000', 'totalRegistered': '1000'}
+        )
         self.service.check_payment_status()
 
         last_log = PaymentLogEntry.objects.all().order_by('-timestamp')[:1][0]
@@ -46,12 +53,14 @@ class TestPaymentLogger(TestCase, FsmTestMixin):
         self.assertEqual(last_log.payment_id, self.order_payment.payment.id)
         self.assertEqual(last_log.message, 'DocdataPayment object - a new payment status authorized')
         self.assertEqual(last_log.level, 'INFO')
-        
 
-class TestPaymentLoggerAdapter(TestCase):
+
+class TestPaymentLoggerAdapter(BluebottleTestCase):
 
     @patch.object(DocdataClient, 'create')
     def setUp(self, mock_client_create):
+        super(TestPaymentLoggerAdapter, self).setUp()
+
         # Mock response to creating the payment at docdata
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
 

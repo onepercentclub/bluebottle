@@ -4,7 +4,9 @@ from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory, Task
 
 
 class TestTaskMemberCase(BluebottleTestCase):
-        
+    def setUp(self):
+        self.init_projects()
+
     def test_check_number_of_members_needed_no_externals_count(self):
         """ Test that 'check_number_of_members_needed' returns the right count without externals"""
         task = TaskFactory.create(status='open', people_needed=4)
@@ -47,7 +49,9 @@ class TestTaskMemberCase(BluebottleTestCase):
 
 
 class TestTaskCase(BluebottleTestCase):
-    
+    def setUp(self):
+        self.init_projects()
+
     def test_save_check_status_update_insufficent_accepted_members(self):
         """ Check that the save method correctly sets the status of the task if not enough task members are 
             accepted for the task and the save method is called """

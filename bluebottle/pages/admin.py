@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.utils.safestring import mark_safe
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
@@ -64,7 +65,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         page = self.get_base_object(pk)
         return render(request, 'admin/pages/preview_canvas.html', {
             'page': page,
-            'body': render_placeholder(request, page.body)
+            'body': mark_safe(render_placeholder(request, page.body).html)
         })
 
     def _get_formset_objects(self, formset):

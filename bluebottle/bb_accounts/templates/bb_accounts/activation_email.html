@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans %}
+
+<h1>Welcome {{ first_name }}</h1>
+<p class="lead">You're officially part of {{ site_name }}</p>
+<br>
+[info about the platform]
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+<a href="{{ site }}" class="action-email">{% trans "Let's get started" context 'email' %}</a>
+{% endblock %}

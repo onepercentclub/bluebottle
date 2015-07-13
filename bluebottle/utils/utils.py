@@ -9,6 +9,9 @@ from django.conf import settings
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
+
 import pygeoip
 import logging
 
@@ -41,7 +44,7 @@ class GetTweetMixin:
 
         # {URL} is replaced in Ember to fill in the page url, avoiding the
         # need to provide front-end urls in our Django code.
-        tweet = _(u'{title} {{URL}} via @{twitter_handle}').format(
+        tweet = _(u'{title} {{URL}}').format(
             title=title, twitter_handle=twitter_handle)
         return tweet
 
@@ -230,3 +233,19 @@ def get_country_code_by_ip(ip_address=None):
 
     gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gi.country_code_by_name(ip_address)
+
+
+def update_group_permissions(sender, group_perms=None):
+    if hasattr(sender, 'GROUP_PERMS'):
+        group_perms = sender.GROUP_PERMS
+
+    try:
+        for group_name in group_perms.keys():
+            group, _ = Group.objects.get_or_create(name=group_name)
+            for perm_codename in group_perms[group_name]['perms']:
+                perm = Permission.objects.get(codename=perm_codename)
+                group.permissions.add(perm)
+
+            group.save()
+    except:
+        pass

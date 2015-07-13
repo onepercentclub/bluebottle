@@ -6,8 +6,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 
+
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_slide', 'change_slide', 'delete_slide',
+        )
+    }
+}
 
 class SlideManager(models.Manager):
 
@@ -49,7 +57,7 @@ class Slide(models.Model):
 
     # Metadata
     sequence = models.IntegerField()
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

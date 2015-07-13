@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from geoposition.fields import GeopositionField
+
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, NumericCodeValidator
+
 
 
 class GeoBaseModel(models.Model):
@@ -77,3 +80,19 @@ class Country(GeoBaseModel):
         ordering = ['name']
         verbose_name = _("country")
         verbose_name_plural = _("countries")
+
+
+class Location(models.Model):
+
+    name = models.CharField(_('name'), max_length=255)
+    position = GeopositionField(null=True)
+
+    city = models.CharField(_('city'), blank=True, null=True, max_length=255)
+
+    country = models.ForeignKey('geo.Country', blank=True, null=True)
+
+    class Meta(GeoBaseModel.Meta):
+        ordering = ['name']
+
+    def __unicode__(self):
+        return self.name

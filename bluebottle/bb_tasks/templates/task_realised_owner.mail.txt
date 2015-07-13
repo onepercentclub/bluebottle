@@ -2,29 +2,20 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with sender_name=sender.mail_name receiver_name=receiver.mail_name task_title=task.title site_name=site.name project_title=task.project.title %}
-Dear {{ receiver_name }},
+{% blocktrans with sender_name=sender.mail_name receiver_name=receiver.mail_name task_title=task.title site_name=site.name project_title=task.project.title project_link=project_link edit_project_link=edit_project_link task_link=confirm_link %}
 
-Yes, yes … your task {{ task_title }} from the project {{ project_title }} is realised
+Hello {{ receiver_name }},
 
-<strong>Please confirm the participations of member(s)</strong>
-Have all accepted members participated in your task? If you confirm that they were part of the task & project their status will change to ‘realised’. All participants will also receive an email to evaluate the activity. Confirm members.
+The deadline of your task is reached.
 
-Go to task: {{ site }}{{link}}
+Is your task realised? Please confirm the participants.
 
-<strong>Was this the final task? If so, there are two options:</strong>
-Option 1. Create a new task and keep on caring! For example when it is possible to do it again next year. Always check the status and deadline of your project! Go to {{site}}{{project_link}} to create a new task.
+Confirm participants at {{ site }}{{ task_link }}
 
-Option 2. Are you sure that everything is done? Change the status of your project to ‘realised’ and evaluate your Cares experience by visiting {{site}}{{edit_project_link}}.
-
-Oops. Is it too early to celebrate? You can always change the deadline or status of your task(s). Close your task if it hasn’t been realised by changing the status into ‘closed’. Or change the deadline if the task has not been realised yet. Edit your task at {{site}}{{link}}/edit.
-
-Was this not the last task from your project? Keep up the good work!
-
-Best,
-
-
-{{ site.name }}
+Too early to celebrate? By changing the deadline you can extend the task period. You can also choose to close the task. 
 {% endblocktrans %}
 {% endblock %}
 
+{% block action %}
+{% trans 'Edit task' context 'email' %}: {{ site }}{{ task_link }}
+{% endblock %}

@@ -1,6 +1,7 @@
 from fluent_contents.rendering import render_placeholder
-from rest_framework import serializers
+from django.utils.safestring import mark_safe
 
+from rest_framework import serializers
 
 from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
@@ -13,7 +14,7 @@ class NewsItemContentsField(serializers.Field):
 
     def to_native(self, obj):
         request = self.context.get('request', None)
-        contents_html = render_placeholder(request, obj)
+        contents_html = mark_safe(render_placeholder(request, obj).html)
         return contents_html
 
 

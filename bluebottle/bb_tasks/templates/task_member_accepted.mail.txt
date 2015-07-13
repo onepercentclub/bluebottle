@@ -6,11 +6,12 @@
 
 Hi {{ receiver_name }},
 
-Congratulations! The project owner, {{ sender_name }}, assigned the task "{{ task_title }}" to you!
+Great news! The project initiatior, {{ sender_name }}, assigned the task '{{ task_title }}' to you.
 
-Good luck with the task and feel free to keep your colleagues updated on the progress.
-
-{{ site_name }}
+Good luck taking on the task and feel free to keep everyone updated on the progress.
 {% endblocktrans %}
 {% endblock %}
 
+{% block action %}
+{% trans 'View task' context 'email' %}: {{ site }}{{ link }}
+{% endblock %}

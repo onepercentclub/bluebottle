@@ -1,5 +1,4 @@
-from django.test import TestCase
-from bluebottle.test.utils import InitProjectDataMixin
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -9,7 +8,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import SystemWallpost
 
 
-class TestDonationSignals(InitProjectDataMixin, TestCase):
+class TestDonationSignals(BluebottleTestCase):
 
     def setUp(self):
         super(TestDonationSignals, self).setUp()

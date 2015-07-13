@@ -1,5 +1,7 @@
 *.py[co]
 
+.ruby-*
+
 # Packages
 *.egg
 *.egg-info
@@ -26,7 +28,7 @@ pip-log.txt
 
 # JS testing
 node_modules
-bluebottle/common/static/refactor-sass/lib
+frontend/static/refactor-sass/lib
 
 #Mr Developer
 .mr.developer.cfg
@@ -56,6 +58,9 @@ reports
 
 # SASS
 .sass-cache
+frontend/static/.sass-cache
+frontend/static/css/*.css*
+bluebottle/common/static/css/admin/dashboard.css
 
 # Espresso
 *.esproj
@@ -80,6 +85,15 @@ ghostdriver.log
 
 # node modules
 bower_components
+
+# GeoIP.dat
+GeoIP.dat
+
+# vim
+*.swp
+
+#autoenv
+/.env
 
 # compiled files
 bluebottle/common/static/css/ie.css

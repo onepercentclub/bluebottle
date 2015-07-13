@@ -1,6 +1,9 @@
-from django.contrib.sites.models import Site
+from django.utils import translation
 from django.utils.translation import ugettext as _
 from bluebottle.utils.email_backend import send_mail
+
+from bluebottle.clients.utils import tenant_url
+from bluebottle.clients import properties
 
 
 def successful_donation_fundraiser_mail(instance):
@@ -14,12 +17,35 @@ def successful_donation_fundraiser_mail(instance):
 
     fundraiser_link = '/go/fundraisers/{0}'.format(instance.fundraiser.id)
 
+    if instance.fundraiser.owner.email:
+
+        if instance.anonymous:
+            donor_name = _('an anonymous person')
+        elif instance.order.user:
+            if instance.order.user.first_name:
+                donor_name = instance.order.user.first_name
+            else:
+                donor_name = instance.order.user.email
+        else:
+            donor_name = _('a guest')
+
+    cur_language = translation.get_language()
+    if receiver and receiver.primary_language:
+        translation.activate(receiver.primary_language)
+    else:
+        translation.activate(properties.LANGUAGE_CODE)
+
+    subject = _('You received a new donation')
+
+    translation.activate(cur_language)
+
     send_mail(
         template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
-        amount=instance.amount,
-        site = 'https://' + Site.objects.get_current().domain,
-        subject=_('You received a new donation'),
+        subject=subject,
+        site=tenant_url(),
         to=receiver,
+        amount=instance.amount,
+        donor_name=donor_name,
         link=fundraiser_link,
         first_name=receiver.first_name
     )
@@ -27,7 +53,8 @@ def successful_donation_fundraiser_mail(instance):
 
 def new_oneoff_donation(instance):
     """
-    Send project owner a mail if a new "one off" donation is done. We consider a donation done if the status is pending.
+    Send project owner a mail if a new "one off" donation is done.
+    We consider a donation done if the status is pending.
     """
     donation = instance
 
@@ -40,25 +67,38 @@ def new_oneoff_donation(instance):
     if donation.project.owner.email:
 
         if donation.anonymous:
-            donor_name = 'Anonymous'
+            donor_name = _('an anonymous person')
         elif donation.order.user:
             donor_name = donation.order.user.first_name
         else:
-            donor_name = 'Guest'
+            donor_name = _('a guest')
+
+        receiver = donation.project.owner
+
+        cur_language = translation.get_language()
+
+        if receiver and receiver.primary_language:
+            translation.activate(receiver.primary_language)
+        else:
+            translation.activate(properties.LANGUAGE_CODE)
+
+        subject = _('You received a new donation')
+
+        translation.activate(cur_language)
 
         # Send email to the project owner.
         send_mail(
             template_name='bb_donations/mails/new_oneoff_donation.mail',
-            subject=_('You received a new donation'),
-            to=donation.project.owner,
+            subject=subject,
+            to=receiver,
             amount=donation.amount,
             donor_name=donor_name,
             link=project_url,
             first_name=donation.project.owner.first_name
-
         )
 
-    # TODO: This is the logic for sending mail to a supporter once he/she has donated.
+    # TODO: This is the logic for sending mail to a supporter once he/she has
+    # donated.
     # if donation.order.user.email:
     #     # Send email to the project supporter
     #     send_mail(
@@ -67,4 +107,3 @@ def new_oneoff_donation(instance):
     #         to=donation.order.user,
     #         link=project_url
     #     )
-     

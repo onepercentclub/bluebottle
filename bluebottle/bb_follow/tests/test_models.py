@@ -1,4 +1,4 @@
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from django.core import mail
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
@@ -15,21 +15,13 @@ from bluebottle.utils.utils import StatusDefinition
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
-class FollowTests(TestCase):
+class FollowTests(BluebottleTestCase):
     """ Testcases for the creation of a Follow object """
 
     def setUp(self):
-
-        phase_data = [{'sequence': 1, 'name': 'Plan - New', 'viewable': False},
-                {'sequence': 2, 'name': 'Plan - Submitted', 'viewable': False},
-                {'sequence': 3, 'name': 'Plan - Needs Work', 'viewable': False},
-                {'sequence': 4, 'name': 'Running', 'viewable': True},
-                {'sequence': 5, 'name': 'Realised', 'viewable': True},
-                {'sequence': 6, 'name': 'Closed', 'viewable': False}]
-
-        for phase in phase_data:
-            ProjectPhaseFactory.create(**phase)
-
+        super(FollowTests, self).setUp()
+        self.init_projects()
+        
         self.some_user = BlueBottleUserFactory.create()
         self.another_user = BlueBottleUserFactory.create()
         self.phase1 = ProjectPhaseFactory.create(slug='realised') # Required model for bb_payouts signals 
@@ -325,27 +317,28 @@ class FollowTests(TestCase):
         # On a Fundraiser page, people who posted to the wall and who donated get an email --> Followers
         self.assertEqual(Follow.objects.count(), 0)
 
+        # A user creates a fundraiser
         fundraiser_person = BlueBottleUserFactory.create()
         fundraiser = FundraiserFactory(project=self.project, owner=fundraiser_person)
 
+        # Two people donate to the fundraiser
         donator1 = BlueBottleUserFactory.create()
         order = OrderFactory.create(user=donator1, status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=None)
+        donation = DonationFactory(order=order, amount=35, project=self.project, fundraiser=fundraiser)
 
         donator2 = BlueBottleUserFactory.create()
         order2 = OrderFactory.create(user=donator2, status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=None)
+        donation = DonationFactory(order=order2, amount=35, project=self.project, fundraiser=fundraiser)
 
+        # A user create a wallpost on the fundraiser
         commenter = BlueBottleUserFactory.create()
         commenter_post = TextWallpostFactory.create(content_object=fundraiser, author=commenter, text="test_commenter", email_followers=False)
 
+        # The fundraiser owner creates a wallpost to followers
         some_wallpost = TextWallpostFactory.create(content_object=fundraiser, author=fundraiser_person, text="test_fundraiser", email_followers=True)
 
         mail_count = 0
-
         self.assertEqual(Follow.objects.count(), 4)
-        for follower in Follow.objects.all():
-            follower.followed_object = self.project
 
         # When the fundraiser sends an email to the followers he doesn't get one himself
         receivers = [donator1.email, donator2.email, commenter.email]

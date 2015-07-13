@@ -34,32 +34,17 @@ Testing
 
 The BlueBottle test suite can be run completely using:
 
-    python setup.py test
+#. Get the latest Geodata
 
-***Watching with Guard***
+    $ curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 
-The tests can be automatically run when changed using
-guard. To install and run do:
+#. Install the dependencies
 
-    gem install bundler
-    bundle
-    bundle exec guard start
+    $ pip install -e .[test,dev]
 
-Guard will run the whole test suite when starting, 
-run specific test files when they change, and run
-an apps test suite when the apps code changes.
+#. Run the tests
 
-***Frontend Javascript***
-
-From the root of the application (node/npm required):
-
-    npm install
-    grunt
-
-This will install some npm & bower packages for dev & testing, 
-and run the tests headless with PhantomJS using Karma. 
-Karma is watching the test/ directory for changes.
-
+    $ python manage.py test --settings=bluebottle.settings.testing
 
 Website developers
 ------------------

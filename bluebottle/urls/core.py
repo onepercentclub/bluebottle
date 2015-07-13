@@ -1,10 +1,11 @@
+from bluebottle.auth.views import GetAuthToken
 from django.conf.urls import patterns, include, url
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-
 
 
 urlpatterns = patterns('',
@@ -29,22 +30,43 @@ urlpatterns = patterns('',
     url(r'^api/donations/', include('bluebottle.bb_donations.urls.api')),
     url(r'^api/order_payments/', include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/', include('bluebottle.payments.urls.api')),
+    url(r'^api/monthly_donations/', include('bluebottle.recurring_donations.urls.api')),
 
-    url(r'^api/suggestions/', include('bluebottle.suggestions.urls.api')),
+    url(r'^api/partners/', include('bluebottle.partners.urls.api')),
+
+    # Homepage API urls
+    url(r'^api/homepage/', include('bluebottle.homepage.urls.api')),
+    url(r'^api/stats', include('bluebottle.statistics.urls.api')),
+    url(r'^api/bb_projects/', include('bluebottle.projects.urls.api')),
 
 
     url(r'^payments_mock/', include('bluebottle.payments_mock.urls.core')),
     url(r'^payments_docdata/', include('bluebottle.payments_docdata.urls.core')),
 
-    url(r'^documents/', include('bluebottle.utils.urls.documents')),
-    url(r'^utils/', include('bluebottle.utils.urls.utils')),
+    # Urls for partner sites
+    url(r'^pp/', include('bluebottle.partners.urls.partners')),
+
+    # Project view that search engines will use.
+    url(r'^projects/', include('bluebottle.projects.urls.seo')),
+    url(r'^api/organizations/', include('bluebottle.organizations.urls.api')),
+    url(r'^api/suggestions/', include('bluebottle.suggestions.urls.api')),
+
+    # Organization urls for private documents
+    url(r'^documents/', include('bluebottle.organizations.urls.documents')),
+
+    # handlebar templates
+    url(r'^templates/', include('bluebottle.hbtemplates.urls')),
 
     url(r'^embed/', include('bluebottle.widget.urls.core')),
 
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
 
+    url(r'token/', include('token_auth.urls')),
+
+
 )
+
 
 # Nicely parse 500 errors so we get semantic messages in tests.
 def handler500(request):
@@ -64,6 +86,43 @@ js_info_dict = {
 
 urlpatterns += patterns(
     '',
+    (r'^js$', 'django.views.i18n.javascript_catalog'),
+)
+
+# Serve django-staticfiles (only works in DEBUG)
+# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-development
+urlpatterns += staticfiles_urlpatterns()
+
+# Serve media files (only works in DEBUG)
+# https://docs.djangoproject.com/en/dev/howto/static-files/#django.conf.urls.static.static
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+urlpatterns += patterns('',
+
+    url('', include('social.apps.django_app.urls', namespace='social')),
+    url(r'^api/social-login/(?P<backend>[^/]+)/$', GetAuthToken.as_view()),
+
+    # Needed for the self-documenting API in Django Rest Framework.
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # JSON Web Token based authentication for Django REST framework
+    url(r'^api/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
+    url(r'^api/token-auth-refresh/$', 'rest_framework_jwt.views.refresh_jwt_token'),
+
+    url(r'^', include('django.conf.urls.i18n')),
+)
+
+urlpatterns += patterns('loginas.views',
+    url(r"^login/user/(?P<user_id>.+)/$", "user_login", name="loginas-user-login"),
+)
+
+
+js_info_dict = {
+    'packages': ('apps.accounts', 'bluebottle.projects'),
+}
+
+urlpatterns += patterns('',
     (r'^js$', 'django.views.i18n.javascript_catalog'),
 )
 

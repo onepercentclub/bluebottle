@@ -1,14 +1,17 @@
 {% extends "base.mail.html" %}
-{# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
+{% load i18n %}
+
 {% block content %}
-Hi there!<br />
-<br />
-{{ message.name }} left a contact-message on {{ site.name }}:<br />
-<br />
-"{{ message.message|linebreaksbr }}"<br />
-<br />
-You can manage this message in  the <a href="{{ site_url }}{{ link }}">backoffice</a>.<br />
-<br />
-Take care!<br />
-<br />
-{% endblock content %}
+{# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
+Hi there!
+<br><br>
+{{ message.name }} left the following contact message on {{ site.name }}.
+<br><br>
+<i>{{ message.message|linebreaksbr }}</i>
+<br><br>
+Would you like to reply to this message?
+{% endblock %}
+
+{% block action %}
+<a href="{{ site_url }}{{ link }}" class="action-email">{% trans 'Reply' context 'email' %}</a>
+{% endblock %}

@@ -2,7 +2,7 @@ import json
 import unittest
 from bluebottle.test.factory_models.donations import DonationFactory
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 from bluebottle.orders.models import Order
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -10,7 +10,6 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.utils import InitProjectDataMixin
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_mock.adapters import MockPaymentAdapter
@@ -21,9 +20,11 @@ from bluebottle.utils.utils import StatusDefinition
 ORDER_MODEL = get_order_model()
 
 
-class OrderApiTestCase(InitProjectDataMixin, TestCase):
+class OrderApiTestCase(BluebottleTestCase):
 
     def setUp(self):
+        super(OrderApiTestCase, self).setUp()
+        
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -47,26 +48,26 @@ class TestCreateUpdateOrder(OrderApiTestCase):
     def test_create_order(self):
 
         # Check that there's no orders
-        response = self.client.get(self.manage_order_list_url, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.get(self.manage_order_list_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 0)
 
         # Create an order
-        response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.post(self.manage_order_list_url, {}, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
         self.assertEqual(response.data['total'], 0)
         order_id = response.data['id']
 
         # Check that there's one order
-        response = self.client.get(self.manage_order_list_url, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.get(self.manage_order_list_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
 
     def test_update_order(self):
 
         # Create an order
-        response = self.client.post(self.manage_order_list_url, {}, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.post(self.manage_order_list_url, {}, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
         self.assertEqual(response.data['total'], 0)
@@ -74,7 +75,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
 
         # User should be able to update the order because status is still 'new'
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
-        response = self.client.put(order_url, json.dumps({}), 'application/json', HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.put(order_url, {}, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Change order status to 'locked'
@@ -83,14 +84,16 @@ class TestCreateUpdateOrder(OrderApiTestCase):
 
         # User should not be able to update the order now that it has status 'locked'
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
-        response = self.client.put(order_url, json.dumps({}), 'application/json', HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.put(order_url, {}, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestOrderPermissions(TestCase):
+class TestOrderPermissions(BluebottleTestCase):
     """ Test the permissions for order ownership in bb_orders """
 
     def setUp(self):
+        super(TestOrderPermissions, self).setUp()
+
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -103,13 +106,13 @@ class TestOrderPermissions(TestCase):
     def test_user_not_owner(self):
         """ User that is not owner of the order tries to do a get to the order should get a 403"""
         response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.pk}),
-                                   HTTP_AUTHORIZATION=self.user2_token)
+                                   token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_user_is_owner(self):
         """ User that is owner of the order must get a 200 response """
         response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.pk}),
-                                   HTTP_AUTHORIZATION=self.user1_token)
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -125,7 +128,7 @@ class TestAdditionalOrderPermissions(OrderApiTestCase):
             "user": self.user2.pk
         }
 
-        response = self.client.post(self.manage_order_list_url, order_data, HTTP_AUTHORIZATION=self.user1_token)
+        response = self.client.post(self.manage_order_list_url, order_data, token=self.user1_token)
         # Order creation success but the user should be re-set to the current user
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['user'], self.user1.pk)
@@ -138,15 +141,17 @@ class TestAdditionalOrderPermissions(OrderApiTestCase):
 
         response = self.client.put(reverse('manage-order-detail',
                            kwargs={'pk': self.order.id}),
-                           json.dumps(updated_order),
-                           'application/json',
-                           HTTP_AUTHORIZATION=self.user1_token)
+                           updated_order,
+                           token=self.user1_token)
     
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestStatusUpdates(TestCase):
+class TestStatusUpdates(BluebottleTestCase):
+
     def setUp(self):
+        super(TestStatusUpdates, self).setUp()
+
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -156,7 +161,7 @@ class TestStatusUpdates(TestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)
         response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.id}),
-                                   HTTP_AUTHORIZATION=self.user1_token)
+                                   token=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, True)
 
     @patch.object(MockPaymentAdapter, 'check_payment_status')
@@ -167,5 +172,5 @@ class TestStatusUpdates(TestCase):
                                                         status=StatusDefinition.AUTHORIZED)
 
         response = self.client.get(reverse('manage-order-detail', kwargs={'pk': self.order.id}),
-                                   HTTP_AUTHORIZATION=self.user1_token)
+                                   token=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, False)

@@ -1,11 +1,9 @@
 import logging
-from bluebottle.payments_logger.models import PaymentLogEntry
 import gateway
 
 from django.utils.http import urlencode
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import get_language
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
@@ -13,6 +11,8 @@ from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirect
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
 from .models import DocdataPayment
+from bluebottle.clients import properties
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +21,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     MODEL_CLASSES = [DocdataPayment, DocdataDirectdebitPayment]
 
-    # Payment methods specified by DocData. They should map to the payment methods we specify in our settings file so we can map
-    # payment methods of Docdata to our own definitions of payment methods
+    # Payment methods specified by DocData. They should map to the payment methods we specify in our settings file
+    # so we can map payment methods of Docdata to our own definitions of payment methods
     PAYMENT_METHODS = {
         'MASTERCARD'                        : 'docdataCreditcard',
         'VISA'                              : 'docdataCreditcard',
@@ -35,22 +35,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     }
 
-    STATUS_MAPPING = {
-        'NEW':                            StatusDefinition.STARTED,
-        'STARTED':                        StatusDefinition.STARTED,
-        'REDIRECTED_FOR_AUTHENTICATION':  StatusDefinition.STARTED, # Is this mapping correct?
-        'AUTHORIZATION_REQUESTED':        StatusDefinition.STARTED, # Is this mapping correct?
-        'AUTHORIZED':                     StatusDefinition.AUTHORIZED,
-        'PAID':                           StatusDefinition.SETTLED,
-        'CANCELED':                       StatusDefinition.CANCELLED, # Docdata responds with 'CANCELED'
-        'CHARGED_BACK':                   StatusDefinition.CHARGED_BACK,
-        'CONFIRMED_PAID':                 StatusDefinition.SETTLED,
-        'CONFIRMED_CHARGEDBACK':          StatusDefinition.CHARGED_BACK,
-        'CLOSED_SUCCESS':                 StatusDefinition.SETTLED,
-        'CLOSED_CANCELLED':               StatusDefinition.CANCELLED,
-    }
-
     def __init__(self, *args, **kwargs):
+        self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
         super(DocdataPaymentAdapter, self).__init__(*args, **kwargs)
 
     def get_user_data(self):
@@ -70,17 +56,21 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 'id': 1,
                 'first_name': 'Nomen',
                 'last_name': 'Nescio',
-                'email': settings.CONTACT_EMAIL,
+                'email': properties.CONTACT_EMAIL,
                 'ip_address': ip_address
             }
 
+        default_country_code = getattr(properties, 'DEFAULT_COUNTRY_CODE')
 
         if user and hasattr(user, 'address'):
 
             street = user.address.line1.split(' ')
             if street[-1] and any(char.isdigit() for char in street[-1]):
                 user_data['house_number'] = street.pop(-1)
-                user_data['street'] = ' '.join(street)
+                if len(street):
+                    user_data['street'] = ' '.join(street)
+                else:
+                    user_data['street'] = 'Unknown'
             else:
                 user_data['house_number'] = 'Unknown'
                 if user.address.line1:
@@ -101,7 +91,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             elif get_country_code_by_ip(ip_address):
                 user_data['country'] = get_country_code_by_ip(ip_address)
             else:
-                user_data['country'] = 'NL'
+                user_data['country'] = default_country_code
         else:
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'
@@ -110,22 +100,22 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             if country:
                 user_data['country'] = country
             else:
-                user_data['country'] = 'NL'
+                user_data['country'] = default_country_code
             user_data['house_number'] = 'Unknown'
 
         if not user_data['country']:
-            user_data['country'] = 'NL'
+            user_data['country'] = default_country_code
 
         user_data['company'] = ''
         user_data['kvk_number'] = ''
         user_data['vat_number'] = ''
         user_data['house_number_addition'] = ''
         user_data['state'] = ''
+
         return user_data
 
-
-    def get_status_mapping(self, external_payment_status):
-        return self.STATUS_MAPPING.get(external_payment_status)
+    def get_method_mapping(self, external_payment_method):
+        return self.PAYMENT_METHODS.get(external_payment_method)
 
     def create_payment(self):
         if self.order_payment.payment_method == 'docdataDirectdebit':
@@ -138,9 +128,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if payment.default_pm == 'paypal':
             payment.default_pm = 'paypal_express_checkout'
 
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-
-        merchant = gateway.Merchant(name=settings.DOCDATA_MERCHANT_NAME, password=settings.DOCDATA_MERCHANT_PASSWORD)
+        merchant = gateway.Merchant(name=properties.DOCDATA_MERCHANT_NAME, password=properties.DOCDATA_MERCHANT_PASSWORD)
 
         amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
         user = self.get_user_data()
@@ -188,9 +176,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         bill_to = gateway.Destination(name=name, address=address)
 
-        client = gateway.DocdataClient(testing_mode)
+        client = gateway.DocdataClient(self.live_mode)
 
-        info_text = _("Bluebottle donation %(payment_id)s") % {'payment_id': self.order_payment.id}
+        info_text = self.order_payment.info_text
 
         response = client.create(
             merchant=merchant,
@@ -213,14 +201,19 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def get_authorization_action(self):
 
-        #FIXME: get rid of these testing
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        client = gateway.DocdataClient(testing_mode)
-        client_language = get_language()
+        client = gateway.DocdataClient(self.live_mode)
+
+        # Get the language that the user marked as his / her primary language
+        # or fallback on the default LANGUAGE_CODE in settings
+
+        try:
+            client_language = self.order_payment.order.user.primary_language
+        except AttributeError:
+            client_language = properties.LANGUAGE_CODE
 
         if self.order_payment.payment_method == 'docdataDirectdebit':
             try:
-                reply = client.start_remote_payment(
+                client.start_remote_payment(
                     order_key=self.payment.payment_cluster_key,
                     payment=self.payment,
                     payment_method='SEPA_DIRECT_DEBIT'
@@ -240,7 +233,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         except DocdataPaymentException as i:
             raise PaymentException(i)
 
-        integration_data = self.order_payment.integration_data
         default_act = False
         if self.payment.ideal_issuer_id:
             default_act = True
@@ -259,9 +251,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             default_act = True
 
         params = {
-             'default_pm': self.payment.default_pm,
-             'ideal_issuer_id': self.payment.ideal_issuer_id,
-             'default_act': default_act
+            'default_pm': self.payment.default_pm,
+            'ideal_issuer_id': self.payment.ideal_issuer_id,
+            'default_act': default_act
         }
         url += '&' + urlencode(params)
         return {'type': 'redirect', 'method': 'get', 'url': url}
@@ -273,13 +265,44 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if not hasattr(response, 'payment'):
             return None
 
-        status = self.get_status_mapping(response.payment[0].authorization.status)
-
         totals = response.approximateTotals
-        if totals.totalCaptured - totals.totalChargedback - totals.totalChargedback > 0:
-            status = StatusDefinition.SETTLED
 
-        if self.payment.status <> status:
+        if int(totals.totalAcquirerApproved) + int(totals.totalAcquirerPending) + int(totals.totalShopperPending) + int(totals.totalCaptured)== 0:
+            # No payment has been authorized
+            statuses = {payment.authorization.status for payment in response.payment}
+
+            if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION', 'AUTHORIZATION_REQUESTED', 'AUTHENTICATED', 'RISK_CHECK_OK', 'AUTHORIZED'} & statuses:
+                # All these statuses belong are considered new
+                status = StatusDefinition.STARTED
+            elif statuses == {'CANCELED', }:
+                # If all of them are cancelled, the whole payment is cancelled
+                # Yes, docdata uses "CANCELED"
+                status = StatusDefinition.CANCELLED
+            elif {'RISK_CHECK_FAILED', 'AUTHORIZATION_ERROR', 'AUTHORIZATION_FAILED'} & statuses:
+                # If all of them are cancelled, the whole payment is cancelled
+                # Yes, docdata uses "CANCELED"
+                status = StatusDefinition.FAILED
+            else:
+                status = StatusDefinition.UNKNOWN
+        else:
+            # We have some authorized payments
+            if int(totals.totalChargedback) == int(totals.totalRegistered):
+                # Everything is charged back
+                status = StatusDefinition.CHARGED_BACK
+            elif int(totals.totalChargedback) + int(totals.totalRefunded) == int(totals.totalRegistered):
+                # Everything is refunded (even if it was partially charged back
+                status = StatusDefinition.REFUNDED
+            elif int(totals.totalCaptured) == int(totals.totalRegistered):
+                # Everything was captured
+                status = StatusDefinition.SETTLED
+            elif int(totals.totalAcquirerApproved) + int(totals.totalAcquirerPending) + int(totals.totalShopperPending) == int(totals.totalRegistered):
+                # Everything was authorized
+                status = StatusDefinition.AUTHORIZED
+            else:
+                # Anything else (Partly captured, partly charged back, etc)
+                status = StatusDefinition.UNKNOWN
+
+        if self.payment.status != status:
             self.payment.total_registered = totals.totalRegistered
             self.payment.total_shopper_pending = totals.totalShopperPending
             self.payment.total_acquirer_pending = totals.totalAcquirerPending
@@ -288,28 +311,48 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.total_refunded = totals.totalRefunded
             self.payment.total_charged_back = totals.totalChargedback
             self.payment.status = status
+
+            try:
+                payment_method = [payment.authorization.paymentMethod for payment in response.payment
+                                  if payment.authorization.method == 'AUTHORIZED'][0]
+            except (AttributeError, IndexError):
+                payment_method = None
+
+            if payment_method:
+                self.payment.default_pm = payment_method
+                self.order_payment.payment_method = self.get_method_mapping(payment_method)
+                self.order_payment.save()
             self.payment.save()
 
-        # FIXME: Saving transactions fails...
-        # for transaction in response.payment:
-        #    self._store_payment_transaction(transaction)
+        for transaction in response.payment:
+            self._store_payment_transaction(transaction)
 
     def _store_payment_transaction(self, transaction):
-        dd_transaction, created = DocdataTransaction.objects.get_or_create(docdata_id=transaction.id, payment=self.payment)
+        dd_transaction, _created = DocdataTransaction.objects.get_or_create(
+            docdata_id=transaction.id, payment=self.payment
+        )
+
         dd_transaction.payment_method = transaction.paymentMethod
         dd_transaction.authorization_amount = transaction.authorization.amount.value
         dd_transaction.authorization_currency = transaction.authorization.amount._currency
         dd_transaction.authorization_status = transaction.authorization.status
+        dd_transaction.raw_response = str(transaction)
+
         if hasattr(transaction.authorization, 'capture'):
+            dd_transaction.capture_amount = sum(int(capture.amount.value) for capture in transaction.authorization.capture)
             dd_transaction.capture_status = transaction.authorization.capture[0].status
-            dd_transaction.capture_amount = transaction.authorization.capture[0].amount.value
             dd_transaction.capture_currency = transaction.authorization.capture[0].amount._currency
+
+        if hasattr(transaction.authorization, 'chargeback'):
+            dd_transaction.chargeback_amount = sum(int(chargeback.amount.value) for chargeback in transaction.authorization.chargeback)
+
+        if hasattr(transaction.authorization, 'refund'):
+            dd_transaction.refund_amount = sum(int(refund.amount.value) for refund in transaction.authorization.refund)
 
         dd_transaction.save()
 
     def _fetch_status(self):
-        testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        client = gateway.DocdataClient(testing_mode)
+        client = gateway.DocdataClient(self.live_mode)
         response = client.status(self.payment.payment_cluster_key)
 
         return response

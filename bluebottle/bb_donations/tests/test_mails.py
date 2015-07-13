@@ -6,6 +6,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -14,10 +16,13 @@ class TestDonationEmails(BluebottleTestCase):
 
     def setUp(self):
         super(TestDonationEmails, self).setUp()
+        self.init_projects()
+        
         self.user = BlueBottleUserFactory.create(first_name='user')
 
         self.project_owner = BlueBottleUserFactory.create(first_name='projectowner')
-        self.some_project = ProjectFactory.create(owner=self.project_owner)
+        campaign_status = ProjectPhase.objects.get(slug='campaign')
+        self.some_project = ProjectFactory.create(owner=self.project_owner, status=campaign_status)
 
         self.order = OrderFactory.create(
             user=self.user,
@@ -44,7 +49,7 @@ class TestDonationEmails(BluebottleTestCase):
             user=self.user,
         )
 
-        self.fund_project = ProjectFactory.create(owner=self.project_owner)
+        self.fund_project = ProjectFactory.create(owner=self.project_owner, status=campaign_status)
 
         self.fund_owner = BlueBottleUserFactory.create(first_name='fundraiser')
 

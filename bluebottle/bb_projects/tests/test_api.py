@@ -1,6 +1,5 @@
 import json
 
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.projects import (
@@ -26,13 +25,15 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
+        self.init_projects()
+
         self.phase_1 = ProjectPhase.objects.get(slug='plan-new')
         self.phase_2 = ProjectPhase.objects.get(slug='plan-submitted')
         self.phase_3 = ProjectPhase.objects.get(slug='campaign')
 
-        self.theme_1 = ProjectTheme.objects.get(id=1)
-        self.theme_2 = ProjectTheme.objects.get(id=2)
-        self.theme_3 = ProjectTheme.objects.get(id=3)
+        self.theme_1 = ProjectTheme.objects.get(name='Education')
+        self.theme_2 = ProjectTheme.objects.get(name='Climate')
+        self.theme_3 = ProjectTheme.objects.get(name='Health')
 
         self.project_1 = ProjectFactory.create(owner=self.user, status=self.phase_1, theme=self.theme_1)
         self.project_2 = ProjectFactory.create(owner=self.user, status=self.phase_2, theme=self.theme_2)
@@ -51,7 +52,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
         Tests that the list of project phases can be obtained from its
         endpoint.
         """
-        
+
         response = self.client.get(reverse('project_phase_list'))
 
         self.assertEqual(response.status_code, 200)
@@ -71,7 +72,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
             self.assertIn('active', item)
             self.assertIn('editable', item)
             self.assertIn('viewable', item)
-    
+
 
 class TestProjectList(ProjectEndpointTestCase):
     """
@@ -101,7 +102,7 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('meta_data', item)
             self.assertIn('owner', item)
             self.assertIn('status', item)
-            
+
             #Ensure that non-viewable status are filtered out
             phase = ProjectPhase.objects.get(id=item['status'])
             self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
@@ -213,12 +214,34 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 17)
 
         for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
 
+    def test_api_project_theme_list_endpoint_disabled(self):
+        """
+        Test the API endpoint for Project theme list. Verify that disabled
+        themes are not returned
+        """
+        all_themes = list(ProjectTheme.objects.all())
+        disabled = all_themes[0]
+        disabled.disabled = True
+        disabled.save()
+
+        response = self.client.get(reverse('project_theme_list'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(len(data), 16)
+
+        for item in data:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertNotEquals(item['id'], disabled.id)
 
 class TestProjectThemeDetail(ProjectEndpointTestCase):
     """
@@ -263,7 +286,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         Test successful request for a logged in user over the API endpoint for
         manage Project list.
         """
-        response = self.client.get(reverse('project_manage_list'), HTTP_AUTHORIZATION=self.user_token)
+        response = self.client.get(reverse('project_manage_list'), token=self.user_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -295,7 +318,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
             'status': self.phase_1.pk
         }
 
-        response = self.client.post(reverse('project_manage_list'), post_data, HTTP_AUTHORIZATION=self.user_token)
+        response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -343,7 +366,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
 
         response = self.client.get(
             reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
-            HTTP_AUTHORIZATION=token)
+            token=token)
 
         self.assertEqual(response.status_code, 403)
         data = json.loads(response.content)
@@ -357,7 +380,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         """
         response = self.client.get(
             reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
-            HTTP_AUTHORIZATION=self.user_token)
+            token=self.user_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -372,3 +395,19 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('country', data)
         self.assertIn('editable', data)
+
+    def test_api_manage_project_detail_check_not_editable(self):
+        """
+        Test successful request for a logged in user over the API endpoint for
+        manage Project detail.
+        """
+        self.project_1.set_status('campaign')
+
+        response = self.client.put(
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            token=self.user_token, data={'title': 'test-new'})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue('permission' in response.content)
+
+

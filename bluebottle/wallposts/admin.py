@@ -78,6 +78,9 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     thumbnail.allow_tags = True
 
     def view_online(self, obj):
+        if obj.content_object is None:
+            return _(u'The project this post belongs to has been deleted')
+
         if obj.content_type.name == 'project':
             return u'<a href="/go/projects/{slug}">{title}</a>'.format(slug=obj.content_object.slug, title=obj.content_object.title)
         if obj.content_type.name == 'task':
@@ -96,6 +99,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
         return render_to_string("admin/wallposts/mediawallpost_gallery.html", data)
     gallery.allow_tags = True
+
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost

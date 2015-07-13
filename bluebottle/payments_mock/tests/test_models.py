@@ -2,15 +2,19 @@ from django.test import TestCase
 
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.utils import FsmTestMixin
+from bluebottle.test.utils import FsmTestMixin, BluebottleTestCase
 
 from bluebottle.payments.services import PaymentService
 from bluebottle.utils.utils import StatusDefinition
 
 
-class PaymentsMockTestCase(TestCase, FsmTestMixin):
+class PaymentsMockTestCase(BluebottleTestCase, FsmTestMixin):
 
     def setUp(self):
+        super(PaymentsMockTestCase, self).setUp()
+
+    	self.init_projects()
+
         self.order = OrderFactory.create(total=35)
         self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)

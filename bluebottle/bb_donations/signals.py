@@ -19,6 +19,7 @@ def _order_status_changed(sender, instance, **kwargs):
     if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING, StatusDefinition.FAILED]:
         # Is order transitioning into the success or pending state - this should
         # only happen once.
+
         first_time_success = (kwargs['source'] not in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]
             and kwargs['target'] in [StatusDefinition.SUCCESS, StatusDefinition.PENDING])
 
@@ -28,8 +29,8 @@ def _order_status_changed(sender, instance, **kwargs):
             donation.project.update_amounts()
                 
             # Send mail / create wallposts if status transitions in to 
-            # success/pending for the first time.
-            if first_time_success:
+            # success/pending for the first time and only if it's a one-off donation.
+            if first_time_success and instance.order_type == "one-off":
                 if not donation.anonymous:
                     author = donation.order.user
                 else:

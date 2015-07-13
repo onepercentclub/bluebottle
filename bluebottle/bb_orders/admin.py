@@ -30,7 +30,7 @@ class OrderStatusFilter(SimpleListFilter):
             }
 
     def queryset(self, request, queryset):
-        if self.value() in ORDER_MODEL.STATUS_CHOICES:
+        if self.value() in dict(ORDER_MODEL.STATUS_CHOICES):
             return queryset.filter(status=self.value())
         elif self.value() is None or self.value() == 'pending_or_success':
             return queryset.filter(status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])

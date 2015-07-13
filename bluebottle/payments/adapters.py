@@ -1,6 +1,7 @@
 from bluebottle.payments.models import Payment
 from django.conf import settings
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
+from bluebottle.clients import properties
 
 
 class BasePaymentAdapter(object):
@@ -48,7 +49,7 @@ class BasePaymentAdapter(object):
                 'id': None,
                 'first_name': 'Nomen',
                 'last_name': 'Nescio',
-                'email': settings.CONTACT_EMAIL,
+                'email': properties.CONTACT_EMAIL,
             }
         return user_data
 

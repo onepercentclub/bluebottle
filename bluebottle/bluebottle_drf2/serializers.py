@@ -2,6 +2,7 @@ import decimal
 import logging
 import sys
 import json
+from os.path import isfile
 import os
 import re
 import types
@@ -26,7 +27,18 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 logger = logging.getLogger(__name__)
 
 
-class SorlImageField(serializers.ImageField):
+class RestrictedImageField(serializers.ImageField):
+    def from_native(self, data):
+        if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+            # We restrict images to a fixed set of mimetypes.
+            # This prevents users from uploading broken eps files (for example),
+            # that bring the application down.
+            raise ValidationError(self.error_messages['invalid_image'])
+
+        return super(RestrictedImageField, self).from_native(data)
+
+
+class SorlImageField(RestrictedImageField):
     def __init__(self, source, geometry_string, **kwargs):
         self.crop = kwargs.pop('crop', 'center')
         self.colorspace = kwargs.pop('colorspace', 'RGB')
@@ -47,6 +59,8 @@ class SorlImageField(serializers.ImageField):
         # so we need to deal with exceptions like is done in the template tag.
         try:
             thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
+        except IOError:
+            return ""
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
@@ -268,7 +282,7 @@ class FileSerializer(serializers.FileField):
                     'size': ''}
 
 
-class ImageSerializer(serializers.ImageField):
+class ImageSerializer(RestrictedImageField):
 
     crop = 'center'
 
@@ -279,6 +293,8 @@ class ImageSerializer(serializers.ImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         thumbnail = ""
+        if not isfile(value.path):
+            return None
         try:
             large = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x450', crop=self.crop))
             full = settings.MEDIA_URL + unicode(get_thumbnail(value, '1200x900'))
@@ -300,7 +316,7 @@ class ImageSerializer(serializers.ImageField):
         return {'full': full, 'large': large, 'small': small, 'square': square}
 
 
-class PhotoSerializer(serializers.ImageField):
+class PhotoSerializer(RestrictedImageField):
 
     crop = 'center'
 
@@ -338,10 +354,10 @@ class PrivateFileSerializer(FileSerializer):
             return None
         content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
         pk = obj.pk
-        url = reverse('document_download_detail', kwargs={'content_type': content_type, 'pk': pk})
+        url = reverse('document_download_detail',
+                      kwargs={'content_type': content_type, 'pk': pk})
         return {'name': os.path.basename(value.name),
-                'url': url,
-                'size': defaultfilters.filesizeformat(value.size)}
+                'url': url}
 
 
 #TODO: PROBABLY THOSE TAG SERIALIZER ARE NOT USED ANYMORE, WAITING TO CLEAN ALL APPS FOR DELETING THEM
@@ -389,7 +405,11 @@ class TaggableSerializerMixin(object):
         # First save the object so we can add tags to it.
         super(TaggableSerializerMixin, self).save_object(obj, **kwargs)
 
-        tags = getattr(obj, 'tags')
+        try:
+            tags = getattr(obj, 'tags')
+        except AttributeError:
+            return
+
         if hasattr(self, 'tag_list'):
             tags.clear()
             if type(self.tag_list) == types.UnicodeType:

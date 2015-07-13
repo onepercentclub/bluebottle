@@ -14,6 +14,8 @@ from .serializers import (
 from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
     get_task_skill_model
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
 BB_TASKFILE_MODEL = get_taskfile_model()
@@ -40,7 +42,6 @@ class TaskPreviewList(generics.ListAPIView):
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
-                           Q(end_goal__icontains=text) |
                            Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
@@ -58,7 +59,7 @@ class TaskPreviewList(generics.ListAPIView):
 class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
-    permission_classes = (IsProjectOwnerOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, IsProjectOwnerOrReadOnly,)
     filter_fields = ('status', 'author')
 
     def get_queryset(self):
@@ -71,7 +72,6 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) | 
-                           Q(end_goal__icontains=text) |
                            Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
@@ -88,10 +88,11 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     def pre_save(self, obj):
         obj.author = self.request.user
 
-class MyTaskList(generics.ListAPIView):
+class MyTaskList(generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
     filter_fields = ('author',)
+    permission_classes = (IsProjectOwnerOrReadOnly, )
     serializer_class = MyTasksSerializer
 
     def get_queryset(self):
@@ -99,9 +100,18 @@ class MyTaskList(generics.ListAPIView):
             return BB_TASK_MODEL.objects.filter(author=self.request.user)
         return BB_TASK_MODEL.objects.none()
 
+    def pre_save(self, obj):
+        obj.author = self.request.user
+
+
 class TaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateAPIView):
     model = BB_TASK_MODEL
-    permission_classes = (IsAuthorOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, )
+
+
+class MyTaskDetail(DefaultSerializerMixin, generics.RetrieveUpdateDestroyAPIView):
+    model = BB_TASK_MODEL
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, )
 
 
 class TaskMemberList(generics.ListCreateAPIView):
@@ -109,7 +119,7 @@ class TaskMemberList(generics.ListCreateAPIView):
     serializer_class = BaseTaskMemberSerializer
     paginate_by = 50
     filter_fields = ('task', 'status', )
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, )
     queryset = model.objects.all()
 
     def pre_save(self, obj):
@@ -132,7 +142,7 @@ class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
     model = BB_TASKMEMBER_MODEL
     serializer_class = BaseTaskMemberSerializer
 
-    permission_classes = (IsMemberOrAuthorOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsMemberOrAuthorOrReadOnly, )
     
 
 class TaskFileList(generics.ListCreateAPIView):
@@ -140,7 +150,7 @@ class TaskFileList(generics.ListCreateAPIView):
     serializer_class = TaskFileSerializer
     paginate_by = 50
     filter_fields = ('task', )
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, )
 
     def pre_save(self, obj):
         # When creating a task file the author should always be by the request.user
@@ -151,7 +161,7 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
     model = BB_TASKFILE_MODEL
     serializer_class = TaskFileSerializer
 
-    permission_classes = (IsAuthorOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, )
 
 
 class SkillList(generics.ListAPIView):

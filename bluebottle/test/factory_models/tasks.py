@@ -29,7 +29,6 @@ class TaskFactory(factory.DjangoModelFactory):
     skill = factory.SubFactory(SkillFactory)
     title = factory.Sequence(lambda n: 'Task_{0}'.format(n))
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
-    end_goal = factory.Sequence(lambda n: "Filler endgoal text{0}".format(n))
     description = factory.Sequence(lambda n: "Filler description text{0}".format(n))
     location = factory.Sequence(lambda n: "Location_{0}".format(n))
     time_needed = 4

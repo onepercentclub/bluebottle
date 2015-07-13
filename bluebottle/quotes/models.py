@@ -35,7 +35,7 @@ class Quote(models.Model):
     publication_end_date = models.DateTimeField(_('publication end date'), null=True, blank=True, db_index=True)
 
     # Metadata
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('Author'), related_name="quote_author", editable=False)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('Author'), related_name="quote_author", editable=False, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('Quoted member'), related_name="quote_user")
 
     creation_date = CreationDateTimeField(_('creation date'))

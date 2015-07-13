@@ -1,19 +1,25 @@
+sudo: false
 language: python
+addons:
+  postgresql: "9.1"
+cache:
+  directories:
+  - $HOME/.pip-cache/
+  - $HOME/virtualenv/python2.7.9/lib/python2.7/site-packages
 python:
-- '2.7'
+- '2.7.9'
 env:
 - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 install:
 - pip install --upgrade setuptools --use-mirrors
-- python setup.py install
+- pip install -e .[test] --process-dependency-links
+- createdb bluebottle_test
+- echo `psql --version`
 before_script:
-- npm install
+- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
-- python setup.py install
-- pip install -r test_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
 script:
 - python manage.py test
-- grunt travis --verbose
 notifications:
   hipchat:
     rooms:

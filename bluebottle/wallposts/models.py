@@ -20,6 +20,19 @@ WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH', 300)
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_reaction', 'change_reaction', 'delete_reaction',
+            'add_wallpost', 'change_wallpost', 'delete_wallpost',
+            'add_mediawallpost', 'change_mediawallpost', 'delete_mediawallpost',
+            'add_textwallpost', 'change_textwallpost', 'delete_textwallpost',
+            'add_systemwallpost', 'change_systemwallpost', 'delete_systemwallpost',
+            'add_mediawallpostphoto', 'change_mediawallpostphoto', 'delete_mediawallpostphoto',
+        )
+    }
+}
+
 class Wallpost(PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the content of a Wallpost is always defined
@@ -141,6 +154,6 @@ class Reaction(models.Model):
         return Truncator(s).words(10)
 
 #Import the signals for sending mails in case they are present
-if 'apps.tasks' in settings.INSTALLED_APPS and 'apps.projects' in settings.INSTALLED_APPS:
+if 'bluebottle.tasks' in settings.INSTALLED_APPS and 'bluebottle.projects' in settings.INSTALLED_APPS:
     import mails
 

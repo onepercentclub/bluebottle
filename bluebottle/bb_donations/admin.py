@@ -104,8 +104,7 @@ class DonationAdmin(admin.ModelAdmin):
         order_payment = obj.order.get_latest_order_payment()
         if not order_payment or not order_payment.payment:
             return '?'
-        icon = static(order_payment.payment.method_icon)
-        return '<img src="{0}" height="16px" title="{1}" />'.format(icon, order_payment.payment.method_name)
+        return order_payment.payment.method_name
 
     related_payment_method.short_description = 'Payment method'
     related_payment_method.allow_tags = True

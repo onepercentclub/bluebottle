@@ -1,6 +1,5 @@
 import json
 from django.core.urlresolvers import reverse
-from django.test import TestCase
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from bluebottle.test.utils import BluebottleTestCase
@@ -13,6 +12,9 @@ class FundraiserAPITestCase(BluebottleTestCase):
 
     def setUp(self):
         super(FundraiserAPITestCase, self).setUp()
+
+        self.init_projects()
+
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 
@@ -27,30 +29,30 @@ class FundraiserAPITestCase(BluebottleTestCase):
         future_date = self.some_project.deadline + timezone.timedelta(days=5)
 
         fundraiser_data = {
-            'owner': self.some_user,
+            'owner': self.some_user.pk,
             'project': self.some_project.slug,
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
             'amount': '1000',
-            'deadline': future_date
+            'deadline': str(future_date)
         }
 
-        response = self.client.post(reverse('fundraiser-list'), fundraiser_data, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.post(reverse('fundraiser-list'), fundraiser_data, token=self.some_token)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(json.loads(response.content).get('deadline', None)[0], _('Fundraiser deadline exceeds campaign deadline.')) 
+        self.assertEqual(json.loads(response.content).get('deadline', None)[0], _('Fundraiser deadline exceeds project deadline.')) 
 
     def test_fundraiser_deadline_not_exceeds_project_deadline(self): 
         future_date = self.some_other_project.deadline - timezone.timedelta(days=5)
 
         fundraiser_data = {
-            'owner': self.some_other_user,
+            'owner': self.some_other_user.pk,
             'project': self.some_other_project.slug,
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
             'amount': '1000',
-            'deadline': future_date
+            'deadline': str(future_date)
         }
 
-        response = self.client.post(reverse('fundraiser-list'), fundraiser_data, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.post(reverse('fundraiser-list'), fundraiser_data, token=self.some_token)
         self.assertEqual(response.status_code, 400)
         self.assertTrue(not json.loads(response.content).get('deadline', None))

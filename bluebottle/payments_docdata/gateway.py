@@ -15,6 +15,7 @@ from suds import plugin
 from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
+from bluebottle.clients import properties
 
 from .exceptions import DocdataPaymentStatusException
 
@@ -43,14 +44,14 @@ __all__ = (
 )
 
 
-def get_suds_client(testing_mode=False):
+def get_suds_client(live_mode=False):
     """
     Create the suds client to connect to docdata.
     """
-    if testing_mode:
-        url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_2?wsdl'
-    else:
+    if live_mode:
         url = 'https://secure.docdatapayments.com/ps/services/paymentservice/1_2?wsdl'
+    else:
+        url = 'https://test.docdatapayments.com/ps/services/paymentservice/1_2?wsdl'
 
     # TODO: CACHE THIS object, avoid having to request the WSDL at every instance.
     try:
@@ -88,28 +89,24 @@ class DocdataClient(object):
     PAYMENT_METHOD_ELV = 'ELV'
 
 
-    def __init__(self, testing_mode=None):
+    def __init__(self, live_mode=False):
         """
         Initialize the client.
         """
-        try:
-            testing_mode = settings.DOCDATA_SETTINGS['testing_mode']
-        except AttributeError:
-            testing_mode = False
 
-        self.client = get_suds_client(testing_mode)
-        self.testing_mode = testing_mode
+        self.client = get_suds_client(live_mode)
+        self.live_mode = live_mode
 
-        if not settings.DOCDATA_MERCHANT_NAME:
+        if not properties.DOCDATA_MERCHANT_NAME:
             raise ImproperlyConfigured("Missing DOCDATA_MERCHANT_NAME setting!")
-        if not settings.DOCDATA_MERCHANT_PASSWORD:
+        if not properties.DOCDATA_MERCHANT_PASSWORD:
             raise ImproperlyConfigured("Missing DOCDATA_MERCHANT_PASSWORD setting!")
 
         # Create the merchant node which is passed to every request.
         # The _ notation is used to assign attributes to the XML node, instead of child elements.
         self.merchant = self.client.factory.create('ns0:merchant')
-        self.merchant._name = settings.DOCDATA_MERCHANT_NAME
-        self.merchant._password = settings.DOCDATA_MERCHANT_PASSWORD
+        self.merchant._name = properties.DOCDATA_MERCHANT_NAME
+        self.merchant._password = properties.DOCDATA_MERCHANT_PASSWORD
 
         # Create the integration info node which is passed to every request.
         self.integration_info = TechnicalIntegrationInfo()
@@ -271,7 +268,7 @@ class DocdataClient(object):
         reply = self.client.service.status(
             self.merchant,
             order_key,
-            iIntegrationInfo=self.integration_info.to_xml(self.client.factory)  # NOTE: called iIntegrationInfo in the XSD!!
+            iIntegrationInfo=self.integration_info.to_xml(self.client.factory)
         )
 
         if hasattr(reply, 'statusSuccess'):
@@ -307,7 +304,7 @@ class DocdataClient(object):
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
-            'merchant_name': settings.DOCDATA_MERCHANT_NAME,
+            'merchant_name': properties.DOCDATA_MERCHANT_NAME,
             'return_url_success': "{0}/{1}/#!/orders/{2}/success".format(return_url, client_language, order_id),
             'return_url_pending': "{0}/{1}/#!/orders/{2}/pending".format(return_url, client_language, order_id),
             'return_url_canceled': "{0}/{1}/#!/orders/{2}/cancelled".format(return_url, client_language, order_id),
@@ -316,10 +313,10 @@ class DocdataClient(object):
         }
         args.update(extra_url_args)
 
-        if self.testing_mode:
-            return 'https://test.docdatapayments.com/ps/menu?' + urlencode(args)
-        else:
+        if self.live_mode:
             return 'https://secure.docdatapayments.com/ps/menu?' + urlencode(args)
+        else:
+            return 'https://test.docdatapayments.com/ps/menu?' + urlencode(args)
 
     def convert_to_ascii(self, value):
         """ Normalize / convert unicode characters to ascii equivalents. """

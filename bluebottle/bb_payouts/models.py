@@ -3,19 +3,21 @@ import decimal
 
 import datetime
 from decimal import Decimal
-from bluebottle.bb_payouts.exceptions import PayoutException
-from bluebottle.bb_payouts.utils import money_from_cents
-from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import StatusDefinition
-
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
+from bluebottle.bb_payouts.exceptions import PayoutException
+from bluebottle.bb_payouts.utils import money_from_cents
+from bluebottle.bb_projects.fields import MoneyField
+from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import StatusDefinition
+
+
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
@@ -208,7 +210,9 @@ class BaseProjectPayout(PayoutBase):
 
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        five = ChoiceItem('five', label=_("5%"))
+        beneath_threshold = ChoiceItem('beneath_threshold', label=_("Beneath minimal payout amount"))
+        fully_funded = ChoiceItem('fully_funded', label=_("Fully funded"))
+        not_fully_funded = ChoiceItem('not_fully_funded', label=_("Not fully funded"))
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
 
@@ -253,6 +257,12 @@ class BaseProjectPayout(PayoutBase):
     def amount_failed(self):
         return self.get_amount_failed()
 
+    @property
+    def percent(self):
+        if not self.amount_payable: return "-"
+        
+        return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised)*100, 1))
+    
     def get_payout_rule(self):
         """
         Override this if you want different payout rules for different circumstances.
@@ -296,6 +306,10 @@ class BaseProjectPayout(PayoutBase):
             raise PayoutException(message)
 
         self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
+
+        if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
+            self.status = StatusDefinition.SETTLED
+
         self.organization_fee = self.amount_raised - self.amount_payable
 
         if save:

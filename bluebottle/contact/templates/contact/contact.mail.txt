@@ -1,13 +1,17 @@
 {% extends "base.mail.txt" %}
-{# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
+{% load i18n %}
+
 {% block content %}
+{# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
 Hi there!
 
-{{ message.name }} left a contact-message on {{ site.name }}:
+{{ message.name }} left the following contact message on {{ site.name }}.
 
-"{{ message.message }}"
+'{{ message.message }}'
 
-You can manage this message on {{ site_url }}{{ link }}.
+Would you like to reply to this message?
+{% endblock %}
 
-Take care!
-{% endblock content %}
+{% block action %}
+{% trans 'Reply' context 'email' %}: {{ site_url }}{{ link }}
+{% endblock %}

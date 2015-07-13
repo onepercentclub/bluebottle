@@ -100,7 +100,7 @@ class StartedCampaigns(ProjectModule):
     Simple implementation of ``ProjectModule``
     TODO: This will not work for all projects. Left here for backwards-compat.
     """
-    title = _('Recently Started Campaigns')
+    title = _('Recently Started Projects')
     template = 'admin_tools/dashboard/started_campaigns.html'
 
     def __init__(self, *args, **kwargs):

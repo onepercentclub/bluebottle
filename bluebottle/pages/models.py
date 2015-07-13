@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils.safestring import mark_safe
 
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField)
@@ -12,6 +12,14 @@ from fluent_contents.rendering import render_placeholder
 
 from bluebottle.utils.serializers import MLStripper
 
+
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_page', 'change_page', 'delete_page',
+        )
+    }
+}
 
 class Page(models.Model):
     """
@@ -42,7 +50,7 @@ class Page(models.Model):
 
     # Metadata
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False)
+        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 
@@ -56,5 +64,5 @@ class Page(models.Model):
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')
         s = MLStripper()
-        s.feed(render_placeholder(request, self.body))
+        s.feed(mark_safe(render_placeholder(request, self.body).html))
         return truncatechars(s.get_data(), 200)

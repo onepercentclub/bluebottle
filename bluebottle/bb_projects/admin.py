@@ -7,18 +7,40 @@ from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model
-from .models import ProjectPhase, ProjectTheme
+from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
+
+from .forms import ProjectDocumentForm
+
+from .models import ProjectTheme
+
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-
+PROJECT_DOCUMENT_MODEL = get_project_document_model()
 
 class ProjectThemeAdmin(admin.ModelAdmin):
-    model = ProjectTheme
-    prepopulated_fields = {'slug': ('name', 'name_nl')}
+    list_display = admin.ModelAdmin.list_display + \
+        ('slug', 'disabled',)
+
 
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
+
+
+class ProjectDocumentInline(admin.StackedInline):
+    model = PROJECT_DOCUMENT_MODEL
+    form = ProjectDocumentForm
+    extra = 0
+    raw_id_fields = ('author', )
+    readonly_fields = ('download_url',)
+    fields = readonly_fields + ('file', 'author')
+
+    def download_url(self, obj):
+        url = obj.document_url
+
+        if url is not None:
+            return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
+        return '(None)'
+    download_url.allow_tags = True
 
 
 class ProjectPhaseLogInline(admin.TabularInline):
@@ -29,7 +51,7 @@ class ProjectPhaseLogInline(admin.TabularInline):
 
 
 class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
-    inlines = [ProjectPhaseLogInline, ]
+    inlines = [ProjectPhaseLogInline, ProjectDocumentInline]
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
@@ -83,13 +105,3 @@ class BaseProjectAdmin(AdminImageMixin, ImprovedModelForm):
 # (possibly inheriting from BaseProjectAdmin), and then re-register it
 admin.site.register(PROJECT_MODEL, BaseProjectAdmin)
 
-
-class ProjectPhaseAdmin(admin.ModelAdmin):
-    model = ProjectPhase
-    ordering = ['sequence']
-    list_editable = ['active', 'editable', 'viewable', 'owner_editable']
-    list_filter = ['active', ]
-    list_display_links = ['name']
-    list_display = ['sequence', 'name', 'active', 'editable', 'viewable', 'owner_editable']
-
-admin.site.register(ProjectPhase, ProjectPhaseAdmin)

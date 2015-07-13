@@ -1,10 +1,13 @@
-from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
-from bluebottle.utils.utils import StatusDefinition
-from django.http.response import Http404
 import logging
-from rest_framework import generics
+from django.http.response import Http404
+from serializers import LatestDonationSerializer
+from rest_framework import permissions, generics
+
+from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_fundraiser_model
+from bluebottle.donations.models import Donation
+from bluebottle.utils.utils import StatusDefinition
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
@@ -141,3 +144,16 @@ class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')
 
     permission_classes = (OrderIsNew, IsOrderCreator)
+
+
+# For showing the latest donations
+class LatestDonationsList(generics.ListAPIView):
+    model = Donation
+    serializer_class = LatestDonationSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    paginate_by = 20
+
+    def get_queryset(self):
+        qs = super(LatestDonationsList, self).get_queryset()
+        qs = qs.order_by('-created')
+        return qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])

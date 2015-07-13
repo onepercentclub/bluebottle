@@ -1,34 +1,41 @@
 import json
 
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations_factories import (
+from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationMemberFactory, ORGANIZATION_MODEL)
 
 
-class OrganizationsEndpointTestCase(TestCase):
+class OrganizationsEndpointTestCase(BluebottleTestCase):
+
     """
     Base class for test cases for ``organizations`` module.
 
     The testing classes for ``organization`` module related to the API must
     subclass this.
     """
+
     def setUp(self):
+        super(OrganizationsEndpointTestCase, self).setUp()
+
         self.user_1 = BlueBottleUserFactory.create()
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
-        
+
         self.user_2 = BlueBottleUserFactory.create()
 
         self.organization_1 = OrganizationFactory.create()
         self.organization_2 = OrganizationFactory.create()
         self.organization_3 = OrganizationFactory.create()
 
-        self.member_1 = OrganizationMemberFactory.create(user=self.user_1, organization=self.organization_1)
-        self.member_2 = OrganizationMemberFactory.create(user=self.user_1, organization=self.organization_2)
-        self.member_3 = OrganizationMemberFactory.create(user=self.user_2, organization=self.organization_3)
+        self.member_1 = OrganizationMemberFactory.create(
+            user=self.user_1, organization=self.organization_1)
+        self.member_2 = OrganizationMemberFactory.create(
+            user=self.user_1, organization=self.organization_2)
+        self.member_3 = OrganizationMemberFactory.create(
+            user=self.user_2, organization=self.organization_3)
 
         # self.organization_1.members.add(self.member_1)
         # self.organization_1.save()
@@ -39,11 +46,13 @@ class OrganizationsEndpointTestCase(TestCase):
 
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
+
     """
     Test case for ``OrganizationsList`` API view.
 
     Endpoint: /api/bb_organizations/
     """
+
     def test_api_organizations_list_endpoint(self):
         """
         Tests that the list of organizations can be obtained from its
@@ -59,29 +68,36 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
 
 
 class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
+
     """
     Test case for ``OrganizationsList`` API view.
 
     Endpoint: /api/bb_organizations/{pk}
     """
+
     def test_api_organizations_detail_endpoint(self):
-        response = self.client.get(reverse('organization_detail', kwargs={'pk': self.organization_1.pk}))
+        response = self.client.get(
+            reverse('organization_detail',
+                    kwargs={'pk': self.organization_1.pk}))
 
         self.assertEqual(response.status_code, 200)
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
+
     """
     Test case for ``ManageOrganizationsList`` API view.
 
     Endpoint: /api/bb_organizations/manage/
     """
+
     def test_api_manage_organizations_list_user_filter(self):
         """
         Tests that the organizations returned are those which belongs to the
         logged-in user.
         """
-        response = self.client.get(reverse('manage_organization_list'), HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(
+            reverse('manage_organization_list'), token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -105,12 +121,12 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             'phone_number': '(+31) 20 715 8980',
             'website': 'http://onepercentclub.com',
             'email': 'info@onepercentclub.com',
-            'twitter': '@1percentclub',
-            'facebook': '/onepercentclub',
-            'skype': 'onepercentclub'
         }
 
-        response = self.client.post(reverse('manage_organization_list'), post_data, HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.post(
+            reverse('manage_organization_list'),
+            post_data,
+            token=self.user_1_token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -118,8 +134,10 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         organization = ORGANIZATION_MODEL.objects.latest('pk')
         self.assertEqual(organization.name, post_data['name'])
         self.assertEqual(organization.slug, post_data['slug'])
-        self.assertEqual(organization.address_line1, post_data['address_line1'])
-        self.assertEqual(organization.address_line2, post_data['address_line2'])
+        self.assertEqual(
+            organization.address_line1, post_data['address_line1'])
+        self.assertEqual(
+            organization.address_line2, post_data['address_line2'])
         self.assertEqual(organization.city, post_data['city'])
         self.assertEqual(organization.state, post_data['state'])
         self.assertEqual(organization.country.pk, post_data['country'])
@@ -127,24 +145,26 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(organization.phone_number, post_data['phone_number'])
         self.assertEqual(organization.website, post_data['website'])
         self.assertEqual(organization.email, post_data['email'])
-        self.assertEqual(organization.twitter, post_data['twitter'])
-        self.assertEqual(organization.facebook, post_data['facebook'])
-        self.assertEqual(organization.skype, post_data['skype'])
 
 
 class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
+
     """
     Test case for ``OrganizationsList`` API view.
 
     Endpoint: /api/bb_organizations/manage/{pk}
     """
+
     def test_manage_organizations_detail_login_required(self):
         """
         Tests that the endpoint first restricts results to logged-in users.
         """
         # Making the request without logging in...
-        response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}))
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        response = self.client.get(
+            reverse('manage_organization_detail',
+                    kwargs={'pk': self.organization_1.pk}))
+        self.assertEqual(
+            response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_manage_organizations_detail_user_restricted(self):
         """
@@ -153,8 +173,9 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         # Requesting an organization for which the user have no membership...
         response = self.client.get(
-            reverse('manage_organization_detail', kwargs={'pk': self.organization_3.pk}),
-            HTTP_AUTHORIZATION=self.user_1_token)
+            reverse('manage_organization_detail',
+                    kwargs={'pk': self.organization_3.pk}),
+            token=self.user_1_token)
 
         # ...it fails.
         self.assertEqual(response.status_code, 403)
@@ -163,8 +184,9 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         Tests a successful GET request over the endpoint.
         """
-        response = self.client.get(reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}), 
-                                                                         HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(reverse('manage_organization_detail',
+                                   kwargs={'pk': self.organization_1.pk}),
+                                   token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -184,21 +206,18 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
             'phone_number': '(+31) 20 123 4567',
             'website': 'http://www.utrecht.nl',
             'email': 'info@utrecht.nl',
-            'twitter': 'utrecht',
-            'facebook': '/utrecht',
-            'skype': 'utrecht'
         }
 
-        data = json.dumps(put_data)
-
         response = self.client.put(
-            reverse('manage_organization_detail', kwargs={'pk': self.organization_1.pk}), data,
-            content_type='application/json', HTTP_AUTHORIZATION=self.user_1_token)
+            reverse('manage_organization_detail',
+                    kwargs={'pk': self.organization_1.pk}),
+            put_data, token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 
         # Check the data.
-        organization = ORGANIZATION_MODEL.objects.get(pk=self.organization_1.pk)
+        organization = ORGANIZATION_MODEL.objects.get(
+            pk=self.organization_1.pk)
         self.assertEqual(organization.name, put_data['name'])
         self.assertEqual(organization.slug, put_data['slug'])
         self.assertEqual(organization.address_line1, put_data['address_line1'])
@@ -210,6 +229,3 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(organization.phone_number, put_data['phone_number'])
         self.assertEqual(organization.website, put_data['website'])
         self.assertEqual(organization.email, put_data['email'])
-        self.assertEqual(organization.twitter, put_data['twitter'])
-        self.assertEqual(organization.facebook, put_data['facebook'])
-        self.assertEqual(organization.skype, put_data['skype'])

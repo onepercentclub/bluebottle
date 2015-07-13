@@ -12,108 +12,113 @@ def read_file(name):
 readme = read_file('README.rst')
 changes = ''
 
+dependency_links = [
+    'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
+    'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
+    'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.14.zip#egg=django-bb-salesforce-1.1.14',
+    'https://github.com/onepercentclub/django-tenant-extras/archive/1.9.0.zip#egg=django-tenant-extras-1.9.0',
+    'https://github.com/onepercentclub/django-token-auth/archive/0.1.2.zip#egg=django-token-auth-0.1.2'
+]
+
 install_requires = [
     'Babel==1.3',
-    'bunch==1.0.1',
-    'Django==1.5.5',
+    'BeautifulSoup==3.2.1',
+    'Django==1.6.8',
     'Pillow==2.3.0',
-    'South==0.8.1',
+    'South==1.0',
     'Sphinx==1.2b1',
-    'django-admin-tools==0.5.1', # for now replaced by fork
+    'bunch==1.0.1',
+    'celery==3.1.17',
+    'django-celery==3.0.17',
     'django-apptemplates==0.0.1',
     'django-choices==1.1.11',
     'django-compressor==1.3',
     'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
-    'django-filetransfers==0.0.0',
+    'django-exportdb==0.3.3',
     'django-filter==0.6',
-    'django-fluent-contents==0.9a1', # Version 1.0b1 and up breaks our code
+    'django-geoposition==0.2.2',
     'django-iban==0.2.1',
-    'django-localflavor==1.0',
-    'django-registration==1.0',
+    'django-localflavor==1.1',
     'django-social-auth==0.7.23',
-    'django-statici18n==0.4.5',
-    'django-taggit==0.10a1',
-    'django-taggit-autocomplete-modified==0.1.0b4',
+    'django-taggit==0.12.1',
     'django-templatetag-handlebars==1.2.0',
-    'django-tinymce==1.5.1b2',
+    'django-tinymce==1.5.2',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.5.1',
     'django-dynamic-fixture==1.8.0',
-    'djangorestframework==2.3.12',
+    'django-fluent-dashboard==0.3.2',
+    'djangorestframework==2.3.14',
     'dkimpy==0.5.4',
     'html5lib==0.95',
     'micawber==0.2.6',
-    'mock==1.0.1',
     'requests==2.3.0',
     'sorl-thumbnail==11.12',
-    'splinter==0.6.0',
-    'transifex-client==0.9.1',
+    'transifex-client==0.11b3',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz==1.2',
     'beautifulsoup4==4.3.2',
-    'djangorestframework-jwt==1.0.2',
-    'psycopg2==2.2.1',
-    'requests==2.3.0',
+    'psycopg2==2.5.5',
     'django-fsm==1.6.0',
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
-    'pygeoip==0.3.1'
+    'pygeoip==0.3.1',
+    'python-social-auth==0.1.26',
+    'python-memcached==1.53',
+    'lxml==3.1.2',
+    'unicodecsv==0.9.4',
+    'python-dateutil==1.5',
+    'gunicorn==19.2.1',
+    'surlex==0.2.0',
+    'django_polymorphic==0.6.1',
+    'dnspython',
+    'fabric',
+    'django-tenant-schemas==1.5.1-4-g45c9ee9',
+    'raven==5.1.1',
+    'djangorestframework-jwt==1.1.1',
+    'django-filetransfers==0.1.0',
+    'django-admin-tools==0.5.2',
+
+    # Github requirements
+    'django-taggit-autocomplete-modified==0.1.1',
+    'django-fluent-contents==1.0c3',
+    'django-bb-salesforce==1.1.14',
+    'django-tenant-extras==1.9.0',
+    'django-token-auth==0.1.2'
 ]
 
-
-dependency_links = [
-    'https://github.com/GetBlimp/django-rest-framework-jwt/archive/b6b42b967c3584b426446df1f72149b7a07fd520.zip#egg=djangorestframework-jwt-1.0.2',
-
-    'https://github.com/onepercentclub/django-salesforce/archive/1e54beb7bcc15a893e9590fb27cbf08853da5599.zip#egg=django-salesforce-0.1.6.3',
-
-    'https://bitbucket.org/wkornewald/django-filetransfers/get/32ddeac.zip#egg=django-filetransfers-0.0.0',
-
-    'https://bitbucket.org/sergei_maertens/django-admin-tools/get/c989fd1.zip#egg=django-admin-tools-0.5.1',
-]
-
-tests_require = [
-    'South==0.8.1',
+tests_requires = [
     'coverage==3.6',
-    'django-nose',
-    'django-admin-tools==0.5.1',
-    'django-apptemplates==0.0.1',
-    'django_compressor==1.2',
-    'django-fluent-contents==0.9a1',
-    'django-filetransfers==0.0.0',
-    'django-localflavor==1.0',
-    'django-registration==1.0',
+    'django-nose==1.3',
     'django-setuptest==0.1.4',
-    'django-social-auth==0.7.23',
-    'django-taggit==0.10a1',
-    'django-templatetag-handlebars==1.2.0',
-    'django-tinymce==1.5.1b2',
-    'django-tools==0.25.0',
-    'django-wysiwyg==0.5.1',
-    'djangorestframework==2.3.12',
     'factory-boy==2.3.1',
-    'micawber==0.2.6',
     'mock==1.0.1',
     'nose==1.3.4',
     'pylint==1.1.0',
-    'sauceclient==0.1.0',
-    'selenium==2.44.0',
-    'sorl-thumbnail==11.12',
-    'splinter==0.6.0',
-    'tdaemon==0.1.1',
+    'tdaemon==0.1.1'
+]
+
+dev_requires = [
+    'ipdb'
 ]
 
 setup(
     name='bluebottle',
-    version='.'.join(map(str, bluebottle.__version__)),
+    version=bluebottle.__version__,
     license='BSD',
 
     # Packaging.
     packages=find_packages(exclude=('tests', 'tests.*')),
     install_requires=install_requires,
     dependency_links=dependency_links,
-    tests_require=tests_require,
+
+    # You can install these using the following syntax, for example:
+    # $ pip install -e .[dev,test]
+    extras_require={
+        'dev': dev_requires,
+        'test': tests_requires,
+    },
     include_package_data=True,
     zip_safe=False,
 
@@ -125,11 +130,12 @@ setup(
     platforms=['any'],
     url='https://github.com/onepercentclub/bluebottle',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
+        'Framework :: Django',
         'Intended Audience :: Developers',
-        'Operating System :: OS Independent',
+        'Operating System :: Unix',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Topic :: Software Development',
-    ],
+        'Topic :: Software Development :: Libraries :: Application Frameworks'
+    ]
 )

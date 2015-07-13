@@ -8,16 +8,13 @@ from django.views.generic.detail import DetailView
 from filetransfers.api import serve_file
 from rest_framework import generics
 
-from bluebottle.utils.utils import get_client_ip
-
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationdocument_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
 
 from .permissions import IsOrganizationMember
-from .serializers import OrganizationSerializer, ManageOrganizationSerializer, OrganizationDocumentSerializer
+from .serializers import OrganizationSerializer, ManageOrganizationSerializer
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()
-DOCUMENT_MODEL = get_organizationdocument_model()
 
 
 class OrganizationList(DefaultSerializerMixin, generics.ListAPIView):
@@ -50,32 +47,10 @@ class ManageOrganizationList(ManageSerializerMixin, generics.ListCreateAPIView):
             member.save()
 
 
-class ManageOrganizationDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
+class ManageOrganizationDetail(ManageSerializerMixin, generics.RetrieveUpdateDestroyAPIView):
     model = ORGANIZATION_MODEL
     serializer_class = ManageOrganizationSerializer
     permission_classes = (IsOrganizationMember, )
-
-
-class ManageOrganizationDocumentList(generics.ListCreateAPIView):
-    model = DOCUMENT_MODEL
-    serializer_class = OrganizationDocumentSerializer
-    paginate_by = 20
-    filter = ('organization', )
-
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
-
-
-class ManageOrganizationDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = DOCUMENT_MODEL
-    serializer_class = OrganizationDocumentSerializer
-    paginate_by = 20
-    filter = ('organization', )
-
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
 
 
 #
@@ -83,7 +58,6 @@ class ManageOrganizationDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
 #
 
 # Download private documents
-# OrganizationDocument handled by Bluebottle view
 
 class RegistrationDocumentDownloadView(DetailView):
     model = ORGANIZATION_MODEL

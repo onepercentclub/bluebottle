@@ -1,21 +1,26 @@
 from datetime import datetime
-from bluebottle.payments.services import PaymentService
+from collections import namedtuple
+
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.payments.services import PaymentService
 from bluebottle.test.utils import BluebottleTestCase
 
-from django.test import TestCase
 from django_fsm.db.fields import TransitionNotAllowed
 
 from bluebottle.test.factory_models.payments import PaymentFactory, OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.models import TestBaseUser
-
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle import clients
+
+from mock import patch
 
 
-class BlueBottlePaymentTestCase(TestCase):
-    
+class BlueBottlePaymentTestCase(BluebottleTestCase):
+
     def setUp(self):
+        super(BlueBottlePaymentTestCase, self).setUp()
+        self.init_projects()
+
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order)
 
@@ -85,18 +90,37 @@ class BlueBottlePaymentTestCase(TestCase):
         # Starting an authorized Payment should not change Order Payment status
         with self.assertRaises(TransitionNotAllowed):
             self.payment.save()
-            
+
         self.assertEqual(self.payment.order_payment.status, StatusDefinition.AUTHORIZED,
             'Starting an authorized Payment should not change Order Payment status')
 
         self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.PENDING,
             'Starting an authorized Payment should not change Order status')
 
+    def test_info_text(self):
+        self.assertEqual(
+            self.order_payment.info_text,
+            'testserver via onepercentclub {id}'.format(id=self.order_payment.id)
+        )
+
+    @patch.object(clients.utils, 'tenant_site')
+    def test_info_text_onepercentclub(self, tenant_site_mock):
+        tenant_site_mock.return_value = namedtuple(
+            'Site', ['name', 'domain']
+        )('1% club', 'onepercentclub.com')
+
+        self.assertEqual(
+            self.order_payment.info_text,
+            'onepercentclub.com donation {id}'.format(id=self.order_payment.id)
+        )
+
 
 class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(BlueBottlePaymentFeeTestCase, self).setUp()
+        self.init_projects()
+
         self.order = OrderFactory.create()
         self.donation = DonationFactory(amount=60, order=self.order)
         self.order_payment = OrderPaymentFactory.create(order=self.order)
@@ -132,3 +156,15 @@ class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
         self.order_payment.save()
         self.assertEqual(self.order_payment.transaction_fee, 1.95)
 
+
+class UtilsTestCase(BluebottleTestCase):
+
+    def test_trim_url(self):
+        from ..models import trim_tenant_url
+
+        tenant_url = 'www.holycrapthisisareallyreallylongurl.com'
+        max_length = 30
+
+        new_url = trim_tenant_url(max_length, tenant_url)
+        self.assertEqual(len(new_url), max_length)
+        self.assertTrue('...' in new_url)

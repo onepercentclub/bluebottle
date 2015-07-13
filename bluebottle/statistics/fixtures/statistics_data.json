@@ -1,0 +1,12 @@
+[
+  {
+    "pk": 1,
+    "model": "statistics.statistic",
+    "fields": {
+      "lives_changed": "0",
+      "projects": "0",
+      "countries": "0",
+      "hours_spent": "0"
+    }
+  }
+]

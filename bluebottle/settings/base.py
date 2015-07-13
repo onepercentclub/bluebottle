@@ -82,7 +82,11 @@ STATICFILES_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     # You can also name this tuple like: ('css', '/path/to/css')
-    (os.path.join(PROJECT_ROOT, 'static', 'global')),
+    ("app", os.path.join(PROJECT_ROOT, 'frontend', 'app')),
+    ("vendor", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'vendor')),
+    ("css", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'css')),
+    ("images", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'images')),
+    ("fonts", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'fonts'))
 )
 
 # List of finder classes that know how to find static files in
@@ -102,11 +106,11 @@ TEMPLATE_LOADERS = (
 
 TEMPLATE_DIRS = (
     (os.path.join(PROJECT_ROOT, 'templates')),
+    (os.path.join(PROJECT_ROOT, 'frontend', 'app', 'templates'))
 )
 
-
-
 MIDDLEWARE_CLASSES = (
+    'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
@@ -127,7 +131,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-    ),
+    )
 }
 
 JWT_AUTH = {
@@ -136,81 +140,137 @@ JWT_AUTH = {
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
-INSTALLED_APPS = (
+
+SHARED_APPS = (
+    'bluebottle.clients', # you must list the app where your tenant model resides in
+
+    # Django apps
+    'south',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
 
-    # BlueBottle dependencies.
+    # 3rd party apps
+    'django_extensions',
+    'django_extensions.tests',
+    'raven.contrib.django.raven_compat',
+    'djcelery',
     'compressor',
-    'registration',
-    'rest_framework',
-    'taggit',
-    'south',
     'sorl.thumbnail',
+    'taggit',
+    'taggit_autocomplete_modified',
+    'micawber.contrib.mcdjango',  # Embedding videos
+    'templatetag_handlebars',
+    'rest_framework',
+    'filetransfers',
+    'loginas',
+)
 
-    # BlueBottle applications.
+TENANT_APPS = (
+    'south',
+    'polymorphic',
+
+    #'social_auth',
+    'social.apps.django_app.default',
+
+    # Custom dashboard
+    'fluent_dashboard',
+
+    'admin_tools',
+    'admin_tools.theming',
+    'admin_tools.menu',
+    'admin_tools.dashboard',
+
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+
+    # FB Auth
+    'bluebottle.auth',
+
+    #Widget
+    'bluebottle.widget',
+
+    'rest_framework.authtoken',
+
+    # Newly moved BB apps
+    'bluebottle.members',
+    'bluebottle.projects',
+    'bluebottle.partners',
+    'bluebottle.organizations',
+    'bluebottle.tasks',
+    'bluebottle.hbtemplates',
+    'bluebottle.bluebottle_dashboard',
+    'bluebottle.statistics',
+    'bluebottle.homepage',
+    'bluebottle.recurring_donations',
+    'bluebottle.payouts',
+
+    # Plain Bluebottle apps
+    'bluebottle.wallposts',
+    'bluebottle.utils',
+    'bluebottle.common',
+    'bluebottle.contentplugins',
+    'bluebottle.contact',
+    'bluebottle.geo',
+    'bluebottle.pages',
+    'bluebottle.news',
+    'bluebottle.slides',
+    'bluebottle.quotes',
+    'bluebottle.payments',
+    'bluebottle.payments_docdata',
+    'bluebottle.payments_logger',
+    'bluebottle.payments_voucher',
+    'bluebottle.redirects',
+
+    # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
     'bluebottle.bb_donations',
+    'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
-
-    # Other Bb apps
-    'bluebottle.common',
-    'bluebottle.contact',
-    'bluebottle.contentplugins',
-    'bluebottle.geo',
-    'bluebottle.news',
-    'bluebottle.pages',
-    'bluebottle.quotes',
-    'bluebottle.slides',
-    'bluebottle.redirects',
-    'bluebottle.terms',
-    'bluebottle.utils',
-    'bluebottle.wallposts',
-
-    # Basic Bb implementations
-    'bluebottle.fundraisers',
-    'bluebottle.orders',
-    'bluebottle.donations',
-    'bluebottle.payouts',
-
-    'bluebottle.payments',
-    'bluebottle.payments_docdata',
-    'bluebottle.payments_mock',
-    'bluebottle.payments_logger',
-    'bluebottle.payments_voucher',
-
     'bluebottle.bb_follow',
     'bluebottle.suggestions',
 
-    # Test Bb implementations
-    'bluebottle.test',
+    # Basic Bb implementations
+    'bluebottle.fundraisers',
+    'bluebottle.donations',
+    'bluebottle.orders',
+    'bluebottle.suggestions',
 
-    # Modules required by BlueBottle
+    # CMS page contents
     'fluent_contents',
     'fluent_contents.plugins.text',
     'fluent_contents.plugins.oembeditem',
     'fluent_contents.plugins.rawhtml',
-
     'django_wysiwyg',
-    'templatetag_handlebars',
-
-    'raven.contrib.django.raven_compat',
+    'tinymce',
+    'django.contrib.humanize',
+    'django_tools',
 )
 
+INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)
+
+TENANT_MODEL = "clients.Client"
+TENANT_PROPERTIES = "bluebottle.clients.properties"
+
+SOUTH_DATABASE_ADAPTERS = {
+    'default': 'south.db.postgresql_psycopg2',
+}
+
+SOUTH_MIGRATION_MODULES = {
+    'taggit': 'taggit.south_migrations',
+}
+
 TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.core.context_processors.request',
     'django.contrib.auth.context_processors.auth',
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
@@ -218,7 +278,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.core.context_processors.tz',
     'django.contrib.messages.context_processors.messages',
-    'bluebottle.utils.context_processors.installed_apps_context_processor',
 )
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
@@ -236,12 +295,29 @@ THUMBNAIL_QUALITY = 85
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
     'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'logging.NullHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -257,6 +333,26 @@ LOGGING = {
         }
     },
     'loggers': {
+        'null': {
+            'handlers': ['null'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'console': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'recurring_donations': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'bluebottle.salesforce': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
             'level': 'INFO',
@@ -270,53 +366,46 @@ LOGGING = {
     }
 }
 
+# Custom User model
+AUTH_USER_MODEL = 'members.Member'
 
-# Define the models to use for testing
-AUTH_USER_MODEL = 'test.TestBaseUser'
-
-PROJECTS_PROJECT_MODEL = 'test.TestBaseProject'
-PROJECTS_PHASELOG_MODEL = 'test.TestBaseProjectPhaseLog'
+PROJECTS_PROJECT_MODEL = 'projects.Project'
+PROJECT_DOCUMENT_MODEL = 'projects.ProjectDocument'
+PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
 
 FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
 
-TASKS_TASK_MODEL = 'test.TestTask'
-TASKS_SKILL_MODEL = 'test.TestSkill'
-TASKS_TASKMEMBER_MODEL = 'test.TestTaskMember'
-TASKS_TASKFILE_MODEL = 'test.TestTaskFile'
+TASKS_TASK_MODEL = 'tasks.Task'
+TASKS_SKILL_MODEL = 'tasks.Skill'
+TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
+TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
 
-ORGANIZATIONS_ORGANIZATION_MODEL = 'test.TestOrganization'
-ORGANIZATIONS_DOCUMENT_MODEL = 'test.TestOrganizationDocument'
-ORGANIZATIONS_MEMBER_MODEL = 'test.TestOrganizationMember'
+ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
+ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
 
-DONATIONS_DONATION_MODEL = 'donations.Donation'
 ORDERS_ORDER_MODEL = 'orders.Order'
+DONATIONS_DONATION_MODEL = 'donations.Donation'
 
 PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
 PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
 
 
+# Default Client properties
+RECURRING_DONATIONS_ENABLED = False
+DONATIONS_ENABLED = True
+
+
+# For building frontend code
+BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
+           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
+           'projects', 'tasks', 'fundraisers', 'donations', 'orders',
+           'homepage', 'recurring-donations', 'partners']
+
+MINIMAL_PAYOUT_AMOUNT = 21.00
+VAT_RATE = '0.21'
+
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True
-
-
-PROJECT_PHASES = (
-    ('Plan', (
-        ('plan-new', 'Plan - New'),
-        ('plan-submitted', 'Plan - Submitted'),
-        ('plan-needs-work', 'Plan - Needs work'),
-        ('plan-rejected', 'Plan - Rejected'),
-        ('plan-approved', 'Plan - Approved'),
-    )),
-    ('Campaign', (
-        ('campaign-running', 'Campaign - Running'),
-        ('campaign-stopped', 'Campaign - Stopped'),
-    )),
-    ('Done', (
-        ('done-completed', 'Done - Completed'),
-        ('done-incomplete', 'Done - Incomplete'),
-        ('done-stopped', 'Done - Stopped'),
-    )),
-)
 
 # Twitter handles, per language
 TWITTER_HANDLES = {
@@ -325,6 +414,9 @@ TWITTER_HANDLES = {
 }
 
 DEFAULT_TWITTER_HANDLE = TWITTER_HANDLES['nl']
+
+# Used when creating default payment address
+DEFAULT_COUNTRY_CODE = 'NL'
 
 # E-MAILS
 CONTACT_EMAIL = 'contact@my-bluebottle-project.com'
@@ -335,4 +427,35 @@ HTML_ACTIVATION_EMAIL = True
 
 SEND_WELCOME_MAIL = False
 
-THUMBNAIL_DEBUG = False
+TENANT_MAIL_PROPERTIES = {}
+
+MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'clients')
+
+TENANT_BASE = os.path.join(PROJECT_ROOT, 'static', 'media')
+
+PROJECT_PAYOUT_FEES = {
+    'beneath_threshold': 1,
+    'fully_funded': .05,
+    'not_fully_funded': .05
+}
+
+
+EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key', 'git_commit', \
+                             'debug', 'compress_templates', 'facebook_auth_id', 'installed_apps', \
+                             'bb_apps', ]
+
+MIXPANEL = ''
+MAPS_API_KEY = ''
+ANALYTICS = ''
+GIT_COMMIT = ''
+DEBUG = True
+COMPRESS_TEMPLATES = False
+FACEBOOK_AUTH_ID = ''
+
+
+CELERY_MAIL = False
+SEND_MAIL = True
+
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', )
+
+CLOSED_SITE = False

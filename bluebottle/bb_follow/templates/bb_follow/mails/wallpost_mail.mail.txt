@@ -1,17 +1,16 @@
-{% extends "base.mail.txt" %}
+{% extends "base.mail.html" %}
 {% load i18n %}
 
 {% block content %}
 {% blocktrans %}
-Hi {{first_name}},
 
-There has been a new post on a {{follow_object}} you follow. 
+Hello {{ first_name }},
 
-Here's part of the post:
+{{ author }} added a new post on a {{ follow_object }} you follow:
 
-{{wallpost_text}}...
-
-Check the wall at: {{link}} for the full update.
-
+'{{ wallpost_text }}...'
 {% endblocktrans %}
+{% endblock %}
+{% block action %}
+<{% trans 'View full update' context 'email' %}: {{ link }}
 {% endblock %}

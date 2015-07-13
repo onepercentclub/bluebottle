@@ -1,9 +1,0 @@
-{% load templatetag_handlebars %}
-{% load i18n %}
-{% load static %}
-
-{% tplhandlebars "components/bb-select-country" %}
-    {{#bb-form-field hint=hint label=label errors=errors}}
-        {{view "App.CountrySelectView" selectionBinding='selection' nameBinding=name valueBinding='value'}}
-    {{/bb-form-field}}
-{% endtplhandlebars %}

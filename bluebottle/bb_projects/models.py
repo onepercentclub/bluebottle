@@ -1,32 +1,40 @@
-from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.utils.utils import StatusDefinition
-from django.db.models.aggregates import Sum
-from django.db.models.query_utils import Q
-from taggit.managers import TaggableManager
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 from django.db.models import options
+from django_iban.fields import IBANField, SWIFTBICField
+from django.db.models.aggregates import Sum
+from django.db.models.query_utils import Q
+from django.core.urlresolvers import reverse
+from django.contrib.contenttypes.models import ContentType
 
+from sorl.thumbnail import ImageField
+from taggit.managers import TaggableManager
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
-from sorl.thumbnail import ImageField
 
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model
+from bluebottle.bb_projects.fields import MoneyField
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.model_dispatcher import get_project_phaselog_model, get_taskmember_model
 from bluebottle.utils.utils import GetTweetMixin
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
+                                                 'preview_serializer',
+                                                 'manage_serializer')
 
 
 class ProjectTheme(models.Model):
+
     """ Themes for Projects. """
 
-    # The name is marked as unique so that users can't create duplicate theme names.
+    # The name is marked as unique so that users can't create duplicate
+    # theme names.
     name = models.CharField(_('name'), max_length=100, unique=True)
     name_nl = models.CharField(_('name NL'), max_length=100, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
 
     class Meta:
         ordering = ['name']
@@ -44,27 +52,29 @@ class ProjectTheme(models.Model):
 
 
 class ProjectPhase(models.Model):
+
     """ Phase of a project """
 
     slug = models.SlugField(max_length=200, unique=True)
     name = models.CharField(max_length=100, unique=True)
     description = models.CharField(max_length=400, blank=True)
-    sequence = models.IntegerField(unique=True, help_text=_('For ordering phases.'))
+    sequence = models.IntegerField(unique=True,
+                                   help_text=_('For ordering phases.'))
 
-    active = models.BooleanField(default=True, help_text=_('Whether this phase is in use or has been discarded.'))
+    active = models.BooleanField(default=True,
+                                 help_text=_('Whether this phase is in use or has been discarded.'))
     editable = models.BooleanField(default=True,
                                    help_text=_('Whether the project owner can change the details of the project.'))
     viewable = models.BooleanField(default=True,
                                    help_text=_('Whether this phase, and projects in it show up at the website'))
     owner_editable = models.BooleanField(default=False,
-                                   help_text=_('The owner can manually select between these phases'))
-
+                                         help_text=_('The owner can manually select between these phases'))
 
     class Meta():
         ordering = ['sequence']
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.sequence,  self.name)
+        return u'{0} - {1}'.format(self.sequence, self.name)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -115,32 +125,77 @@ class BaseProjectManager(models.Manager):
         return qs
 
 
+class BaseProjectDocument(models.Model):
+
+    """ Document for an Project """
+
+    file = models.FileField(
+        upload_to='projects/documents')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+                               verbose_name=_('author'), blank=True, null=True)
+    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
+                                     related_name="documents")
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
+
+    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('project document')
+        verbose_name_plural = _('project documents')
+        abstract = True
+
+    @property
+    def document_url(self):
+        from bluebottle.utils.model_dispatcher import get_project_document_model
+        document_model = get_project_document_model()
+        content_type = ContentType.objects.get_for_model(document_model).id
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None:
+            return reverse('document_download_detail',
+                           kwargs={'content_type': content_type,
+                                   'pk': self.pk or 1})
+        return None
+
+
 class BaseProject(models.Model, GetTweetMixin):
+
     """ The base Project model. """
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')
 
     organization = models.ForeignKey(
-        settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_('organization'),
-        help_text=_('Project organization'), related_name='organization', null=True, blank=True)
+        settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_(
+            'organization'),
+        help_text=_('Project organization'),
+        related_name='organization', null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
+    created = CreationDateTimeField(
+        _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
     title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    pitch = models.TextField(_('pitch'), help_text=_('Pitch your smart idea in one sentence'), blank=True)
+    pitch = models.TextField(
+        _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
+        blank=True)
     status = models.ForeignKey('bb_projects.ProjectPhase')
-    theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True)
+    theme = models.ForeignKey(
+        'bb_projects.ProjectTheme', null=True, blank=True)
     favorite = models.BooleanField(default=True)
-    tags = TaggableManager(blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
+    tags = TaggableManager(
+        blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
+    location = models.ForeignKey('geo.Location', null=True, blank=True)
+    place = models.CharField(help_text=_('Geographical location'), max_length=100, null=True, blank=True)
 
     # Extended Description
-    description = models.TextField(_('why, what and how'), help_text=_('Blow us away with the details!'), blank=True)
+    description = models.TextField(_('why, what and how'), help_text=_(
+        'Blow us away with the details!'), blank=True)
 
     # Media
     image = ImageField(
@@ -150,14 +205,43 @@ class BaseProject(models.Model, GetTweetMixin):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
 
-    # For convenience and performance we also store money donated and needed here.
+    # For convenience and performance we also store money donated and needed
+    # here.
     amount_asked = MoneyField(default=0, null=True, blank=True)
     amount_donated = MoneyField(default=0)
     amount_needed = MoneyField(default=0)
+    amount_extra = MoneyField(default=0, null=True, blank=True,
+                              help_text=_("Amount pledged by organisation (matching fund)."))
+
+    # Bank detail data
+
+    # Account holder Info
+    account_holder_name = models.CharField(
+        _("account holder name"), max_length=255, null=True, blank=True)
+    account_holder_address = models.CharField(
+        _("account holder address"), max_length=255, null=True, blank=True)
+    account_holder_postal_code = models.CharField(
+        _("account holder postal code"), max_length=20, null=True, blank=True)
+    account_holder_city = models.CharField(
+        _("account holder city"), max_length=255, null=True, blank=True)
+    account_holder_country = models.ForeignKey(
+        'geo.Country', blank=True, null=True,
+        related_name="project_account_holder_country")
+
+    # Bank details
+    account_number = models.CharField(_("Account number"), max_length=255, null=True, blank=True)
+    account_bic = SWIFTBICField(_("account SWIFT-BIC"), null=True, blank=True)
+    account_bank_country = models.ForeignKey(
+        'geo.Country', blank=True, null=True,
+        related_name="project_account_bank_country")
 
     @property
     def is_realised(self):
-        return self.status == ProjectPhase.objects.get(slug='realised')
+        return self.status == ProjectPhase.objects.get(slug='done-complete')
+
+    @property
+    def is_closed(self):
+        return self.status == ProjectPhase.objects.get(slug='closed')
 
     @property
     def amount_pending(self):
@@ -201,8 +285,9 @@ class BaseProject(models.Model, GetTweetMixin):
         super(BaseProject, self).save(*args, **kwargs)
 
         # Only log project phase if the status has changed
-        if self != None and previous_status != self.status:
-            get_project_phaselog_model().objects.create(project=self, status=self.status)
+        if self is not None and previous_status != self.status:
+            get_project_phaselog_model().objects.create(
+                project=self, status=self.status)
 
     @models.permalink
     def get_absolute_url(self):
@@ -213,7 +298,8 @@ class BaseProject(models.Model, GetTweetMixin):
         """
         Update amount_donated and amount_needed
         """
-        self.amount_donated = self.get_amount_total([StatusDefinition.SUCCESS, StatusDefinition.PENDING])
+        self.amount_donated = self.get_amount_total(
+            [StatusDefinition.SUCCESS, StatusDefinition.PENDING])
         self.amount_needed = self.amount_asked - self.amount_donated
 
         if self.amount_needed < 0:
@@ -225,7 +311,8 @@ class BaseProject(models.Model, GetTweetMixin):
 
     def get_amount_total(self, status_in=None):
         """
-        Calculate the total (real time) amount of money for donations, filtered by status.
+        Calculate the total (real time) amount of money for donations,
+        filtered by status.
         """
 
         if self.amount_asked == 0:
@@ -258,11 +345,33 @@ class BaseProject(models.Model, GetTweetMixin):
         if save:
             self.save()
 
+    @property
+    def funding(self):
+        """
+        Return the amount of people funding this project
+        """
+        return self.donation_set.filter(
+            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        ).distinct('order__user').count()
+
+    @property
+    def sourcing(self):
+        taskmembers = get_taskmember_model().objects.filter(
+            task__project=self,
+            status__in=['applied', 'accepted', 'realized']
+        ).distinct('member')
+        return taskmembers.count()
+
+    @property
+    def supporters(self):
+        return self.funding + self.sourcing
+
 
 class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     status = models.ForeignKey("bb_projects.ProjectPhase")
-    start = CreationDateTimeField(_('created'), help_text=_('When this project entered in this status.'))
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this project entered in this status.'))
 
     class Meta():
         abstract = True

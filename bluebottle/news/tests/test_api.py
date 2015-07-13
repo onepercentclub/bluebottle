@@ -6,15 +6,18 @@ from rest_framework.compat import patterns, url
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.test import APITestCase
 
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.news import NewsItemFactory, DraftNewsItemFactory
 
-class NewsItemApiTestCase(APITestCase):
+
+class NewsItemApiTestCase(BluebottleTestCase):
     """
     Integration tests for the NewsItem API.
     """
     def setUp(self):
+        super(NewsItemApiTestCase, self).setUp()
+
         self.some_dutch_news = NewsItemFactory.create(language='nl')
         self.some_other_dutch_news = NewsItemFactory.create(language='nl')
         self.third_dutch_news = NewsItemFactory.create(language='nl')

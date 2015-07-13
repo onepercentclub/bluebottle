@@ -5,6 +5,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.bb_accounts.models import UserAddress
 
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -80,15 +81,29 @@ class BlueBottleUserChangeForm(forms.ModelForm):
         return self.initial["password"]
 
 
+class UserAddressInline(admin.StackedInline):
+    model = UserAddress
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class BlueBottleUserAdmin(UserAdmin):
     # TODO: this should be easier to override
-    fieldsets = (
+    standard_fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
-        (_("Profile"), {'fields': ('user_type', 'picture', 'about', 'why', 'available_time', 'location', 'website', 'tags')}),
+        (_("Profile"), {'fields': ('user_type', 'picture', 'about_me','location',)}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined', 'deleted')}),
+    )
+
+    staff_fieldsets = (
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'groups')}),
+    )
+
+    superuser_fieldsets = (
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
 
     add_fieldsets = (
@@ -97,6 +112,8 @@ class BlueBottleUserAdmin(UserAdmin):
             'fields': ('email', 'password1', 'password2')}
         ),
     )
+
+    inlines = [UserAddressInline]
 
     readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
 
@@ -116,6 +133,19 @@ class BlueBottleUserAdmin(UserAdmin):
         return "<a href='/login/user/{0}'>{1}</a>".format(obj.id, 'Login as user')
 
     login_as_user.allow_tags = True
+
+    def change_view(self, request, *args, **kwargs):
+        # for superuser
+        try:
+            if request.user.is_superuser:
+                self.fieldsets = self.standard_fieldsets + self.superuser_fieldsets
+            else:
+                self.fieldsets = self.standard_fieldsets + self.staff_fieldsets
+            response = UserAdmin.change_view(self, request, *args, **kwargs)
+        finally:
+            # Reset fieldsets to its original value
+            self.fieldsets = self.standard_fieldsets
+        return response
 
 
 if settings.AUTH_USER_MODEL == 'accounts.BlueBottleUser':

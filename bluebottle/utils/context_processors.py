@@ -1,55 +1,7 @@
+from django.db import connection
 import re
 
 from django.conf import settings
-
-
-def installed_apps_context_processor(request):
-    bb_apps = []
-    for app in settings.INSTALLED_APPS:
-        if app[:11] == 'bluebottle.':
-            # Ignore some standard apps
-            if app[11:] not in ['common', 'admin_dashboard', 'contentplugins', 'auth', 'redirects',
-                                'donations', 'orders', 'fundraisers', 'tasks', 'bb_payouts', 'payouts',
-                                'payments_logger', 'widget', 'bb_follow']:
-                bb_apps.append(app[11:])
-    context = {
-        'installed_apps': settings.INSTALLED_APPS,
-        'bb_apps': bb_apps,
-    }
-    return context
-
-
-def google_analytics_code(request):
-    """
-    Add Google Analytics code from settings file to general request context.
-    """
-    try:
-        context = {'ANALYTICS_CODE': settings.ANALYTICS_CODE}
-    except AttributeError:
-        context ={}
-    return context
-
-
-def google_maps_api_key(request):
-    """
-    Add Google Maps API key from settings file to general request context.
-    """
-    try:
-        context = {'MAPS_API_KEY': settings.MAPS_API_KEY}
-    except AttributeError:
-        context = {}
-    return context
-
-
-def git_commit(request):
-    """
-    Make the git commit hash available in the templates.
-    """
-    try:
-        context = {'GIT_COMMIT': settings.GIT_COMMIT}
-    except AttributeError:
-        context = {}
-    return context
 
 
 def sentry_dsn(request):
@@ -72,33 +24,15 @@ def sentry_dsn(request):
         return {'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key, project_id)}
 
 
-def conf_settings(request):
+def tenant(request):
     """
-    Some settings we want to make available in templates.
+    Add tenant to request context
     """
-    context = {}
-    context['DEBUG'] = getattr(settings, 'DEBUG', False)
-    context['COMPRESS_TEMPLATES'] = getattr(settings, 'COMPRESS_TEMPLATES', False)
+    if connection.tenant:
+        tenant = connection.tenant
+        return {
+            'TENANT': connection,
+            'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name, request.LANGUAGE_CODE)
+        }
+    return {}
 
-    return context
-
-
-def facebook_auth_settings(request):
-    """
-    Facebook Auth client side ID.
-    """
-    context = {}
-    context['FACEBOOK_AUTH_ID'] = getattr(settings, 'SOCIAL_AUTH_FACEBOOK_KEY', '')
-
-    return context
-
-
-def mixpanel_settings(request):
-    """
-    Add Mixpanel API key from settings file to general request context.
-    """
-    try:
-        context = {'MIXPANEL': settings.MIXPANEL}
-    except AttributeError:
-        context = {}
-    return context;

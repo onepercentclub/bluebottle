@@ -55,8 +55,10 @@ class BaseTaskMember(models.Model):
 
     _initial_status = None
 
-    #objects = models.Manager()
+    # objects = models.Manager()
 
+    class Meta:
+        abstract = True
 
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
@@ -70,7 +72,8 @@ class BaseTaskMember(models.Model):
         total_externals = 0
         for member in members:
             total_externals += member.externals
-        members_accepted = members.count() + total_externals 
+
+        members_accepted = members.count() + total_externals
 
         if task.status == 'open' and task.people_needed <= members_accepted:
             task.set_in_progress()
@@ -80,12 +83,16 @@ class BaseTaskMember(models.Model):
         if self.member.email:
             return self.member.email
         return _("No email address for this user")
-
     get_member_email.admin_order_field = 'member__email'
     get_member_email.short_description = "Member Email"
 
-    class Meta:
-        abstract = True
+    @property
+    def partners(self):
+        """
+        Get the amount of partners for this task
+        """
+        accepted = get_taskmember_model().objects.filter(task=self.task, status='accepted')
+        return max(accepted.count() - 1, 0)
 
 
 class BaseTaskFile(models.Model):
@@ -112,8 +119,7 @@ class BaseTask(models.Model, GetTweetMixin):
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
-    end_goal = models.TextField(_('end_goal'))
-    location = models.CharField(_('location'), max_length=200)
+    location = models.CharField(_('location'), max_length=200, null=True, blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
@@ -131,9 +137,9 @@ class BaseTask(models.Model, GetTweetMixin):
     objects = models.Manager()
 
     # required resources
-    time_needed = models.CharField(
-        _('time_needed'), max_length=200,
-        help_text=_('Estimated number of hours needed to perform this task.'))
+    time_needed = models.FloatField(
+        _('time_needed'), help_text=_('Estimated number of hours needed to perform this task.'))
+
     skill = models.ForeignKey(settings.TASKS_SKILL_MODEL, verbose_name=_('Skill needed'), null=True)
 
     # internal usage
@@ -158,6 +164,10 @@ class BaseTask(models.Model, GetTweetMixin):
     def set_in_progress(self):
         self.status = self.TaskStatuses.in_progress
         self.save()
+
+    @property
+    def people_applied(self):
+        return self.members.count()
 
 
 from taskwallmails import *

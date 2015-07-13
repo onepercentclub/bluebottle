@@ -1,7 +1,8 @@
 import factory
-
+from random import randint
 from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.geo.models import Country, SubRegion, Region
+from bluebottle.geo.models import Country, SubRegion, Region, Location
+from geoposition import Geoposition
 
 
 PROJECT_MODEL = get_project_model()
@@ -25,3 +26,10 @@ class CountryFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Country_{0}'.format(n))
     subregion = factory.SubFactory(SubRegionFactory)
+
+
+class LocationFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = Location
+
+    name = factory.Sequence(lambda n: 'Location_{0}'.format(n))
+    position = Geoposition(52.5, 13.4)

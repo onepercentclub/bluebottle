@@ -7,7 +7,7 @@ from django_extensions.db.fields import CreationDateTimeField, ModificationDateT
 from djchoices import DjangoChoices, ChoiceItem
 
 from .mails import send_contact_email
-
+from bluebottle.clients import properties
 
 class ContactMessage(models.Model):
     """
@@ -36,6 +36,6 @@ class ContactMessage(models.Model):
 def mail_contact_message(sender, instance, **kwargs):
     """ Send an e-mail with the contact message content """
     if kwargs['created']:
-        send_contact_email(instance, settings.CONTACT_EMAIL)
+        send_contact_email(instance, properties.CONTACT_EMAIL)
 
 post_save.connect(mail_contact_message, sender=ContactMessage)

@@ -8,13 +8,11 @@ install:
 - pip install --upgrade setuptools --use-mirrors
 - python setup.py install
 before_script:
-- npm install
 - echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
 - python setup.py install
-- pip install -r test_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
+- pip install -r requirements/ci_requirements.txt --use-mirrors --use-wheel --find-links=https://stream.onepercentclub.com/wheelhouse/
 script:
 - python manage.py test
-- grunt travis --verbose
 notifications:
   hipchat:
     rooms:

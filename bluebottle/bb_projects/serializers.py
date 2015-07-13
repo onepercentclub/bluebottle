@@ -137,6 +137,8 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
+    organization = serializers.PrimaryKeyRelatedField(required=False)
+
 
     tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True, source='task_set', read_only=True)
     documents = ProjectDocumentSerializer(

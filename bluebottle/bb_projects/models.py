@@ -176,7 +176,7 @@ class BaseProject(models.Model, GetTweetMixin):
     created = CreationDateTimeField(
         _('created'), help_text=_('When this project was created.'))
     updated = ModificationDateTimeField(_('updated'))
-    title = models.CharField(_('title'), max_length=255, unique=True)
+    title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -268,6 +268,7 @@ class BaseProject(models.Model, GetTweetMixin):
         return self.slug if not self.title else self.title
 
     def save(self, *args, **kwargs):
+
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2

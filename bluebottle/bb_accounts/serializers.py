@@ -97,6 +97,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     avatar = SorlImageField('picture', '133x133', crop='center',
                             required=False)
 
+    skill_ids = serializers.PrimaryKeyRelatedField(many=True,
+                                                   source='skills',
+                                                   required=False)
+    favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True,
+                                                             source='favourite_themes')
+
     project_count = serializers.Field()
     donation_count = serializers.Field()
     fundraiser_count = serializers.Field()
@@ -109,7 +115,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
-                  'website', 'twitter', 'facebook', 'skypename', )
+                  'website', 'twitter', 'facebook', 'skypename',
+                  'skill_ids', 'favourite_theme_ids')
 
 
 class ManageProfileSerializer(UserProfileSerializer):

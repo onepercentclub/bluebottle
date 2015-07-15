@@ -262,7 +262,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         try:
             response = self._fetch_status()
         except DocdataPaymentStatusException, e:
-            if 'REQUEST_DATA_INCORRECT' in e.message:
+            if 'REQUEST_DATA_INCORRECT' == e.message and 'Order could not be found' in e.report_type:
                 # The payment was not found in docdata: Mark the payment as failed
                 logger.error('Fetching status failed for payment {0}: {1}'.format(self.payment.id, e))
                 self.payment.status = StatusDefinition.FAILED

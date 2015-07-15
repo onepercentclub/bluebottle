@@ -23,12 +23,18 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
                   'deadline', 'status', 'owner', 'partner', 'is_funding')
 
 
-class PartnerOrganizationSerializer(serializers.ModelSerializer):
-
+class PartnerOrganizationPreviewSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+        fields = ('id', 'name', )
+
+
+class PartnerOrganizationSerializer(PartnerOrganizationPreviewSerializer):
     projects = ProjectPreviewSerializer(source='projects')
-    description = serializers.CharField(source='description')
     image = ImageSerializer(required=False)
+    description = serializers.CharField(source='description')
 
     class Meta:
         model = PartnerOrganization

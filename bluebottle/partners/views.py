@@ -1,4 +1,7 @@
-from bluebottle.partners.serializers import PartnerOrganizationSerializer
+from bluebottle.partners.serializers import (
+    PartnerOrganizationSerializer, PartnerOrganizationPreviewSerializer
+)
+
 from bluebottle.projects.models import Project, PartnerOrganization
 from django.views.generic.list import ListView
 from rest_framework import generics
@@ -16,6 +19,11 @@ class PartnerDetail(generics.RetrieveAPIView):
 class PartnerList(generics.ListAPIView):
     model = PartnerOrganization
     serializer_class = PartnerOrganizationSerializer
+
+
+class PartnerPreviewList(generics.ListAPIView):
+    model = PartnerOrganization
+    serializer_class = PartnerOrganizationPreviewSerializer
 
 
 # Django view

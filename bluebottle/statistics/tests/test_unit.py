@@ -9,7 +9,7 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 
-from bluebottle.statistics.models import Statistic
+from bluebottle.statistics.views import Statistics
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 
@@ -20,7 +20,7 @@ class InitialStatisticsTest(BluebottleTestCase):
     def setUp(self):
         super(InitialStatisticsTest, self).setUp()
 
-        self.stats = Statistic.objects.create()
+        self.stats = Statistics()
 
         # Required by Project model save method
         self.init_projects()
@@ -45,7 +45,7 @@ class StatisticsTest(BluebottleTestCase):
     def setUp(self):
         super(StatisticsTest, self).setUp()
 
-        self.stats = Statistic.objects.create()
+        self.stats = Statistics()
 
         # Required by Project model save method
         self.init_projects()
@@ -84,7 +84,7 @@ class StatisticsTest(BluebottleTestCase):
 
     def test_task_stats(self):
         self.assertEqual(self.stats.tasks_realized, 0)
-        
+
         # project is in campaign phase
         self.some_project.status = self.campaign_status
         self.some_project.save()
@@ -98,7 +98,7 @@ class StatisticsTest(BluebottleTestCase):
         # - campaigner
         # - task member (another_user)
         self.assertEqual(self.stats.people_involved, 2)
-        
+
     def test_donation_stats(self):
         self.some_project.status = self.campaign_status
         self.some_project.save()

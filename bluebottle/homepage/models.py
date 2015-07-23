@@ -1,6 +1,6 @@
 from bluebottle.slides.models import Slide
 from bluebottle.quotes.models import Quote
-from bluebottle.statistics.models import Statistic
+from bluebottle.statistics.views import Statistics
 
 from bluebottle.utils.model_dispatcher import get_project_model
 
@@ -14,12 +14,7 @@ class HomePage(object):
         self.id = 1
         self.quotes = Quote.objects.published().filter(language=language)
         self.slides = Slide.objects.published().filter(language=language)
-        stats = Statistic.objects.order_by('-creation_date').all()
-
-        if len(stats) > 0:
-            self.stats = stats[0]
-        else:
-            self.stats = None
+        self.stats = Statistics();
 
         projects = PROJECT_MODEL.objects.filter(is_campaign=True,
                                                 status__viewable=True)

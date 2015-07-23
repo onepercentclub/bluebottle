@@ -12,7 +12,7 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 
-from bluebottle.statistics.models import Statistic
+from bluebottle.statistics.views import Statistics
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 
@@ -111,7 +111,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         super(HomepageEndpointTestCase, self).setUp()
         self.init_projects()
 
-        self.stats = Statistic.objects.create()
+        self.stats = Statistics()
 
         """
         Create 10 Project instances for one user with half in the campaign phase
@@ -169,7 +169,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
 
     def test_homepage_stats(self):
         response = self.client.get(reverse('stats'))
-        
+
         self.assertEqual(response.data['donated'], Decimal('10000.00'))
         self.assertEqual(response.data['projects_online'], 5)
         self.assertEqual(response.data['projects_realized'], 5)

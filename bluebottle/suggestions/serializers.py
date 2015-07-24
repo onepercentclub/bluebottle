@@ -19,7 +19,7 @@ def generate_token():
 class SuggestionSerializer(serializers.ModelSerializer):
     deadline = DateField()
     project = serializers.SlugRelatedField(slug_field='slug', required=False)
+    token = serializers.CharField(required=False, default=generate_token)
 
     class Meta:
         model = Suggestion
-        exclude = ('token', )

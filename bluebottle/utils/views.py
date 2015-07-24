@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
 from django.views.generic.base import View
 from django.template.loader import render_to_string
+from django.template import Context
 from django.utils.translation import ugettext as _
 
 from sorl.thumbnail.shortcuts import get_thumbnail
@@ -13,6 +14,8 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response, status
+
+from bunch import bunchify
 from taggit.models import Tag
 
 from bluebottle.utils.email_backend import send_mail
@@ -65,11 +68,10 @@ class ShareFlyer(views.APIView):
 
         if project.image:
             project_image = self.request.build_absolute_uri(
-                            settings.MEDIA_URL + unicode(get_thumbnail(project.image,
-                                                                       "400x380")))
+                settings.MEDIA_URL + unicode(get_thumbnail(project.image,
+                                                           "400x380")))
         else:
             project_image = None
-
         args = dict(
             project_title=project.title,
             project_pitch=project.pitch,
@@ -78,24 +80,27 @@ class ShareFlyer(views.APIView):
 
         return args
 
-    def get(self, request, slug):
+    def get(self, request, *args, **kwargs):
         """
-            return the bare email as preview. We do not (always) have access to the
+            return the bare email as preview. We do not have access to the
             logged in user so use fake data
         """
-        args = self.project_args(slug)
+        data = request.GET
+
+        args = self.project_args(data.get('project'))
 
         if args is None:
             return HttpResponseNotFound()
 
         args['share_name'] = "John Doe"
         args['share_email'] = "john@example.com"
+
         if self.request.user.is_authenticated():
             args['sender_name'] = self.request.user.get_full_name() or self.request.user.username
             args['sender_email'] = self.request.user.email
         else:
             args['sender_name'] = "John Doe"
-            args['sender_email'] = "john.doe@exampe.com"
+            args['sender_email'] = "john.doe@example.com"
 
         args['share_motivation'] = """(sample motivation) Great to see you again this afternoon. Attached you'll find a project flyer for the big event next friday. If you care to join in, please let me know, I'll add you as my +1 on the attendee list.
 
@@ -104,24 +109,15 @@ class ShareFlyer(views.APIView):
         Cheers,
 
         Jane"""
-
-        result = render_to_string('utils/mails/share_flyer.mail.html', {},
-                                  ClientContext(args))
+        result = render_to_string('utils/mails/share_flyer.mail.html', {}, Context(args))
         return response.Response({'preview': result})
 
-    def post(self, request, slug):
-        """ Let's assume a user has to be logged in in order to share a flyer -
-            it can't be done anonymously (in which case we'd have to ask for
-            personal details """
-
-        serializer = ShareSerializer(data=request.DATA)
-
+    def post(self, request, *args, **kwargs):
+        serializer = ShareSerializer(bunchify({}), data=request.DATA)
         if not serializer.is_valid():
-            return response.Response(serializer.errors,
-                                     status=status.HTTP_400_BAD_REQUEST)
+            return response.Response(serializer.errors, status=400)
 
-        args = self.project_args(slug)
-
+        args = self.project_args(serializer.data.get('project'))
         if args is None:
             return HttpResponseNotFound()
 
@@ -142,13 +138,15 @@ class ShareFlyer(views.APIView):
             share_motivation=share_motivation,
             sender_name=sender_name,
             sender_email=sender_email,
+            cc=[sender_email] if share_cc else []
         ))
         if share_cc:
             args['cc'] = [sender_email]
 
         result = send_mail(**args)
 
-        return response.Response({}, status=200)
+        return response.Response({}, status=201)
+
 
 # Non API views
 # Download private documents based on content_type (id) and pk

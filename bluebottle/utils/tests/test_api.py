@@ -19,7 +19,8 @@ class TestShareFlyer(BluebottleTestCase):
     def test_preview(self):
         """ simple preview of project flyer """
         response = self.client.get(
-            reverse("share_flyer", kwargs={'slug':self.project.slug}),
+            reverse("share_flyer"),
+            data={'project': self.project.slug},
             HTTP_AUTHORIZATION=self.user_1_token
         )
         data = json.loads(response.content)
@@ -31,15 +32,16 @@ class TestShareFlyer(BluebottleTestCase):
     def test_share_success(self, send_mail):
         """ successfull share of project flyer """
         response = self.client.post(
-            reverse("share_flyer", kwargs={'slug':self.project.slug}),
+            reverse("share_flyer"),
             HTTP_AUTHORIZATION=self.user_1_token,
-            data={"share_name":"S. Hare",
+            data={"project": self.project.slug,
+                  "share_name":"S. Hare",
                   "share_email":"share@example.com",
                   "share_motivation":"Wow I'm sharing this project!",
                   "share_cc":False}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.failUnless(send_mail.called)
 
@@ -47,13 +49,15 @@ class TestShareFlyer(BluebottleTestCase):
     def test_share_fail(self, send_mail):
         """ failed share due to missing email """
         response = self.client.post(
-            reverse("share_flyer", kwargs={'slug':self.project.slug}),
+            reverse("share_flyer"),
             HTTP_AUTHORIZATION=self.user_1_token,
-            data={"share_name": "S. Hare",
+            data={"project": self.project.slug,
+                  "share_name": "S. Hare",
                   "share_motivation":"Wow I'm sharing this project!",
                   "share_cc":True}
         )
         data = json.loads(response.content)
+
         self.assertTrue('share_email' in data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -64,15 +68,16 @@ class TestShareFlyer(BluebottleTestCase):
     def test_share_cc(self, send_mail):
         """ successfull share of project flyer, with cc """
         response = self.client.post(
-            reverse("share_flyer", kwargs={'slug':self.project.slug}),
+            reverse("share_flyer"),
             HTTP_AUTHORIZATION=self.user_1_token,
-            data={"share_name":"S. Hare",
+            data={"project": self.project.slug,
+                  "share_name":"S. Hare",
                   "share_email":"share@example.com",
                   "share_motivation":"Wow I'm sharing this project!",
-                  "share_cc":True}
+                  "share_cc":'true'}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.failUnless(send_mail.called)
         self.failUnless(self.user_1.email in send_mail.call_args[1].get('cc'))

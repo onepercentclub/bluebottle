@@ -17,9 +17,9 @@ def generate_token():
     return str(uuid.uuid4())
 
 class SuggestionSerializer(serializers.ModelSerializer):
+    deadline = DateField()
+    project = serializers.SlugRelatedField(slug_field='slug', required=False)
+
     class Meta:
         model = Suggestion
-
-    deadline = DateField()
-    token = serializers.CharField(required=False, default=generate_token)
-    project = serializers.SlugRelatedField(slug_field='slug', required=False)
+        exclude = ('token', )

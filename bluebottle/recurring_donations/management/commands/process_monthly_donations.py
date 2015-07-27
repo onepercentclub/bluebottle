@@ -2,6 +2,8 @@ from decimal import Decimal
 import math
 import sys
 import logging
+import importlib
+
 from collections import namedtuple
 from optparse import make_option
 
@@ -82,6 +84,13 @@ class Command(BaseCommand):
         try:
             tenant = Client.objects.get(client_name=options['tenant'])
             connection.set_tenant(tenant)
+
+            # Also load tenant properties
+            tenant_model_path = tenant.__module__
+            tenant_app_path = tenant_model_path.replace('.models', '')
+            properties = importlib.import_module(tenant_app_path).properties
+            properties.set_tenant(tenant)
+
         except Client.DoesNotExist:
             logger.error("You must specify a valid tenant with -t or --tenant.")
             tenants = Client.objects.all().values_list('client_name', flat=True)

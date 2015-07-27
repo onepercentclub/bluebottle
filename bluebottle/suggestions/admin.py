@@ -73,4 +73,3 @@ try:
     admin.site.register(Suggestion, SuggestionAdmin)
 except AlreadyRegistered: # happens in testing
     pass
-

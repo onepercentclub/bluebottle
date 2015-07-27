@@ -111,13 +111,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     fundraiser_count = serializers.Field()
     task_count = serializers.Field()
     time_spent = serializers.Field()
+    tasks_performed = serializers.Field()
 
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'full_name', 'short_name', 'picture',
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
-                  'fundraiser_count', 'task_count', 'time_spent',
+                  'fundraiser_count', 'task_count', 'time_spent', 'tasks_performed',
                   'website', 'twitter', 'facebook', 'skypename',
                   'skill_ids', 'favourite_theme_ids')
 

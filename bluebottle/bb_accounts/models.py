@@ -129,7 +129,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True, null=True)
     skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True, null=True)
-    
+
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
 
@@ -284,7 +284,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """ Returns the number of tasks a user is the author of  and / or is a task member in """
         task_count = get_task_model().objects.filter(author=self).count()
         taskmember_count = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized']).count()
+
         return task_count + taskmember_count
+
+    @property
+    def tasks_performed(self):
+        """ Returns the number of tasks that the user participated in."""
+        return get_taskmember_model().objects.filter(member=self, status='realized').count()
 
     def get_donations_qs(self):
         qs = get_donation_model().objects.filter(order__user=self)

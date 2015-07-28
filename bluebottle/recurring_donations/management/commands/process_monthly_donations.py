@@ -21,6 +21,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model, get_project_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments.services import PaymentService
+from bluebottle.clients.utils import LocalTenant
 
 from ...models import MonthlyDonor, MonthlyDonation, MonthlyOrder, MonthlyBatch
 from ...mails import mail_monthly_donation_processed_notification
@@ -82,14 +83,8 @@ class Command(BaseCommand):
         send_email = not options['no_email']
 
         try:
-            tenant = Client.objects.get(client_name=options['tenant'])
-            connection.set_tenant(tenant)
-
-            # Also load tenant properties
-            tenant_model_path = tenant.__module__
-            tenant_app_path = tenant_model_path.replace('.models', '')
-            properties = importlib.import_module(tenant_app_path).properties
-            properties.set_tenant(tenant)
+            client = Client.objects.get(client_name=options['tenant'])
+            connection.set_tenant(client)
 
         except Client.DoesNotExist:
             logger.error("You must specify a valid tenant with -t or --tenant.")
@@ -97,14 +92,15 @@ class Command(BaseCommand):
             logger.info("Valid tenants are: {0}".format(", ".join(tenants)))
             sys.exit(1)
 
-        if options['prepare']:
-            prepare_monthly_donations()
+        with LocalTenant(client):
+            if options['prepare']:
+                prepare_monthly_donations()
 
-        if options['process']:
-            process_monthly_batch(None, send_email)
+            if options['process']:
+                process_monthly_batch(None, send_email)
 
-        if options['process_single']:
-            process_single_monthly_order(options['process_single'], None, send_email)
+            if options['process_single']:
+                process_single_monthly_order(options['process_single'], None, send_email)
 
 
 def create_recurring_order(user, projects, batch, donor):

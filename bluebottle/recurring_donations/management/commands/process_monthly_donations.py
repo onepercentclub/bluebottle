@@ -2,6 +2,8 @@ from decimal import Decimal
 import math
 import sys
 import logging
+import importlib
+
 from collections import namedtuple
 from optparse import make_option
 
@@ -11,6 +13,7 @@ from django.utils import timezone
 from django.db import connection
 
 from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
@@ -88,14 +91,15 @@ class Command(BaseCommand):
             logger.info("Valid tenants are: {0}".format(", ".join(tenants)))
             sys.exit(1)
 
-        if options['prepare']:
-            prepare_monthly_donations()
+        with LocalTenant(tenant):
+            if options['prepare']:
+                prepare_monthly_donations()
 
-        if options['process']:
-            process_monthly_batch(None, send_email)
+            if options['process']:
+                process_monthly_batch(None, send_email)
 
-        if options['process_single']:
-            process_single_monthly_order(options['process_single'], None, send_email)
+            if options['process_single']:
+                process_single_monthly_order(options['process_single'], None, send_email)
 
 
 def create_recurring_order(user, projects, batch, donor):

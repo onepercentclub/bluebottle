@@ -22,6 +22,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model, get_project_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments.services import PaymentService
+from bluebottle.clients.utils import LocalTenant
 
 from ...models import MonthlyDonor, MonthlyDonation, MonthlyOrder, MonthlyBatch
 from ...mails import mail_monthly_donation_processed_notification
@@ -83,15 +84,16 @@ class Command(BaseCommand):
         send_email = not options['no_email']
 
         try:
-            tenant = Client.objects.get(client_name=options['tenant'])
-            connection.set_tenant(tenant)
+            client = Client.objects.get(client_name=options['tenant'])
+            connection.set_tenant(client)
+
         except Client.DoesNotExist:
             logger.error("You must specify a valid tenant with -t or --tenant.")
             tenants = Client.objects.all().values_list('client_name', flat=True)
             logger.info("Valid tenants are: {0}".format(", ".join(tenants)))
             sys.exit(1)
 
-        with LocalTenant(tenant):
+        with LocalTenant(client):
             if options['prepare']:
                 prepare_monthly_donations()
 

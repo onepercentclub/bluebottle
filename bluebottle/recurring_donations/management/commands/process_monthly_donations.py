@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.db import connection
 
 from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
@@ -84,27 +85,21 @@ class Command(BaseCommand):
         try:
             tenant = Client.objects.get(client_name=options['tenant'])
             connection.set_tenant(tenant)
-
-            # Also load tenant properties
-            tenant_model_path = tenant.__module__
-            tenant_app_path = tenant_model_path.replace('.models', '')
-            properties = importlib.import_module(tenant_app_path).properties
-            properties.set_tenant(tenant)
-
         except Client.DoesNotExist:
             logger.error("You must specify a valid tenant with -t or --tenant.")
             tenants = Client.objects.all().values_list('client_name', flat=True)
             logger.info("Valid tenants are: {0}".format(", ".join(tenants)))
             sys.exit(1)
 
-        if options['prepare']:
-            prepare_monthly_donations()
+        with LocalTenant(tenant):
+            if options['prepare']:
+                prepare_monthly_donations()
 
-        if options['process']:
-            process_monthly_batch(None, send_email)
+            if options['process']:
+                process_monthly_batch(None, send_email)
 
-        if options['process_single']:
-            process_single_monthly_order(options['process_single'], None, send_email)
+            if options['process_single']:
+                process_single_monthly_order(options['process_single'], None, send_email)
 
 
 def create_recurring_order(user, projects, batch, donor):

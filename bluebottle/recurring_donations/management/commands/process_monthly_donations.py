@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.db import connection
 
 from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException

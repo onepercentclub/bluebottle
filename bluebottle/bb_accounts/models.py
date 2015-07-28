@@ -9,6 +9,7 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import options as options
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.core import serializers
@@ -129,7 +130,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True, null=True)
     skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True, null=True)
-    
+
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
 
@@ -295,7 +296,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """ Returns the number of donations a user has made """
         return self.get_donations_qs().count()
 
-    @property
+    @cached_property
     def funding(self):
         """ Returns the number of projects a user has donated to """
         return self.get_donations_qs().distinct('project').count()
@@ -308,7 +309,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """ Returns the number of donations a user has made """
         return self.get_tasks_qs().aggregate(Sum('time_spent'))['time_spent__sum']
 
-    @property
+    @cached_property
     def sourcing(self):
         return self.get_tasks_qs().distinct('task__project').count()
 

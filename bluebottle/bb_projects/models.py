@@ -8,6 +8,7 @@ from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.models import ContentType
+from django.utils.functional import cached_property
 
 from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
@@ -344,7 +345,7 @@ class BaseProject(models.Model, GetTweetMixin):
         if save:
             self.save()
 
-    @property
+    @cached_property
     def funding(self):
         """
         Return the amount of people funding this project
@@ -353,7 +354,7 @@ class BaseProject(models.Model, GetTweetMixin):
             order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
 
-    @property
+    @cached_property
     def sourcing(self):
         taskmembers = get_taskmember_model().objects.filter(
             task__project=self,

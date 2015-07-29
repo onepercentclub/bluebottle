@@ -17,7 +17,7 @@ dependency_links = [
     'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
     'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.14.zip#egg=django-bb-salesforce-1.1.14',
     'https://github.com/onepercentclub/django-tenant-extras/archive/1.9.0.zip#egg=django-tenant-extras-1.9.0',
-    'https://github.com/onepercentclub/django-token-auth/archive/0.1.2.zip#egg=django-token-auth-0.1.2'
+    'https://github.com/onepercentclub/django-token-auth/archive/0.1.3.zip#egg=django-token-auth-0.1.3'
 ]
 
 install_requires = [
@@ -74,7 +74,7 @@ install_requires = [
     'django_polymorphic==0.6.1',
     'dnspython',
     'fabric',
-    'django-tenant-schemas==1.5.1-4-g45c9ee9',
+    'django-tenant-schemas==1.5.2',
     'raven==5.1.1',
     'djangorestframework-jwt==1.1.1',
     'django-filetransfers==0.1.0',
@@ -85,7 +85,7 @@ install_requires = [
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.14',
     'django-tenant-extras==1.9.0',
-    'django-token-auth==0.1.2'
+    'django-token-auth==0.1.3'
 ]
 
 tests_requires = [

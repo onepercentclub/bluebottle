@@ -2,7 +2,6 @@ from bluebottle.utils.model_dispatcher import get_taskmember_model
 from django.conf import settings
 from django.db import models
 import django.db.models.options as options
-
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (

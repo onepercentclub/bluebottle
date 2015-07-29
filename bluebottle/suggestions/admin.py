@@ -53,7 +53,6 @@ class SuggestionAdmin(admin.ModelAdmin):
         return obj.expired
 
     raw_id_fields = ('project', )
-    exclude = ("token", )
 
     readonly_fields = ('project_link', )
 

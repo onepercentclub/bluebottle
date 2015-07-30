@@ -1,4 +1,10 @@
+from django.db.models.signals import post_init
+
 from exportdb.exporter import ExportModelResource
+
+from bluebottle.projects.models import project_post_init, Project
+from bluebottle.utils.signals import temp_disconnect_signal
+from bluebottle.tasks.models import task_post_init, Task
 
 
 class DateRangeResource(ExportModelResource):
@@ -21,14 +27,67 @@ class UserResource(DateRangeResource):
 class ProjectResource(DateRangeResource):
     select_related = ('status', 'owner', 'location',)
 
+    def export(self, **kwargs):
+        with temp_disconnect_signal(
+                signal=post_init,
+                receiver=project_post_init,
+                sender=Project,
+                dispatch_uid='bluebottle.projects.Project.post_init'):
+            data = super(ProjectResource, self).export(**kwargs)
+        return data
+
 
 class TaskResource(DateRangeResource):
     select_related = ('project', 'author', 'location')
+
+    def export(self, **kwargs):
+
+        task_signal = dict(
+            signal=post_init,
+            receiver=task_post_init,
+            sender=Task,
+            dispatch_uid='bluebottle.tasks.Task.post_init'
+        )
+        project_signal = dict(
+            signal=post_init,
+            receiver=project_post_init,
+            sender=Project,
+            dispatch_uid='bluebottle.projects.Project.post_init'
+        )
+        with temp_disconnect_signal(**task_signal), temp_disconnect_signal(**project_signal):
+            data = super(TaskResource, self).export(**kwargs)
+        return data
 
 
 class TaskMemberResource(DateRangeResource):
     select_related = ('member', 'task', 'task__project', 'member__location')
 
+    def export(self, **kwargs):
+        task_signal = dict(
+            signal=post_init,
+            receiver=task_post_init,
+            sender=Task,
+            dispatch_uid='bluebottle.tasks.Task.post_init'
+        )
+        project_signal = dict(
+            signal=post_init,
+            receiver=project_post_init,
+            sender=Project,
+            dispatch_uid='bluebottle.projects.Project.post_init'
+        )
+        with temp_disconnect_signal(**task_signal), temp_disconnect_signal(**project_signal):
+            data = super(TaskMemberResource, self).export(**kwargs)
+        return data
+
 
 class DonationResource(DateRangeResource):
-    select_related = ('order', 'order__user', 'order__user__location', 'project', 'fundraiser')
+    select_related = ('order', 'order__user', 'order__user__location', 'project', 'project', 'fundraiser')
+
+    def export(self, **kwargs):
+        with temp_disconnect_signal(
+                signal=post_init,
+                receiver=project_post_init,
+                sender=Project,
+                dispatch_uid='bluebottle.projects.Project.post_init'):
+            data = super(DonationResource, self).export(**kwargs)
+        return data

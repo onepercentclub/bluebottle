@@ -2,24 +2,49 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans %}
-        Hi {{share_name}}<br/>
+    <table class="twelve columns">
+        <tr>
+            <td>
+                {% trans "Hi" context 'email' %} {{share_name}},<br><br>
+                {{sender_name}} {% trans " wants to share the following project with you:" context 'email' %}<br><br>
+                <hr><br>
+            </td>
+            <td class="expander"></td>
+        </tr>
+    </table>
 
+    <table class="eight columns center">
+        <tr>
+            <td class="wrapper last center">
+                <img src="{{project_image}}" width="400" height="auto" alt="Project Image" /><br><br>
+            </td>
+            <td class="expander"></td>
+        </tr>
+    </table>
 
-        {{sender_name}} ({{sender_email}}) wants to share a project with you:
+    <table class="eight columns center">
+        <tr>
+            <td class="wrapper last center">
+                <h3>{{project_title}}</h3>
+                <p class="lead">{{project_pitch}}</p>
+                <br>
+            </td>
+            <td class="expander"></td>
+        </tr>
+    </table>
 
-        <br/>
-        {{share_motivation}}
-        <br/>
------ project flyer ------<br/>
+    <hr><br>
 
-        <figure class="project-image">
-           <img src="{{project_image}}" width="100%" alt="Photo" />
-        </figure>
+    <table class="twelve columns">
+        <tr>
+            <td class="wrapper last">
+                <b style="font-weight: bold">{{sender_name}} {% trans "says:" context 'email' %}</b><br>
+                {{share_motivation}}
+            </td>
+        </tr>
+    </table>
+{% endblock %}
 
-        <h1>{{project_title}}</h1>
-        <p class="project-description">
-        {{project_pitch}}
-        </p>
-    {% endblocktrans %}
+{% block action %}
+<a href="mailto:{{sender_email}}" class="action-email">{% trans "Reply" context 'email' %}</a>
 {% endblock %}

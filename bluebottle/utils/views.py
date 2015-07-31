@@ -69,7 +69,7 @@ class ShareFlyer(views.APIView):
         if project.image:
             project_image = self.request.build_absolute_uri(
                 settings.MEDIA_URL + unicode(get_thumbnail(project.image,
-                                                           "400x380")))
+                                                           "400x225", crop="center")))
         else:
             project_image = None
         args = dict(

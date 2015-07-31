@@ -19,12 +19,12 @@ class RedirectFallbackMiddleware(object):
 
     It is based on: http://djangosnippets.org/snippets/2784/
     """
-    def __init__(self):
-        if 'django.contrib.sites' not in settings.INSTALLED_APPS:
-            raise ImproperlyConfigured(
-                "You cannot use RedirectFallbackMiddleware when "
-                "django.contrib.sites is not installed."
-            )
+    # def __init__(self):
+    #     if 'django.contrib.sites' not in settings.INSTALLED_APPS:
+    #         raise ImproperlyConfigured(
+    #             "You cannot use RedirectFallbackMiddleware when "
+    #             "django.contrib.sites is not installed."
+    #         )
 
     def process_response(self, request, response):
 

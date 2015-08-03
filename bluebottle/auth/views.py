@@ -73,10 +73,6 @@ def admin_password_reset(request, is_admin_site=False,
                          current_app=None,
                          extra_context=None):
 
-    tenant = connection.get_tenant()
-
-    extra_context = {'domain': tenant.domain_url, 'tenant': tenant, 'site_name': tenant.name}
-
     if post_reset_redirect is None:
         post_reset_redirect = reverse('password_reset_done')
     else:

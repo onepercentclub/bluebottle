@@ -72,6 +72,10 @@ def admin_password_reset(request, is_admin_site=False,
                          from_email=None,
                          current_app=None,
                          extra_context=None):
+    """
+    This is a copy of django.contrib.auth.views.password_reset but this
+    forces the domain to the one specified in current tenant.
+    """
 
     if post_reset_redirect is None:
         post_reset_redirect = reverse('password_reset_done')

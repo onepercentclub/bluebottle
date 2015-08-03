@@ -122,6 +122,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'website', 'twitter', 'facebook', 'skypename',
                   'skill_ids', 'favourite_theme_ids')
 
+    def save_object(self, obj, **kwargs):
+        """ Make sure that we can set None as the address.
+
+        We should be able to solve this by adding `allow_null` to the address field,
+        however our version of drf does not support that.
+
+        FIXME: fix the above after drf upgrade.
+        """
+        if 'address' in obj._related_data and obj._related_data['address'] is None:
+            del obj._related_data['address']
+
+        return super(UserProfileSerializer, self).save_object(obj, **kwargs)
+
 
 class ManageProfileSerializer(UserProfileSerializer):
     """

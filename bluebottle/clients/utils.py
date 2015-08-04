@@ -1,21 +1,35 @@
 from collections import namedtuple
 from django.db import connection
+from bluebottle.clients import properties
+import logging
+
+logger = logging.getLogger()
 
 
 class LocalTenant(object):
-    def __init__(self, tenant):
-        self.tenant = tenant
+    def __init__(self, tenant=None, clear_tenant=False):
+        self.clear_tenant = clear_tenant
+        self.previous_tenant = None
+
+        if tenant:
+            self.previous_tenant = connection.tenant
+            self.tenant = tenant
+        else:
+            self.tenant = connection.tenant
 
     def __enter__(self):
-        from bluebottle.clients import properties
         if self.tenant:
             properties.set_tenant(self.tenant)
 
     def __exit__(self, type, value, traceback):
-        from bluebottle.clients import properties
-        if self.tenant:
-            del properties.tenant
-            del properties.tenant_properties
+        if self.clear_tenant:
+            try:
+                del properties.tenant
+                del properties.tenant_properties
+            except AttributeError:
+                logger.info("Attempted to clear missing tenant properties.")
+        elif self.previous_tenant:
+            properties.set_tenant(self.previous_tenant)
 
 
 def tenant_url():

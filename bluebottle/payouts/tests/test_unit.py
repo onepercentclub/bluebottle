@@ -1,6 +1,10 @@
+import os
 from decimal import Decimal
+
 from django.test.utils import override_settings
+from django.conf import settings
 from django.utils import timezone
+
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.payouts.models import ProjectPayout
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -28,6 +32,7 @@ class PayoutTestAdmin(BluebottleTestCase):
         self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
 
 
+@override_settings(MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test', 'properties'))
 class PayoutTestCase(BluebottleTestCase):
 
     """ Test case for Payouts. """
@@ -234,7 +239,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is pending but not paid
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.get_amount_pending(), Decimal('60.00'))
         self.assertEquals(payout.get_amount_safe(), Decimal('0.00'))
@@ -297,7 +302,7 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
 
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
@@ -328,7 +333,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
@@ -360,7 +365,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('52.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))

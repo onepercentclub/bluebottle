@@ -488,3 +488,19 @@ def project_post_save(sender, instance, **kwargs):
     except AttributeError:
         pass
 
+
+@receiver(post_save, sender=Project, dispatch_uid="updating_suggestion")
+def project_submitted_update_suggestion(sender, instance, **kwargs):
+
+    if instance.status.slug == 'plan-submitted':
+        # Only one suggestion can be connected to a project
+        suggestion = instance.suggestions.first()
+        if suggestion and suggestion.status == 'in_progress':
+            suggestion.status = 'submitted'
+            suggestion.save()
+
+    if instance.status.slug == 'plan-needs-work':
+        suggestion = instance.suggestions.first()
+        if suggestion and suggestion.status == 'submitted':
+            suggestion.status = 'in_progress'
+            suggestion.save()

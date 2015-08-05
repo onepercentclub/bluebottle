@@ -1,11 +1,9 @@
-from decimal import Decimal
 from datetime import timedelta
 import logging
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.clients.utils import LocalTenant
@@ -72,4 +70,5 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                     payout.receiver_account_city = project.account_holder_city
                     payout.receiver_account_country = project.account_bank_country
 
-                payout.save()
+                    payout.save()
+

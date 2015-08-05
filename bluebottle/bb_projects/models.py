@@ -8,6 +8,8 @@ from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.models import ContentType
+from django.utils.functional import cached_property
+from django.db.models import Count, Sum
 
 from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
@@ -16,7 +18,7 @@ from django_extensions.db.fields import (
 
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model
+from bluebottle.utils.model_dispatcher import get_project_phaselog_model, get_taskmember_model
 from bluebottle.utils.utils import GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
@@ -251,6 +253,14 @@ class BaseProject(models.Model, GetTweetMixin):
     def amount_safe(self):
         return self.get_amount_total([StatusDefinition.SUCCESS])
 
+    @property
+    def people_registered(self):
+        return self.task_set.filter(members__status__in=['accepted', 'realized']).aggregate(total=Count('members'))['total']
+
+    @property
+    def people_requested(self):
+        return self.task_set.aggregate(total=Sum('people_needed'))['total']
+
     _initial_status = None
 
     objects = BaseProjectManager()
@@ -344,6 +354,27 @@ class BaseProject(models.Model, GetTweetMixin):
         if save:
             self.save()
 
+    @cached_property
+    def funding(self):
+        """
+        Return the amount of people funding this project
+        """
+        return self.donation_set.filter(
+            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        ).distinct('order__user').count()
+
+    @cached_property
+    def sourcing(self):
+        taskmembers = get_taskmember_model().objects.filter(
+            task__project=self,
+            status__in=['applied', 'accepted', 'realized']
+        ).distinct('member')
+        return taskmembers.count()
+
+    @property
+    def supporters(self):
+        return self.funding + self.sourcing
+
 
 class BaseProjectPhaseLog(models.Model):
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
@@ -356,4 +387,3 @@ class BaseProjectPhaseLog(models.Model):
 
 
 from projectwallmails import *
-

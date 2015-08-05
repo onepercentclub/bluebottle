@@ -1,15 +1,23 @@
 from decimal import Decimal
+from mock import patch
+
+from django.core.management import call_command
+from django.test.utils import override_settings
+from django.core import mail
+
 from bluebottle.recurring_donations.models import MonthlyOrder
 from bluebottle.recurring_donations.tests.model_factory import MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
-from django.core.management import call_command
 
+
+@override_settings(SEND_WELCOME_MAIL=False)
 class MonthlyDonationCommandsTest(BluebottleTestCase):
 
     def setUp(self):
@@ -49,15 +57,15 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.user1 = BlueBottleUserFactory.create()
         self.user2 = BlueBottleUserFactory.create()
 
-    def test_prepare(self):
         # Create a monthly donor with a preferred project
-        monthly_donor1 = MonthlyDonorFactory(user=self.user1, amount=25)
-        monthly_donor1_project = MonthlyDonorProjectFactory(
-            donor=monthly_donor1, project=self.projects[0])
+        self.monthly_donor1 = MonthlyDonorFactory(user=self.user1, amount=25)
+        self.monthly_donor1_project = MonthlyDonorProjectFactory(
+            donor=self.monthly_donor1, project=self.projects[0])
 
         # Create a monthly donor without preferred projects
-        monthly_donor2 = MonthlyDonorFactory(user=self.user2, amount=100)
+        self.monthly_donor2 = MonthlyDonorFactory(user=self.user2, amount=100)
 
+    def test_prepare(self):
         call_command('process_monthly_donations', prepare=True,
                      tenant='test')
 
@@ -87,3 +95,14 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
         self.assertEqual(monthly_donations[2].amount, Decimal('33.34'))
         self.assertEqual(monthly_donations[2].project, self.projects[0])
+
+    def test_email(self):
+
+        with patch.object(LocalTenant, '__new__') as mocked_init:
+            # Clear the outbox before running monthly donations
+            for m in mail.outbox: mail.outbox.pop(0)
+            call_command('process_monthly_donations', tenant='test')
+            
+            self.assertEquals(len(mail.outbox), 6)
+            # LocalTenant should be called once to set the correct tenant properties
+            mocked_init.assert_called_once_with(LocalTenant, self.tenant)

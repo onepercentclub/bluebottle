@@ -55,7 +55,7 @@ class ProjectAdmin(BaseProjectAdmin):
     inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline)
 
     list_filter = BaseProjectAdmin.list_filter + \
-        ('is_campaign', 'theme', 'partner_organization', FundingFilter)
+        ('is_campaign', 'theme', 'country__subregion__region', 'partner_organization', FundingFilter)
     list_display = BaseProjectAdmin.list_display + \
         ('is_campaign', 'deadline', 'donated_percentage')
     list_editable = ('is_campaign', )

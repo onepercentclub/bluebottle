@@ -19,8 +19,17 @@ from .models import Address, Language
 from HTMLParser import HTMLParser
 
 
+class ShareSerializer(serializers.Serializer):
+    share_name = serializers.CharField(max_length=256, required=True)
+    share_email = serializers.EmailField(required=True)
+    share_motivation = serializers.CharField(default="", required=True)
+    share_cc = serializers.BooleanField(default=False, required=True)
+
+    project = serializers.CharField(max_length=256, required=True)
+
+
 class LanguageSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = Language
         fields = ('id', 'code', 'language_name', 'native_name')

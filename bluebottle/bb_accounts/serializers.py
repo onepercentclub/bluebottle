@@ -9,6 +9,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer)
 
 from bluebottle.clients import properties
+from bluebottle.geo.serializers import LocationSerializer
 
 
 BB_USER_MODEL = get_user_model()
@@ -60,6 +61,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     project_count = serializers.Field(source='project_count')
     donation_count = serializers.Field(source='donation_count')
     fundraiser_count = serializers.Field(source='fundraiser_count')
+    location = LocationSerializer()
 
     class Meta:
         model = BB_USER_MODEL
@@ -71,7 +73,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
                                                       'task_count',
                                                       'project_count',
                                                       'donation_count',
-                                                      'fundraiser_count')
+                                                      'fundraiser_count',
+                                                      'location')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -97,19 +100,40 @@ class UserProfileSerializer(serializers.ModelSerializer):
     avatar = SorlImageField('picture', '133x133', crop='center',
                             required=False)
 
+    skill_ids = serializers.PrimaryKeyRelatedField(many=True,
+                                                   source='skills',
+                                                   required=False)
+    favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True,
+                                                             source='favourite_themes')
+
     project_count = serializers.Field()
     donation_count = serializers.Field()
     fundraiser_count = serializers.Field()
     task_count = serializers.Field()
     time_spent = serializers.Field()
+    tasks_performed = serializers.Field()
 
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'full_name', 'short_name', 'picture',
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
-                  'fundraiser_count', 'task_count', 'time_spent',
-                  'website', 'twitter', 'facebook', 'skypename', )
+                  'fundraiser_count', 'task_count', 'time_spent', 'tasks_performed',
+                  'website', 'twitter', 'facebook', 'skypename',
+                  'skill_ids', 'favourite_theme_ids')
+
+    def save_object(self, obj, **kwargs):
+        """ Make sure that we can set None as the address.
+
+        We should be able to solve this by adding `allow_null` to the address field,
+        however our version of drf does not support that.
+
+        FIXME: fix the above after drf upgrade.
+        """
+        if 'address' in obj._related_data and obj._related_data['address'] is None:
+            del obj._related_data['address']
+
+        return super(UserProfileSerializer, self).save_object(obj, **kwargs)
 
 
 class ManageProfileSerializer(UserProfileSerializer):

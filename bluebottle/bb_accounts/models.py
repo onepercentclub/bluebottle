@@ -9,6 +9,7 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import options as options
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.core import serializers
@@ -129,7 +130,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True, null=True)
     skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True, null=True)
-    
+
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
 
@@ -141,7 +142,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         choices=properties.LANGUAGES, default=properties.LANGUAGE_CODE)
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
-    newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=False)
+    newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=True)
     phone_number = models.CharField(_('phone number'), max_length=50, blank=True)
     gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
     birthdate = models.DateField(_('birthdate'), null=True, blank=True)
@@ -284,21 +285,43 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """ Returns the number of tasks a user is the author of  and / or is a task member in """
         task_count = get_task_model().objects.filter(author=self).count()
         taskmember_count = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized']).count()
+
         return task_count + taskmember_count
+
+    @property
+    def tasks_performed(self):
+        """ Returns the number of tasks that the user participated in."""
+        return get_taskmember_model().objects.filter(member=self, status='realized').count()
+
+    def get_donations_qs(self):
+        qs = get_donation_model().objects.filter(order__user=self)
+        return qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
 
     @property
     def donation_count(self):
         """ Returns the number of donations a user has made """
-        qs = get_donation_model().objects.filter(order__user=self)
-        qs = qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        return self.get_donations_qs().count()
 
-        return qs.count()
+    @cached_property
+    def funding(self):
+        """ Returns the number of projects a user has donated to """
+        return self.get_donations_qs().distinct('project').count()
+
+    def get_tasks_qs(self):
+        return get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized'])
 
     @property
     def time_spent(self):
         """ Returns the number of donations a user has made """
-        qs = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized'])
-        return qs.aggregate(Sum('time_spent'))['time_spent__sum']
+        return self.get_tasks_qs().aggregate(Sum('time_spent'))['time_spent__sum']
+
+    @cached_property
+    def sourcing(self):
+        return self.get_tasks_qs().distinct('task__project').count()
+
+    @property
+    def projects_supported(self):
+        return self.funding + self.sourcing
 
     @property
     def project_count(self):

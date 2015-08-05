@@ -41,7 +41,9 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
         tenant_from = construct_from_header()
         activated_language = None
 
-        if from_email is None and tenant_from:
+        if from_email:
+            kwargs['from_email'] = from_email
+        elif tenant_from:
             kwargs['from_email'] = tenant_from
 
         super(EmailMultiAlternatives, self).__init__(*args, **kwargs)

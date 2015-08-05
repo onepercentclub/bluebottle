@@ -61,6 +61,12 @@ class InvoiceReferenceMixin(models.Model):
         if save:
             super(InvoiceReferenceMixin, self).save()
 
+    def save(self, *args, **kwargs):
+        super(InvoiceReferenceMixin, self).save(*args, **kwargs)
+        if not self.invoice_reference:
+            self.update_invoice_reference()
+
+
 
 class CompletedDateTimeMixin(models.Model):
     """
@@ -261,9 +267,9 @@ class BaseProjectPayout(PayoutBase):
     @property
     def percent(self):
         if not self.amount_payable: return "-"
-        
+
         return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised)*100, 1))
-    
+
     def get_payout_rule(self):
         """
         Override this if you want different payout rules for different circumstances.
@@ -584,7 +590,6 @@ class BaseOrganizationPayout(PayoutBase):
         """
         Calculate values on first creation and generate invoice reference.
         """
-
         if not self.id:
             # No id? Not previously saved
 
@@ -592,10 +597,6 @@ class BaseOrganizationPayout(PayoutBase):
                 # This exists mainly for testing reasons, payouts should
                 # always be created new
                 self.calculate_amounts(save=False)
-
-            if not self.invoice_reference:
-                # Conditionally creat invoice reference
-                self.update_invoice_reference(auto_save=True, save=False)
 
         super(BaseOrganizationPayout, self).save(*args, **kwargs)
 

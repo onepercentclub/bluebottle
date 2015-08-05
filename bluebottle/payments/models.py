@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -173,7 +172,7 @@ class OrderPayment(models.Model, FSMTransition):
     def settled(self):
         self.closed = now()
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED,
+    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
                 StatusDefinition.SETTLED], target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None

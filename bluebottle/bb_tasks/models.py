@@ -85,14 +85,6 @@ class BaseTaskMember(models.Model):
     get_member_email.admin_order_field = 'member__email'
     get_member_email.short_description = "Member Email"
 
-    @property
-    def partners(self):
-        """
-        Get the amount of partners for this task
-        """
-        accepted = get_taskmember_model().objects.filter(task=self.task, status='accepted')
-        return max(accepted.count() - 1, 0)
-
 
 class BaseTaskFile(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')

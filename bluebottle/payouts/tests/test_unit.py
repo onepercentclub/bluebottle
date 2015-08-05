@@ -396,7 +396,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('54.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
@@ -428,7 +428,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('30.00'))
+        self.assertEquals(payout.amount_payable, Decimal('52.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))

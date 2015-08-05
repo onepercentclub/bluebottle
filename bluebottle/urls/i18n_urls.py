@@ -18,6 +18,7 @@ urlpatterns = patterns(
         name='password_reset_confirm'),
     url(r'^admin/password_reset/done/$', 'django.contrib.auth.views.password_reset_done'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/exportdb/', include('exportdb.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
     # Other modules that need URLs exposed

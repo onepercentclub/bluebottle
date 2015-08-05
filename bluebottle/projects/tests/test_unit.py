@@ -1,6 +1,5 @@
 from datetime import timedelta, time
 from decimal import Decimal
-from django.test import TestCase
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -14,8 +13,8 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import CountryFactory
-
+from bluebottle.test.factory_models.suggestions import SuggestionFactory
+from bluebottle.suggestions.models import Suggestion
 
 PROJECT_MODEL = get_project_model()
 
@@ -148,7 +147,8 @@ class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
     #     second_donation.order.save()
     #     self.assertEqual(self.some_project.amount_donated, 40)
 
-    def _create_donation(self, user=None, amount=None, project=None, status=StatusDefinition.NEW):
+    def _create_donation(self, user=None, amount=None, project=None,
+                         status=StatusDefinition.NEW):
         """ Helper method for creating donations."""
         if not project:
             project = ProjectFactory.create()
@@ -161,7 +161,53 @@ class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
             amount = Decimal('10.00')
 
         order = Order.objects.create(status=status)
-        donation = Donation.objects.create(user=user, amount=amount, project=project, order=order)
+        donation = Donation.objects.create(user=user, amount=amount,
+                                           project=project, order=order)
 
         return donation
 
+
+class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
+
+    def setUp(self):
+        super(TestProjectStatusChangeSuggestionUpdate, self).setUp()
+
+        self.init_projects()
+
+        self.new = ProjectPhase.objects.get(slug="plan-new")
+        self.needs_work = ProjectPhase.objects.get(slug="plan-needs-work")
+        self.submitted = ProjectPhase.objects.get(slug="plan-submitted")
+
+    def test_project_submitted_suggestion_submitted(self):
+        """
+        Test that suggestion has status submitted if a project status
+        changes to submitted
+        """
+        project = ProjectFactory.create(status=self.new)
+        suggestion = SuggestionFactory.create(project=project,
+                                              token='xxx',
+                                              status='in_progress')
+
+        project.status = self.submitted
+        project.save()
+
+        suggestion = Suggestion.objects.get(project=project)
+
+        self.assertEquals(suggestion.status, 'submitted')
+
+    def test_project_needs_work_suggestion_in_progress(self):
+        """
+        Test that suggestion has status in-progress if a project status
+        changes to needs-work
+        """
+        project = ProjectFactory.create(status=self.submitted)
+        suggestion = SuggestionFactory.create(project=project,
+                                              token='xxx',
+                                              status='submitted')
+
+        project.status = self.needs_work
+        project.save()
+
+        suggestion = Suggestion.objects.get(project=project)
+
+        self.assertEquals(suggestion.status, 'in_progress')

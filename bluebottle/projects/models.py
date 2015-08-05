@@ -1,11 +1,13 @@
 import datetime
 import pytz
+from django.utils.timezone import now
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.dispatch import receiver
+from django.db.models.signals import post_init, post_save
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.conf import settings
@@ -13,7 +15,7 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from bluebottle.utils.fields import ImageField
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from .mails import mail_project_funded_internal
+from .mails import mail_project_funded_internal, mail_project_complete, mail_project_incomplete
 from .signals import project_funded
 
 
@@ -61,23 +63,22 @@ class ProjectManager(models.Manager):
         return self._ordering(query.get('ordering', None), qs, status)
 
     def _ordering(self, ordering, queryset, status):
-
         if ordering == 'amount_asked':
-            queryset = queryset.order_by('amount_asked')
+            queryset = queryset.order_by('status', 'amount_asked')
         elif ordering == 'deadline':
-            queryset = queryset.order_by('deadline')
+            queryset = queryset.order_by('status', 'deadline')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('amount_needed')
+            queryset = queryset.order_by('status', 'amount_needed')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
-            queryset = queryset.order_by('-campaign_started')
-            queryset = queryset.filter(amount_needed__gt=0)
+            queryset = queryset.order_by('status', '-campaign_started', '-created')
         elif ordering == 'popularity':
-            queryset = queryset.order_by('-popularity')
+            queryset = queryset.order_by('status', '-popularity')
             if status == 5:
                 queryset = queryset.filter(amount_needed__gt=0)
         elif ordering:
-            queryset = queryset.order_by(ordering)
+            queryset = queryset.order_by('status', ordering)
+
         return queryset
 
 
@@ -375,6 +376,35 @@ class Project(BaseProject):
 
         super(Project, self).save(*args, **kwargs)
 
+    def status_changed(self, old_status, new_status):
+        status_complete = ProjectPhase.objects.get(slug="done-complete")
+        status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
+
+        if new_status == status_complete:
+            mail_project_complete(self)
+        if new_status == status_incomplete:
+            mail_project_incomplete(self)
+
+    def deadline_reached(self):
+        # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
+        from bluebottle.utils.model_dispatcher import get_task_model
+        TASK_MODEL = get_task_model()
+
+        if self.is_funding:
+            if self.amount_donated >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+            elif self.amount_donated <= 20 or not self.campaign_started:
+                self.status = ProjectPhase.objects.get(slug="closed")
+            else:
+                self.status = ProjectPhase.objects.get(slug="done-incomplete")
+        else:
+            if self.task_set.filter(status__in=[TASK_MODEL.TaskStatuses.in_progress,
+                                                TASK_MODEL.TaskStatuses.open]).count() > 0:
+                self.status = ProjectPhase.objects.get(slug="done-incomplete")
+            else:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+        self.campaign_ended = now()
+        self.save()
 
 class ProjectBudgetLine(models.Model):
     """
@@ -428,3 +458,48 @@ class PartnerOrganization(models.Model):
 @receiver(project_funded, weak=False, sender=Project, dispatch_uid="email-project-team-project-funded")
 def email_project_team_project_funded(sender, instance, first_time_funded, **kwargs):
     mail_project_funded_internal(instance)
+
+
+@receiver(post_init, sender=Project, dispatch_uid="bluebottle.projects.Project.post_init")
+def project_post_init(sender, instance, **kwargs):
+    try:
+        instance._init_status = instance.status
+    except ProjectPhase.DoesNotExist:
+        instance._init_status = None
+
+@receiver(post_save, sender=Project, dispatch_uid="bluebottle.projects.Project.post_save")
+def project_post_save(sender, instance, **kwargs):
+    try:
+        init_status, current_status = None, None
+
+        try:
+            init_status = instance._init_status
+        except ProjectPhase.DoesNotExist:
+            pass
+
+        try:
+            current_status = instance.status
+        except ProjectPhase.DoesNotExist:
+            pass
+
+        if init_status != current_status:
+            instance.status_changed(init_status, current_status)
+    except AttributeError:
+        pass
+
+
+@receiver(post_save, sender=Project, dispatch_uid="updating_suggestion")
+def project_submitted_update_suggestion(sender, instance, **kwargs):
+
+    if instance.status.slug == 'plan-submitted':
+        # Only one suggestion can be connected to a project
+        suggestion = instance.suggestions.first()
+        if suggestion and suggestion.status == 'in_progress':
+            suggestion.status = 'submitted'
+            suggestion.save()
+
+    if instance.status.slug == 'plan-needs-work':
+        suggestion = instance.suggestions.first()
+        if suggestion and suggestion.status == 'submitted':
+            suggestion.status = 'in_progress'
+            suggestion.save()

@@ -14,7 +14,7 @@ On {{ date }} you contributed {{ amount }}. Below you'll find an overview of the
 {% endblocktrans %}
 {% for donation in order.donations.all %}
     <a href="{{ site }}/go/projects/{{ donation.project.slug }}">{{ donation.project.title }}</a>
-    in {{ donation.project.country.name }}.<br/>
+    in {% trans donation.project.country.name  %}.<br/>
 {%  endfor %}
 {% blocktrans %}
 <br/><br/>

@@ -6,24 +6,9 @@ from django.core.management import call_command
 
 from celery import shared_task
 
+from bluebottle.clients.utils import LocalTenant
+
 logger = logging.getLogger()
-
-
-class LocalTenant(object):
-    def __init__(self, tenant):
-        self.tenant = tenant
-
-    def __enter__(self):
-        from bluebottle.clients import properties
-        if self.tenant:
-            properties.set_tenant(self.tenant)
-
-    def __exit__(self, type, value, traceback):
-        from bluebottle.clients import properties
-        if self.tenant:
-            del properties.tenant
-            del properties.tenant_properties
-
 
 
 @shared_task
@@ -80,7 +65,8 @@ def update_salesforce(tenant=None,
                       synchronize=False,
                       updated=False,
                       csv_export=False,
-                      verbosity='3'):
+                      verbosity='3',
+                      log_to_salesforce=False):
     logger.info("Updating Salesforce")
 
     try:
@@ -89,7 +75,8 @@ def update_salesforce(tenant=None,
                      synchronize=synchronize,
                      updated=updated,
                      verbosity=verbosity,
-                     csv_export=csv_export)
+                     csv_export=csv_export,
+                     log_to_salesforce=log_to_salesforce)
     except Exception as e:
         logger.error("Error running salesforce celery task: {0}".format(e))
 

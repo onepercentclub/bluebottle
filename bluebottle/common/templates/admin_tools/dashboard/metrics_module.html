@@ -1,0 +1,15 @@
+{% extends "admin_tools/dashboard/module.html" %}
+{% load i18n %}
+
+{% block module_content %}
+    <ul>
+        {% spaceless %}
+            {% for metric in module.children %}
+                <li class="{% cycle 'odd' 'even' %}">
+                    <a href="{{ metric.url }}" >{{ metric.title }}</a>
+                    <b style="float:right">{{ metric.value }}</b>
+                </li>
+            {% endfor %}
+        {% endspaceless %}
+    </ul>
+{% endblock %}

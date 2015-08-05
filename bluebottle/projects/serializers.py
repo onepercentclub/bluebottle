@@ -80,6 +80,7 @@ class ProjectSerializer(BaseProjectSerializer):
     budget_lines = BasicProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
+    location = serializers.PrimaryKeyRelatedField(required=False)
 
     class Meta(BaseProjectSerializer):
         model = BaseProjectSerializer.Meta.model
@@ -87,7 +88,7 @@ class ProjectSerializer(BaseProjectSerializer):
             'allow_overfunding', 'task_count',
             'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
             'story', 'budget_lines', 'status', 'deadline', 'is_funding',
-            'latitude', 'longitude', 'video_url', 'video_html', 'partner')
+            'latitude', 'longitude', 'video_url', 'video_html', 'partner', 'location')
 
 
 class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
@@ -97,6 +98,7 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
     is_funding = serializers.Field()
     people_requested = serializers.Field()
     people_registered = serializers.Field()
+    location = serializers.PrimaryKeyRelatedField(required=False)
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
@@ -104,7 +106,7 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
                   'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
                   'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
                   'deadline', 'status', 'owner', 'partner', 'is_funding', 'people_requested',
-                  'people_registered')
+                  'people_registered', 'location')
 
 
 class ManageProjectSerializer(BaseManageProjectSerializer):

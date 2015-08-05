@@ -5,7 +5,6 @@ import dkim
 from django.core.mail.backends.smtp import EmailBackend
 from django.utils import translation
 from django.template.loader import get_template
-from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives

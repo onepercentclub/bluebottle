@@ -93,7 +93,7 @@ class Command(BaseCommand):
             logger.info("Valid tenants are: {0}".format(", ".join(tenants)))
             sys.exit(1)
 
-        with LocalTenant(client):
+        with LocalTenant(client, clear_tenant=True):
             if options['prepare']:
                 prepare_monthly_donations()
 

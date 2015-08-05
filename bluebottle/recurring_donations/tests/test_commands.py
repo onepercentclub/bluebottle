@@ -105,4 +105,4 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
             
             self.assertEquals(len(mail.outbox), 6)
             # LocalTenant should be called once to set the correct tenant properties
-            mocked_init.assert_called_once_with(LocalTenant, self.tenant)
+            mocked_init.assert_called_once_with(LocalTenant, self.tenant, clear_tenant=True)

@@ -15,9 +15,9 @@ changes = ''
 dependency_links = [
     'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
     'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
-    'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.13.zip#egg=django-bb-salesforce-1.1.13',
+    'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.15.zip#egg=django-bb-salesforce-1.1.15',
     'https://github.com/onepercentclub/django-tenant-extras/archive/1.9.0.zip#egg=django-tenant-extras-1.9.0',
-    'https://github.com/onepercentclub/django-token-auth/archive/0.1.2.zip#egg=django-token-auth-0.1.2'
+    'https://github.com/onepercentclub/django-token-auth/archive/0.1.3.zip#egg=django-token-auth-0.1.3'
 ]
 
 install_requires = [
@@ -35,7 +35,7 @@ install_requires = [
     'django-compressor==1.3',
     'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
-    'django-exportdb==0.3.3',
+    'django-exportdb==0.4.3',
     'django-filter==0.6',
     'django-geoposition==0.2.2',
     'django-iban==0.2.1',
@@ -74,7 +74,7 @@ install_requires = [
     'django_polymorphic==0.6.1',
     'dnspython',
     'fabric',
-    'django-tenant-schemas==1.5.1-4-g45c9ee9',
+    'django-tenant-schemas==1.5.2',
     'raven==5.1.1',
     'djangorestframework-jwt==1.1.1',
     'django-filetransfers==0.1.0',
@@ -83,9 +83,9 @@ install_requires = [
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1',
     'django-fluent-contents==1.0c3',
-    'django-bb-salesforce==1.1.13',
+    'django-bb-salesforce==1.1.15',
     'django-tenant-extras==1.9.0',
-    'django-token-auth==0.1.2'
+    'django-token-auth==0.1.3'
 ]
 
 tests_requires = [

@@ -95,6 +95,7 @@ class BlueBottleUserAdmin(UserAdmin):
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
         (_("Profile"), {'fields': ('user_type', 'picture', 'about_me','location',)}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
+        (_('Skills & interests'), {'fields': ('favourite_themes',)}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined', 'deleted')}),
     )
 

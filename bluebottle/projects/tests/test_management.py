@@ -1,4 +1,12 @@
+from mock import patch
+
 from django.core.management import call_command
+from django.utils import timezone
+from django.db import connection
+from django.core import mail
+from django.test.utils import override_settings
+
+from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
@@ -8,7 +16,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.tasks.models import Task
-from django.utils import timezone
+from bluebottle.clients.utils import LocalTenant
 
 
 class TestStatusMC(BluebottleTestCase):
@@ -185,3 +193,64 @@ class TestStatusMC(BluebottleTestCase):
 
         self.assertEqual(task1.status, 'realized')
         self.assertEqual(task2.status, 'open')
+
+
+@override_settings(SEND_WELCOME_MAIL=False)
+class TestMultiTenant(BluebottleTestCase):
+
+    def setUp(self):
+        super(TestMultiTenant, self).setUp()
+
+        now = timezone.now()
+
+        self.init_projects()
+        self.tenant1 = connection.tenant
+        status_running = ProjectPhase.objects.get(slug='campaign')
+
+        # Create a project for the main tenant
+        self.project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'),
+                                             deadline=now - timezone.timedelta(days=5),
+                                             amount_asked=0)
+
+        # Create a second tenant
+        connection.set_schema_to_public()
+        tenant_domain = 'testserver2'
+        self.tenant2 = get_tenant_model()(
+            domain_url=tenant_domain,
+            schema_name='test2',
+            client_name='test2')
+
+        self.tenant2.save(verbosity=0)
+        connection.set_tenant(self.tenant2)
+
+        self.init_projects()
+        self.project2 = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'),
+                                              deadline=now - timezone.timedelta(days=5),
+                                              amount_asked=0)
+
+
+    def test_realized_email_multiple_tenants(self):
+        with patch.object(LocalTenant, '__new__') as mocked_init:
+            call_command('cron_status_realised')
+
+            self.assertEquals(len(mail.outbox), 2)
+
+            mocked_init.assert_once_called_with(LocalTenant, self.tenant1)
+            mocked_init.assert_once_called_with(LocalTenant, self.tenant2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

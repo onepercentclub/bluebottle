@@ -63,22 +63,21 @@ class ProjectManager(models.Manager):
         return self._ordering(query.get('ordering', None), qs, status)
 
     def _ordering(self, ordering, queryset, status):
-
         if ordering == 'amount_asked':
-            queryset = queryset.order_by('amount_asked')
+            queryset = queryset.order_by('status', 'amount_asked')
         elif ordering == 'deadline':
-            queryset = queryset.order_by('deadline')
+            queryset = queryset.order_by('status', 'deadline')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('amount_needed')
+            queryset = queryset.order_by('status', 'amount_needed')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
-            queryset = queryset.order_by('-campaign_started')
+            queryset = queryset.order_by('status', '-campaign_started', '-created')
         elif ordering == 'popularity':
-            queryset = queryset.order_by('-popularity')
+            queryset = queryset.order_by('status', '-popularity')
             if status == 5:
                 queryset = queryset.filter(amount_needed__gt=0)
         elif ordering:
-            queryset = queryset.order_by(ordering)
+            queryset = queryset.order_by('status', ordering)
 
         return queryset
 
@@ -488,3 +487,19 @@ def project_post_save(sender, instance, **kwargs):
     except AttributeError:
         pass
 
+
+@receiver(post_save, sender=Project, dispatch_uid="updating_suggestion")
+def project_submitted_update_suggestion(sender, instance, **kwargs):
+
+    if instance.status.slug == 'plan-submitted':
+        # Only one suggestion can be connected to a project
+        suggestion = instance.suggestions.first()
+        if suggestion and suggestion.status == 'in_progress':
+            suggestion.status = 'submitted'
+            suggestion.save()
+
+    if instance.status.slug == 'plan-needs-work':
+        suggestion = instance.suggestions.first()
+        if suggestion and suggestion.status == 'submitted':
+            suggestion.status = 'in_progress'
+            suggestion.save()

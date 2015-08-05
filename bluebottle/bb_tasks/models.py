@@ -2,7 +2,6 @@ from bluebottle.utils.model_dispatcher import get_taskmember_model
 from django.conf import settings
 from django.db import models
 import django.db.models.options as options
-
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (
@@ -85,14 +84,6 @@ class BaseTaskMember(models.Model):
         return _("No email address for this user")
     get_member_email.admin_order_field = 'member__email'
     get_member_email.short_description = "Member Email"
-
-    @property
-    def partners(self):
-        """
-        Get the amount of partners for this task
-        """
-        accepted = get_taskmember_model().objects.filter(task=self.task, status='accepted')
-        return max(accepted.count() - 1, 0)
 
 
 class BaseTaskFile(models.Model):

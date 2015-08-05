@@ -24,6 +24,17 @@ from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
 
 
+# TODO: remove this temporary work around to not verify ssl certs
+#       when docdata fix their ssl cert chain on their testing server.
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+
 def css_dict(style):
     """
     Returns a dict from a style attribute value.

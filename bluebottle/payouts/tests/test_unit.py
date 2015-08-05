@@ -371,9 +371,6 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
-    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
-                                            'fully_funded': .1,
-                                            'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -405,9 +402,6 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
-    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
-                                            'fully_funded': .1,
-                                            'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -440,10 +434,6 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
-    @override_settings(MINIMAL_PAYOUT_AMOUNT=60,
-                       PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
-                                            'fully_funded': .1,
-                                            'not_fully_funded': .5})
     def test_changed_fees_amounts_beneath_threshold(self):
         """ Test amounts when donations are beneath minimal payout amount. """
 
@@ -454,31 +444,42 @@ class PayoutTestCase(BluebottleTestCase):
         organization.account_bic = 'ABNANL2A'
         organization.save()
 
-        # Set status of donation to paid
-        self.donation2.order.locked()
-        self.donation2.order.succeeded()
+        beneath_threshold_project = ProjectFactory.create(
+            organization=organization, amount_asked=50)
+
+        # Update phase to campaign.
+        beneath_threshold_project.status = ProjectPhase.objects.get(slug='campaign')
+        beneath_threshold_project.campaign_started = (timezone.now() - timezone.timedelta(days=10))
+        beneath_threshold_project.save()
+
+        order = OrderFactory.create()
+        donation = DonationFactory.create(
+            project=beneath_threshold_project,
+            order=order,
+            amount=5
+        )
+        donation.save()
+        donation.order.locked()
+        donation.order.succeeded()
 
         # Update phase to act.
         self._reload_project()
-        self.project_incomplete.status = ProjectPhase.objects.get(
+        beneath_threshold_project.status = ProjectPhase.objects.get(
             slug='done-incomplete')
-        self.project_incomplete.save()
+        beneath_threshold_project.save()
 
         # Fetch payout
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Decimal('5.00'))
         self.assertEquals(payout.payout_rule, 'beneath_threshold')
         self.assertEquals(payout.amount_payable, Decimal('0.00'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('60.00'))
+        self.assertEquals(payout.amount_safe, Decimal('5.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
-    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
-                                            'fully_funded': .1,
-                                            'not_fully_funded': .5})
     def test_beneath_threshold_status_completed(self):
         """
         Test that a payout with payout rule 'beneath_threshold' and no
@@ -502,10 +503,6 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEqual(payout.status, 'settled')
         self.assertTrue(payout.completed)
 
-    @override_settings(MINIMAL_PAYOUT_AMOUNT=10,
-                       PROJECT_PAYOUT_FEES={'beneath_threshold': 1,
-                                            'fully_funded': .1,
-                                            'not_fully_funded': .5})
     def test_beneath_threshold_status_not_completed_pending_payments(self):
         """
         Test that a payout with rule 'beneath_threshold' but with pending

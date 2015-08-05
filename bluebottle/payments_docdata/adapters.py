@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException, DocdataPaymentStatusException
 from bluebottle.payments_docdata.models import DocdataTransaction, DocdataDirectdebitPayment
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition, get_current_host, get_client_ip, get_country_code_by_ip
@@ -14,7 +14,7 @@ from .models import DocdataPayment
 from bluebottle.clients import properties
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('console')
 
 
 class DocdataPaymentAdapter(BasePaymentAdapter):
@@ -259,7 +259,17 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         return {'type': 'redirect', 'method': 'get', 'url': url}
 
     def check_payment_status(self):
-        response = self._fetch_status()
+        try:
+            response = self._fetch_status()
+        except DocdataPaymentStatusException, e:
+            if 'REQUEST_DATA_INCORRECT' == e.message and 'Order could not be found' in e.report_type:
+                # The payment was not found in docdata: Mark the payment as failed
+                logger.error('Fetching status failed for payment {0}: {1}'.format(self.payment.id, e))
+                self.payment.status = StatusDefinition.FAILED
+                self.payment.save()
+                return None
+            else:
+                raise
 
         # Only continue this if there's a payment set.
         if not hasattr(response, 'payment'):

@@ -17,7 +17,7 @@ def _send_celery_mail(msg, tenant=None, send=False):
         Async function to send emails or do logging. For the logging we encode
         to utf_8 so we don't get Unicode errors.
     """
-    with LocalTenant(tenant):
+    with LocalTenant(tenant, clear_tenant=True):
         #if tenant:
         #    properties.set_tenant(tenant)
 

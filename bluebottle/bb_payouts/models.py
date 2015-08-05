@@ -16,7 +16,7 @@ from bluebottle.bb_payouts.utils import money_from_cents
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
-
+from bluebottle.clients.utils import LocalTenant
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
@@ -25,6 +25,7 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_donation_mo
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
+
 
 class InvoiceReferenceMixin(models.Model):
     """
@@ -304,14 +305,15 @@ class BaseProjectPayout(PayoutBase):
 
         self.amount_raised = self.get_amount_raised()
 
-        calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
-        try:
-            calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
-        except AttributeError:
-            message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
-            raise PayoutException(message)
+        with LocalTenant():
+            calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
+            try:
+                calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
+            except AttributeError:
+                message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
+                raise PayoutException(message)
 
-        self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
+            self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
 
         if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
             self.status = StatusDefinition.SETTLED

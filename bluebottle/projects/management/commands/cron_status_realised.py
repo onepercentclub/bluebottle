@@ -28,7 +28,7 @@ class Command(BaseCommand):
         or they have been overfunded and have expired.
         """
         connection.set_tenant(client)
-        with LocalTenant(client):
+        with LocalTenant(client, clear_tenant=True):
 
             self.stdout.write("Checking deadlines for client {0}".
                               format(client.client_name))

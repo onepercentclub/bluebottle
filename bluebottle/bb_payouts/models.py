@@ -16,7 +16,7 @@ from bluebottle.bb_payouts.utils import money_from_cents
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
-
+from bluebottle.clients.utils import LocalTenant
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
@@ -25,6 +25,7 @@ from bluebottle.utils.model_dispatcher import get_project_model, get_donation_mo
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
+
 
 class InvoiceReferenceMixin(models.Model):
     """
@@ -59,6 +60,12 @@ class InvoiceReferenceMixin(models.Model):
 
         if save:
             super(InvoiceReferenceMixin, self).save()
+
+    def save(self, *args, **kwargs):
+        super(InvoiceReferenceMixin, self).save(*args, **kwargs)
+        if not self.invoice_reference:
+            self.update_invoice_reference()
+
 
 
 class CompletedDateTimeMixin(models.Model):
@@ -260,9 +267,9 @@ class BaseProjectPayout(PayoutBase):
     @property
     def percent(self):
         if not self.amount_payable: return "-"
-        
+
         return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised)*100, 1))
-    
+
     def get_payout_rule(self):
         """
         Override this if you want different payout rules for different circumstances.
@@ -298,14 +305,15 @@ class BaseProjectPayout(PayoutBase):
 
         self.amount_raised = self.get_amount_raised()
 
-        calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
-        try:
-            calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
-        except AttributeError:
-            message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
-            raise PayoutException(message)
+        with LocalTenant():
+            calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
+            try:
+                calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
+            except AttributeError:
+                message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
+                raise PayoutException(message)
 
-        self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
+            self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
 
         if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
             self.status = StatusDefinition.SETTLED
@@ -582,7 +590,6 @@ class BaseOrganizationPayout(PayoutBase):
         """
         Calculate values on first creation and generate invoice reference.
         """
-
         if not self.id:
             # No id? Not previously saved
 
@@ -590,10 +597,6 @@ class BaseOrganizationPayout(PayoutBase):
                 # This exists mainly for testing reasons, payouts should
                 # always be created new
                 self.calculate_amounts(save=False)
-
-            if not self.invoice_reference:
-                # Conditionally creat invoice reference
-                self.update_invoice_reference(auto_save=True, save=False)
 
         super(BaseOrganizationPayout, self).save(*args, **kwargs)
 

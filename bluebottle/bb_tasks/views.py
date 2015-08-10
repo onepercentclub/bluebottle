@@ -59,6 +59,8 @@ class TaskPreviewList(generics.ListAPIView):
 class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
     model = BB_TASK_MODEL
     paginate_by = 8
+    paginate_by_param = 'page_size'
+
     permission_classes = (TenantConditionalOpenClose, IsProjectOwnerOrReadOnly,)
     filter_fields = ('status', 'author')
 
@@ -71,7 +73,7 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
 
         text = self.request.QUERY_PARAMS.get('text', None)
         if text:
-            qs = qs.filter(Q(title__icontains=text) | 
+            qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
 
         ordering = self.request.QUERY_PARAMS.get('ordering', None)
@@ -143,7 +145,7 @@ class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (TenantConditionalOpenClose, IsMemberOrAuthorOrReadOnly, )
-    
+
 
 class TaskFileList(generics.ListCreateAPIView):
     model = BB_TASKFILE_MODEL

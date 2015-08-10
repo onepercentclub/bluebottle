@@ -12,11 +12,12 @@ urlpatterns = patterns(
     url(r'^$', HomeView.as_view(), name='home'),
 
     # Django Admin, docs and password reset
-    url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset', name='admin_password_reset'),
+    url(r'^admin/password_reset/$', 'bluebottle.auth.views.admin_password_reset', name='admin_password_reset'),
+    url(r'^admin/password_reset/done/$', 'django.contrib.auth.views.password_reset_done'),
+
     url(r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         'django.contrib.auth.views.password_reset_confirm',
         name='password_reset_confirm'),
-    url(r'^admin/password_reset/done/$', 'django.contrib.auth.views.password_reset_done'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/exportdb/', include('exportdb.urls')),
     url(r'^admin/', include(admin.site.urls)),

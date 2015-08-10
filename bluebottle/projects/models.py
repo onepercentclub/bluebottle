@@ -71,7 +71,8 @@ class ProjectManager(models.Manager):
             queryset = queryset.order_by('status', 'amount_needed')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
-            queryset = queryset.order_by('status', '-campaign_started', '-created')
+            queryset = queryset.extra(select={'has_campaign_started': 'campaign_started is null'})
+            queryset = queryset.order_by('status', 'has_campaign_started', '-campaign_started', '-created')
         elif ordering == 'popularity':
             queryset = queryset.order_by('status', '-popularity')
             if status == 5:

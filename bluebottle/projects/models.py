@@ -364,7 +364,7 @@ class Project(BaseProject):
                                                            Q(slug="closed")) and self.deadline < timezone.now():
             if (self.amount_asked > 0 and self.amount_donated <= 20) or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
-            elif self.amount_donated >= self.amount_asked:
+            elif (self.amount_asked > 0) and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")

@@ -235,6 +235,10 @@ class Project(BaseProject):
         return count
 
     @property
+    def vote_count(self):
+        return self.votes.all().count()
+
+    @property
     def task_count(self):
         from bluebottle.utils.model_dispatcher import get_task_model
         TASK_MODEL = get_task_model()

@@ -90,6 +90,7 @@ class ProjectSerializer(BaseProjectSerializer):
             'allow_overfunding', 'task_count',
             'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
             'story', 'budget_lines', 'status', 'deadline', 'is_funding', 'vote_count',
+            'voting_deadline',
             'latitude', 'longitude', 'video_url', 'video_html', 'partner', 'location')
 
 
@@ -109,7 +110,7 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
                   'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
                   'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
                   'deadline', 'status', 'owner', 'partner', 'is_funding', 'people_requested',
-                  'people_registered', 'location', 'vote_count')
+                  'people_registered', 'location', 'vote_count', 'voting_deadline')
 
 
 class ManageProjectSerializer(BaseManageProjectSerializer):

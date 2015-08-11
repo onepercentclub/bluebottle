@@ -156,6 +156,24 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.data['account_holder_city'], 'Amsterdam')
         self.assertEquals(response.data['account_holder_country'], country.id)
 
+    def test_project_get_vote_count(self):
+        """ Tests retrieving a project's vote count from the API. """
+
+        # Create vote
+
+        # Get the list of projects.
+        response = self.client.get(self.projects_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        # Test retrieving the first project detail from the list.
+        project = response.data['results'][0]
+
+        # Test retrieving the first project detail from the list.
+        response = self.client.get(self.projects_url + str(project['id']))
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        self.assertEquals(response.data['votes_count'], 0)
+
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
 

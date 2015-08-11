@@ -126,6 +126,8 @@ class Project(BaseProject):
     campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True, blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True, blank=True)
 
+    voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True, blank=True)
+
     objects = ProjectManager()
 
     def __unicode__(self):

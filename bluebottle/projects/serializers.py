@@ -82,13 +82,18 @@ class ProjectSerializer(BaseProjectSerializer):
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
     location = serializers.PrimaryKeyRelatedField(required=False)
 
+    vote_count = serializers.SerializerMethodField(method_name='get_vote_count')
+
     class Meta(BaseProjectSerializer):
         model = BaseProjectSerializer.Meta.model
         fields = BaseProjectSerializer.Meta.fields + (
             'allow_overfunding', 'task_count',
             'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
-            'story', 'budget_lines', 'status', 'deadline', 'is_funding',
+            'story', 'budget_lines', 'status', 'deadline', 'is_funding', 'vote_count',
             'latitude', 'longitude', 'video_url', 'video_html', 'partner', 'location')
+
+    def get_vote_count(self, obj):
+        return obj.votes.count()
 
 
 class ProjectPreviewSerializer(BaseProjectPreviewSerializer):

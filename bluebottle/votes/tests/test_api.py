@@ -3,7 +3,6 @@ import json
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.votes.models import Vote
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.votes import VoteFactory
@@ -24,7 +23,6 @@ class ProjectVotesAPITestcase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-
         self.project = ProjectFactory.create(owner=self.user)
         self.vote_url = reverse('project_votes_list', kwargs={'project_id': self.project.id})
 
@@ -41,12 +39,10 @@ class ProjectVotesAPITestcase(BluebottleTestCase):
         response = self.client.post(self.vote_url, {})
         self.assertEqual(response.status_code, 403)
 
-
     def test_vote_twice(self):
         self.client.post(self.vote_url, {}, token=self.user_token)
         response = self.client.post(self.vote_url, {}, token=self.user_token)
         self.assertEqual(response.status_code, 400)
-
 
     def test_get_votes(self):
         for i in range(11):

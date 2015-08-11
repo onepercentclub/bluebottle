@@ -1,7 +1,5 @@
 from rest_framework import generics, exceptions
 from django.http import Http404
-
-
 from bluebottle.projects.models import Project
 from bluebottle.votes.models import Vote
 from bluebottle.votes.serializers import VoteSerializer

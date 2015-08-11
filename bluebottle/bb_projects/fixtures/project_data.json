@@ -91,6 +91,32 @@
         }
     },
     {
+        "pk": 11,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "name": "Voting",
+            "slug": "voting",
+            "sequence": 11,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 12,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "name": "Voting - Done",
+            "slug": "voting-done",
+            "sequence": 12,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
         "pk": 1,
         "model": "bb_projects.projecttheme",
         "fields": {

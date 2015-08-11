@@ -57,10 +57,10 @@ class ProjectAdmin(BaseProjectAdmin):
     list_filter = BaseProjectAdmin.list_filter + \
         ('is_campaign', 'theme', 'country__subregion__region', 'partner_organization', FundingFilter)
     list_display = BaseProjectAdmin.list_display + \
-        ('is_campaign', 'deadline', 'donated_percentage')
+        ('is_campaign', 'deadline', 'donated_percentage', 'vote_count')
     list_editable = ('is_campaign', )
 
-    readonly_fields = ('owner_link', 'organization_link',
+    readonly_fields = ('owner_link', 'organization_link', 'vote_count',
                        'amount_donated', 'amount_needed', 'popularity')
 
     export_fields = ['title', 'owner', 'created', 'status',
@@ -81,7 +81,8 @@ class ProjectAdmin(BaseProjectAdmin):
                                 'date_submitted', 'campaign_started',
                                 'campaign_ended', 'campaign_funded', 'tags',
                                 'amount_donated', 'amount_needed',
-                                'popularity')}),
+                                'popularity', 'voting_deadline', 'vote_count')}),
+
         (_('Bank details'), {'fields': ('account_holder_name',
                                         'account_holder_address',
                                         'account_holder_postal_code',
@@ -91,6 +92,9 @@ class ProjectAdmin(BaseProjectAdmin):
                                         'account_bic',
                                         'account_bank_country')})
     )
+
+    def vote_count(self, obj):
+        return obj.vote_set.count()
 
     def owner_link(self, obj):
         object = obj.owner

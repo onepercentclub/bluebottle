@@ -17,6 +17,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.votes import VoteFactory
 
 from ..models import Project
 
@@ -155,6 +156,29 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.data['account_holder_postal_code'], '12345AC')
         self.assertEquals(response.data['account_holder_city'], 'Amsterdam')
         self.assertEquals(response.data['account_holder_country'], country.id)
+
+    def test_project_get_vote_count(self):
+        """ Tests retrieving a project's vote count from the API. """
+
+        # Get the list of projects.
+        response = self.client.get(self.projects_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        # Test retrieving the first project detail from the list.
+        project = response.data['results'][0]
+        project_object = Project.objects.get(slug=str(project['id']))
+
+        # Create votes
+        vote = VoteFactory.create(project=project_object, voter=self.user)
+
+        user2 = BlueBottleUserFactory.create()
+        vote2 = VoteFactory.create(project=project_object, voter=user2)
+
+        # Test retrieving the first project detail from the list.
+        response = self.client.get(self.projects_url + str(project['id']))
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        self.assertEquals(response.data['vote_count'], 2)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):

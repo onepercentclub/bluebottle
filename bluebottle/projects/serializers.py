@@ -82,12 +82,15 @@ class ProjectSerializer(BaseProjectSerializer):
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
     location = serializers.PrimaryKeyRelatedField(required=False)
 
+    vote_count = serializers.IntegerField(source='vote_count')
+
     class Meta(BaseProjectSerializer):
         model = BaseProjectSerializer.Meta.model
         fields = BaseProjectSerializer.Meta.fields + (
             'allow_overfunding', 'task_count',
             'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
-            'story', 'budget_lines', 'status', 'deadline', 'is_funding',
+            'story', 'budget_lines', 'status', 'deadline', 'is_funding', 'vote_count',
+            'voting_deadline',
             'latitude', 'longitude', 'video_url', 'video_html', 'partner', 'location')
 
 
@@ -99,6 +102,7 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
     people_requested = serializers.Field()
     people_registered = serializers.Field()
     location = serializers.PrimaryKeyRelatedField(required=False)
+    vote_count = serializers.IntegerField(source='vote_count')
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
@@ -106,7 +110,7 @@ class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
                   'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
                   'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
                   'deadline', 'status', 'owner', 'partner', 'is_funding', 'people_requested',
-                  'people_registered', 'location')
+                  'people_registered', 'location', 'vote_count', 'voting_deadline')
 
 
 class ManageProjectSerializer(BaseManageProjectSerializer):

@@ -236,7 +236,7 @@ class Project(BaseProject):
 
     @property
     def vote_count(self):
-        return self.votes.all().count()
+        return self.vote_set.count()
 
     @property
     def task_count(self):

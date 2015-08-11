@@ -51,6 +51,8 @@ urlpatterns = patterns('',
     url(r'^api/organizations/', include('bluebottle.organizations.urls.api')),
     url(r'^api/suggestions/', include('bluebottle.suggestions.urls.api')),
 
+    url(r'^api/votes/', include('bluebottle.votes.urls.api')),
+
     # Organization urls for private documents
     url(r'^documents/', include('bluebottle.organizations.urls.documents')),
 

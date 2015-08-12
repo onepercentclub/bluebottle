@@ -65,7 +65,7 @@ def update_salesforce(tenant=None,
                       synchronize=False,
                       updated=False,
                       csv_export=False,
-                      verbosity='3',
+                      verbosity='2',
                       log_to_salesforce=False):
     logger.info("Updating Salesforce")
 

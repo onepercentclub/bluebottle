@@ -225,6 +225,7 @@ TENANT_APPS = (
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
+    'bluebottle.votes',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -242,7 +243,6 @@ TENANT_APPS = (
     'bluebottle.donations',
     'bluebottle.orders',
     'bluebottle.suggestions',
-    'bluebottle.votes',
 
     # CMS page contents
     'fluent_contents',

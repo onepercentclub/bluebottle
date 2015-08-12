@@ -9,4 +9,4 @@ class VoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vote
-        fields = ('id', 'voter', 'project')
+        fields = ('id', 'voter', 'project', 'created')

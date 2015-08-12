@@ -33,4 +33,11 @@ class VoteList(generics.ListCreateAPIView):
         Set the voter.
         Check that a user has not vote before
         """
+
+        try:
+            self.get_queryset().get(voter=self.request.user)
+            raise exceptions.ParseError('You cannot vote twice')
+        except Vote.DoesNotExist:
+            pass
+
         obj.voter = self.request.user

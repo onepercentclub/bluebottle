@@ -39,7 +39,32 @@
         }
     },
     {
+        "pk": 4,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "name": "Voting",
+            "slug": "voting",
+            "sequence": 4,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
         "pk": 5,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "name": "Voting - Done",
+            "slug": "voting-done",
+            "sequence": 5,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },    {
+        "pk": 6,
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
@@ -85,32 +110,6 @@
             "name": "Closed",
             "slug": "closed",
             "sequence": 10,
-            "editable": false,
-            "active": true,
-            "description": ""
-        }
-    },
-    {
-        "pk": 11,
-        "model": "bb_projects.projectphase",
-        "fields": {
-            "viewable": true,
-            "name": "Voting",
-            "slug": "voting",
-            "sequence": 11,
-            "editable": false,
-            "active": true,
-            "description": ""
-        }
-    },
-    {
-        "pk": 12,
-        "model": "bb_projects.projectphase",
-        "fields": {
-            "viewable": true,
-            "name": "Voting - Done",
-            "slug": "voting-done",
-            "sequence": 12,
             "editable": false,
             "active": true,
             "description": ""

@@ -8,7 +8,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 
 
-class ProjectVotesAPITestcase(BluebottleTestCase):
+class ProjectVotesAPITestCase(BluebottleTestCase):
     """
     Base class for ``projects`` app API endpoints test cases.
 
@@ -16,24 +16,30 @@ class ProjectVotesAPITestcase(BluebottleTestCase):
     as well as a dummy testing user which can be used for unit tests.
     """
     def setUp(self):
-        super(ProjectVotesAPITestcase, self).setUp()
+        super(ProjectVotesAPITestCase, self).setUp()
 
         self.init_projects()
 
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.project = ProjectFactory.create(owner=self.user)
-        self.vote_url = reverse('project_votes_list', kwargs={'project_id': self.project.id})
+        self.project1 = ProjectFactory.create(owner=self.user)
+        self.project2 = ProjectFactory.create(owner=self.user)
+        self.vote_url = reverse('vote_list')
 
     def test_vote(self):
-        response = self.client.post(self.vote_url, {}, token=self.user_token)
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project1.slug},
+                                    token=self.user_token)
         self.assertEqual(response.status_code, 201)
 
     def test_vote_project_does_not_exist(self):
-        vote_url = reverse('project_votes_list', kwargs={'project_id': 1234})
-        response = self.client.post(vote_url, {}, token=self.user_token)
-        self.assertEqual(response.status_code, 404)
+        response = self.client.post(self.vote_url,
+                                    {'project': 'none-existing-project'},
+                                    token=self.user_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['project'][0],
+                         "Object with slug=none-existing-project does not exist.")
 
     def test_vote_unauthenticated(self):
         response = self.client.post(self.vote_url, {})
@@ -45,11 +51,11 @@ class ProjectVotesAPITestcase(BluebottleTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_get_votes(self):
-        for i in range(11):
-            user = BlueBottleUserFactory.create()
-            VoteFactory.create(voter=user, project=self.project)
+        VoteFactory.create_batch(11, project=self.project1)
+        VoteFactory.create_batch(12, project=self.project2)
 
-        response = self.client.get(self.vote_url)
+        response = self.client.get(self.vote_url +
+                                   '?project={0}'.format(self.project1.slug))
 
         self.assertEqual(response.status_code, 200)
 
@@ -58,17 +64,16 @@ class ProjectVotesAPITestcase(BluebottleTestCase):
         self.assertEqual(len(data['results']), 10)
 
     def test_get_user_votes(self):
-        for i in range(11):
-            user = BlueBottleUserFactory.create()
-            VoteFactory.create(voter=user, project=self.project)
+        VoteFactory.create_batch(11, project=self.project1)
+        VoteFactory.create_batch(3, project=self.project2)
+        VoteFactory.create(voter=self.user, project=self.project1)
+        VoteFactory.create(voter=self.user, project=self.project2)
 
-        VoteFactory.create(voter=self.user, project=self.project)
-
-        vote_url = self.vote_url + '?voter_id={}'.format(self.user.id)
+        vote_url = self.vote_url + '?voter={0}'.format(self.user.id)
         response = self.client.get(vote_url)
 
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
-        self.assertEqual(data['count'], 1)
-        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['count'], 2)
+        self.assertEqual(len(data['results']), 2)

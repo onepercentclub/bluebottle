@@ -13,7 +13,7 @@ readme = read_file('README.rst')
 changes = ''
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
+    'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6.zip#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
     'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.15.zip#egg=django-bb-salesforce-1.1.15',
     'https://github.com/onepercentclub/django-tenant-extras/archive/1.9.0.zip#egg=django-tenant-extras-1.9.0',
@@ -81,7 +81,7 @@ install_requires = [
     'django-admin-tools==0.5.2',
 
     # Github requirements
-    'django-taggit-autocomplete-modified==0.1.1',
+    'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.15',
     'django-tenant-extras==1.9.0',

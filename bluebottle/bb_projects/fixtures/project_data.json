@@ -94,7 +94,7 @@
         "pk": 11,
         "model": "bb_projects.projectphase",
         "fields": {
-            "viewable": false,
+            "viewable": true,
             "name": "Voting",
             "slug": "voting",
             "sequence": 11,
@@ -107,7 +107,7 @@
         "pk": 12,
         "model": "bb_projects.projectphase",
         "fields": {
-            "viewable": false,
+            "viewable": true,
             "name": "Voting - Done",
             "slug": "voting-done",
             "sequence": 12,

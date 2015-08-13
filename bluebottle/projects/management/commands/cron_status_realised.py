@@ -8,6 +8,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.votes.models import Vote
 
 
 class Command(BaseCommand):
@@ -88,3 +89,15 @@ class Command(BaseCommand):
             self.stdout.write(
                 "Successfully updated the status of expired Project and Task \
                   models.\n\n")
+
+            self.stdout.write("Checking projects with voting deadlines\n\n")
+
+            vote_phase = ProjectPhase.objects.get(slug='voting')
+            vote_done = ProjectPhase.objects.get(slug='voting-done')
+
+            for project in Project.objects.filter(status=vote_phase,
+                                                  voting_deadline__lt=now()):
+                project.status = vote_done
+                project.save()
+
+            self.stdout.write("Done checking projects with voting deadlines")

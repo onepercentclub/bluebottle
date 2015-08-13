@@ -10,6 +10,7 @@ from django.utils.html import escape
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.common.admin_utils import ImprovedModelForm
+from bluebottle.geo.admin import LocationFilter
 from bluebottle.geo.models import Location
 
 from bluebottle.bb_projects.admin import ProjectDocumentInline
@@ -85,6 +86,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', 'theme', 'country__subregion__region',
                 'partner_organization', FundingFilter)
+
+        # Only show Location column if there are any
+        if Location.objects.count():
+            filters +=  (LocationFilter, )
         return filters
 
     def get_list_display(self, request):

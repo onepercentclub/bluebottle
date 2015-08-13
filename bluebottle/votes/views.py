@@ -35,7 +35,7 @@ class VoteList(generics.ListCreateAPIView):
         """
 
         try:
-            self.get_queryset().get(voter=self.request.user)
+            self.get_queryset().get(voter=self.request.user, project=obj.project)
             raise exceptions.ParseError('You cannot vote twice')
         except Vote.DoesNotExist:
             pass

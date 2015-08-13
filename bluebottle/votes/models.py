@@ -19,3 +19,4 @@ class Vote(models.Model):
 
     class Meta:
         unique_together = (('project', 'voter'), )
+        ordering = ('-created', )

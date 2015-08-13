@@ -43,7 +43,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
 
     def test_vote_unauthenticated(self):
         response = self.client.post(self.vote_url, {'project': self.project1.slug})
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
 
     def test_vote_twice(self):
         self.client.post(self.vote_url,

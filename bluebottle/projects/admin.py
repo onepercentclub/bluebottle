@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.projects.models import ProjectBudgetLine, Project
+from bluebottle.projects.models import ProjectBudgetLine, Project, ProjectPhaseLog
 from bluebottle.bb_projects.admin import BaseProjectAdmin, ProjectDocumentInline
 from bluebottle.bb_tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action
@@ -46,13 +46,25 @@ class ProjectBudgetLineInline(admin.TabularInline):
     extra = 0
 
 
+class ProjectPhaseLogInline(admin.TabularInline):
+    model = ProjectPhaseLog
+    can_delete = False
+
+    def has_add_permission(self, request):
+        return False
+
+    readonly_fields = ('status', 'start')
+    fields = readonly_fields
+
+
 class ProjectAdminForm(forms.ModelForm):
     theme = forms.ModelChoiceField(queryset=ProjectTheme.objects.all().filter(disabled=False))
+
 
 class ProjectAdmin(BaseProjectAdmin):
     form = ProjectAdminForm
 
-    inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline)
+    inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline, ProjectPhaseLogInline)
 
     list_filter = BaseProjectAdmin.list_filter + \
         ('is_campaign', 'theme', 'country__subregion__region', 'partner_organization', FundingFilter)

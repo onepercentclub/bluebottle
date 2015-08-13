@@ -14,5 +14,8 @@ class Vote(models.Model):
     voter = models.ForeignKey(settings.AUTH_USER_MODEL,
                               verbose_name=_('voter'), blank=True, null=True)
 
+    def __unicode__(self):
+        return "{0} -> {1}".format(self.voter, self.project)
+
     class Meta:
         unique_together = (('project', 'voter'), )

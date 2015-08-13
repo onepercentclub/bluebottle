@@ -42,13 +42,24 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                          "Object with slug=none-existing-project does not exist.")
 
     def test_vote_unauthenticated(self):
-        response = self.client.post(self.vote_url, {})
+        response = self.client.post(self.vote_url, {'project': self.project1.slug})
         self.assertEqual(response.status_code, 403)
 
     def test_vote_twice(self):
-        self.client.post(self.vote_url, {}, token=self.user_token)
-        response = self.client.post(self.vote_url, {}, token=self.user_token)
+        self.client.post(self.vote_url,
+                         {'project': self.project1.slug}, token=self.user_token)
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project1.slug},
+                                    token=self.user_token)
         self.assertEqual(response.status_code, 400)
+
+    def test_vote_on_second_project(self):
+        self.client.post(self.vote_url, {'project': self.project1.slug},
+                         token=self.user_token)
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project2.slug},
+                                    token=self.user_token)
+        self.assertEqual(response.status_code, 201)
 
     def test_get_votes(self):
         VoteFactory.create_batch(11, project=self.project1)

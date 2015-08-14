@@ -1,4 +1,4 @@
-from bluebottle.bb_donations.views import ProjectDonationList, ProjectDonationDetail, LatestDonationsList
+from bluebottle.donations.views import ProjectDonationList, ProjectDonationDetail, LatestDonationsList
 from django.conf.urls import patterns, url
 from ..views import DonationList, DonationDetail, ManageDonationDetail, ManageDonationList, MyProjectDonationList, MyFundraiserDonationList
 

@@ -20,8 +20,7 @@ from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
-from .models import (PartnerOrganization, ProjectBudgetLine, Project,
-                     ProjectPhaseLog)
+from .models import (PartnerOrganization, ProjectBudgetLine, Project)
 
 logger = logging.getLogger(__name__)
 

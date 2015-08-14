@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme
-from bluebottle.bb_tasks.admin import TaskAdminInline
+from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
 from bluebottle.geo.models import Location
@@ -95,7 +95,7 @@ class ProjectBudgetLineInline(admin.TabularInline):
 
 class ProjectAdminForm(forms.ModelForm):
     theme = forms.ModelChoiceField(
-        queryset=ProjectTheme.objects.all().filter(dsabled=False))
+        queryset=ProjectTheme.objects.all().filter(disabled=False))
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):

@@ -1,11 +1,11 @@
-from django.contrib.auth import get_user_model
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
-from bluebottle.utils.model_dispatcher import get_user_model, get_task_model, get_taskmember_model, \
-    get_taskfile_model, get_task_skill_model
+from bluebottle.utils.model_dispatcher import (
+    get_user_model,get_task_model, get_taskmember_model, get_taskfile_model,
+    get_task_skill_model)
 
 BB_USER_MODEL = get_user_model()
 BB_TASK_MODEL = get_task_model()
@@ -16,11 +16,11 @@ BB_SKILL_MODEL = get_task_skill_model()
 
 class TaskMemberAdminInline(admin.StackedInline):
     model = BB_TASKMEMBER_MODEL
-
+    extra = 0
     raw_id_fields = ('member', )
     readonly_fields = ('created', )
-    fields =  readonly_fields + ('member', 'status', 'motivation', 'time_spent', 'externals')
-    extra = 0
+    fields =  readonly_fields + ('member', 'status', 'motivation',
+                                 'time_spent', 'externals')
 
 
 class TaskFileAdminInline(admin.StackedInline):
@@ -55,11 +55,10 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'author__first_name', 'author__last_name'
     )
-    # ordering
-    fields = (
-        'title', 'description', 'skill', 'time_needed', 'status', 'date_status_change',
-        'people_needed', 'project', 'author', 'tags', 'deadline',
-    )
+
+    fields = ('title', 'description', 'skill', 'time_needed', 'status',
+              'date_status_change', 'people_needed', 'project', 'author',
+              'tags', 'deadline')
 
 admin.site.register(BB_TASK_MODEL, TaskAdmin)
 
@@ -73,7 +72,8 @@ class TaskAdminInline(admin.TabularInline):
 
     def task_link(self, obj):
         object = obj
-        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:{0}_{1}_change'.format(
+            object._meta.app_label, object._meta.module_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(str(url), obj.title)
 
     task_link.allow_tags = True

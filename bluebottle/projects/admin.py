@@ -106,8 +106,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_editable(self, request):
         return ('is_campaign', )
 
-    readonly_fields = ('owner_link', 'organization_link', 'vote_count',
-                       'amount_donated', 'amount_needed', 'popularity')
+    readonly_fields = ('vote_count', 'amount_donated', 'amount_needed', 'popularity')
 
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
@@ -115,9 +114,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     actions = (export_as_csv_action(fields=export_fields), )
 
     fieldsets = (
-        (_('Main'), {'fields': ('owner', 'owner_link',
-                                'organization', 'organization_link',
-                                'partner_organization',
+        (_('Main'), {'fields': ('owner', 'organization', 'partner_organization',
                                 'status', 'title', 'slug', 'is_campaign')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
@@ -147,26 +144,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def vote_count(self, obj):
         return obj.vote_set.count()
-
-    def owner_link(self, obj):
-        object = obj.owner
-        url = reverse('admin:%s_%s_change' % (
-            object._meta.app_label, object._meta.module_name),
-            args=[object.id])
-        return "<a href='%s'>%s</a>" % (str(url),
-                                        object.first_name + ' ' +
-                                        object.last_name)
-
-    owner_link.allow_tags = True
-
-    def organization_link(self, obj):
-        object = obj.organization
-        url = reverse('admin:%s_%s_change' % (
-            object._meta.app_label, object._meta.module_name),
-            args=[object.id])
-        return "<a href='%s'>%s</a>" % (str(url), object.name)
-
-    organization_link.allow_tags = True
 
     def donated_percentage(self, obj):
         if not obj.amount_asked:

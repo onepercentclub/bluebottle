@@ -40,7 +40,7 @@ def successful_donation_fundraiser_mail(instance):
     translation.activate(cur_language)
 
     send_mail(
-        template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
+        template_name='donations/mails/new_oneoff_donation_fundraiser.mail',
         subject=subject,
         site=tenant_url(),
         to=receiver,
@@ -88,7 +88,7 @@ def new_oneoff_donation(instance):
 
         # Send email to the project owner.
         send_mail(
-            template_name='bb_donations/mails/new_oneoff_donation.mail',
+            template_name='donations/mails/new_oneoff_donation.mail',
             subject=subject,
             to=receiver,
             amount=donation.amount,
@@ -102,7 +102,7 @@ def new_oneoff_donation(instance):
     # if donation.order.user.email:
     #     # Send email to the project supporter
     #     send_mail(
-    #         template_name="bb_donations/new_oneoff_donation.mail",
+    #         template_name="donations/new_oneoff_donation.mail",
     #         subject=_("You supported {0}".format(donation.project.title)),
     #         to=donation.order.user,
     #         link=project_url

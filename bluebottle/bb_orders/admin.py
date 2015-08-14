@@ -1,12 +1,12 @@
-from bluebottle.bb_donations.admin import DonationInline
-from bluebottle.payments.admin import OrderPaymentInline
-from bluebottle.utils.admin import TotalAmountAdminChangeList
-from bluebottle.utils.utils import StatusDefinition
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
-from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.donations.admin import DonationInline
 
+from bluebottle.payments.admin import OrderPaymentInline
+from bluebottle.utils.admin import TotalAmountAdminChangeList
+from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model
+from bluebottle.utils.utils import StatusDefinition
 
 ORDER_MODEL = get_order_model()
 DONATION_MODEL = get_donation_model()

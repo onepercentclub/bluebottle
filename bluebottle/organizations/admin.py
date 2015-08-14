@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import (get_organization_model,
+                                               get_organizationmember_model)
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()

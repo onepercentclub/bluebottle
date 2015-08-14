@@ -1,30 +1,70 @@
 import logging
 
 from django import forms
-from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
-from django.contrib.admin.sites import NotRegistered
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
+from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
 
+from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.bb_tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
 from bluebottle.geo.models import Location
-
-from bluebottle.bb_projects.admin import ProjectDocumentInline
-from bluebottle.bb_tasks.admin import TaskAdminInline
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_project_phaselog_model,
+                                               get_project_document_model)
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
-from bluebottle.bb_projects.models import ProjectTheme
 
-from geoposition.widgets import GeopositionWidget
-
-
-from .models import PartnerOrganization, ProjectBudgetLine, Project, ProjectPhaseLog
+from .forms import ProjectDocumentForm
+from .models import (PartnerOrganization, ProjectBudgetLine, Project,
+                     ProjectPhaseLog)
 
 logger = logging.getLogger(__name__)
+
+PROJECT_MODEL = get_project_model()
+PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
+PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
+
+class ProjectThemeAdmin(admin.ModelAdmin):
+    list_display = admin.ModelAdmin.list_display + ('slug', 'disabled',)
+
+
+admin.site.register(ProjectTheme, ProjectThemeAdmin)
+
+
+class ProjectDocumentInline(admin.StackedInline):
+    model = PROJECT_DOCUMENT_MODEL
+    form = ProjectDocumentForm
+    extra = 0
+    raw_id_fields = ('author', )
+    readonly_fields = ('download_url',)
+    fields = readonly_fields + ('file', 'author')
+
+    def download_url(self, obj):
+        url = obj.document_url
+
+        if url is not None:
+            return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
+        return '(None)'
+    download_url.allow_tags = True
+
+
+class ProjectPhaseLogInline(admin.TabularInline):
+    model = PROJECT_PHASELOG_MODEL
+    can_delete = False
+    ordering = ('-start',)
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    readonly_fields = ('status', 'start')
+    fields = readonly_fields
 
 
 class FundingFilter(admin.SimpleListFilter):
@@ -54,19 +94,9 @@ class ProjectBudgetLineInline(admin.TabularInline):
     extra = 0
 
 
-class ProjectPhaseLogInline(admin.TabularInline):
-    model = ProjectPhaseLog
-    can_delete = False
-
-    def has_add_permission(self, request):
-        return False
-
-    readonly_fields = ('status', 'start')
-    fields = readonly_fields
-
-
 class ProjectAdminForm(forms.ModelForm):
-    theme = forms.ModelChoiceField(queryset=ProjectTheme.objects.all().filter(disabled=False))
+    theme = forms.ModelChoiceField(
+        queryset=ProjectTheme.objects.all().filter(dsabled=False))
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
@@ -75,17 +105,20 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     ordering = ('-created',)
     save_on_top = True
 
-    search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
+    search_fields = ('title', 'owner__first_name', 'owner__last_name',
+                     'organization__name')
 
     raw_id_fields = ('owner', 'organization',)
 
     prepopulated_fields = {'slug': ('title',)}
 
-    inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline, ProjectPhaseLogInline)
+    inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline,
+               ProjectPhaseLogInline)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', 'theme', 'country__subregion__region',
-                'partner_organization', FundingFilter)
+        filters = ('status', 'is_campaign', 'theme',
+                   'country__subregion__region', 'partner_organization',
+                   FundingFilter)
 
         # Only show Location column if there are any
         if Location.objects.count():
@@ -175,15 +208,17 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return "{0} %".format(percentage)
 
     def queryset(self, request):
-        # Optimization: Select related fields that are used in admin specific display fields.
+        # Optimization: Select related fields that are used in admin specific
+        # display fields.
         queryset = super(ProjectAdmin, self).queryset(request)
-        return queryset.select_related('projectpitch', 'projectplan', 'projectcampaign', 'owner',
+        return queryset.select_related('projectpitch', 'projectplan',
+                                       'projectcampaign', 'owner',
                                        'organization')
 
     def get_title_display(self, obj):
-        if len(obj.title) > 50:
-            return u'<span title="{title}">{short_title} [...]</span>'.format(title=escape(obj.title),
-                                                                              short_title=obj.title[:45])
+        if len(obj.title) > 35:
+            return u'<span title="{title}">{short_title} &hellip;</span>'\
+                .format(title=escape(obj.title), short_title=obj.title[:45])
         return obj.title
 
     get_title_display.allow_tags = True
@@ -201,8 +236,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def project_owner(self, obj):
         object = obj.owner
-        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), object.first_name + ' ' + object.last_name)
+        url = reverse('admin:{0}_{1}_change'.format(
+            object._meta.app_label, object._meta.module_name), args=[object.id])
+        return "<a href='{0}'>{1}</a>".format(
+            str(url), object.first_name + ' ' + object.last_name)
 
     project_owner.allow_tags = True
 

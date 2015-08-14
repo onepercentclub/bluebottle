@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
 from django.utils.translation import ugettext_lazy as _
-from bluebottle.donations.admin import DonationInline
 
+from bluebottle.donations.admin import DonationInline
 from bluebottle.payments.admin import OrderPaymentInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList
 from bluebottle.utils.model_dispatcher import get_order_model, get_donation_model

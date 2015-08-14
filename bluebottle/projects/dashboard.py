@@ -1,9 +1,8 @@
-from bluebottle.bb_projects.models import ProjectPhase
-from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
-
 from admin_tools.dashboard.modules import DashboardModule
+
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
 
 
@@ -73,7 +72,8 @@ class EndedProjects(DashboardModule):
 
     def init_with_context(self, context):
 
-        qs = Project.objects.filter(campaign_ended__isnull=False).order_by('-campaign_ended')[:self.limit]
+        qs = Project.objects.filter(campaign_ended__isnull=False).order_by(
+            '-campaign_ended')[:self.limit]
         projects = list(qs)
 
         self.children = projects[:self.limit]

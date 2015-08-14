@@ -32,7 +32,7 @@ class FundraiserAdmin(admin.ModelAdmin):
         object = obj.project
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(str(url), object.title)
-            
+
     project_link.allow_tags = True
 
     def owner_link(self, obj):

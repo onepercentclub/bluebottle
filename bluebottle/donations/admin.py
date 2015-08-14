@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bb_payouts.admin_utils import link_to
+from bluebottle.payouts.admin_utils import link_to
 from bluebottle.utils.admin import (
     export_as_csv_action, TotalAmountAdminChangeList)
 from bluebottle.utils.model_dispatcher import (

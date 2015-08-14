@@ -1,4 +1,4 @@
-from bluebottle.bb_donations.donationmail import successful_donation_fundraiser_mail
+from bluebottle.donations.donationmail import successful_donation_fundraiser_mail
 from bluebottle.payments.services import PaymentService
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete

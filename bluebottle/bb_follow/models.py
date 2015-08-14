@@ -8,7 +8,7 @@ from django.utils import translation
 from bluebottle.utils.model_dispatcher import get_user_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
-from bluebottle.bb_donations.models import BaseDonation
+from bluebottle.donations.models import Donation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
@@ -74,8 +74,69 @@ def create_follow(sender, instance, created, **kwargs):
     from bluebottle.wallposts.models import Wallpost, Reaction, SystemWallpost
     # Imported inside the signal to prevent circular imports
 
+    # A Wallpost is created by user
+    if isinstance(instance, Wallpost):
+
+        # Create a Follow to the specific Project or Task if a Wallpost was
+        # created
+        if isinstance(instance.content_object, BaseProject) or isinstance(instance.content_object, BaseTask) or isinstance(instance.content_object, BaseFundraiser):
+            user = instance.author
+            if user and instance.content_object:
+
+                content_type = ContentType.objects.get_for_model(
+                    instance.content_object)
+
+                # A Follow object should link the project / task to the user,
+                # not the wallpost and the user
+                try:
+                    follow = Follow.objects.get(user=user,
+                                                object_id=instance.content_object.id,
+                                                content_type=content_type)
+                except Follow.DoesNotExist:
+                    # Check that the project owner is not the user
+                    if isinstance(instance.content_object, BaseProject) and instance.content_object.owner != user:
+                        follow = Follow(
+                            user=user, followed_object=instance.content_object)
+                        follow.save()
+                    # Check that the task owner is not the user
+                    elif isinstance(instance.content_object, BaseTask) and instance.content_object.author != user:
+                        follow = Follow(
+                            user=user, followed_object=instance.content_object)
+                        follow.save()
+
+                    # Check that the fundraiser is not the project owner
+                    elif isinstance(instance.content_object, BaseFundraiser) and instance.content_object.project.owner != user and instance.content_object.owner != user:
+                        follow = Follow(
+                            user=user, followed_object=instance.content_object)
+                        follow.save()
+
+    # For now, posting a a reaction does not make you a follower. This code is left in commented because it might be re-enabled soon.
+    # A Reaction is created by user
+    # if isinstance(instance, Reaction):
+    # Create a Follow to the specific Project or Task if a Reaction was created
+    #     if isinstance(instance.wallpost.content_object, BaseProject) or isinstance(instance.wallpost.content_object, BaseTask):
+    #         user = instance.author
+    #         if user and instance.wallpost.content_object:
+
+    #             content_type = ContentType.objects.get_for_model(instance.wallpost.content_object)
+
+    # A Follow object should link the project / task to the user, not the wallpost and the user
+    #             try:
+    #                 follow = Follow.objects.get(user=user,
+    #                                             object_id=instance.wallpost.content_object.id,
+    #                                             content_type=content_type)
+    #             except Follow.DoesNotExist:
+    # Check that a project owner is not the user
+    #                 if isinstance(instance.wallpost.content_object, BaseProject) and instance.wallpost.content_object.owner != user:
+    #                     follow = Follow(user=user, followed_object=instance.wallpost.content_object)
+    #                     follow.save()
+    # Check that a task author is not the user
+    #                 if isinstance(instance.wallpost.content_object, BaseTask) and instance.wallpost.content_object.author != user:
+    #                     follow = Follow(user=user, followed_object=instance.wallpost.content_object)
+    #                     follow.save()
+
     # A user does a donation
-    if isinstance(instance, BaseDonation):
+    elif isinstance(instance, Donation):
         # Create a Follow to the specific Project or Task if a donation was
         # made
 

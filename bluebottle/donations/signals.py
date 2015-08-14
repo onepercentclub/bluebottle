@@ -1,7 +1,7 @@
 from django.dispatch.dispatcher import receiver
 from django_fsm.signals import post_transition
 from django.contrib.auth.models import AnonymousUser
-from bluebottle.bb_donations.donationmail import new_oneoff_donation, successful_donation_fundraiser_mail
+from bluebottle.donations.donationmail import new_oneoff_donation, successful_donation_fundraiser_mail
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import SystemWallpost

@@ -106,7 +106,7 @@ def _map_model(name, model_name):
     Derive some partials of a model based on settings
     """
     model = getattr(settings, model_name)
-    db_table = getattr(get_model_class(model_name).Meta, 'db_table', model.lower().replace('.', '_'))
+    db_table = getattr(get_model_class(model_name)._meta, 'db_table', model.lower().replace('.', '_'))
     return {
         name: {
             'model': model,

@@ -255,7 +255,12 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_registered(self):
-        return self.task_set.filter(members__status__in=['accepted', 'realized']).aggregate(total=Count('members'))['total']
+        counts = self.task_set.filter(
+            members__status__in=['accepted', 'realized']
+        ).aggregate(total=Count('members'), externals=Sum('members__externals'))
+
+        # If there are no members, externals is None
+        return counts['total'] + (counts['externals'] or 0)
 
     @property
     def people_requested(self):

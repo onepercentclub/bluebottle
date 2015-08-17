@@ -8,10 +8,11 @@ from django.views.generic.detail import DetailView
 from filetransfers.api import serve_file
 from rest_framework import generics
 
+from bluebottle.organizations.serializers import OrganizationSerializer, \
+    ManageOrganizationSerializer
 from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
 
 from .permissions import IsOrganizationMember
-from .serializers import OrganizationSerializer, ManageOrganizationSerializer
 
 ORGANIZATION_MODEL = get_organization_model()
 MEMBER_MODEL = get_organizationmember_model()

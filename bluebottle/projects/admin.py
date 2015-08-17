@@ -160,9 +160,9 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                 'amount_donated','amount_needed',
                                 'popularity', 'vote_count')}),
 
-        (_('Dates'), {'fields': ('deadline', 'date_submitted',
-                                 'campaign_started', 'campaign_ended',
-                                 'campaign_funded', 'voting_deadline')}),
+        (_('Dates'), {'fields': ('voting_deadline', 'deadline',
+                                 'date_submitted', 'campaign_started',
+                                 'campaign_ended', 'campaign_funded')}),
 
         (_('Bank details'), {'fields': ('account_holder_name',
                                         'account_holder_address',

@@ -139,7 +139,7 @@ class BaseTask(models.Model, GetTweetMixin):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
-        default_serializer = 'bluebottle.bb_tasks.serializers.BaseTaskSerializer'
+        default_serializer = 'bluebottle.tasks.serializers.BaseTaskSerializer'
         abstract = True
         ordering = ['-created']
         verbose_name = _(u'task')

@@ -3,16 +3,15 @@ from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.serializers import (DefaultSerializerMixin,
-                                          ManageSerializerMixin,
-                                          PreviewSerializerMixin)
-from bluebottle.utils.model_dispatcher import (
-    get_project_model,get_project_phaselog_model, get_project_document_model)
-from bluebottle.utils.utils import get_client_ip
-from .models import ProjectTheme, ProjectPhase
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer)
+from bluebottle.utils.model_dispatcher import (
+    get_project_model, get_project_phaselog_model, get_project_document_model)
+from bluebottle.utils.serializers import (
+    DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin)
+from bluebottle.utils.utils import get_client_ip
+from .models import ProjectTheme, ProjectPhase
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
@@ -127,7 +126,8 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         obj.owner = self.request.user
 
 
-class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
+class ManageProjectDetail(ManageSerializerMixin,
+                          generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL
     permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
 
@@ -150,7 +150,8 @@ class ProjectThemeList(generics.ListAPIView):
 class ProjectUsedThemeList(ProjectThemeList):
     def get_queryset(self):
         qs = super(ProjectUsedThemeList, self).get_queryset()
-        theme_ids = PROJECT_MODEL.objects.filter(status__viewable=True).values_list('theme', flat=True).distinct()
+        theme_ids = PROJECT_MODEL.objects.filter(
+            status__viewable=True).values_list('theme', flat=True).distinct()
         return qs.filter(id__in=theme_ids)
 
 

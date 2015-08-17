@@ -270,9 +270,9 @@ class BaseProject(models.Model, GetTweetMixin):
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')
-        default_serializer = 'bluebottle.bb_projects.serializers.ProjectSerializer'
-        preview_serializer = 'bluebottle.bb_projects.serializers.ProjectPreviewSerializer'
-        manage_serializer = 'bluebottle.bb_projects.serializers.ManageProjectSerializer'
+        default_serializer = 'bluebottle.projects.serializers.ProjectSerializer'
+        preview_serializer = 'bluebottle.projects.serializers.ProjectPreviewSerializer'
+        manage_serializer = 'bluebottle.projects.serializers.ManageProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title

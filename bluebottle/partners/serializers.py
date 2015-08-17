@@ -1,6 +1,6 @@
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.projects.models import PartnerOrganization
-from bluebottle.bb_projects.serializers import ProjectPreviewSerializer as BaseProjectPreviewSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer as BaseProjectPreviewSerializer
 from rest_framework import serializers
 
 

@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
-from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 
 from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \

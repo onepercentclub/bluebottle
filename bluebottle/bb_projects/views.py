@@ -1,15 +1,18 @@
-from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin
 from django.db.models.query_utils import Q
-from django.db.models import Count, Sum
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
+from bluebottle.utils.serializers import (DefaultSerializerMixin,
+                                          ManageSerializerMixin,
+                                          PreviewSerializerMixin)
+from bluebottle.utils.model_dispatcher import (
+    get_project_model,get_project_phaselog_model, get_project_document_model)
 from bluebottle.utils.utils import get_client_ip
 from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer,
-                          ProjectDocumentSerializer)
+from bluebottle.projects.serializers import (
+    ProjectThemeSerializer, ProjectPhaseSerializer,
+    ProjectPhaseLogSerializer, ProjectDocumentSerializer)
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose

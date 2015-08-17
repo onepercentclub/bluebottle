@@ -23,5 +23,5 @@ class ManageOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ORGANIZATION_MODEL
-        fields = OrganizationSerializer.Meta.field + ('partner_organizations',
+        fields = OrganizationSerializer.Meta.fields + ('partner_organizations',
                                                       'created', 'updated')

@@ -1,10 +1,10 @@
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.votes.models import Vote
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from rest_framework import serializers
 
 
 class VoteSerializer(serializers.ModelSerializer):
-    voter = UserPreviewSerializer(read_only=True)
+    voter = get_serializer_class('AUTH_USER_MODEL', 'preview')(read_only=True)
     project = serializers.SlugRelatedField(source='project', slug_field='slug')
 
     class Meta:

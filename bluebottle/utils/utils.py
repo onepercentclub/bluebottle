@@ -1,10 +1,7 @@
 import socket
-import os
 
-from django.conf import settings
 from django_fsm.db.fields import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
-from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _

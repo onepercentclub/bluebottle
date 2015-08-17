@@ -1,25 +1,27 @@
 from rest_framework import serializers
 
-from bluebottle.utils.serializers import AddressSerializer, URLField
+from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
+from bluebottle.utils.serializers import URLField
 
-from .models import Organization
-
-from bluebottle.bb_organizations.serializers import (OrganizationSerializer as BaseOrganizationSerializer,
-                                                     ManageOrganizationSerializer as BaseManageOrganizationSerializer)
-
-
-class OrganizationSerializer(BaseOrganizationSerializer):
-
-    class Meta(BaseOrganizationSerializer):
-        model = BaseOrganizationSerializer.Meta.model
-        fields = BaseOrganizationSerializer.Meta.fields
+ORGANIZATION_MODEL = get_organization_model()
+MEMBER_MODEL = get_organizationmember_model()
 
 
-class ManageOrganizationSerializer(BaseManageOrganizationSerializer):
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ORGANIZATION_MODEL
+        fields = ('id', 'name', 'slug', 'address_line1', 'address_line2',
+                  'city', 'state', 'country', 'postal_code', 'phone_number',
+                  'website', 'email')
 
+
+class ManageOrganizationSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False)
+    name = serializers.CharField(required=True)
+    website = URLField(required=False)
+    email = serializers.EmailField(required=False)
 
-    class Meta(BaseManageOrganizationSerializer):
-        model = BaseManageOrganizationSerializer.Meta.model
-        fields = BaseManageOrganizationSerializer.Meta.fields
-
+    class Meta:
+        model = ORGANIZATION_MODEL
+        fields = OrganizationSerializer.Meta.fields + ('partner_organizations',
+                                                      'created', 'updated')

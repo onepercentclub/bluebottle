@@ -3,10 +3,10 @@ from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
 
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
 from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 from .models import (
     Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto,
@@ -32,7 +32,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     Serializer for Wallpost Reactions.
     """
-    author = UserPreviewSerializer()
+    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField()
 
@@ -89,7 +89,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
         Base class serializer for Wallposts. This is not used directly; please subclass it.
     """
 
-    author = UserPreviewSerializer()
+    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     reactions = ReactionSerializer(many=True, read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model', source='content_type')
     parent_id = WallpostParentIdField(source='object_id')

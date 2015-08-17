@@ -46,6 +46,6 @@ class BaseFundraiser(models.Model, GetTweetMixin):
 
     class Meta():
         abstract = True
-        default_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundraiserSerializer'
-        preview_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundraiserSerializer'
-        manage_serializer = 'bluebottle.bb_fundraisers.serializers.BaseFundraiserSerializer'
+        default_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'
+        preview_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'
+        manage_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'

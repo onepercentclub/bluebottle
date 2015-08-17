@@ -5,11 +5,11 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.serializers import DefaultSerializerMixin
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
-
-from .permissions import IsMemberOrAuthorOrReadOnly
-from .serializers import (
+from bluebottle.tasks.serializers import (
     BaseTaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
     MyTaskMemberSerializer, SkillSerializer, MyTasksSerializer)
+
+from .permissions import IsMemberOrAuthorOrReadOnly
 
 from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
     get_task_skill_model

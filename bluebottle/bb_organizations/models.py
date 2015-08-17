@@ -77,8 +77,8 @@ class BaseOrganization(models.Model):
         ordering = ['name']
         verbose_name = _('organization')
         verbose_name_plural = _('organizations')
-        default_serializer = 'bluebottle.bb_organizations.serializers.OrganizationSerializer'
-        manage_serializer = 'bluebottle.bb_organizations.serializers.ManageOrganizationSerializer'
+        default_serializer = 'bluebottle.organizations.serializers.OrganizationSerializer'
+        manage_serializer = 'bluebottle.organizations.serializers.ManageOrganizationSerializer'
 
     def __unicode__(self):
         return self.name

@@ -1,4 +1,4 @@
-from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.quotes.serializers import QuoteSerializer
 from bluebottle.slides.serializers import SlideSerializer
 from bluebottle.statistics.serializers import StatisticSerializer

@@ -65,16 +65,10 @@ class CurrentUserSerializer(UserPreviewSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = UserPreviewSerializer.Meta.fields + ('id_for_ember',
-                                                      'primary_language',
-                                                      'email', 'full_name',
-                                                      'last_login',
-                                                      'date_joined',
-                                                      'task_count',
-                                                      'project_count',
-                                                      'donation_count',
-                                                      'fundraiser_count',
-                                                      'location')
+        fields = UserPreviewSerializer.Meta.fields + (
+            'id_for_ember', 'primary_language', 'email', 'full_name',
+            'last_login', 'date_joined', 'task_count', 'project_count',
+            'donation_count', 'fundraiser_count', 'location')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -103,8 +97,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     skill_ids = serializers.PrimaryKeyRelatedField(many=True,
                                                    source='skills',
                                                    required=False)
-    favourite_theme_ids = serializers.PrimaryKeyRelatedField(many=True,
-                                                             source='favourite_themes')
+    favourite_theme_ids = serializers.PrimaryKeyRelatedField(
+        many=True, source='favourite_themes')
 
     project_count = serializers.Field()
     donation_count = serializers.Field()
@@ -118,19 +112,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'url', 'full_name', 'short_name', 'picture',
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
-                  'fundraiser_count', 'task_count', 'time_spent', 'tasks_performed',
-                  'website', 'twitter', 'facebook', 'skypename',
-                  'skill_ids', 'favourite_theme_ids')
+                  'fundraiser_count', 'task_count', 'time_spent',
+                  'tasks_performed','website', 'twitter', 'facebook',
+                  'skypename', 'skill_ids', 'favourite_theme_ids')
 
     def save_object(self, obj, **kwargs):
         """ Make sure that we can set None as the address.
 
-        We should be able to solve this by adding `allow_null` to the address field,
+        We should be able to solve this by adding `allow_null`
+        to the address field,
         however our version of drf does not support that.
 
         FIXME: fix the above after drf upgrade.
         """
-        if 'address' in obj._related_data and obj._related_data['address'] is None:
+        if 'address' in obj._related_data and \
+                        obj._related_data['address'] is None:
             del obj._related_data['address']
 
         return super(UserProfileSerializer, self).save_object(obj, **kwargs)
@@ -230,10 +226,11 @@ class PasswordSetSerializer(serializers.Serializer):
     """
     A serializer that lets a user change set his/her password without entering
     the old password. This uses the validation from the Django SetPasswordForm.
+
+    We can't use the PasswordField here because it hashes the passwords with
+    a salt which means we can't compare the
+    two passwords to see if they are the same.
     """
-    # We can't use the PasswordField here because it hashes the passwords with
-    # a salt which means we can't compare the
-    # two passwords to see if they are the same.
     new_password1 = serializers.CharField(
         required=True, max_length=128, widget=forms.widgets.PasswordInput)
     new_password2 = serializers.CharField(

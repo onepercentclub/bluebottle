@@ -94,8 +94,8 @@ class BaseOrder(models.Model, FSMTransition):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
-        preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
-        manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
+        default_serializer = 'bluebottle.orders.serializers.OrderSerializer'
+        preview_serializer = 'bluebottle.orders.serializers.OrderSerializer'
+        manage_serializer = 'bluebottle.orders.serializers.ManageOrderSerializer'
 
 import signals

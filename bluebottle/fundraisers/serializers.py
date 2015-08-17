@@ -2,8 +2,8 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from bluebottle.utils.model_dispatcher import get_fundraiser_model
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
-from bluebottle.bluebottle_drf2.serializers import EuroField, ImageSerializer, OEmbedField
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 
 
@@ -41,7 +41,7 @@ class ImageSerializerExt(ImageSerializer):
 class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
-    owner = UserPreviewSerializer(read_only=True)
+    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')(read_only=True)
     project = serializers.SlugRelatedField(source='project', slug_field='slug')
     image = ImageSerializerExt()
     amount_donated = serializers.DecimalField(source='amount_donated', read_only=True)

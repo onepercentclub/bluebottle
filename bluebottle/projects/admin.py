@@ -36,6 +36,23 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
+class ProjectThemeFilter(admin.SimpleListFilter):
+    title = _('Theme')
+    parameter_name = 'theme'
+
+    def lookups(self, request, model_admin):
+        themes = [obj.theme for obj in
+                     model_admin.model.objects.order_by('theme__name').distinct(
+                         'theme__name').exclude(theme__isnull=True).all()]
+        return [(theme.id, theme.name) for theme in themes]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(theme__id__exact=self.value())
+        else:
+            return queryset
+
+
 class ProjectDocumentInline(admin.StackedInline):
     model = PROJECT_DOCUMENT_MODEL
     form = ProjectDocumentForm
@@ -115,7 +132,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                ProjectPhaseLogInline)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', 'theme',
+        filters = ('status', 'is_campaign', ProjectThemeFilter,
                    'country__subregion__region', 'partner_organization',
                    FundingFilter)
 

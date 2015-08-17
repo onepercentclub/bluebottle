@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
@@ -17,7 +17,7 @@ BB_SKILL_MODEL = get_task_skill_model()
 
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
-    author = UserPreviewSerializer()
+    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField()
 
@@ -26,7 +26,7 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
 
 
 class BaseTaskMemberSerializer(serializers.ModelSerializer):
-    member = UserPreviewSerializer()
+    member = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     status = serializers.ChoiceField(
         choices=BB_TASKMEMBER_MODEL.TaskMemberStatuses.choices,
         required=False, default=BB_TASKMEMBER_MODEL.TaskMemberStatuses.applied)
@@ -38,7 +38,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
-    author = UserPreviewSerializer()
+    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     file = FileSerializer()
 
     class Meta:
@@ -50,7 +50,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     files = TaskFileSerializer(many=True, source='files', read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
-    author = UserPreviewSerializer()
+    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     status = serializers.ChoiceField(choices=BB_TASK_MODEL.TaskStatuses.choices,
                                      default=BB_TASK_MODEL.TaskStatuses.open)
     tags = TagSerializer()

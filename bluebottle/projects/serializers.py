@@ -1,15 +1,12 @@
 from bluebottle.projects.models import ProjectBudgetLine
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.geo.serializers import CountrySerializer
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (SorlImageField, SlugGenericRelatedField, PolymorphicSerializer, EuroField,
                                               TagSerializer, ImageSerializer, TaggableSerializerMixin, PrivateFileSerializer)
 from bluebottle.geo.models import Country
-from bluebottle.utils.serializers import MetaField
 from bluebottle.bluebottle_drf2.serializers import OEmbedField
 
-from bluebottle.bb_projects.serializers import ProjectThemeSerializer
 from bluebottle.donations.models import Donation
 
 from bluebottle.utils.model_dispatcher import get_project_model, get_project_document_model
@@ -18,6 +15,7 @@ from bluebottle.bb_projects.serializers import (ProjectSerializer as BaseProject
                                                 ProjectPreviewSerializer as BaseProjectPreviewSerializer)
 
 from bs4 import BeautifulSoup
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 PROJECT_MODEL = get_project_model()
 PROJECT_DOCUMENT_MODEL = get_project_document_model()
@@ -96,7 +94,7 @@ class ProjectSerializer(BaseProjectSerializer):
 
 class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
     task_count = serializers.IntegerField(source='task_count')
-    owner = UserPreviewSerializer(source='owner')
+    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='owner')
     partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
     is_funding = serializers.Field()
     people_requested = serializers.Field()
@@ -134,7 +132,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
     """
     For displaying donations on project and member pages.
     """
-    member = UserPreviewSerializer(source='user')
+    member = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
     project = ProjectPreviewSerializer(source='project') # NOTE: is this really necessary?
     date_donated = serializers.DateTimeField(source='ready')
 
@@ -144,7 +142,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 
 
 class ProjectDonationSerializer(serializers.ModelSerializer):
-    member = UserPreviewSerializer(source='user')
+    member = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
     date_donated = serializers.DateTimeField(source='ready')
     amount = EuroField(source='amount')
 

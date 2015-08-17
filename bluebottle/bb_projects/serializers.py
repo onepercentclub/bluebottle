@@ -4,7 +4,6 @@ from django_iban.validators import iban_validator, swift_bic_validator
 from rest_framework import serializers
 from bs4 import BeautifulSoup
 
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer, TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
 from bluebottle.geo.models import Country
@@ -80,7 +79,7 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    owner = UserPreviewSerializer()
+    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     image = ImageSerializer(required=False)
     country = CountrySerializer()
     tags = TagSerializer()
@@ -113,7 +112,7 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
     country = ProjectCountrySerializer(source='country')
     pitch = serializers.CharField(source='pitch')
     theme = ProjectThemeSerializer(source='theme')
-    owner = UserPreviewSerializer()
+    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
 
     class Meta:
         model = PROJECT_MODEL

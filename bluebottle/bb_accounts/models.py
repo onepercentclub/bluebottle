@@ -176,10 +176,14 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = _('members')
         # specifying the serializer here allows us to leave the urls/views untouched while
         # modifying the serializer for the user model
-        default_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
-        preview_serializer = 'bluebottle.bb_accounts.serializers.UserPreviewSerializer'
-        manage_serializer = 'bluebottle.bb_accounts.serializers.UserProfileSerializer'
-        current_user_serializer = 'bluebottle.bb_accounts.serializers.CurrentUserSerializer'
+        default_serializer = \
+            'bluebottle.members.serializers.UserProfileSerializer'
+        preview_serializer = \
+            'bluebottle.members.serializers.UserPreviewSerializer'
+        manage_serializer = \
+            'bluebottle.members.serializers.UserProfileSerializer'
+        current_user_serializer = \
+            'bluebottle.members.serializers.CurrentUserSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""

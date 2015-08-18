@@ -44,7 +44,7 @@ class ProjectThemeFilter(admin.SimpleListFilter):
         themes = [obj.theme for obj in
                      model_admin.model.objects.order_by('theme__name').distinct(
                          'theme__name').exclude(theme__isnull=True).all()]
-        return [(theme.id, theme.name) for theme in themes]
+        return [(theme.id, _(theme.name)) for theme in themes]
 
     def queryset(self, request, queryset):
         if self.value():

@@ -259,5 +259,15 @@
         "name": "Writing proposals", 
         "name_nl": "Plan schrijven"
     }
+},
+{
+    "pk": 30, 
+    "model": "tasks.skill", 
+    "fields": {
+        "description": "", 
+        "name": "Coaching", 
+        "name_nl": "Coaching"
+    }
 }
+
 ]

@@ -35,7 +35,7 @@ install_requires = [
     'django-compressor==1.3',
     'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
-    'django-exportdb==0.4.4',
+    'django-exportdb==0.4.5',
     'django-filter==0.6',
     'django-geoposition==0.2.2',
     'django-iban==0.2.1',

@@ -264,7 +264,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_requested(self):
-        return self.task_set.aggregate(total=Sum('people_needed'))['total']
+        return self.task_set.filter(status='open').aggregate(total=Sum('people_needed'))['total']
 
     _initial_status = None
 

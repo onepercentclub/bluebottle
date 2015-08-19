@@ -5,6 +5,9 @@ from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 from django.utils import translation
+
+from tenant_extras.utils import TenantLanguage
+
 from bluebottle.utils.model_dispatcher import get_user_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
@@ -225,8 +228,9 @@ def email_followers(sender, instance, created, **kwargs):
                     else:
                         translation.activate(properties.LANGUAGE_CODE)
 
-                    subject = _("New wallpost on %(name)s") % {
-                        'name': instance.content_object.title}
+                    with TenantLanguage(mailee.primary_language):
+                        subject = _("New wallpost on %(name)s") % {
+                            'name': instance.content_object.title}
 
                     translation.activate(cur_language)
 

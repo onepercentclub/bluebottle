@@ -1,6 +1,8 @@
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
+from tenant_extras.utils import TenantLanguage
+
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.wallposts.notifiers import (WallpostObserver,
                                             ReactionObserver,
@@ -22,10 +24,11 @@ class ProjectWallObserver(WallpostObserver):
         # Implement 1a: send email to Object owner, if Wallpost author is not
         # the Object owner.
         if self.author != project_owner:
-            self.activate_language(project_owner)
-            subject = _('%(author)s commented on your project') % {
-                'author': self.author.get_short_name()}
-            self.deactivate_language()
+
+            with TenantLanguage(project_owner.primary_language):
+                subject = _('%(author)s commented on your project') % {
+                    'author': self.author.get_short_name()}
+
             send_mail(
                 template_name='project_wallpost_new.mail',
                 subject=subject,
@@ -58,11 +61,9 @@ class ProjectReactionObserver(ReactionObserver):
                                                 Q(author=self.reaction_author))
         for r in reactions:
             if r.author not in mailed_users:
-
-                self.activate_language(r.author)
-                subject = _('%(author)s replied on your comment') % {
-                    'author': self.reaction_author.get_short_name()}
-                self.deactivate_language()
+                with TenantLanguage(r.author.primary_language):
+                    subject = _('%(author)s replied on your comment') % {
+                        'author': self.reaction_author.get_short_name()}
 
                 send_mail(
                     template_name='project_wallpost_reaction_same_wallpost.mail',
@@ -79,10 +80,11 @@ class ProjectReactionObserver(ReactionObserver):
         # the post author.
         if self.reaction_author != self.post_author:
             if self.reaction_author not in mailed_users and self.post_author:
-                self.activate_language(self.post_author)
-                subject = _('%(author)s replied on your comment') % {
-                    'author': self.reaction_author.get_short_name()}
-                self.deactivate_language()
+
+                with TenantLanguage(self.post_author.primary_language):
+                    subject = _('%(author)s replied on your comment') % {
+                        'author': self.reaction_author.get_short_name()}
+
                 send_mail(
                     template_name='project_wallpost_reaction_new.mail',
                     subject=subject,
@@ -99,10 +101,11 @@ class ProjectReactionObserver(ReactionObserver):
         # the Object owner.
         if self.reaction_author != project_owner:
             if project_owner not in mailed_users:
-                self.activate_language(project_owner)
-                subject = _('%(author)s commented on your project') % {
-                    'author': self.reaction_author.get_short_name()}
-                self.deactivate_language()
+
+                with TenantLanguage(project_owner.primary_language):
+                    subject = _('%(author)s commented on your project') % {
+                        'author': self.reaction_author.get_short_name()}
+
                 send_mail(
                     template_name='project_wallpost_reaction_project.mail',
                     subject=subject,

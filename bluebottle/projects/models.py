@@ -159,18 +159,14 @@ class Project(BaseProject):
         if save:
             self.save()
 
-    def update_status_after_donation(self):
+    def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
                                             self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
                                                            Q(slug="done-incomplete") |
                                                            Q(slug="done-stopped")) and self.amount_needed <= 0:
             self.campaign_funded = timezone.now()
-
-            if not self.allow_overfunding:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.campaign_ended = self.campaign_funded
-
-            self.save()
+            if save:
+                self.save()
 
     def update_amounts(self, save=True):
         """ Update amount based on paid and pending donations. """
@@ -183,6 +179,7 @@ class Project(BaseProject):
             self.amount_needed = 0
 
         self.update_popularity(False)
+        self.update_status_after_donation(False)
 
         if save:
             self.save()

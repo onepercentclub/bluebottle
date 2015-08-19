@@ -69,9 +69,6 @@ class Metrics():
 
         # the explicit project_isnull check is a bit redundant - a submitted
         # suggestion always (?) has a project.
-
-        suggestion_metrics['adopted'] = Suggestion.objects.filter(project__isnull=False,
-                                                                  status="submitted").count()
         suggestion_metrics['expired'] = Suggestion.objects.filter(deadline__lt=self.today).count()
 
         for status in ('unconfirmed',

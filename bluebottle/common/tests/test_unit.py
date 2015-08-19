@@ -47,7 +47,7 @@ class MetricsTest(BluebottleTestCase):
         task_member = TaskMemberFactory(task=task, externals=2, status='applied', time_spent=4) # count 0
         task_member2 = TaskMemberFactory(task=task, externals=4, status='realized', time_spent=4) # count 4 x 4 = 16
         task_member3 = TaskMemberFactory(task=task, externals=2, status='accepted', time_spent=8) # count 8 x 2 = 16
-        task_member4 = TaskMemberFactory(task=task, externals=3, status='rejected', time_spent=8) # 0 
+        task_member4 = TaskMemberFactory(task=task, externals=3, status='rejected', time_spent=8) # 0
         task_member5 = TaskMemberFactory(task=task, externals=3, status='stopped', time_spent=4) # 0
 
         # Only count the time spent hours of task members with externals with allowed statuses (applied, accepted, realized)
@@ -58,29 +58,9 @@ class MetricsTest(BluebottleTestCase):
         """ No suggestions means all zeroes """
         suggestion_metrics = self.metrics.calculate_suggestion_metrics()
 
-        for key in ("adopted", "expired", "unconfirmed",
+        for key in ("expired", "unconfirmed",
                     "draft", "accepted", "rejected"):
             self.assertEqual(suggestion_metrics[key], 0)
-
-    def test_suggestions_adopted(self):
-        """ a submitted suggestion with project is adopted, all others aren't """
-        p = ProjectFactory()
-
-        not1 = SuggestionFactory.create(title="wrong state",
-                                        deadline=self.future,
-                                        project=p,
-                                        status="in_progress")
-        not2 = SuggestionFactory.create(title="no project",
-                                        project=None,
-                                        deadline=self.future,
-                                        status="submitted")
-        adopt = SuggestionFactory.create(title="adopted",
-                                         deadline=self.future,
-                                         project=p,
-                                         status="submitted")
-
-        suggestion_metrics = self.metrics.calculate_suggestion_metrics()
-        self.assertEqual(suggestion_metrics['adopted'], 1)
 
     def test_suggestions_expired(self):
         """ verify suggestions past the deadline are expired """
@@ -184,8 +164,8 @@ class MetricsTest(BluebottleTestCase):
 
     def test_initiators(self):
         """
-            Test counting project initiators of project with status, 
-            campaign, done-complete, done-incomplete 
+            Test counting project initiators of project with status,
+            campaign, done-complete, done-incomplete
         """
         user1 = BlueBottleUserFactory.create()
         user2 = BlueBottleUserFactory.create()

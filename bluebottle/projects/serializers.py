@@ -87,6 +87,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer()
+    project = serializers.SlugRelatedField(slug_field='slug')
 
     class Meta:
         model = PROJECT_DOCUMENT_MODEL

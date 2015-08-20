@@ -195,22 +195,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def generate_username(self):
         """ Generate and set a username if it hasn't already been set. """
         if not self.username:
-            # Default to something so Django doesn't complain.
-            username = 'x'
-            if self.first_name or self.last_name:
-                # The ideal condition.
-                username = slugify(unicode((self.first_name + self.last_name).replace(' ', '')))
-            elif self.email and '@' in self.email:
-                # The best we can do if there's no first or last name.
-                email_name, domain_part = self.email.strip().rsplit('@', 1)
-                username = slugify(email_name.replace(' ', ''))
-
-            # Strip username depending on max_length attribute of the slug field.
-            max_length = self._meta.get_field('username').max_length
-            username = username[:max_length]
+            username = self.email
             original_username = username
-
-            # Exclude the current model instance from the queryset used in finding the next valid slug.
             queryset = self._default_manager.all()
             if self.pk:
                 queryset = queryset.exclude(pk=self.pk)
@@ -337,6 +323,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return get_fundraiser_model().objects.filter(owner=self).count()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.generate_username()
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
         try:
             self.address

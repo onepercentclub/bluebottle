@@ -3,6 +3,8 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from django.utils.translation import ugettext as _
 
+from tenant_extras.utils import TenantLanguage
+
 
 GROUP_PERMS = {
     'Staff': {
@@ -27,9 +29,12 @@ class Task(BaseTask):
         self._init_status = 'realized' # suppress post_save activation
         self.save()
 
+        with TenantLanguage(self.author.primary_language):
+            subject = _("The deadline for task '{0}' has been reached").format(self.title)
+
         send_mail(
             template_name="tasks/mails/task_deadline_reached.mail",
-            subject=_("The deadline for task '{0}' has been reached").format(self.title),
+            subject=subject,
             title=self.title,
             to=self.author,
             site=tenant_url(),
@@ -41,9 +46,12 @@ class Task(BaseTask):
         # confirm everything with task owner
 
         if oldstate in ("in progress", "open") and newstate == "realized":
+            with TenantLanguage(self.author.primary_language):
+                subject = _("You've set '{0}' to realized").format(self.title)
+
             send_mail(
                 template_name="tasks/mails/task_status_realized.mail",
-                subject=_("You've set '{0}' to realized").format(self.title),
+                subject=subject,
                 title=self.title,
                 to=self.author,
                 site=tenant_url(),

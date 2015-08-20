@@ -11,6 +11,8 @@ from django.utils.translation import ugettext as _
 
 from sorl.thumbnail.shortcuts import get_thumbnail
 
+from tenant_extras.utils import TenantLanguage
+
 from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response, status
@@ -128,9 +130,12 @@ class ShareFlyer(views.APIView):
         share_motivation = serializer.object.get('share_motivation', None)
         share_cc = serializer.object.get('share_cc')
 
+        with TenantLanguage(self.request.user.primary_language):
+            subject = _('%(name)s wants to share a project with you!') % dict(name=sender_name)
+
         args.update(dict(
             template_name='utils/mails/share_flyer.mail',
-            subject=_('%(name)s wants to share a project with you!') % dict(name=sender_name),
+            subject=subject,
             to=namedtuple("Receiver", "email")(email=share_email),
             from_email=sender_email,
             share_name=share_name,
@@ -143,7 +148,7 @@ class ShareFlyer(views.APIView):
         if share_cc:
             args['cc'] = [sender_email]
 
-        result = send_mail(**args)
+        send_mail(**args)
 
         return response.Response({}, status=201)
 

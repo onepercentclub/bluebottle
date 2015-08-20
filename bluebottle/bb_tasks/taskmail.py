@@ -3,6 +3,8 @@ from django.db.models.signals import post_save, pre_delete
 from django.utils.translation import ugettext as _
 from django.utils import translation
 
+from tenant_extras.utils import TenantLanguage
+
 from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.clients.utils import tenant_url
 
@@ -29,17 +31,7 @@ class TaskMemberMailSender:
         self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
         self.cur_language = translation.get_language()
 
-    def activate_language(self, receiver=None):
-        if receiver and receiver.primary_language:
-            translation.activate(receiver.primary_language)
-        else:
-            translation.activate(properties.LANGUAGE_CODE)
-
-    def reset_language(self):
-        translation.activate(self.cur_language)
-
     def send(self):
-
         send_mail(template_name=self.template_mail, subject=self.subject,
                   to=self.receiver, **self.ctx)
 
@@ -50,10 +42,11 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
         self.template_mail = 'task_member_applied.mail'
         self.receiver = self.task.author
-        self.activate_language(self.receiver)
-        self.subject = _('%(member)s applied for your task') % {
-            'member': self.task_member.member.get_short_name()}
-        self.reset_language()
+
+        with TenantLanguage(self.task_member.member.primary_language):
+            self.subject = _('%(member)s applied for your task') % {
+                'member': self.task_member.member.get_short_name()}
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task_member.member,
                     'link': self.task_link,
@@ -68,10 +61,11 @@ class TaskMemberRejectMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_rejected.mail'
         self.receiver = self.task_member.member
-        self.activate_language(self.receiver)
-        self.subject = _('%(author)s didn\'t select you for a task') % {
-            'author': self.task.author.get_short_name()}
-        self.reset_language()
+
+        with TenantLanguage(self.receiver.primary_language):
+            self.subject = _('%(author)s didn\'t select you for a task') % {
+                'author': self.task.author.get_short_name()}
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task.author,
                     'link': self.task_link,
@@ -86,10 +80,11 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_accepted.mail'
         self.receiver = self.task_member.member
-        self.activate_language(self.receiver)
-        self.subject = _('%(author)s assigned you to a task') % {
-            'author': self.task.author.get_short_name()}
-        self.reset_language()
+
+        with TenantLanguage(self.receiver.primary_language):
+            self.subject = _('%(author)s assigned you to a task') % {
+                'author': self.task.author.get_short_name()}
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task.author,
                     'link': self.task_link,
@@ -103,9 +98,10 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_realized.mail'
         self.receiver = self.task_member.member
-        self.activate_language(self.receiver)
-        self.subject = _('You realised a task!')
-        self.reset_language()
+
+        with TenantLanguage(self.receiver.primary_language):
+            self.subject = _('You realised a task!')
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task.author,
                     'link': self.task_link,
@@ -121,10 +117,11 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
 
         self.template_mail = 'task_member_withdrew.mail'
         self.receiver = self.task.author
-        self.activate_language(self.receiver)
-        self.subject = _('%(member)s withdrew from a task') % {
-            'member': self.task_member.member.get_short_name()}
-        self.reset_language()
+
+        with TenantLanguage(self.receiver.primary_language):
+            self.subject = _('%(member)s withdrew from a task') % {
+                'member': self.task_member.member.get_short_name()}
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task_member.member,
                     'link': self.task_link, 'site': self.site,

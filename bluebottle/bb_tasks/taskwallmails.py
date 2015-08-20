@@ -1,4 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
+
+from tenant_extras.utils import TenantLanguage
+
 from bluebottle.bb_tasks.models import BaseTask
 from bluebottle.wallposts.notifiers import (WallpostObserver, ReactionObserver,
                                             ObserversContainer)
@@ -17,10 +20,11 @@ class TaskWallObserver(WallpostObserver):
         task_owner = task.author
 
         if self.author != task_owner:
-            self.activate_language(task_owner)
-            subject = _('%(author)s commented on your task') % {
-                'author': self.author.get_short_name()}
-            self.deactivate_language()
+
+            with TenantLanguage(task_owner.primary_language):
+                subject = _('%(author)s commented on your task') % {
+                    'author': self.author.get_short_name()}
+
             site = self.site
             send_mail(
                 template_name='task_wallpost_new.mail',
@@ -74,10 +78,10 @@ class TaskReactionObserver(ReactionObserver):
         # the post author.
         if self.reaction_author != self.post_author:
             if self.reaction_author not in mailed_users and self.post_author:
-                self.activate_language(self.post_author)
-                subject = _('%(author)s replied on your comment') % {
-                    'author': self.reaction_author.get_short_name()}
-                self.deactivate_language()
+                with TenantLanguage(post_author.primary_language):
+                    subject = _('%(author)s replied on your comment') % {
+                        'author': self.reaction_author.get_short_name()}
+
                 send_mail(
                     template_name='task_wallpost_reaction_new.mail',
                     subject=subject,
@@ -94,10 +98,9 @@ class TaskReactionObserver(ReactionObserver):
         # the Object owner.
         if self.reaction_author != task_author:
             if task_author not in mailed_users:
-                self.activate_language(task_author)
-                subject = _('%(author)s commented on your task') % {
-                    'author': self.reaction_author.get_short_name()}
-                self.deactivate_language()
+                with TenantLanguage(task_author.primary_language):
+                    subject = _('%(author)s commented on your task') % {
+                        'author': self.reaction_author.get_short_name()}
 
                 send_mail(
                     template_name='task_wallpost_reaction_task.mail',

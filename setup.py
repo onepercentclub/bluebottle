@@ -23,7 +23,7 @@ dependency_links = [
 install_requires = [
     'Babel==1.3',
     'BeautifulSoup==3.2.1',
-    'Django==1.8.4',
+    'Django==1.6.4',
     'Pillow==2.3.0',
     'South==1.0.2',
     'Sphinx==1.2b1',

@@ -2,14 +2,17 @@
 
 {% load i18n %}
 
-{% block htmltitle %}{{ block.super }} | {% trans "Page not found" %}{% endblock %}
+{% block htmltitle %}{{ block.super }} |
+    {% trans "Page not found" %}{% endblock %}
 
 {% block content %}
-<div id="page-not-found">
-<h1>{% trans "Page not found" %}</h1>
-<p>{% trans "The requested page could not be found on this website." %}</p>
+    <div id="page-not-found">
+        <h1>{% trans "Page not found" %}</h1>
 
-{% url 'home' as home_url %}
-<p>{% blocktrans %}Click <a href="{{ home_url }}">here</a> to return to the homepage.{% endblocktrans %}</p>
-</div>
+        <p>{% trans "The requested page could not be found on this website." %}</p>
+
+        {% url 'home' as home_url %}
+        <p>{% blocktrans %}Click <a href="{{ home_url }}">here</a> to return to
+            the homepage.{% endblocktrans %}</p>
+    </div>
 {% endblock %}

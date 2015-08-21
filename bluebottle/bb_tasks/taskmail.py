@@ -11,18 +11,15 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.utils.email_backend import send_mail
 
-
 TASK_MEMBER_MODEL = get_taskmember_model()
 
 
 class TaskMemberMailSender:
-
     """
     The base class for Task Mail senders
     """
 
     def __init__(self, instance, *args, **kwargs):
-
         self.task_member = instance
         self.task = instance.task
         self.task_link = '/go/tasks/{0}'.format(self.task.id)
@@ -37,7 +34,6 @@ class TaskMemberMailSender:
 
 
 class TaskMemberAppliedMail(TaskMemberMailSender):
-
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
         self.template_mail = 'task_member_applied.mail'
@@ -55,7 +51,6 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
 
 
 class TaskMemberRejectMail(TaskMemberMailSender):
-
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
 
@@ -74,7 +69,6 @@ class TaskMemberRejectMail(TaskMemberMailSender):
 
 
 class TaskMemberAcceptedMail(TaskMemberMailSender):
-
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
 
@@ -92,7 +86,6 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
 
 class TaskMemberRealizedMail(TaskMemberMailSender):
-
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
 
@@ -111,7 +104,6 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
 
 
 class TaskMemberWithdrawMail(TaskMemberMailSender):
-
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
 
@@ -130,7 +122,6 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
 
 
 class TaskMemberMailAdapter:
-
     """
     This class retrieve the correct TaskMemberMailSender instance based on
     the status and allows to send task emails.
@@ -161,13 +152,11 @@ class TaskMemberMailAdapter:
 
 @receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
 def new_reaction_notification(sender, instance, created, **kwargs):
-
     mailer = TaskMemberMailAdapter(instance)
     mailer.send_mail()
 
 
 @receiver(pre_delete, weak=False, sender=TASK_MEMBER_MODEL)
 def task_member_withdraw(sender, instance, **kwargs):
-
     mailer = TaskMemberMailAdapter(instance, 'withdraw')
     mailer.send_mail()

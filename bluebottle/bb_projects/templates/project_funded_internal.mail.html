@@ -2,14 +2,15 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans %}
+    {% blocktrans %}
 
-Hello Project Team,
-<br><br>
-A project has been funded!
-{% endblocktrans %}
+        Hello Project Team,
+        <br><br>
+        A project has been funded!
+    {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}{{ link }}" class="action-email">{% trans 'View project' context 'email' %}</a>
+    <a href="{{ site }}{{ link }}"
+       class="action-email">{% trans 'View project' context 'email' %}</a>
 {% endblock %}

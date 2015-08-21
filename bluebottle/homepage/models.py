@@ -9,7 +9,6 @@ PROJECT_MODEL = get_project_model()
 # Instead of serving all the objects separately we combine Slide, Quote and Stats into a dummy object
 
 class HomePage(object):
-
     def get(self, language):
         self.id = 1
         self.quotes = Quote.objects.published().filter(language=language)

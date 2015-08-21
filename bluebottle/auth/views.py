@@ -8,7 +8,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, QueryDict
 from django.template.response import TemplateResponse
 
-
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -18,13 +17,15 @@ from rest_framework import parsers, renderers
 from rest_framework import status
 from social.apps.django_app.utils import strategy
 
-#from social_auth.decorators import
+# from social_auth.decorators import
 from datetime import datetime
+
 
 class GetAuthToken(APIView):
     throttle_classes = ()
     permission_classes = ()
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
+    parser_classes = (
+    parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
     renderer_classes = (renderers.JSONRenderer,)
     serializer_class = AuthTokenSerializer
     model = Token
@@ -43,6 +44,7 @@ class GetAuthToken(APIView):
             return Response({'error': token_result.get('error')})
         return Response({'error': _('No result for token')})
 
+
 @strategy()
 def register_by_access_token(request, backend):
     backend = request.strategy.backend
@@ -56,10 +58,12 @@ def register_by_access_token(request, backend):
             user.save()
             return {'token': user.get_jwt_token()}
         elif user and not user.is_active:
-            return {'error': _("This user account is disabled, please contact us if you want to re-activate.")}
+            return {'error': _(
+                "This user account is disabled, please contact us if you want to re-activate.")}
         else:
             return None
     return None
+
 
 @csrf_protect
 def admin_password_reset(request, is_admin_site=False,
@@ -105,4 +109,5 @@ def admin_password_reset(request, is_admin_site=False,
     }
     if extra_context is not None:
         context.update(extra_context)
-    return TemplateResponse(request, template_name, context, current_app=current_app)
+    return TemplateResponse(request, template_name, context,
+                            current_app=current_app)

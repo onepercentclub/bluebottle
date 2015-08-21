@@ -6,7 +6,6 @@ from .models import ContactMessage
 
 
 class ContactMessageSerializer(serializers.ModelSerializer):
-
     author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
 
     class Meta:

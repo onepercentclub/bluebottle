@@ -6,7 +6,7 @@
         {% spaceless %}
             {% for project in module.children %}
                 <li class="{% cycle 'odd' 'even' %}">
-                    <a href="{{ project.admin_url }}" >{{ project.title }}</a>
+                    <a href="{{ project.admin_url }}">{{ project.title }}</a>
                     <ul>
                         <li>
                             <b>{{ project.status }}</b>

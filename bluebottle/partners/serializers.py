@@ -1,6 +1,7 @@
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.projects.models import PartnerOrganization
-from bluebottle.projects.serializers import ProjectPreviewSerializer as BaseProjectPreviewSerializer
+from bluebottle.projects.serializers import \
+    ProjectPreviewSerializer as BaseProjectPreviewSerializer
 from rest_framework import serializers
 
 
@@ -14,15 +15,17 @@ from bluebottle.utils.serializer_dispatcher import get_serializer_class
 class ProjectPreviewSerializer(BaseProjectPreviewSerializer):
     task_count = serializers.IntegerField(source='task_count')
     owner = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='owner')
-    partner = serializers.SlugRelatedField(slug_field='slug', source='partner_organization')
+    partner = serializers.SlugRelatedField(slug_field='slug',
+                                           source='partner_organization')
     is_funding = serializers.Field()
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
-        fields = ('id', 'title', 'image', 'status', 'pitch', 'country', 'task_count',
-                  'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
-                  'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
-                  'deadline', 'status', 'owner', 'partner', 'is_funding')
+        fields = (
+        'id', 'title', 'image', 'status', 'pitch', 'country', 'task_count',
+        'allow_overfunding', 'latitude', 'longitude', 'is_campaign',
+        'amount_asked', 'amount_donated', 'amount_needed', 'amount_extra',
+        'deadline', 'status', 'owner', 'partner', 'is_funding')
 
 
 class PartnerOrganizationPreviewSerializer(serializers.ModelSerializer):
@@ -30,7 +33,7 @@ class PartnerOrganizationPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
-        fields = ('id', 'name', )
+        fields = ('id', 'name',)
 
 
 class PartnerOrganizationSerializer(PartnerOrganizationPreviewSerializer):
@@ -41,4 +44,3 @@ class PartnerOrganizationSerializer(PartnerOrganizationPreviewSerializer):
     class Meta:
         model = PartnerOrganization
         fields = ('id', 'name', 'projects', 'description', 'image')
-

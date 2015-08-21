@@ -9,7 +9,7 @@ from bluebottle.suggestions.serializers import SuggestionSerializer
 
 class SuggestionList(generics.ListCreateAPIView):
     model = Suggestion
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     serializer_class = SuggestionSerializer
 
     def get_queryset(self):
@@ -30,13 +30,13 @@ class SuggestionList(generics.ListCreateAPIView):
 
 class SuggestionDetail(generics.RetrieveUpdateAPIView):
     model = Suggestion
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     serializer_class = SuggestionSerializer
 
 
 class SuggestionToken(generics.RetrieveUpdateAPIView):
     model = Suggestion
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     serializer_class = SuggestionSerializer
     lookup_field = 'token'
 
@@ -44,7 +44,7 @@ class SuggestionToken(generics.RetrieveUpdateAPIView):
         suggestion = self.get_object()
 
         if suggestion.confirm():
-            return response.Response({'status':'validated'},
+            return response.Response({'status': 'validated'},
                                      status=status.HTTP_200_OK)
-        return response.Response({'status':'not validated'},
+        return response.Response({'status': 'not validated'},
                                  status=status.HTTP_400_BAD_REQUEST)

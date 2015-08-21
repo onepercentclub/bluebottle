@@ -5,7 +5,8 @@ from django.utils.timezone import now
 import factory
 import factory.fuzzy
 
-from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_task_skill_model
+from bluebottle.utils.model_dispatcher import get_task_model, \
+    get_taskmember_model, get_task_skill_model
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
 
@@ -29,10 +30,10 @@ class TaskFactory(factory.DjangoModelFactory):
     skill = factory.SubFactory(SkillFactory)
     title = factory.Sequence(lambda n: 'Task_{0}'.format(n))
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
-    description = factory.Sequence(lambda n: "Filler description text{0}".format(n))
+    description = factory.Sequence(
+        lambda n: "Filler description text{0}".format(n))
     location = factory.Sequence(lambda n: "Location_{0}".format(n))
     time_needed = 4
-
 
     @factory.post_generation
     def members(self, create, extracted, **kwargs):

@@ -10,7 +10,6 @@ MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
-
     def forwards(self, orm):
         # Deleting field 'Client.created_on'
         db.delete_column(u'clients_client', 'created_on')
@@ -23,19 +22,21 @@ class Migration(SchemaMigration):
 
         # Adding field 'Client.client_name'
         db.add_column(u'clients_client', 'client_name',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=100),
+                      self.gf('django.db.models.fields.CharField')(default='',
+                                                                   max_length=100),
                       keep_default=False)
-
 
     def backwards(self, orm):
         # Adding field 'Client.created_on'
         db.add_column(u'clients_client', 'created_on',
-                      self.gf('django.db.models.fields.DateField')(auto_now_add=True, default='', blank=True),
+                      self.gf('django.db.models.fields.DateField')(
+                          auto_now_add=True, default='', blank=True),
                       keep_default=False)
 
         # Adding field 'Client.on_trial'
         db.add_column(u'clients_client', 'on_trial',
-                      self.gf('django.db.models.fields.BooleanField')(default=''),
+                      self.gf('django.db.models.fields.BooleanField')(
+                          default=''),
                       keep_default=False)
 
         # Adding field 'Client.paid_until'
@@ -46,15 +47,19 @@ class Migration(SchemaMigration):
         # Deleting field 'Client.client_name'
         db.delete_column(u'clients_client', 'client_name')
 
-
     models = {
         u'clients.client': {
             'Meta': {'object_name': 'Client'},
-            'client_name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'domain_url': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'schema_name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '63'})
+            'client_name': (
+            'django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'domain_url': ('django.db.models.fields.CharField', [],
+                           {'unique': 'True', 'max_length': '128'}),
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': (
+            'django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'schema_name': ('django.db.models.fields.CharField', [],
+                            {'unique': 'True', 'max_length': '63'})
         }
     }
 

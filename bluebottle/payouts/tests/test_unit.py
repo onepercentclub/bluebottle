@@ -32,9 +32,10 @@ class PayoutTestAdmin(BluebottleTestCase):
         self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
 
 
-@override_settings(MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test', 'properties'))
+@override_settings(
+    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                  'properties'))
 class PayoutTestCase(BluebottleTestCase):
-
     """ Test case for Payouts. """
 
     def setUp(self):
@@ -448,8 +449,10 @@ class PayoutTestCase(BluebottleTestCase):
             organization=organization, amount_asked=50)
 
         # Update phase to campaign.
-        beneath_threshold_project.status = ProjectPhase.objects.get(slug='campaign')
-        beneath_threshold_project.campaign_started = (timezone.now() - timezone.timedelta(days=10))
+        beneath_threshold_project.status = ProjectPhase.objects.get(
+            slug='campaign')
+        beneath_threshold_project.campaign_started = (
+        timezone.now() - timezone.timedelta(days=10))
         beneath_threshold_project.save()
 
         order = OrderFactory.create()

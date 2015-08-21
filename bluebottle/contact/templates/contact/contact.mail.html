@@ -2,16 +2,17 @@
 {% load i18n %}
 
 {% block content %}
-{# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
-Hi there!
-<br><br>
-{{ message.name }} left the following contact message on {{ site.name }}.
-<br><br>
-<i>{{ message.message|linebreaksbr }}</i>
-<br><br>
-Would you like to reply to this message?
+    {# It makes no sense to activate translation here, we have no idea of the language of the recipient(s) #}
+    Hi there!
+    <br><br>
+    {{ message.name }} left the following contact message on {{ site.name }}.
+    <br><br>
+    <i>{{ message.message|linebreaksbr }}</i>
+    <br><br>
+    Would you like to reply to this message?
 {% endblock %}
 
 {% block action %}
-<a href="{{ site_url }}{{ link }}" class="action-email">{% trans 'Reply' context 'email' %}</a>
+    <a href="{{ site_url }}{{ link }}"
+       class="action-email">{% trans 'Reply' context 'email' %}</a>
 {% endblock %}

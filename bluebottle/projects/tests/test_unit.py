@@ -24,6 +24,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         save() automatically updates some fields, specifically
         the status field. Make sure it picks the right one
     """
+
     def setUp(self):
         super(TestProjectStatusUpdate, self).setUp()
 
@@ -37,7 +38,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         self.expired_project = ProjectFactory.create(amount_asked=5000,
                                                      campaign_started=now -
-                                                     timezone.
+                                                                      timezone.
                                                      timedelta(days=15),
                                                      status=self.campaign)
 
@@ -106,7 +107,6 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
 
 class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
-
     def setUp(self):
         super(CalculateProjectMoneyDonatedTest, self).setUp()
 
@@ -168,7 +168,6 @@ class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
 
 
 class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
-
     def setUp(self):
         super(TestProjectStatusChangeSuggestionUpdate, self).setUp()
 

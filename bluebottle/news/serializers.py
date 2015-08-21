@@ -11,7 +11,6 @@ from .models import NewsItem
 
 
 class NewsItemContentsField(serializers.Field):
-
     def to_native(self, obj):
         request = self.context.get('request', None)
         contents_html = mark_safe(render_placeholder(request, obj).html)
@@ -21,17 +20,19 @@ class NewsItemContentsField(serializers.Field):
 class NewsItemSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug')
     body = NewsItemContentsField(source='contents')
-    main_image = SorlImageField('main_image', '300x200',)
+    main_image = SorlImageField('main_image', '300x200', )
     author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
 
     meta_data = MetaField(
-        description = 'get_meta_description',
-        image_source = 'main_image',
-        )
+        description='get_meta_description',
+        image_source='main_image',
+    )
 
     class Meta:
         model = NewsItem
-        fields = ('id', 'title', 'body', 'main_image', 'author', 'publication_date', 'allow_comments', 'language', 'meta_data')
+        fields = (
+        'id', 'title', 'body', 'main_image', 'author', 'publication_date',
+        'allow_comments', 'language', 'meta_data')
 
 
 class NewsItemPreviewSerializer(serializers.ModelSerializer):
@@ -40,4 +41,3 @@ class NewsItemPreviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsItem
         fields = ('id', 'title', 'publication_date')
-

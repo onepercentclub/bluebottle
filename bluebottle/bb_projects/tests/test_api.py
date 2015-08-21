@@ -19,6 +19,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
     Sets up a common set of three ``Project``s and three ``ProjectTheme``s,
     as well as a dummy testing user which can be used for unit tests.
     """
+
     def setUp(self):
         super(ProjectEndpointTestCase, self).setUp()
 
@@ -35,9 +36,15 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.theme_2 = ProjectTheme.objects.get(name='Climate')
         self.theme_3 = ProjectTheme.objects.get(name='Health')
 
-        self.project_1 = ProjectFactory.create(owner=self.user, status=self.phase_1, theme=self.theme_1)
-        self.project_2 = ProjectFactory.create(owner=self.user, status=self.phase_2, theme=self.theme_2)
-        self.project_3 = ProjectFactory.create(owner=self.user, status=self.phase_3, theme=self.theme_3)
+        self.project_1 = ProjectFactory.create(owner=self.user,
+                                               status=self.phase_1,
+                                               theme=self.theme_1)
+        self.project_2 = ProjectFactory.create(owner=self.user,
+                                               status=self.phase_2,
+                                               theme=self.theme_2)
+        self.project_3 = ProjectFactory.create(owner=self.user,
+                                               status=self.phase_3,
+                                               theme=self.theme_3)
 
 
 class TestProjectPhaseList(ProjectEndpointTestCase):
@@ -47,6 +54,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/phases/
     """
+
     def test_api_phases_list_endpoint(self):
         """
         Tests that the list of project phases can be obtained from its
@@ -80,6 +88,7 @@ class TestProjectList(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/projects/
     """
+
     def test_api_project_list_endpoint(self):
         """
         Test the API endpoint for Projects list.
@@ -103,9 +112,10 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('owner', item)
             self.assertIn('status', item)
 
-            #Ensure that non-viewable status are filtered out
+            # Ensure that non-viewable status are filtered out
             phase = ProjectPhase.objects.get(id=item['status'])
-            self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
+            self.assertTrue(phase.viewable,
+                            "Projects with non-viewable status were returned")
 
     def test_api_project_list_endpoint_status_viewable(self):
         """
@@ -128,6 +138,7 @@ class TestProjectDetail(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/projects/{slug}
     """
+
     def test_api_project_detail_endpoint(self):
         """
         Test the API endpoint for Project detail.
@@ -153,6 +164,7 @@ class TestProjectPreviewList(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/previews
     """
+
     def test_api_project_preview_list_endpoint(self):
         """
         Test the API endpoint for Project preview list.
@@ -179,6 +191,7 @@ class TestProjectPreviewDetail(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/preview/{slug}
     """
+
     def test_api_project_preview_detail_endpoint(self):
         """
         Test the API endpoint for Project preview detail.
@@ -204,6 +217,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/themes
     """
+
     def test_api_project_theme_list_endpoint(self):
         """
         Test the API endpoint for Project theme list.
@@ -243,12 +257,14 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             self.assertIn('name', item)
             self.assertNotEquals(item['id'], disabled.id)
 
+
 class TestProjectThemeDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ProjectThemeDetail`` API view.
 
     Endpoint: /api/projects/themes/{pk}
     """
+
     def test_api_project_theme_detail_endpoint(self):
         """
         Test the API endpoint for Project theme detail.
@@ -270,13 +286,15 @@ class TestManageProjectList(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/manage
     """
+
     def test_api_manage_project_list_endpoint_login_required(self):
         """
         Test login required for the API endpoint for manage Project list.
         """
         response = self.client.get(reverse('project_manage_list'))
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
+                         response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')
@@ -286,7 +304,8 @@ class TestManageProjectList(ProjectEndpointTestCase):
         Test successful request for a logged in user over the API endpoint for
         manage Project list.
         """
-        response = self.client.get(reverse('project_manage_list'), token=self.user_token)
+        response = self.client.get(reverse('project_manage_list'),
+                                   token=self.user_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -318,7 +337,8 @@ class TestManageProjectList(ProjectEndpointTestCase):
             'status': self.phase_1.pk
         }
 
-        response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
+        response = self.client.post(reverse('project_manage_list'), post_data,
+                                    token=self.user_token)
 
         self.assertEqual(response.status_code, 201)
 
@@ -341,14 +361,17 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/manage/{slug}
     """
+
     def test_api_manage_project_detail_endpoint_login_required(self):
         """
         Test login required for the API endpoint for manage Project detail.
         """
         response = self.client.get(
-            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}))
+            reverse('project_manage_detail',
+                    kwargs={'slug': self.project_1.slug}))
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
+                         response.data)
         data = json.loads(response.content)
         self.assertEqual(
             data['detail'], 'Authentication credentials were not provided.')
@@ -365,13 +388,15 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         token = "JWT {0}".format(user.get_jwt_token())
 
         response = self.client.get(
-            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            reverse('project_manage_detail',
+                    kwargs={'slug': self.project_1.slug}),
             token=token)
 
         self.assertEqual(response.status_code, 403)
         data = json.loads(response.content)
         self.assertEqual(
-            data['detail'], 'You do not have permission to perform this action.')
+            data['detail'],
+            'You do not have permission to perform this action.')
 
     def test_api_manage_project_detail_endpoint_success(self):
         """
@@ -379,7 +404,8 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         manage Project detail.
         """
         response = self.client.get(
-            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            reverse('project_manage_detail',
+                    kwargs={'slug': self.project_1.slug}),
             token=self.user_token)
 
         self.assertEqual(response.status_code, 200)
@@ -404,10 +430,9 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.project_1.set_status('campaign')
 
         response = self.client.put(
-            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            reverse('project_manage_detail',
+                    kwargs={'slug': self.project_1.slug}),
             token=self.user_token, data={'title': 'test-new'})
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue('permission' in response.content)
-
-

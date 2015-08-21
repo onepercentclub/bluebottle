@@ -15,7 +15,7 @@ class VoteList(generics.ListCreateAPIView):
     model = Vote
     paginate_by = 10
     serializer_class = VoteSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = ('voter', 'project')
 
@@ -27,7 +27,6 @@ class VoteList(generics.ListCreateAPIView):
             queryset = queryset.filter(project=project)
         return queryset
 
-
     def pre_save(self, obj):
         """
         Set the voter.
@@ -35,7 +34,8 @@ class VoteList(generics.ListCreateAPIView):
         """
 
         try:
-            self.get_queryset().get(voter=self.request.user, project=obj.project)
+            self.get_queryset().get(voter=self.request.user,
+                                    project=obj.project)
             raise exceptions.ParseError('You cannot vote twice')
         except Vote.DoesNotExist:
             pass

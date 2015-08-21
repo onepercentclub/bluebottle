@@ -1,5 +1,6 @@
 from django.db import connection
-from django.core.mail import EmailMultiAlternatives as BaseEmailMultiAlternatives
+from django.core.mail import \
+    EmailMultiAlternatives as BaseEmailMultiAlternatives
 
 from bluebottle.clients import properties
 
@@ -37,6 +38,7 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
     A tenant-aware emailer. Replaces the from_email by the tenant's
     address, if available
     """
+
     def __init__(self, from_email=None, *args, **kwargs):
         tenant_from = construct_from_header()
         activated_language = None

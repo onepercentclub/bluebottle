@@ -4,9 +4,9 @@ from ..views import (
     ManageProjectDetail, ManageProjectList, ProjectDetail,
     ProjectList, ProjectThemeDetail, ProjectThemeList,
     ProjectPreviewDetail, ProjectPreviewList,
-    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList, ProjectPhaseLogList, ProjectPhaseLogDetail,
+    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList,
+    ProjectPhaseLogList, ProjectPhaseLogDetail,
     ManageProjectDocumentList, ManageProjectDocumentDetail)
-
 
 urlpatterns = patterns(
     '',
@@ -29,18 +29,21 @@ urlpatterns = patterns(
     url(r'^phases_log/(?P<pk>\d+)$', ProjectPhaseLogDetail.as_view(),
         name='project_phase_log'),
 
-
     url(r'^themes/$', ProjectThemeList.as_view(), name='project_theme_list'),
-    url(r'^used_themes/$', ProjectUsedThemeList.as_view(), name='project_used_theme_list'),
+    url(r'^used_themes/$', ProjectUsedThemeList.as_view(),
+        name='project_used_theme_list'),
     url(r'^themes/(?P<pk>\d+)$', ProjectThemeDetail.as_view(),
         name='project_theme_detail'),
 
     # Manage stuff
     url(r'^manage/$', ManageProjectList.as_view(), name='project_manage_list'),
-    url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(), name='project_manage_detail'),
+    url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(),
+        name='project_manage_detail'),
 
-    url(r'^documents/manage/$', ManageProjectDocumentList.as_view(), name='manage_project_document_list'),
-    url(r'^documents/manage/(?P<pk>\d+)$', ManageProjectDocumentDetail.as_view(),
+    url(r'^documents/manage/$', ManageProjectDocumentList.as_view(),
+        name='manage_project_document_list'),
+    url(r'^documents/manage/(?P<pk>\d+)$',
+        ManageProjectDocumentDetail.as_view(),
         name='manage_project_document_detail'),
 
 )

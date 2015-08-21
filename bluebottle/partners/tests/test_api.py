@@ -34,7 +34,7 @@ class PartnerEndpointTestCase(BluebottleTestCase):
                                         organization=organization,
                                         status=self.campaign_phase)
 
-        url = reverse('partner-detail', kwargs={'slug':po.slug})
+        url = reverse('partner-detail', kwargs={'slug': po.slug})
         response = self.client.get(url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
@@ -69,4 +69,3 @@ class PartnerPreviewEndpointTestCase(BluebottleTestCase):
         self.assertIn('id', data[0])
         self.assertIn('name', data[0])
         self.assertNotIn('projects', data[0])
-

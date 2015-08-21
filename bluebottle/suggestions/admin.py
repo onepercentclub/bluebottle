@@ -5,12 +5,13 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.suggestions.models import Suggestion
 
+
 class ExpiredFilter(admin.SimpleListFilter):
     title = _('expired')
 
     parameter_name = 'isexpired'
     default_expired = 'notexpired'
-    
+
     def lookups(self, request, model_admin):
         return (
             ('notexpired', _("Not Expired")),
@@ -24,7 +25,7 @@ class ExpiredFilter(admin.SimpleListFilter):
             return queryset.filter(deadline__lt=date.today())
 
         if self.value() == 'notexpired' or not self.value():
-            return queryset.filter(deadline__gte=date.today())      
+            return queryset.filter(deadline__gte=date.today())
 
         if self.value() == 'all':
             return queryset
@@ -33,12 +34,15 @@ class ExpiredFilter(admin.SimpleListFilter):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup if self.value() else lookup == self.default_expired,
-                'query_string': cl.get_query_string({self.parameter_name: lookup}, []),
+                'query_string': cl.get_query_string(
+                    {self.parameter_name: lookup}, []),
                 'display': title,
             }
 
+
 class SuggestionAdmin(admin.ModelAdmin):
-    list_display = ('title', 'destination', 'deadline', 'created', 'updated', 'status')
+    list_display = (
+    'title', 'destination', 'deadline', 'created', 'updated', 'status')
     list_filter = ('status', 'destination', ExpiredFilter)
 
     readonly_fields = ('created', 'updated', 'expired')
@@ -52,23 +56,28 @@ class SuggestionAdmin(admin.ModelAdmin):
     def expired(self, obj):
         return obj.expired
 
-    raw_id_fields = ('project', )
+    raw_id_fields = ('project',)
 
-    readonly_fields = ('project_link', )
+    readonly_fields = ('project_link',)
 
     def project_link(self, obj):
         if obj.project:
-            url = reverse('admin:{0}_{1}_change'.format(obj.project._meta.app_label, obj.project._meta.module_name), args=[obj.project.id])
+            url = reverse(
+                'admin:{0}_{1}_change'.format(obj.project._meta.app_label,
+                                              obj.project._meta.module_name),
+                args=[obj.project.id])
             return u"<a href='{0}' target='_blank'>{1}</a>".format(
-                                       url,
-                                       obj.project.title)
+                url,
+                obj.project.title)
         return u"(None)"
+
     project_link.allow_tags = True
     project_link.short_description = _('Project link')
+
 
 from django.contrib.admin.sites import AlreadyRegistered
 
 try:
     admin.site.register(Suggestion, SuggestionAdmin)
-except AlreadyRegistered: # happens in testing
+except AlreadyRegistered:  # happens in testing
     pass

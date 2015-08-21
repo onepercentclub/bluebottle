@@ -6,7 +6,10 @@
         {% spaceless %}
             {% for member in module.children %}
                 <li class="{% cycle 'odd' 'even' %}">
-                    <a href="{{ member.admin_url }}" >{% if member.get_full_name %}{{ member.get_full_name }}{% else %}{{ member.email }}{% endif %}</a>
+                    <a href="{{ member.admin_url }}">
+                        {% if member.get_full_name %}
+                            {{ member.get_full_name }}{% else %}
+                            {{ member.email }}{% endif %}</a>
                     <ul>
                         <li>
                             <b>{{ member.updated|date }}</b>

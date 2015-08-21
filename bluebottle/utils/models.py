@@ -37,7 +37,6 @@ class Address(models.Model):
     def __unicode__(self):
         return self.line1[:80]
 
-
 # Below is test-only stuff
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
@@ -47,7 +46,8 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
     from fluent_contents.models import PlaceholderField
     from fluent_contents.plugins.oembeditem.models import OEmbedItem
     from bluebottle.contentplugins.models import PictureItem
-    from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+    from taggit_autocomplete_modified.managers import \
+        TaggableManagerAutocomplete as TaggableManager
 
     class MetaDataModel(models.Model):
         """
@@ -63,7 +63,9 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
             Return the url of the first picture.
             """
             relevant_items = [item for item in self.contents.get_content_items()
-                              if (isinstance(item, PictureItem) or isinstance(item, OEmbedItem))]
+                              if (
+                              isinstance(item, PictureItem) or isinstance(item,
+                                                                          OEmbedItem))]
 
             item = relevant_items.pop(0)
             if isinstance(item, PictureItem):
@@ -78,7 +80,9 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
                 # https://developers.facebook.com/docs/web/tutorials/scrumptious/open-graph-object/
                 # Only JPEG, PNG, GIF and BMP images are supported
                 # TODO: a generic utils function for this kind of stuff would be nice ;)
-                regex = re.compile(r'http(s?)://.*/.*\.(png|jpg|jpeg|jpe|jfif|jif|jfi|gif|bmp|dib)', re.IGNORECASE)
+                regex = re.compile(
+                    r'http(s?)://.*/.*\.(png|jpg|jpeg|jpe|jfif|jif|jfi|gif|bmp|dib)',
+                    re.IGNORECASE)
                 match = re.match(regex, item.url)
                 while relevant_items and not match:
                     item = relevant_items.pop(0)
@@ -91,6 +95,7 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
 
         def get_image_without_is_url(self, **kwargs):
             """ Return an image to be serialized """
-            relevant_items = [item for item in self.contents.get_content_items() if isinstance(item, PictureItem)]
+            relevant_items = [item for item in self.contents.get_content_items()
+                              if isinstance(item, PictureItem)]
             item = relevant_items.pop(0)
             return item.image

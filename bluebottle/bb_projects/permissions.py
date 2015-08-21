@@ -9,6 +9,7 @@ class IsProjectOwner(permissions.BasePermission):
     """
     Permissions class used to allow access only to project owner.
     """
+
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, PROJECT_MODEL):
             return obj.owner == request.user
@@ -19,13 +20,13 @@ class IsOwner(permissions.BasePermission):
     """
     Allows access only to project owner.
     """
+
     def has_object_permission(self, request, view, obj):
         # Test for project model object-level permissions.
         return isinstance(obj, PROJECT_MODEL) and obj.owner == request.user
 
 
 class IsEditableOrReadOnly(permissions.BasePermission):
-
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request, so we'll always allow
         # GET, HEAD or OPTIONS requests.
@@ -43,6 +44,7 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     Ideally, this will grant only-reading access for all users and restrict
     data changes permissions to the project owner only.
     """
+
     def _get_project_from_request(self, request):
         if request.DATA:
             project_slug = request.DATA.get('project', None)

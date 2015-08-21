@@ -13,10 +13,13 @@ class NewsItemQuerySet(QuerySet):
         Return only published entries
         """
         from .models import NewsItem
+
         qs = self
         qs = qs.filter(status=NewsItem.PostStatus.published)
-        qs = qs.filter(Q(publication_date__isnull=True) | Q(publication_date__lte=now()))
-        qs = qs.filter(Q(publication_end_date__isnull=True) | Q(publication_end_date__gte=now()))
+        qs = qs.filter(
+            Q(publication_date__isnull=True) | Q(publication_date__lte=now()))
+        qs = qs.filter(Q(publication_end_date__isnull=True) | Q(
+            publication_end_date__gte=now()))
         return qs
 
 
@@ -24,6 +27,7 @@ class NewsItemManager(models.Manager):
     """
     Extra methods attached to ``BlogPost.objects`` .
     """
+
     def get_query_set(self):
         return NewsItemQuerySet(self.model, using=self._db)
 
@@ -32,5 +36,3 @@ class NewsItemManager(models.Manager):
         Return only published entries
         """
         return self.get_query_set().published()
-
-

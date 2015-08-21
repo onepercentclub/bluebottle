@@ -52,14 +52,16 @@ class LocaleMiddleware(object):
                     if url_parts[1] != 'api':
                         if len(url_parts) >= 2:
                             current_url_lang_prefix = url_parts[1]
-                            if current_url_lang_prefix in dict(settings.LANGUAGES).keys() and not request.path.startswith(
+                            if current_url_lang_prefix in dict(
+                                    settings.LANGUAGES).keys() and not request.path.startswith(
                                     expected_url_lang_prefix):
                                 new_location = request.get_full_path().replace(
-                                    '/{0}/'.format(current_url_lang_prefix), expected_url_lang_prefix)
+                                    '/{0}/'.format(current_url_lang_prefix),
+                                    expected_url_lang_prefix)
 
                                 return http.HttpResponseRedirect(new_location)
-                        # End early redirect.
-                    
+                                # End early redirect.
+
                     if translation.check_for_language(lang_code):
                         # activate the language
                         translation.activate(lang_code)
@@ -76,19 +78,20 @@ class LocaleMiddleware(object):
 
             if hasattr(request, 'session'):
                 """ Set the language in the session if it has changed """
-                if (request.session.get('django_language', False) and 
-                        request.session['django_language'] != lang_code):
+                if (request.session.get('django_language', False) and
+                            request.session['django_language'] != lang_code):
                     request.session['django_language'] = lang_code
             else:
                 """ Fall back to language cookie """
                 response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang_code)
-            
+
         # Headers, translation deactivation etc. is done in django's LocaleMiddleware
         return response
 
     def enable_middleware(self):
-        if ('django.middleware.locale.LocaleMiddleware' in settings.MIDDLEWARE_CLASSES 
-                and self.is_language_prefix_patterns_used()):
+        if (
+                'django.middleware.locale.LocaleMiddleware' in settings.MIDDLEWARE_CLASSES
+        and self.is_language_prefix_patterns_used()):
             return True
         return False
 

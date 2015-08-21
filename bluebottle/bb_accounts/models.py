@@ -4,7 +4,8 @@ import string
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, \
+    BaseUserManager
 from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import options as options
@@ -22,8 +23,11 @@ from taggit.managers import TaggableManager
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.utils.model_dispatcher import (get_user_model, get_task_model, get_taskmember_model,
-                                               get_donation_model, get_project_model, get_fundraiser_model)
+from bluebottle.utils.model_dispatcher import (get_user_model, get_task_model,
+                                               get_taskmember_model,
+                                               get_donation_model,
+                                               get_project_model,
+                                               get_fundraiser_model)
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.clients import properties
 from bluebottle.geo.models import Country
@@ -31,7 +35,9 @@ from bluebottle.utils.models import Address
 
 from bluebottle.utils.fields import ImageField
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer', 'current_user_serializer')
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + (
+'default_serializer', 'preview_serializer', 'manage_serializer',
+'current_user_serializer')
 
 
 # TODO: Make this generic for all user file uploads.
@@ -64,7 +70,6 @@ def generate_picture_filename(instance, filename):
 # Our custom user model is based on option 3 from Two Scoops of Django
 # - Chapter 16: Dealing With the User Model.
 class BlueBottleUserManager(BaseUserManager):
-
     def create_user(self, email, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
@@ -73,7 +78,8 @@ class BlueBottleUserManager(BaseUserManager):
         if not email:
             raise ValueError('The given email address must be set')
         email = BlueBottleUserManager.normalize_email(email)
-        user = self.model(email=email, is_staff=False, is_active=True, is_superuser=False,
+        user = self.model(email=email, is_staff=False, is_active=True,
+                          is_superuser=False,
                           last_login=now, date_joined=now, **extra_fields)
         user.set_password(password)
         user.generate_username()
@@ -99,6 +105,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     The Django Meta attribute seems the best place for this configuration, so we
     have to add this.
     """
+
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
@@ -110,26 +117,35 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         school = ChoiceItem('school', label=_('School'))
         group = ChoiceItem('group', label=_('Club / association'))
 
-    email = models.EmailField(_('email address'), max_length=254, unique=True, db_index=True)
+    email = models.EmailField(_('email address'), max_length=254, unique=True,
+                              db_index=True)
     username = models.SlugField(_('username'), unique=True)
     is_staff = models.BooleanField(
-        _('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.'))
+        _('staff status'), default=False, help_text=_(
+            'Designates whether the user can log into this admin site.'))
     is_active = models.BooleanField(
         _('active'), default=False,
-        help_text=_('Designates whether this user should be treated as active. Unselect this instead of deleting '
-                    'accounts.'))
+        help_text=_(
+            'Designates whether this user should be treated as active. Unselect this instead of deleting '
+            'accounts.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     updated = ModificationDateTimeField()
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
-    user_type = models.CharField(_('Member Type'), max_length=25, choices=UserType.choices, default=UserType.person)
+    user_type = models.CharField(_('Member Type'), max_length=25,
+                                 choices=UserType.choices,
+                                 default=UserType.person)
 
     # Public Profile
     first_name = models.CharField(_('first name'), max_length=100, blank=True)
     last_name = models.CharField(_('last name'), max_length=100, blank=True)
-    place = models.CharField(_('Location your at now'), max_length=100, blank=True)
-    location = models.ForeignKey('geo.Location', help_text=_('Location'), null=True, blank=True)
-    favourite_themes = models.ManyToManyField(ProjectTheme, blank=True, null=True)
-    skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True, null=True)
+    place = models.CharField(_('Location your at now'), max_length=100,
+                             blank=True)
+    location = models.ForeignKey('geo.Location', help_text=_('Location'),
+                                 null=True, blank=True)
+    favourite_themes = models.ManyToManyField(ProjectTheme, blank=True,
+                                              null=True)
+    skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True,
+                                    null=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
@@ -138,18 +154,25 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     # Private Settings
     primary_language = models.CharField(
-        _('primary language'), max_length=5, help_text=_('Language used for website and emails.'),
+        _('primary language'), max_length=5,
+        help_text=_('Language used for website and emails.'),
         choices=properties.LANGUAGES, default=properties.LANGUAGE_CODE)
-    share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
+    share_time_knowledge = models.BooleanField(_('share time and knowledge'),
+                                               default=False)
     share_money = models.BooleanField(_('share money'), default=False)
-    newsletter = models.BooleanField(_('newsletter'), help_text=_('Subscribe to newsletter.'), default=True)
-    phone_number = models.CharField(_('phone number'), max_length=50, blank=True)
-    gender = models.CharField(_('gender'), max_length=6, blank=True, choices=Gender.choices)
+    newsletter = models.BooleanField(_('newsletter'),
+                                     help_text=_('Subscribe to newsletter.'),
+                                     default=True)
+    phone_number = models.CharField(_('phone number'), max_length=50,
+                                    blank=True)
+    gender = models.CharField(_('gender'), max_length=6, blank=True,
+                              choices=Gender.choices)
     birthdate = models.DateField(_('birthdate'), null=True, blank=True)
 
     disable_token = models.CharField(max_length=32, blank=True, null=True)
 
-    campaign_notifications = models.BooleanField(_('Project Notifications'), default=True)
+    campaign_notifications = models.BooleanField(_('Project Notifications'),
+                                                 default=True)
 
     objects = BlueBottleUserManager()
 
@@ -157,12 +180,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     website = models.URLField(_('website'), blank=True)
 
-    facebook = models.CharField(_('facebook profile'), max_length=50, blank=True)
+    facebook = models.CharField(_('facebook profile'), max_length=50,
+                                blank=True)
 
     twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
 
     skypename = models.CharField(_('skype profile'), max_length=32, blank=True)
-
 
     USERNAME_FIELD = 'email'
     # Only email and password is required to create a user account but this is how you'd require other fields.
@@ -261,7 +284,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return self.get_short_name()
 
     def reset_disable_token(self):
-        token = uuid.uuid4().hex #Generates a random UUID and converts it to a 32-character hexidecimal string
+        token = uuid.uuid4().hex  # Generates a random UUID and converts it to a 32-character hexidecimal string
         self.disable_token = token
         self.save()
 
@@ -274,18 +297,24 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def task_count(self):
         """ Returns the number of tasks a user is the author of  and / or is a task member in """
         task_count = get_task_model().objects.filter(author=self).count()
-        taskmember_count = get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized']).count()
+        taskmember_count = get_taskmember_model().objects.filter(member=self,
+                                                                 status__in=[
+                                                                     'applied',
+                                                                     'accepted',
+                                                                     'realized']).count()
 
         return task_count + taskmember_count
 
     @property
     def tasks_performed(self):
         """ Returns the number of tasks that the user participated in."""
-        return get_taskmember_model().objects.filter(member=self, status='realized').count()
+        return get_taskmember_model().objects.filter(member=self,
+                                                     status='realized').count()
 
     def get_donations_qs(self):
         qs = get_donation_model().objects.filter(order__user=self)
-        return qs.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        return qs.filter(order__status__in=[StatusDefinition.PENDING,
+                                            StatusDefinition.SUCCESS])
 
     @property
     def donation_count(self):
@@ -298,12 +327,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return self.get_donations_qs().distinct('project').count()
 
     def get_tasks_qs(self):
-        return get_taskmember_model().objects.filter(member=self, status__in=['applied', 'accepted', 'realized'])
+        return get_taskmember_model().objects.filter(member=self,
+                                                     status__in=['applied',
+                                                                 'accepted',
+                                                                 'realized'])
 
     @property
     def time_spent(self):
         """ Returns the number of donations a user has made """
-        return self.get_tasks_qs().aggregate(Sum('time_spent'))['time_spent__sum']
+        return self.get_tasks_qs().aggregate(Sum('time_spent'))[
+            'time_spent__sum']
 
     @cached_property
     def sourcing(self):
@@ -322,9 +355,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def fundraiser_count(self):
         return get_fundraiser_model().objects.filter(owner=self).count()
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
         self.generate_username()
-        super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
+        super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
+                                             update_fields)
         try:
             self.address
         except UserAddress.DoesNotExist:
@@ -333,14 +368,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
 
 class UserAddress(Address):
-
     class AddressType(DjangoChoices):
         primary = ChoiceItem('primary', label=_("Primary"))
         secondary = ChoiceItem('secondary', label=_("Secondary"))
 
-    address_type = models.CharField(_("address type"),max_length=10, blank=True, choices=AddressType.choices,
+    address_type = models.CharField(_("address type"), max_length=10,
+                                    blank=True, choices=AddressType.choices,
                                     default=AddressType.primary)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name=_("user"), related_name="address")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,
+                                verbose_name=_("user"), related_name="address")
 
     def save(self, *args, **kwargs):
         if not self.country:
@@ -360,10 +396,13 @@ from django.dispatch import receiver
 from .utils import send_welcome_mail
 from django.conf import settings
 
+
 @receiver(post_save)
 def send_welcome_mail_callback(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
+
     USER_MODEL = get_user_model()
-    if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance, USER_MODEL) and created:
+    if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance,
+                                                             USER_MODEL) and created:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)

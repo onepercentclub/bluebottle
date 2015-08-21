@@ -13,7 +13,6 @@ USER_MODEL = get_user_model()
 
 def save_profile_picture(strategy, user, response, details,
                          is_new=False, *args, **kwargs):
-
     if is_new and strategy.backend.name == 'facebook':
         url = 'http://graph.facebook.com/{0}/picture'.format(response['id'])
 
@@ -30,8 +29,7 @@ def save_profile_picture(strategy, user, response, details,
 
 
 def set_language(strategy, user, response, details,
-                         is_new=False, *args, **kwargs):
-
+                 is_new=False, *args, **kwargs):
     supported_langauges = [
         lang_code for (lang_code, lang_name) in getattr(properties,
                                                         'LANGUAGES')]

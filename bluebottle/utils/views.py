@@ -27,7 +27,6 @@ from bluebottle.clients.context import ClientContext
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
 
-
 PROJECT_MODEL = get_project_model()
 
 
@@ -55,7 +54,8 @@ class TagSearch(views.APIView):
     """
 
     def get(self, request, format=None, search=''):
-        data = [tag.name for tag in Tag.objects.filter(name__startswith=search).all()[:20]]
+        data = [tag.name for tag in
+                Tag.objects.filter(name__startswith=search).all()[:20]]
         return response.Response(data)
 
 
@@ -71,7 +71,8 @@ class ShareFlyer(views.APIView):
         if project.image:
             project_image = self.request.build_absolute_uri(
                 settings.MEDIA_URL + unicode(get_thumbnail(project.image,
-                                                           "400x225", crop="center")))
+                                                           "400x225",
+                                                           crop="center")))
         else:
             project_image = None
         args = dict(
@@ -98,7 +99,8 @@ class ShareFlyer(views.APIView):
         args['share_email'] = "john@example.com"
 
         if self.request.user.is_authenticated():
-            args['sender_name'] = self.request.user.get_full_name() or self.request.user.username
+            args[
+                'sender_name'] = self.request.user.get_full_name() or self.request.user.username
             args['sender_email'] = self.request.user.email
         else:
             args['sender_name'] = "John Doe"
@@ -111,7 +113,8 @@ class ShareFlyer(views.APIView):
         Cheers,
 
         Jane"""
-        result = render_to_string('utils/mails/share_flyer.mail.html', {}, Context(args))
+        result = render_to_string('utils/mails/share_flyer.mail.html', {},
+                                  Context(args))
         return response.Response({'preview': result})
 
     def post(self, request, *args, **kwargs):
@@ -131,7 +134,8 @@ class ShareFlyer(views.APIView):
         share_cc = serializer.object.get('share_cc')
 
         with TenantLanguage(self.request.user.primary_language):
-            subject = _('%(name)s wants to share a project with you!') % dict(name=sender_name)
+            subject = _('%(name)s wants to share a project with you!') % dict(
+                name=sender_name)
 
         args.update(dict(
             template_name='utils/mails/share_flyer.mail',
@@ -171,15 +175,13 @@ class DocumentDownloadView(View):
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
 
-
-#TODO: this was creating problems with the tests
+# TODO: this was creating problems with the tests
 # TESTS
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
 if INCLUDE_TEST_MODELS:
     from .models import MetaDataModel
     from .serializers import MetaDataSerializer
-
 
     class MetaDataDetail(generics.RetrieveAPIView):
         model = MetaDataModel

@@ -17,12 +17,14 @@ class TestDonationEmails(BluebottleTestCase):
     def setUp(self):
         super(TestDonationEmails, self).setUp()
         self.init_projects()
-        
+
         self.user = BlueBottleUserFactory.create(first_name='user')
 
-        self.project_owner = BlueBottleUserFactory.create(first_name='projectowner')
+        self.project_owner = BlueBottleUserFactory.create(
+            first_name='projectowner')
         campaign_status = ProjectPhase.objects.get(slug='campaign')
-        self.some_project = ProjectFactory.create(owner=self.project_owner, status=campaign_status)
+        self.some_project = ProjectFactory.create(owner=self.project_owner,
+                                                  status=campaign_status)
 
         self.order = OrderFactory.create(
             user=self.user,
@@ -49,7 +51,8 @@ class TestDonationEmails(BluebottleTestCase):
             user=self.user,
         )
 
-        self.fund_project = ProjectFactory.create(owner=self.project_owner, status=campaign_status)
+        self.fund_project = ProjectFactory.create(owner=self.project_owner,
+                                                  status=campaign_status)
 
         self.fund_owner = BlueBottleUserFactory.create(first_name='fundraiser')
 
@@ -78,9 +81,10 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Test email to owner
         self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
-        self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-        self.assertTrue("EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
-
+        self.assertEqual(mail.outbox[0].subject,
+                         _('You received a new donation'))
+        self.assertTrue(
+            "EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
 
     def test_mail_no_mail_not_one_off(self):
         """ Test that no email is sent when its not a one-off donation"""
@@ -93,7 +97,6 @@ class TestDonationEmails(BluebottleTestCase):
 
         # No mail because its not a one-off donation
         self.assertEqual(len(mail.outbox), 0)
-
 
     def test_mail_fundraiser_successful_donation(self):
         "Test that an email is sent to the fundraiser after a succesful donation"
@@ -108,11 +111,7 @@ class TestDonationEmails(BluebottleTestCase):
         # With fundraiser so two mails should be sent: one to the owner and one to fundraiser.
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], self.fund_owner.email)
-        self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
-        self.assertTrue("EUR {0}".format(self.fund_donation.amount) in mail.outbox[0].body)
-
-
-
-
-
-
+        self.assertEqual(mail.outbox[0].subject,
+                         _('You received a new donation'))
+        self.assertTrue(
+            "EUR {0}".format(self.fund_donation.amount) in mail.outbox[0].body)

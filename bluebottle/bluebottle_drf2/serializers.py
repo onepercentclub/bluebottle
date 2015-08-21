@@ -23,7 +23,6 @@ from micawber.parsers import standalone_url_re, full_handler
 from rest_framework import serializers
 from sorl.thumbnail.shortcuts import get_thumbnail
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -58,7 +57,9 @@ class SorlImageField(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
+            thumbnail = unicode(
+                get_thumbnail(value, self.geometry_string, crop=self.crop,
+                              colorspace=self.colorspace))
         except IOError:
             return ""
         except Exception:
@@ -124,7 +125,8 @@ class OEmbedField(serializers.Field):
         else:
             html = full_handler(url, response, **self.params)
             # Tweak for youtube to hide controls and info bars.
-            html = html.replace('feature=oembed', 'feature=oembed&showinfo=0&controls=0')
+            html = html.replace('feature=oembed',
+                                'feature=oembed&showinfo=0&controls=0')
             return html
 
 
@@ -140,8 +142,10 @@ class PolymorphicSerializerOptions(serializers.SerializerOptions):
 class PolymorphicSerializer(serializers.Serializer):
     _options_class = PolymorphicSerializerOptions
 
-    def __init__(self, instance=None, data=None, files=None, context=None, partial=False, **kwargs):
-        super(PolymorphicSerializer, self).__init__(instance, data, files, context, partial, **kwargs)
+    def __init__(self, instance=None, data=None, files=None, context=None,
+                 partial=False, **kwargs):
+        super(PolymorphicSerializer, self).__init__(instance, data, files,
+                                                    context, partial, **kwargs)
         self._child_models = {}
         for Model, Serializer in self.opts.child_models:
             self._child_models[Model] = Serializer()
@@ -152,7 +156,8 @@ class PolymorphicSerializer(serializers.Serializer):
         """
         obj = getattr(obj, self.source or field_name)
 
-        return [self._child_models[item.__class__].to_native(item) for item in obj.all()]
+        return [self._child_models[item.__class__].to_native(item) for item in
+                obj.all()]
 
     def to_native(self, obj):
         """
@@ -161,7 +166,8 @@ class PolymorphicSerializer(serializers.Serializer):
         ret = self._dict_class()
         ret.fields = {}
 
-        for field_name, field in self._child_models[obj.__class__].fields.items():
+        for field_name, field in self._child_models[
+            obj.__class__].fields.items():
             field.initialize(parent=self, field_name=field_name)
             key = self.get_field_key(field_name)
             value = field.field_to_native(obj, field_name)
@@ -187,10 +193,14 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
     def __init__(self, to_model, *args, **kwargs):
         self.to_model = to_model
         queryset = self.to_model.objects.order_by('id').all()
-        super(PrimaryKeyGenericRelatedField, self).__init__(*args, source='object_id', queryset=queryset, **kwargs)
+        super(PrimaryKeyGenericRelatedField, self).__init__(*args,
+                                                            source='object_id',
+                                                            queryset=queryset,
+                                                            **kwargs)
 
     def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)), str(obj.id))
+        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),
+                                  str(obj.id))
 
     def prepare_value(self, obj):
         # Called when preparing the ChoiceField widget from the to_model queryset.
@@ -221,10 +231,13 @@ class SlugGenericRelatedField(serializers.RelatedField):
     def __init__(self, to_model, *args, **kwargs):
         self.to_model = to_model
         queryset = self.to_model.objects.order_by('id').all()
-        super(SlugGenericRelatedField, self).__init__(*args, source='object_id', queryset=queryset, **kwargs)
+        super(SlugGenericRelatedField, self).__init__(*args, source='object_id',
+                                                      queryset=queryset,
+                                                      **kwargs)
 
     def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)), obj.slug)
+        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),
+                                  obj.slug)
 
     def prepare_value(self, to_instance):
         # Called when preparing the ChoiceField widget from the to_model queryset.
@@ -233,7 +246,8 @@ class SlugGenericRelatedField(serializers.RelatedField):
     def to_native(self, obj):
         # Serialize using self.source (i.e. 'object_id').
         try:
-            to_instance = self.to_model.objects.get(id=getattr(obj, self.source))
+            to_instance = self.to_model.objects.get(
+                id=getattr(obj, self.source))
         except self.to_model.DoesNotExist:
             return None
         return to_instance.serializable_value('slug')
@@ -283,7 +297,6 @@ class FileSerializer(serializers.FileField):
 
 
 class ImageSerializer(RestrictedImageField):
-
     crop = 'center'
 
     def to_native(self, value):
@@ -296,10 +309,14 @@ class ImageSerializer(RestrictedImageField):
         if not isfile(value.path):
             return None
         try:
-            large = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x450', crop=self.crop))
-            full = settings.MEDIA_URL + unicode(get_thumbnail(value, '1200x900'))
-            small = settings.MEDIA_URL + unicode(get_thumbnail(value, '400x380', crop=self.crop))
-            square = settings.MEDIA_URL + unicode(get_thumbnail(value, '120x120', crop=self.crop))
+            large = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '800x450', crop=self.crop))
+            full = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '1200x900'))
+            small = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '400x380', crop=self.crop))
+            square = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '120x120', crop=self.crop))
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
@@ -308,16 +325,15 @@ class ImageSerializer(RestrictedImageField):
         request = self.context.get('request')
         if request:
             return {
-                    'full': request.build_absolute_uri(full),
-                    'large': request.build_absolute_uri(large),
-                    'small': request.build_absolute_uri(small),
-                    'square': request.build_absolute_uri(square),
-                }
+                'full': request.build_absolute_uri(full),
+                'large': request.build_absolute_uri(large),
+                'small': request.build_absolute_uri(small),
+                'square': request.build_absolute_uri(square),
+            }
         return {'full': full, 'large': large, 'small': small, 'square': square}
 
 
 class PhotoSerializer(RestrictedImageField):
-
     crop = 'center'
 
     def to_native(self, value):
@@ -329,7 +345,8 @@ class PhotoSerializer(RestrictedImageField):
         thumbnail = ""
         try:
             full = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x600'))
-            small = settings.MEDIA_URL + unicode(get_thumbnail(value, '120x120', crop=self.crop))
+            small = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '120x120', crop=self.crop))
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
@@ -338,21 +355,21 @@ class PhotoSerializer(RestrictedImageField):
         request = self.context.get('request')
         if request:
             return {
-                    'full': request.build_absolute_uri(full),
-                    'small': request.build_absolute_uri(small),
-                }
+                'full': request.build_absolute_uri(full),
+                'small': request.build_absolute_uri(small),
+            }
         return {'full': full, 'small': small}
 
 
 class PrivateFileSerializer(FileSerializer):
-
     def field_to_native(self, obj, field_name):
         if not obj:
             return None
         value = getattr(obj, self.source or field_name)
         if not value:
             return None
-        content_type = ContentType.objects.get_for_model(self.parent.Meta.model).id
+        content_type = ContentType.objects.get_for_model(
+            self.parent.Meta.model).id
         pk = obj.pk
         url = reverse('document_download_detail',
                       kwargs={'content_type': content_type, 'pk': pk})
@@ -360,7 +377,7 @@ class PrivateFileSerializer(FileSerializer):
                 'url': url}
 
 
-#TODO: PROBABLY THOSE TAG SERIALIZER ARE NOT USED ANYMORE, WAITING TO CLEAN ALL APPS FOR DELETING THEM
+# TODO: PROBABLY THOSE TAG SERIALIZER ARE NOT USED ANYMORE, WAITING TO CLEAN ALL APPS FOR DELETING THEM
 
 class TagSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
@@ -388,6 +405,7 @@ class TaggableSerializerMixin(object):
     On save object we write the tags with object.tags.add()
     This is here because tags behave different from other m2m objects. Please correct if wrong.
     """
+
     def from_native(self, data, files):
         """
         Override the default method to also add tags to a TaggableManager field
@@ -419,6 +437,5 @@ class TaggableSerializerMixin(object):
 
 
 class ObjectFieldSerializer(serializers.CharField):
-
     def from_native(self, value):
         return json.dumps(value)

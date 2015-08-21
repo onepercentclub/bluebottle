@@ -9,7 +9,6 @@ from bluebottle.test.factory_models.projects import (ProjectFactory,
 from bluebottle.utils.model_dispatcher import (get_project_model,
                                                get_project_phaselog_model)
 
-
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()
 
@@ -45,7 +44,6 @@ class TestProjectPhaseLog(TestProjectTestCase):
 
 
 class TestProjectDonationsStatusChanges(BluebottleTestCase):
-
     def setUp(self):
         super(TestProjectDonationsStatusChanges, self).setUp()
         self.init_projects()

@@ -11,7 +11,6 @@ from bluebottle.utils.email_backend import send_mail
 
 
 class ProjectWallObserver(WallpostObserver):
-
     model = BaseProject
 
     def __init__(self, instance):
@@ -24,7 +23,6 @@ class ProjectWallObserver(WallpostObserver):
         # Implement 1a: send email to Object owner, if Wallpost author is not
         # the Object owner.
         if self.author != project_owner:
-
             with TenantLanguage(project_owner.primary_language):
                 subject = _('%(author)s commented on your project') % {
                     'author': self.author.get_short_name()}
@@ -41,7 +39,6 @@ class ProjectWallObserver(WallpostObserver):
 
 
 class ProjectReactionObserver(ReactionObserver):
-
     model = BaseProject
 
     def __init__(self, instance):
@@ -80,7 +77,6 @@ class ProjectReactionObserver(ReactionObserver):
         # the post author.
         if self.reaction_author != self.post_author:
             if self.reaction_author not in mailed_users and self.post_author:
-
                 with TenantLanguage(self.post_author.primary_language):
                     subject = _('%(author)s replied on your comment') % {
                         'author': self.reaction_author.get_short_name()}
@@ -101,7 +97,6 @@ class ProjectReactionObserver(ReactionObserver):
         # the Object owner.
         if self.reaction_author != project_owner:
             if project_owner not in mailed_users:
-
                 with TenantLanguage(project_owner.primary_language):
                     subject = _('%(author)s commented on your project') % {
                         'author': self.reaction_author.get_short_name()}
@@ -116,6 +111,7 @@ class ProjectReactionObserver(ReactionObserver):
                     author=self.reaction_author,
                     receiver=project_owner
                 )
+
 
 ObserversContainer().register(ProjectWallObserver)
 ObserversContainer().register(ProjectReactionObserver)

@@ -1,9 +1,9 @@
-from bluebottle.recurring_donations.models import MonthlyDonor, MonthlyDonorProject
+from bluebottle.recurring_donations.models import MonthlyDonor, \
+    MonthlyDonorProject
 from rest_framework import serializers
 
 
 class MonthlyDonationProjectSerializer(serializers.ModelSerializer):
-
     project = serializers.SlugRelatedField(many=False, slug_field='slug')
     donation = serializers.PrimaryKeyRelatedField(source='donor')
 
@@ -13,9 +13,10 @@ class MonthlyDonationProjectSerializer(serializers.ModelSerializer):
 
 
 class MonthlyDonationSerializer(serializers.ModelSerializer):
-
     projects = MonthlyDonationProjectSerializer(many=True, read_only=True)
 
     class Meta():
         model = MonthlyDonor
-        fields = ('id', 'amount', 'iban', 'bic', 'active', 'name', 'city', 'country', 'projects')
+        fields = (
+        'id', 'amount', 'iban', 'bic', 'active', 'name', 'city', 'country',
+        'projects')

@@ -2,7 +2,8 @@ import mock
 
 from django.test import TestCase
 
-from bluebottle.clients.middleware import TenantProperties, TenantPropertiesMiddleware
+from bluebottle.clients.middleware import TenantProperties, \
+    TenantPropertiesMiddleware
 from bluebottle.clients.middleware import properties
 
 Mock = mock.Mock
@@ -28,7 +29,8 @@ class TestProperties(TestCase):
 
     def test_nomatch(self):
         """ No match in either properties or settings """
-        with mock.patch("bluebottle.clients.middleware.settings", Mock(spec_set=[])):
+        with mock.patch("bluebottle.clients.middleware.settings",
+                        Mock(spec_set=[])):
             p = TenantProperties()
             with self.assertRaises(AttributeError):
                 p.foo == 1

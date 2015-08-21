@@ -49,7 +49,7 @@ class ProjectPhaseList(generics.ListAPIView):
     def get_query(self):
         qs = ProjectPhase.objects
 
-        name = self.request.QUERY_PARAMS.get('name',None)
+        name = self.request.QUERY_PARAMS.get('name', None)
         text = self.request.QUERY_PARAMS.get('text')
 
         qs = qs.order_by('sequence')
@@ -105,7 +105,7 @@ class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
 
 class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
     model = PROJECT_MODEL
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticated,)
     paginate_by = 100
 
     def get_queryset(self):
@@ -164,7 +164,7 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
     model = PROJECT_DOCUMENT_MODEL
     serializer_class = ProjectDocumentSerializer
     paginate_by = 20
-    filter = ('project', )
+    filter = ('project',)
 
     def pre_save(self, obj):
         obj.author = self.request.user
@@ -175,7 +175,7 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
     model = PROJECT_DOCUMENT_MODEL
     serializer_class = ProjectDocumentSerializer
     paginate_by = 20
-    filter = ('project', )
+    filter = ('project',)
 
     def pre_save(self, obj):
         obj.author = self.request.user

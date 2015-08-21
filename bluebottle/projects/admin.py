@@ -42,8 +42,8 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         themes = [obj.theme for obj in
-                     model_admin.model.objects.order_by('theme__name').distinct(
-                         'theme__name').exclude(theme__isnull=True).all()]
+                  model_admin.model.objects.order_by('theme__name').distinct(
+                      'theme__name').exclude(theme__isnull=True).all()]
         return [(theme.id, _(theme.name)) for theme in themes]
 
     def queryset(self, request, queryset):
@@ -57,7 +57,7 @@ class ProjectDocumentInline(admin.StackedInline):
     model = PROJECT_DOCUMENT_MODEL
     form = ProjectDocumentForm
     extra = 0
-    raw_id_fields = ('author', )
+    raw_id_fields = ('author',)
     readonly_fields = ('download_url',)
     fields = readonly_fields + ('file', 'author')
 
@@ -67,6 +67,7 @@ class ProjectDocumentInline(admin.StackedInline):
         if url is not None:
             return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
         return '(None)'
+
     download_url.allow_tags = True
 
 
@@ -86,6 +87,7 @@ class ProjectPhaseLogInline(admin.TabularInline):
 class FundingFilter(admin.SimpleListFilter):
     title = _('Funding')
     parameter_name = 'funding'
+
     def lookups(self, request, model_admin):
         return (
             ('yes', _('Funding')),
@@ -138,7 +140,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters +=  (LocationFilter, )
+            filters += (LocationFilter,)
         return filters
 
     def get_list_display(self, request):
@@ -146,21 +148,22 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'status', 'is_campaign', 'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
-            fields +=  ('location', )
+            fields += ('location',)
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields +=  ('vote_count', )
+            fields += ('vote_count',)
         return fields
 
     def get_list_editable(self, request):
-        return ('is_campaign', )
+        return ('is_campaign',)
 
-    readonly_fields = ('vote_count', 'amount_donated', 'amount_needed', 'popularity')
+    readonly_fields = (
+    'vote_count', 'amount_donated', 'amount_needed', 'popularity')
 
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization', 'partner_organization',
@@ -174,7 +177,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                    'location', 'place', 'tags')}),
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
-                                'amount_donated','amount_needed',
+                                'amount_donated', 'amount_needed',
                                 'popularity', 'vote_count')}),
 
         (_('Dates'), {'fields': ('voting_deadline', 'deadline',
@@ -210,7 +213,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_title_display(self, obj):
         if len(obj.title) > 35:
-            return u'<span title="{title}">{short_title} &hellip;</span>'\
+            return u'<span title="{title}">{short_title} &hellip;</span>' \
                 .format(title=escape(obj.title), short_title=obj.title[:45])
         return obj.title
 
@@ -235,5 +238,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             str(url), object.first_name + ' ' + object.last_name)
 
     project_owner.allow_tags = True
+
 
 admin.site.register(Project, ProjectAdmin)

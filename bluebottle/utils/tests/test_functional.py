@@ -9,7 +9,6 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 
 
 class AdminPermissionsTest(BluebottleTestCase):
-    
     def setUp(self):
         self.init_projects()
 
@@ -23,7 +22,8 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.groups.add(Group.objects.get(name='Staff'))
 
         # Login user
-        self.assertTrue(self.client.login(email=self.user.email, password='testing'))
+        self.assertTrue(
+            self.client.login(email=self.user.email, password='testing'))
 
     def tearDown(self):
         self.client.logout()
@@ -31,18 +31,19 @@ class AdminPermissionsTest(BluebottleTestCase):
 
     def test_staff_forbidden_access(self):
         response = self.client.get(reverse('admin:auth_group_changelist'))
-        
+
         self.assertIsInstance(response, HttpResponseForbidden)
 
     def test_staff_list_projects(self):
         response = self.client.get(reverse('admin:projects_project_changelist'))
-        
+
         self.assertIsInstance(response, TemplateResponse)
 
     def test_staff_edit_project(self):
         project = ProjectFactory.create()
 
-        response = self.client.get(reverse('admin:projects_project_change', args=(project.pk,)))
+        response = self.client.get(
+            reverse('admin:projects_project_change', args=(project.pk,)))
         self.assertIsInstance(response, TemplateResponse)
 
     def test_staff_create_project(self):
@@ -59,7 +60,8 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.is_superuser = True
         self.user.save()
 
-        self.assertTrue(self.client.login(email=self.user.email, password='testing'))
+        self.assertTrue(
+            self.client.login(email=self.user.email, password='testing'))
 
         response = self.client.get(reverse('admin:auth_group_changelist'))
         self.assertIsInstance(response, TemplateResponse)

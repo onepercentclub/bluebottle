@@ -28,7 +28,8 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
             if now.day <= 15:
                 next_date = timezone.datetime(now.year, now.month, 15)
             else:
-                next_date = timezone.datetime(now.year, now.month, 1) + timedelta(days=20)
+                next_date = timezone.datetime(now.year, now.month,
+                                              1) + timedelta(days=20)
 
             PROJECT_PAYOUT_MODEL = get_project_payout_model()
 
@@ -62,7 +63,9 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                         IBANValidator()(project.account_number)
                         payout.receiver_account_iban = project.account_number
                     except ValidationError as e:
-                        logger.info("IBAN error for payout id {0} and project id: {1}: {2}".format(payout.id, project.id, e.message))
+                        logger.info(
+                            "IBAN error for payout id {0} and project id: {1}: {2}".format(
+                                payout.id, project.id, e.message))
 
                     payout.receiver_account_bic = project.account_bic
                     payout.receiver_account_number = project.account_number
@@ -71,4 +74,3 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                     payout.receiver_account_country = project.account_bank_country
 
                     payout.save()
-

@@ -1,13 +1,16 @@
 from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bluebottle_drf2.serializers import PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, TaggableSerializerMixin
+from bluebottle.bluebottle_drf2.serializers import \
+    PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, \
+    TaggableSerializerMixin
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 
-from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model, get_taskfile_model, \
+from bluebottle.utils.model_dispatcher import get_task_model, \
+    get_taskmember_model, get_taskfile_model, \
     get_task_skill_model
 
 BB_TASK_MODEL = get_task_model()
@@ -34,7 +37,8 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASKMEMBER_MODEL
-        fields = ('id', 'member', 'status', 'created', 'motivation', 'task', 'externals')
+        fields = (
+        'id', 'member', 'status', 'created', 'motivation', 'task', 'externals')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -46,7 +50,8 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
 
 class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, source='members', read_only=True)
+    members = BaseTaskMemberSerializer(many=True, source='members',
+                                       read_only=True)
     files = TaskFileSerializer(many=True, source='files', read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug')
     skill = serializers.PrimaryKeyRelatedField()
@@ -64,7 +69,8 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     )
 
     def validate_deadline(self, task, field):
-        if task['project'].deadline and task['deadline'] > task['project'].deadline:
+        if task['project'].deadline and task['deadline'] > task[
+            'project'].deadline:
             raise serializers.ValidationError(
                 _('The deadline must be before the project deadline')
             )
@@ -95,30 +101,33 @@ class MyTaskMemberSerializer(BaseTaskMemberSerializer):
     class Meta(BaseTaskMemberSerializer.Meta):
         fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
 
+
 class MyTasksSerializer(BaseTaskSerializer):
     task = MyTaskPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField()
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'people_needed',
-                  'status', 'deadline', 'description', 'location')
+        fields = (
+        'id', 'title', 'skill', 'project', 'time_needed', 'people_needed',
+        'status', 'deadline', 'description', 'location')
+
 
 # Task Wallpost serializers
 
 class TaskWallpostSerializer(TextWallpostSerializer):
     """ TextWallpostSerializer with task specific customizations. """
 
-    url = serializers.HyperlinkedIdentityField(view_name='task-twallpost-detail')
+    url = serializers.HyperlinkedIdentityField(
+        view_name='task-twallpost-detail')
     task = PrimaryKeyGenericRelatedField(BB_TASK_MODEL)
 
     class Meta(TextWallpostSerializer.Meta):
         # Add the project slug field.
-        fields = TextWallpostSerializer.Meta.fields + ('task', )
+        fields = TextWallpostSerializer.Meta.fields + ('task',)
 
 
 class SkillSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BB_SKILL_MODEL
         fields = ('id', 'name')

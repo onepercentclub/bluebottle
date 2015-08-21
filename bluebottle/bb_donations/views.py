@@ -22,6 +22,7 @@ class ValidDonationsMixin(object):
     """
     Filter query set on "valid" donations.
     """
+
     def get_queryset(self):
         queryset = super(ValidDonationsMixin, self).get_queryset()
         queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS,
@@ -59,14 +60,16 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
                 filter_kwargs['fundraiser'] = fundraiser
             except FUNDRAISER_MODEL.DoesNotExist:
                 raise Http404(u"No %(verbose_name)s found matching the query" %
-                          {'verbose_name': FUNDRAISER_MODEL._meta.verbose_name})
+                              {
+                              'verbose_name': FUNDRAISER_MODEL._meta.verbose_name})
         elif project_slug:
             try:
                 project = PROJECT_MODEL.objects.get(slug=project_slug)
                 filter_kwargs['project'] = project
             except PROJECT_MODEL.DoesNotExist:
                 raise Http404(u"No %(verbose_name)s found matching the query" %
-                          {'verbose_name': queryset.model._meta.verbose_name})
+                              {
+                              'verbose_name': queryset.model._meta.verbose_name})
         else:
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})

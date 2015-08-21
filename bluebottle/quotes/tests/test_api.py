@@ -15,15 +15,18 @@ class QuoteTestCase(BluebottleTestCase):
     The testing classes for ``slide`` module related to the API must
     subclass this.
     """
+
     def setUp(self):
         super(QuoteTestCase, self).setUp()
 
         self.author = BlueBottleUserFactory.create()
         self.user = BlueBottleUserFactory.create()
         self.quote1 = QuoteFactory.create(
-            author=self.author, user=self.user, quote="The best things in life are free.", language='en')
+            author=self.author, user=self.user,
+            quote="The best things in life are free.", language='en')
         self.quote2 = QuoteFactory.create(
-            author=self.author, user=self.user, quote="Always forgive your enemies; nothing annoys them so much.",
+            author=self.author, user=self.user,
+            quote="Always forgive your enemies; nothing annoys them so much.",
             language='nl')
 
 
@@ -33,6 +36,7 @@ class QuoteListTestCase(QuoteTestCase):
 
     Endpoint: /api/quotes/
     """
+
     def test_api_quotes_list_endpoint(self):
         """
         Ensure get request returns 200.

@@ -1,5 +1,6 @@
 from bluebottle.recurring_donations.models import MonthlyProject
-from .models import MonthlyDonation, MonthlyBatch, MonthlyOrder, MonthlyDonor, MonthlyDonorProject
+from .models import MonthlyDonation, MonthlyBatch, MonthlyOrder, MonthlyDonor, \
+    MonthlyDonorProject
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
 from django.utils.translation import ugettext as _
@@ -11,7 +12,7 @@ class MonthlyProjectInline(admin.TabularInline):
     fields = readonly_fields
     extra = 0
     can_delete = False
-    ordering = ('-amount', )
+    ordering = ('-amount',)
 
     def has_add_permission(self, request):
         return False
@@ -27,8 +28,8 @@ class MonthlyProjectInline(admin.TabularInline):
 
 class MonthlyDonorProjectInline(admin.TabularInline):
     model = MonthlyDonorProject
-    raw_id_fields = ('project', )
-    fields = ('project', )
+    raw_id_fields = ('project',)
+    fields = ('project',)
     extra = 0
 
 
@@ -47,7 +48,8 @@ class ActiveFilter(SimpleListFilter):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup if self.value() else lookup == self.default,
-                'query_string': cl.get_query_string({self.parameter_name: lookup}, []),
+                'query_string': cl.get_query_string(
+                    {self.parameter_name: lookup}, []),
                 'display': title,
             }
 
@@ -61,13 +63,14 @@ class ActiveFilter(SimpleListFilter):
 class MonthlyDonorAdmin(admin.ModelAdmin):
     model = MonthlyDonor
     list_display = ('user', 'amount', 'active', 'iban', 'selected_projects')
-    raw_id_fields = ('user', )
-    inlines = (MonthlyDonorProjectInline, )
-    list_filter = (ActiveFilter, )
+    raw_id_fields = ('user',)
+    inlines = (MonthlyDonorProjectInline,)
+    list_filter = (ActiveFilter,)
     search_fields = ('user__first_name', 'user__email', 'iban')
 
     def selected_projects(self, obj):
         return obj.projects.count() or '-'
+
 
 admin.site.register(MonthlyDonor, MonthlyDonorAdmin)
 
@@ -75,8 +78,9 @@ admin.site.register(MonthlyDonor, MonthlyDonorAdmin)
 class MonthlyDonorProjectAdmin(admin.ModelAdmin):
     model = MonthlyDonorProject
     list_display = ('donor', 'project')
-    readonly_fields = ('donor', )
-    raw_id_fields = ('project', )
+    readonly_fields = ('donor',)
+    raw_id_fields = ('project',)
+
 
 admin.site.register(MonthlyDonorProject, MonthlyDonorProjectAdmin)
 
@@ -84,7 +88,7 @@ admin.site.register(MonthlyDonorProject, MonthlyDonorProjectAdmin)
 class MonthlyBatchAdmin(admin.ModelAdmin):
     model = MonthlyBatch
     readonly_fields = ('date', 'monthly_orders')
-    inlines = (MonthlyProjectInline, )
+    inlines = (MonthlyProjectInline,)
 
     def monthly_orders(self, obj):
         url = '/admin/recurring_donations/monthlyorder?processed__exact={0}&batch={1}'
@@ -98,13 +102,14 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
 
     monthly_orders.allow_tags = True
 
+
 admin.site.register(MonthlyBatch, MonthlyBatchAdmin)
 
 
 class MonthlyDonationInline(admin.TabularInline):
     model = MonthlyDonation
-    readonly_fields = ('amount', )
-    raw_id_fields = ('project', )
+    readonly_fields = ('amount',)
+    raw_id_fields = ('project',)
     can_delete = False
     fields = ('project', 'amount')
     extra = 0
@@ -116,17 +121,20 @@ class MonthlyDonationInline(admin.TabularInline):
 class MonthlyOrderAdmin(admin.ModelAdmin):
     model = MonthlyDonation
     list_display = ('user', 'amount', 'batch', 'processed', 'has_error')
-    readonly_fields = ('user', 'amount', 'batch', 'iban', 'bic', 'name', 'city', 'processed', 'error_message')
+    readonly_fields = (
+    'user', 'amount', 'batch', 'iban', 'bic', 'name', 'city', 'processed',
+    'error_message')
     fields = readonly_fields
     list_filter = ('batch', 'processed')
     raw_id_fields = ('user', 'batch')
-    inlines = (MonthlyDonationInline, )
-    search_fields = ('user__email', )
+    inlines = (MonthlyDonationInline,)
+    search_fields = ('user__email',)
 
     ordering = ('-batch', 'user__email')
 
     def error_message(self, obj):
-        return "<span style='color:red; font-weight: bold'>{0}</span>".format(obj.error)
+        return "<span style='color:red; font-weight: bold'>{0}</span>".format(
+            obj.error)
 
     error_message.allow_tags = True
 
@@ -138,7 +146,6 @@ class MonthlyOrderAdmin(admin.ModelAdmin):
     has_error.allow_tags = True
 
 
-
 admin.site.register(MonthlyOrder, MonthlyOrderAdmin)
 
 
@@ -147,5 +154,5 @@ class MonthlyDonationAdmin(admin.ModelAdmin):
     list_display = ('user', 'project', 'order')
     raw_id_fields = ('user', 'project', 'order')
 
-admin.site.register(MonthlyDonation, MonthlyDonationAdmin)
 
+admin.site.register(MonthlyDonation, MonthlyDonationAdmin)

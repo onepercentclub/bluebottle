@@ -39,7 +39,6 @@ class DirectDebit(object):
 
 
 class InitiatingParty(object):
-
     def __init__(self, *args, **kwargs):
         self.name = kwargs['name']
 
@@ -115,7 +114,6 @@ class SepaDocument(object):
         self._credit_transfers = []
         self._direct_debits = []
 
-
     def set_initiating_party(self, *args, **kwargs):
         self.initiating_party = InitiatingParty(**kwargs)
 
@@ -133,7 +131,8 @@ class SepaDocument(object):
 
     def set_creditor(self, creditor):
         if self._type != 'DD':
-            raise Exception("Can only set a creditor to Sepa Document of type DD")
+            raise Exception(
+                "Can only set a creditor to Sepa Document of type DD")
         if not isinstance(creditor, SepaAccount):
             raise Exception("Creditor should be of type SepaAccount")
         self.creditor = creditor
@@ -141,7 +140,8 @@ class SepaDocument(object):
     def as_xml(self):
         """ Return the XML string. """
         return tostring(self._generate_xml(),
-            xml_declaration=True, encoding='UTF-8', pretty_print=True)
+                        xml_declaration=True, encoding='UTF-8',
+                        pretty_print=True)
 
     def get_header_control_sum(self):
         """ Get the header control sum in cents """
@@ -150,7 +150,8 @@ class SepaDocument(object):
     def add_direct_debit(self, *args, **kwargs):
         """ Add a direct debit transaction. """
         if self._type != 'DD':
-            raise Exception("Can only add a direct debit to Sepa Document of type DD")
+            raise Exception(
+                "Can only add a direct debit to Sepa Document of type DD")
 
         transfer = DirectDebit()
 
@@ -160,10 +161,12 @@ class SepaDocument(object):
 
         transfer.creditor = kwargs['creditor']
 
-        transfer.end_to_end_id = str(self.message_identification) + '-' + str(len(self._credit_transfers))
+        transfer.end_to_end_id = str(self.message_identification) + '-' + str(
+            len(self._credit_transfers))
 
         transfer.currency = getattr(kwargs, 'currency', self.currency)
-        transfer.remittance_information = getattr(kwargs, 'remittance_information', '')
+        transfer.remittance_information = getattr(kwargs,
+                                                  'remittance_information', '')
 
         self._credit_transfers.append(transfer)
         self._header_control_sum += transfer.amount
@@ -171,7 +174,8 @@ class SepaDocument(object):
     def add_credit_transfer(self, *args, **kwargs):
         """ Add a credit transfer transaction. """
         if self._type != 'CT':
-            raise Exception("Can only add a credit transfer to Sepa Document of type CT")
+            raise Exception(
+                "Can only add a credit transfer to Sepa Document of type CT")
 
         transfer = CreditTransfer()
 
@@ -179,10 +183,12 @@ class SepaDocument(object):
         transfer.amount = decimal.Decimal(kwargs['amount'])
         transfer.creditor = kwargs['creditor']
 
-        transfer.end_to_end_id = str(self.message_identification) + '-' + str(len(self._credit_transfers))
+        transfer.end_to_end_id = str(self.message_identification) + '-' + str(
+            len(self._credit_transfers))
 
         transfer.currency = getattr(kwargs, 'currency', self.currency)
-        transfer.remittance_information = getattr(kwargs, 'remittance_information', '')
+        transfer.remittance_information = getattr(kwargs,
+                                                  'remittance_information', '')
 
         self._credit_transfers.append(transfer)
         self._header_control_sum += transfer.amount
@@ -211,7 +217,8 @@ class SepaDocument(object):
 
         SubElement(grp_hdr, 'MsgId').text = str(self.message_identification)
 
-        SubElement(grp_hdr, 'CreDtTm').text = datetime.strftime(datetime.now(), '%Y-%m-%dT%H:%I:%S')
+        SubElement(grp_hdr, 'CreDtTm').text = datetime.strftime(datetime.now(),
+                                                                '%Y-%m-%dT%H:%I:%S')
 
         SubElement(grp_hdr, 'NbOfTxs').text = str(len(self._credit_transfers))
 
@@ -276,7 +283,8 @@ class SepaDocument(object):
             #  - Prtry Proprietary
 
             # RequestedExecutionDate
-            SubElement(pmt_inf, 'ReqdExctnDt').text = datetime.strftime(datetime.now(), '%Y-%m-%d')
+            SubElement(pmt_inf, 'ReqdExctnDt').text = datetime.strftime(
+                datetime.now(), '%Y-%m-%d')
 
             # Debtor
             dbtr = SubElement(pmt_inf, 'Dbtr')
@@ -444,19 +452,20 @@ class SepaDocument(object):
 
             # Unstructured
             if transfer.remittance_information:
-                SubElement(rmt_inf, 'Ustrd').text = transfer.remittance_information
+                SubElement(rmt_inf,
+                           'Ustrd').text = transfer.remittance_information
 
-            # Structured (optional)
-            #
-            # - CreditorReferenceInformation (optional)
-            #
-            # - - Type
-            # - - Tp
-            #
-            # - - - CodeOrProprietary
-            # - - - CdOrPrtry
-            # - - - - Code
-            # - - - Issuer
-            # - - Reference
+                # Structured (optional)
+                #
+                # - CreditorReferenceInformation (optional)
+                #
+                # - - Type
+                # - - Tp
+                #
+                # - - - CodeOrProprietary
+                # - - - CdOrPrtry
+                # - - - - Code
+                # - - - Issuer
+                # - - Reference
 
         return document

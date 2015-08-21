@@ -18,7 +18,8 @@ from django_extensions.db.fields import (
 
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model, get_taskmember_model
+from bluebottle.utils.model_dispatcher import get_project_phaselog_model, \
+    get_taskmember_model
 from bluebottle.utils.utils import GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
@@ -27,7 +28,6 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
 
 
 class ProjectTheme(models.Model):
-
     """ Themes for Projects. """
 
     # The name is marked as unique so that users can't create duplicate
@@ -54,7 +54,6 @@ class ProjectTheme(models.Model):
 
 
 class ProjectPhase(models.Model):
-
     """ Phase of a project """
 
     slug = models.SlugField(max_length=200, unique=True)
@@ -64,13 +63,17 @@ class ProjectPhase(models.Model):
                                    help_text=_('For ordering phases.'))
 
     active = models.BooleanField(default=True,
-                                 help_text=_('Whether this phase is in use or has been discarded.'))
+                                 help_text=_(
+                                     'Whether this phase is in use or has been discarded.'))
     editable = models.BooleanField(default=True,
-                                   help_text=_('Whether the project owner can change the details of the project.'))
+                                   help_text=_(
+                                       'Whether the project owner can change the details of the project.'))
     viewable = models.BooleanField(default=True,
-                                   help_text=_('Whether this phase, and projects in it show up at the website'))
+                                   help_text=_(
+                                       'Whether this phase, and projects in it show up at the website'))
     owner_editable = models.BooleanField(default=False,
-                                         help_text=_('The owner can manually select between these phases'))
+                                         help_text=_(
+                                             'The owner can manually select between these phases'))
 
     class Meta():
         ordering = ['sequence']
@@ -84,7 +87,6 @@ class ProjectPhase(models.Model):
 
 
 class BaseProjectManager(models.Manager):
-
     def search(self, query):
         qs = super(BaseProjectManager, self).get_query_set()
 
@@ -128,7 +130,6 @@ class BaseProjectManager(models.Manager):
 
 
 class BaseProjectDocument(models.Model):
-
     """ Document for an Project """
 
     file = models.FileField(
@@ -136,7 +137,7 @@ class BaseProjectDocument(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                verbose_name=_('author'), blank=True, null=True)
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
-                                     related_name="documents")
+                                related_name="documents")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
@@ -150,6 +151,7 @@ class BaseProjectDocument(models.Model):
     @property
     def document_url(self):
         from bluebottle.utils.model_dispatcher import get_project_document_model
+
         document_model = get_project_document_model()
         content_type = ContentType.objects.get_for_model(document_model).id
         # pk may be unset if not saved yet, in which case no url can be
@@ -162,7 +164,6 @@ class BaseProjectDocument(models.Model):
 
 
 class BaseProject(models.Model, GetTweetMixin):
-
     """ The base Project model. """
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
@@ -193,7 +194,8 @@ class BaseProject(models.Model, GetTweetMixin):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     location = models.ForeignKey('geo.Location', null=True, blank=True)
-    place = models.CharField(help_text=_('Geographical location'), max_length=100, null=True, blank=True)
+    place = models.CharField(help_text=_('Geographical location'),
+                             max_length=100, null=True, blank=True)
 
     # Extended Description
     description = models.TextField(_('why, what and how'), help_text=_(
@@ -213,7 +215,8 @@ class BaseProject(models.Model, GetTweetMixin):
     amount_donated = MoneyField(default=0)
     amount_needed = MoneyField(default=0)
     amount_extra = MoneyField(default=0, null=True, blank=True,
-                              help_text=_("Amount pledged by organisation (matching fund)."))
+                              help_text=_(
+                                  "Amount pledged by organisation (matching fund)."))
 
     # Bank detail data
 
@@ -231,7 +234,8 @@ class BaseProject(models.Model, GetTweetMixin):
         related_name="project_account_holder_country")
 
     # Bank details
-    account_number = models.CharField(_("Account number"), max_length=255, null=True, blank=True)
+    account_number = models.CharField(_("Account number"), max_length=255,
+                                      null=True, blank=True)
     account_bic = SWIFTBICField(_("account SWIFT-BIC"), null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
@@ -264,7 +268,8 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_requested(self):
-        return self.task_set.filter(status='open').aggregate(total=Sum('people_needed'))['total']
+        return self.task_set.filter(status='open').aggregate(
+            total=Sum('people_needed'))['total']
 
     _initial_status = None
 
@@ -365,7 +370,8 @@ class BaseProject(models.Model, GetTweetMixin):
         Return the amount of people funding this project
         """
         return self.donation_set.filter(
-            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+            order__status__in=[StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
 
     @cached_property

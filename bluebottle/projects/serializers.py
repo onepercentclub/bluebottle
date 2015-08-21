@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.bluebottle_drf2.serializers import (
-    EuroField, OEmbedField,SorlImageField, ImageSerializer,
+    EuroField, OEmbedField, SorlImageField, ImageSerializer,
     TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
@@ -34,10 +34,10 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
+
 
 class StoryField(serializers.WritableField):
     def to_native(self, value):
@@ -60,7 +60,6 @@ class StoryField(serializers.WritableField):
 
 
 class ProjectCountrySerializer(CountrySerializer):
-
     subregion = serializers.CharField(source='subregion.name')
 
     class Meta:
@@ -139,7 +138,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
     country = ProjectCountrySerializer(source='country')
@@ -200,7 +198,6 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     documents = ProjectDocumentSerializer(
         many=True, source='documents', read_only=True)
 
-
     def validate_account_iban(self, attrs, source):
         value = attrs.get(source)
         if value:
@@ -257,9 +254,9 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                 """
                 if (not (proposed_status == current_status) and
                         not (proposed_status and
-                             (current_status == new_status or
-                              current_status == needs_work_status) and
-                             proposed_status == submit_status)):
+                                 (current_status == new_status or
+                                          current_status == needs_work_status) and
+                                     proposed_status == submit_status)):
                     raise serializers.ValidationError(
                         _("You can not change the project state."))
 
@@ -291,7 +288,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Donation
-        fields = ('date_donated', 'project',  'member',)
+        fields = ('date_donated', 'project', 'member',)
 
 
 class ProjectDonationSerializer(serializers.ModelSerializer):
@@ -302,4 +299,3 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('member', 'date_donated', 'amount',)
-

@@ -53,19 +53,16 @@ from bluebottle.wallposts.notifiers import ObserversContainer
 TASK_MODEL = get_task_model()
 PROJECT_MODEL = get_project_model()
 
-
 logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, weak=False, sender=TextWallpost)
 def new_wallpost_notification(sender, instance, created, **kwargs):
-
     container = ObserversContainer()
     container.notify_wallpost_observers(instance)
 
 
 @receiver(post_save, weak=False, sender=Reaction)
 def new_reaction_notification(sender, instance, created, **kwargs):
-
     container = ObserversContainer()
     container.notify_reaction_observers(instance)

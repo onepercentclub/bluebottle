@@ -27,7 +27,6 @@ factory = RequestFactory()
 
 
 class ProjectEndpointTestCase(BluebottleTestCase):
-
     """
     Integration tests for the Project API.
     """
@@ -66,7 +65,6 @@ class ProjectEndpointTestCase(BluebottleTestCase):
 
 
 class ProjectApiIntegrationTest(ProjectEndpointTestCase):
-
     def test_project_list_view(self):
         """
         Tests for Project List view. These basic tests are here because Project
@@ -152,8 +150,10 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.data['account_bank_country'], country.id)
 
         self.assertEquals(response.data['account_holder_name'], 'test name')
-        self.assertEquals(response.data['account_holder_address'], 'test address')
-        self.assertEquals(response.data['account_holder_postal_code'], '12345AC')
+        self.assertEquals(response.data['account_holder_address'],
+                          'test address')
+        self.assertEquals(response.data['account_holder_postal_code'],
+                          '12345AC')
         self.assertEquals(response.data['account_holder_city'], 'Amsterdam')
         self.assertEquals(response.data['account_holder_country'], country.id)
 
@@ -182,7 +182,6 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
-
     """
     Integration tests for the Project API.
     """
@@ -218,7 +217,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # Let's throw a pitch (create a project really)
         response = self.client.post(self.manage_projects_url, {
-                                    'title': 'This is my smart idea'},
+            'title': 'This is my smart idea'},
                                     token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_201_CREATED, response)
@@ -243,7 +242,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # Let's check that another user can't get this pitch
         response = self.client.get(reverse('project_manage_detail',
-                                   kwargs={'slug': project_id}),
+                                           kwargs={'slug': project_id}),
                                    token=self.another_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
@@ -274,7 +273,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEquals(response.data['status'][
-                          0], 'You can not change the project state.',
+                              0], 'You can not change the project state.',
                           'status change should not be possible')
 
         # Ok, let's try to submit it. We have to submit all previous data again
@@ -290,7 +289,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
-        self.assertEquals(response_2.data['detail'], 'You do not have permission to perform this action.')
+        self.assertEquals(response_2.data['detail'],
+                          'You do not have permission to perform this action.')
         self.assertEquals(response_2.status_code, 403)
 
         # Set the project to plan phase from the backend
@@ -339,7 +339,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_number', 'account_bic', 'account_bank_country']
+        bank_detail_fields = ['account_number', 'account_bic',
+                              'account_bank_country']
 
         for field in bank_detail_fields:
             self.assertIn(field, response.data)
@@ -363,7 +364,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                         'title': 'This is my smart idea',
                                         'image': image
                                     },
-                                    token=self.some_user_token, format='multipart')
+                                    token=self.some_user_token,
+                                    format='multipart')
         self.assertContains(
             response,
             "Upload a valid image",
@@ -394,7 +396,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_number', 'account_bic', 'account_bank_country',
+        bank_detail_fields = ['account_number', 'account_bic',
+                              'account_bank_country',
                               'account_holder_name', 'account_holder_address',
                               'account_holder_postal_code',
                               'account_holder_city',
@@ -450,7 +453,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             {'project': project_id, 'description': 'Stuff', 'amount': 800},
             {'project': project_id, 'description': 'Things', 'amount': 1200},
             {'project': project_id,
-                'description': 'Random produce', 'amount': 170}
+             'description': 'Random produce', 'amount': 170}
         ]
 
         for line in budget:
@@ -494,7 +497,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
 
 class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
-
     """
     Integration tests for the Project Media Wallpost API.
     """
@@ -537,7 +539,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.media_wallposts_url,
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
+                                     'parent_id': self.some_project.slug},
                                     token=self.owner_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -559,7 +561,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(project_wallpost_detail_url,
                                    {'text': new_wallpost_text, 'parent_type':
                                        'project', 'parent_id':
-                                       self.some_project.slug},
+                                        self.some_project.slug},
                                    token=self.owner_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -586,7 +588,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.media_wallposts_url,
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
+                                     'parent_id': self.some_project.slug},
                                     token=self.owner_token)
         project_wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, str(response.data['id']))
@@ -619,14 +621,14 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.media_wallposts_url,
                                     {'text': second_wallpost_text,
                                      'parent_type':
-                                        'project',
-                                        'parent_id': self.some_project.slug},
+                                         'project',
+                                     'parent_id': self.some_project.slug},
                                     token=self.some_user_token)
 
         response = self.client.put(project_wallpost_detail_url,
                                    {'text': new_wallpost_text, 'parent_type':
                                        'project',
-                                       'parent_id': self.some_project.slug},
+                                    'parent_id': self.some_project.slug},
                                    token=self.some_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_403_FORBIDDEN, response.data)
@@ -677,7 +679,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.media_wallposts_url,
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
+                                     'parent_id': self.some_project.slug},
                                     token=self.owner_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -782,14 +784,14 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Create text wallpost as not logged in guest should be denied
         text1 = 'Great job!'
         response = self.client.post(self.text_wallposts_url, {
-                                    'text': text1, 'parent_type': 'project',
-                                    'parent_id': self.some_project.slug})
+            'text': text1, 'parent_type': 'project',
+            'parent_id': self.some_project.slug})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Create TextWallpost as a logged in member should be allowed
         response = self.client.post(self.text_wallposts_url,
                                     {'text': text1, 'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
+                                     'parent_id': self.some_project.slug},
                                     token=self.some_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -825,7 +827,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Create TextWallpost without a text should return an error
         response = self.client.post(self.text_wallposts_url,
                                     {'text': '', 'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
+                                     'parent_id': self.some_project.slug},
                                     token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
@@ -836,7 +838,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Create TextWallpost as another logged in member should be allowed
         response = self.client.post(self.text_wallposts_url,
                                     {'text': text2, 'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
+                                     'parent_id': self.some_project.slug},
                                     token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -848,7 +850,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
             self.wallposts_url, str(response.data['id']))
         response = self.client.put(wallpost_detail_url,
                                    {'text': text2a, 'parent_type': 'project',
-                                       'parent_id': self.some_project.slug},
+                                    'parent_id': self.some_project.slug},
                                    token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -886,7 +888,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
             text = char * 15
             self.client.post(self.media_wallposts_url,
                              {'text': text, 'parent_type': 'project',
-                                 'parent_id': self.some_project.slug},
+                              'parent_id': self.some_project.slug},
                              token=self.owner_token)
 
         # Retrieve a list of the 26 Project Wallposts
@@ -918,14 +920,14 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Wallpost List count should have decreased after deleting one
         response = self.client.get(self.wallposts_url,
                                    {'parent_type': 'project',
-                                       'parent_id': self.some_project.slug},
+                                    'parent_id': self.some_project.slug},
                                    token=self.owner_token)
         self.assertEqual(response.data['count'], 25)
 
         # View Project Wallpost list works for guests.
         response = self.client.get(self.wallposts_url, {
-                                   'parent_type': 'project',
-                                   'parent_id': self.some_project.slug})
+            'parent_type': 'project',
+            'parent_id': self.some_project.slug})
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data['results']), 5)
@@ -936,7 +938,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
             text = char * 15
             self.client.post(self.media_wallposts_url,
                              {'text': text, 'parent_type': 'project',
-                                 'parent_id': self.another_project.slug},
+                              'parent_id': self.another_project.slug},
                              token=self.owner_token)
         response = self.client.get(
             self.wallposts_url, {'parent_type': 'project',
@@ -947,7 +949,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         response = self.client.get(self.wallposts_url,
                                    {'parent_type': 'project',
-                                       'parent_id': self.another_project.slug},
+                                    'parent_id': self.another_project.slug},
                                    token=self.owner_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -955,7 +957,6 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
 
 class ChangeProjectStatuses(ProjectEndpointTestCase):
-
     def set_date_submitted(self, project):
         # Set a date_submitted value for the project
         yesterday = datetime.now() - timedelta(days=1)
@@ -968,7 +969,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         Changing project status to submitted sets the date_submitted field
         """
         project = Project.objects.get(
-            id=Project.objects.last().id - randint(0, Project.objects.count() - 1))
+            id=Project.objects.last().id - randint(0,
+                                                   Project.objects.count() - 1))
         self.assertTrue(project.date_submitted is None)
 
         # Change status of project to Needs work
@@ -984,7 +986,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         project = ProjectFactory.create(title="testproject",
                                         slug="testproject",
-                                        status=ProjectPhase.objects.get(slug='plan-new'))
+                                        status=ProjectPhase.objects.get(
+                                            slug='plan-new'))
         self.assertTrue(project.date_submitted is None)
         self.assertTrue(project.campaign_started is None)
 
@@ -1000,7 +1003,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         project
         """
         project = Project.objects.get(
-            id=Project.objects.last().id - randint(0, Project.objects.count() - 1))
+            id=Project.objects.last().id - randint(0,
+                                                   Project.objects.count() - 1))
         self.set_date_submitted(project)
 
         # Change status of project to Needs work
@@ -1015,7 +1019,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         Changing status to new clears the date_submitted field of a project
         """
         project = Project.objects.get(
-            id=Project.objects.last().id - randint(0, Project.objects.count() - 1))
+            id=Project.objects.last().id - randint(0,
+                                                   Project.objects.count() - 1))
         self.set_date_submitted(project)
 
         # Change status of project to Needs work
@@ -1073,7 +1078,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         loaded_project = Project.objects.get(pk=project.pk)
         self.assertTrue(loaded_project.campaign_ended is None)
         # FIXME: Re-enable this if donations are ok again
-        #self.assertTrue(loaded_project.campaign_funded is not None)
+        # self.assertTrue(loaded_project.campaign_funded is not None)
         self.assertEquals(
             loaded_project.status, ProjectPhase.objects.get(slug="campaign"))
 
@@ -1144,7 +1149,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
                                         slug="testproject",
                                         organization=organization,
                                         campaign_started=now - timezone.
-                                             timedelta(days=15),
+                                        timedelta(days=15),
                                         status=ProjectPhase.objects.
                                         get(slug="campaign"),
                                         amount_asked=100)

@@ -13,7 +13,9 @@ def sentry_dsn(request):
     except AttributeError, KeyError:
         return {}
 
-    match = re.search( r"https:\/\/([a-z|0-9]+):([a-z|0-9]+)\@app.getsentry.com\/(\d+)", raven_config, re.M|re.I)
+    match = re.search(
+        r"https:\/\/([a-z|0-9]+):([a-z|0-9]+)\@app.getsentry.com\/(\d+)",
+        raven_config, re.M | re.I)
 
     if not match:
         return {}
@@ -21,7 +23,9 @@ def sentry_dsn(request):
         public_key = match.group(1)
         project_id = match.group(3)
 
-        return {'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key, project_id)}
+        return {
+        'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key,
+                                                                project_id)}
 
 
 def tenant(request):
@@ -32,7 +36,7 @@ def tenant(request):
         tenant = connection.tenant
         return {
             'TENANT': connection,
-            'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name, request.LANGUAGE_CODE)
+            'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name,
+                                               request.LANGUAGE_CODE)
         }
     return {}
-

@@ -87,26 +87,12 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_generate_username_from_email(self):
         """
         Tests the ``generate_username`` method when no username was provided.
-        It should create the username from the name of the user email.
+        It should set the email as username.
         """
-        user = BlueBottleUserFactory.create(
-            username='', first_name='', last_name='')
+        user = BlueBottleUserFactory.create(email='piet@puk.nl', username='',
+                                            first_name='', last_name='')
         user.generate_username()
-
-        email_name, domain_part = user.email.strip().rsplit('@', 1)
-
-        self.assertEqual(user.username, email_name)
-
-    def test_generate_username_from_names(self):
-        """
-        Tests the ``generate_username`` method when no username was provided
-        but ``first_name`` and ``last_name`` are defined.
-        """
-        user = BlueBottleUserFactory.create(
-            username='', first_name=u'John', last_name=u'Doe')
-        user.generate_username()
-
-        self.assertEqual(user.username, 'johndoe')
+        self.assertEqual(user.username, user.email)
 
     def test_get_full_name(self):
         """

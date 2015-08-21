@@ -140,10 +140,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['email'][0], 'This field is required.')
 
     def test_generate_username(self):
-        new_user1_email = 'nijntje74@hetkonijntje.nl'
-        new_user2_email = 'nijntje89@hetkonijntje.nl'
-        new_user3_email = 'nijntje21@hetkonijntje.nl'
-        new_user4_email = 'nijntje45@hetkonijntje.nl'
+        new_user_email = 'nijntje74@hetkonijntje.nl'
         first_name = 'Nijntje'
         last_name = 'het Konijntje'
         new_user_password = 'password'
@@ -151,30 +148,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
         # Test username generation with duplicates.
         response = self.client.post(self.user_create_api_url, {'first_name': first_name,
                                                                'last_name': last_name,
-                                                               'email': new_user1_email,
+                                                               'email': new_user_email,
                                                                'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(response.data['username'], 'nijntjehetkonijntje')
-
-        response = self.client.post(self.user_create_api_url, {'first_name': first_name,
-                                                               'last_name': last_name,
-                                                               'email': new_user2_email,
-                                                               'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(response.data['username'], 'nijntjehetkonijntje_2')
-
-        response = self.client.post(self.user_create_api_url, {'first_name': first_name,
-                                                               'last_name': last_name,
-                                                               'email': new_user3_email,
-                                                               'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(response.data['username'], 'nijntjehetkonijntje_3')
-
-        # Test username generation with no first name or lastname.
-        response = self.client.post(self.user_create_api_url, {'email': new_user4_email,
-                                                               'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(response.data['username'], 'nijntje45')
+        self.assertEqual(response.data['username'], new_user_email)
 
     def test_password_reset(self):
         # Setup: create a user.

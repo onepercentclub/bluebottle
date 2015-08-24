@@ -2,15 +2,16 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans %}
+    {% blocktrans %}
 
-<h1>Welcome {{ first_name }}</h1>
-<p class="lead">You're officially part of {{ site_name }}</p>
-<br>
-[info about the platform]
-{% endblocktrans %}
+        <h1>Welcome {{ first_name }}</h1>
+        <p class="lead">You're officially part of {{ site_name }}</p>
+        <br>
+        [info about the platform]
+    {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}" class="action-email">{% trans "Let's get started" context 'email' %}</a>
+    <a href="{{ site }}"
+       class="action-email">{% trans "Let's get started" context 'email' %}</a>
 {% endblock %}

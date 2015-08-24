@@ -2,16 +2,18 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with amount=amount donor_name=donor_name site=site link=link receiver=receiver %}
+    {% blocktrans with amount=amount donor_name=donor_name site=site link=link receiver=receiver %}
 
-Hello {{ first_name }},
-<br><br>
-You received a &euro; {{ amount }} donation from {{ donor_name }}.
-<br><br>
-Quickly thank your supporter by posting a personal message on your fundraiser page.
-{% endblocktrans %}
+        Hello {{ first_name }},
+        <br><br>
+        You received a &euro; {{ amount }} donation from {{ donor_name }}.
+        <br><br>
+        Quickly thank your supporter by posting a personal message on your
+        fundraiser page.
+    {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}{{ link }}" class="action">{% trans 'Say thanks' context 'email' %}!</a>
+    <a href="{{ site }}{{ link }}"
+       class="action">{% trans 'Say thanks' context 'email' %}!</a>
 {% endblock %}

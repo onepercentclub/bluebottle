@@ -28,7 +28,7 @@ USER_MODEL = get_user_model()
 
 class UserProfileDetail(generics.RetrieveAPIView):
     model = USER_MODEL
-    permission_classes = (TenantConditionalOpenClose, )
+    permission_classes = (TenantConditionalOpenClose,)
     serializer_class = UserProfileSerializer
 
 
@@ -94,7 +94,7 @@ class UserCreate(generics.CreateAPIView):
         # reponse should include these details
         errors = serializer.errors
         try:
-            if request.DATA.has_key('email'):
+            if 'email' in request.DATA:
                 user = USER_MODEL.objects.get(email=request.DATA['email'])
 
                 # Return whether the conflict was with a user created via
@@ -159,7 +159,6 @@ class PasswordResetForm(forms.Form):
 
 
 class PasswordReset(views.APIView):
-
     """
     Allows a password reset to be initiated for valid users in the system. An
     email will be sent to the user with a
@@ -245,7 +244,6 @@ class PasswordReset(views.APIView):
 
 
 class PasswordSet(views.APIView):
-
     """
     Allows a new password to be set in the resource that is a valid password
     reset hash.
@@ -296,7 +294,6 @@ class PasswordSet(views.APIView):
 
 
 class DisableAccount(views.APIView):
-
     def post(self, request, *args, **kwargs):
         user_id = self.kwargs.get("user_id")
         token = self.kwargs.get("token")

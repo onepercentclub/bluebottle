@@ -1,15 +1,12 @@
-from django.utils import translation
 from django.utils.translation import ugettext as _
-from bluebottle.utils.email_backend import send_mail
 
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url
-from bluebottle.clients import properties
+from bluebottle.utils.email_backend import send_mail
 
 
 def successful_donation_fundraiser_mail(instance):
-
     # should be only when the status is success
     try:
         receiver = instance.fundraiser.owner
@@ -84,13 +81,13 @@ def new_oneoff_donation(instance):
             first_name=donation.project.owner.first_name
         )
 
-    # TODO: This is the logic for sending mail to a supporter once he/she has
-    # donated.
-    # if donation.order.user.email:
-    #     # Send email to the project supporter
-    #     send_mail(
-    #         template_name="bb_donations/new_oneoff_donation.mail",
-    #         subject=_("You supported {0}".format(donation.project.title)),
-    #         to=donation.order.user,
-    #         link=project_url
-    #     )
+        # TODO: This is the logic for sending mail to a supporter once he/she has
+        # donated.
+        # if donation.order.user.email:
+        #     # Send email to the project supporter
+        #     send_mail(
+        #         template_name="bb_donations/new_oneoff_donation.mail",
+        #         subject=_("You supported {0}".format(donation.project.title)),
+        #         to=donation.order.user,
+        #         link=project_url
+        #     )

@@ -222,7 +222,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             if self.pk:
                 queryset = queryset.exclude(pk=self.pk)
 
-            # Increase the number while searching for the next valid slug depending on the given slug, clean-up
+            # Increase the number while searching for the next valid slug
+            # depending on the given slug, clean-up
             next_num = 2
             while queryset.filter(username=username):
                 username = original_username
@@ -258,8 +259,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Sends an email to this User with content type HTML.
         """
-        # It's possible to send multi-part text / HTML email by following these instructions:
-        # https://docs.djangoproject.com/en/1.5/topics/email/#sending-alternative-content-types
+        # It's possible to send multi-part text / HTML email by following these
+        # instructions: https://docs.djangoproject.com/en/1.5/topics/email
+        # /#sending-alternative-content-types
         msg = EmailMessage(subject, message, from_email, [self.email])
         msg.content_subtype = 'html'  # Main content is now text/html
         msg.send()
@@ -277,7 +279,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return self.get_short_name()
 
     def reset_disable_token(self):
-        token = uuid.uuid4().hex  # Generates a random UUID and converts it to a 32-character hexidecimal string
+        # Generates a random UUID and converts it to a 32-character
+        # hexidecimal string
+        token = uuid.uuid4().hex
         self.disable_token = token
         self.save()
 
@@ -288,21 +292,21 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def task_count(self):
-        """ Returns the number of tasks a user is the author of  and / or is a task member in """
+        """
+        Returns the number of tasks a user is the author of  and / or is a
+        task member in
+        """
         task_count = get_task_model().objects.filter(author=self).count()
-        taskmember_count = get_taskmember_model().objects.filter(member=self,
-                                                                 status__in=[
-                                                                     'applied',
-                                                                     'accepted',
-                                                                     'realized']).count()
+        taskmember_count = get_taskmember_model().objects.filter(
+            member=self, status__in=['applied', 'accepted', 'realized']).count()
 
         return task_count + taskmember_count
 
     @property
     def tasks_performed(self):
         """ Returns the number of tasks that the user participated in."""
-        return get_taskmember_model().objects.filter(member=self,
-                                                     status='realized').count()
+        return get_taskmember_model().objects.filter(
+            member=self, status='realized').count()
 
     def get_donations_qs(self):
         qs = get_donation_model().objects.filter(order__user=self)
@@ -320,10 +324,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return self.get_donations_qs().distinct('project').count()
 
     def get_tasks_qs(self):
-        return get_taskmember_model().objects.filter(member=self,
-                                                     status__in=['applied',
-                                                                 'accepted',
-                                                                 'realized'])
+        return get_taskmember_model().objects.filter(
+            member=self, status__in=['applied', 'accepted', 'realized'])
 
     @property
     def time_spent(self):
@@ -395,7 +397,7 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
 
     USER_MODEL = get_user_model()
-    if getattr(settings, "SEND_WELCOME_MAIL") and isinstance(instance,
-                                                             USER_MODEL) and created:
+    if getattr(settings, "SEND_WELCOME_MAIL") and \
+            isinstance(instance, USER_MODEL) and created:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)

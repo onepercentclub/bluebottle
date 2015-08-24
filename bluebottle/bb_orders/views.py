@@ -37,7 +37,8 @@ class ManageOrderList(generics.ListCreateAPIView):
         if self.request.user.is_authenticated():
             return queryset.filter(user=self.request.user)
         else:
-            order_id = getattr(self.request.session, anonymous_order_id_session_key, 0)
+            order_id = getattr(self.request.session,
+                               anonymous_order_id_session_key, 0)
             return queryset.filter(id=order_id)
 
     def pre_save(self, obj):

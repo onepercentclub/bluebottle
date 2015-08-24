@@ -94,7 +94,7 @@ class UserCreate(generics.CreateAPIView):
         # reponse should include these details
         errors = serializer.errors
         try:
-            if request.DATA.has_key('email'):
+            if 'email' in request.DATA:
                 user = USER_MODEL.objects.get(email=request.DATA['email'])
 
                 # Return whether the conflict was with a user created via

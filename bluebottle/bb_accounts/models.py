@@ -227,11 +227,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             while queryset.filter(username=username):
                 username = original_username
                 end = str(next_num)
-                end_len = len(end)
-
-                if len(username) + end_len > max_length:
-                    username = username[:max_length - end_len]
-
                 username = '{0}_{1}'.format(username, end)
                 next_num += 1
 

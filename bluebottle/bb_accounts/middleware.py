@@ -54,12 +54,7 @@ class LocaleMiddleware(object):
                 # finding out and redirect after loading a complete page
                 # in the wrong language.
 
-                if not user_lang:
-                    return
-
-                if part1 == 'api':
-                    return
-                if len(url_parts) < 2:
+                if not user_lang or part1 == 'api' or len(url_parts) < 2:
                     return
 
                 if part1 in dict(settings.LANGUAGES).keys() and \

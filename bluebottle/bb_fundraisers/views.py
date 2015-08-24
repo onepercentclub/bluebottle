@@ -2,24 +2,28 @@ from django.db.models.aggregates import Max
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView, ListCreateAPIView
+from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView, \
+    ListCreateAPIView
 from rest_framework import permissions, exceptions
 
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
+from bluebottle.utils.model_dispatcher import get_project_model, \
+    get_fundraiser_model
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
 
-FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL', 'default')
+FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL',
+                                             'default')
 
 
 class FundraiserListView(ListCreateAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
-    permission_classes = (TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose,
+                          permissions.IsAuthenticatedOrReadOnly,)
     paginate_by = 10
     paginate_by_param = 'page_size'
 
@@ -37,8 +41,9 @@ class FundraiserListView(ListCreateAPIView):
             try:
                 project = PROJECT_MODEL.objects.get(slug=project_slug)
             except PROJECT_MODEL.DoesNotExist:
-                raise Http404(_(u"No %(verbose_name)s found matching the query") %
-                              {'verbose_name': PROJECT_MODEL._meta.verbose_name})
+                raise Http404(
+                    _(u"No %(verbose_name)s found matching the query") %
+                    {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
             filter_kwargs['project'] = project
 
@@ -47,7 +52,9 @@ class FundraiserListView(ListCreateAPIView):
             filter_kwargs['owner__pk'] = user_id
 
         queryset = queryset.filter(**filter_kwargs)
-        queryset = queryset.annotate(latest_donation=Max('donation__order__confirmed')).order_by('-latest_donation')
+        queryset = queryset.annotate(
+            latest_donation=Max('donation__order__confirmed')).order_by(
+            '-latest_donation')
         return queryset
 
     def pre_save(self, obj):
@@ -60,6 +67,5 @@ class FundraiserListView(ListCreateAPIView):
 class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
     model = FUNDRAISER_MODEL
     serializer_class = FUNDRAISER_SERIALIZER
-    permission_classes = (TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
-
-
+    permission_classes = (TenantConditionalOpenClose,
+                          permissions.IsAuthenticatedOrReadOnly,)

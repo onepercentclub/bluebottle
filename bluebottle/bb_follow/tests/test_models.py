@@ -178,7 +178,8 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(Follow.objects.count(), 0)
 
     def test_wallpost_no_mail(self):
-        """ Test that followers don't get an email if email_followers is false. Email_followers boolean is false by default on wallpost model"""
+        """ Test that followers don't get an email if email_followers is false.
+            Email_followers boolean is false by default on wallpost model"""
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(Follow.objects.count(), 0)
         commenter = BlueBottleUserFactory.create()
@@ -217,7 +218,8 @@ class FollowTests(BluebottleTestCase):
             self.assertTrue("New wallpost on" not in email.subject)
 
     def test_wallpost_mail_project(self):
-        """ Test that the relevant people get an email when the email_followers option is selected for a project """
+        """ Test that the relevant people get an email when the 
+            email_followers option is selected for a project """
 
         # On a project page, task owners, fundraisers, and people who donated,  get a mail.
 
@@ -254,6 +256,11 @@ class FollowTests(BluebottleTestCase):
 
         self.assertEqual(Follow.objects.count(), 3)
 
+        voter = BlueBottleUserFactory.create()
+        vote = VoteFactory(voter=voter, project=self.project)
+
+        self.assertEqual(Follow.objects.count(), 4)
+
         # Project owner creates a wallpost and emails followers
         some_wallpost_2 = TextWallpostFactory.create(
             content_object=self.project, author=self.project.owner,
@@ -261,14 +268,15 @@ class FollowTests(BluebottleTestCase):
 
         mail_count = 0
 
-        # People who should get an email: self.some_user, task_owner1, fundraiser_person, commenter, and donator1
-        receivers = [task_owner1.email, fundraiser_person.email, donator1.email]
+        # People who should get an email: self.some_user, voter, task_owner1,
+        # fundraiser_person, commenter, and donator1
+        receivers = [voter.email, task_owner1.email, fundraiser_person.email, donator1.email]
         for email in mail.outbox:
             if "New wallpost on" in email.subject:
                 mail_count += 1
                 self.assertTrue(email.to[0] in receivers)
                 receivers.remove(email.to[0])
-        self.assertEqual(mail_count, 3)
+        self.assertEqual(mail_count, 4)
         self.assertEqual(receivers, [])
 
     def test_wallpost_mail_task(self):
@@ -388,6 +396,11 @@ class FollowTests(BluebottleTestCase):
 
         self.assertEqual(Follow.objects.count(), 3)
 
+        # Create follower by voting
+        voter_person = BlueBottleUserFactory.create(
+            campaign_notifications=False)
+        vote = VoteFactory(voter=voter_person, project=self.project)
+
         # Project owner creates a wallpost and emails followers
         some_wallpost_2 = TextWallpostFactory.create(
             content_object=self.project, author=self.project.owner,
@@ -395,7 +408,8 @@ class FollowTests(BluebottleTestCase):
 
         mail_count = 0
 
-        # People who should get an email: self.some_user, task_owner1, fundraiser_person, commenter, and donator1
+        # People who should get an email: self.some_user, task_owner1,
+        # fundraiser_person, commenter, voter and donator1
         receivers = []
         for email in mail.outbox:
             if "New wallpost on" in email.subject:

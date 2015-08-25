@@ -16,6 +16,7 @@ from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
+from bluebottle.votes.models import Vote
 
 USER_MODEL = get_user_model()
 
@@ -65,6 +66,7 @@ def create_follow(sender, instance, created, **kwargs):
             - user creates a task for a project (user will follow project),
             - user creates a fundraiser for a project (user will follow
               project)
+            - user votes on a project
 
             Users do not follow their own project or task.
 
@@ -155,6 +157,22 @@ def create_follow(sender, instance, created, **kwargs):
             except Follow.DoesNotExist:
                 if user != followed_object.owner:
                     follow = Follow(user=user, followed_object=followed_object)
+                    follow.save()
+
+    elif isinstance(instance, Vote):
+        user = instance.voter
+        project = instance.project
+
+        if user and project:
+            content_type = ContentType.objects.get_for_model(project)
+
+            try:
+                follow = Follow.objects.get(user=user,
+                                            object_id=project.id,
+                                            content_type=content_type)
+            except Follow.DoesNotExist:
+                if user != project.owner:
+                    follow = Follow(user=user, followed_object=project)
                     follow.save()
 
 

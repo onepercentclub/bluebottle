@@ -11,6 +11,7 @@ from bluebottle.utils.model_dispatcher import get_model_class
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.utils.utils import StatusDefinition
 
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
@@ -70,8 +71,38 @@ class FollowTests(BluebottleTestCase):
 
         self.assertEqual(Follow.objects.count(), 1)
 
+    def test_create_follow_create_vote(self):
+        """
+            Test that a Follow is created if a user, that is not the owner,
+            casts a vote. User will follow project.
+        """
+        self.assertEqual(Follow.objects.count(), 0)
+
+        voter = BlueBottleUserFactory.create()
+
+        vote = VoteFactory.create(
+            voter=voter,
+            project=self.project,
+        )
+
+        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
+        self.assertEqual(Follow.objects.all()[0].user, voter)
+
+        # Test that no follower is created when the task owner
+        # is also the project owner
+        project_owner_vote = VoteFactory.create(
+            voter=self.project.owner,
+            project=self.project
+        )
+
+        self.assertEqual(Follow.objects.count(), 1)
+
     def test_create_follow_create_taskmember(self):
-        """ Test that a Follow object is created when a task member is created. User will follow Task, not the project """
+        """
+            Test that a Follow object is created when a task member is
+            created. User will follow Task, not the project
+            """
         self.assertEqual(Follow.objects.count(), 0)
 
         task_member_1 = TaskMemberFactory(task=self.task)
@@ -97,17 +128,20 @@ class FollowTests(BluebottleTestCase):
         user = BlueBottleUserFactory.create()
 
         order = OrderFactory.create(user=user, status=StatusDefinition.CREATED)
-        # Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
-        donation = DonationFactory(order=order, amount=35, project=self.project,
+        # Make sure to set Fundraiser to None. Otherwise, fundraiser is created
+        donation = DonationFactory(order=order, amount=35,
+                                   project=self.project,
                                    fundraiser=None)
 
         order = OrderFactory.create(user=user, status=StatusDefinition.CREATED)
-        # Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
-        donation = DonationFactory(order=order, amount=35, project=self.project,
+        # Make sure to set Fundraiser to None. Otherwise, fundraiser is created
+        donation = DonationFactory(order=order, amount=35,
+                                   project=self.project,
                                    fundraiser=None)
 
         self.assertEqual(Follow.objects.count(), 1)
-        # Make sure to inspect the second Follow object, this is the Follow object for the donation
+        # Make sure to inspect the second Follow object, this is the Follow
+        # object for the donation
         self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
         self.assertEqual(Follow.objects.all()[0].user, user)
 

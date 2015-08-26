@@ -200,7 +200,8 @@ class BaseProject(models.Model, GetTweetMixin):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     location = models.ForeignKey('geo.Location', null=True, blank=True)
-    place = models.CharField(help_text=_('Geographical location'), max_length=100, null=True, blank=True)
+    place = models.CharField(help_text=_('Geographical location'),
+                             max_length=100, null=True, blank=True)
 
     # Extended Description
     description = models.TextField(_('why, what and how'), help_text=_(
@@ -238,7 +239,8 @@ class BaseProject(models.Model, GetTweetMixin):
         related_name="project_account_holder_country")
 
     # Bank details
-    account_number = models.CharField(_("Account number"), max_length=255, null=True, blank=True)
+    account_number = models.CharField(_("Account number"), max_length=255,
+                                      null=True, blank=True)
     account_bic = SWIFTBICField(_("account SWIFT-BIC"), null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
@@ -372,7 +374,8 @@ class BaseProject(models.Model, GetTweetMixin):
         Return the amount of people funding this project
         """
         return self.donation_set.filter(
-            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+            order__status__in=[StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
 
     @cached_property

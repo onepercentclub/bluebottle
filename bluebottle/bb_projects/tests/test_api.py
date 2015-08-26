@@ -395,6 +395,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('country', data)
         self.assertIn('editable', data)
+        self.assertIn('project_type', data)
 
     def test_api_manage_project_detail_check_not_editable(self):
         """

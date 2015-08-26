@@ -266,6 +266,15 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                    token=self.another_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
 
+        # Let's put a project_type on it
+        project_data['project_type'] = 'funding'
+        response = self.client.put(project_url, project_data,
+                                   token=self.some_user_token)
+        response = self.client.put(project_url, project_data,
+                                   token=self.another_user_token)
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['project_type'], 'funding')
+
         # Back to the previous pitch. Try to cheat and put it to status
         # approved.
         project_data['status'] = self.phase_campaign.id

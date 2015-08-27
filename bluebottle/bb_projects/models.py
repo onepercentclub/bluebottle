@@ -1,25 +1,23 @@
 from django.conf import settings
-from django.db import models
-from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext as _
-from django.db.models import options
-from django_iban.fields import IBANField, SWIFTBICField
-from django.db.models.aggregates import Sum
-from django.db.models.query_utils import Q
-from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.db.models import Count, Sum, options
+from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
-from django.db.models import Count, Sum
+from django.utils.translation import ugettext as _
 
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
+from django_iban.fields import SWIFTBICField
+from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
-from django_extensions.db.fields import (
-    ModificationDateTimeField, CreationDateTimeField)
 
 from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model, get_taskmember_model
-from bluebottle.utils.utils import GetTweetMixin
+from bluebottle.utils.model_dispatcher import (get_project_phaselog_model,
+                                               get_taskmember_model)
+from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
                                                  'preview_serializer',
@@ -64,13 +62,13 @@ class ProjectPhase(models.Model):
                                    help_text=_('For ordering phases.'))
 
     active = models.BooleanField(default=True,
-                                 help_text=_('Whether this phase is in use or has been discarded.'))
+        help_text=_('Whether this phase is in use or has been discarded.'))
     editable = models.BooleanField(default=True,
-                                   help_text=_('Whether the project owner can change the details of the project.'))
+        help_text=_('Whether the project owner can change the details of the project.'))
     viewable = models.BooleanField(default=True,
-                                   help_text=_('Whether this phase, and projects in it show up at the website'))
+        help_text=_('Whether this phase, and projects in it show up at the website'))
     owner_editable = models.BooleanField(default=False,
-                                         help_text=_('The owner can manually select between these phases'))
+        help_text=_('The owner can manually select between these phases'))
 
     class Meta():
         ordering = ['sequence']
@@ -163,6 +161,12 @@ class BaseProjectDocument(models.Model):
 
 class BaseProject(models.Model, GetTweetMixin):
 
+
+    class Type(DjangoChoices):
+        sourcing = ChoiceItem('sourcing', label=_('Crowd-sourcing'))
+        funding = ChoiceItem('funding', label=_('Crowd-funding'))
+        both = ChoiceItem('both', label=_('Crowd-funding & Crowd-sourcing'))
+
     """ The base Project model. """
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
@@ -173,6 +177,9 @@ class BaseProject(models.Model, GetTweetMixin):
             'organization'),
         help_text=_('Project organization'),
         related_name='organization', null=True, blank=True)
+
+    project_type = models.CharField(_('Project type'), max_length=50,
+                                    choices=Type.choices, null=True, blank=True)
 
     # Basics
     created = CreationDateTimeField(
@@ -193,7 +200,8 @@ class BaseProject(models.Model, GetTweetMixin):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     location = models.ForeignKey('geo.Location', null=True, blank=True)
-    place = models.CharField(help_text=_('Geographical location'), max_length=100, null=True, blank=True)
+    place = models.CharField(help_text=_('Geographical location'),
+                             max_length=100, null=True, blank=True)
 
     # Extended Description
     description = models.TextField(_('why, what and how'), help_text=_(
@@ -231,7 +239,8 @@ class BaseProject(models.Model, GetTweetMixin):
         related_name="project_account_holder_country")
 
     # Bank details
-    account_number = models.CharField(_("Account number"), max_length=255, null=True, blank=True)
+    account_number = models.CharField(_("Account number"), max_length=255,
+                                      null=True, blank=True)
     account_bic = SWIFTBICField(_("account SWIFT-BIC"), null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
@@ -365,7 +374,8 @@ class BaseProject(models.Model, GetTweetMixin):
         Return the amount of people funding this project
         """
         return self.donation_set.filter(
-            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+            order__status__in=[StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
 
     @cached_property

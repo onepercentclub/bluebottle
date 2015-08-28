@@ -1,11 +1,15 @@
+import re
+
 from django.db.models.query_utils import Q
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
+from django.core.cache import cache
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
-    ProjectPhaseLogSerializer, ProjectDocumentSerializer)
+    ProjectPhaseLogSerializer, ProjectDocumentSerializer,
+    ProjectTinyPreviewSerializer)
 from bluebottle.utils.model_dispatcher import (
     get_project_model, get_project_phaselog_model, get_project_document_model)
 from bluebottle.utils.serializers import (
@@ -19,6 +23,18 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
+
+class ProjectTinyPreviewList(generics.ListAPIView):
+    model = PROJECT_MODEL
+    paginate_by = 8
+    paginate_by_param = 'page_size'
+    serializer_class = ProjectTinyPreviewSerializer
+
+    def get_queryset(self):
+        query = self.request.QUERY_PARAMS
+        qs = PROJECT_MODEL.objects.search(query=query)
+        return qs.filter(status__viewable=True)
 
 
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):

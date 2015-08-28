@@ -166,6 +166,16 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
                   'voting_deadline', 'project_type')
 
 
+class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(source='slug', read_only=True)
+    image = SorlImageField('image', '400x300', crop='center')
+
+    class Meta:
+        model = PROJECT_MODEL
+        fields = ('id', 'title', 'status', 'image', 'latitude', 'longitude')
+
+
 class ManageProjectSerializer(TaggableSerializerMixin,
                               serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)

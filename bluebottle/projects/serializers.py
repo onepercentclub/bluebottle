@@ -170,18 +170,6 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(source='slug', read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
-    country = ProjectCountrySerializer(source='country')
-    pitch = serializers.CharField(source='pitch')
-    theme = ProjectThemeSerializer(source='theme')
-    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
-    task_count = serializers.IntegerField(source='task_count')
-    partner = serializers.SlugRelatedField(slug_field='slug',
-                                           source='partner_organization')
-    is_funding = serializers.Field()
-    people_requested = serializers.Field()
-    people_registered = serializers.Field()
-    location = serializers.PrimaryKeyRelatedField(required=False)
-    vote_count = serializers.IntegerField(source='vote_count')
 
     class Meta:
         model = PROJECT_MODEL

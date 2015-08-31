@@ -1,6 +1,7 @@
 from rest_framework import permissions
 
-from bluebottle.utils.model_dispatcher import get_task_model, get_taskmember_model
+from bluebottle.utils.model_dispatcher import get_task_model, \
+    get_taskmember_model
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
@@ -52,14 +53,14 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
 
 
 class IsMemberOrReadOnly(permissions.BasePermission):
-
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
         # Test for project model object-level permissions.
-        return isinstance(obj, BB_TASKMEMBER_MODEL) and obj.member == request.user
+        return isinstance(obj,
+                          BB_TASKMEMBER_MODEL) and obj.member == request.user
 
 
 class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
@@ -68,11 +69,11 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        if isinstance(obj, BB_TASKMEMBER_MODEL) and obj.task.author == request.user:
+        if isinstance(obj,
+                      BB_TASKMEMBER_MODEL) and obj.task.author == request.user:
             return True
 
         if isinstance(obj, BB_TASKMEMBER_MODEL) and obj.member == request.user:
             return True
 
         return False
-

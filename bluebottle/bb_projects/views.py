@@ -1,11 +1,9 @@
-import re
-
 from django.db.models.query_utils import Q
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
-from django.core.cache import cache
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
@@ -15,10 +13,9 @@ from bluebottle.utils.model_dispatcher import (
 from bluebottle.utils.serializers import (
     DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin)
 from bluebottle.utils.utils import get_client_ip
+
 from .models import ProjectTheme, ProjectPhase
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
-
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
@@ -65,7 +62,7 @@ class ProjectPhaseList(generics.ListAPIView):
     def get_query(self):
         qs = ProjectPhase.objects
 
-        name = self.request.QUERY_PARAMS.get('name',None)
+        name = self.request.QUERY_PARAMS.get('name', None)
         text = self.request.QUERY_PARAMS.get('text')
 
         qs = qs.order_by('sequence')

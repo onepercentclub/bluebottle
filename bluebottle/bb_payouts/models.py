@@ -19,7 +19,6 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
 
-
 from bluebottle.utils.model_dispatcher import (get_project_model,
                                                get_donation_model,
                                                get_project_payout_model)
@@ -282,7 +281,7 @@ class BaseProjectPayout(PayoutBase):
             return "-"
 
         return "{}%".format(round(((
-                                   self.amount_raised - self.amount_payable) / self.amount_raised) * 100,
+                                       self.amount_raised - self.amount_payable) / self.amount_raised) * 100,
                                   1))
 
     def get_payout_rule(self):
@@ -595,13 +594,13 @@ class BaseOrganizationPayout(PayoutBase):
             old_status = self.__class__.objects.get(id=self.id).status
 
             if (old_status == StatusDefinition.NEW and
-               self.status == StatusDefinition.IN_PROGRESS):
+                        self.status == StatusDefinition.IN_PROGRESS):
                 # Old status: new
                 # New status: progress
 
                 # Check consistency of other costs
                 if (self.other_costs_incl - self.other_costs_excl !=
-                   self.other_costs_vat):
+                        self.other_costs_vat):
                     raise ValidationError(_(
                         'Other costs have changed, please recalculate before progessing.'))
 

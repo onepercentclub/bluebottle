@@ -1,6 +1,5 @@
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 
-
 GROUP_PERMS = {
     'Staff': {
         'perms': (
@@ -8,6 +7,7 @@ GROUP_PERMS = {
         )
     }
 }
+
 
 class Fundraiser(BaseFundraiser):
     pass

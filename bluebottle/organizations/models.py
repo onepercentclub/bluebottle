@@ -4,7 +4,8 @@ from django.utils.translation import ugettext as _
 from django.template.defaultfilters import slugify
 from django.core.files.storage import FileSystemStorage
 
-from bluebottle.bb_organizations.models import BaseOrganization, BaseOrganizationMember
+from bluebottle.bb_organizations.models import BaseOrganization, \
+    BaseOrganizationMember
 
 GROUP_PERMS = {
     'Staff': {

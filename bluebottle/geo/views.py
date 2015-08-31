@@ -14,7 +14,8 @@ class CountryList(generics.ListAPIView):
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        return self.model.objects.filter(alpha2_code__isnull=False).order_by('name').all()
+        return self.model.objects.filter(alpha2_code__isnull=False).order_by(
+            'name').all()
 
 
 class CountryDetail(generics.RetrieveAPIView):
@@ -27,10 +28,10 @@ class CountryDetail(generics.RetrieveAPIView):
 
 
 class UsedCountryList(CountryList):
-
     def get_queryset(self):
         qs = super(UsedCountryList, self).get_queryset()
-        project_country_ids = PROJECT_MODEL.objects.filter(status__viewable=True).values_list('country', flat=True).distinct()
+        project_country_ids = PROJECT_MODEL.objects.filter(
+            status__viewable=True).values_list('country', flat=True).distinct()
 
         return qs.filter(id__in=project_country_ids)
 
@@ -38,5 +39,3 @@ class UsedCountryList(CountryList):
 class LocationList(generics.ListAPIView):
     serializer_class = LocationSerializer
     model = Location
-
-

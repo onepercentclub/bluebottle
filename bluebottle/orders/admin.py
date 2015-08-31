@@ -20,15 +20,15 @@ class OrderStatusFilter(SimpleListFilter):
     default_status = 'pending_or_success'
 
     def lookups(self, request, model_admin):
-        return (('all', _('All')),
-                ('pending_or_success', _('Pending/Success')) ) + \
-               ORDER_MODEL.STATUS_CHOICES
+        choices = (('all', _('All')),
+                   ('pending_or_success', _('Pending/Success')))
+        return choices + ORDER_MODEL.STATUS_CHOICES
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup if self.value() else
-                    lookup == self.default_status,
+                lookup == self.default_status,
                 'query_string': cl.get_query_string(
                     {self.parameter_name: lookup}, []),
                 'display': title,
@@ -51,9 +51,9 @@ class BaseOrderAdmin(admin.ModelAdmin):
 
     inlines = (DonationInline, OrderPaymentInline)
 
-    search_fields = ('user__email', )
+    search_fields = ('user__email',)
 
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user',)
     readonly_fields = ('status', 'total', 'created', 'confirmed', 'completed',
                        'order_type')
 
@@ -63,4 +63,3 @@ class BaseOrderAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ORDER_MODEL, BaseOrderAdmin)
-

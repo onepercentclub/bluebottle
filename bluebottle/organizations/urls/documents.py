@@ -3,5 +3,7 @@ from surlex.dj import surl
 from ..views import RegistrationDocumentDownloadView
 
 urlpatterns = patterns('',
-    surl(r'^organizations/<pk:#>/$', RegistrationDocumentDownloadView.as_view(), name='organization-registration-download'),
-)
+                       surl(r'^organizations/<pk:#>/$',
+                            RegistrationDocumentDownloadView.as_view(),
+                            name='organization-registration-download'),
+                       )

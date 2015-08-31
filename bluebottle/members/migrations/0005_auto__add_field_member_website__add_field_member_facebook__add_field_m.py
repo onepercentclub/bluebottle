@@ -6,28 +6,34 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
-
     def forwards(self, orm):
         # Adding field 'Member.website'
         db.add_column(u'members_member', 'website',
-                      self.gf('django.db.models.fields.URLField')(default='', max_length=200, blank=True),
+                      self.gf('django.db.models.fields.URLField')(default='',
+                                                                  max_length=200,
+                                                                  blank=True),
                       keep_default=False)
 
         # Adding field 'Member.facebook'
         db.add_column(u'members_member', 'facebook',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
+                      self.gf('django.db.models.fields.CharField')(default='',
+                                                                   max_length=50,
+                                                                   blank=True),
                       keep_default=False)
 
         # Adding field 'Member.twitter'
         db.add_column(u'members_member', 'twitter',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=15, blank=True),
+                      self.gf('django.db.models.fields.CharField')(default='',
+                                                                   max_length=15,
+                                                                   blank=True),
                       keep_default=False)
 
         # Adding field 'Member.skypename'
         db.add_column(u'members_member', 'skypename',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=32, blank=True),
+                      self.gf('django.db.models.fields.CharField')(default='',
+                                                                   max_length=32,
+                                                                   blank=True),
                       keep_default=False)
-
 
     def backwards(self, orm):
         # Deleting field 'Member.website'
@@ -42,78 +48,146 @@ class Migration(SchemaMigration):
         # Deleting field 'Member.skypename'
         db.delete_column(u'members_member', 'skypename')
 
-
     models = {
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [],
+                     {'unique': 'True', 'max_length': '80'}),
+            'permissions': (
+            'django.db.models.fields.related.ManyToManyField', [],
+            {'to': u"orm['auth.Permission']", 'symmetrical': 'False',
+             'blank': 'True'})
         },
         u'auth.permission': {
-            'Meta': {'ordering': "(u'content_type__app_label', u'content_type__model', u'codename')", 'unique_together': "((u'content_type', u'codename'),)", 'object_name': 'Permission'},
-            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+            'Meta': {
+            'ordering': "(u'content_type__app_label', u'content_type__model', u'codename')",
+            'unique_together': "((u'content_type', u'codename'),)",
+            'object_name': 'Permission'},
+            'codename': (
+            'django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'content_type': ('django.db.models.fields.related.ForeignKey', [],
+                             {'to': u"orm['contenttypes.ContentType']"}),
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': (
+            'django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         u'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+            'Meta': {'ordering': "('name',)",
+                     'unique_together': "(('app_label', 'model'),)",
+                     'object_name': 'ContentType',
+                     'db_table': "'django_content_type'"},
+            'app_label': (
+            'django.db.models.fields.CharField', [], {'max_length': '100'}),
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'model': (
+            'django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'name': (
+            'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
         u'geo.location': {
             'Meta': {'ordering': "['name']", 'object_name': 'Location'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'latitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
-            'longitude': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '21', 'decimal_places': '18', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'zoom_level': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'latitude': ('django.db.models.fields.DecimalField', [],
+                         {'null': 'True', 'max_digits': '21',
+                          'decimal_places': '18', 'blank': 'True'}),
+            'longitude': ('django.db.models.fields.DecimalField', [],
+                          {'null': 'True', 'max_digits': '21',
+                           'decimal_places': '18', 'blank': 'True'}),
+            'name': (
+            'django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'zoom_level': ('django.db.models.fields.IntegerField', [],
+                           {'null': 'True', 'blank': 'True'})
         },
         u'members.checkedtoken': {
-            'Meta': {'ordering': "('timestamp', 'user__username')", 'object_name': 'CheckedToken'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'Meta': {'ordering': "('timestamp', 'user__username')",
+                     'object_name': 'CheckedToken'},
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'timestamp': ('django.db.models.fields.DateTimeField', [], {}),
-            'token': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['members.Member']"})
+            'token': (
+            'django.db.models.fields.CharField', [], {'max_length': '300'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [],
+                     {'to': u"orm['members.Member']"})
         },
         u'members.member': {
             'Meta': {'object_name': 'Member'},
-            'about_me': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
-            'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'campaign_notifications': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'disable_token': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'}),
-            'email': ('django.db.models.fields.EmailField', [], {'unique': 'True', 'max_length': '254', 'db_index': 'True'}),
-            'facebook': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'gender': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Location']", 'null': 'True', 'blank': 'True'}),
-            'newsletter': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'picture': ('bluebottle.utils.fields.ImageField', [], {'max_length': '100', 'blank': 'True'}),
-            'place': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
-            'primary_language': ('django.db.models.fields.CharField', [], {'default': "'en'", 'max_length': '5'}),
-            'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'skypename': ('django.db.models.fields.CharField', [], {'max_length': '32', 'blank': 'True'}),
-            'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
-            'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),
-            'username': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
-            'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
+            'about_me': ('django.db.models.fields.TextField', [],
+                         {'max_length': '265', 'blank': 'True'}),
+            'birthdate': ('django.db.models.fields.DateField', [],
+                          {'null': 'True', 'blank': 'True'}),
+            'campaign_notifications': (
+            'django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'date_joined': ('django.db.models.fields.DateTimeField', [],
+                            {'default': 'datetime.datetime.now'}),
+            'deleted': ('django.db.models.fields.DateTimeField', [],
+                        {'null': 'True', 'blank': 'True'}),
+            'disable_token': ('django.db.models.fields.CharField', [],
+                              {'max_length': '32', 'null': 'True',
+                               'blank': 'True'}),
+            'email': ('django.db.models.fields.EmailField', [],
+                      {'unique': 'True', 'max_length': '254',
+                       'db_index': 'True'}),
+            'facebook': ('django.db.models.fields.CharField', [],
+                         {'max_length': '50', 'blank': 'True'}),
+            'first_name': ('django.db.models.fields.CharField', [],
+                           {'max_length': '100', 'blank': 'True'}),
+            'gender': ('django.db.models.fields.CharField', [],
+                       {'max_length': '6', 'blank': 'True'}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [],
+                       {'symmetrical': 'False', 'related_name': "u'user_set'",
+                        'blank': 'True', 'to': u"orm['auth.Group']"}),
+            u'id': (
+            'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_active': (
+            'django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'is_staff': (
+            'django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'is_superuser': (
+            'django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'last_login': ('django.db.models.fields.DateTimeField', [],
+                           {'default': 'datetime.datetime.now'}),
+            'last_name': ('django.db.models.fields.CharField', [],
+                          {'max_length': '100', 'blank': 'True'}),
+            'location': ('django.db.models.fields.related.ForeignKey', [],
+                         {'to': u"orm['geo.Location']", 'null': 'True',
+                          'blank': 'True'}),
+            'newsletter': (
+            'django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'password': (
+            'django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'phone_number': ('django.db.models.fields.CharField', [],
+                             {'max_length': '50', 'blank': 'True'}),
+            'picture': ('bluebottle.utils.fields.ImageField', [],
+                        {'max_length': '100', 'blank': 'True'}),
+            'place': ('django.db.models.fields.CharField', [],
+                      {'max_length': '100', 'blank': 'True'}),
+            'primary_language': ('django.db.models.fields.CharField', [],
+                                 {'default': "'en'", 'max_length': '5'}),
+            'share_money': (
+            'django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'share_time_knowledge': (
+            'django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'skypename': ('django.db.models.fields.CharField', [],
+                          {'max_length': '32', 'blank': 'True'}),
+            'twitter': ('django.db.models.fields.CharField', [],
+                        {'max_length': '15', 'blank': 'True'}),
+            'updated': ('django.db.models.fields.DateTimeField', [],
+                        {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'user_permissions': (
+            'django.db.models.fields.related.ManyToManyField', [],
+            {'symmetrical': 'False', 'related_name': "u'user_set'",
+             'blank': 'True', 'to': u"orm['auth.Permission']"}),
+            'user_type': ('django.db.models.fields.CharField', [],
+                          {'default': "'person'", 'max_length': '25'}),
+            'username': ('django.db.models.fields.SlugField', [],
+                         {'unique': 'True', 'max_length': '50'}),
+            'website': ('django.db.models.fields.URLField', [],
+                        {'max_length': '200', 'blank': 'True'})
         }
     }
 

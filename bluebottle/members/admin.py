@@ -1,7 +1,6 @@
 from django import forms
 from django.conf import settings
 from django.conf.urls import patterns
-from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
@@ -29,12 +28,14 @@ class MemberCreationForm(forms.ModelForm):
         'password_mismatch': _("The two password fields didn't match."),
     }
     email = forms.EmailField(label=_("email address"), max_length=254,
-                             help_text=_("Required. 254 characters or fewer. A valid email address."))
+                             help_text=_(
+                                 "Required. 254 characters or fewer. A valid email address."))
     password1 = forms.CharField(label=_("Password"),
                                 widget=forms.PasswordInput)
     password2 = forms.CharField(label=_("Password confirmation"),
                                 widget=forms.PasswordInput,
-                                help_text=_("Enter the same password as above, for verification."))
+                                help_text=_(
+                                    "Enter the same password as above, for verification."))
 
     class Meta:
         model = BB_USER_MODEL
@@ -71,11 +72,13 @@ class MemberChangeForm(forms.ModelForm):
     """
 
     email = forms.EmailField(label=_("email address"), max_length=254,
-                             help_text=_("Required. 254 characters or fewer. A valid email address."))
+                             help_text=_(
+                                 "Required. 254 characters or fewer. A valid email address."))
     password = ReadOnlyPasswordHashField(label=_("Password"),
-                                         help_text=_("Raw passwords are not stored, so there is no way to see "
-                                                     "this user's password, but you can change the password "
-                                                     "using <a href=\"password/\">this form</a>."))
+                                         help_text=_(
+                                             "Raw passwords are not stored, so there is no way to see "
+                                             "this user's password, but you can change the password "
+                                             "using <a href=\"password/\">this form</a>."))
 
     class Meta:
         model = BB_USER_MODEL
@@ -110,11 +113,15 @@ class MemberVotesInline(admin.TabularInline):
 class MemberAdmin(UserAdmin):
     standard_fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number')}),
-        (_("Profile"), {'fields': ('user_type', 'picture', 'about_me','location',)}),
+        (_('Personal info'), {'fields': (
+            'first_name', 'last_name', 'username', 'gender', 'birthdate',
+            'phone_number')}),
+        (_("Profile"),
+         {'fields': ('user_type', 'picture', 'about_me', 'location',)}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
         (_('Skills & interests'), {'fields': ('favourite_themes',)}),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined', 'deleted')}),
+        (_('Important dates'),
+         {'fields': ('last_login', 'date_joined', 'deleted')}),
     )
 
     staff_fieldsets = (
@@ -122,34 +129,43 @@ class MemberAdmin(UserAdmin):
     )
 
     superuser_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (_('Permissions'), {'fields': (
+            'is_active', 'is_staff', 'is_superuser', 'groups',
+            'user_permissions')}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2')}
-        ),
+         ),
     )
 
     inlines = [UserAddressInline, MemberVotesInline]
 
-    readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
+    readonly_fields = (
+        'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
 
-    export_fields = getattr(settings, 'USER_EXPORT_FIELDS', ['username', 'email'])
+    export_fields = getattr(settings, 'USER_EXPORT_FIELDS',
+                            ['username', 'email'])
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)
 
     form = MemberChangeForm
     add_form = MemberCreationForm
 
-    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter')
+    list_filter = (
+        'user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter')
 
-    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
+    list_display = (
+        'email', 'first_name', 'last_name', 'is_staff', 'date_joined',
+        'is_active',
+        'login_as_user')
     ordering = ('-date_joined', 'email',)
 
     def login_as_user(self, obj):
-        return "<a href='/login/user/{0}'>{1}</a>".format(obj.id, 'Login as user')
+        return "<a href='/login/user/{0}'>{1}</a>".format(obj.id,
+                                                          'Login as user')
 
     login_as_user.allow_tags = True
 
@@ -169,14 +185,17 @@ class MemberAdmin(UserAdmin):
     def __init__(self, *args, **kwargs):
         super(MemberAdmin, self).__init__(*args, **kwargs)
 
-        self.list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_link')
+        self.list_display = (
+            'email', 'first_name', 'last_name', 'is_staff', 'date_joined',
+            'is_active', 'login_as_link')
 
     def get_urls(self):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = patterns('',
                               (r'^login-as/(?P<user_id>\d+)/$',
-                               self.admin_site.admin_view(self.login_as_redirect)),
+                               self.admin_site.admin_view(
+                                   self.login_as_redirect)),
                               )
         return extra_urls + urls
 
@@ -187,8 +206,10 @@ class MemberAdmin(UserAdmin):
         return HttpResponseRedirect(url)
 
     def login_as_link(self, obj):
-        return "<a target='_blank' href='{0}members/member/login-as/{1}/'>{2}</a>".format(reverse('admin:index'), obj.pk, 'Login as user')
+        return "<a target='_blank' href='{0}members/member/login-as/{1}/'>{2}</a>".format(
+            reverse('admin:index'), obj.pk, 'Login as user')
 
     login_as_link.allow_tags = True
+
 
 admin.site.register(Member, MemberAdmin)

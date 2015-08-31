@@ -10,12 +10,10 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 from bluebottle.utils.utils import GetTweetMixin
 
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
 class BaseSkill(models.Model):
-
     name = models.CharField(_('english name'), max_length=100, unique=True)
     name_nl = models.CharField(_('dutch name'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
@@ -24,7 +22,7 @@ class BaseSkill(models.Model):
         return self.name
 
     class Meta:
-        ordering = ('id', )
+        ordering = ('id',)
         abstract = True
 
 
@@ -36,18 +34,24 @@ class BaseTaskMember(models.Model):
         stopped = ChoiceItem('stopped', label=_('Stopped'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
-    member = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL,
+                               related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="members")
-    status = models.CharField(_('status'), max_length=20, choices=TaskMemberStatuses.choices,
+    status = models.CharField(_('status'), max_length=20,
+                              choices=TaskMemberStatuses.choices,
                               default=TaskMemberStatuses.applied)
     motivation = models.TextField(
         _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
-    comment = models.TextField(_('Comment'), help_text=_('Comment by task owner.'), blank=True)
+    comment = models.TextField(_('Comment'),
+                               help_text=_('Comment by task owner.'),
+                               blank=True)
     time_spent = models.PositiveSmallIntegerField(
-        _('time spent'), default=0, help_text=_('Time spent executing this task.'))
+        _('time spent'), default=0,
+        help_text=_('Time spent executing this task.'))
 
     externals = models.PositiveSmallIntegerField(
-        _('Externals'), default=0, help_text=_('External people helping for this task'))
+        _('Externals'), default=0,
+        help_text=_('External people helping for this task'))
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -67,7 +71,8 @@ class BaseTaskMember(models.Model):
         self.check_number_of_members_needed(self.task)
 
     def check_number_of_members_needed(self, task):
-        members = get_taskmember_model().objects.filter(task=task, status='accepted')
+        members = get_taskmember_model().objects.filter(task=task,
+                                                        status='accepted')
         total_externals = 0
         for member in members:
             total_externals += member.externals
@@ -82,12 +87,14 @@ class BaseTaskMember(models.Model):
         if self.member.email:
             return self.member.email
         return _("No email address for this user")
+
     get_member_email.admin_order_field = 'member__email'
     get_member_email.short_description = "Member Email"
 
 
 class BaseTaskFile(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+                               related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
@@ -110,17 +117,20 @@ class BaseTask(models.Model, GetTweetMixin):
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
-    location = models.CharField(_('location'), max_length=200, null=True, blank=True)
+    location = models.CharField(_('location'), max_length=200, null=True,
+                                blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(app_label)s_%(class)s_related')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+                               related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(
         _('status'), max_length=20, choices=TaskStatuses.choices,
         default=TaskStatuses.open)
-    date_status_change = models.DateTimeField(_('date status change'), blank=True, null=True)
+    date_status_change = models.DateTimeField(_('date status change'),
+                                              blank=True, null=True)
 
     deadline = models.DateTimeField()
     tags = TaggableManager(blank=True, verbose_name=_('tags'))
@@ -129,9 +139,11 @@ class BaseTask(models.Model, GetTweetMixin):
 
     # required resources
     time_needed = models.FloatField(
-        _('time_needed'), help_text=_('Estimated number of hours needed to perform this task.'))
+        _('time_needed'),
+        help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey(settings.TASKS_SKILL_MODEL, verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey(settings.TASKS_SKILL_MODEL,
+                              verbose_name=_('Skill needed'), null=True)
 
     # internal usage
     created = CreationDateTimeField(

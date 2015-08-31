@@ -50,11 +50,13 @@ class HasIBANPayoutFilter(CustomBooleanFilter):
 
         if self.value() == '1':
             # Only show payouts with pending donations
-            queryset = queryset.exclude(receiver_account_iban='').exclude(receiver_account_bic='')
+            queryset = queryset.exclude(receiver_account_iban='').exclude(
+                receiver_account_bic='')
 
         elif self.value() == '0':
             # Don't show payouts with pending donations
-            queryset = queryset.filter(Q(receiver_account_iban='') | Q(receiver_account_bic=''))
+            queryset = queryset.filter(
+                Q(receiver_account_iban='') | Q(receiver_account_bic=''))
 
         # Make sure they're unique - if filtered
         if self.value():

@@ -3,8 +3,9 @@ from bluebottle.projects.serializers import ProjectPreviewSerializer
 
 
 def prepare_money_donated():
-    projects = Project.objects.filter(status__in=[ProjectPhase.objects.get(slug="campaign"),
-                                                  ProjectPhase.objects.get(slug="done-complete")]).all()
+    projects = Project.objects.filter(
+        status__in=[ProjectPhase.objects.get(slug="campaign"),
+                    ProjectPhase.objects.get(slug="done-complete")]).all()
 
     for project in projects:
         try:
@@ -16,8 +17,9 @@ def prepare_money_donated():
 
 
 def prepare_project_images():
-    projects = Project.objects.exclude(status__in=[ProjectPhase.objects.get(slug="plan-new"),
-                                                   ProjectPhase.objects.get(slug="done-stopped")]).all()
+    projects = Project.objects.exclude(
+        status__in=[ProjectPhase.objects.get(slug="plan-new"),
+                    ProjectPhase.objects.get(slug="done-stopped")]).all()
 
     for project in projects:
         try:
@@ -25,4 +27,3 @@ def prepare_project_images():
         except Exception:
             # Don't raise errors on corrupt or missing images
             pass
-

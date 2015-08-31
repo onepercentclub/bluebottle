@@ -1,6 +1,4 @@
-from django.utils import translation
 from bluebottle.clients.utils import tenant_url
-from bluebottle.clients import properties
 
 
 class WallpostObserver(object):

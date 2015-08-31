@@ -1,16 +1,6 @@
-import time
-import urlparse
-import os
-import json
-import requests
-import base64
-
 from bunch import bunchify
 
 from django.db import connection
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.test import LiveServerTestCase
 from django.test.utils import override_settings
 from django.test import TestCase
 
@@ -98,7 +88,7 @@ class ApiClient(RestAPIClient):
             self.renderer_classes[cls.format] = cls
 
     def get(self, path, data=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -108,7 +98,7 @@ class ApiClient(RestAPIClient):
         return super(ApiClient, self).get(path, data=data, **extra)
 
     def post(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -119,7 +109,7 @@ class ApiClient(RestAPIClient):
             path, data=data, format=format, content_type=content_type, **extra)
 
     def put(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -130,7 +120,7 @@ class ApiClient(RestAPIClient):
             path, data=data, format=format, content_type=content_type, **extra)
 
     def patch(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -142,7 +132,7 @@ class ApiClient(RestAPIClient):
 
     def delete(self, path, data=None, format='json', content_type=None,
                **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 

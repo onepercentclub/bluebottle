@@ -4,18 +4,18 @@ import django_filters
 from rest_framework import permissions
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
+from bluebottle.bluebottle_drf2.views import (
+    ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_fundraiser_model)
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
-from bluebottle.bluebottle_drf2.views import ListCreateAPIView, \
-    RetrieveUpdateDeleteAPIView, ListAPIView
-from bluebottle.utils.model_dispatcher import get_project_model, \
-    get_fundraiser_model
 
-from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto
+from .models import (TextWallpost, MediaWallpost, MediaWallpostPhoto,
+                     Wallpost, Reaction)
+from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
+                          MediaWallpostPhotoSerializer, ReactionSerializer,
+                          WallpostSerializer)
 from .permissions import IsConnectedWallpostAuthorOrReadOnly
-from .serializers import TextWallpostSerializer, MediaWallpostSerializer, \
-    MediaWallpostPhotoSerializer
-from .models import Wallpost, Reaction
-from .serializers import ReactionSerializer, WallpostSerializer
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
@@ -69,8 +69,7 @@ class TextWallpostList(ListCreateAPIView):
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     paginate_by = 5
-    permission_classes = (
-    TenantConditionalOpenClose, IsAuthenticatedOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
 
     def get_queryset(self):
         queryset = super(TextWallpostList, self).get_queryset()
@@ -154,11 +153,10 @@ class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
 
 
 class ReactionList(ListCreateAPIView):
-    # model = Reaction
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (
-    TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (TenantConditionalOpenClose,
+                          permissions.IsAuthenticatedOrReadOnly)
     paginate_by = 10
     filter_fields = ('wallpost',)
 

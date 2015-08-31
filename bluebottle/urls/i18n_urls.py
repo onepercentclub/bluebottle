@@ -1,5 +1,4 @@
 from django.conf.urls import include, url, patterns
-from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 
 from bluebottle.views import HomeView

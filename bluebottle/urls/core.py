@@ -1,14 +1,16 @@
-from bluebottle.auth.views import GetAuthToken
 from django.conf.urls import patterns, include, url
-from django.conf import settings
-from django.conf.urls.i18n import i18n_patterns
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
+from django.conf import settings
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
+from bluebottle.auth.views import GetAuthToken
+
+
 urlpatterns = patterns('',
-                       # The api urls are in the / url namespace so that they're not redirected to /en/.
+                       # The api urls are in the / url namespace so that
+                       # they're not redirected to /en/.
                        url(r'^api/users/',
                            include('bluebottle.bb_accounts.urls.api')),
                        url(r'^api/bb_organizations/',

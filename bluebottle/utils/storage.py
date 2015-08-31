@@ -8,12 +8,14 @@ __all__ = ('TenantFileSystemStorage',)
 
 
 class TenantFileSystemStorage(FileSystemStorage):
-    '''Lookup files first in $TENANT_BASE//media/ then in default location'''
+    """
+    Lookup files first in $TENANT_BASE//media/ then in default location
+    """
 
     def path(self, name):
         from django.db import connection
         from django.utils._os import safe_join
-        # FIXME: These imports are inline so that the connection object 
+        # FIXME: These imports are inline so that the connection object
         # can be mocked in tests
 
         if connection.tenant:

@@ -1,4 +1,3 @@
-import hashlib
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.base import TemplateDoesNotExist
@@ -10,9 +9,11 @@ from django.db import connection
 class FilesystemLoader(BaseLoader):
     """
     Based on FileSystemLoader from django-tenant-schemas:
-    https://github.com/bernardopires/django-tenant-schemas/blob/master/tenant_schemas/template_loaders.py#L79
+    https://github.com/bernardopires/django-tenant-schemas/blob/master/
+    tenant_schemas/template_loaders.py#L79
     Changes are:
-    - Use MULTI_TENANT_DIR from config for path (not multiple paths in MULTITENANT_TEMPLATE_DIRS)
+    - Use MULTI_TENANT_DIR from config for path (not multiple paths
+      in MULTITENANT_TEMPLATE_DIRS)
     - Use tenant.client_name not tenant.domain_url
     """
 
@@ -57,7 +58,8 @@ class FilesystemLoader(BaseLoader):
         if tried:
             error_msg = "Tried %s" % tried
         else:
-            error_msg = "Your TEMPLATE_DIRS setting is empty. Change it to point to at least one template directory."
+            error_msg = "Your TEMPLATE_DIRS setting is empty. Change it to " \
+                        "point to at least one template directory."
         raise TemplateDoesNotExist(error_msg)
 
     load_template_source.is_usable = True

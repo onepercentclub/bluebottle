@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from .models import Wallpost, MediaWallpost
+from .models import MediaWallpost
 
 
 # TODO: Add write permission for 1%CREW / Assistants.
@@ -12,7 +12,8 @@ class IsConnectedWallpostAuthorOrReadOnly(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        # Read permissions are allowed to any request, so we'll always
+        # allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 

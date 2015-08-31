@@ -1,11 +1,11 @@
-from bluebottle.utils.permissions import IsUser
-from django.utils.timezone import now
-from bluebottle.terms.models import Terms, TermsAgreement
-from bluebottle.terms.serializers import TermsSerializer, \
-    TermsAgreementSerializer
-from rest_framework.generics import ListAPIView, RetrieveAPIView, \
-    RetrieveDestroyAPIView, ListCreateAPIView
+from rest_framework.generics import (ListAPIView, RetrieveAPIView,
+                                     ListCreateAPIView)
 from rest_framework.permissions import IsAuthenticated
+
+from bluebottle.utils.permissions import IsUser
+from bluebottle.terms.models import Terms, TermsAgreement
+from bluebottle.terms.serializers import (TermsSerializer,
+                                          TermsAgreementSerializer)
 
 
 class TermsListView(ListAPIView):

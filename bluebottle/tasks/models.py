@@ -63,6 +63,7 @@ class Task(BaseTask):
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 
+
 # post_init to store state on model
 @receiver(post_init, sender=Task,
           dispatch_uid="bluebottle.tasks.Task.post_init")

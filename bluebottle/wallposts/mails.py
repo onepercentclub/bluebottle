@@ -10,13 +10,16 @@ The prescribed mail flow is as follows:
 
 1) Wallposts created
 
-    a) send email to Object owner, if Wallpost author is not the Object owner (except if he already got an email via 2c).
+    a) send email to Object owner, if Wallpost author is not the Object owner
+       (except if he already got an email via 2c).
 
 2) Reaction created on Wallpost
 
     a) send email to Object owner, if Reaction author is not the Object ower.
-    b) send email to Wallpost author, if Reaction author is not the Wallpost author.
-    c) send email to other Reaction authors that are not the Object owner or the Wallpost author (they already get an
+    b) send email to Wallpost author, if Reaction author is not the
+       Wallpost author.
+    c) send email to other Reaction authors that are not the Object owner or
+       the Wallpost author (they already get an
        email, see above).
 
 Example::
@@ -28,8 +31,9 @@ Example::
         +-- Reaction by C
 
 
-Basically, everyone in the tree gets an email if a new Wallpost or Reaction is created, except the author if the newly
-created Wallpost or Reaction. But, every unique person shall receive at most 1 email.
+Basically, everyone in the tree gets an email if a new Wallpost or Reaction
+is created, except the author if the newly created Wallpost or Reaction.
+But, every unique person shall receive at most 1 email.
 
 """
 import logging
@@ -43,12 +47,15 @@ from bluebottle.wallposts.notifiers import ObserversContainer
 
 
 # NOTE
-# The following two calls (TASK_MODEL, PROJECT_MODEL )are needed for no clear reason...
+# The following two calls (TASK_MODEL, PROJECT_MODEL )are needed for no
+# clear reason...
 # if you take them out you will receive the following error message:
 # ===========
 # django.core.management.base.CommandError: One or more models did not validate:
-# vouchers.voucher: 'order' has a relation with model fund.Order, which has either not been installed or is abstract.
-# cowry.payment: 'order' has a relation with model fund.Order, which has either not been installed or is abstract.
+# vouchers.voucher: 'order' has a relation with model fund.Order, which has
+# either not been installed or is abstract. cowry.payment: 'order' has a
+# relation with model fund.Order, which has either not been installed
+# or is abstract.
 # ===========
 TASK_MODEL = get_task_model()
 PROJECT_MODEL = get_project_model()

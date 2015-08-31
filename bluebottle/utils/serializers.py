@@ -1,12 +1,13 @@
+from HTMLParser import HTMLParser
 import sys
 import re
 
 from django.conf import settings
-from django.core.exceptions import FieldError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 from django.utils.importlib import import_module
-from django_tools.middlewares import ThreadLocal
 
+from django_tools.middlewares import ThreadLocal
 from rest_framework import serializers
 from rest_framework.serializers import get_component
 from taggit.managers import _TaggableManager
@@ -15,8 +16,6 @@ from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 
 from .validators import validate_postal_code
 from .models import Address, Language
-
-from HTMLParser import HTMLParser
 
 
 class ShareSerializer(serializers.Serializer):
@@ -323,8 +322,8 @@ class HumanReadableChoiceField(serializers.ChoiceField):
 
         components = source.split('.')
         for component in components:
-            if component == components[
-                -1]:  # last item, fetch human readable form
+            # last item, fetch human readable form
+            if component == components[-1]:
                 component = 'get_{0}_display'.format(component)
             value = get_component(value, component)
             if value is None:
@@ -332,7 +331,7 @@ class HumanReadableChoiceField(serializers.ChoiceField):
 
         return self.to_native(value.lower())
 
-#### TESTS #############
+
 # Below is test-only stuff
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 

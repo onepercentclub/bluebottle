@@ -10,7 +10,9 @@ def sentry_dsn(request):
     """
     try:
         raven_config = settings.RAVEN_CONFIG['dsn']
-    except AttributeError, KeyError:
+    except AttributeError:
+        return {}
+    except KeyError:
         return {}
 
     match = re.search(

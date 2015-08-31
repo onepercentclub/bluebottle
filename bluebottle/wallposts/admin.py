@@ -4,17 +4,15 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 
-from polymorphic.admin import PolymorphicParentModelAdmin, \
-    PolymorphicChildModelAdmin
-from sorl.thumbnail.admin.compat import AdminImageMixin
+from polymorphic.admin import (PolymorphicParentModelAdmin,
+                               PolymorphicChildModelAdmin)
+from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.utils.utils import set_author_editor_ip
-
 from bluebottle.wallposts.models import SystemWallpost
-from .models import Wallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, \
-    Reaction
 
-from sorl.thumbnail.shortcuts import get_thumbnail
+from .models import (Wallpost, MediaWallpost, TextWallpost,
+                     MediaWallpostPhoto, Reaction)
 
 
 class MediaWallpostPhotoInline(admin.TabularInline):
@@ -118,11 +116,10 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted')
+    readonly_fields = ('ip_address', 'deleted', 'wallpost_link',)
     list_display = ('created', 'author', 'content_type', 'text')
     raw_id_fields = ('author', 'editor')
     ordering = ('-created',)
-    readonly_fields = ('wallpost_link',)
 
     def wallpost_link(self, obj):
         if str(obj.content_type) == 'task':
@@ -169,21 +166,19 @@ admin.site.register(SystemWallpost, SystemWallpostAdmin)
 
 class ReactionAdmin(admin.ModelAdmin):
     # created and updated are auto-set fields. author, editor and ip_address are auto-set on save.
-    readonly_fields = (
-    'project_url', 'created', 'updated', 'author', 'editor', 'ip_address')
-    list_display = (
-    'author_full_name', 'created', 'updated', 'deleted', 'ip_address')
+    readonly_fields = ('project_url', 'created', 'updated', 'author',
+                       'editor', 'ip_address')
+    list_display = ('author_full_name', 'created', 'updated',
+                    'deleted', 'ip_address')
     list_filter = ('created', 'updated', 'deleted')
     date_hierarchy = 'created'
     ordering = ('-created',)
     raw_id_fields = ('author', 'editor')
-    search_fields = (
-    'text', 'author__username', 'author__email', 'author__first_name',
-    'author__last_name', 'ip_address')
+    search_fields = ('text', 'author__username', 'author__email',
+                     'author__first_name', 'author__last_name', 'ip_address')
 
-    fields = (
-    'text', 'project_url', 'wallpost', 'deleted', 'created', 'updated',
-    'author', 'editor', 'ip_address')
+    fields = ('text', 'project_url', 'wallpost', 'deleted', 'created',
+              'updated', 'author', 'editor', 'ip_address')
 
     def get_fieldsets(self, request, obj=None):
         """ Only show the relevant fields when adding a Reaction. """

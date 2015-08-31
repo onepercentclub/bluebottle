@@ -1,17 +1,17 @@
 from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bluebottle_drf2.serializers import \
-    PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer, \
-    TaggableSerializerMixin
+from bluebottle.bluebottle_drf2.serializers import (
+    PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer,
+    TaggableSerializerMixin)
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 
-from bluebottle.utils.model_dispatcher import get_task_model, \
-    get_taskmember_model, get_taskfile_model, \
-    get_task_skill_model
+from bluebottle.utils.model_dispatcher import (
+    get_task_model, get_taskmember_model, get_taskfile_model,
+    get_task_skill_model)
 
 BB_TASK_MODEL = get_task_model()
 BB_TASKMEMBER_MODEL = get_taskmember_model()
@@ -37,9 +37,8 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_TASKMEMBER_MODEL
-        fields = (
-            'id', 'member', 'status', 'created', 'motivation', 'task',
-            'externals')
+        fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
+                  'externals')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -70,8 +69,8 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     )
 
     def validate_deadline(self, task, field):
-        if task['project'].deadline and task['deadline'] > task[
-            'project'].deadline:
+        if task['project'].deadline \
+                and task['deadline'] > task['project'].deadline:
             raise serializers.ValidationError(
                 _('The deadline must be before the project deadline')
             )
@@ -109,9 +108,9 @@ class MyTasksSerializer(BaseTaskSerializer):
 
     class Meta:
         model = BB_TASK_MODEL
-        fields = (
-            'id', 'title', 'skill', 'project', 'time_needed', 'people_needed',
-            'status', 'deadline', 'description', 'location')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed',
+                  'people_needed', 'status', 'deadline', 'description',
+                  'location')
 
 
 # Task Wallpost serializers

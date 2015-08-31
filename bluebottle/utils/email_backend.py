@@ -3,8 +3,10 @@ import re
 import dkim
 
 from django.core.mail.backends.smtp import EmailBackend
+from django.db import connection
 from django.utils import translation
 from django.template.loader import get_template
+
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
@@ -13,9 +15,6 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
-from django.utils.encoding import force_unicode
-
-from django.db import connection
 
 logger = logging.getLogger('console')
 

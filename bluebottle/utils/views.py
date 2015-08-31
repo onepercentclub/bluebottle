@@ -15,14 +15,13 @@ from tenant_extras.utils import TenantLanguage
 
 from filetransfers.api import serve_file
 from rest_framework import generics
-from rest_framework import views, response, status
+from rest_framework import views, response
 
 from bunch import bunchify
 from taggit.models import Tag
 
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.clients.context import ClientContext
 
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
@@ -106,12 +105,13 @@ class ShareFlyer(views.APIView):
             args['sender_name'] = "John Doe"
             args['sender_email'] = "john.doe@example.com"
 
-        args['share_motivation'] = """(sample motivation) Great to see you again this afternoon. Attached you'll find a project flyer for the big event next friday. If you care to join in, please let me know, I'll add you as my +1 on the attendee list.
-
+        args['share_motivation'] = """
+        (sample motivation) Great to see you again this afternoon.
+        Attached you'll find a project flyer for the big event next friday.
+        If you care to join in, please let me know,
+        I'll add you as my +1 on the attendee list.
         Hope to hear from you soon
-
         Cheers,
-
         Jane"""
         result = render_to_string('utils/mails/share_flyer.mail.html', {},
                                   Context(args))

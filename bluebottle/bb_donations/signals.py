@@ -1,7 +1,7 @@
 from django.dispatch.dispatcher import receiver
 from django_fsm.signals import post_transition
-from django.contrib.auth.models import AnonymousUser
-from bluebottle.bb_donations.donationmail import new_oneoff_donation, successful_donation_fundraiser_mail
+from bluebottle.bb_donations.donationmail import (
+    new_oneoff_donation, successful_donation_fundraiser_mail)
 from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import SystemWallpost
@@ -16,20 +16,25 @@ def _order_status_changed(sender, instance, **kwargs):
     - Get the status from the Order and Send an Email.
     """
 
-    if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING, StatusDefinition.FAILED]:
+    if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
+                           StatusDefinition.FAILED]:
         # Is order transitioning into the success or pending state - this should
         # only happen once.
 
-        first_time_success = (kwargs['source'] not in [StatusDefinition.SUCCESS, StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.SUCCESS, StatusDefinition.PENDING])
+        first_time_success = (
+            kwargs['source'] not in [StatusDefinition.SUCCESS,
+                                     StatusDefinition.PENDING]
+            and kwargs['target'] in [StatusDefinition.SUCCESS,
+                                     StatusDefinition.PENDING])
 
         # Process each donation in the order
         for donation in instance.donations.all():
             # Update amounts for the associated project
             donation.project.update_amounts()
-                
-            # Send mail / create wallposts if status transitions in to 
-            # success/pending for the first time and only if it's a one-off donation.
+
+            # Send mail / create wallposts if status transitions in to
+            # success/pending for the first time and only if it's a
+            # one-off donation.
             if first_time_success and instance.order_type == "one-off":
                 if not donation.anonymous:
                     author = donation.order.user
@@ -39,7 +44,7 @@ def _order_status_changed(sender, instance, **kwargs):
                 successful_donation_fundraiser_mail(donation)
                 new_oneoff_donation(donation)
 
-                #Create Wallpost on project wall
+                # Create Wallpost on project wall
                 post = SystemWallpost()
                 post.content_object = donation.project
                 post.related_object = donation

@@ -8,7 +8,8 @@ from bluebottle.bb_orders.views import ManageOrderDetail
 from django.core.urlresolvers import reverse
 from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, \
+    ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
@@ -27,7 +28,6 @@ DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
 class DonationApiTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(DonationApiTestCase, self).setUp()
 
@@ -70,7 +70,6 @@ class DonationApiTestCase(BluebottleTestCase):
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
 @patch.object(ManageOrderDetail, 'check_status_psp')
 class TestDonationPermissions(DonationApiTestCase):
-
     def test_user_is_order_owner(self, mock_check_status_psp):
         """ Test that a user that is owner of the order can post a new donation """
         donation1 = {
@@ -80,7 +79,8 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1, token=self.user_token)
+        response = self.client.post(reverse('manage-donation-list'), donation1,
+                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
@@ -95,7 +95,8 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1, token=self.user2_token)
+        response = self.client.post(reverse('manage-donation-list'), donation1,
+                                    token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
@@ -103,7 +104,8 @@ class TestDonationPermissions(DonationApiTestCase):
     def test_order_status_not_new(self, mock_check_status_psp):
         """ Test that a non-new order status produces a forbidden response """
 
-        order = OrderFactory.create(user=self.user, status=StatusDefinition.SUCCESS)
+        order = OrderFactory.create(user=self.user,
+                                    status=StatusDefinition.SUCCESS)
 
         donation1 = {
             "project": self.project.slug,
@@ -112,7 +114,8 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1, token=self.user_token)
+        response = self.client.post(reverse('manage-donation-list'), donation1,
+                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
@@ -120,7 +123,8 @@ class TestDonationPermissions(DonationApiTestCase):
     def test_order_status_new(self, mock_check_status_psp):
         """ Test that a new order status produces a 201 created response """
 
-        order = OrderFactory.create(user=self.user, status=StatusDefinition.CREATED)
+        order = OrderFactory.create(user=self.user,
+                                    status=StatusDefinition.CREATED)
 
         donation1 = {
             "project": self.project.slug,
@@ -129,7 +133,8 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(DONATION_MODEL.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1, token=self.user_token)
+        response = self.client.post(reverse('manage-donation-list'), donation1,
+                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
@@ -147,7 +152,7 @@ class TestDonationPermissions(DonationApiTestCase):
 
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
-                                   kwargs={'pk': donation.id}),
+                                           kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user2_token)
 
@@ -167,7 +172,7 @@ class TestDonationPermissions(DonationApiTestCase):
 
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
-                                   kwargs={'pk': donation.id}),
+                                           kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
 
@@ -177,7 +182,8 @@ class TestDonationPermissions(DonationApiTestCase):
     def test_donation_update_order_not_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does not have status CREATED produces 403 FORBIDDEN"""
 
-        order = OrderFactory.create(user=self.user, status=StatusDefinition.SUCCESS)
+        order = OrderFactory.create(user=self.user,
+                                    status=StatusDefinition.SUCCESS)
 
         donation = DonationFactory(order=order, amount=35)
 
@@ -189,7 +195,7 @@ class TestDonationPermissions(DonationApiTestCase):
 
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
-                                   kwargs={'pk': donation.id}),
+                                           kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
 
@@ -199,7 +205,8 @@ class TestDonationPermissions(DonationApiTestCase):
     def test_donation_update_order_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does has status CREATED produces 200 OK response"""
 
-        order = OrderFactory.create(user=self.user, status=StatusDefinition.CREATED)
+        order = OrderFactory.create(user=self.user,
+                                    status=StatusDefinition.CREATED)
 
         donation = DonationFactory(order=order, amount=35)
 
@@ -211,24 +218,25 @@ class TestDonationPermissions(DonationApiTestCase):
 
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
-                                   kwargs={'pk': donation.id}),
+                                           kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(DONATION_MODEL.objects.count(), 1)
 
+
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
 @patch.object(ManageOrderDetail, 'check_status_psp')
 class TestCreateDonation(DonationApiTestCase):
-
     def test_create_single_donation(self, check_status_psp):
         """
         Test donation in the current donation flow where we have just one donation that can't be deleted.
         """
 
         # Create an order
-        response = self.client.post(self.manage_order_list_url, {}, token=self.user1_token)
+        response = self.client.post(self.manage_order_list_url, {},
+                                    token=self.user1_token)
         order_id = response.data['id']
 
         fundraiser = FundraiserFactory.create(amount=100)
@@ -240,7 +248,8 @@ class TestCreateDonation(DonationApiTestCase):
             "amount": 50
         }
 
-        response = self.client.post(self.manage_donation_list_url, donation1, token=self.user1_token)
+        response = self.client.post(self.manage_donation_list_url, donation1,
+                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'created')
         donation_id = response.data['id']
@@ -257,7 +266,8 @@ class TestCreateDonation(DonationApiTestCase):
         """
 
         # Create an order
-        response = self.client.post(self.manage_order_list_url, {}, token=self.user1_token)
+        response = self.client.post(self.manage_order_list_url, {},
+                                    token=self.user1_token)
         order_id = response.data['id']
 
         donation1 = {
@@ -266,7 +276,8 @@ class TestCreateDonation(DonationApiTestCase):
             "amount": 35
         }
 
-        response = self.client.post(self.manage_donation_list_url, donation1, token=self.user1_token)
+        response = self.client.post(self.manage_donation_list_url, donation1,
+                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'created')
         donation_id = response.data['id']
@@ -284,7 +295,8 @@ class TestCreateDonation(DonationApiTestCase):
         """
 
         # Create an order
-        response = self.client.post(self.manage_order_list_url, {}, token=self.user1_token)
+        response = self.client.post(self.manage_order_list_url, {},
+                                    token=self.user1_token)
         order_id = response.data['id']
 
         donation1 = {
@@ -293,7 +305,8 @@ class TestCreateDonation(DonationApiTestCase):
             "amount": 35
         }
 
-        response = self.client.post(self.manage_donation_list_url, donation1, token=self.user1_token)
+        response = self.client.post(self.manage_donation_list_url, donation1,
+                                    token=self.user1_token)
         donation_id = response.data['id']
 
         # Check that the order total is equal to the donation amount
@@ -303,9 +316,11 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.data['total'], 35)
 
         # Check that this user can change the amount
-        donation_url = "{0}{1}".format(self.manage_donation_list_url, donation_id)
+        donation_url = "{0}{1}".format(self.manage_donation_list_url,
+                                       donation_id)
         donation1['amount'] = 50
-        response = self.client.put(donation_url, donation1, token=self.user1_token)
+        response = self.client.put(donation_url, donation1,
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Check that the order total is equal to the increased donation amount
@@ -320,7 +335,8 @@ class TestCreateDonation(DonationApiTestCase):
             "order": order_id,
             "amount": 47
         }
-        response = self.client.post(self.manage_donation_list_url, donation2, token=self.user1_token)
+        response = self.client.post(self.manage_donation_list_url, donation2,
+                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'created')
 
@@ -353,12 +369,14 @@ class TestCreateDonation(DonationApiTestCase):
         }
 
         # Should not be able to add more donations to this order now.
-        response = self.client.post(self.manage_donation_list_url, donation3, token=self.user1_token)
+        response = self.client.post(self.manage_donation_list_url, donation3,
+                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Check that this user can't change the amount of an donation
         donation1['amount'] = 5
-        response = self.client.put(donation_url, donation1, token=self.user1_token)
+        response = self.client.put(donation_url, donation1,
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
@@ -367,12 +385,17 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
         donation_url = reverse('manage-donation-list')
 
         # create a new anonymous donation
-        response = self.client.post(donation_url, {'order': self.order.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True}, token=self.user_token)
+        response = self.client.post(donation_url, {'order': self.order.pk,
+                                                   'project': self.project.slug,
+                                                   'amount': 50,
+                                                   'anonymous': True},
+                                    token=self.user_token)
         self.assertEqual(response.status_code, 201)
 
         # retrieve the donation just created
         donation_id = response.data['id']
-        donation_url = reverse('manage-donation-detail', kwargs={'pk': donation_id})
+        donation_url = reverse('manage-donation-detail',
+                               kwargs={'pk': donation_id})
         response = self.client.get(donation_url, token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -408,7 +431,10 @@ class TestUnauthenticatedDonationCreate(DonationApiTestCase):
         donation_url = reverse('manage-donation-list')
 
         # create a new anonymous donation
-        response = self.client.post(donation_url, {'order': self.order_anon.pk, 'project': self.project.slug, 'amount': 50, 'anonymous': True})
+        response = self.client.post(donation_url, {'order': self.order_anon.pk,
+                                                   'project': self.project.slug,
+                                                   'amount': 50,
+                                                   'anonymous': True})
         self.assertEqual(response.status_code, 201)
 
 
@@ -417,15 +443,18 @@ class TestMyProjectDonationList(DonationApiTestCase):
     """
     Test that the project donations list only works for the project owner
     """
+
     def setUp(self):
         super(TestMyProjectDonationList, self).setUp()
 
-        self.project3 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
+        self.project3 = ProjectFactory.create(amount_asked=5000,
+                                              owner=self.user1)
         self.project3.set_status('campaign')
 
         # User 2 makes a donation
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=1000, project=self.project3, order=order)
+        donation = DonationFactory.create(amount=1000, project=self.project3,
+                                          order=order)
 
         order.locked()
         order.succeeded()
@@ -433,7 +462,9 @@ class TestMyProjectDonationList(DonationApiTestCase):
         self.project_donation_list_url = reverse('my-project-donation-list')
 
     def test_my_project_donation_list(self, check_status_psp):
-        response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, token=self.user1_token)
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug},
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
@@ -444,15 +475,20 @@ class TestMyProjectDonationList(DonationApiTestCase):
     def test_successful_my_project_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=2000, project=self.project3, order=order)
+        donation = DonationFactory.create(amount=2000, project=self.project3,
+                                          order=order)
 
-        response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, token=self.user1_token)
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug},
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1, 'Only the successful donation should be returned')
-
+        self.assertEqual(len(response.data), 1,
+                         'Only the successful donation should be returned')
 
     def test_my_project_donation_list_unauthorized(self, check_status_psp):
-        response = self.client.get(self.project_donation_list_url, {'project': self.project3.slug}, token=self.user2_token)
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug},
+                                   token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -461,24 +497,33 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
     """
     Test that the fundraiser donations list only works for the fundraiser owner
     """
+
     def setUp(self):
         super(TestMyFundraiserDonationList, self).setUp()
 
-        self.project4 = ProjectFactory.create(amount_asked=5000, owner=self.user1)
+        self.project4 = ProjectFactory.create(amount_asked=5000,
+                                              owner=self.user1)
         self.project4.set_status('campaign')
-        self.fundraiser = FundraiserFactory.create(amount=4000, owner=self.user1, project=self.project4)
+        self.fundraiser = FundraiserFactory.create(amount=4000,
+                                                   owner=self.user1,
+                                                   project=self.project4)
 
         # User 2 makes a donation
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=1000, project=self.project4, fundraiser=self.fundraiser, order=order)
+        donation = DonationFactory.create(amount=1000, project=self.project4,
+                                          fundraiser=self.fundraiser,
+                                          order=order)
 
         order.locked()
         order.succeeded()
 
-        self.fundraiser_donation_list_url = reverse('my-fundraiser-donation-list')
+        self.fundraiser_donation_list_url = reverse(
+            'my-fundraiser-donation-list')
 
     def test_my_fundraiser_donation_list(self, check_status_psp):
-        response = self.client.get(self.fundraiser_donation_list_url, {'fundraiser': self.fundraiser.pk}, token=self.user1_token)
+        response = self.client.get(self.fundraiser_donation_list_url,
+                                   {'fundraiser': self.fundraiser.pk},
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
@@ -490,13 +535,19 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
     def test_successful_my_fundraiser_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=2000, project=self.project4, fundraiser=self.fundraiser, order=order)
+        donation = DonationFactory.create(amount=2000, project=self.project4,
+                                          fundraiser=self.fundraiser,
+                                          order=order)
 
-        response = self.client.get(self.fundraiser_donation_list_url, {'fundraiser': self.fundraiser.pk}, token=self.user1_token)
+        response = self.client.get(self.fundraiser_donation_list_url,
+                                   {'fundraiser': self.fundraiser.pk},
+                                   token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1, 'Only the successful donation should be returned')
-
+        self.assertEqual(len(response.data), 1,
+                         'Only the successful donation should be returned')
 
     def test_my_fundraiser_donation_list_unauthorized(self, check_status_psp):
-        response = self.client.get(self.fundraiser_donation_list_url, {'project': self.fundraiser.pk}, token=self.user2_token)
+        response = self.client.get(self.fundraiser_donation_list_url,
+                                   {'project': self.fundraiser.pk},
+                                   token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

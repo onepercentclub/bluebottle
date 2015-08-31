@@ -22,10 +22,12 @@ from ..views import (
 urlpatterns = patterns(
     '',
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
-    url(r'^disable-account/(?P<user_id>\d+)/(?P<token>[0-9A-Za-z]+)/$', DisableAccount.as_view(), name='disable-account'),
+    url(r'^disable-account/(?P<user_id>\d+)/(?P<token>[0-9A-Za-z]+)/$',
+        DisableAccount.as_view(), name='disable-account'),
     url(r'^current$', CurrentUser.as_view(), name='user-current'),
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
-    url(r'^passwordset/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})$',
+    url(
+        r'^passwordset/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})$',
         PasswordSet.as_view(), name='password-set'),
     url(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
         name='manage-profile'),

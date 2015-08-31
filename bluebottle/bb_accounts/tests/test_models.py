@@ -11,14 +11,14 @@ from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectPhaseFactory, \
+    ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 
 TASKS_MEMBER_MODEL = get_taskmember_model()
 
 
 class BlueBottleUserManagerTestCase(BluebottleTestCase):
-
     """
     Test case for the model manager of the abstract user model.
     """
@@ -39,14 +39,14 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         Tests exception raising when trying to create a new user without
         providing an email.
         """
-        with self.assertRaisesMessage(IntegrityError, 'null value in column "email" violates not-null constraint'):
+        with self.assertRaisesMessage(IntegrityError,
+                                      'null value in column "email" violates not-null constraint'):
             user = BlueBottleUserFactory.build()
             user.email = None
             user.save()
 
 
 class BlueBottleUserTestCase(BluebottleTestCase):
-
     """
     Test case for the implementation of the abstract user model.
     """
@@ -235,10 +235,14 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         """ Test that a base user model has all the expected fields """
         from bluebottle.members.models import Member
 
-        user_fields = set(['email', 'username', 'is_staff', 'is_active', 'date_joined', 'updated', 'deleted',
-                           'user_type', 'first_name', 'last_name', 'location', 'picture', 'about_me',
-                           'primary_language', 'share_time_knowledge', 'share_money', 'newsletter', 'phone_number',
-                           'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
+        user_fields = set(
+            ['email', 'username', 'is_staff', 'is_active', 'date_joined',
+             'updated', 'deleted',
+             'user_type', 'first_name', 'last_name', 'location', 'picture',
+             'about_me',
+             'primary_language', 'share_time_knowledge', 'share_money',
+             'newsletter', 'phone_number',
+             'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
 
         self.assertEquals(
             set(f.name for f in Member._meta.fields) & user_fields, user_fields)

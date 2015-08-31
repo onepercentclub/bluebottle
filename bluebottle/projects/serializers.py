@@ -135,7 +135,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
-                  'video_html', 'partner', 'location')
+                  'video_html', 'partner', 'location', 'project_type')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
@@ -163,7 +163,17 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
                   'partner', 'is_funding', 'people_requested',
                   'people_registered', 'location', 'vote_count',
-                  'voting_deadline')
+                  'voting_deadline', 'project_type')
+
+
+class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(source='slug', read_only=True)
+    image = SorlImageField('image', '400x300', crop='center')
+
+    class Meta:
+        model = PROJECT_MODEL
+        fields = ('id', 'title', 'status', 'image', 'latitude', 'longitude')
 
 
 class ManageProjectSerializer(TaggableSerializerMixin,
@@ -278,7 +288,8 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                   'account_bank_country', 'tasks', 'amount_asked',
                   'amount_donated', 'amount_needed', 'video_url',
                   'video_html', 'partner', 'is_funding', 'story',
-                  'budget_lines', 'deadline', 'latitude', 'longitude')
+                  'budget_lines', 'deadline', 'latitude', 'longitude',
+                  'project_type')
 
 
 class ProjectSupporterSerializer(serializers.ModelSerializer):

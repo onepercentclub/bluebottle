@@ -14,4 +14,3 @@ class TermsFactory(factory.DjangoModelFactory):
     date = now() - timedelta(weeks=4)
     contents = u"Apply yourself!"
     version = "1.0"
-

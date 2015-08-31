@@ -14,7 +14,8 @@ class TermsForm(forms.ModelForm):
 class TermsAdmin(admin.ModelAdmin):
     model = Terms
     form = TermsForm
-    raw_id_fields = ('author', )
+    raw_id_fields = ('author',)
+
 
 admin.site.register(Terms, TermsAdmin)
 
@@ -24,5 +25,6 @@ class TermsAgreementAdmin(admin.ModelAdmin):
     readonly_fields = ('user', 'terms')
     fields = readonly_fields
     list_display = readonly_fields
+
 
 admin.site.register(TermsAgreement, TermsAgreementAdmin)

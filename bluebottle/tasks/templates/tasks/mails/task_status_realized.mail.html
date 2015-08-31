@@ -2,15 +2,16 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=to.short_name  %}
+    {% blocktrans with receiver_name=to.short_name %}
 
-Hello {{receiver_name}}
-<br><br>
-You've set your task "{{title}}" to realised.<br>
-Please be sure to confirm all participants.
-{% endblocktrans %}
+        Hello {{ receiver_name }}
+        <br><br>
+        You've set your task "{{ title }}" to realised.<br>
+        Please be sure to confirm all participants.
+    {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}{{ link }}" class="action-email">{% trans 'Confirm participants' context 'email' %}</a>
+    <a href="{{ site }}{{ link }}"
+       class="action-email">{% trans 'Confirm participants' context 'email' %}</a>
 {% endblock %}`

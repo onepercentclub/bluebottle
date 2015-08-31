@@ -9,6 +9,7 @@ from bluebottle.test.utils import BluebottleTestCase
 # import taskmail in order to properly register mail handlers. Without it tests mail fail
 from bluebottle.bb_tasks import taskmail
 
+
 @override_settings(SEND_WELCOME_MAIL=False)
 class TestTaskMails(BluebottleTestCase):
     """
@@ -31,11 +32,13 @@ class TestTaskMails(BluebottleTestCase):
         self.assertEquals(len(mail.outbox), 0)
         self.task.save()
 
-        self.task_member = TaskMemberFactory.create(task=self.task, status='applied')
+        self.task_member = TaskMemberFactory.create(task=self.task,
+                                                    status='applied')
 
         # Task owner receives email about new task member
         self.assertEquals(len(mail.outbox), 1)
-        self.assertNotEquals(mail.outbox[0].body.find("applied for your task"), -1)
+        self.assertNotEquals(mail.outbox[0].body.find("applied for your task"),
+                             -1)
         self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
 
         self.task_member.status = 'accepted'
@@ -80,4 +83,3 @@ class TestTaskMails(BluebottleTestCase):
         self.task.deadline_reached()
         self.assertEquals(len(mail.outbox), 1)
         self.failIf(mail.outbox[0].body.find("The deadline of your task") == -1)
-

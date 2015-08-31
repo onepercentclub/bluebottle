@@ -15,7 +15,8 @@ class DutchBankAccountFieldValidator(RegexValidator):
     main_message = _("Dutch bank account numbers have 1 - 7, 9 or 10 digits.")
 
     def __init__(self, regex=None, message=None, code=None):
-        super(DutchBankAccountFieldValidator, self).__init__(regex='^[0-9]+$', message=self.main_message)
+        super(DutchBankAccountFieldValidator, self).__init__(regex='^[0-9]+$',
+                                                             message=self.main_message)
 
     def __call__(self, value):
         super(DutchBankAccountFieldValidator, self).__call__(value)
@@ -27,13 +28,13 @@ class DutchBankAccountFieldValidator(RegexValidator):
             if len(value) == 9:
                 value = "0" + value
 
-            eleven_test_sum = sum([int(a)*b for a, b in zip(value, range(1, 11))])
+            eleven_test_sum = sum(
+                [int(a) * b for a, b in zip(value, range(1, 11))])
             if eleven_test_sum % 11 != 0:
                 raise ValidationError(_("Invalid Dutch bank account number."))
 
 
 class DutchBankAccountField(models.CharField):
-
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('max_length', 10)
         super(DutchBankAccountField, self).__init__(*args, **kwargs)
@@ -47,6 +48,7 @@ class ImageField(sorl.thumbnail.fields.ImageField):
 
     The list of valid mime-types can be set using the IMAGE_ALLOWED_MIME_TYPES setting.
     """
+
     def formfield(self, **kwargs):
         defaults = {'form_class': RestrictedImageFormField}
         defaults.update(kwargs)
@@ -55,6 +57,7 @@ class ImageField(sorl.thumbnail.fields.ImageField):
 
 class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
     """ Actual FormField that does the validation of the mime-types."""
+
     def to_python(self, data):
         """
         Checks that the file-upload field data contains a valid image (GIF,
@@ -64,11 +67,10 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
             raise forms.ValidationError(self.error_messages['invalid_image'])
         return super(RestrictedImageFormField, self).to_python(data)
 
-
-
 # If south is installed, ensure that DutchBankAccountField will be introspected just like a normal CharField
 try:
     from south.modelsinspector import add_introspection_rules
+
     add_introspection_rules([], ["^apps.fund\.fields\.DutchBankAccountField"])
 except ImportError:
     pass

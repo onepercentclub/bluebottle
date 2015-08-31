@@ -1,5 +1,6 @@
 import factory
-from bluebottle.recurring_donations.models import MonthlyDonor, MonthlyDonorProject
+from bluebottle.recurring_donations.models import MonthlyDonor, \
+    MonthlyDonorProject
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -24,4 +25,3 @@ class MonthlyDonorProjectFactory(factory.DjangoModelFactory):
 
     project = factory.SubFactory(ProjectFactory)
     donor = factory.SubFactory(MonthlyDonorFactory)
-

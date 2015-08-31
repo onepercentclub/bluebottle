@@ -1,10 +1,10 @@
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, BaseSkill
+from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
+    BaseSkill
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from django.utils.translation import ugettext as _
 
 from tenant_extras.utils import TenantLanguage
-
 
 GROUP_PERMS = {
     'Staff': {
@@ -26,11 +26,12 @@ class Task(BaseTask):
         # send "The deadline of your task" - mail
 
         self.status = 'realized'
-        self._init_status = 'realized' # suppress post_save activation
+        self._init_status = 'realized'  # suppress post_save activation
         self.save()
 
         with TenantLanguage(self.author.primary_language):
-            subject = _("The deadline for task '{0}' has been reached").format(self.title)
+            subject = _("The deadline for task '{0}' has been reached").format(
+                self.title)
 
         send_mail(
             template_name="tasks/mails/task_deadline_reached.mail",
@@ -63,18 +64,22 @@ from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 
 # post_init to store state on model
-@receiver(post_init, sender=Task, dispatch_uid="bluebottle.tasks.Task.post_init")
+@receiver(post_init, sender=Task,
+          dispatch_uid="bluebottle.tasks.Task.post_init")
 def task_post_init(sender, instance, **kwargs):
     instance._init_status = instance.status
 
+
 # post save to check if changed?
-@receiver(post_save, sender=Task, dispatch_uid="bluebottle.tasks.Task.post_save")
+@receiver(post_save, sender=Task,
+          dispatch_uid="bluebottle.tasks.Task.post_save")
 def task_post_save(sender, instance, **kwargs):
     try:
         if instance._init_status != instance.status:
             instance.status_changed(instance._init_status, instance.status)
     except AttributeError:
         pass
+
 
 class Skill(BaseSkill):
     pass
@@ -86,4 +91,3 @@ class TaskMember(BaseTaskMember):
 
 class TaskFile(BaseTaskFile):
     pass
-

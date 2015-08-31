@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 
 class StatisticSerializer(serializers.Serializer):
-
     donated = serializers.DecimalField(source='donated')
     projects_online = serializers.IntegerField(source='projects_online')
     projects_realized = serializers.IntegerField(source='projects_realized')
@@ -10,4 +9,5 @@ class StatisticSerializer(serializers.Serializer):
     people_involved = serializers.IntegerField(source='people_involved')
 
     class Meta:
-        fields = ('donated', 'projects_online', 'projects_realized', 'tasks_realized', 'people_involved')
+        fields = ('donated', 'projects_online', 'projects_realized',
+                  'tasks_realized', 'people_involved')

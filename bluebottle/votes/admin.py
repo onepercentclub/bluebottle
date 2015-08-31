@@ -10,7 +10,8 @@ class ProjectFilter(admin.SimpleListFilter):
     parameter_name = 'project'
 
     def lookups(self, request, model_admin):
-        projects = [obj.project for obj in model_admin.model.objects.order_by('project__title').distinct('project__title').all()]
+        projects = [obj.project for obj in model_admin.model.objects.order_by(
+            'project__title').distinct('project__title').all()]
         return [(project.id, project.title) for project in projects]
 
     def queryset(self, request, queryset):
@@ -23,7 +24,7 @@ class ProjectFilter(admin.SimpleListFilter):
 class VoteAdmin(ImprovedModelForm, admin.ModelAdmin):
     raw_id_fields = ('voter', 'project')
     list_display = ('voter', 'project', 'created')
-    list_filter = (ProjectFilter, )
+    list_filter = (ProjectFilter,)
+
 
 admin.site.register(Vote, VoteAdmin)
-

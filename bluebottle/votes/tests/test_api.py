@@ -15,6 +15,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
     Sets up a common set of three ``Project``s and three ``ProjectTheme``s,
     as well as a dummy testing user which can be used for unit tests.
     """
+
     def setUp(self):
         super(ProjectVotesAPITestCase, self).setUp()
 
@@ -42,7 +43,8 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                          "Object with slug=none-existing-project does not exist.")
 
     def test_vote_unauthenticated(self):
-        response = self.client.post(self.vote_url, {'project': self.project1.slug})
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project1.slug})
         self.assertEqual(response.status_code, 403)
 
     def test_vote_twice(self):

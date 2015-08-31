@@ -2,10 +2,9 @@ from django.utils import translation
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
+
 class WallpostObserver(object):
-
     def __init__(self, instance):
-
         # the object wall the post is left (project, task...)
         self.post = instance.content_object
 
@@ -19,7 +18,6 @@ class WallpostObserver(object):
 
 
 class ReactionObserver(object):
-
     def __init__(self, instance):
         self.reaction = instance
         self.post = instance.wallpost
@@ -32,7 +30,6 @@ class ReactionObserver(object):
 
 
 class ObserversContainer:
-
     wallpost_observer_list = []
     reaction_observer_list = []
 

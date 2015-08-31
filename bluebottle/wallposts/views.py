@@ -5,12 +5,15 @@ from rest_framework import permissions
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
-from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
-from bluebottle.utils.model_dispatcher import get_project_model, get_fundraiser_model
+from bluebottle.bluebottle_drf2.views import ListCreateAPIView, \
+    RetrieveUpdateDeleteAPIView, ListAPIView
+from bluebottle.utils.model_dispatcher import get_project_model, \
+    get_fundraiser_model
 
 from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto
 from .permissions import IsConnectedWallpostAuthorOrReadOnly
-from .serializers import TextWallpostSerializer, MediaWallpostSerializer, MediaWallpostPhotoSerializer
+from .serializers import TextWallpostSerializer, MediaWallpostSerializer, \
+    MediaWallpostPhotoSerializer
 from .models import Wallpost, Reaction
 from .serializers import ReactionSerializer, WallpostSerializer
 
@@ -18,6 +21,7 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
+
 
 class WallpostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")
@@ -43,7 +47,8 @@ class WallpostList(ListAPIView):
             content_type = ContentType.objects.get_for_model(PROJECT_MODEL)
         else:
             white_listed_apps = ['projects', 'tasks', 'fundraisers']
-            content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(name=parent_type)
+            content_type = ContentType.objects.filter(
+                app_label__in=white_listed_apps).get(name=parent_type)
         queryset = queryset.filter(content_type=content_type)
 
         if parent_type == 'project' and parent_id:
@@ -64,7 +69,8 @@ class TextWallpostList(ListCreateAPIView):
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     paginate_by = 5
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, )
+    permission_classes = (
+    TenantConditionalOpenClose, IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         queryset = super(TextWallpostList, self).get_queryset()
@@ -99,7 +105,7 @@ class MediaWallpostList(TextWallpostList):
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
     model = Wallpost
     serializer_class = WallpostSerializer
-    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, )
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 
 
 class MediaWallpostPhotoList(ListCreateAPIView):
@@ -114,7 +120,7 @@ class MediaWallpostPhotoList(ListCreateAPIView):
             obj.editor = self.request.user
         obj.ip_address = get_client_ip(self.request)
 
-    def create(self, request, *args, **kwargs): #FIXME
+    def create(self, request, *args, **kwargs):  # FIXME
         """
         Work around browser issues.
 
@@ -136,20 +142,23 @@ class MediaWallpostPhotoList(ListCreateAPIView):
         post = request.POST.get('mediawallpost', False)
         if post and post == u'null':
             request.POST['mediawallpost'] = u''
-        return super(MediaWallpostPhotoList, self).create(request, *args, **kwargs)
+        return super(MediaWallpostPhotoList, self).create(request, *args,
+                                                          **kwargs)
 
 
 class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
     model = MediaWallpostPhoto
     serializer_class = MediaWallpostPhotoSerializer
-    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly, IsConnectedWallpostAuthorOrReadOnly)
+    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,
+                          IsConnectedWallpostAuthorOrReadOnly)
 
 
 class ReactionList(ListCreateAPIView):
     # model = Reaction
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (
+    TenantConditionalOpenClose, permissions.IsAuthenticatedOrReadOnly,)
     paginate_by = 10
     filter_fields = ('wallpost',)
 

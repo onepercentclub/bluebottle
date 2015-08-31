@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Backend calls to docdata.
 

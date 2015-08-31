@@ -17,7 +17,7 @@ def prepare_money_donated():
 
 def prepare_project_images():
     projects = Project.objects.exclude(status__in=[ProjectPhase.objects.get(slug="plan-new"),
-                                                   ProjectPhase.objects.get(slug="done-stopped")]).all()
+                                                   ProjectPhase.objects.get(slug="closed")]).all()
 
     for project in projects:
         try:

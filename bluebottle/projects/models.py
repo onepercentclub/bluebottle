@@ -71,7 +71,8 @@ class ProjectManager(models.Manager):
             queryset = queryset.order_by('status', 'amount_needed')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
-            queryset = queryset.order_by('status', '-campaign_started', '-created')
+            queryset = queryset.extra(select={'has_campaign_started': 'campaign_started is null'})
+            queryset = queryset.order_by('status', 'has_campaign_started', '-campaign_started', '-created')
         elif ordering == 'popularity':
             queryset = queryset.order_by('status', '-popularity')
             if status == 5:
@@ -363,18 +364,18 @@ class Project(BaseProject):
         #Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
                                                            Q(slug="done-incomplete") |
-                                                           Q(slug="done-stopped")) and self.deadline < timezone.now():
-            if self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-            elif self.amount_donated <= 20 or not self.campaign_started:
+                                                           Q(slug="closed")) and self.deadline < timezone.now():
+            if (self.amount_asked > 0 and self.amount_donated <= 20) or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
+            elif (self.amount_asked > 0) and self.amount_donated >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
 
         if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |
                                                            Q(slug="done-incomplete") |
-                                                           Q(slug="done-stopped")) and not self.campaign_ended:
+                                                           Q(slug="closed")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         super(Project, self).save(*args, **kwargs)

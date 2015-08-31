@@ -119,20 +119,22 @@ class Project(BaseProject):
                                        default=False)
 
     allow_overfunding = models.BooleanField(default=True)
-    story = models.TextField(_("story"), help_text=_(
-        "This is the help text for the story field"), blank=True,
-                             null=True)
+    story = models.TextField(
+        _("story"), blank=True, null=True,
+        help_text=_("This is the help text for the story field"))
 
     # TODO: Remove these fields?
-    effects = models.TextField(_("effects"), help_text=_(
-        "What will be the Impact? How will your Smart Idea change the lives of people?"),
-                               blank=True, null=True)
+    effects = models.TextField(
+        _("effects"), blank=True, null=True,
+        help_text=_("What will be the Impact? How will your Smart Idea "
+                    "change the lives of people?"))
     for_who = models.TextField(_("for who"),
                                help_text=_("Describe your target group"),
                                blank=True, null=True)
-    future = models.TextField(_("future"), help_text=_(
-        "How will this project be self-sufficient and sustainable in the long term?"),
-                              blank=True, null=True)
+    future = models.TextField(
+        _("future"), blank=True, null=True,
+        help_text=_("How will this project be self-sufficient and sustainable "
+                    "in the long term?"))
 
     date_submitted = models.DateTimeField(_('Campaign Submitted'), null=True,
                                           blank=True)
@@ -174,19 +176,17 @@ class Project(BaseProject):
 
         if recent_donors and recent_donations:
             self.popularity = 50 * (
-            float(recent_donors) / float(total_recent_donors)) + 50 * (
-            float(recent_donations) / float(total_recent_donations))
+                float(recent_donors) / float(total_recent_donors)) + 50 * (
+                float(recent_donations) / float(total_recent_donations))
         else:
             self.popularity = 0
         if save:
             self.save()
 
     def update_status_after_donation(self, save=True):
-        if not self.campaign_funded and not self.campaign_ended and \
-                        self.status not in ProjectPhase.objects.filter(
-                                    Q(slug="done-complete") |
-                                    Q(slug="done-incomplete") |
-                            Q(slug="done-stopped")) and self.amount_needed <= 0:
+        # FIXME: Do we need to change the status here too?
+        # There was soem non functional code here about status / amount donated
+        if not self.campaign_funded and not self.campaign_ended:
             self.campaign_funded = timezone.now()
             if save:
                 self.save()
@@ -361,14 +361,13 @@ class Project(BaseProject):
                 counter += 1
             self.slug = original_slug
 
-        # There are 9 ProjectPhase objects: 1. Plan - New, 2. Plan - Submitted, 3. Plan - Needs Work, 4. Plan - Rejected,
-        # 5. Campaign, 6. Stopped, 7. Done - Complete, 8. Done - Incomplete, 9. Done - Stopped.
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
-        # If the project status is moved to New or Needs Work, clear the date_submitted field
+        # If the project status is moved to New or Needs Work, clear
+        # the date_submitted field
         if self.status in ProjectPhase.objects.filter(
-                        Q(slug="plan-new") | Q(slug="plan-needs-work")):
+                Q(slug="plan-new") | Q(slug="plan-needs-work")):
             self.date_submitted = None
 
         # Set the submitted date
@@ -398,11 +397,10 @@ class Project(BaseProject):
             self.update_amounts(False)
 
         # Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(
-                                Q(slug="done-complete") |
-                                Q(slug="done-incomplete") |
-                        Q(
-                            slug="done-stopped")) and self.deadline < timezone.now():
+        if not self.campaign_ended \
+                and self.status not in ProjectPhase.objects.filter(
+                    Q(slug="done-complete") | Q(slug="done-incomplete") |
+                    Q(slug="done-stopped")) and self.deadline < timezone.now():
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             elif self.amount_donated <= 20 or not self.campaign_started:
@@ -411,11 +409,9 @@ class Project(BaseProject):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
 
-        if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                              Q(
-                                                                  slug="done-incomplete") |
-                                                              Q(
-                                                                  slug="done-stopped")) and not self.campaign_ended:
+        if self.status in ProjectPhase.objects.filter(
+                Q(slug="done-complete") | Q(slug="done-incomplete")) \
+                and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         super(Project, self).save(*args, **kwargs)

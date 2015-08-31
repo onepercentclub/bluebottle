@@ -196,14 +196,11 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
         for payout in qs_new:
             payout.calculate_amounts()
 
-        message = (
-                      "Fees for %(new_payouts)d new payouts were recalculated. "
-                      "%(skipped_payouts)d progressing or closed payouts have"
-                      "been skipped."
-                  ) % {
-                      'new_payouts': qs_new.count(),
-                      'skipped_payouts': queryset.exclude(**filter_args).count()
-                  }
+        message = ("Fees for %(new_payouts)d new payouts were recalculated. "
+                   "%(skipped_payouts)d progressing or closed payouts have"
+                   "been skipped.") % {
+            'new_payouts': qs_new.count(),
+            'skipped_payouts': queryset.exclude(**filter_args).count()}
 
         self.message_user(request, message)
 
@@ -286,14 +283,11 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
         for payout in qs_new:
             payout.calculate_amounts()
 
-        message = (
-                      "Amounts for %(new_payouts)d new payouts were recalculated. "
-                      "%(skipped_payouts)d progressing or closed payouts have been "
-                      "skipped."
-                  ) % {
-                      'new_payouts': qs_new.count(),
-                      'skipped_payouts': queryset.exclude(**filter_args).count()
-                  }
+        message = ("Amounts for %(new_payouts)d new payouts were recalculated. "
+                   "%(skipped_payouts)d progressing or closed payouts have been "
+                   "skipped.") % {
+            'new_payouts': qs_new.count(),
+            'skipped_payouts': queryset.exclude(**filter_args).count()}
 
         self.message_user(request, message)
 
@@ -310,7 +304,6 @@ class PayoutListFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         rules = getattr(properties, 'PROJECT_PAYOUT_FEES', {})
-        rule_choices = ProjectPayout.PayoutRules.choices
 
         def _value(label):
             value = re.search(r'\d+', label)

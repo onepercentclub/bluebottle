@@ -1,6 +1,7 @@
-from bluebottle.bb_projects.models import ProjectPhase
 from django.core.exceptions import ImproperlyConfigured
+
 from rest_framework import permissions
+
 from .models import Project
 
 

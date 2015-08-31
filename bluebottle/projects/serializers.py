@@ -262,10 +262,10 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                    is submitted
                 """
                 if (not (proposed_status == current_status) and
-                        not (proposed_status and
-                                 (current_status == new_status or
-                                          current_status == needs_work_status) and
-                                     proposed_status == submit_status)):
+                        not (proposed_status
+                             and (current_status == new_status
+                                  or current_status == needs_work_status)
+                             and proposed_status == submit_status)):
                     raise serializers.ValidationError(
                         _("You can not change the project state."))
 

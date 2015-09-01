@@ -440,13 +440,15 @@ class PartnerOrganization(models.Model):
     name = models.CharField(_("name"), max_length=255, unique=True)
     slug = models.SlugField(_("slug"), max_length=100, unique=True)
     description = models.TextField(_("description"))
-    image = ImageField(_("image"), max_length=255, blank=True, null=True, upload_to='partner_images/', help_text=_("Main partner picture"))
+    image = ImageField(_("image"), max_length=255, blank=True, null=True,
+                       upload_to='partner_images/',
+                       help_text=_("Main partner picture"))
 
     @property
     def projects(self):
-        return self.project_set.order_by('-favorite', '-popularity').filter(status__in=[ProjectPhase.objects.get(slug="campaign"),
-                                                                            ProjectPhase.objects.get(slug="done-complete"),
-                                                                            ProjectPhase.objects.get(slug="done-incomplete")])
+        return self.project_set.order_by('-favorite', '-popularity').filter(
+            status__slug__in=['campaign', 'done-complete', 'done-incomplete',
+                              'voting', 'voting-done'])
 
     class Meta:
         db_table = 'projects_partnerorganization'

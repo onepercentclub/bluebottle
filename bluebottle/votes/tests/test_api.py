@@ -7,6 +7,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 
+from bluebottle.votes.models import Vote
+
 
 class ProjectVotesAPITestCase(BluebottleTestCase):
     """
@@ -32,6 +34,11 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     {'project': self.project1.slug},
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
+        vote = Vote.objects.all()[0]
+
+        self.assertEqual(vote.project, self.project1)
+        self.assertEqual(vote.voter, self.user)
+        self.assertEqual(vote.ip_address, '127.0.0.1')
 
     def test_vote_project_does_not_exist(self):
         response = self.client.post(self.vote_url,

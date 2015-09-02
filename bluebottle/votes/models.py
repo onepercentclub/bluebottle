@@ -11,8 +11,9 @@ class Vote(models.Model):
     """
     created = CreationDateTimeField(_('created'))
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    voter = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              verbose_name=_('voter'), blank=True, null=True)
+    ip_address = models.IPAddressField()
+
+    voter = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('voter'))
 
     def __unicode__(self):
         return "{0} -> {1}".format(self.voter, self.project)

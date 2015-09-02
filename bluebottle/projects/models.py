@@ -216,14 +216,12 @@ class Project(BaseProject):
     def is_funding(self):
         return self.amount_asked > 0
 
-    def supporters_count(self, with_guests=True):
+    def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations
         donations = self.donation_set
         donations = donations.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
-        donations = donations.filter(order__user__isnull=False)
-        donations = donations.annotate(Count('order__user'))
-        count = len(donations.all())
+        count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
             donations = self.donation_set

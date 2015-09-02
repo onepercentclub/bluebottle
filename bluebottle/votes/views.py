@@ -1,7 +1,6 @@
 from rest_framework import generics, exceptions, filters, permissions
 
-from django.http import Http404
-
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.projects.models import Project
 from bluebottle.votes.models import Vote
 from bluebottle.votes.serializers import VoteSerializer
@@ -27,7 +26,6 @@ class VoteList(generics.ListCreateAPIView):
             queryset = queryset.filter(project=project)
         return queryset
 
-
     def pre_save(self, obj):
         """
         Set the voter.
@@ -41,3 +39,4 @@ class VoteList(generics.ListCreateAPIView):
             pass
 
         obj.voter = self.request.user
+        obj.ip_address = get_client_ip(self.request)

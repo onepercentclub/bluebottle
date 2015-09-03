@@ -17,11 +17,9 @@ def prepare_money_donated():
 
 
 def prepare_project_images():
-    projects = Project.objects.exclude(
-        status__in=[ProjectPhase.objects.get(slug="plan-new"),
-                    ProjectPhase.objects.get(slug="done-stopped")]).all()
+    projects = Project.objects.exclude(status__slug__in=["plan-new", "closed"])
 
-    for project in projects:
+    for project in projects.all():
         try:
             ProjectPreviewSerializer().to_native(project)
         except Exception:

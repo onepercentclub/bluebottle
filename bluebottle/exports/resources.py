@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db.models.signals import post_init
 
 from exportdb.exporter import ExportModelResource
@@ -16,6 +17,8 @@ class DateRangeResource(ExportModelResource):
         if self.select_related:
             qs = qs.select_related(*self.select_related)
         frm, to = self.kwargs.get('from_date'), self.kwargs.get('to_date')
+        to = to + timedelta(days=1)
+
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
 
 

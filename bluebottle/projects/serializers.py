@@ -110,6 +110,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                                            source='partner_organization')
     location = serializers.PrimaryKeyRelatedField(required=False)
     vote_count = serializers.IntegerField(source='vote_count')
+    supporter_count = serializers.IntegerField(source='supporter_count')
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -132,7 +133,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
-                  'status', 'deadline', 'is_funding', 'vote_count',
+                  'status', 'deadline', 'is_funding', 'vote_count', 'supporter_count',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
                   'video_html', 'partner', 'location', 'project_type')
 

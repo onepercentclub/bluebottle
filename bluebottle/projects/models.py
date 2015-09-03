@@ -74,8 +74,8 @@ class ProjectManager(models.Manager):
             queryset = queryset.order_by('status', 'amount_needed')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
-            queryset = queryset.order_by('status', '-campaign_started',
-                                         '-created')
+            queryset = queryset.extra(select={'has_campaign_started': 'campaign_started is null'})
+            queryset = queryset.order_by('status', 'has_campaign_started', '-campaign_started', '-created')
         elif ordering == 'popularity':
             queryset = queryset.order_by('status', '-popularity')
             if status == 5:
@@ -240,16 +240,12 @@ class Project(BaseProject):
     def is_funding(self):
         return self.amount_asked > 0
 
-    def supporters_count(self, with_guests=True):
+    def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations
         donations = self.donation_set
-        donations = donations.filter(
-            order__status__in=[StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS])
-        donations = donations.filter(order__user__isnull=False)
-        donations = donations.annotate(Count('order__user'))
-        count = len(donations.all())
+        donations = donations.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
             donations = self.donation_set
@@ -396,22 +392,21 @@ class Project(BaseProject):
         if self.amount_asked:
             self.update_amounts(False)
 
-        # Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended \
-                and self.status not in ProjectPhase.objects.filter(
-                    Q(slug="done-complete") | Q(slug="done-incomplete") |
-                    Q(slug="done-stopped")) and self.deadline < timezone.now():
-            if self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-            elif self.amount_donated <= 20 or not self.campaign_started:
+        #Project is not ended, complete, funded or stopped and its deadline has expired.
+        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
+                                                           Q(slug="done-incomplete") |
+                                                           Q(slug="closed")) and self.deadline < timezone.now():
+            if (self.amount_asked > 0 and self.amount_donated <= 20) or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
+            elif (self.amount_asked > 0) and self.amount_donated >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
 
-        if self.status in ProjectPhase.objects.filter(
-                Q(slug="done-complete") | Q(slug="done-incomplete")) \
-                and not self.campaign_ended:
+        if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |
+                                                           Q(slug="done-incomplete") |
+                                                           Q(slug="closed")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         super(Project, self).save(*args, **kwargs)
@@ -486,9 +481,8 @@ class PartnerOrganization(models.Model):
     @property
     def projects(self):
         return self.project_set.order_by('-favorite', '-popularity').filter(
-            status__in=[ProjectPhase.objects.get(slug="campaign"),
-                        ProjectPhase.objects.get(slug="done-complete"),
-                        ProjectPhase.objects.get(slug="done-incomplete")])
+            status__slug__in=['campaign', 'done-complete', 'done-incomplete',
+                              'voting', 'voting-done'])
 
     class Meta:
         db_table = 'projects_partnerorganization'

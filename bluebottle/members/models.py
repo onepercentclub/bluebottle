@@ -15,4 +15,3 @@ GROUP_PERMS = {
 
 class Member(BlueBottleBaseUser):
     pass
-

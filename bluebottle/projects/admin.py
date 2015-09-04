@@ -150,7 +150,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             fields +=  ('location', )
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields +=  ('num_votes', )
+            fields +=  ('vote_count', )
         return fields
 
     def get_list_editable(self, request):

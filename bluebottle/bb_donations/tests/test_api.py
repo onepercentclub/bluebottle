@@ -52,7 +52,7 @@ class DonationApiTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.user2 = BlueBottleUserFactory.create(user_type='company')
+        self.user2 = BlueBottleUserFactory.create(is_co_financer=True)
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
         self.project = ProjectFactory.create()
@@ -478,17 +478,17 @@ class TestProjectDonationList(DonationApiTestCase):
 
     def test_successful_project_donation_list_paged(self, check_status_psp):
         for i in range(30):
-            order = OrderFactory.create(user=self.user2, status=StatusDefinition.SUCCESS)
+            order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
             DonationFactory.create(amount=2000, project=self.project3,
                                    order=order)
 
         response = self.client.get(self.project_donation_list_url,
-                                   {'project': self.project3.slug},
+                                   {'project': self.project3.slug,},
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['count'], 31,
-                         'Only the successful donation should be returned')
+                         'All the donations should be returned')
         self.assertEqual(len(response.data['results']), 20)
 
     def test_project_donation_list_co_financing(self, check_status_psp):
@@ -502,7 +502,7 @@ class TestProjectDonationList(DonationApiTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1,
-                         'Only donations by companies should be returned')
+                         'Only donations by co-financers should be returned')
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')

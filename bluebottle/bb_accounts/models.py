@@ -148,6 +148,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
 
+    is_co_financer = models.BooleanField(
+        _('Co-financer'), default=False,
+        help_text=_(
+            'Donations by co-financers are shown in a separate list on the project page.'
+            'These donation will always be visible.'))
+
     about_me = models.TextField(_('about me'), max_length=265, blank=True)
 
     # Private Settings

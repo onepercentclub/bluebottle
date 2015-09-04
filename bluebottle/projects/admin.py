@@ -150,7 +150,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             fields +=  ('location', )
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields +=  ('vote_count', )
+            fields +=  ('num_votes', )
         return fields
 
     def get_list_editable(self, request):
@@ -203,10 +203,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         # Optimization: Select related fields that are used in admin specific
         # display fields.
         queryset = super(ProjectAdmin, self).queryset(request)
-        return queryset.select_related(
+        queryset = queryset.select_related(
             'projectpitch', 'projectplan', 'projectcampaign', 'owner',
             'organization'
-        ).annotate(admin_vote_count=Count('vote'))
+        ).extra(
+            {'admin_vote_count': 'SELECT COUNT(*) from votes_vote where "votes_vote"."project_id" = "projects_project"."id"'}
+        )
+
+        return queryset
 
     def num_votes(self, obj):
         self.queryset(None)

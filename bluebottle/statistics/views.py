@@ -28,7 +28,8 @@ class Statistics(object):
         tenant_name = connection.tenant.client_name
 
         for key in ['people-involved-total', 'projects-realized-total',
-                    'projects-online-total', 'donations-total', 'tasks-realized-total']:
+                    'projects-online-total', 'donations-total',
+                    'tasks-realized-total']:
             tenant_key = '-'.join([tenant_name, key])
             cache.set(tenant_key, None, 0)
 
@@ -38,7 +39,6 @@ class Statistics(object):
         from bluebottle.orders.models import Order
         from bluebottle.projects.models import Project
         from bluebottle.fundraisers.models import Fundraiser
-        from bluebottle.members.models import Member
 
         """
         Count all people who donated, fundraised, campaigned or was
@@ -47,24 +47,36 @@ class Statistics(object):
         if False and self._get_cached('people-involved-total'):
             return self._get_cached('people-involved-total')
 
-        donator_ids = Order.objects.filter(status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)).order_by('user__id').distinct('user').values_list('user_id', flat=True)
-        fundraiser_owner_ids = Fundraiser.objects.order_by('owner__id').distinct('owner').values_list('owner_id', flat=True)
-        project_owner_ids = Project.objects.filter(status__slug__in=('campaign', 'done-complete', 'done-incomplete',)).order_by('owner__id').distinct('owner').values_list('owner_id', flat=True)
-        task_member_ids = TaskMember.objects.order_by('member__id').distinct('member').values_list('member_id', flat=True)
-        task_owner_ids = Task.objects.order_by('author__id').distinct('author').values_list('author_id', flat=True)
+        donator_ids = Order.objects.filter(status__in=(
+            StatusDefinition.PENDING, StatusDefinition.SUCCESS)).order_by(
+            'user__id').distinct('user').values_list('user_id', flat=True)
+        fundraiser_owner_ids = Fundraiser.objects.order_by(
+            'owner__id').distinct('owner').values_list('owner_id', flat=True)
+        project_owner_ids = Project.objects.filter(status__slug__in=(
+            'campaign', 'done-complete', 'done-incomplete',)).order_by(
+            'owner__id').distinct('owner').values_list('owner_id', flat=True)
+        task_member_ids = TaskMember.objects.order_by('member__id').distinct(
+            'member').values_list('member_id', flat=True)
+        task_owner_ids = Task.objects.order_by('author__id').distinct(
+            'author').values_list('author_id', flat=True)
 
-        items = [donator_ids, fundraiser_owner_ids, project_owner_ids, task_member_ids, task_owner_ids]
+        items = [donator_ids, fundraiser_owner_ids, project_owner_ids,
+                 task_member_ids, task_owner_ids]
 
         # get count of unique member ids
         seen = set()
         seen_add = seen.add
-        people_count = len([item for item in list(itertools.chain(*items)) if item and not (item in seen or seen_add(item))])
+        people_count = len([item for item in list(itertools.chain(*items)) if
+                            item and not (item in seen or seen_add(item))])
 
         # Add anonymous donators
-        people_count += Order.objects.filter(user_id=None, status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)).count()
+        people_count += Order.objects.filter(user_id=None, status__in=(
+            StatusDefinition.PENDING, StatusDefinition.SUCCESS)).count()
 
         # Add "plus one"
-        people_count += TaskMember.objects.all().aggregate(externals=Sum('externals'))['externals'] or 0
+        people_count += \
+            TaskMember.objects.all().aggregate(externals=Sum('externals'))[
+                'externals'] or 0
 
         self._set_cached('people-involved-total', people_count)
 
@@ -89,7 +101,8 @@ class Statistics(object):
         """ Count all realized projects (status in done-complete or done-incomplete) """
         if self._get_cached('projects-realized-total'):
             return self._get_cached('projects-realized-total')
-        project_count = Project.objects.filter(status__slug__in=('done-complete', 'done-incomplete',)).count()
+        project_count = Project.objects.filter(
+            status__slug__in=('done-complete', 'done-incomplete',)).count()
         self._set_cached('projects-realized-total', project_count)
 
         return project_count
@@ -113,7 +126,8 @@ class Statistics(object):
         """ Add all donation amounts for all donations ever """
         if self._get_cached('donations-total'):
             return self._get_cached('donations-total')
-        donations = Donation.objects.filter(order__status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS))
+        donations = Donation.objects.filter(order__status__in=(
+            StatusDefinition.PENDING, StatusDefinition.SUCCESS))
         donated = donations.aggregate(sum=Sum('amount'))['sum'] or '000'
         self._set_cached('donations-total', donated)
 

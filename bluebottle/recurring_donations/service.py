@@ -3,7 +3,6 @@ from django.utils.timezone import now, timedelta
 
 
 class MonthlyBatchService(object):
-
     def __init__(self, date=None):
         batches = MonthlyBatch.objects.order_by('-date')
         if batches.count():
@@ -19,8 +18,6 @@ class MonthlyBatchService(object):
                 self.batch = last_batch
             else:
                 self.batch = MonthlyBatch.objects.create(date=date)
-
-
 
     def generate_donations(self):
         self.batch

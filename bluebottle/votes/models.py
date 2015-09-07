@@ -18,5 +18,5 @@ class Vote(models.Model):
         return "{0} -> {1}".format(self.voter, self.project)
 
     class Meta:
-        unique_together = (('project', 'voter'), )
-        ordering = ('-created', )
+        unique_together = (('project', 'voter'),)
+        ordering = ('-created',)

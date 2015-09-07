@@ -17,4 +17,3 @@ class OrderFactory(factory.DjangoModelFactory):
 
 class OrderActionFactory(factory.DjangoModelFactory):
     FACTORY_FOR = OrderPaymentAction
-

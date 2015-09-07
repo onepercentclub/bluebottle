@@ -40,12 +40,12 @@ class IncrementalCSVImportMixin(ExtendibleModelAdminMixin):
         urls = super(IncrementalCSVImportMixin, self).get_urls()
 
         new_urls = patterns('',
-            url(
-                r'^import/$',
-                self._wrap(self.import_view),
-                name=self._view_name('import')
-            )
-        )
+                            url(
+                                r'^import/$',
+                                self._wrap(self.import_view),
+                                name=self._view_name('import')
+                            )
+                            )
 
         return new_urls + urls
 
@@ -77,7 +77,8 @@ class IncrementalCSVImportMixin(ExtendibleModelAdminMixin):
                     request, _(
                         '{new} new records have been imported, '
                         '{ignored} have been already imported and have been ignored.'
-                    ).format(new_records=new_records, ignored_records=ignored_records)
+                    ).format(new_records=new_records,
+                             ignored_records=ignored_records)
                 )
 
                 # Redirect after POST
@@ -117,12 +118,14 @@ class IncrementalCSVImportMixin(ExtendibleModelAdminMixin):
                 'has_add_permission': False,
                 'has_change_permission': False,
                 'has_delete_permission': False,
-                'has_file_field': True, # FIXME - this should check if form or formsets have a FileField,
+                'has_file_field': True,
+                # FIXME - this should check if form or formsets have a FileField,
                 'has_absolute_url': False,
                 # 'ordered_objects': ordered_objects,
                 'form_url': '',
                 'opts': opts,
-                'content_type_id': ContentType.objects.get_for_model(self.model).id,
+                'content_type_id': ContentType.objects.get_for_model(
+                    self.model).id,
                 'save_as': False,
                 'save_on_top': False,
                 'is_popup': False,

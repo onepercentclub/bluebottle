@@ -8,6 +8,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from django.core.urlresolvers import reverse
 
+
 class TestShareFlyer(BluebottleTestCase):
     def setUp(self):
         super(TestShareFlyer, self).setUp()
@@ -35,10 +36,10 @@ class TestShareFlyer(BluebottleTestCase):
             reverse("share_flyer"),
             HTTP_AUTHORIZATION=self.user_1_token,
             data={"project": self.project.slug,
-                  "share_name":"S. Hare",
-                  "share_email":"share@example.com",
-                  "share_motivation":"Wow I'm sharing this project!",
-                  "share_cc":False}
+                  "share_name": "S. Hare",
+                  "share_email": "share@example.com",
+                  "share_motivation": "Wow I'm sharing this project!",
+                  "share_cc": False}
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -53,8 +54,8 @@ class TestShareFlyer(BluebottleTestCase):
             HTTP_AUTHORIZATION=self.user_1_token,
             data={"project": self.project.slug,
                   "share_name": "S. Hare",
-                  "share_motivation":"Wow I'm sharing this project!",
-                  "share_cc":True}
+                  "share_motivation": "Wow I'm sharing this project!",
+                  "share_cc": True}
         )
         data = json.loads(response.content)
 
@@ -71,10 +72,10 @@ class TestShareFlyer(BluebottleTestCase):
             reverse("share_flyer"),
             HTTP_AUTHORIZATION=self.user_1_token,
             data={"project": self.project.slug,
-                  "share_name":"S. Hare",
-                  "share_email":"share@example.com",
-                  "share_motivation":"Wow I'm sharing this project!",
-                  "share_cc":'true'}
+                  "share_name": "S. Hare",
+                  "share_email": "share@example.com",
+                  "share_motivation": "Wow I'm sharing this project!",
+                  "share_cc": 'true'}
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

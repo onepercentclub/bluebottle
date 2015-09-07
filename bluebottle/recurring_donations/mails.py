@@ -1,17 +1,15 @@
 from babel.dates import format_date
 from babel.numbers import format_currency
+
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from tenant_extras.utils import TenantLanguage
-
-from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+
+from tenant_extras.utils import TenantLanguage
 
 
 def mail_monthly_donation_processed_notification(monthly_order):
-
     cur_language = translation.get_language()
     receiver = monthly_order.user
     with TenantLanguage(receiver.primary_language):

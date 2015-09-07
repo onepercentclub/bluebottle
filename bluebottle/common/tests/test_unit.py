@@ -23,17 +23,21 @@ class MetricsTest(BluebottleTestCase):
         self.done_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
         self.closed = ProjectPhase.objects.get(slug="closed")
 
-
     def test_partners_year(self):
         """ Test correct calculation of partners """
 
         task = TaskFactory()
 
-        task_member = TaskMemberFactory(task=task, externals=1, status='applied')  # count 0
-        task_member2 = TaskMemberFactory(task=task, externals=4, status='realized')  # count 4
-        task_member3 = TaskMemberFactory(task=task, externals=2, status='accepted')  # count 2
-        task_member4 = TaskMemberFactory(task=task, externals=3, status='rejected')  # 0
-        task_member5 = TaskMemberFactory(task=task, externals=3, status='stopped')  # 0
+        task_member = TaskMemberFactory(task=task, externals=1,
+                                        status='applied')  # count 0
+        task_member2 = TaskMemberFactory(task=task, externals=4,
+                                         status='realized')  # count 4
+        task_member3 = TaskMemberFactory(task=task, externals=2,
+                                         status='accepted')  # count 2
+        task_member4 = TaskMemberFactory(task=task, externals=3,
+                                         status='rejected')  # 0
+        task_member5 = TaskMemberFactory(task=task, externals=3,
+                                         status='stopped')  # 0
 
         # Only count the task members with externals with allowed statuses (applied, accepted, realized)
         partners, _ = self.metrics.calculate_partner_metrics()
@@ -44,11 +48,19 @@ class MetricsTest(BluebottleTestCase):
 
         task = TaskFactory()
 
-        task_member = TaskMemberFactory(task=task, externals=2, status='applied', time_spent=4) # count 0
-        task_member2 = TaskMemberFactory(task=task, externals=4, status='realized', time_spent=4) # count 4 x 4 = 16
-        task_member3 = TaskMemberFactory(task=task, externals=2, status='accepted', time_spent=8) # count 8 x 2 = 16
-        task_member4 = TaskMemberFactory(task=task, externals=3, status='rejected', time_spent=8) # 0
-        task_member5 = TaskMemberFactory(task=task, externals=3, status='stopped', time_spent=4) # 0
+        task_member = TaskMemberFactory(task=task, externals=2,
+                                        status='applied',
+                                        time_spent=4)  # count 0
+        task_member2 = TaskMemberFactory(task=task, externals=4,
+                                         status='realized',
+                                         time_spent=4)  # count 4 x 4 = 16
+        task_member3 = TaskMemberFactory(task=task, externals=2,
+                                         status='accepted',
+                                         time_spent=8)  # count 8 x 2 = 16
+        task_member4 = TaskMemberFactory(task=task, externals=3,
+                                         status='rejected', time_spent=8)  # 0
+        task_member5 = TaskMemberFactory(task=task, externals=3,
+                                         status='stopped', time_spent=4)  # 0
 
         # Only count the time spent hours of task members with externals with allowed statuses (applied, accepted, realized)
         _, partner_hours = self.metrics.calculate_partner_metrics()
@@ -176,7 +188,8 @@ class MetricsTest(BluebottleTestCase):
         project1 = ProjectFactory.create(status=self.new, owner=user1)
         project2 = ProjectFactory.create(status=self.campaign, owner=user2)
         project3 = ProjectFactory.create(status=self.done_complete, owner=user3)
-        project4 = ProjectFactory.create(status=self.done_incomplete, owner=user4)
+        project4 = ProjectFactory.create(status=self.done_incomplete,
+                                         owner=user4)
         project5 = ProjectFactory.create(status=self.closed, owner=user5)
         project6 = ProjectFactory.create(status=self.campaign, owner=user2)
 
@@ -188,13 +201,16 @@ class MetricsTest(BluebottleTestCase):
         task = TaskFactory()
 
         task_member = TaskMemberFactory(task=task, status='applied')
-        task_member2 = TaskMemberFactory(task=task, status='realized', time_spent=8)
+        task_member2 = TaskMemberFactory(task=task, status='realized',
+                                         time_spent=8)
         task_member3 = TaskMemberFactory(task=task, status='accepted')
         task_member4 = TaskMemberFactory(task=task, status='rejected')
         task_member5 = TaskMemberFactory(task=task, status='stopped')
 
-        task_member6 = TaskMemberFactory(task=task, status='realized', time_spent=8)
-        task_member7 = TaskMemberFactory(task=task, status='realized', time_spent=8)
+        task_member6 = TaskMemberFactory(task=task, status='realized',
+                                         time_spent=8)
+        task_member7 = TaskMemberFactory(task=task, status='realized',
+                                         time_spent=8)
 
         # Count tm2, tm6, tm7, 3x8 hours
         _, hours = self.metrics.calculate_taskmember_metrics()
@@ -223,7 +239,8 @@ class MetricsTest(BluebottleTestCase):
 
         # Task in progress, don't count
         task_member8 = TaskMemberFactory(task=task3, status='accepted')
-        self.assertEquals(self.metrics.calculate_realized_tasks_unconfirmed_taskmembers(), 1)
+        self.assertEquals(
+            self.metrics.calculate_realized_tasks_unconfirmed_taskmembers(), 1)
 
     def test_tasks_with_realized_taskmember(self):
         """ Test task counting with realized task members """
@@ -243,4 +260,5 @@ class MetricsTest(BluebottleTestCase):
         task_member5 = TaskMemberFactory(task=task3, status='realized')
         task_member6 = TaskMemberFactory(task=task3, status='applied')
 
-        self.assertEquals(self.metrics.calculate_tasks_realized_taskmembers(), 3)
+        self.assertEquals(self.metrics.calculate_tasks_realized_taskmembers(),
+                          3)

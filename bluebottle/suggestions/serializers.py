@@ -3,7 +3,6 @@ from bluebottle.suggestions.models import Suggestion
 
 
 class DateField(serializers.CharField):
-
     def from_native(self, value):
         try:
             return value.split('T')[0]
@@ -13,8 +12,10 @@ class DateField(serializers.CharField):
 
 import uuid
 
+
 def generate_token():
     return str(uuid.uuid4())
+
 
 class SuggestionSerializer(serializers.ModelSerializer):
     deadline = DateField()

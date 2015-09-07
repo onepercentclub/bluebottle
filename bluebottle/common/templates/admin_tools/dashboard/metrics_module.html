@@ -6,7 +6,7 @@
         {% spaceless %}
             {% for metric in module.children %}
                 <li class="{% cycle 'odd' 'even' %}">
-                    <a href="{{ metric.url }}" >{{ metric.title }}</a>
+                    <a href="{{ metric.url }}">{{ metric.title }}</a>
                     <b style="float:right">{{ metric.value }}</b>
                 </li>
             {% endfor %}

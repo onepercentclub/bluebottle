@@ -39,4 +39,3 @@ def get_serializer_class(model_name=None, serializer_type='default'):
             "installed".format(model_name))
 
     return serializer_model
-

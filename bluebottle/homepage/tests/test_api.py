@@ -18,6 +18,7 @@ from bluebottle.tasks.models import Task
 
 from ..models import HomePage
 
+
 class HomepagePreviewProjectsTestCase(BluebottleTestCase):
     def setUp(self):
         super(HomepagePreviewProjectsTestCase, self).setUp()
@@ -103,10 +104,12 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               status=self.phases['done-complete'])
         self.assertEquals(HomePage().get('en').projects, None)
 
+
 class HomepageEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Statistics API.
     """
+
     def setUp(self):
         super(HomepageEndpointTestCase, self).setUp()
         self.init_projects()
@@ -128,9 +131,11 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
-                project = ProjectFactory.create(title=char * 3, slug=char * 3, status=self.campaign_phase)
+                project = ProjectFactory.create(title=char * 3, slug=char * 3,
+                                                status=self.campaign_phase)
             else:
-                project = ProjectFactory.create(title=char * 3, slug=char * 3, status=self.plan_phase)
+                project = ProjectFactory.create(title=char * 3, slug=char * 3,
+                                                status=self.plan_phase)
 
             projects.append(project)
 
@@ -141,7 +146,8 @@ class HomepageEndpointTestCase(BluebottleTestCase):
             - 1 task owner (eg 1 new person involved)
             - 10 task members (eg 10 new people involved)
         """
-        self.task = TaskFactory.create(project=projects[0], status=Task.TaskStatuses.realized)
+        self.task = TaskFactory.create(project=projects[0],
+                                       status=Task.TaskStatuses.realized)
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
@@ -158,11 +164,16 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         """
         for char in 'abcdefghij':
             if ord(char) % 2 == 1:
-                self.order = OrderFactory.create(status=StatusDefinition.SUCCESS)
-                self.donation = DonationFactory.create(amount=1000, order=self.order, fundraiser=None)
+                self.order = OrderFactory.create(
+                    status=StatusDefinition.SUCCESS)
+                self.donation = DonationFactory.create(amount=1000,
+                                                       order=self.order,
+                                                       fundraiser=None)
             else:
-                self.order = OrderFactory.create(status=StatusDefinition.SUCCESS)
-                self.donation = DonationFactory.create(amount=1000, order=self.order)
+                self.order = OrderFactory.create(
+                    status=StatusDefinition.SUCCESS)
+                self.donation = DonationFactory.create(amount=1000,
+                                                       order=self.order)
 
     def tearDown(self):
         self.stats.clear_cached()

@@ -8,6 +8,7 @@ class SoftDeleteModelMixin(object):
     """
     This Mixin marks an object as deleted by setting the deleted field to the current time.
     """
+
     def destroy(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.deleted = timezone.now()
@@ -30,15 +31,18 @@ class RetrieveAPIView(NonDeletedModelMixin, generics.RetrieveAPIView):
     pass
 
 
-class DeleteAPIView(SoftDeleteModelMixin, NonDeletedModelMixin, generics.DestroyAPIView):
+class DeleteAPIView(SoftDeleteModelMixin, NonDeletedModelMixin,
+                    generics.DestroyAPIView):
     pass
 
 
-class RetrieveDeleteAPIView(SoftDeleteModelMixin, NonDeletedModelMixin, generics.RetrieveDestroyAPIView):
+class RetrieveDeleteAPIView(SoftDeleteModelMixin, NonDeletedModelMixin,
+                            generics.RetrieveDestroyAPIView):
     pass
 
 
-class RetrieveUpdateDeleteAPIView(SoftDeleteModelMixin, NonDeletedModelMixin, generics.RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDeleteAPIView(SoftDeleteModelMixin, NonDeletedModelMixin,
+                                  generics.RetrieveUpdateDestroyAPIView):
     pass
 
 
@@ -48,5 +52,3 @@ class ListAPIView(NonDeletedModelMixin, generics.ListAPIView):
 
 class ListCreateAPIView(NonDeletedModelMixin, generics.ListCreateAPIView):
     pass
-
-

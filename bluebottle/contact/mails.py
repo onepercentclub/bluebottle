@@ -15,12 +15,16 @@ def send_contact_email(message, contact_email):
     # add the url to the backoffice
     link = reverse('admin:contact_contactmessage_change', args=[message.id])
 
-    ctx = ClientContext({'message': message, 'link': link, 'site_url': tenant_url(), 'site': tenant_site()})
+    ctx = ClientContext(
+        {'message': message, 'link': link, 'site_url': tenant_url(),
+         'site': tenant_site()})
 
-    text_content = render_to_string('contact/contact.mail.txt', context_instance=ctx)
-    html_content = render_to_string('contact/contact.mail.html', context_instance=ctx)
+    text_content = render_to_string('contact/contact.mail.txt',
+                                    context_instance=ctx)
+    html_content = render_to_string('contact/contact.mail.html',
+                                    context_instance=ctx)
 
-
-    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[contact_email], from_email=from_email)
+    msg = EmailMultiAlternatives(subject=subject, body=text_content,
+                                 to=[contact_email], from_email=from_email)
     msg.attach_alternative(html_content, "text/html")
     msg.send()

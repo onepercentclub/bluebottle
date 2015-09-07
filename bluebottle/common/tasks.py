@@ -18,7 +18,7 @@ def _send_celery_mail(msg, tenant=None, send=False):
         to utf_8 so we don't get Unicode errors.
     """
     with LocalTenant(tenant, clear_tenant=True):
-        #if tenant:
+        # if tenant:
         #    properties.set_tenant(tenant)
 
         body = msg.body

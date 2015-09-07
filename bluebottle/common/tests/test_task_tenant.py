@@ -5,8 +5,8 @@ from django.utils import unittest
 from bluebottle.common.tasks import _send_celery_mail
 from bluebottle.clients import properties
 
-class TestCeleryMailTenant(unittest.TestCase):
 
+class TestCeleryMailTenant(unittest.TestCase):
     def test_tenant_setup_celery(self):
         """ verify that, once send() is called, a tenant has been setup """
 

@@ -7,7 +7,8 @@ from bluebottle.test.utils import BluebottleTestCase
 
 from django_fsm.db.fields import TransitionNotAllowed
 
-from bluebottle.test.factory_models.payments import PaymentFactory, OrderPaymentFactory
+from bluebottle.test.factory_models.payments import PaymentFactory, \
+    OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle import clients
@@ -16,7 +17,6 @@ from mock import patch
 
 
 class BlueBottlePaymentTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(BlueBottlePaymentTestCase, self).setUp()
         self.init_projects()
@@ -26,28 +26,28 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
 
     def test_basic_order_payment_flow(self):
         self.assertEqual(self.order.status, StatusDefinition.LOCKED,
-            'Creating an Order Payment should change Order to locked')
+                         'Creating an Order Payment should change Order to locked')
 
         self.assertEqual(self.order_payment.status, StatusDefinition.CREATED,
-            'Order Payment should start with created status')
+                         'Order Payment should start with created status')
 
         self.order_payment.started()
         self.assertEqual(self.order.status, StatusDefinition.LOCKED,
-            'Starting an Order Payment should change Order to locked')
+                         'Starting an Order Payment should change Order to locked')
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
-            'Starting an Order Payment should change status to started')
+                         'Starting an Order Payment should change status to started')
 
         self.order_payment.authorized()
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
-            'Authorizing an Order Payment should change Order to pending')
+                         'Authorizing an Order Payment should change Order to pending')
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
-            'Authorizing an Order Payment should status to authorized')
+                         'Authorizing an Order Payment should status to authorized')
 
         self.order_payment.settled()
         self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
-            'Settling an Order Payment should change Order to success')
+                         'Settling an Order Payment should change Order to success')
         self.assertEqual(self.order_payment.status, StatusDefinition.SETTLED,
-            'Settling an Order Payment should change status to settled')
+                         'Settling an Order Payment should change status to settled')
 
     def test_invalid_order_payment_flow(self):
         self.order_payment.started()
@@ -62,20 +62,20 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
             self.order_payment.cancelled()
 
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
-            'A failed Order Payment transition should not change Order status')
+                         'A failed Order Payment transition should not change Order status')
 
     def test_payment_status_changes(self):
         self.payment = PaymentFactory.create(order_payment=self.order_payment)
 
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
-            'Starting a Payment should change Order Payment to started')
+                         'Starting a Payment should change Order Payment to started')
 
         self.payment.status = StatusDefinition.AUTHORIZED
         self.payment.save()
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
-            'Authorizing a Payment should change Order Payment to authorized')
+                         'Authorizing a Payment should change Order Payment to authorized')
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
-            'Authorizing a Payment should change Order Payment to pending')
+                         'Authorizing a Payment should change Order Payment to pending')
 
     def test_bad_payment_status_changes(self):
         self.payment = PaymentFactory.create(order_payment=self.order_payment)
@@ -83,7 +83,7 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
         self.payment.save()
 
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
-            'Authorizing a Payment should change Order Payment to authorized')
+                         'Authorizing a Payment should change Order Payment to authorized')
 
         self.payment.status = StatusDefinition.STARTED
 
@@ -91,16 +91,19 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
         with self.assertRaises(TransitionNotAllowed):
             self.payment.save()
 
-        self.assertEqual(self.payment.order_payment.status, StatusDefinition.AUTHORIZED,
-            'Starting an authorized Payment should not change Order Payment status')
+        self.assertEqual(self.payment.order_payment.status,
+                         StatusDefinition.AUTHORIZED,
+                         'Starting an authorized Payment should not change Order Payment status')
 
-        self.assertEqual(self.payment.order_payment.order.status, StatusDefinition.PENDING,
-            'Starting an authorized Payment should not change Order status')
+        self.assertEqual(self.payment.order_payment.order.status,
+                         StatusDefinition.PENDING,
+                         'Starting an authorized Payment should not change Order status')
 
     def test_info_text(self):
         self.assertEqual(
             self.order_payment.info_text,
-            'testserver via onepercentclub {id}'.format(id=self.order_payment.id)
+            'testserver via onepercentclub {id}'.format(
+                id=self.order_payment.id)
         )
 
     @patch.object(clients.utils, 'tenant_site')
@@ -116,7 +119,6 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
 
 
 class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(BlueBottlePaymentFeeTestCase, self).setUp()
         self.init_projects()
@@ -158,7 +160,6 @@ class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
 
 
 class UtilsTestCase(BluebottleTestCase):
-
     def test_trim_url(self):
         from ..models import trim_tenant_url
 

@@ -65,7 +65,8 @@ class Command(BaseCommand):
             self.stdout.write("Checking Project funded and still running...")
             Project.objects.filter(amount_needed__lte=0,
                                    status=campaign_phase,
-                                   deadline__gt=now()).update(campaign_funded=now())
+                                   deadline__gt=now()).update(
+                campaign_funded=now())
 
             """
             Projects which are still in campaign phase but have expired need to be
@@ -83,7 +84,6 @@ class Command(BaseCommand):
             self.stdout.write("Checking Task deadlines...\n\n")
             for task in Task.objects.filter(status='in progress',
                                             deadline__lt=now()).all():
-
                 task.deadline_reached()
 
             self.stdout.write(

@@ -34,7 +34,6 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
@@ -61,7 +60,6 @@ class StoryField(serializers.WritableField):
 
 
 class ProjectCountrySerializer(CountrySerializer):
-
     subregion = serializers.CharField(source='subregion.name')
 
     class Meta:
@@ -141,7 +139,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
     country = ProjectCountrySerializer(source='country')
@@ -169,7 +166,6 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
 
@@ -267,10 +263,10 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                    is submitted
                 """
                 if (not (proposed_status == current_status) and
-                        not (proposed_status and
-                             (current_status == new_status or
-                              current_status == needs_work_status) and
-                             proposed_status == submit_status)):
+                        not (proposed_status
+                             and (current_status == new_status
+                                  or current_status == needs_work_status)
+                             and proposed_status == submit_status)):
                     raise serializers.ValidationError(
                         _("You can not change the project state."))
 

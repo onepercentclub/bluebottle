@@ -1,4 +1,5 @@
 from datetime import timedelta, time
+from decimal import Decimal
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -23,6 +24,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         save() automatically updates some fields, specifically
         the status field. Make sure it picks the right one
     """
+
     def setUp(self):
         super(TestProjectStatusUpdate, self).setUp()
 
@@ -36,7 +38,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         self.expired_project = ProjectFactory.create(amount_asked=5000,
                                                      campaign_started=now -
-                                                     timezone.
+                                                                      timezone.
                                                      timedelta(days=15),
                                                      status=self.campaign)
 
@@ -174,7 +176,6 @@ class SupporterCountTest(BluebottleTestCase):
 
 
 class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
-
     def setUp(self):
         super(TestProjectStatusChangeSuggestionUpdate, self).setUp()
 

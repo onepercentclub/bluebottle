@@ -10,7 +10,6 @@ from .models import Page
 
 
 class PageContentsField(serializers.Field):
-
     def to_native(self, obj):
         request = self.context.get('request', None)
         contents_html = mark_safe(render_placeholder(request, obj).html)
@@ -19,7 +18,6 @@ class PageContentsField(serializers.Field):
 
 
 class PageSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     body = PageContentsField(source='body')
     author = get_serializer_class('AUTH_USER_MODEL', 'preview')()

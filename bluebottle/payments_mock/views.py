@@ -4,7 +4,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 from django.core.urlresolvers import reverse
-from django.contrib.sites.models import get_current_site
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
 
@@ -21,14 +20,17 @@ class PaymentMock(TemplateView):
 
         order_payment_id = kwargs.get('order_payment_id', None)
 
-        result = {'return_url': reverse('payment-service-provider-handler'), 'order_payment_id': order_payment_id}
-        return render_to_response(self.template_name, result, context_instance=RequestContext(request))
+        result = {'return_url': reverse('payment-service-provider-handler'),
+                  'order_payment_id': order_payment_id}
+        return render_to_response(self.template_name, result,
+                                  context_instance=RequestContext(request))
 
 
 class PaymentResponseMockHandler(TemplateView):
     """
-    This view is a Django handler for the return of the user from the mock PSP server. This view will handle
-    the initial redirect from the server and redirect the user to the mock ember route that displays the
+    This view is a Django handler for the return of the user from the mock PSP
+    server. This view will handle the initial redirect from the server and
+    redirect the user to the mock ember route that displays the
     page matching the user' chosen action.
     """
 
@@ -49,7 +51,8 @@ class PaymentResponseMockHandler(TemplateView):
         else:
             raise Http404
 
-        # # #Fake an external signal by calling our Payment Status Listener view and sending the chosen status.s
+        # Fake an external signal by calling our Payment Status Listener
+        # view and sending the chosen status.s
         # payload = {'order_payment_id': order_payment_id, 'status': status}
         # status_url = ''.join(['http://', get_current_site(request).domain,
         #                       reverse('payment-service-provider-status-update')])
@@ -62,8 +65,9 @@ class PaymentResponseMockHandler(TemplateView):
 
 class PaymentStatusListener(View):
     """
-    This view simulates our listener that handles incoming messages from an external PSP to update the status of
-    a payment. It's an "underwater" view and the user does not directly engage with this view or url, only the
+    This view simulates our listener that handles incoming messages from an
+    external PSP to update the status of a payment. It's an "underwater" view
+    and the user does not directly engage with this view or url, only the
     external server by making a POST request to it.
     """
 
@@ -78,11 +82,8 @@ class PaymentStatusListener(View):
 
         service = PaymentService(order_payment)
 
-        #We pass the MockPayment status and get back the status name of our OrderStatus definition
+        # We pass the MockPayment status and get back the status name of our
+        # OrderStatus definition
         service.adapter.set_order_payment_new_status(status)
 
         return HttpResponse('success')
-
-
-
-

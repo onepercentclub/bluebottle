@@ -1,8 +1,9 @@
-from bluebottle.payments.exception import PaymentException
 import re
+
 from bluebottle.clients import properties
-from bluebottle.utils.utils import import_class
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import import_class
 
 
 def get_payment_methods(country=None, amount=None):
@@ -15,12 +16,12 @@ def get_payment_methods(country=None, amount=None):
         return all_methods
 
     allowed_methods = []
-    
+
     for method in all_methods:
         try:
             countries = method['restricted_countries']
             if country in countries:
-                allowed_methods.append(method) 
+                allowed_methods.append(method)
         except KeyError:
             allowed_methods.append(method)
 
@@ -36,7 +37,8 @@ class PaymentService(object):
 
     def __init__(self, order_payment=None):
         if not order_payment or not isinstance(order_payment, OrderPayment):
-            raise Exception("Need an OrderPayment to in initiate PaymentService")
+            raise Exception(
+                "Need an OrderPayment to in initiate PaymentService")
 
         self.order_payment = order_payment
         self.adapter = self._get_adapter()
@@ -46,7 +48,8 @@ class PaymentService(object):
 
     def _get_adapter(self):
         # FIXME: Check if payment_method is set.
-        provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1', self.order_payment.payment_method)
+        provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1',
+                               self.order_payment.payment_method)
         app_name = 'payments_' + provider_name
         class_name = provider_name.title() + 'PaymentAdapter'
         class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
@@ -54,7 +57,9 @@ class PaymentService(object):
         try:
             adapter_class = import_class(class_path)
         except ImportError:
-            raise PaymentException("Couldn't find an adapter for payment method '{0}'".format(self.order_payment.payment_method))
+            raise PaymentException(
+                "Couldn't find an adapter for payment method '{0}'".format(
+                    self.order_payment.payment_method))
 
         adapter = adapter_class(self.order_payment)
         return adapter
@@ -69,5 +74,4 @@ class PaymentService(object):
         self.order_payment.set_authorization_action(action)
 
     def check_payment_status(self, **integration_details):
-        action = self.adapter.check_payment_status()
-
+        self.adapter.check_payment_status()

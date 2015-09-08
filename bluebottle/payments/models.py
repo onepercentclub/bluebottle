@@ -18,8 +18,7 @@ from bluebottle.utils.utils import FSMTransition, StatusDefinition
 from bluebottle.payments.managers import PaymentManager
 from bluebottle import clients
 
-
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer', )
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer',)
 
 
 def trim_tenant_url(max_length, tenant_url):
@@ -74,16 +73,15 @@ class Payment(PolymorphicModel):
 
     def get_fee(self):
         if not isinstance(self, Payment):
-            raise PaymentException(
-                "get_fee() not implemented for {0}".
-                format(self.__class__.__name__))
+            msg = "get_fee() not implemented for {0}".format(
+                self.__class__.__name__)
+            raise PaymentException(msg)
 
     class Meta:
         ordering = ('-created', '-updated')
 
 
 class OrderPaymentAction(models.Model):
-
     """
     This is used as action to process OrderPayment.
     For now this is only used as AuthorizationAction
@@ -112,7 +110,6 @@ class OrderPaymentAction(models.Model):
 
 
 class OrderPayment(models.Model, FSMTransition):
-
     """
     An order is a collection of OrderItems and vouchers with a connected
     payment.
@@ -136,7 +133,8 @@ class OrderPayment(models.Model, FSMTransition):
 
     transaction_fee = models.DecimalField(_("Transaction Fee"), max_digits=16,
                                           decimal_places=2, null=True,
-                                          help_text=_("Bank & transaction fee, withheld by payment provider."))
+                                          help_text=_(
+                                              "Bank & transaction fee, withheld by payment provider."))
 
     # Payment method used
     payment_method = models.CharField(max_length=20, default='', blank=True)
@@ -160,42 +158,51 @@ class OrderPayment(models.Model, FSMTransition):
         pass
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                StatusDefinition.CANCELLED, StatusDefinition.FAILED],
+                                                 StatusDefinition.CANCELLED,
+                                                 StatusDefinition.FAILED],
                 target=StatusDefinition.AUTHORIZED)
     def authorized(self):
         # TODO: add authorized state behaviour here
         pass
 
     @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                StatusDefinition.STARTED, StatusDefinition.CANCELLED, StatusDefinition.FAILED, StatusDefinition.UNKNOWN],
+                                                 StatusDefinition.STARTED,
+                                                 StatusDefinition.CANCELLED,
+                                                 StatusDefinition.FAILED,
+                                                 StatusDefinition.UNKNOWN],
                 target=StatusDefinition.SETTLED)
     def settled(self):
         self.closed = now()
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
-                StatusDefinition.SETTLED], target=StatusDefinition.FAILED)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
+                        StatusDefinition.SETTLED],
+                target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                StatusDefinition.FAILED], target=StatusDefinition.CANCELLED)
+                                                 StatusDefinition.FAILED],
+                target=StatusDefinition.CANCELLED)
     def cancelled(self):
         # TODO: add cancelled state behaviour here
         pass
 
     @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                StatusDefinition.SETTLED],
+                                                 StatusDefinition.SETTLED],
                 target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         self.closed = None
 
     @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                StatusDefinition.SETTLED], target=StatusDefinition.REFUNDED)
+                                                 StatusDefinition.SETTLED],
+                target=StatusDefinition.REFUNDED)
     def refunded(self):
         self.closed = None
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED],
+                                                 StatusDefinition.AUTHORIZED,
+                                                 StatusDefinition.SETTLED],
                 target=StatusDefinition.UNKNOWN)
     def unknown(self):
         # TODO: add unknown state behaviour here
@@ -209,7 +216,6 @@ class OrderPayment(models.Model, FSMTransition):
         self.amount = self.order.total
         if self.id:
             # If the payment method has changed we should recalculate the fee.
-            previous = OrderPayment.objects.get(id=self.id)
             try:
                 self.transaction_fee = self.payment.get_fee()
             except ObjectDoesNotExist:
@@ -266,5 +272,6 @@ class Transaction(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+
 
 import signals

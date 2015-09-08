@@ -77,14 +77,7 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
-        co_financing_user_types = (
-            Member.UserType.foundation, Member.UserType.company
-        )
-
-        if co_financing:
-            filter_kwargs['order__user__user_type__in'] = co_financing_user_types
-        else:
-            queryset.exclude(order__user__user_type__in=co_financing_user_types)
+        filter_kwargs['order__user__is_co_financer'] = co_financing
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")

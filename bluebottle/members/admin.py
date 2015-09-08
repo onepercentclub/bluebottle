@@ -117,7 +117,7 @@ class MemberAdmin(UserAdmin):
             'first_name', 'last_name', 'username', 'gender', 'birthdate',
             'phone_number')}),
         (_("Profile"),
-         {'fields': ('user_type', 'picture', 'about_me', 'location',)}),
+         {'fields': ('user_type', 'is_co_financer', 'picture', 'about_me', 'location')}),
         (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
         (_('Skills & interests'), {'fields': ('favourite_themes',)}),
         (_('Important dates'),

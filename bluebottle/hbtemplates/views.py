@@ -32,7 +32,7 @@ class HBTemplateView(TemplateView):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
-        if kwargs.has_key('hbtemplate'):
+        if 'hbtemplate' in kwargs:
             hbtemplate = kwargs.get('hbtemplate')
             if not self._check_template_exists(hbtemplate):
                 raise http.Http404

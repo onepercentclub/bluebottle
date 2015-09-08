@@ -1,6 +1,9 @@
 /* Header */
 
-div#header { background-image: none; }
+div#header {
+    background-image: none;
+}
+
 #header #branding {
     background: #000;
 }
@@ -17,7 +20,6 @@ div#header { background-image: none; }
     width: 110px;
 }
 
-
 /* Login variation */
 
 body.login .password-reset-link {
@@ -29,13 +31,11 @@ body.login #footer {
     padding: 5px;
 }
 
-
 /* Fieldset titles */
 
-.module h2, .module caption, .inline-group h2  {
+.module h2, .module caption, .inline-group h2 {
     background: #00C051
 }
-
 
 /* Form submit buttons */
 
@@ -53,25 +53,34 @@ input.default[type="submit"]:active,
     border-color: #FF639D;
 }
 
-
 /* Footer */
 
-html, body { height: 100%; }
-#container { min-height: 100%; }
-.login #container { min-height: 0; }
+html, body {
+    height: 100%;
+}
 
-#footerspace { padding-bottom: 40px; }
+#container {
+    min-height: 100%;
+}
+
+.login #container {
+    min-height: 0;
+}
+
+#footerspace {
+    padding-bottom: 40px;
+}
+
 #footer {
     color: #aaa;
     position: absolute;
     bottom: 5px;
     left: 0;
     width: 100%;
-    padding:  0;
-    margin:  0;
+    padding: 0;
+    margin: 0;
     text-align: center;
 }
-
 
 /* Other fixes */
 

@@ -114,7 +114,6 @@ FLUENT_DASHBOARD_APP_ICONS = {
     'auth/group': 'icons/flaticons_stroke/SVGs/group-1.svg',
     'registration/registrationprofile': 'icons/flaticons_stroke/SVGs/add-user-1.svg',
 
-
     # Projects
     'bb_projects/projectphase': 'icons/flaticons_stroke/SVGs/history-1.svg',
     'bb_projects/projecttheme': 'icons/flaticons_stroke/SVGs/leaf-1.svg',

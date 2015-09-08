@@ -1,5 +1,6 @@
 """ Common utils. """
 
+
 def has_duplicate_items(ls):
     """ Returns True when an iterable has duplicate items. """
 

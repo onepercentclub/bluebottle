@@ -12,5 +12,3 @@ class HomePageDetail(generics.GenericAPIView):
         homepage = HomePage().get(language)
         serialized = HomePageSerializer().to_native(homepage)
         return response.Response(serialized)
-
-

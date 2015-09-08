@@ -7,14 +7,16 @@ import os
 from optparse import make_option
 
 from django.core.management.base import NoArgsCommand, CommandError
-from django.core.management.commands.makemessages import handle_extensions, _popen, STATUS_OK, process_file, \
+from django.core.management.commands.makemessages import handle_extensions, \
+    _popen, STATUS_OK, process_file, \
     write_po_file, is_ignored, Command as OriginalCommand
 from django.utils.text import get_text_list
 
 
 class Command(OriginalCommand):
     option_list = OriginalCommand.option_list + (
-        make_option('--include', action='append', dest='include_paths', default=[], help="Include additional paths."),
+        make_option('--include', action='append', dest='include_paths',
+                    default=[], help="Include additional paths."),
     )
 
     def handle_noargs(self, *args, **options):
@@ -42,13 +44,15 @@ class Command(OriginalCommand):
 
         if verbosity > 1:
             self.stdout.write('examining files with the extensions: %s\n'
-                             % get_text_list(list(extensions), 'and'))
+                              % get_text_list(list(extensions), 'and'))
 
         make_messages(locale, domain, verbosity, process_all, extensions,
-            symlinks, ignore_patterns, no_wrap, no_location, no_obsolete, self.stdout, include_paths)
+                      symlinks, ignore_patterns, no_wrap, no_location,
+                      no_obsolete, self.stdout, include_paths)
 
 
-def find_files(root, ignore_patterns, verbosity, stdout=sys.stdout, symlinks=False):
+def find_files(root, ignore_patterns, verbosity, stdout=sys.stdout,
+               symlinks=False):
     """
     Helper function to get all files in the given root.
 
@@ -57,9 +61,11 @@ def find_files(root, ignore_patterns, verbosity, stdout=sys.stdout, symlinks=Fal
     inside subdirectories) is not ignored either.
     """
     dir_suffix = '%s*' % os.sep
-    norm_patterns = [p[:-len(dir_suffix)] if p.endswith(dir_suffix) else p for p in ignore_patterns]
+    norm_patterns = [p[:-len(dir_suffix)] if p.endswith(dir_suffix) else p for p
+                     in ignore_patterns]
     all_files = []
-    for dirpath, dirnames, filenames in os.walk(root, topdown=True, followlinks=symlinks):
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True,
+                                                followlinks=symlinks):
         for dirname in dirnames[:]:
             # NOTE: This line was changed, also affecting default behaviour.
             if is_ignored(dirname, norm_patterns):
@@ -70,7 +76,8 @@ def find_files(root, ignore_patterns, verbosity, stdout=sys.stdout, symlinks=Fal
             # NOTE: This line was changed, also affecting default behaviour.
             if is_ignored(filename, ignore_patterns):
                 if verbosity > 1:
-                    stdout.write('ignoring file %s in %s\n' % (filename, dirpath))
+                    stdout.write(
+                        'ignoring file %s in %s\n' % (filename, dirpath))
             else:
                 all_files.extend([(dirpath, filename)])
     all_files.sort()
@@ -78,8 +85,10 @@ def find_files(root, ignore_patterns, verbosity, stdout=sys.stdout, symlinks=Fal
 
 
 def make_messages(locale=None, domain='django', verbosity=1, all=False,
-        extensions=None, symlinks=False, ignore_patterns=None, no_wrap=False,
-        no_location=False, no_obsolete=False, stdout=sys.stdout, include_paths=None):
+                  extensions=None, symlinks=False, ignore_patterns=None,
+                  no_wrap=False,
+                  no_location=False, no_obsolete=False, stdout=sys.stdout,
+                  include_paths=None):
     """
     Uses the ``locale/`` directory from the Django Git tree or an
     application/project to process all files with translatable literals for
@@ -92,10 +101,11 @@ def make_messages(locale=None, domain='django', verbosity=1, all=False,
 
     # Need to ensure that the i18n framework is enabled
     from django.conf import settings
+
     if settings.configured:
         settings.USE_I18N = True
     else:
-        settings.configure(USE_I18N = True)
+        settings.configure(USE_I18N=True)
 
     if ignore_patterns is None:
         ignore_patterns = []
@@ -110,32 +120,34 @@ def make_messages(locale=None, domain='django', verbosity=1, all=False,
         localedir = os.path.abspath('locale')
     else:
         raise CommandError("This script should be run from the Django Git "
-                "tree or your project or app tree. If you did indeed run it "
-                "from the Git checkout or your project or application, "
-                "maybe you are just missing the conf/locale (in the django "
-                "tree) or locale (for project and application) directory? It "
-                "is not created automatically, you have to create it by hand "
-                "if you want to enable i18n for your project or application.")
+                           "tree or your project or app tree. If you did indeed run it "
+                           "from the Git checkout or your project or application, "
+                           "maybe you are just missing the conf/locale (in the django "
+                           "tree) or locale (for project and application) directory? It "
+                           "is not created automatically, you have to create it by hand "
+                           "if you want to enable i18n for your project or application.")
 
     if domain not in ('django', 'djangojs'):
-        raise CommandError("currently makemessages only supports domains 'django' and 'djangojs'")
+        raise CommandError(
+            "currently makemessages only supports domains 'django' and 'djangojs'")
 
     if (locale is None and not all) or domain is None:
-        message = "Type '%s help %s' for usage information." % (os.path.basename(sys.argv[0]), sys.argv[1])
+        message = "Type '%s help %s' for usage information." % (
+        os.path.basename(sys.argv[0]), sys.argv[1])
         raise CommandError(message)
 
     # We require gettext version 0.15 or newer.
     output, errors, status = _popen('xgettext --version')
     if status != STATUS_OK:
         raise CommandError("Error running xgettext. Note that Django "
-                    "internationalization requires GNU gettext 0.15 or newer.")
+                           "internationalization requires GNU gettext 0.15 or newer.")
     match = re.search(r'(?P<major>\d+)\.(?P<minor>\d+)', output)
     if match:
         xversion = (int(match.group('major')), int(match.group('minor')))
         if xversion < (0, 15):
             raise CommandError("Django internationalization requires GNU "
-                    "gettext 0.15 or newer. You are using version %s, please "
-                    "upgrade your gettext toolset." % match.group())
+                               "gettext 0.15 or newer. You are using version %s, please "
+                               "upgrade your gettext toolset." % match.group())
 
     locales = []
     if locale is not None:
@@ -163,17 +175,22 @@ def make_messages(locale=None, domain='django', verbosity=1, all=False,
         # NOTE: Additional for-loop added compared to original command to iterate over included projects.
         for root in ['.'] + include_paths:
             if not os.path.exists(root):
-                stdout.write('  skipping directory: {0} (not found)'.format(root))
+                stdout.write(
+                    '  skipping directory: {0} (not found)'.format(root))
             else:
                 stdout.write('  processing directory: {0}'.format(root))
-                for dirpath, file in find_files(root, ignore_patterns, verbosity,
-                        stdout, symlinks=symlinks):
+                for dirpath, file in find_files(root, ignore_patterns,
+                                                verbosity,
+                                                stdout, symlinks=symlinks):
                     try:
-                        process_file(file, dirpath, potfile, domain, verbosity, extensions,
-                                wrap, location, stdout)
+                        process_file(file, dirpath, potfile, domain, verbosity,
+                                     extensions,
+                                     wrap, location, stdout)
                     except UnicodeDecodeError:
-                        stdout.write("UnicodeDecodeError: skipped file %s in %s" % (file, dirpath))
+                        stdout.write(
+                            "UnicodeDecodeError: skipped file %s in %s" % (
+                            file, dirpath))
 
         if os.path.exists(potfile):
             write_po_file(pofile, potfile, domain, locale, verbosity, stdout,
-                    not invoked_for_django, wrap, location, no_obsolete)
+                          not invoked_for_django, wrap, location, no_obsolete)

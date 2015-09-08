@@ -17,7 +17,7 @@ PROJECT_MODEL = get_project_model()
 
 class ProjectThemeFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ProjectTheme
-    FACTORY_DJANGO_GET_OR_CREATE = ('name', )
+    FACTORY_DJANGO_GET_OR_CREATE = ('name',)
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
     name_nl = name

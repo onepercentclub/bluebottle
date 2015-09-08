@@ -13,20 +13,26 @@ class GeoTestsMixin(object):
 
     def create_subregion(self, name, numeric_code, region=None):
         if region is None:
-            region, _ = Region.objects.get_or_create(name='test-region', numeric_code='200')
+            region, _ = Region.objects.get_or_create(name='test-region',
+                                                     numeric_code='200')
 
-        sub_region = SubRegion.objects.create(name=name, numeric_code=numeric_code, region=region)
+        sub_region = SubRegion.objects.create(name=name,
+                                              numeric_code=numeric_code,
+                                              region=region)
 
         return sub_region
 
     def create_country(self, name, numeric_code, sub_region=None, **kwargs):
         if sub_region is None:
             try:
-                sub_region = SubRegion.objects.get(name='test-subregion', numeric_code='100')
+                sub_region = SubRegion.objects.get(name='test-subregion',
+                                                   numeric_code='100')
             except SubRegion.DoesNotExist:
-                sub_region = self.create_subregion(name='test-subregion', numeric_code='100')
+                sub_region = self.create_subregion(name='test-subregion',
+                                                   numeric_code='100')
 
-        country = Country(name=name, numeric_code=numeric_code, subregion=sub_region)
+        country = Country(name=name, numeric_code=numeric_code,
+                          subregion=sub_region)
         for k, v in kwargs.items():
             setattr(country, k, v)
 

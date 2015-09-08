@@ -10,4 +10,3 @@ class Client(TenantMixin):
     updated = ModificationDateTimeField()
 
     auto_create_schema = True
-

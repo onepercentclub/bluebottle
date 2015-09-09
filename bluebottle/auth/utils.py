@@ -11,6 +11,13 @@ from bluebottle.clients import properties
 USER_MODEL = get_user_model()
 
 
+def user_from_request(strategy, backend, *args, **kwargs):
+    user = strategy.request.user
+
+    if user.is_authenticated():
+        return {'user': strategy.request.user}
+
+
 def save_profile_picture(strategy, user, response, details, backend,
                          is_new=False, *args, **kwargs):
     if is_new and backend.name == 'facebook':

@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
+from social.exceptions import AuthAlreadyAssociated
 from social.apps.django_app.utils import psa, get_strategy, STORAGE
 
 
@@ -18,9 +20,11 @@ class AccessTokenView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, backend):
-        user = store_token(request, backend)
-        return Response()
-
-
-
-
+        try:
+            store_token(request, backend)
+            return Response({})
+        except AuthAlreadyAssociated:
+            return Response(
+                {'error': 'Another user for this facebook account already exists'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

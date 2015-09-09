@@ -17,8 +17,10 @@ class BasePaymentAdapter(object):
         self.order_payment = order_payment
         self.payment = None
 
-        if len(self.MODEL_CLASSES) == 1 and self.MODEL_CLASSES[0].__class__ == Payment:
-            raise Exception("Please override MODEL_CLASSES with extended payment model(s).")
+        if len(self.MODEL_CLASSES) == 1 and self.MODEL_CLASSES[
+            0].__class__ == Payment:
+            raise Exception(
+                "Please override MODEL_CLASSES with extended payment model(s).")
 
         for i in range(0, len(self.MODEL_CLASSES)):
             cls = self.MODEL_CLASSES[i]
@@ -26,7 +28,8 @@ class BasePaymentAdapter(object):
                 self.payment = cls.objects.get(order_payment=self.order_payment)
                 break
             except cls.MultipleObjectsReturned:
-                raise Exception("Multiple payments for OrderPayment {0}".format(self.order_payment))
+                raise Exception("Multiple payments for OrderPayment {0}".format(
+                    self.order_payment))
             except cls.DoesNotExist:
                 # Pass here to allow for other classes in MODEL_CLASSES
                 pass

@@ -28,7 +28,7 @@ class SubmittedPlans(DashboardModule):
     template = 'admin_tools/dashboard/submitted_plans.html'
     limit = 10
 
-    def __init__(self, title=None, limit=10,**kwargs):
+    def __init__(self, title=None, limit=10, **kwargs):
         kwargs.update({'limit': limit})
         super(SubmittedPlans, self).__init__(title, **kwargs)
 
@@ -47,7 +47,7 @@ class StartedCampaigns(DashboardModule):
     template = 'admin_tools/dashboard/started_campaigns.html'
     limit = 10
 
-    def __init__(self, title=None, limit=10,**kwargs):
+    def __init__(self, title=None, limit=10, **kwargs):
         kwargs.update({'limit': limit})
         super(StartedCampaigns, self).__init__(title, **kwargs)
 
@@ -71,7 +71,6 @@ class EndedProjects(DashboardModule):
         super(EndedProjects, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-
         qs = Project.objects.filter(campaign_ended__isnull=False).order_by(
             '-campaign_ended')[:self.limit]
         projects = list(qs)
@@ -80,4 +79,3 @@ class EndedProjects(DashboardModule):
         if not len(self.children):
             self.pre_content = _('No recently funded projects.')
         self._initialized = True
-

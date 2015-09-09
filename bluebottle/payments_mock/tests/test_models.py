@@ -9,14 +9,14 @@ from bluebottle.utils.utils import StatusDefinition
 
 
 class PaymentsMockTestCase(BluebottleTestCase, FsmTestMixin):
-
     def setUp(self):
         super(PaymentsMockTestCase, self).setUp()
 
-    	self.init_projects()
+        self.init_projects()
 
         self.order = OrderFactory.create(total=35)
-        self.order_payment = OrderPaymentFactory.create(order=self.order, payment_method='mock')
+        self.order_payment = OrderPaymentFactory.create(order=self.order,
+                                                        payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)
 
     def test_check_authorized_status(self):
@@ -24,4 +24,3 @@ class PaymentsMockTestCase(BluebottleTestCase, FsmTestMixin):
         self.assert_status(self.order_payment.payment, StatusDefinition.STARTED)
         self.assert_status(self.order_payment, StatusDefinition.STARTED)
         self.assert_status(self.order, StatusDefinition.LOCKED)
-

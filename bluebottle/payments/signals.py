@@ -6,17 +6,19 @@ from django.dispatch import receiver
 from .models import Payment, OrderPayment
 from bluebottle.payments.models import Payment
 
-
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
 
-@receiver(post_save, weak=False, sender=OrderPayment, dispatch_uid='order_payment_model')
+
+@receiver(post_save, weak=False, sender=OrderPayment,
+          dispatch_uid='order_payment_model')
 def order_payment_changed(sender, instance, **kwargs):
     # Send status change notification when record first created
     # This is to ensure any components listening for a status 
     # on an OrderPayment will also receive the initial status.
 
     # Get the default status for the status field on OrderPayment
-    default_status = OrderPayment._meta.get_field_by_name('status')[0].get_default()
+    default_status = OrderPayment._meta.get_field_by_name('status')[
+        0].get_default()
 
     # Signal new status if current status is the default value
     if (instance.status == default_status):
@@ -30,7 +32,8 @@ def order_payment_changed(sender, instance, **kwargs):
 
 @receiver(post_save, weak=False, dispatch_uid='payments_previous_status')
 def set_previous_status(sender, instance, **kwargs):
-    if not (isinstance(instance, Payment) or isinstance(instance, OrderPayment)): return
+    if not (isinstance(instance, Payment) or isinstance(instance,
+                                                        OrderPayment)): return
 
     # Store the previous status when the Instance is saved
     # so that it can be used on the next save to determine
@@ -54,14 +57,15 @@ def payment_status_changed(sender, instance, **kwargs):
 
     # Get the mapped status OrderPayment to Order
     new_order_payment_status = order_payment.get_status_mapping(instance.status)
-    
+
     # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)
 
 
 @receiver(post_save, weak=False, dispatch_uid='default_status')
 def default_status_check(sender, instance, **kwargs):
-    if not (isinstance(instance, Payment) or isinstance(instance, OrderPayment)): return
+    if not (isinstance(instance, Payment) or isinstance(instance,
+                                                        OrderPayment)): return
 
     # Send status change notification when record first created
     # This is to ensure any components listening for a status 
@@ -79,13 +83,17 @@ def default_status_check(sender, instance, **kwargs):
         # if there is no Payment associated to the order_payment do not log
         # The log will be created in the adapter
         payment = Payment.objects.get(order_payment=instance)
-        payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
+        payment_logger.log(payment, 'info',
+                           'a new payment status {0}'.format(instance.status))
 
     except Payment.DoesNotExist:
         pass
     except Payment.MultipleObjectsReturned:
-        payment = Payment.objects.order('-created').filter(order_payment=instance).all()[0]
-        payment_logger.log(payment, 'info', 'a new payment status {0}'.format(instance.status))
+        payment = \
+        Payment.objects.order('-created').filter(order_payment=instance).all()[
+            0]
+        payment_logger.log(payment, 'info',
+                           'a new payment status {0}'.format(instance.status))
     finally:
         # Signal new status if current status is the default value
         if (instance.status == default_status):
@@ -95,4 +103,3 @@ def default_status_check(sender, instance, **kwargs):
                 'target': instance.status
             }
             post_transition.send(**signal_kwargs)
-

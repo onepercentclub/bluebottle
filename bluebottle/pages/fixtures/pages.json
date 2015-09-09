@@ -1,146 +1,146 @@
 [
-    {
-        "pk": 1,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "How it works",
-            "language": "en",
-            "slug": "how-it-works",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 2,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Hoe wekt het",
-            "language": "nl",
-            "slug": "how-it-works",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 3,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "The Story",
-            "language": "en",
-            "slug": "the-story",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 4,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Ons verhaal",
-            "language": "nl",
-            "slug": "the-story",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 5,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Our partners",
-            "language": "en",
-            "slug": "partners",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 6,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Onze partners",
-            "language": "nl",
-            "slug": "partners",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 7,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "FAQ",
-            "language": "en",
-            "slug": "faq",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 8,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "FAQ",
-            "language": "nl",
-            "slug": "faq",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 9,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Terms and conditions",
-            "language": "en",
-            "slug": "terms-and-conditions",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 10,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Algemene voorwaarden",
-            "language": "nl",
-            "slug": "terms-and-conditions",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 11,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Privacy policy",
-            "language": "en",
-            "slug": "privacy",
-            "full_page": false
-        }
-    },
-    {
-        "pk": 12,
-        "model": "pages.page",
-        "fields": {
-            "status": "published",
-            "publication_date": "2015-01-01T12:00:00Z",
-            "title": "Provacy policy",
-            "language": "nl",
-            "slug": "privacy",
-            "full_page": false
-        }
+  {
+    "pk": 1,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "How it works",
+      "language": "en",
+      "slug": "how-it-works",
+      "full_page": false
     }
+  },
+  {
+    "pk": 2,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Hoe wekt het",
+      "language": "nl",
+      "slug": "how-it-works",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 3,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "The Story",
+      "language": "en",
+      "slug": "the-story",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 4,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Ons verhaal",
+      "language": "nl",
+      "slug": "the-story",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 5,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Our partners",
+      "language": "en",
+      "slug": "partners",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 6,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Onze partners",
+      "language": "nl",
+      "slug": "partners",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 7,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "FAQ",
+      "language": "en",
+      "slug": "faq",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 8,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "FAQ",
+      "language": "nl",
+      "slug": "faq",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 9,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Terms and conditions",
+      "language": "en",
+      "slug": "terms-and-conditions",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 10,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Algemene voorwaarden",
+      "language": "nl",
+      "slug": "terms-and-conditions",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 11,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Privacy policy",
+      "language": "en",
+      "slug": "privacy",
+      "full_page": false
+    }
+  },
+  {
+    "pk": 12,
+    "model": "pages.page",
+    "fields": {
+      "status": "published",
+      "publication_date": "2015-01-01T12:00:00Z",
+      "title": "Provacy policy",
+      "language": "nl",
+      "slug": "privacy",
+      "full_page": false
+    }
+  }
 ]

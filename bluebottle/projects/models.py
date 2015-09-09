@@ -2,7 +2,8 @@ import datetime
 import pytz
 from django.utils.timezone import now
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.bb_projects.models import BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
+from bluebottle.bb_projects.models import BaseProject, ProjectPhase, \
+    BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -11,29 +12,31 @@ from django.db.models.signals import post_init, post_save
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.conf import settings
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from django_extensions.db.fields import ModificationDateTimeField, \
+    CreationDateTimeField
 from bluebottle.utils.fields import ImageField
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from .mails import mail_project_funded_internal, mail_project_complete, mail_project_incomplete
+from .mails import mail_project_funded_internal, mail_project_complete, \
+    mail_project_incomplete
 from .signals import project_funded
-
 
 GROUP_PERMS = {
     'Staff': {
         'perms': (
             'add_project', 'change_project', 'delete_project',
-            'add_partnerorganization', 'change_partnerorganization', 'delete_partnerorganization',
+            'add_partnerorganization', 'change_partnerorganization',
+            'delete_partnerorganization',
         )
     }
 }
+
 
 class ProjectPhaseLog(BaseProjectPhaseLog):
     pass
 
 
 class ProjectManager(models.Manager):
-
     def search(self, query):
         qs = super(ProjectManager, self).get_query_set()
 
@@ -71,8 +74,10 @@ class ProjectManager(models.Manager):
             queryset = queryset.order_by('status', 'amount_needed')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
-            queryset = queryset.extra(select={'has_campaign_started': 'campaign_started is null'})
-            queryset = queryset.order_by('status', 'has_campaign_started', '-campaign_started', '-created')
+            queryset = queryset.extra(
+                select={'has_campaign_started': 'campaign_started is null'})
+            queryset = queryset.order_by('status', 'has_campaign_started',
+                                         '-campaign_started', '-created')
         elif ordering == 'popularity':
             queryset = queryset.order_by('status', '-popularity')
             if status == 5:
@@ -88,8 +93,8 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject):
-
-    partner_organization = models.ForeignKey('projects.PartnerOrganization', null=True, blank=True)
+    partner_organization = models.ForeignKey('projects.PartnerOrganization',
+                                             null=True, blank=True)
 
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
@@ -107,27 +112,43 @@ class Project(BaseProject):
                     "You can paste the link to YouTube or Vimeo video here"))
 
     popularity = models.FloatField(null=False, default=0)
-    is_campaign = models.BooleanField(default=False, help_text=_("Project is part of a campaign and gets special promotion."))
+    is_campaign = models.BooleanField(default=False, help_text=_(
+        "Project is part of a campaign and gets special promotion."))
 
     skip_monthly = models.BooleanField(_("Skip monthly"),
-                                       help_text=_("Skip this project when running monthly donations"),
+                                       help_text=_(
+                                           "Skip this project when running monthly donations"),
                                        default=False)
 
     allow_overfunding = models.BooleanField(default=True)
-    story = models.TextField(_("story"), help_text=_("This is the help text for the story field"), blank=True,
-                             null=True)
+    story = models.TextField(
+        _("story"), help_text=_("This is the help text for the story field"),
+        blank=True, null=True)
 
     # TODO: Remove these fields?
-    effects = models.TextField(_("effects"), help_text=_("What will be the Impact? How will your Smart Idea change the lives of people?"), blank=True, null=True)
-    for_who = models.TextField(_("for who"), help_text=_("Describe your target group"), blank=True, null=True)
-    future = models.TextField(_("future"), help_text=_("How will this project be self-sufficient and sustainable in the long term?"), blank=True, null=True)
+    effects = models.TextField(
+        _("effects"), blank=True, null=True,
+        help_text=_("What will be the Impact? How will your "
+                    "Smart Idea change the lives of people?"))
+    for_who = models.TextField(
+        _("for who"), blank=True, null=True,
+        help_text=_("Describe your target group"))
+    future = models.TextField(
+        _("future"), blank=True, null=True,
+        help_text=_("How will this project be self-sufficient and "
+                    "sustainable in the long term?"))
 
-    date_submitted = models.DateTimeField(_('Campaign Submitted'), null=True, blank=True)
-    campaign_started = models.DateTimeField(_('Campaign Started'), null=True, blank=True)
-    campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True, blank=True)
-    campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True, blank=True)
+    date_submitted = models.DateTimeField(_('Campaign Submitted'), null=True,
+                                          blank=True)
+    campaign_started = models.DateTimeField(_('Campaign Started'), null=True,
+                                            blank=True)
+    campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True,
+                                          blank=True)
+    campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
+                                           blank=True)
 
-    voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True, blank=True)
+    voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
+                                           blank=True)
 
     objects = ProjectManager()
 
@@ -140,7 +161,9 @@ class Project(BaseProject):
         from bluebottle.donations.models import Donation
 
         last_month = timezone.now() - timezone.timedelta(days=30)
-        donations = Donation.objects.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        donations = Donation.objects.filter(
+            order__status__in=[StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS])
         donations = donations.filter(created__gte=last_month)
         donations = donations.exclude(order__order_type='recurring')
 
@@ -154,7 +177,9 @@ class Project(BaseProject):
         recent_donations = donations.aggregate(sum=Sum('amount'))['sum']
 
         if recent_donors and recent_donations:
-            self.popularity = 50 * (float(recent_donors) / float(total_recent_donors)) + 50 * (float(recent_donations) / float(total_recent_donations))
+            self.popularity = 50 * (
+                float(recent_donors) / float(total_recent_donors)) + 50 * (
+                float(recent_donations) / float(total_recent_donations))
         else:
             self.popularity = 0
         if save:
@@ -162,9 +187,9 @@ class Project(BaseProject):
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
-                                            self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                           Q(slug="done-incomplete") |
-                                                           Q(slug="done-stopped")) and self.amount_needed <= 0:
+                self.status not in ProjectPhase.objects.filter(
+                    Q(slug="done-complete") |
+                    Q(slug="done-incomplete")) and self.amount_needed <= 0:
             self.campaign_funded = timezone.now()
             if save:
                 self.save()
@@ -172,7 +197,8 @@ class Project(BaseProject):
     def update_amounts(self, save=True):
         """ Update amount based on paid and pending donations. """
 
-        self.amount_donated = self.get_money_total([StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+        self.amount_donated = self.get_money_total(
+            [StatusDefinition.PENDING, StatusDefinition.SUCCESS])
         self.amount_needed = self.amount_asked - self.amount_donated
 
         if self.amount_needed < 0:
@@ -210,7 +236,8 @@ class Project(BaseProject):
 
     @property
     def is_realised(self):
-        return self.status in ProjectPhase.objects.filter(slug__in=['done-complete', 'done-incomplete', 'realised']).all()
+        return self.status in ProjectPhase.objects.filter(
+            slug__in=['done-complete', 'done-incomplete', 'realised']).all()
 
     @property
     def is_funding(self):
@@ -220,12 +247,19 @@ class Project(BaseProject):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations
         donations = self.donation_set
-        donations = donations.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
-        count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
+        donations = donations.filter(
+            order__status__in=[StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS])
+        count = \
+            donations.all().aggregate(
+                total=Count('order__user', distinct=True))[
+                'total']
 
         if with_guests:
             donations = self.donation_set
-            donations = donations.filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+            donations = donations.filter(
+                order__status__in=[StatusDefinition.PENDING,
+                                   StatusDefinition.SUCCESS])
             donations = donations.filter(order__user__isnull=True)
             count += len(donations.all())
         return count
@@ -237,12 +271,15 @@ class Project(BaseProject):
     @property
     def task_count(self):
         from bluebottle.utils.model_dispatcher import get_task_model
+
         TASK_MODEL = get_task_model()
-        return len(self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all())
+        return len(
+            self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all())
 
     @property
     def get_open_tasks(self):
         from bluebottle.utils.model_dispatcher import get_task_model
+
         TASK_MODEL = get_task_model()
         return self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all()
 
@@ -287,9 +324,9 @@ class Project(BaseProject):
 
     def get_fb_title(self, **kwargs):
         title = _(u"{name_project} in {country}").format(
-                    name_project = self.title,
-                    country = self.country.name if self.country else '',
-                )
+            name_project=self.title,
+            country=self.country.name if self.country else '',
+        )
         return title
 
     def get_tweet(self, **kwargs):
@@ -299,15 +336,16 @@ class Project(BaseProject):
             lang_code = request.LANGUAGE_CODE
         else:
             lang_code = 'en'
-        twitter_handle = settings.TWITTER_HANDLES.get(lang_code, settings.DEFAULT_TWITTER_HANDLE)
+        twitter_handle = settings.TWITTER_HANDLES.get(lang_code,
+                                                      settings.DEFAULT_TWITTER_HANDLE)
 
         title = urlquote(self.get_fb_title())
 
         # {URL} is replaced in Ember to fill in the page url, avoiding the
         # need to provide front-end urls in our Django code.
         tweet = _(u"{title} {{URL}}").format(
-                    title=title, twitter_handle=twitter_handle
-                )
+            title=title, twitter_handle=twitter_handle
+        )
 
         return tweet
 
@@ -322,29 +360,32 @@ class Project(BaseProject):
             original_slug = slugify(self.title)
             counter = 2
             qs = Project.objects
-            while qs.filter(slug = original_slug).exists():
+            while qs.filter(slug=original_slug).exists():
                 original_slug = '%s-%d' % (original_slug, counter)
                 counter += 1
             self.slug = original_slug
 
-        #There are 9 ProjectPhase objects: 1. Plan - New, 2. Plan - Submitted, 3. Plan - Needs Work, 4. Plan - Rejected,
-        #5. Campaign, 6. Stopped, 7. Done - Complete, 8. Done - Incomplete, 9. Done - Stopped.
+        # There are 9 ProjectPhase objects: 1. Plan - New, 2. Plan - Submitted, 3. Plan - Needs Work, 4. Plan - Rejected,
+        # 5. Campaign, 6. Stopped, 7. Done - Complete, 8. Done - Incomplete, 9. Done - Stopped.
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
-        #If the project status is moved to New or Needs Work, clear the date_submitted field
-        if self.status in ProjectPhase.objects.filter(Q(slug="plan-new")|Q(slug="plan-needs-work")):
+        # If the project status is moved to New or Needs Work, clear the date_submitted field
+        if self.status in ProjectPhase.objects.filter(
+                        Q(slug="plan-new") | Q(slug="plan-needs-work")):
             self.date_submitted = None
 
-        #Set the submitted date
-        if self.status == ProjectPhase.objects.get(slug="plan-submitted") and not self.date_submitted:
+        # Set the submitted date
+        if self.status == ProjectPhase.objects.get(
+                slug="plan-submitted") and not self.date_submitted:
             self.date_submitted = timezone.now()
 
-        #Set the campaign started date
-        if self.status == ProjectPhase.objects.get(slug="campaign") and not self.campaign_started:
+        # Set the campaign started date
+        if self.status == ProjectPhase.objects.get(
+                slug="campaign") and not self.campaign_started:
             self.campaign_started = timezone.now()
 
-        #Set a default deadline of 30 days
+        # Set a default deadline of 30 days
         if not self.deadline:
             self.deadline = timezone.now() + datetime.timedelta(days=30)
 
@@ -353,27 +394,33 @@ class Project(BaseProject):
         local_time = self.deadline.astimezone(tz)
         if local_time.time() != datetime.time(23, 59, 59):
             self.deadline = tz.localize(
-                datetime.datetime.combine(local_time.date(), datetime.time(23, 59, 59))
+                datetime.datetime.combine(local_time.date(),
+                                          datetime.time(23, 59, 59))
             )
 
         if self.amount_asked:
             self.update_amounts(False)
 
-        #Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                           Q(slug="done-incomplete") |
-                                                           Q(slug="closed")) and self.deadline < timezone.now():
-            if (self.amount_asked > 0 and self.amount_donated <= 20) or not self.campaign_started:
+        # Project is not ended, complete, funded or stopped and its deadline has expired.
+        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(
+                                Q(slug="done-complete") |
+                                Q(slug="done-incomplete") |
+                        Q(slug="closed")) and self.deadline < timezone.now():
+            if (
+                            self.amount_asked > 0 and self.amount_donated <= 20) or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
-            elif (self.amount_asked > 0) and self.amount_donated >= self.amount_asked:
+            elif (
+                        self.amount_asked > 0) and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
 
         if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                           Q(slug="done-incomplete") |
-                                                           Q(slug="closed")) and not self.campaign_ended:
+                                                              Q(
+                                                                  slug="done-incomplete") |
+                                                              Q(
+                                                                  slug="closed")) and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         super(Project, self).save(*args, **kwargs)
@@ -390,6 +437,7 @@ class Project(BaseProject):
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
         from bluebottle.utils.model_dispatcher import get_task_model
+
         TASK_MODEL = get_task_model()
 
         if self.is_funding:
@@ -400,13 +448,15 @@ class Project(BaseProject):
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
         else:
-            if self.task_set.filter(status__in=[TASK_MODEL.TaskStatuses.in_progress,
-                                                TASK_MODEL.TaskStatuses.open]).count() > 0:
+            if self.task_set.filter(
+                    status__in=[TASK_MODEL.TaskStatuses.in_progress,
+                                TASK_MODEL.TaskStatuses.open]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
         self.campaign_ended = now()
         self.save()
+
 
 class ProjectBudgetLine(models.Model):
     """
@@ -459,19 +509,24 @@ class PartnerOrganization(models.Model):
         return self.slug
 
 
-@receiver(project_funded, weak=False, sender=Project, dispatch_uid="email-project-team-project-funded")
-def email_project_team_project_funded(sender, instance, first_time_funded, **kwargs):
+@receiver(project_funded, weak=False, sender=Project,
+          dispatch_uid="email-project-team-project-funded")
+def email_project_team_project_funded(sender, instance, first_time_funded,
+                                      **kwargs):
     mail_project_funded_internal(instance)
 
 
-@receiver(post_init, sender=Project, dispatch_uid="bluebottle.projects.Project.post_init")
+@receiver(post_init, sender=Project,
+          dispatch_uid="bluebottle.projects.Project.post_init")
 def project_post_init(sender, instance, **kwargs):
     try:
         instance._init_status = instance.status
     except ProjectPhase.DoesNotExist:
         instance._init_status = None
 
-@receiver(post_save, sender=Project, dispatch_uid="bluebottle.projects.Project.post_save")
+
+@receiver(post_save, sender=Project,
+          dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
     try:
         init_status, current_status = None, None
@@ -494,7 +549,6 @@ def project_post_save(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Project, dispatch_uid="updating_suggestion")
 def project_submitted_update_suggestion(sender, instance, **kwargs):
-
     if instance.status.slug == 'plan-submitted':
         # Only one suggestion can be connected to a project
         suggestion = instance.suggestions.first()

@@ -1,7 +1,8 @@
 import json
 from ipware.ip import get_ip
 from rest_framework.exceptions import APIException, ParseError
-from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, \
+    RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -19,11 +20,10 @@ from bluebottle.utils.utils import get_country_by_ip
 
 
 class PaymentMethodList(APIView):
-
     def get(self, request, *args, **kwargs):
         ip = get_ip(request)
         if ip == '127.0.0.1':
-            country = 'all' #get_payment_methods returns all methods when 'all' is specified
+            country = 'all'  # get_payment_methods returns all methods when 'all' is specified
         else:
             country = get_country_by_ip(ip)
 
@@ -66,7 +66,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
         except PaymentException as error:
             print error
             raise ParseError(detail=str(error))
-    
+
     def get_queryset(self):
         """ If there is an Order parameter in the GET request, filter the OrderPayments on the order """
         qs = OrderPayment.objects.all()
@@ -74,4 +74,3 @@ class ManageOrderPaymentList(ListCreateAPIView):
         if order_id:
             qs = qs.filter(order__id=order_id)
         return qs
-

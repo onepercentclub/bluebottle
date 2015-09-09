@@ -23,6 +23,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         save() automatically updates some fields, specifically
         the status field. Make sure it picks the right one
     """
+
     def setUp(self):
         super(TestProjectStatusUpdate, self).setUp()
 
@@ -36,7 +37,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         self.expired_project = ProjectFactory.create(amount_asked=5000,
                                                      campaign_started=now -
-                                                     timezone.
+                                                                      timezone.
                                                      timedelta(days=15),
                                                      status=self.campaign)
 
@@ -105,7 +106,6 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
 
 class SupporterCountTest(BluebottleTestCase):
-
     def setUp(self):
         super(SupporterCountTest, self).setUp()
 
@@ -126,22 +126,27 @@ class SupporterCountTest(BluebottleTestCase):
         self.assertEqual(self.some_project.supporter_count(), 0)
 
     def test_supporter_count_success(self):
-        self._create_donation(user=self.some_user, status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
 
         self.assertEqual(self.some_project.supporter_count(), 1)
 
     def test_supporter_count_pending(self):
-        self._create_donation(user=self.some_user, status=StatusDefinition.PENDING)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.PENDING)
 
         self.assertEqual(self.some_project.supporter_count(), 1)
 
     def test_supporter_count_unique(self):
-        self._create_donation(user=self.some_user, status=StatusDefinition.SUCCESS)
-        self._create_donation(user=self.some_user, status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
 
         self.assertEqual(self.some_project.supporter_count(), 1)
 
-        self._create_donation(user=self.another_user, status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.another_user,
+                              status=StatusDefinition.SUCCESS)
 
         self.assertEqual(self.some_project.supporter_count(), 2)
 
@@ -155,10 +160,13 @@ class SupporterCountTest(BluebottleTestCase):
         self.assertEqual(self.some_project.supporter_count(), 2)
 
     def test_supporter_count_anonymous_and_user(self):
-        self._create_donation(user=self.some_user, status=StatusDefinition.SUCCESS)
-        self._create_donation(user=self.some_user, status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
 
-        self._create_donation(user=self.another_user, status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.another_user,
+                              status=StatusDefinition.SUCCESS)
 
         self._create_donation(status=StatusDefinition.SUCCESS)
         self._create_donation(status=StatusDefinition.SUCCESS)
@@ -168,13 +176,13 @@ class SupporterCountTest(BluebottleTestCase):
         """ Helper method for creating donations."""
         order = Order.objects.create(status=status, user=user)
         donation = Donation.objects.create(amount=100,
-                                           project=self.some_project, order=order)
+                                           project=self.some_project,
+                                           order=order)
 
         return donation
 
 
 class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
-
     def setUp(self):
         super(TestProjectStatusChangeSuggestionUpdate, self).setUp()
 

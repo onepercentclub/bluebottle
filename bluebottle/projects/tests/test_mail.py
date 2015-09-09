@@ -29,7 +29,6 @@ class TestProjectMails(BluebottleTestCase):
         self.assertEquals(len(mail.outbox), 1)
         self.assertNotEquals(mail.outbox[0].subject.find("has completed"), -1)
 
-
     def test_incomplete(self):
         self.project.status = self.incomplete
         self.project.save()

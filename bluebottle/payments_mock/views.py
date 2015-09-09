@@ -21,8 +21,10 @@ class PaymentMock(TemplateView):
 
         order_payment_id = kwargs.get('order_payment_id', None)
 
-        result = {'return_url': reverse('payment-service-provider-handler'), 'order_payment_id': order_payment_id}
-        return render_to_response(self.template_name, result, context_instance=RequestContext(request))
+        result = {'return_url': reverse('payment-service-provider-handler'),
+                  'order_payment_id': order_payment_id}
+        return render_to_response(self.template_name, result,
+                                  context_instance=RequestContext(request))
 
 
 class PaymentResponseMockHandler(TemplateView):
@@ -78,11 +80,7 @@ class PaymentStatusListener(View):
 
         service = PaymentService(order_payment)
 
-        #We pass the MockPayment status and get back the status name of our OrderStatus definition
+        # We pass the MockPayment status and get back the status name of our OrderStatus definition
         service.adapter.set_order_payment_new_status(status)
 
         return HttpResponse('success')
-
-
-
-

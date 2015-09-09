@@ -16,15 +16,19 @@ class MockPaymentAdapter(BasePaymentAdapter):
         Have some basic criteria that might fail so we can check our error parsing.
         """
         if self.order_payment.amount < 10:
-            raise PaymentException("Amount for Mock payments should be greater then 10")
+            raise PaymentException(
+                "Amount for Mock payments should be greater then 10")
 
         user_data = self.get_user_data()
         pattern = re.compile(r'\W')
         if pattern.findall(user_data['first_name']):
-            raise PaymentException("First name '{0}' has got illegal characters.".format(user_data['first_name']))
+            raise PaymentException(
+                "First name '{0}' has got illegal characters.".format(
+                    user_data['first_name']))
 
         if len(user_data['last_name']) > 30:
-            raise PaymentException("Last name too long: '{0}'".format(user_data["last_name"]))
+            raise PaymentException(
+                "Last name too long: '{0}'".format(user_data["last_name"]))
 
         # Now just create the payment.
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment)
@@ -36,8 +40,9 @@ class MockPaymentAdapter(BasePaymentAdapter):
         This is the PSP url where Ember redirects the user to.
         """
         return {'type': 'redirect',
-                'method':'get',
-                'url': reverse('payment-service-provider', kwargs={'order_payment_id': self.order_payment.id})}
+                'method': 'get',
+                'url': reverse('payment-service-provider', kwargs={
+                'order_payment_id': self.order_payment.id})}
 
     def _get_mapped_status(self, status):
         """

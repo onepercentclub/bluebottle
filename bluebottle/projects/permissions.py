@@ -17,7 +17,8 @@ class BaseIsUser(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if self.field is None:
-            raise ImproperlyConfigured('The "IsUser" permission should provide a field attribute.')
+            raise ImproperlyConfigured(
+                'The "IsUser" permission should provide a field attribute.')
 
         o = obj
         for f in self.field.split('.'):
@@ -48,6 +49,7 @@ class IsProjectOwner(permissions.BasePermission):
     """
     Allows access only to project owner.
     """
+
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, Project):
             return obj.owner == request.user
@@ -68,6 +70,7 @@ class IsOwner(permissions.BasePermission):
     """
     Allows access only to project owner.
     """
+
     def has_object_permission(self, request, view, obj):
         # Test for project model object-level permissions.
         return isinstance(obj, Project) and obj.owner == request.user
@@ -95,6 +98,3 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
 
         # Test for project model object-level permissions.
         return isinstance(obj, Project) and obj.owner == request.user
-
-
-

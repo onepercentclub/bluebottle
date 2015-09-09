@@ -13,7 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import parsers, renderers
-from social.apps.django_app.utils import strategy
+from social.apps.django_app.utils import psa, get_strategy, STORAGE
 
 # from social_auth.decorators import
 from datetime import datetime
@@ -43,9 +43,13 @@ class GetAuthToken(APIView):
         return Response({'error': _('No result for token')})
 
 
-@strategy()
+def load_drf_strategy(request=None):
+    return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
+
+
+@psa(load_strategy=load_drf_strategy)
 def register_by_access_token(request, backend):
-    backend = request.strategy.backend
+    backend = request.backend
 
     access_token = request.DATA.get('accessToken', None)
 

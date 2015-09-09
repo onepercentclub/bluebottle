@@ -64,7 +64,7 @@ install_requires = [
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
     'pygeoip==0.3.1',
-    'python-social-auth==0.1.26',
+    'python-social-auth==0.2.12',
     'python-memcached==1.53',
     'lxml==3.1.2',
     'unicodecsv==0.9.4',

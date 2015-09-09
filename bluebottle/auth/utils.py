@@ -11,9 +11,9 @@ from bluebottle.clients import properties
 USER_MODEL = get_user_model()
 
 
-def save_profile_picture(strategy, user, response, details,
+def save_profile_picture(strategy, user, response, details, backend,
                          is_new=False, *args, **kwargs):
-    if is_new and strategy.backend.name == 'facebook':
+    if is_new and backend.name == 'facebook':
         url = 'http://graph.facebook.com/{0}/picture'.format(response['id'])
 
         try:
@@ -36,13 +36,16 @@ def set_language(strategy, user, response, details,
 
     # Check if request includes supported language for tenant otherwise
     # the user is created with the default language.
-    language = kwargs['request'].LANGUAGE_CODE[:2]
-    if language in supported_langauges:
-        user.primary_language = language
-    else:
-        user.primary_language = properties.LANGUAGE_CODE
+    try:
+        language = kwargs['request'].LANGUAGE_CODE[:2]
+        if language in supported_langauges:
+            user.primary_language = language
+        else:
+            user.primary_language = properties.LANGUAGE_CODE
 
-    user.save()
+        user.save()
+    except AttributeError:
+        pass
 
 
 def get_extra_facebook_data(strategy, user, response, details,
@@ -67,7 +70,7 @@ def get_extra_facebook_data(strategy, user, response, details,
         birthdate = time.strptime(birthday, "%m/%d/%Y")
         user.birthdate = datetime.fromtimestamp(time.mktime(birthdate))
 
-    if len(fb_link) < 50:
+    if fb_link and len(fb_link) < 50:
         user.facebook = fb_link
 
     user.save()

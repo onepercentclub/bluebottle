@@ -67,6 +67,9 @@ class Wallpost(PolymorphicModel):
     object_id = models.PositiveIntegerField(_('object ID'))
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    share_with_facebook = models.BooleanField(default=False)
+    share_with_twitter = models.BooleanField(default=False)
+    share_with_linkedin = models.BooleanField(default=False)
     email_followers = models.BooleanField(default=True)
 
     # Manager

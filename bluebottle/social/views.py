@@ -11,7 +11,9 @@ def load_drf_strategy(request=None):
     return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
 
 
-@psa(redirect_uri='/en/', load_strategy=load_drf_strategy)
+@psa(
+    redirect_uri='/static/assets/frontend/popup.html', load_strategy=load_drf_strategy
+)
 def store_token(request, backend):
     return request.backend.auth_complete()
 

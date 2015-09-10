@@ -185,3 +185,4 @@ class Reaction(models.Model):
         return Truncator(s).words(10)
 
 import mails
+import bluebottle.wallposts.signals

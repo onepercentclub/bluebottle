@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from social.exceptions import AuthAlreadyAssociated
+from social.exceptions import AuthAlreadyAssociated, AuthCanceled, AuthMissingParameter
 from social.apps.django_app.utils import psa, get_strategy, STORAGE
 
 
@@ -26,7 +26,12 @@ class AccessTokenView(APIView):
     def post(self, request, backend):
         try:
             store_token(request, backend)
-            return Response({})
+            return Response({}, status=status.HTTP_201_CREATED)
+        except (AuthCanceled, AuthMissingParameter), e:
+            return Response(
+                {'error': 'Authentication process canceled: {}'.format(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except AuthAlreadyAssociated:
             return Response(
                 {'error': 'Another user for this facebook account already exists'},
@@ -49,7 +54,7 @@ class AccessTokenView(APIView):
 
         if social_auth:
             if self._check(social_auth, backend):
-                return Response({})
+                return Response({}, status=status.HTTP_201_CREATED)
 
         return Response(
             {'error': 'No access valid token found'},

@@ -41,7 +41,9 @@ class SocialTokenAPITestCase(BluebottleTestCase):
 
     def test_token(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-secret'):
-            with mock.patch('social.apps.django_app.utils.BACKENDS', ['bluebottle.social.backends.NoStateFacebookOAuth2']):
+            with mock.patch(
+                    'social.apps.django_app.utils.BACKENDS',
+                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
                 with httmock.HTTMock(facebook_access_token_mock, facebook_me_mock):
                     response = self.client.post(self.token_url,
                                                 {'code': 'test-code'},
@@ -51,7 +53,9 @@ class SocialTokenAPITestCase(BluebottleTestCase):
 
     def test_token_invalid_code(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-secret'):
-            with mock.patch('social.apps.django_app.utils.BACKENDS', ['bluebottle.social.backends.NoStateFacebookOAuth2']):
+            with mock.patch(
+                    'social.apps.django_app.utils.BACKENDS',
+                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
                 with httmock.HTTMock(facebook_access_token_mock, facebook_me_mock):
                     response = self.client.post(self.token_url,
                                                 {'code': 'test-invalid'},
@@ -60,7 +64,9 @@ class SocialTokenAPITestCase(BluebottleTestCase):
 
     def test_token_invalid_secret(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-invalid'):
-            with mock.patch('social.apps.django_app.utils.BACKENDS', ['bluebottle.social.backends.NoStateFacebookOAuth2']):
+            with mock.patch(
+                    'social.apps.django_app.utils.BACKENDS',
+                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
                 with httmock.HTTMock(facebook_access_token_mock, facebook_me_mock):
                     response = self.client.post(self.token_url,
                                                 {'code': 'test-invalid'},
@@ -69,7 +75,9 @@ class SocialTokenAPITestCase(BluebottleTestCase):
 
     def test_token_unauthenticated(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-invalid'):
-            with mock.patch('social.apps.django_app.utils.BACKENDS', ['bluebottle.social.backends.NoStateFacebookOAuth2']):
+            with mock.patch(
+                    'social.apps.django_app.utils.BACKENDS',
+                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
                 with httmock.HTTMock(facebook_access_token_mock, facebook_me_mock):
                     response = self.client.post(self.token_url,
                                                 {'code': 'test-invalid'})

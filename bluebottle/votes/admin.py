@@ -23,23 +23,34 @@ class ProjectFilter(admin.SimpleListFilter):
 
 
 class VoteAdmin(ImprovedModelForm, admin.ModelAdmin):
+
+    raw_id_fields = ('voter', 'project')
+    list_display = ('email', 'first_name', 'last_name', 'project',
+                    'created', 'ip_address')
+
+    list_filter = (ProjectFilter,)
+
     def email(self, obj):
         return obj.voter.email
 
     email.admin_order_field = 'voter__email'
 
-    raw_id_fields = ('voter', 'project')
-    list_display = ('email', 'first_name', 'last_name', 'project',
-                    'created', 'ip_address')
-    list_filter = (ProjectFilter,)
-
     def first_name(self, obj):
         return obj.voter.first_name
+
+    first_name.admin_order_field = 'voter__first_name'
 
     def last_name(self, obj):
         return obj.voter.last_name
 
-    export_fields = ['project', 'created', 'ip_address', 'voter']
+    last_name.admin_order_field = 'voter__last_name'
+
+    export_fields = [('project', 'project'),
+                     ('created', 'created'),
+                     ('ip_address', 'ip address'),
+                     ('voter', 'voter'),
+                     ('voter__first_name', 'first name'),
+                     ('voter__last_name', 'last name')]
 
     actions = (export_as_csv_action(fields=export_fields), )
 

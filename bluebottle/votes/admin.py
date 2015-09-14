@@ -29,9 +29,15 @@ class VoteAdmin(ImprovedModelForm, admin.ModelAdmin):
     email.admin_order_field = 'voter__email'
 
     raw_id_fields = ('voter', 'project')
-    list_display = ('email', 'project', 'created', 'ip_address')
+    list_display = ('email', 'first_name', 'last_name', 'project',
+                    'created', 'ip_address')
     list_filter = (ProjectFilter,)
 
+    def first_name(self, obj):
+        return obj.voter.first_name
+
+    def last_name(self, obj):
+        return obj.voter.last_name
 
     export_fields = ['project', 'created', 'ip_address', 'voter']
 

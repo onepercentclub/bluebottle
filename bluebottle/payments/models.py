@@ -1,22 +1,22 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import options
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
 
+from django_extensions.db.fields import (
+    ModificationDateTimeField, CreationDateTimeField)
 from django_extensions.db.fields.json import JSONField
-# from django_fsm import FSMField, transition
+
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.polymorphic_model import PolymorphicModel
-from django.db.models import options
 from django_fsm.db.fields import FSMField, transition
 
-from bluebottle.payments.exception import PaymentException
-from bluebottle.utils.utils import FSMTransition, StatusDefinition
-from bluebottle.payments.managers import PaymentManager
 from bluebottle import clients
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments.managers import PaymentManager
+from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer',)
 
@@ -73,9 +73,8 @@ class Payment(PolymorphicModel):
 
     def get_fee(self):
         if not isinstance(self, Payment):
-            raise PaymentException(
-                "get_fee() not implemented for {0}".
-                    format(self.__class__.__name__))
+            raise PaymentException("get_fee() not implemented for "
+                                   "{0}".format(self.__class__.__name__))
 
     class Meta:
         ordering = ('-created', '-updated')
@@ -216,7 +215,6 @@ class OrderPayment(models.Model, FSMTransition):
         self.amount = self.order.total
         if self.id:
             # If the payment method has changed we should recalculate the fee.
-            previous = OrderPayment.objects.get(id=self.id)
             try:
                 self.transaction_fee = self.payment.get_fee()
             except ObjectDoesNotExist:

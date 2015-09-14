@@ -1,30 +1,25 @@
-from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 
-from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments.exception import PaymentAdminException
-from bluebottle.payments_docdata.admin import DocdataPaymentAdmin, \
-    DocdataDirectdebitPaymentAdmin
-from bluebottle.payments_docdata.models import DocdataPayment
-from bluebottle.payments_mock.admin import MockPaymentAdmin
-from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
-from bluebottle.payments_mock.models import MockPayment
+from polymorphic.admin import (PolymorphicParentModelAdmin,
+                               PolymorphicChildModelAdmin)
 
-from polymorphic.admin import PolymorphicParentModelAdmin, \
-    PolymorphicChildModelAdmin
+from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments_docdata.admin import (DocdataPaymentAdmin,
+                                               DocdataDirectdebitPaymentAdmin)
+from bluebottle.payments_logger.admin import PaymentLogEntryInline
+from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
 
 
 class OrderPaymentAdmin(admin.ModelAdmin):
     model = OrderPayment
     raw_id_fields = ('user',)
-    readonly_fields = (
-    'order_link', 'payment_link', 'authorization_action', 'amount',
-    'integration_data',
-    'payment_method', 'transaction_fee', 'status', 'created', 'closed')
+    readonly_fields = ('order_link', 'payment_link', 'authorization_action',
+                       'amount', 'integration_data', 'payment_method',
+                       'transaction_fee', 'status', 'created', 'closed')
     fields = ('user',) + readonly_fields
-    list_display = (
-    'created', 'user', 'status', 'amount', 'payment_method', 'transaction_fee')
+    list_display = ('created', 'user', 'status', 'amount',
+                    'payment_method', 'transaction_fee')
 
     def order_link(self, obj):
         object = obj.order
@@ -55,8 +50,8 @@ class OrderPaymentInline(admin.TabularInline):
     extra = 0
     can_delete = False
     max_num = 0
-    readonly_fields = (
-    'order_payment_link', 'amount', 'user', 'payment_method', 'status')
+    readonly_fields = ('order_payment_link', 'amount', 'user',
+                       'payment_method', 'status')
     fields = readonly_fields
 
     def order_payment_link(self, obj):

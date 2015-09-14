@@ -1,19 +1,15 @@
-from datetime import datetime
 from collections import namedtuple
-
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.payments.services import PaymentService
-from bluebottle.test.utils import BluebottleTestCase
-
 from django_fsm.db.fields import TransitionNotAllowed
-
-from bluebottle.test.factory_models.payments import PaymentFactory, \
-    OrderPaymentFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle import clients
-
 from mock import patch
+
+from bluebottle import clients
+from bluebottle.payments.services import PaymentService
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.payments import (PaymentFactory,
+                                                     OrderPaymentFactory)
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
 
 
 class BlueBottlePaymentTestCase(BluebottleTestCase):

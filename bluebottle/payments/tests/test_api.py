@@ -1,21 +1,13 @@
-import json
-
 from mock import patch
 
 from django.core.urlresolvers import reverse
+
 from rest_framework import status
 
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.orders.models import Order
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.utils.model_dispatcher import get_order_model
-from bluebottle.test.factory_models.geo import CountryFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.payments import OrderPaymentFactory
-from bluebottle.test.factory_models.orders import OrderFactory, \
-    OrderActionFactory
-from bluebottle.bb_orders.views import ManageOrderDetail
 from bluebottle.payments_mock.adapters import MockPaymentAdapter
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class TestOrderPaymentPermissions(BluebottleTestCase):

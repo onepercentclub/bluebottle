@@ -1,10 +1,10 @@
 from django.db.models.signals import post_save
 from django.dispatch import Signal
-from django_fsm.signals import post_transition
 from django.dispatch import receiver
 
+from django_fsm.signals import post_transition
+
 from .models import Payment, OrderPayment
-from bluebottle.payments.models import Payment
 
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
 
@@ -13,7 +13,7 @@ payment_status_fetched = Signal(providing_args=['new_authorized_status'])
           dispatch_uid='order_payment_model')
 def order_payment_changed(sender, instance, **kwargs):
     # Send status change notification when record first created
-    # This is to ensure any components listening for a status 
+    # This is to ensure any components listening for a status
     # on an OrderPayment will also receive the initial status.
 
     # Get the default status for the status field on OrderPayment
@@ -32,8 +32,9 @@ def order_payment_changed(sender, instance, **kwargs):
 
 @receiver(post_save, weak=False, dispatch_uid='payments_previous_status')
 def set_previous_status(sender, instance, **kwargs):
-    if not (isinstance(instance, Payment) or isinstance(instance,
-                                                        OrderPayment)): return
+    if not (isinstance(instance, Payment)
+            or isinstance(instance, OrderPayment)):
+        return
 
     # Store the previous status when the Instance is saved
     # so that it can be used on the next save to determine
@@ -44,12 +45,14 @@ def set_previous_status(sender, instance, **kwargs):
 @receiver(post_save, weak=False, dispatch_uid='payment_model_change_status')
 def payment_status_changed(sender, instance, **kwargs):
     """
-    TODO: Here we need to get the status from the payment and update the associated Order Payment.
-          The mapping is currently one to one so we can handle a transition to the same status.
+    TODO: Here we need to get the status from the payment and update the
+    associated Order Payment. The mapping is currently one to one so we can
+    handle a transition to the same status.
     """
-    if not isinstance(instance, Payment): return
+    if not isinstance(instance, Payment):
+        return
 
-    # Get the Order from the Signal 
+    # Get the Order from the Signal
     order_payment = instance.order_payment
 
     # Set the fee on OrderPayment
@@ -64,11 +67,12 @@ def payment_status_changed(sender, instance, **kwargs):
 
 @receiver(post_save, weak=False, dispatch_uid='default_status')
 def default_status_check(sender, instance, **kwargs):
-    if not (isinstance(instance, Payment) or isinstance(instance,
-                                                        OrderPayment)): return
+    if not (isinstance(instance, Payment)
+            or isinstance(instance, OrderPayment)):
+        return
 
     # Send status change notification when record first created
-    # This is to ensure any components listening for a status 
+    # This is to ensure any components listening for a status
     # on the Sender will also receive the initial status.
 
     # Get the default status for the status field on Sender
@@ -89,9 +93,8 @@ def default_status_check(sender, instance, **kwargs):
     except Payment.DoesNotExist:
         pass
     except Payment.MultipleObjectsReturned:
-        payment = \
-        Payment.objects.order('-created').filter(order_payment=instance).all()[
-            0]
+        payment = Payment.objects.order('-created').filter(
+            order_payment=instance).all()[0]
         payment_logger.log(payment, 'info',
                            'a new payment status {0}'.format(instance.status))
     finally:

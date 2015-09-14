@@ -1,12 +1,17 @@
 from __future__ import absolute_import
 
+import json
 import logging
+import requests
 
 from django.core.management import call_command
 
+from urlparse import urljoin
 from celery import shared_task
+from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.wallposts.models import MediaWallpost
 
 logger = logging.getLogger()
 
@@ -81,3 +86,72 @@ def update_salesforce(tenant=None,
         logger.error("Error running salesforce celery task: {0}".format(e))
 
     logger.info("Finished updating Salesforce")
+
+
+@shared_task
+def _post_to_facebook(instance, tenant=None):
+    """ Post a Wallpost to users Facebook page using Celery """
+    logger.info("FB post for:")
+    logger.info("{0} with id {1} and tenant {2}".format(instance.__class__,
+                                                        instance.id,
+                                                        tenant.client_name))
+
+    if not tenant:
+        return
+
+    from tenant_schemas.utils import get_tenant_model
+    from django.db import connection
+
+    db_tenant = get_tenant_model().objects.get(client_name=tenant.client_name)
+    connection.set_tenant(db_tenant)
+
+    with LocalTenant(tenant, clear_tenant=True):
+        social = instance.author.social_auth.get(provider='facebook')
+        authorization_header = 'Bearer {token}'.format(
+            token=social.extra_data['access_token']
+        )
+
+        graph_url = 'https://graph.facebook.com/v2.4/me/feed'
+        base_url = 'https://{domain}'.format(
+            domain=tenant.domain_url)
+
+        link = urljoin(
+            base_url,
+            '/go/projects/{slug}'.format(slug=instance.content_object.slug)
+        )
+
+        image = None
+        # This code is executed via Celery, we assume the MediaWallpostPhoto
+        # is saved and available on the instance. If the user uploaded
+        # photos with the MediaWallpost we take the first one and include it
+        # in the Facebook post. Otherwise we fallback to the project image.
+        if isinstance(instance, MediaWallpost) and instance.photos.count() > 0:
+            image = urljoin(base_url,
+                            get_thumbnail(instance.photos.all()[0].photo,
+                                          "600x400").url
+                            )
+        else:
+            if instance.content_object.image:
+                image = urljoin(
+                    base_url,
+                    get_thumbnail(instance.content_object.image, "600x400").url
+                )
+
+        logger.info("Image url: {0}".format(image))
+
+        data = {
+            'link': link,
+            'name': instance.content_object.title,
+            'caption': instance.content_object.pitch,
+            'description': instance.text,
+            'picture': image
+        }
+
+        # TODO: log failed requests
+        requests.post(
+            graph_url,
+            data=json.dumps(data),
+            headers={
+                'Authorization': authorization_header,
+                'Content-Type': 'application/json'}
+        )

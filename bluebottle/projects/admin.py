@@ -157,8 +157,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_editable(self, request):
         return ('is_campaign',)
 
-    readonly_fields = (
-    'vote_count', 'amount_donated', 'amount_needed', 'popularity')
+    readonly_fields = ('vote_count', 'amount_donated',
+                       'amount_needed', 'popularity')
 
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']

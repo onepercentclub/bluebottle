@@ -1,30 +1,34 @@
 import datetime
 import pytz
-from django.utils.timezone import now
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.bb_projects.models import BaseProject, ProjectPhase, \
-    BaseProjectPhaseLog, BaseProjectDocument
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
-from django.dispatch import receiver
 from django.db.models.signals import post_init, post_save
-from django.utils.http import urlquote
-from django.utils.translation import ugettext as _
+from django.dispatch import receiver
 from django.conf import settings
-from django_extensions.db.fields import ModificationDateTimeField, \
-    CreationDateTimeField
-from bluebottle.utils.fields import ImageField
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from .mails import mail_project_funded_internal, mail_project_complete, \
-    mail_project_incomplete
+from django.utils.http import urlquote
+from django.utils.timezone import now
+from django.utils.translation import ugettext as _
+
+
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
+
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.bb_projects.models import (
+    BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
+from bluebottle.utils.fields import ImageField
+
+from .mails import (mail_project_funded_internal, mail_project_complete,
+                    mail_project_incomplete)
 from .signals import project_funded
 
-GROUP_PERMS = {'Staff':{'perms': ('add_project', 'change_project',
-                                  'delete_project', 'add_partnerorganization',
-                                  'change_partnerorganization',
-                                  'delete_partnerorganization')}}
+GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
+                                   'delete_project', 'add_partnerorganization',
+                                   'change_partnerorganization',
+                                   'delete_partnerorganization')}}
 
 
 class ProjectPhaseLog(BaseProjectPhaseLog):
@@ -360,14 +364,12 @@ class Project(BaseProject):
                 counter += 1
             self.slug = original_slug
 
-        # There are 9 ProjectPhase objects: 1. Plan - New, 2. Plan - Submitted, 3. Plan - Needs Work, 4. Plan - Rejected,
-        # 5. Campaign, 6. Stopped, 7. Done - Complete, 8. Done - Incomplete, 9. Done - Stopped.
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
-        # If the project status is moved to New or Needs Work, clear the date_submitted field
-        if self.status in ProjectPhase.objects.filter(
-                        Q(slug="plan-new") | Q(slug="plan-needs-work")):
+        # If the project status is moved to New or Needs Work, clear the
+        # date_submitted field
+        if self.status.slug in ["plan-new", "plan-needs-work"]:
             self.date_submitted = None
 
         # Set the submitted date
@@ -396,26 +398,24 @@ class Project(BaseProject):
         if self.amount_asked:
             self.update_amounts(False)
 
+        # FIXME: CLean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.status not in ProjectPhase.objects.filter(
-                                Q(slug="done-complete") |
-                                Q(slug="done-incomplete") |
-                        Q(slug="closed")) and self.deadline < timezone.now():
-            if (
-                            self.amount_asked > 0 and self.amount_donated <= 20) or not self.campaign_started:
+        if not self.campaign_ended and self.deadline < timezone.now() \
+                and self.status.slug not in ["done-complete",
+                                             "done-incomplete",
+                                             "closed"]:
+            if self.amount_asked > 0 and self.amount_donated <= 20 \
+                    or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
-            elif (
-                        self.amount_asked > 0) and self.amount_donated >= self.amount_asked:
+            elif self.amount_asked > 0 \
+                    and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
 
-        if self.status in ProjectPhase.objects.filter(Q(slug="done-complete") |
-                                                              Q(
-                                                                  slug="done-incomplete") |
-                                                              Q(
-                                                                  slug="closed")) and not self.campaign_ended:
+        if self.status.slug in ["done-complete", "done-incomplete", "closed"] \
+                and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
         super(Project, self).save(*args, **kwargs)

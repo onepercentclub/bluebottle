@@ -203,7 +203,6 @@ class TestMultiTenant(BluebottleTestCase):
 
         self.init_projects()
         self.tenant1 = connection.tenant
-        status_running = ProjectPhase.objects.get(slug='campaign')
 
         # Create a project for the main tenant
         self.project = ProjectFactory.create(

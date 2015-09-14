@@ -386,7 +386,7 @@ class Migration(SchemaMigration):
             'organization': ('django.db.models.fields.related.ForeignKey', [],
                              {'blank': 'True', 'related_name': "'organization'",
                               'null': 'True', 'to': "orm['{0}']".format(
-                                 MODEL_MAP['organization']['model'])}),
+                                  MODEL_MAP['organization']['model'])}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'owner'",
                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),

@@ -2,7 +2,6 @@ from django.core import mail
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 

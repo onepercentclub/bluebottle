@@ -216,8 +216,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.data['count'], 0)
 
         # Let's throw a pitch (create a project really)
-        response = self.client.post(self.manage_projects_url, {
-            'title': 'This is my smart idea'},
+        response = self.client.post(self.manage_projects_url,
+                                    {'title': 'This is my smart idea'},
                                     token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_201_CREATED, response)
@@ -280,8 +280,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                    token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertEquals(response.data['status'][
-                              0], 'You can not change the project state.',
+        self.assertEquals(response.data['status'][0],
+                          'You can not change the project state.',
                           'status change should not be possible')
 
         # Ok, let's try to submit it. We have to submit all previous data again
@@ -494,13 +494,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(len(response.data['budget_lines']), 2)
 
         # Login as another user and try to add a budget line to this project.
-        new_budget_line = {
-            'project': project_id, 'description': 'I want in too',
-            'amount': 10000}
-        response = self.client.post(
-            self.manage_budget_lines_url, line, token=self.another_user_token)
-        self.assertEquals(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+        response = self.client.post(self.manage_budget_lines_url,
+                                    line, token=self.another_user_token)
+        self.assertEquals(response.status_code,
+                          status.HTTP_403_FORBIDDEN,
+                          response)
 
 
 class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
@@ -566,9 +564,9 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Update the created Project Media Wallpost by author.
         new_wallpost_text = 'This is my super-duper project!'
         response = self.client.put(project_wallpost_detail_url,
-                                   {'text': new_wallpost_text, 'parent_type':
-                                       'project', 'parent_id':
-                                        self.some_project.slug},
+                                   {'text': new_wallpost_text,
+                                    'parent_type': 'project',
+                                    'parent_id': self.some_project.slug},
                                    token=self.owner_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -1016,9 +1014,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         Changing status to needs work clears the date_submitted field of a
         project
         """
-        project = Project.objects.get(
-            id=Project.objects.last().id -
-               randint(0, Project.objects.count() - 1))
+        project = Project.objects.order_by('?').all()[0]
         self.set_date_submitted(project)
 
         # Change status of project to Needs work
@@ -1104,8 +1100,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        donation = DonationFactory.create(
-            user=self.user, project=project, amount=99)
+        DonationFactory.create(user=self.user, project=project, amount=99)
 
         loaded_project = Project.objects.get(pk=project.pk)
         self.assertTrue(loaded_project.campaign_ended is None)

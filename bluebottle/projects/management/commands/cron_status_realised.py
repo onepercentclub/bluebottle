@@ -1,14 +1,12 @@
 from django.core.management.base import BaseCommand, CommandError
-from django.utils.timezone import now
 from django.db import connection
+from django.utils.timezone import now
 
-from bluebottle.clients.models import Client
-from bluebottle.projects.models import Project
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
-from bluebottle.clients import properties
+from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.votes.models import Vote
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task
 
 
 class Command(BaseCommand):

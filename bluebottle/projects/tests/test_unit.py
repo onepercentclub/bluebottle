@@ -35,11 +35,10 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.complete = ProjectPhase.objects.get(slug="done-complete")
         self.campaign = ProjectPhase.objects.get(slug="campaign")
 
-        self.expired_project = ProjectFactory.create(amount_asked=5000,
-                                                     campaign_started=now -
-                                                                      timezone.
-                                                     timedelta(days=15),
-                                                     status=self.campaign)
+        some_days_ago = now - timezone.timedelta(days=15)
+        self.expired_project = ProjectFactory.create(
+            amount_asked=5000, campaign_started=some_days_ago,
+            status=self.campaign)
 
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
 

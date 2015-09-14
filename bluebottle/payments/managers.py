@@ -1,8 +1,4 @@
-from django.db import models
-
 from polymorphic import PolymorphicManager
-
-from bluebottle.utils.managers import GenericForeignKeyManagerMixin
 
 
 class PaymentManager(PolymorphicManager):

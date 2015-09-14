@@ -1,6 +1,7 @@
+from rest_framework import serializers
+
 from bluebottle.bluebottle_drf2.serializers import ObjectFieldSerializer
 from bluebottle.payments.models import OrderPayment, OrderPaymentAction
-from rest_framework import serializers
 
 
 class OrderPaymentActionSerializer(serializers.ModelSerializer):
@@ -18,6 +19,5 @@ class ManageOrderPaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderPayment
-        fields = (
-        'id', 'order', 'payment_method', 'integration_data', 'amount', 'status',
-        'authorization_action')
+        fields = ('id', 'order', 'payment_method', 'integration_data',
+                  'amount', 'status', 'authorization_action')

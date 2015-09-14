@@ -1,8 +1,9 @@
-from bluebottle.payments.exception import PaymentException
 import re
+
 from bluebottle.clients import properties
-from bluebottle.utils.utils import import_class
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import import_class
 
 
 def get_payment_methods(country=None, amount=None):
@@ -65,7 +66,8 @@ class PaymentService(object):
 
     def start_payment(self, **integration_details):
         # Remove the previous authorization action if there is one
-        # FIXME: maybe we want to return this old action rather then generate a new one.
+        # FIXME: maybe we want to return this old action rather then
+        # generate a new one.
         if self.order_payment.authorization_action:
             self.order_payment.authorization_action.delete()
 
@@ -73,4 +75,4 @@ class PaymentService(object):
         self.order_payment.set_authorization_action(action)
 
     def check_payment_status(self, **integration_details):
-        action = self.adapter.check_payment_status()
+        self.adapter.check_payment_status()

@@ -1,13 +1,14 @@
 import json
+
 from django.core.urlresolvers import reverse
+
 from rest_framework import status
 
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.projects.models import PartnerOrganization
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-
-from bluebottle.projects.models import PartnerOrganization
-from bluebottle.bb_projects.models import ProjectPhase
 
 
 class PartnerEndpointTestCase(BluebottleTestCase):
@@ -29,10 +30,10 @@ class PartnerEndpointTestCase(BluebottleTestCase):
         po = PartnerOrganization.objects.create(name="OPC", slug="opc",
                                                 description="1%")
 
-        project = ProjectFactory.create(title="Project with partner org",
-                                        partner_organization=po,
-                                        organization=organization,
-                                        status=self.campaign_phase)
+        ProjectFactory.create(title="Project with partner org",
+                              partner_organization=po,
+                              organization=organization,
+                              status=self.campaign_phase)
 
         url = reverse('partner-detail', kwargs={'slug': po.slug})
         response = self.client.get(url)
@@ -56,10 +57,10 @@ class PartnerPreviewEndpointTestCase(BluebottleTestCase):
         po = PartnerOrganization.objects.create(name="OPC", slug="opc",
                                                 description="1%")
 
-        project = ProjectFactory.create(title="Project with partner org",
-                                        partner_organization=po,
-                                        organization=organization,
-                                        status=self.campaign_phase)
+        ProjectFactory.create(title="Project with partner org",
+                              partner_organization=po,
+                              organization=organization,
+                              status=self.campaign_phase)
 
         url = reverse('partner-preview-list')
         response = self.client.get(url)

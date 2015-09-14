@@ -3,7 +3,6 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 from bluebottle.utils.model_dispatcher import get_model_mapping
 
 MODEL_MAP = get_model_mapping()
@@ -251,10 +250,10 @@ class Migration(SchemaMigration):
                        'null': 'True'}),
             'receiver': ('django.db.models.fields.related.ForeignKey', [],
                          {'blank': 'True', 'related_name': "'casher'",
-                          'null': 'True', 'to': "orm['{0}']".format(
-                             MODEL_MAP['user']['model'])}),
-            'receiver_email': (
-                'django.db.models.fields.EmailField', [], {'max_length': '75'}),
+                          'null': 'True', 'to':
+                              "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+            'receiver_email': ('django.db.models.fields.EmailField',
+                               [], {'max_length': '75'}),
             'receiver_name': ('django.db.models.fields.CharField', [],
                               {'default': "''", 'max_length': '100',
                                'blank': 'True'}),

@@ -13,11 +13,9 @@ from django.utils.translation import ugettext as _
 from bluebottle.bb_payouts.models import (ProjectPayoutLog,
                                           OrganizationPayoutLog)
 from bluebottle.clients import properties
-from bluebottle.payouts.models import ProjectPayout
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.utils.model_dispatcher import (get_project_payout_model,
-                                               get_organization_payout_model,
-                                               get_model_mapping)
+from bluebottle.utils.model_dispatcher import (
+    get_project_payout_model, get_organization_payout_model, get_model_mapping)
 from bluebottle.utils.utils import StatusDefinition
 
 from .admin_utils import link_to
@@ -196,14 +194,11 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
         for payout in qs_new:
             payout.calculate_amounts()
 
-        message = (
-                      "Fees for %(new_payouts)d new payouts were recalculated. "
-                      "%(skipped_payouts)d progressing or closed payouts have"
-                      "been skipped."
-                  ) % {
-                      'new_payouts': qs_new.count(),
-                      'skipped_payouts': queryset.exclude(**filter_args).count()
-                  }
+        new_payouts = qs_new.count()
+        skipped_payouts = queryset.exclude(**filter_args).count()
+        message = ("Fees for {0} new payouts were recalculated. "
+                   "{1} progressing or closed payouts have"
+                   "been skipped.").format(new_payouts, skipped_payouts)
 
         self.message_user(request, message)
 
@@ -286,14 +281,11 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
         for payout in qs_new:
             payout.calculate_amounts()
 
-        message = (
-                      "Amounts for %(new_payouts)d new payouts were recalculated. "
-                      "%(skipped_payouts)d progressing or closed payouts have been "
-                      "skipped."
-                  ) % {
-                      'new_payouts': qs_new.count(),
-                      'skipped_payouts': queryset.exclude(**filter_args).count()
-                  }
+        new_payouts = qs_new.count()
+        skipped_payouts = queryset.exclude(**filter_args).count()
+        message = ("Amounts for {0} new payouts were recalculated. "
+                   "{1} progressing or closed payouts have been "
+                   "skipped.").format(new_payouts, skipped_payouts)
 
         self.message_user(request, message)
 
@@ -310,7 +302,6 @@ class PayoutListFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         rules = getattr(properties, 'PROJECT_PAYOUT_FEES', {})
-        rule_choices = ProjectPayout.PayoutRules.choices
 
         def _value(label):
             value = re.search(r'\d+', label)

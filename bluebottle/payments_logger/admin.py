@@ -2,7 +2,6 @@ from django.contrib.admin.templatetags.admin_static import static
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from bluebottle.payments_logger.models import PaymentLogEntry
-import re
 
 
 class PaymentLogEntryInline(admin.TabularInline):
@@ -22,9 +21,8 @@ class PaymentLogEntryInline(admin.TabularInline):
 
 class PaymentLogEntryAdmin(admin.ModelAdmin):
     # List view.
-    list_display = (
-    'timestamp', 'payment_link', 'level', 'message', 'related_payment_method',
-    'link_to_order_payment')
+    list_display = ('timestamp', 'payment_link', 'level', 'message',
+                    'related_payment_method', 'link_to_order_payment')
     list_filter = ('level',)
     search_fields = ('message', 'level', 'payment__id')
     readonly_fields = ('message', 'level', 'payment_link')
@@ -45,8 +43,8 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
         if not order_payment or not order_payment.payment:
             return '?'
         icon = static(order_payment.payment.method_icon)
-        return '<img src="{0}" height="16px" title="{1}" />'.format(icon,
-                                                                    order_payment.payment.method_name)
+        return '<img src="{0}" height="16px" title="{1}" />'\
+            .format(icon, order_payment.payment.method_name)
 
     related_payment_method.short_description = 'Payment method'
     related_payment_method.allow_tags = True

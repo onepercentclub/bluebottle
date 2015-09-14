@@ -1,15 +1,10 @@
-import json
-
 from django.core.urlresolvers import reverse
 
-from rest_framework.compat import patterns, url
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import status
-
 from fluent_contents.models import Placeholder
-from bluebottle.test.factory_models.pages import PageFactory
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -33,8 +28,7 @@ class PageTestCase(BluebottleTestCase):
         placeholder1.save()
 
         self.page2 = PageFactory.create(author=self.user, language='en')
-        placeholder2 = Placeholder.objects.create_for_object(self.page2,
-                                                             'blog_contents')
+        Placeholder.objects.create_for_object(self.page2, 'blog_contents')
 
 
 class PageListTestCase(PageTestCase):

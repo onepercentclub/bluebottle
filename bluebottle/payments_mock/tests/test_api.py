@@ -1,11 +1,12 @@
-from bluebottle.test.factory_models.donations import DonationFactory
 import unittest
-from bluebottle.test.utils import BluebottleTestCase
-from django.test import TestCase
+
 from django.core.urlresolvers import reverse
-from bluebottle.test.factory_models.payments import OrderPaymentFactory
+
 from bluebottle.payments.models import OrderPayment
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 
 

@@ -1,10 +1,7 @@
-from django.test import TestCase
-
+from bluebottle.payments.services import PaymentService
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import FsmTestMixin, BluebottleTestCase
-
-from bluebottle.payments.services import PaymentService
 from bluebottle.utils.utils import StatusDefinition
 
 

@@ -1,15 +1,13 @@
-from django.test import TestCase
 from mock import patch
 
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
-from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.utils import FsmTestMixin
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
 
 
 class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):

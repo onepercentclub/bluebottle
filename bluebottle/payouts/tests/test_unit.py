@@ -451,8 +451,8 @@ class PayoutTestCase(BluebottleTestCase):
         # Update phase to campaign.
         beneath_threshold_project.status = ProjectPhase.objects.get(
             slug='campaign')
-        beneath_threshold_project.campaign_started = (
-        timezone.now() - timezone.timedelta(days=10))
+        a_week_ago = timezone.now() - timezone.timedelta(days=7)
+        beneath_threshold_project.campaign_started = a_week_ago
         beneath_threshold_project.save()
 
         order = OrderFactory.create()

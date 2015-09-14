@@ -1,27 +1,20 @@
-from bluebottle.test.factory_models.addresses import BlueBottleAddressFactory
-from bluebottle.test.factory_models.geo import CountryFactory
-from django.test import TestCase
 from django.test import Client
 from django.core.urlresolvers import reverse
 
-from bluebottle.test.factory_models.payments import OrderPaymentFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import FsmTestMixin
-
+from bluebottle.payments.models import OrderPayment, Transaction
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
-
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments_docdata.tests.factory_models import \
-    DocdataPaymentFactory, DocdataTransactionFactory, \
-    DocdataDirectdebitPaymentFactory
-from bluebottle.payments_docdata.tests.factory_models import \
-    DocdataPaymentFactory, DocdataTransactionFactory
-from bluebottle.payments.models import OrderPayment, Transaction
+from bluebottle.payments_docdata.tests.factory_models import (
+    DocdataDirectdebitPaymentFactory, DocdataPaymentFactory,
+    DocdataTransactionFactory)
 from bluebottle.payments_logger.models import PaymentLogEntry
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
+from bluebottle.utils.utils import StatusDefinition
 
 from mock import patch
 
@@ -54,7 +47,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',
                                                         integration_data={
-                                                        'default_pm': 'ideal'})
+                                                            'default_pm': 'ideal'})
         self.service = PaymentService(order_payment=self.order_payment)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
@@ -333,15 +326,15 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
             'AUTHORIZED')
 
         order = OrderFactory.create()
-        order_payment = OrderPaymentFactory.create(order=order,
-                                                   payment_method='docdataCreditcard')
+        order_payment = OrderPaymentFactory.create(
+            order=order, payment_method='docdataCreditcard')
         docdata_payment = DocdataPaymentFactory.create(
             order_payment=order_payment,
             default_pm='mastercard',
             payment_cluster_id='1234',
             total_gross_amount=100)
-        docdata_transaction = DocdataTransactionFactory.create(
-            payment=docdata_payment, payment_method='VISA')
+        DocdataTransactionFactory.create(payment=docdata_payment,
+                                         payment_method='VISA')
         c = Client()
         merchant_order_id = "{0}-1".format(order_payment.id)
         resp = c.get(reverse('docdata-payment-status-update',
@@ -367,16 +360,16 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
 
         order = OrderFactory.create()
         # Ensure that we use an existing payment_method or the adapter throws an exception
-        order_payment = OrderPaymentFactory.create(order=order,
-                                                   payment_method='docdataPaypal')
+        order_payment = OrderPaymentFactory.create(
+            order=order, payment_method='docdataPaypal')
         docdata_payment = DocdataPaymentFactory.create(
             order_payment=order_payment,
             default_pm='paypal',
             payment_cluster_id='1235',
             total_gross_amount=100)
 
-        docdata_transaction = DocdataTransactionFactory.create(
-            payment=docdata_payment, payment_method='VISA')
+        DocdataTransactionFactory.create(payment=docdata_payment,
+                                         payment_method='VISA')
         c = Client()
         merchant_order_id = "{0}-1".format(order_payment.id)
         resp = c.get(reverse('docdata-payment-status-update',
@@ -395,7 +388,8 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         # creation of more payment log entries
         log = PaymentLogEntry.objects.all()[0]
         self.assertEqual(log.message,
-                         "{0} - Payment method changed for payment with id {1} and order payment with id {2}.".format(
+                         "{0} - Payment method changed for payment with id {1}"
+                         " and order payment with id {2}.".format(
                              docdata_payment, docdata_payment.id,
                              docdata_payment.order_payment.id))
         self.assertEqual(log.payment.id, docdata_payment.id)
@@ -424,8 +418,8 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
             payment_cluster_id='1236',
             total_gross_amount=100)
 
-        docdata_transaction = DocdataTransactionFactory.create(
-            payment=docdata_payment, payment_method='BLABLABLA')
+        DocdataTransactionFactory.create(payment=docdata_payment,
+                                         payment_method='BLABLABLA')
         c = Client()
         merchant_order_id = "{0}-1".format(order_payment.id)
         resp = c.get(reverse('docdata-payment-status-update',
@@ -442,7 +436,8 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
             PaymentLogEntry.objects.filter(payment=docdata_payment).count(), 5)
         log = PaymentLogEntry.objects.all()[0]
         self.assertEqual(log.message,
-                         "{0} - Payment method '{1}' not found for payment with id {2} and order payment with id {3}.".format(
+                         "{0} - Payment method '{1}' not found for payment "
+                         "with id {2} and order payment with id {3}.".format(
                              docdata_payment,
                              'BLABLABLA',
                              docdata_payment.id,
@@ -460,10 +455,9 @@ class AdapterTestCase(BluebottleTestCase):
 
         user = BlueBottleUserFactory()
         self.order = OrderFactory.create(user=user)
-        self.order_payment = OrderPaymentFactory.create(order=self.order,
-                                                        payment_method='docdataIdeal',
-                                                        integration_data={
-                                                        'default_pm': 'ideal'})
+        self.order_payment = OrderPaymentFactory.create(
+            order=self.order, payment_method='docdataIdeal',
+            integration_data={'default_pm': 'ideal'})
 
         self.service = PaymentService(order_payment=self.order_payment)
 
@@ -506,7 +500,7 @@ class AdapterTestCase(BluebottleTestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',
                                                         integration_data={
-                                                        'default_pm': 'ideal'})
+                                                            'default_pm': 'ideal'})
 
         self.service = PaymentService(order_payment=self.order_payment)
 
@@ -546,7 +540,7 @@ class AdapterTestCase(BluebottleTestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',
                                                         integration_data={
-                                                        'default_pm': 'ideal'})
+                                                            'default_pm': 'ideal'})
 
         self.service = PaymentService(order_payment=self.order_payment)
 

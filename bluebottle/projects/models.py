@@ -21,15 +21,10 @@ from .mails import mail_project_funded_internal, mail_project_complete, \
     mail_project_incomplete
 from .signals import project_funded
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_partnerorganization', 'change_partnerorganization',
-            'delete_partnerorganization',
-        )
-    }
-}
+GROUP_PERMS = {'Staff':{'perms': ('add_project', 'change_project',
+                                  'delete_project', 'add_partnerorganization',
+                                  'change_partnerorganization',
+                                  'delete_partnerorganization')}}
 
 
 class ProjectPhaseLog(BaseProjectPhaseLog):

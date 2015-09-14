@@ -1,12 +1,8 @@
 from django.db import models
-from django.contrib.contenttypes.generic import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 from django.utils.text import Truncator
-from polymorphic.polymorphic_model import PolymorphicModel
 from djchoices import DjangoChoices, ChoiceItem
 from django_extensions.db.fields import CreationDateTimeField
-from bluebottle.payments.models import Payment
 
 
 class PaymentLogLevels(DjangoChoices):

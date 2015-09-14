@@ -3,18 +3,18 @@ import gateway
 
 from django.utils.http import urlencode
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException, \
-    DocdataPaymentStatusException
-from bluebottle.payments_docdata.models import DocdataTransaction, \
-    DocdataDirectdebitPayment
-from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.utils.utils import StatusDefinition, get_current_host, \
-    get_client_ip, get_country_code_by_ip
-from .models import DocdataPayment
 from bluebottle.clients import properties
+from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments_docdata.exceptions import (
+    DocdataPaymentException, DocdataPaymentStatusException)
+from bluebottle.payments_docdata.models import (
+    DocdataTransaction, DocdataDirectdebitPayment)
+from bluebottle.utils.utils import (StatusDefinition, get_current_host,
+                                    get_client_ip, get_country_code_by_ip)
+
+from .models import DocdataPayment
 
 logger = logging.getLogger('console')
 
@@ -22,8 +22,9 @@ logger = logging.getLogger('console')
 class DocdataPaymentAdapter(BasePaymentAdapter):
     MODEL_CLASSES = [DocdataPayment, DocdataDirectdebitPayment]
 
-    # Payment methods specified by DocData. They should map to the payment methods we specify in our settings file
-    # so we can map payment methods of Docdata to our own definitions of payment methods
+    # Payment methods specified by DocData. They should map to the payment
+    # methods we specify in our settings file so we can map payment methods
+    # of Docdata to our own definitions of payment methods
     PAYMENT_METHODS = {
         'MASTERCARD': 'docdataCreditcard',
         'VISA': 'docdataCreditcard',
@@ -293,8 +294,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                         response.payment}
 
             if {'NEW', 'STARTED', 'REDIRECTED_FOR_AUTHORIZATION',
-                'AUTHORIZATION_REQUESTED', 'AUTHENTICATED', 'RISK_CHECK_OK',
-                'AUTHORIZED'} & statuses:
+                    'AUTHORIZATION_REQUESTED', 'AUTHENTICATED', 'RISK_CHECK_OK',
+                    'AUTHORIZED'} & statuses:
                 # All these statuses belong are considered new
                 status = StatusDefinition.STARTED
             elif statuses == {'CANCELED', }:
@@ -340,10 +341,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             self.payment.status = status
 
             try:
-                payment_method = \
-                [payment.authorization.paymentMethod for payment in
-                 response.payment
-                 if payment.authorization.method == 'AUTHORIZED'][0]
+                payment_method = [
+                    payment.authorization.paymentMethod
+                    for payment in response.payment
+                    if payment.authorization.method == 'AUTHORIZED'][0]
             except (AttributeError, IndexError):
                 payment_method = None
 

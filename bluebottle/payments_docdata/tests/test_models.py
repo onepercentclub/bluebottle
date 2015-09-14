@@ -525,22 +525,20 @@ class AdapterTestCase(BluebottleTestCase):
     @patch.object(DocdataClient, 'create')
     def test_abnormal_address_data(self, mock_client_create):
         mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
-        mock_create_payment = patch.object(DocdataPaymentAdapter,
-                                           'create_payment',
-                                           fake_create_payment)
+        patch.object(DocdataPaymentAdapter, 'create_payment',
+                     fake_create_payment)
 
         user = BlueBottleUserFactory()
-        holland = CountryFactory(name='Netherlands', alpha2_code='NL')
+        CountryFactory(name='Netherlands', alpha2_code='NL')
 
         # Update user address with abnormal line1
         user.address.line1 = '1a'
         user.address.save()
 
         self.order = OrderFactory.create(user=user)
-        self.order_payment = OrderPaymentFactory.create(order=self.order,
-                                                        payment_method='docdataIdeal',
-                                                        integration_data={
-                                                            'default_pm': 'ideal'})
+        self.order_payment = OrderPaymentFactory.create(
+            order=self.order, payment_method='docdataIdeal',
+            integration_data={'default_pm': 'ideal'})
 
         self.service = PaymentService(order_payment=self.order_payment)
 
@@ -563,8 +561,9 @@ class DocdataModelTestCase(BluebottleTestCase):
 
         payment = DocdataPayment()
 
-        # For some reason, assertRaises wasn't catching this exception, even though it was throwing
-        # it during the test. Therefore I used this try/except block. (This is still OK according to
+        # For some reason, assertRaises wasn't catching this exception, even
+        # though it was throwing it during the test. Therefore I used this
+        # try/except block. (This is still OK according to
         # the Django docs)
 
         try:
@@ -575,7 +574,10 @@ class DocdataModelTestCase(BluebottleTestCase):
 
     @override_settings(DOCDATA_FEES={})
     def test_get_fee_no_transaction(self):
-        """ Test that a Payment exception is raised when there is no 'transaction' key """
+        """
+        Test that a Payment exception is raised when there is
+        no 'transaction' key
+        """
 
         payment = DocdataPayment()
 
@@ -587,7 +589,10 @@ class DocdataModelTestCase(BluebottleTestCase):
 
     @override_settings(DOCDATA_FEES={'transaction': 0.20})
     def test_get_fee_no_payment_methods(self):
-        """ Test that a Payment exception is raised when there is no 'payment_methods' key """
+        """
+        Test that a Payment exception is raised when there is no
+        'payment_methods' key
+        """
 
         payment = DocdataPayment()
 
@@ -597,14 +602,12 @@ class DocdataModelTestCase(BluebottleTestCase):
         except PaymentException as e:
             self.assertEqual(e.message, "Missing fee 'payment_methods'")
 
-    @override_settings(DOCDATA_FEES={
-        'transaction': 0.20,
-        'payment_methods': {
-            'ideal': 0.35
-        }
-    })
+    @override_settings(DOCDATA_FEES={'transaction': 0.20,
+                                     'payment_methods': {'ideal': 0.35}})
     def test_get_fee_no_payment_method(self):
-        """ Test that a missing specific payment method raises a payment exception """
+        """
+        Test that a missing specific payment method raises a payment exception
+        """
         pm = 'testpm'
 
         payment = DocdataPayment(default_pm=pm)
@@ -615,16 +618,13 @@ class DocdataModelTestCase(BluebottleTestCase):
         except PaymentException as e:
             self.assertEqual(e.message, "Missing fee {0}".format(pm))
 
-    @override_settings(DOCDATA_FEES={
-        'transaction': 0.20,
-        'payment_methods': {
-            'ideal': 0.35
-        }
-    })
+    @override_settings(DOCDATA_FEES={'transaction': 0.20,
+                                     'payment_methods': {'ideal': 0.35}})
     def test_get_fee_absolute(self):
         """
-            Test that a payment method with absolute fees returns the transaction amount and the
-            payment method fee amount, e.g., the 'transaction' amount plus the 'ideal' amount.
+        Test that a payment method with absolute fees returns the transaction
+        amount and the payment method fee amount, e.g., the 'transaction'
+        amount plus the 'ideal' amount.
         """
         pm = 'ideal'
 
@@ -633,16 +633,13 @@ class DocdataModelTestCase(BluebottleTestCase):
         fee_total = payment.get_fee()
         self.assertEqual(0.20 + 0.35, fee_total)
 
-    @override_settings(DOCDATA_FEES={
-        'transaction': 0.20,
-        'payment_methods': {
-            'ideal': '1.5%'
-        }
-    })
-    def test_get_fee_absolute(self):
+    @override_settings(DOCDATA_FEES={'transaction': 0.20,
+                                     'payment_methods': {'ideal': '1.5%'}})
+    def test_get_fee_relative(self):
         """
-            Test that the correct fee is returned given the defined percentage. In this test case the
-            amount is 100 and the fee percentage is 1.5%, so the result should be 100 * 0.015.
+        Test that the correct fee is returned given the defined percentage.
+        In this test case the amount is 100 and the fee percentage is 1.5%,
+        so the result should be 100 * 0.015.
         """
 
         order_payment = OrderPaymentFactory.create(amount=1000)

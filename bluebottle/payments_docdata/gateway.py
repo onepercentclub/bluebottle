@@ -7,15 +7,17 @@ which is Apache licensed, copyright (c) 2013 Diederik van der Boor
 """
 import logging
 import unicodedata
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+
 from django.core.exceptions import ImproperlyConfigured
-from django.conf import settings
+from django.utils.translation import get_language
+
 from suds.client import Client
 from suds import plugin
-from django.utils.translation import get_language
 from urllib import urlencode
 from urllib2 import URLError
+
 from bluebottle.clients import properties
+from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 
 from .exceptions import DocdataPaymentStatusException
 
@@ -65,7 +67,8 @@ def get_suds_client(live_mode=False):
 
 class DocdataAPIVersionPlugin(plugin.MessagePlugin):
     """
-    This adds the API version number to the body element. This is required for the Docdata soap API.
+    This adds the API version number to the body element. This is required
+    for the Docdata soap API.
     """
 
     def marshalled(self, context):
@@ -105,7 +108,8 @@ class DocdataClient(object):
                 "Missing DOCDATA_MERCHANT_PASSWORD setting!")
 
         # Create the merchant node which is passed to every request.
-        # The _ notation is used to assign attributes to the XML node, instead of child elements.
+        # The _ notation is used to assign attributes to the XML node,
+        # instead of child elements.
         self.merchant = self.client.factory.create('ns0:merchant')
         self.merchant._name = properties.DOCDATA_MERCHANT_NAME
         self.merchant._password = properties.DOCDATA_MERCHANT_PASSWORD
@@ -124,12 +128,16 @@ class DocdataClient(object):
         This key can be used to continue using the Payment Menu,
         or make the next call to start a Web Direct payment.
 
-        The goal of the create operation is solely to create a payment order on Docdata Payments system.
-        Creating a payment order is always the first step of any workflow in Docdata Payments payment service.
+        The goal of the create operation is solely to create a payment order
+        on Docdata Payments system.
+        Creating a payment order is always the first step of any workflow in
+        Docdata Payments payment service.
 
-        After an order is created, payments can be made on this order; either through (the shopper via) the web menu
-        or through the API by the merchant. If the order has been created using information on specific order items,
-        the web menu can make use of this information by displaying a shopping cart.
+        After an order is created, payments can be made on this order; either
+        through (the shopper via) the web menu or through the API by the
+        merchant. If the order has been created using information on specific
+        order items, the web menu can make use of this information by
+        displaying a shopping cart.
 
         :param order_id: Unique merchant reference to this order.
         :type total_gross_amount: Amount
@@ -139,10 +147,13 @@ class DocdataClient(object):
         :type bill_to: Destination
         :param description: The description of the order (max 50 chars).
         :type description: str
-        :param receiptText: The description that is used by payment providers on shopper statements (max 50 chars).
+        :param receiptText: The description that is used by payment providers
+        on shopper statements (max 50 chars).
         :type receiptText: str
-        :param profile: The profile that is used to select the payment methods that can be used to pay this order.
-        :param days_to_pay: The expected number of days in which the payment should be processed, or be expired if not paid.
+        :param profile: The profile that is used to select the payment methods
+        that can be used to pay this order.
+        :param days_to_pay: The expected number of days in which the payment
+        should be processed, or be expired if not paid.
         :rtype: CreateReply
         """
         # Preferences for the DocData system.
@@ -153,15 +164,18 @@ class DocdataClient(object):
         # paymentPreferences.exhortation.period1 ?
         # paymentPreferences.exhortation.period2 ?
 
-        # Menu preferences are empty. They are used for CSS file selection in the payment menu.
+        # Menu preferences are empty. They are used for CSS file selection in
+        # the payment menu.
         menuPreferences = self.client.factory.create('ns0:menuPreferences')
 
         # Execute create payment order request.
         #
         # create(
-        #     merchant merchant, string35 merchantOrderReference, paymentPreferences paymentPreferences,
-        #     menuPreferences menuPreferences, shopper shopper, amount totalGrossAmount,
-        #     destination billTo, string50 description, string50 receiptText, xs:boolean includeCosts,
+        #     merchant merchant, string35 merchantOrderReference,
+        #     paymentPreferences paymentPreferences,
+        #     menuPreferences menuPreferences, shopper shopper, amount
+        #     totalGrossAmount, destination billTo, string50 description,
+        #     string50 receiptText, xs:boolean includeCosts,
         #     paymentRequest paymentRequest, invoice invoice )
         #
         # The WSDL and XSD also contain documentation individualnvidual parameters:
@@ -228,7 +242,8 @@ class DocdataClient(object):
         paymentRequestInput = self.client.factory.create(
             'ns0:paymentRequestInput')
 
-        # We only need to set amount because of bug in suds library. Otherwise it defaults to order amount.
+        # We only need to set amount because of bug in suds library. Otherwise
+        # it defaults to order amount.
         paymentAmount = self.client.factory.create('ns0:amount')
         paymentAmount.value = str(int(payment.total_gross_amount))
         paymentAmount._currency = 'EUR'
@@ -301,20 +316,27 @@ class DocdataClient(object):
         Return the URL to the payment menu,
         where the user can be redirected to after creating a successful payment.
 
-        Make sure URLs are absolute, and include the hostname and ``https://`` part.
+        Make sure URLs are absolute, and include the hostname
+        and ``https://`` part.
 
-        When using default_act (possible values "yes" or "true") as well as default_pm,
-        your shopper will be redirected straight from your shop to the payment page of the payment method.
-        This works only with those payment methods that are initiated by a single click,
-        PayPal, Rabo SMS-betalen, SofortUberweisung, eBanking, KBC Betaalknop and iDEAL.
-        When the issuer_id is added to the redirect string, this works for iDEAL as well.
+        When using default_act (possible values "yes" or "true") as well as
+        default_pm, your shopper will be redirected straight from your shop to
+        the payment page of the payment method.
+        This works only with those payment methods that are initiated by a
+        single click, PayPal, Rabo SMS-betalen, SofortUberweisung, eBanking,
+        KBC Betaalknop and iDEAL.
+        When the issuer_id is added to the redirect string, this works for
+        iDEAL as well.
 
-        :param extra_args: Additional URL arguments, e.g. default_pm=IDEAL, ideal_issuer_id=0021, default_act='true'
+        :param extra_args: Additional URL arguments, e.g. default_pm=IDEAL,
+        ideal_issuer_id=0021, default_act='true'
         """
 
-        # We should not use the 'go' link. When we get redirected back from docdata the redirects app, at that point, 
-        # has no notion of the language of the user and defaults to english. This breaks in Safari. However, we do not
-        # need the 'redirects' app here because we know the language and we can generate the exact link.  
+        # We should not use the 'go' link. When we get redirected back from
+        # docdata the redirects app, at that point, has no notion of the
+        # language of the user and defaults to english. This breaks in Safari.
+        # However, we do not need the 'redirects' app here because we know the
+        # language and we can generate the exact link.
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
@@ -550,8 +572,8 @@ class Address(object):
         node.houseNumber = unicode(self.house_number)  # string35
         node.houseNumberAddition = unicode(
             self.house_number_addition) if self.house_number_addition else None
-        node.postalCode = unicode(self.postal_code.replace(' ',
-                                                           ''))  # Spaces aren't allowed in the Docdata postal code (type=NMTOKEN)
+        # Spaces aren't allowed in the Docdata postal code (type=NMTOKEN)
+        node.postalCode = unicode(self.postal_code.replace(' ', ''))
         node.city = unicode(self.city)
         node.state = unicode(self.state) if self.state else None
         node.country = country

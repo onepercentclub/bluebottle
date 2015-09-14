@@ -1,13 +1,11 @@
-from decimal import Decimal as D, Decimal
+from decimal import Decimal
+
 from django.conf import settings
-from django.utils.translation import ugettext as _
 from django.db import models
-from django.db.models.signals import pre_save, post_save, post_delete
-from django_countries.fields import CountryField
+from django.utils.translation import ugettext as _
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, Transaction
-from bluebottle.payments_logger.models import PaymentLogEntry
 
 
 class AbstractDocdataPayment(Payment):
@@ -53,7 +51,8 @@ class AbstractDocdataPayment(Payment):
     total_charged_back = models.IntegerField(_("Total charged back"), default=0)
 
     # Track received information
-    # Additional fields from the existing Docdata data. This data comes from the existing DocDataPaymentOrder model that is migrated.
+    # Additional fields from the existing Docdata data. This data comes
+    # from the existing DocDataPaymentOrder model that is migrated.
     customer_id = models.PositiveIntegerField(
         default=0)  # Defaults to 0 for anonymous.
     email = models.EmailField(max_length=254, default='')

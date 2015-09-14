@@ -24,7 +24,6 @@ class Migration(SchemaMigration):
                                                                    blank=True),
                       keep_default=False)
 
-
         # Changing field 'DocdataTransaction.capture_currency'
         db.alter_column(u'payments_docdata_docdatatransaction',
                         'capture_currency',
@@ -42,7 +41,6 @@ class Migration(SchemaMigration):
 
         # Deleting field 'DocdataTransaction.raw_response'
         db.delete_column(u'payments_docdata_docdatatransaction', 'raw_response')
-
 
         # Changing field 'DocdataTransaction.capture_currency'
         db.alter_column(u'payments_docdata_docdatatransaction',

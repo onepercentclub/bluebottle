@@ -39,8 +39,9 @@ class MockPaymentAdapter(BasePaymentAdapter):
         """
         return {'type': 'redirect',
                 'method': 'get',
-                'url': reverse('payment-service-provider', kwargs={
-                'order_payment_id': self.order_payment.id})}
+                'url': reverse(
+                    'payment-service-provider',
+                    kwargs={'order_payment_id': self.order_payment.id})}
 
     def _get_mapped_status(self, status):
         """

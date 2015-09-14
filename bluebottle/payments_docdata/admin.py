@@ -2,16 +2,16 @@ from django.contrib import admin
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from django.core.urlresolvers import reverse
 from bluebottle.payments.models import Payment
-from bluebottle.payments_docdata.models import DocdataPayment, \
-    DocdataDirectdebitPayment, DocdataTransaction
+from bluebottle.payments_docdata.models import (
+    DocdataPayment, DocdataDirectdebitPayment, DocdataTransaction)
 from polymorphic.admin import PolymorphicChildModelAdmin
 
 
 class DocdataTransactionInline(admin.TabularInline):
     model = DocdataTransaction
-    readonly_fields = (
-    'status', 'created', 'updated', 'docdata_id', 'payment_method',
-    'authorization_status', 'authorization_amount')
+    readonly_fields = ('status', 'created', 'updated', 'docdata_id',
+                       'payment_method', 'authorization_status',
+                       'authorization_amount')
     fields = readonly_fields
     can_delete = False
 
@@ -43,9 +43,10 @@ class AbstractDocdataPaymentAdmin(PolymorphicChildModelAdmin):
     order_payment_link.allow_tags = True
 
     def payment_cluster_link(selfself, obj):
-        url = 'https://backoffice.docdatapayments.com/ps/com.tripledeal.paymentservice.backoffice.MerchantReportPayoutTransaction'
-        return '{1} <a href="{0}" target="docdata">[Docdata Backoffice]</a>'.format(
-            url, obj.payment_cluster_id)
+        url = ('https://backoffice.docdatapayments.com/ps/com.tripledeal.'
+               'paymentservice.backoffice.MerchantReportPayoutTransaction')
+        return ('{1} <a href="{0}" target="docdata">[Docdata Backoffice]'
+                '</a>').format(url, obj.payment_cluster_id)
 
     payment_cluster_link.allow_tags = True
 

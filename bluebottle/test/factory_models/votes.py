@@ -9,3 +9,4 @@ class VoteFactory(factory.DjangoModelFactory):
 
     voter = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)
+    ip_address = "127.0.0.1"

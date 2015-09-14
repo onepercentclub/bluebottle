@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
@@ -149,7 +150,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             fields +=  ('location', )
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields +=  ('vote_count', )
+            fields +=  ('num_votes', )
         return fields
 
     def get_list_editable(self, request):
@@ -192,9 +193,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                         'account_bank_country')})
     )
 
-    def vote_count(self, obj):
-        return obj.vote_set.count()
-
     def donated_percentage(self, obj):
         if not obj.amount_asked:
             return "-"
@@ -205,9 +203,21 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         # Optimization: Select related fields that are used in admin specific
         # display fields.
         queryset = super(ProjectAdmin, self).queryset(request)
-        return queryset.select_related('projectpitch', 'projectplan',
-                                       'projectcampaign', 'owner',
-                                       'organization')
+        queryset = queryset.select_related(
+            'projectpitch', 'projectplan', 'projectcampaign', 'owner',
+            'organization'
+        ).extra(
+            {'admin_vote_count': 'SELECT COUNT(*) from votes_vote where "votes_vote"."project_id" = "projects_project"."id"'}
+        )
+
+        return queryset
+
+    def num_votes(self, obj):
+        self.queryset(None)
+        return obj.admin_vote_count
+
+    num_votes.short_description = _('Vote Count')
+    num_votes.admin_order_field = 'admin_vote_count'
 
     def get_title_display(self, obj):
         if len(obj.title) > 35:

@@ -3,6 +3,7 @@ from django.contrib.admin.filters import SimpleListFilter
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.donations.admin import DonationInline
+from bluebottle.payments.services import PaymentService
 from bluebottle.payments.admin import OrderPaymentInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList
 from bluebottle.utils.model_dispatcher import (get_order_model,
@@ -49,6 +50,7 @@ class BaseOrderAdmin(admin.ModelAdmin):
     list_display = ('created', 'confirmed', 'completed', 'order_type', 'user',
                     'status', 'total')
 
+    actions = ['reload_status']
     inlines = (DonationInline, OrderPaymentInline)
 
     search_fields = ('user__email',)
@@ -60,6 +62,15 @@ class BaseOrderAdmin(admin.ModelAdmin):
     def get_changelist(self, request, **kwargs):
         self.total_column = 'total'
         return TotalAmountAdminChangeList
+
+    def reload_status(self, request, queryset):
+        for order in queryset.all():
+            for order_payment in order.order_payments.all():
+                service = PaymentService(order_payment)
+                service.check_payment_status()
+
+    reload_status.short_description = _("Reload status from docdata")
+
 
 
 admin.site.register(ORDER_MODEL, BaseOrderAdmin)

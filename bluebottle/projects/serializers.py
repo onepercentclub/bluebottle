@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.bluebottle_drf2.serializers import (
-    EuroField, OEmbedField,SorlImageField, ImageSerializer,
+    EuroField, OEmbedField, SorlImageField, ImageSerializer,
     TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
@@ -38,6 +38,7 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
+
 
 class StoryField(serializers.WritableField):
     def to_native(self, value):
@@ -111,6 +112,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                                            source='partner_organization')
     location = serializers.PrimaryKeyRelatedField(required=False)
     vote_count = serializers.IntegerField(source='vote_count')
+    supporter_count = serializers.IntegerField(source='supporter_count')
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -133,7 +135,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
-                  'status', 'deadline', 'is_funding', 'vote_count',
+                  'status', 'deadline', 'is_funding', 'vote_count', 'supporter_count',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
                   'video_html', 'partner', 'location', 'project_type')
 
@@ -209,7 +211,6 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                                                      read_only=True)
     documents = ProjectDocumentSerializer(
         many=True, source='documents', read_only=True)
-
 
     def validate_account_iban(self, attrs, source):
         value = attrs.get(source)
@@ -302,7 +303,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Donation
-        fields = ('date_donated', 'project',  'member',)
+        fields = ('date_donated', 'project', 'member',)
 
 
 class ProjectDonationSerializer(serializers.ModelSerializer):
@@ -313,4 +314,3 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('member', 'date_donated', 'amount',)
-

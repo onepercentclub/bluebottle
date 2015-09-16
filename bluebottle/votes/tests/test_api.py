@@ -7,6 +7,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 
+from bluebottle.votes.models import Vote
+
 
 class ProjectVotesAPITestCase(BluebottleTestCase):
     """
@@ -15,6 +17,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
     Sets up a common set of three ``Project``s and three ``ProjectTheme``s,
     as well as a dummy testing user which can be used for unit tests.
     """
+
     def setUp(self):
         super(ProjectVotesAPITestCase, self).setUp()
 
@@ -32,6 +35,11 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     {'project': self.project1.slug},
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
+        vote = Vote.objects.all()[0]
+
+        self.assertEqual(vote.project, self.project1)
+        self.assertEqual(vote.voter, self.user)
+        self.assertEqual(vote.ip_address, '127.0.0.1')
 
     def test_vote_project_does_not_exist(self):
         response = self.client.post(self.vote_url,
@@ -42,7 +50,8 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                          "Object with slug=none-existing-project does not exist.")
 
     def test_vote_unauthenticated(self):
-        response = self.client.post(self.vote_url, {'project': self.project1.slug})
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project1.slug})
         self.assertEqual(response.status_code, 403)
 
     def test_vote_twice(self):

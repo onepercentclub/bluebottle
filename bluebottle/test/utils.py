@@ -1,16 +1,6 @@
-import time
-import urlparse
-import os
-import json
-import requests
-import base64
-
 from bunch import bunchify
 
 from django.db import connection
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.test import LiveServerTestCase
 from django.test.utils import override_settings
 from django.test import TestCase
 
@@ -27,6 +17,7 @@ from bluebottle.utils.models import Language
 # TODO: remove this temporary work around to not verify ssl certs
 #       when docdata fix their ssl cert chain on their testing server.
 import ssl
+
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
@@ -52,15 +43,17 @@ def css_dict(style):
         return {}
 
     try:
-        return dict([(k.strip(), v.strip()) for k, v in [prop.split(':') for prop in style.rstrip(';').split(';')]])
+        return dict([(k.strip(), v.strip()) for k, v in
+                     [prop.split(':') for prop in
+                      style.rstrip(';').split(';')]])
     except ValueError, e:
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
 class InitProjectDataMixin(object):
-
     def init_projects(self):
         from django.core import management
+
         """
         Set up some basic models needed for project creation.
         """
@@ -69,8 +62,10 @@ class InitProjectDataMixin(object):
 
         Language.objects.all().delete()
 
-        language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
-                         {'code': 'nl', 'language_name': 'Dutch', 'native_name': 'Nederlands'}]
+        language_data = [{'code': 'en', 'language_name': 'English',
+                          'native_name': 'English'},
+                         {'code': 'nl', 'language_name': 'Dutch',
+                          'native_name': 'Nederlands'}]
 
         self.project_status = {}
 
@@ -93,7 +88,7 @@ class ApiClient(RestAPIClient):
             self.renderer_classes[cls.format] = cls
 
     def get(self, path, data=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -103,7 +98,7 @@ class ApiClient(RestAPIClient):
         return super(ApiClient, self).get(path, data=data, **extra)
 
     def post(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -114,7 +109,7 @@ class ApiClient(RestAPIClient):
             path, data=data, format=format, content_type=content_type, **extra)
 
     def put(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -125,7 +120,7 @@ class ApiClient(RestAPIClient):
             path, data=data, format=format, content_type=content_type, **extra)
 
     def patch(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -135,8 +130,9 @@ class ApiClient(RestAPIClient):
         return super(ApiClient, self).patch(
             path, data=data, format=format, content_type=content_type, **extra)
 
-    def delete(self, path, data=None, format='json', content_type=None, **extra):
-        if extra.has_key('token'):
+    def delete(self, path, data=None, format='json', content_type=None,
+               **extra):
+        if 'token' in extra:
             extra['HTTP_AUTHORIZATION'] = extra['token']
             del extra['token']
 
@@ -161,7 +157,8 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
             schema_name='test',
             client_name='test')
 
-        cls.tenant.save(verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
+        cls.tenant.save(
+            verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
         connection.set_tenant(cls.tenant)
 
     @classmethod
@@ -178,12 +175,14 @@ class FsmTestMixin(object):
     def pass_method(self, transaction):
         pass
 
-    def create_status_response(self, status='AUTHORIZED', payments=None, totals=None):
+    def create_status_response(self, status='AUTHORIZED', payments=None,
+                               totals=None):
         if payments is None:
             payments = [{
                 'id': 123456789,
                 'paymentMethod': 'MASTERCARD',
-                'authorization': {'status': status, 'amount': {'value': 1000, '_currency': 'EUR'}}
+                'authorization': {'status': status,
+                                  'amount': {'value': 1000, '_currency': 'EUR'}}
             }]
 
         default_totals = {
@@ -211,4 +210,6 @@ class FsmTestMixin(object):
             pass
 
         self.assertEqual(instance.status, new_status,
-            '{0} should change to {1} not {2}'.format(instance.__class__.__name__, new_status, instance.status))
+                         '{0} should change to {1} not {2}'.format(
+                             instance.__class__.__name__, new_status,
+                             instance.status))

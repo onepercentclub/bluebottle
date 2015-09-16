@@ -16,4 +16,3 @@ class ProjectPayoutFactory(factory.DjangoModelFactory):
     amount_raised = 1000
     organization_fee = 50
     amount_payable = 950
-

@@ -11,12 +11,10 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.clients import properties
 from bluebottle.geo.serializers import LocationSerializer
 
-
 BB_USER_MODEL = get_user_model()
 
 
 class UserAddressSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = UserAddress
         fields = ('id', 'line1', 'line2', 'address_type',
@@ -24,7 +22,6 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):
-
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -47,7 +44,6 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
 
 class CurrentUserSerializer(UserPreviewSerializer):
-
     """
     Serializer for the current authenticated user. This is the same as the
     serializer for the member preview with the
@@ -113,7 +109,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
-                  'tasks_performed','website', 'twitter', 'facebook',
+                  'tasks_performed', 'website', 'twitter', 'facebook',
                   'skypename', 'skill_ids', 'favourite_theme_ids')
 
     def save_object(self, obj, **kwargs):
@@ -126,7 +122,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         FIXME: fix the above after drf upgrade.
         """
         if 'address' in obj._related_data and \
-                        obj._related_data['address'] is None:
+                obj._related_data['address'] is None:
             del obj._related_data['address']
 
         return super(UserProfileSerializer, self).save_object(obj, **kwargs)
@@ -136,6 +132,7 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     Serializer for the a member's private profile.
     """
+
     class Meta:
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
@@ -147,7 +144,6 @@ class ManageProfileSerializer(UserProfileSerializer):
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
 class PasswordField(serializers.CharField):
-
     """ Special field to update a password field. """
     widget = forms.widgets.PasswordInput
     hidden_password_string = '********'
@@ -155,6 +151,7 @@ class PasswordField(serializers.CharField):
     def from_native(self, value):
         """ Hash if new value sent, else retrieve current password. """
         from django.contrib.auth.hashers import make_password
+
         if value == self.hidden_password_string or value == '':
             return self.parent.object.password
         else:
@@ -166,7 +163,6 @@ class PasswordField(serializers.CharField):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-
     """
     Serializer for creating users. This can only be used for creating
     users (POST) and should not be used for listing,
@@ -178,6 +174,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     password = PasswordField(required=True, max_length=128)
     username = serializers.CharField(read_only=True)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
+    primary_language = serializers.CharField(required=False)
 
     def validate_email_confirmation(self, attrs, source):
         """
@@ -194,12 +191,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'username', 'first_name', 'last_name',
-                  'email', 'password', 'jwt_token')
+                  'email', 'password', 'jwt_token', 'primary_language')
         non_native_fields = ('email_confirmation',)
 
 
 class PasswordResetSerializer(serializers.Serializer):
-
     """
     Password reset request serializer that uses the email validation from the
     Django PasswordResetForm.
@@ -222,7 +218,6 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class PasswordSetSerializer(serializers.Serializer):
-
     """
     A serializer that lets a user change set his/her password without entering
     the old password. This uses the validation from the Django SetPasswordForm.
@@ -244,7 +239,6 @@ class PasswordSetSerializer(serializers.Serializer):
         super(PasswordSetSerializer, self).__init__(*args, **kwargs)
 
     def validate_new_password2(self, attrs, source):
-
         # Don't need this check in newer versions of DRF2.
         if attrs is not None:
             value = attrs[source]

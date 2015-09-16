@@ -1,5 +1,6 @@
 from django.db import connection
-from django.core.mail import EmailMultiAlternatives as BaseEmailMultiAlternatives
+from django.core.mail import \
+    EmailMultiAlternatives as BaseEmailMultiAlternatives
 
 from bluebottle.clients import properties
 
@@ -13,7 +14,7 @@ def construct_from_header():
 
     # The tenant properties will not be set if the call to this method
     # does not come via a django request => we need to setup the tenant
-    # properties first. 
+    # properties first.
     # properties.tenant_properties will be an empty dict if the tenant
     # properties has not be initialised yet.
     if not properties.tenant_properties and connection.tenant:
@@ -37,10 +38,9 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
     A tenant-aware emailer. Replaces the from_email by the tenant's
     address, if available
     """
+
     def __init__(self, from_email=None, *args, **kwargs):
         tenant_from = construct_from_header()
-        activated_language = None
-
         if from_email:
             kwargs['from_email'] = from_email
         elif tenant_from:

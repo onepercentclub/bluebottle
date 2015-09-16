@@ -14,7 +14,6 @@ import logging
 
 
 class GetTweetMixin:
-
     def get_fb_title(self, **kwargs):
         return self.get_meta_title()
 
@@ -45,6 +44,7 @@ class GetTweetMixin:
             title=title, twitter_handle=twitter_handle)
         return tweet
 
+
 class StatusDefinition:
     """
     Various status definitions for FSM's
@@ -65,11 +65,12 @@ class StatusDefinition:
     FAILED = 'failed'
     UNKNOWN = 'unknown'
 
-class FSMTransition:
 
+class FSMTransition:
     """
     Class mixin to add transition_to method for Django FSM
     """
+
     def transition_to(self, new_status):
         # If the new_status is the same as then current then return early
         if self.status == new_status:
@@ -78,17 +79,21 @@ class FSMTransition:
         # Lookup the available next transition - from Django FSM
         available_transitions = self.get_available_status_transitions()
 
-        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(self.__class__.__name__, self.pk, self.status, new_status))
+        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(
+            self.__class__.__name__, self.pk, self.status, new_status))
 
-        # Check that the new_status is in the available transitions - created with Django FSM decorator
+        # Check that the new_status is in the available transitions -
+        # created with Django FSM decorator
         try:
-            transition_method = [i[1] for i in available_transitions if i[0] == new_status].pop()
+            transition_method = [i[1] for i in available_transitions if
+                                 i[0] == new_status].pop()
         except IndexError:
             # TODO: should we raise exception here?
             raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
-         
-        # Get the function method on the instance 
+                "Can't switch from state '{0}' to state '{1}' for {2}".format(
+                    self.status, new_status, self.__class__.__name__))
+
+        # Get the function method on the instance
         instance_method = getattr(self, transition_method.__name__)
 
         # Call state transition method
@@ -104,8 +109,9 @@ class FSMTransition:
 
 
 def get_client_ip(request=None):
-    """ A utility method that returns the client IP for the given request. """
-
+    """
+    A utility method that returns the client IP for the given request.
+    """
     if not request:
         request = ThreadLocal.get_current_request()
 
@@ -125,8 +131,10 @@ def get_client_ip(request=None):
 
 
 def set_author_editor_ip(request, obj):
-    """ A utility method to set the author, editor and IP address on an object based on information in a request. """
-
+    """
+    A utility method to set the author, editor and IP address on an
+    object based on information in a request.
+    """
     if not hasattr(obj, 'author'):
         obj.author = request.user
     else:
@@ -152,27 +160,9 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-def clean_for_hashtag(text):
-    """
-    Strip non alphanumeric charachters.
-
-    Sometimes, text bits are made up of two parts, sepated by a slash. Split
-    those into two tags. Otherwise, join the parts separated by a space.
-    """
-    tags = []
-    bits = text.split('/')
-    for bit in bits:
-        # keep the alphanumeric bits and capitalize the first letter
-        _bits = [_bit.title() for _bit in bit.split() if _bit.isalnum()]
-        tag = "".join(_bits)
-        tags.append(tag)
-
-    return " #".join(tags)
-
-
 def import_class(cl):
     d = cl.rfind(".")
-    class_name = cl[d+1:len(cl)]
+    class_name = cl[d + 1:len(cl)]
     m = __import__(cl[0:d], globals(), locals(), [class_name])
     return getattr(m, class_name)
 
@@ -189,8 +179,10 @@ def get_current_host():
         scheme = 'http'
     return '{0}://{1}'.format(scheme, request.get_host())
 
+
 class InvalidIpError(Exception):
     """ Custom exception for an invalid IP address """
+
     def __init__(self, value):
         self.value = value
 
@@ -199,13 +191,14 @@ class InvalidIpError(Exception):
 
 
 def get_country_by_ip(ip_address=None):
-    """ 
-    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    """
+    Returns the country associated with the IP address. Uses pygeoip
+    library which is based on
     the popular Maxmind's GeoIP C API
     """
     if not ip_address:
         return None
-    
+
     try:
         socket.inet_aton(ip_address)
     except socket.error:
@@ -213,11 +206,12 @@ def get_country_by_ip(ip_address=None):
 
     gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
     return gi.country_name_by_addr(ip_address)
-    
+
 
 def get_country_code_by_ip(ip_address=None):
     """
-    Returns the country associated with the IP address. Uses pygeoip library which is based on
+    Returns the country associated with the IP address. Uses pygeoip
+    library which is based on
     the popular Maxmind's GeoIP C API
     """
     if not ip_address:

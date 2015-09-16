@@ -7,7 +7,7 @@ class NewsItemPreviewList(generics.ListAPIView):
     model = NewsItem
     serializer_class = NewsItemPreviewSerializer
     paginate_by = 5
-    filter_fields = ('language', )
+    filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemPreviewList, self).get_queryset()
@@ -20,10 +20,10 @@ class NewsItemList(generics.ListAPIView):
     model = NewsItem
     serializer_class = NewsItemSerializer
     paginate_by = 5
-    filter_fields = ('language', )
-    
+    filter_fields = ('language',)
+
     def get_queryset(self, *args, **kwargs):
-        qs = super(NewsItemList, self).get_queryset() 
+        qs = super(NewsItemList, self).get_queryset()
         qs = qs.published()
         qs = qs.order_by('-publication_date')
         return qs
@@ -37,4 +37,3 @@ class NewsItemDetail(generics.RetrieveAPIView):
         qs = super(NewsItemDetail, self).get_queryset()
         qs = qs.published()
         return qs
-

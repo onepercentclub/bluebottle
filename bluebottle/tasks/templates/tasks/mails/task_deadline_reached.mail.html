@@ -2,21 +2,24 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with receiver_name=to.short_name  %}
+    {% blocktrans with receiver_name=to.short_name %}
 
-Hello {{receiver_name}}
-<br><br>
-The deadline of your task "{{title}}" is reached.
-<br><br>
-Is your task realised?<br>
-Please confirm the participants.<br>
-<a href="{{ site }}{{ link }}" class="action-email">Confirm participants</a><br>
-Too early to celebrate?<br>
-By changing the deadline you can extend the task period. You can also choose to close the task.
-{% endblocktrans %}
+        Hello {{ receiver_name }}
+        <br><br>
+        The deadline of your task "{{ title }}" is reached.
+        <br><br>
+        Is your task realised?<br>
+        Please confirm the participants.<br>
+        <a href="{{ site }}{{ link }}" class="action-email">Confirm
+            participants</a><br>
+        Too early to celebrate?<br>
+        By changing the deadline you can extend the task period. You can also
+        choose to close the task.
+    {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}{{ link }}/edit" class="action-email">{% trans 'Edit task' context 'email' %}</a>
+    <a href="{{ site }}{{ link }}/edit"
+       class="action-email">{% trans 'Edit task' context 'email' %}</a>
 {% endblock %}
 

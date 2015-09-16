@@ -20,4 +20,3 @@ class MoneyField(DecimalField):
         return super(MoneyField, self).__init__(*args, **kwargs)
 
 add_introspection_rules([], ["^bluebottle\.bb_projects\.fields\.MoneyField"])
-

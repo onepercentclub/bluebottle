@@ -6,7 +6,8 @@ from django.test.utils import override_settings
 from django.core import mail
 
 from bluebottle.recurring_donations.models import MonthlyOrder
-from bluebottle.recurring_donations.tests.model_factory import MonthlyDonorFactory, MonthlyDonorProjectFactory
+from bluebottle.recurring_donations.tests.model_factory import \
+    MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -19,7 +20,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 @override_settings(SEND_WELCOME_MAIL=False)
 class MonthlyDonationCommandsTest(BluebottleTestCase):
-
     def setUp(self):
         super(MonthlyDonationCommandsTest, self).setUp()
 
@@ -77,14 +77,16 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
         # Should have one donation
         self.assertEqual(monthly_order.donations.count(), 1)
-        
+
         # Donation should have amount 25 and go to first project
         self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('25'))
-        self.assertEqual(monthly_order.donations.all()[0].project, self.projects[0])
+        self.assertEqual(monthly_order.donations.all()[0].project,
+                         self.projects[0])
 
         # Check second monthly order
         # Should have 3 donations
-        monthly_donations = MonthlyOrder.objects.get(user=self.user2).donations.all()
+        monthly_donations = MonthlyOrder.objects.get(
+            user=self.user2).donations.all()
         self.assertEqual(len(monthly_donations), 3)
 
         self.assertEqual(monthly_donations[0].amount, Decimal('33.33'))
@@ -102,7 +104,8 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
             # Clear the outbox before running monthly donations
             for m in mail.outbox: mail.outbox.pop(0)
             call_command('process_monthly_donations', tenant='test')
-            
+
             self.assertEquals(len(mail.outbox), 6)
             # LocalTenant should be called once to set the correct tenant properties
-            mocked_init.assert_called_once_with(LocalTenant, self.tenant, clear_tenant=True)
+            mocked_init.assert_called_once_with(LocalTenant, self.tenant,
+                                                clear_tenant=True)

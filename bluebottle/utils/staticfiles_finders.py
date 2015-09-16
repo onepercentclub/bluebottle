@@ -6,7 +6,6 @@ from bluebottle.clients.models import Client
 
 
 class TenantStaticFilesFinder(FileSystemFinder):
-
     def find(self, path, all=False):
         """
         Looks for files in the client static directories.
@@ -24,7 +23,8 @@ class TenantStaticFilesFinder(FileSystemFinder):
         for tenant in tenants:
             if "{0}/".format(tenant.client_name) in path:
                 tenant_path = path.replace('{0}/'.format(tenant.client_name),
-                                           '{0}/static/'.format(tenant.client_name))
+                                           '{0}/static/'.format(
+                                               tenant.client_name))
                 local_path = safe_join(tenant_dir, tenant_path)
                 if os.path.exists(local_path):
                     if all:

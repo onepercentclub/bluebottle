@@ -9,7 +9,6 @@ from bluebottle.utils.email_backend import send_mail
 
 
 class TaskWallObserver(WallpostObserver):
-
     model = BaseTask
 
     def __init__(self, instance):
@@ -20,7 +19,6 @@ class TaskWallObserver(WallpostObserver):
         task_owner = task.author
 
         if self.author != task_owner:
-
             with TenantLanguage(task_owner.primary_language):
                 subject = _('%(author)s commented on your task') % {
                     'author': self.author.get_short_name()}
@@ -39,7 +37,6 @@ class TaskWallObserver(WallpostObserver):
 
 
 class TaskReactionObserver(ReactionObserver):
-
     model = BaseTask
 
     def __init__(self, instance):
@@ -78,7 +75,7 @@ class TaskReactionObserver(ReactionObserver):
         # the post author.
         if self.reaction_author != self.post_author:
             if self.reaction_author not in mailed_users and self.post_author:
-                with TenantLanguage(post_author.primary_language):
+                with TenantLanguage(self.post_author.primary_language):
                     subject = _('%(author)s replied on your comment') % {
                         'author': self.reaction_author.get_short_name()}
 
@@ -112,6 +109,7 @@ class TaskReactionObserver(ReactionObserver):
                     author=self.reaction_author,
                     receiver=task_author
                 )
+
 
 ObserversContainer().register(TaskWallObserver)
 ObserversContainer().register(TaskReactionObserver)

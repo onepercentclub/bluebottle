@@ -8,6 +8,7 @@ from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.model_dispatcher import (get_project_model,
                                                get_donation_model,
                                                get_fundraiser_model)
+from bluebottle.members.models import Member
 from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import StatusDefinition
 
@@ -47,6 +48,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
                                             'preview')
 
+    paginate_by = 20
+
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()
 
@@ -54,6 +57,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         project_slug = self.request.QUERY_PARAMS.get('project', None)
         fundraiser_id = self.request.QUERY_PARAMS.get('fundraiser', None)
+        co_financing = 'co_financing' in self.request.QUERY_PARAMS
+
         if fundraiser_id:
             try:
                 fundraiser = FUNDRAISER_MODEL.objects.get(pk=fundraiser_id)
@@ -71,6 +76,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
         else:
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
+
+        filter_kwargs['order__user__is_co_financer'] = co_financing
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")

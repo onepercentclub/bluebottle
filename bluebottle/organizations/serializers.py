@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import get_organization_model, \
+    get_organizationmember_model
 from bluebottle.utils.serializers import URLField
 
 ORGANIZATION_MODEL = get_organization_model()
@@ -24,4 +25,4 @@ class ManageOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ORGANIZATION_MODEL
         fields = OrganizationSerializer.Meta.fields + ('partner_organizations',
-                                                      'created', 'updated')
+                                                       'created', 'updated')

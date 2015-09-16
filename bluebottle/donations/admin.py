@@ -22,15 +22,15 @@ class DonationStatusFilter(SimpleListFilter):
     default_status = 'pending_or_success'
 
     def lookups(self, request, model_admin):
-        return (('all', _('All')),
-                ('pending_or_success', _('Pending/Success')) ) + \
-               ORDER_MODEL.STATUS_CHOICES
+        choises = (('all', _('All')),
+                   ('pending_or_success', _('Pending/Success')))
+        return choises + ORDER_MODEL.STATUS_CHOICES
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup if self.value() else
-                    lookup == self.default_status,
+                lookup == self.default_status,
                 'query_string': cl.get_query_string(
                     {self.parameter_name: lookup}, []),
                 'display': title,
@@ -54,13 +54,13 @@ class DonationUserFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (('all', _('All')), ('member', _('Member')),
-                ('anonymous', _('Anonymous')), ('guest', _('Guest')) )
+                ('anonymous', _('Anonymous')), ('guest', _('Guest')))
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup if self.value() else
-                    lookup == self.default_status,
+                lookup == self.default_status,
                 'query_string': cl.get_query_string(
                     {self.parameter_name: lookup}, []),
                 'display': title,
@@ -83,7 +83,7 @@ class DonationAdmin(admin.ModelAdmin):
                     'related_payment_method', 'order_type', 'status')
     list_filter = (DonationStatusFilter, 'order__order_type',
                    DonationUserFilter)
-    ordering = ('-created',  )
+    ordering = ('-created',)
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'created', 'updated', 'completed',
                        'status', 'user_link', 'project_link',
@@ -95,7 +95,7 @@ class DonationAdmin(admin.ModelAdmin):
     export_fields = ['project', 'order__user', 'amount', 'created', 'updated',
                      'completed', 'order__status',
                      'order__order_type']
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = (export_as_csv_action(fields=export_fields),)
 
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
@@ -168,7 +168,7 @@ class DonationAdmin(admin.ModelAdmin):
         lambda obj: obj.project,
         'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'],
                                       MODEL_MAP['project']['class'].lower()),
-        view_args=lambda obj: (obj.project.id, ),
+        view_args=lambda obj: (obj.project.id,),
         short_description='project',
         truncate=50
     )
@@ -196,4 +196,3 @@ class DonationInline(admin.TabularInline):
         return "<a href='{0}'>Donation: {1}</a>".format(str(url), obj.id)
 
     donation_link.allow_tags = True
-

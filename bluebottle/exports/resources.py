@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db.models.signals import post_init
 
 from exportdb.exporter import ExportModelResource
@@ -16,6 +17,8 @@ class DateRangeResource(ExportModelResource):
         if self.select_related:
             qs = qs.select_related(*self.select_related)
         frm, to = self.kwargs.get('from_date'), self.kwargs.get('to_date')
+        to = to + timedelta(days=1)
+
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
 
 
@@ -41,7 +44,6 @@ class TaskResource(DateRangeResource):
     select_related = ('project', 'author', 'location')
 
     def export(self, **kwargs):
-
         task_signal = dict(
             signal=post_init,
             receiver=task_post_init,
@@ -54,7 +56,8 @@ class TaskResource(DateRangeResource):
             sender=Project,
             dispatch_uid='bluebottle.projects.Project.post_init'
         )
-        with temp_disconnect_signal(**task_signal), temp_disconnect_signal(**project_signal):
+        with temp_disconnect_signal(**task_signal), temp_disconnect_signal(
+                **project_signal):
             data = super(TaskResource, self).export(**kwargs)
         return data
 
@@ -75,13 +78,15 @@ class TaskMemberResource(DateRangeResource):
             sender=Project,
             dispatch_uid='bluebottle.projects.Project.post_init'
         )
-        with temp_disconnect_signal(**task_signal), temp_disconnect_signal(**project_signal):
+        with temp_disconnect_signal(**task_signal), temp_disconnect_signal(
+                **project_signal):
             data = super(TaskMemberResource, self).export(**kwargs)
         return data
 
 
 class DonationResource(DateRangeResource):
-    select_related = ('order', 'order__user', 'order__user__location', 'project', 'project', 'fundraiser')
+    select_related = ('order', 'order__user', 'order__user__location',
+                      'project', 'project', 'fundraiser')
 
     def export(self, **kwargs):
         with temp_disconnect_signal(

@@ -36,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 
 #
 #
-#================================
+# ================================
 #
 #
 import json
@@ -49,13 +49,13 @@ from bluebottle.utils.tests.test_unit import UserTestsMixin
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, \
+    ProjectThemeFactory, ProjectPhaseFactory
 from ..models import Reaction
 from bluebottle.wallposts import mails
 
 
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):
-
     """
     Integration tests for the Project Media Wallpost API.
     """
@@ -73,7 +73,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 
         self.another_user = BlueBottleUserFactory.create(
-            password='testing2', first_name='anotherName', last_name='anotherLast')
+            password='testing2', first_name='anotherName',
+            last_name='anotherLast')
         self.another_token = "JWT {0}".format(
             self.another_user.get_jwt_token())
 
@@ -90,7 +91,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text = "Hear! Hear!"
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text,
-                                        'wallpost': self.some_wallpost.id},
+                                     'wallpost': self.some_wallpost.id},
                                     token=self.some_token)
 
         self.assertEqual(
@@ -109,7 +110,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         new_reaction_text = 'HEAR!!! HEAR!!!'
         response = self.client.put(reaction_detail_url,
                                    {'text': new_reaction_text,
-                                       'wallpost': self.some_wallpost.id},
+                                    'wallpost': self.some_wallpost.id},
                                    token=self.some_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -136,7 +137,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         another_reaction_text = "I'm not so sure..."
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': another_reaction_text,
-                                        'wallpost': self.some_wallpost.id},
+                                     'wallpost': self.some_wallpost.id},
                                     token=self.another_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -145,7 +146,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.assertTrue('not so sure' in response.data['text'])
 
         # retrieve the list of Reactions for this Wallpost should return two
-        response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
+        response = self.client.get(self.wallpost_reaction_url,
+                                   {'wallpost': self.some_wallpost.id},
                                    token=self.another_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -178,7 +180,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text_1 = 'Great job!'
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text_1,
-                                        'wallpost': self.some_wallpost.id},
+                                     'wallpost': self.some_wallpost.id},
                                     token=self.some_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -187,14 +189,15 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text_2 = 'This is a really nice post.'
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text_2,
-                                        'wallpost': self.some_wallpost.id},
+                                     'wallpost': self.some_wallpost.id},
                                     token=self.some_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text_2 in response.data['text'])
 
         # Check the size of the reaction list is correct.
-        response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
+        response = self.client.get(self.wallpost_reaction_url,
+                                   {'wallpost': self.some_wallpost.id},
                                    token=self.some_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -211,7 +214,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         reaction_text_3 = 'Super!'
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text_3,
-                                        'wallpost': self.another_wallpost.id},
+                                     'wallpost': self.another_wallpost.id},
                                     token=self.some_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -221,7 +224,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
             'wallpost_reaction_detail', kwargs={'pk': response.data['id']})
 
         # Check that the size and data in the first reaction list is correct.
-        response = self.client.get(self.wallpost_reaction_url, {'wallpost': self.some_wallpost.id},
+        response = self.client.get(self.wallpost_reaction_url,
+                                   {'wallpost': self.some_wallpost.id},
                                    token=self.some_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
@@ -247,9 +251,10 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
                                     {'text': 'Can I update this reaction?'},
                                     token=self.another_token)
         self.assertEqual(
-            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, response.data)
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED,
+            response.data)
 
-    # def test_embedded_reactions(self):
+        # def test_embedded_reactions(self):
         """
             Test reactions embedded in Project Wallpost Api calls
         """
@@ -269,6 +274,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         # self.assertEqual(len(response.data['reactions']), 2)
         # self.assertTrue(reaction1_text in response.data['reactions'][0]['text'])
         # self.assertTrue(reaction2_text in response.data['reactions'][1]['text'])
+
+
 #
 # Create a Reaction to another Wallpost and retrieve that Wallpost should return one embedded reaction
 #         reaction3_text = "That other post was way better..."
@@ -339,7 +346,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
 
 # ProjectWallpostTestsMixin,
 class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
-
     def setUp(self):
         from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 
@@ -360,7 +366,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
                                        last_name='clast',
                                        primary_language='en')
 
-        #self.project = self.create_project(owner=self.user_a)
+        # self.project = self.create_project(owner=self.user_a)
 
         self.theme_1 = ProjectTheme.objects.get(name='Education')
         self.phase_1 = ProjectPhase.objects.get(slug='campaign')

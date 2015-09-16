@@ -62,13 +62,20 @@ class ProjectPhase(models.Model):
                                    help_text=_('For ordering phases.'))
 
     active = models.BooleanField(default=True,
-        help_text=_('Whether this phase is in use or has been discarded.'))
+                                 help_text=_('Whether this phase is in use or '
+                                             'has been discarded.'))
     editable = models.BooleanField(default=True,
-        help_text=_('Whether the project owner can change the details of the project.'))
+                                   help_text=_('Whether the project owner can '
+                                               'change the details of the'
+                                               'project.'))
     viewable = models.BooleanField(default=True,
-        help_text=_('Whether this phase, and projects in it show up at the website'))
+                                   help_text=_('Whether this phase, and '
+                                               'projects in it show up at the '
+                                               'website'))
     owner_editable = models.BooleanField(default=False,
-        help_text=_('The owner can manually select between these phases'))
+                                         help_text=_('The owner can manually '
+                                                     'select between these '
+                                                     'phases'))
 
     class Meta():
         ordering = ['sequence']
@@ -134,7 +141,7 @@ class BaseProjectDocument(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                verbose_name=_('author'), blank=True, null=True)
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
-                                     related_name="documents")
+                                related_name="documents")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
@@ -160,7 +167,6 @@ class BaseProjectDocument(models.Model):
 
 
 class BaseProject(models.Model, GetTweetMixin):
-
 
     class Type(DjangoChoices):
         sourcing = ChoiceItem('sourcing', label=_('Crowd-sourcing'))
@@ -265,6 +271,7 @@ class BaseProject(models.Model, GetTweetMixin):
     @property
     def people_registered(self):
         counts = self.task_set.filter(
+            status='open',
             members__status__in=['accepted', 'realized']
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 

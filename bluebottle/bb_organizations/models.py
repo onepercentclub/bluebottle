@@ -9,13 +9,11 @@ from django.db.models import options
 from djchoices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
                                                  'manage_serializer')
 
 
 class BaseOrganizationMember(models.Model):
-
     """ Members from a Organization """
 
     class MemberFunctions(DjangoChoices):
@@ -39,7 +37,6 @@ class BaseOrganizationMember(models.Model):
 
 
 class BaseOrganization(models.Model):
-
     """
     Organizations can run Projects. An organization has one or more members.
     """

@@ -67,7 +67,7 @@ def get_extra_facebook_data(strategy, user, response, details,
         birthdate = time.strptime(birthday, "%m/%d/%Y")
         user.birthdate = datetime.fromtimestamp(time.mktime(birthdate))
 
-    if len(fb_link) < 50:
+    if fb_link and len(fb_link) < 50:
         user.facebook = fb_link
 
     user.save()

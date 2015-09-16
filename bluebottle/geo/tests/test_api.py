@@ -22,6 +22,7 @@ class GeoTestCase(BluebottleTestCase):
         self.init_projects()
 
         self.country_1 = Country.objects.get(name="Abkhazia")
+
 \
 
 class CountryListTestCase(GeoTestCase):
@@ -30,6 +31,7 @@ class CountryListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/countries
     """
+
     def test_api_country_list_endpoint(self):
         """
         Ensure get request returns 200.
@@ -38,7 +40,6 @@ class CountryListTestCase(GeoTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 245)
-
 
     def test_api_country_list_data(self):
         """
@@ -53,18 +54,19 @@ class CountryListTestCase(GeoTestCase):
 
 
 class UsedCountryListTestCase(GeoTestCase):
-
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
         campaign_status = ProjectPhase.objects.get(slug='campaign')
-        self.project = ProjectFactory.create(country=self.country_1, status=campaign_status)
+        self.project = ProjectFactory.create(country=self.country_1,
+                                             status=campaign_status)
 
     """
     Test case for ``CountryList`` API view.
 
     Endpoint: /api/geo/used_countries
     """
+
     def test_api_used_country_list_endpoint(self):
         """
         Ensure get request returns 200.

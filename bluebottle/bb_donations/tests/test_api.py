@@ -1,4 +1,3 @@
-import json
 from mock import patch
 
 from bluebottle.test.utils import BluebottleTestCase
@@ -6,19 +5,15 @@ from django.conf import settings
 
 from bluebottle.bb_orders.views import ManageOrderDetail
 from django.core.urlresolvers import reverse
-from bluebottle.bb_orders.tests.test_api import OrderApiTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, \
-    ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 
-from django.conf import settings
 from django.utils.importlib import import_module
 
-from django.core.urlresolvers import reverse
 from bluebottle.utils.utils import StatusDefinition
 
 from rest_framework import status
@@ -57,7 +52,7 @@ class DonationApiTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.user2 = BlueBottleUserFactory.create()
+        self.user2 = BlueBottleUserFactory.create(is_co_financer=True)
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
 
         self.project = ProjectFactory.create()
@@ -252,7 +247,7 @@ class TestCreateDonation(DonationApiTestCase):
                                     token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'created')
-        donation_id = response.data['id']
+        response.data['id']
 
         # Check that the order total is equal to the donation amount
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
@@ -280,7 +275,7 @@ class TestCreateDonation(DonationApiTestCase):
                                     token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'created')
-        donation_id = response.data['id']
+        response.data['id']
 
         # Check that the order total is equal to the donation amount
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
@@ -439,6 +434,78 @@ class TestUnauthenticatedDonationCreate(DonationApiTestCase):
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')
+class TestProjectDonationList(DonationApiTestCase):
+    """
+    Test that the project donations list only works for the project owner
+    """
+
+    def setUp(self):
+        super(TestProjectDonationList, self).setUp()
+
+        self.project3 = ProjectFactory.create(amount_asked=5000,
+                                              owner=self.user1)
+        self.project3.set_status('campaign')
+
+        order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1000, project=self.project3,
+                               order=order)
+
+        self.project_donation_list_url = reverse('project-donation-list')
+
+    def test_project_donation_list(self, check_status_psp):
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
+        donation = response.data['results'][0]
+        self.assertEqual(donation['amount'], 1000.0)
+        self.assertEqual(donation['project'], self.project3.pk)
+
+    def test_successful_project_donation_list(self, check_status_psp):
+        # Unsuccessful donations should not be shown
+        order = OrderFactory.create(user=self.user2)
+        DonationFactory.create(amount=2000, project=self.project3,
+                               order=order)
+
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1,
+                         'Only the successful donation should be returned')
+
+    def test_successful_project_donation_list_paged(self, check_status_psp):
+        for i in range(30):
+            order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
+            DonationFactory.create(amount=2000, project=self.project3,
+                                   order=order)
+
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug,},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['count'], 31,
+                         'All the donations should be returned')
+        self.assertEqual(len(response.data['results']), 20)
+
+    def test_project_donation_list_co_financing(self, check_status_psp):
+        order = OrderFactory.create(user=self.user2, status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1000, project=self.project3,
+                               order=order)
+
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug, 'co_financing': None},
+                                   token=self.user1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1,
+                         'Only donations by co-financers should be returned')
+
+
+@patch.object(ManageOrderDetail, 'check_status_psp')
 class TestMyProjectDonationList(DonationApiTestCase):
     """
     Test that the project donations list only works for the project owner
@@ -453,8 +520,8 @@ class TestMyProjectDonationList(DonationApiTestCase):
 
         # User 2 makes a donation
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=1000, project=self.project3,
-                                          order=order)
+        DonationFactory.create(amount=1000, project=self.project3,
+                               order=order)
 
         order.locked()
         order.succeeded()
@@ -475,8 +542,8 @@ class TestMyProjectDonationList(DonationApiTestCase):
     def test_successful_my_project_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=2000, project=self.project3,
-                                          order=order)
+        DonationFactory.create(amount=2000, project=self.project3,
+                               order=order)
 
         response = self.client.get(self.project_donation_list_url,
                                    {'project': self.project3.slug},
@@ -510,9 +577,9 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
 
         # User 2 makes a donation
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=1000, project=self.project4,
-                                          fundraiser=self.fundraiser,
-                                          order=order)
+        DonationFactory.create(amount=1000, project=self.project4,
+                               fundraiser=self.fundraiser,
+                               order=order)
 
         order.locked()
         order.succeeded()
@@ -535,9 +602,9 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
     def test_successful_my_fundraiser_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
-        donation = DonationFactory.create(amount=2000, project=self.project4,
-                                          fundraiser=self.fundraiser,
-                                          order=order)
+        DonationFactory.create(amount=2000, project=self.project4,
+                               fundraiser=self.fundraiser,
+                               order=order)
 
         response = self.client.get(self.fundraiser_donation_list_url,
                                    {'fundraiser': self.fundraiser.pk},

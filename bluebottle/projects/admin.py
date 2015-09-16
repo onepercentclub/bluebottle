@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
@@ -140,7 +141,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters += (LocationFilter,)
+            filters +=  (LocationFilter, )
         return filters
 
     def get_list_display(self, request):
@@ -148,14 +149,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'status', 'is_campaign', 'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
-            fields += ('location',)
+            fields +=  ('location', )
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields += ('vote_count',)
+            fields +=  ('vote_count', )
         return fields
 
     def get_list_editable(self, request):
-        return ('is_campaign',)
+        return ('is_campaign', )
 
     readonly_fields = ('vote_count', 'amount_donated',
                        'amount_needed', 'popularity')
@@ -163,7 +164,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
 
-    actions = (export_as_csv_action(fields=export_fields),)
+    actions = (export_as_csv_action(fields=export_fields), )
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization', 'partner_organization',
@@ -208,9 +209,21 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         # Optimization: Select related fields that are used in admin specific
         # display fields.
         queryset = super(ProjectAdmin, self).queryset(request)
-        return queryset.select_related('projectpitch', 'projectplan',
-                                       'projectcampaign', 'owner',
-                                       'organization')
+        queryset = queryset.select_related(
+            'projectpitch', 'projectplan', 'projectcampaign', 'owner',
+            'organization'
+        ).extra(
+            {'admin_vote_count': 'SELECT COUNT(*) from votes_vote where "votes_vote"."project_id" = "projects_project"."id"'}
+        )
+
+        return queryset
+
+    def num_votes(self, obj):
+        self.queryset(None)
+        return obj.admin_vote_count
+
+    num_votes.short_description = _('Vote Count')
+    num_votes.admin_order_field = 'admin_vote_count'
 
     def get_title_display(self, obj):
         if len(obj.title) > 35:

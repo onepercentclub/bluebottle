@@ -30,7 +30,7 @@ def mail_project_funded_internal(project):
 
 def mail_project_complete(project):
     with TenantLanguage(project.owner.primary_language):
-        subject = _(u"The project '{0}' has completed").format(project.title)
+        subject = _(u"The project '{0}' has been realised").format(project.title)
 
     send_mail(
         template_name="projects/mails/project_complete.mail",

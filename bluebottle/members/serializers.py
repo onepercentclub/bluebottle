@@ -174,6 +174,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     password = PasswordField(required=True, max_length=128)
     username = serializers.CharField(read_only=True)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
+    primary_language = serializers.CharField(required=False)
 
     def validate_email_confirmation(self, attrs, source):
         """
@@ -190,7 +191,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'username', 'first_name', 'last_name',
-                  'email', 'password', 'jwt_token')
+                  'email', 'password', 'jwt_token', 'primary_language')
         non_native_fields = ('email_confirmation',)
 
 

@@ -271,6 +271,7 @@ class BaseProject(models.Model, GetTweetMixin):
     @property
     def people_registered(self):
         counts = self.task_set.filter(
+            status='open',
             members__status__in=['accepted', 'realized']
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 

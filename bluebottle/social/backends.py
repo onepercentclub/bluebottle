@@ -8,5 +8,6 @@ class NoStateFacebookOAuth2(FacebookOAuth2):
 
     def extra_data(self, *args, **kwargs):
         result = super(NoStateFacebookOAuth2, self).extra_data(*args, **kwargs)
-        result['requested_scope'] = kwargs['request'].get('scope').split(',')
+        if 'scope' in kwargs['request']:
+            result['requested_scope'] = kwargs['request'].get('scope').split(',')
         return result

@@ -129,7 +129,7 @@ class MetaTestCase(BluebottleTestCase):
 
         # Imgur
         self.imgur = OEmbedItem.objects.create(
-            embed_url='http://imgur.com/gallery/CXLgSVc',
+            embed_url='http://i.imgur.com/ZtRTS9h.jpg',
             parent=self.object,
             placeholder=self.ph,
             sort_order=4

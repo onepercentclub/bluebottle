@@ -51,6 +51,7 @@ install_requires = [
     'djangorestframework==2.3.14',
     'dkimpy==0.5.4',
     'html5lib==0.95',
+    'httmock==1.2.3',
     'micawber==0.2.6',
     'requests==2.3.0',
     'sorl-thumbnail==11.12',

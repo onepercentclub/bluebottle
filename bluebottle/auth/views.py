@@ -15,7 +15,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import parsers, renderers
 
 from social.apps.django_app.utils import psa, get_strategy, STORAGE
-from social.exceptions import AuthAlreadyAssociated, AuthCanceled, AuthMissingParameter
+from social.exceptions import AuthCanceled
 
 # from social_auth.decorators import
 from datetime import datetime
@@ -49,9 +49,8 @@ def load_drf_strategy(request=None):
     return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
 
 
-@psa(
-    redirect_uri='/static/assets/frontend/popup.html', load_strategy=load_drf_strategy
-)
+@psa(redirect_uri='/static/assets/frontend/popup.html',
+     load_strategy=load_drf_strategy)
 def complete(request, backend):
     try:
         user = request.backend.auth_complete()

@@ -132,6 +132,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
+    list_filter = ('country__subregion__region',)
+
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter,
                    'country__subregion__region', 'partner_organization',

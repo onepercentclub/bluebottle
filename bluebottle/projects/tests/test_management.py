@@ -20,7 +20,6 @@ from bluebottle.clients.utils import LocalTenant
 
 
 class TestStatusMC(BluebottleTestCase):
-
     def setUp(self):
         super(TestStatusMC, self).setUp()
 
@@ -197,7 +196,6 @@ class TestStatusMC(BluebottleTestCase):
 
 @override_settings(SEND_WELCOME_MAIL=False)
 class TestMultiTenant(BluebottleTestCase):
-
     def setUp(self):
         super(TestMultiTenant, self).setUp()
 
@@ -205,12 +203,12 @@ class TestMultiTenant(BluebottleTestCase):
 
         self.init_projects()
         self.tenant1 = connection.tenant
-        status_running = ProjectPhase.objects.get(slug='campaign')
 
         # Create a project for the main tenant
-        self.project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'),
-                                             deadline=now - timezone.timedelta(days=5),
-                                             amount_asked=0)
+        self.project = ProjectFactory.create(
+            status=ProjectPhase.objects.get(slug='campaign'),
+            deadline=now - timezone.timedelta(days=5),
+            amount_asked=0)
 
         # Create a second tenant
         connection.set_schema_to_public()
@@ -224,10 +222,10 @@ class TestMultiTenant(BluebottleTestCase):
         connection.set_tenant(self.tenant2)
 
         self.init_projects()
-        self.project2 = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'),
-                                              deadline=now - timezone.timedelta(days=5),
-                                              amount_asked=0)
-
+        self.project2 = ProjectFactory.create(
+            status=ProjectPhase.objects.get(slug='campaign'),
+            deadline=now - timezone.timedelta(days=5),
+            amount_asked=0)
 
     def test_realized_email_multiple_tenants(self):
         with patch.object(LocalTenant, '__new__') as mocked_init:
@@ -237,20 +235,3 @@ class TestMultiTenant(BluebottleTestCase):
 
             mocked_init.assert_once_called_with(LocalTenant, self.tenant1)
             mocked_init.assert_once_called_with(LocalTenant, self.tenant2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

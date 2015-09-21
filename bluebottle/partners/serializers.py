@@ -9,7 +9,7 @@ class PartnerOrganizationPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
-        fields = ('id', 'name', )
+        fields = ('id', 'name',)
 
 
 class PartnerOrganizationSerializer(PartnerOrganizationPreviewSerializer):
@@ -20,4 +20,3 @@ class PartnerOrganizationSerializer(PartnerOrganizationPreviewSerializer):
     class Meta:
         model = PartnerOrganization
         fields = ('id', 'name', 'projects', 'description', 'image')
-

@@ -1,14 +1,12 @@
 from django.core.management.base import BaseCommand, CommandError
-from django.utils.timezone import now
 from django.db import connection
+from django.utils.timezone import now
 
-from bluebottle.clients.models import Client
-from bluebottle.projects.models import Project
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
-from bluebottle.clients import properties
+from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.votes.models import Vote
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task
 
 
 class Command(BaseCommand):
@@ -65,7 +63,8 @@ class Command(BaseCommand):
             self.stdout.write("Checking Project funded and still running...")
             Project.objects.filter(amount_needed__lte=0,
                                    status=campaign_phase,
-                                   deadline__gt=now()).update(campaign_funded=now())
+                                   deadline__gt=now()).update(
+                campaign_funded=now())
 
             """
             Projects which are still in campaign phase but have expired need to be
@@ -83,7 +82,6 @@ class Command(BaseCommand):
             self.stdout.write("Checking Task deadlines...\n\n")
             for task in Task.objects.filter(status='in progress',
                                             deadline__lt=now()).all():
-
                 task.deadline_reached()
 
             self.stdout.write(

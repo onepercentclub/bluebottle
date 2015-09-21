@@ -3,7 +3,8 @@ import urllib
 from django.core.urlresolvers import reverse
 
 
-def link_to(value, url_name, view_args=(), view_kwargs={}, query={}, short_description=None, truncate=None):
+def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
+            short_description=None, truncate=None):
     """
     Return admin field with link to named view with view_args/view_kwargs
     or view_[kw]args(obj) methods and HTTP GET parameters.
@@ -54,7 +55,8 @@ def link_to(value, url_name, view_args=(), view_kwargs={}, query={}, short_descr
 
         if truncate:
             new_value = unicode(new_value)
-            new_value = (new_value[:truncate] + '...') if len(new_value) > truncate else new_value
+            new_value = (new_value[:truncate] + '...') if len(
+                new_value) > truncate else new_value
 
         return u'<a href="{0}">{1}</a>'.format(url, new_value)
 

@@ -7,14 +7,15 @@
             <started>{{ project.campaign_started|date:"c" }}</started>
             <deadline>{{ project.deadline|date:"c" }}</deadline>
             <title>{{ project.title }}</title>
-            <link>{{ site }}/go/projects/{{ project.slug }}</link>
+            <link>
+            {{ site }}/go/projects/{{ project.slug }}</link>
             <created>{{ project.created|date:"c" }}</created>
             <slug>{{ project.slug }}</slug>
             <supportlink>{{ site }}/go/projects/{{ project.slug }}</supportlink>
             <image>
-                    {% thumbnail project.image "200x110" as im %}
+                {% thumbnail project.image "200x110" as im %}
                     {{ site }}{{ im.url }}
-                    {% endthumbnail %}
+                {% endthumbnail %}
             </image>
             <location>
                 <country>{{ project.country.name }}</country>
@@ -28,5 +29,5 @@
                 <needed>{{ project.amount_needed }}</needed>
             </money>
         </project>
-    {%  endfor  %}
+    {% endfor %}
 </projects>

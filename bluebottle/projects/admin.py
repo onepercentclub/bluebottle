@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
@@ -42,8 +43,8 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         themes = [obj.theme for obj in
-                     model_admin.model.objects.order_by('theme__name').distinct(
-                         'theme__name').exclude(theme__isnull=True).all()]
+                  model_admin.model.objects.order_by('theme__name').distinct(
+                      'theme__name').exclude(theme__isnull=True).all()]
         return [(theme.id, _(theme.name)) for theme in themes]
 
     def queryset(self, request, queryset):
@@ -57,7 +58,7 @@ class ProjectDocumentInline(admin.StackedInline):
     model = PROJECT_DOCUMENT_MODEL
     form = ProjectDocumentForm
     extra = 0
-    raw_id_fields = ('author', )
+    raw_id_fields = ('author',)
     readonly_fields = ('download_url',)
     fields = readonly_fields + ('file', 'author')
 
@@ -67,6 +68,7 @@ class ProjectDocumentInline(admin.StackedInline):
         if url is not None:
             return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
         return '(None)'
+
     download_url.allow_tags = True
 
 
@@ -86,6 +88,7 @@ class ProjectPhaseLogInline(admin.TabularInline):
 class FundingFilter(admin.SimpleListFilter):
     title = _('Funding')
     parameter_name = 'funding'
+
     def lookups(self, request, model_admin):
         return (
             ('yes', _('Funding')),
@@ -131,6 +134,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
+    list_filter = ('country__subregion__region',)
+
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter,
                    'country__subregion__region', 'partner_organization',
@@ -155,7 +160,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_editable(self, request):
         return ('is_campaign', )
 
-    readonly_fields = ('vote_count', 'amount_donated', 'amount_needed', 'popularity')
+    readonly_fields = ('vote_count', 'amount_donated',
+                       'amount_needed', 'popularity')
 
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
@@ -175,7 +181,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                    'location', 'place', 'tags')}),
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
-                                'amount_donated','amount_needed',
+                                'amount_donated', 'amount_needed',
                                 'popularity', 'vote_count')}),
 
         (_('Dates'), {'fields': ('voting_deadline', 'deadline',
@@ -205,13 +211,25 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         # Optimization: Select related fields that are used in admin specific
         # display fields.
         queryset = super(ProjectAdmin, self).queryset(request)
-        return queryset.select_related('projectpitch', 'projectplan',
-                                       'projectcampaign', 'owner',
-                                       'organization')
+        queryset = queryset.select_related(
+            'projectpitch', 'projectplan', 'projectcampaign', 'owner',
+            'organization'
+        ).extra(
+            {'admin_vote_count': 'SELECT COUNT(*) from votes_vote where "votes_vote"."project_id" = "projects_project"."id"'}
+        )
+
+        return queryset
+
+    def num_votes(self, obj):
+        self.queryset(None)
+        return obj.admin_vote_count
+
+    num_votes.short_description = _('Vote Count')
+    num_votes.admin_order_field = 'admin_vote_count'
 
     def get_title_display(self, obj):
         if len(obj.title) > 35:
-            return u'<span title="{title}">{short_title} &hellip;</span>'\
+            return u'<span title="{title}">{short_title} &hellip;</span>' \
                 .format(title=escape(obj.title), short_title=obj.title[:45])
         return obj.title
 
@@ -236,5 +254,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             str(url), object.first_name + ' ' + object.last_name)
 
     project_owner.allow_tags = True
+
 
 admin.site.register(Project, ProjectAdmin)

@@ -13,11 +13,9 @@ from django.utils.translation import ugettext as _
 from bluebottle.bb_payouts.models import (ProjectPayoutLog,
                                           OrganizationPayoutLog)
 from bluebottle.clients import properties
-from bluebottle.payouts.models import ProjectPayout
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.utils.model_dispatcher import (get_project_payout_model,
-                                               get_organization_payout_model,
-                                               get_model_mapping)
+from bluebottle.utils.model_dispatcher import (
+    get_project_payout_model, get_organization_payout_model, get_model_mapping)
 from bluebottle.utils.utils import StatusDefinition
 
 from .admin_utils import link_to
@@ -46,7 +44,8 @@ class OrganizationPayoutLogInline(PayoutLogBase):
 
 
 class ProjectPayoutForm(forms.ModelForm):
-    payout_rule = forms.ChoiceField(choices=PROJECT_PAYOUT_MODEL.PayoutRules.choices)
+    payout_rule = forms.ChoiceField(
+        choices=PROJECT_PAYOUT_MODEL.PayoutRules.choices)
 
     class Meta:
         model = PROJECT_PAYOUT_MODEL
@@ -55,7 +54,7 @@ class ProjectPayoutForm(forms.ModelForm):
 class BaseProjectPayoutAdmin(admin.ModelAdmin):
     model = PROJECT_PAYOUT_MODEL
     form = ProjectPayoutForm
-    inlines = (PayoutLogInline, )
+    inlines = (PayoutLogInline,)
 
     search_fields = [
         'invoice_reference', 'receiver_account_iban', 'receiver_account_number',
@@ -67,7 +66,8 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
 
     list_filter = ['status', 'payout_rule']
 
-    actions = ['change_status_to_new', 'change_status_to_progress', 'change_status_to_settled',
+    actions = ['change_status_to_new', 'change_status_to_progress',
+               'change_status_to_settled',
                'recalculate_amounts']
 
     def change_status_to_new(self, request, queryset):
@@ -85,13 +85,15 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
             payout.status = StatusDefinition.SETTLED
             payout.save()
 
-    list_display = ['payout', 'status', 'admin_project', 'amount_pending', 'amount_raised', 'amount_payable', 'rule',
-                    'admin_has_iban', 'created_date', 'submitted_date', 'completed_date']
-
+    list_display = ['payout', 'status', 'admin_project', 'amount_pending',
+                    'amount_raised', 'amount_payable', 'rule',
+                    'admin_has_iban', 'created_date', 'submitted_date',
+                    'completed_date']
 
     list_display_links = ['payout']
 
-    readonly_fields = ['admin_project', 'admin_organization', 'created', 'updated']
+    readonly_fields = ['admin_project', 'admin_organization', 'created',
+                       'updated']
 
     fieldsets = (
         (None, {
@@ -112,8 +114,8 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
         (_('Payment details'), {
             'fields': (
                 'receiver_account_name', 'receiver_account_country',
-                'receiver_account_number','receiver_account_iban',
-                'receiver_account_bic','description_line1',
+                'receiver_account_number', 'receiver_account_iban',
+                'receiver_account_bic', 'description_line1',
                 'description_line2', 'description_line3', 'description_line4'
             )
         })
@@ -125,6 +127,7 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
             return False
 
         return True
+
     is_pending.boolean = True
     is_pending.short_description = _('pending')
 
@@ -155,7 +158,7 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
         lambda obj: obj.project,
         'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'],
                                       MODEL_MAP['project']['class'].lower()),
-        view_args=lambda obj: (obj.project.id, ),
+        view_args=lambda obj: (obj.project.id,),
         short_description=_('project'),
         truncate=50
     )
@@ -164,7 +167,7 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
     admin_organization = link_to(
         lambda obj: obj.project.organization,
         'admin:organizations_organization_change',
-        view_args=lambda obj: (obj.project.organization.id, ),
+        view_args=lambda obj: (obj.project.organization.id,),
         short_description=_('organization')
     )
 
@@ -173,6 +176,7 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
             return True
 
         return False
+
     admin_has_iban.short_description = _('IBAN')
     admin_has_iban.boolean = True
 
@@ -190,14 +194,11 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
         for payout in qs_new:
             payout.calculate_amounts()
 
-        message = (
-            "Fees for %(new_payouts)d new payouts were recalculated. "
-            "%(skipped_payouts)d progressing or closed payouts have"
-            "been skipped."
-        ) % {
-            'new_payouts': qs_new.count(),
-            'skipped_payouts': queryset.exclude(**filter_args).count()
-        }
+        new_payouts = qs_new.count()
+        skipped_payouts = queryset.exclude(**filter_args).count()
+        message = ("Fees for {0} new payouts were recalculated. "
+                   "{1} progressing or closed payouts have"
+                   "been skipped.").format(new_payouts, skipped_payouts)
 
         self.message_user(request, message)
 
@@ -270,7 +271,7 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
         })
     )
 
-    actions = ('recalculate_amounts', )
+    actions = ('recalculate_amounts',)
 
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
@@ -280,14 +281,11 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
         for payout in qs_new:
             payout.calculate_amounts()
 
-        message = (
-            "Amounts for %(new_payouts)d new payouts were recalculated. "
-            "%(skipped_payouts)d progressing or closed payouts have been "
-            "skipped."
-        ) % {
-            'new_payouts': qs_new.count(),
-            'skipped_payouts': queryset.exclude(**filter_args).count()
-        }
+        new_payouts = qs_new.count()
+        skipped_payouts = queryset.exclude(**filter_args).count()
+        message = ("Amounts for {0} new payouts were recalculated. "
+                   "{1} progressing or closed payouts have been "
+                   "skipped.").format(new_payouts, skipped_payouts)
 
         self.message_user(request, message)
 
@@ -304,7 +302,6 @@ class PayoutListFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         rules = getattr(properties, 'PROJECT_PAYOUT_FEES', {})
-        rule_choices = ProjectPayout.PayoutRules.choices
 
         def _value(label):
             value = re.search(r'\d+', label)
@@ -314,9 +311,9 @@ class PayoutListFilter(admin.SimpleListFilter):
                 return None
 
         def _label(v, k):
-            return "{0}% ({1})".format(int(v*100), k)
+            return "{0}% ({1})".format(int(v * 100), k)
 
-        return tuple(sorted(((k, _label(v,k)) for k, v in rules.iteritems()),
+        return tuple(sorted(((k, _label(v, k)) for k, v in rules.iteritems()),
                             key=lambda x: _value(x[1])))
 
     def queryset(self, request, queryset):
@@ -348,8 +345,7 @@ class LegacyPayoutListFilter(admin.SimpleListFilter):
 
 
 class OrganizationPayoutAdmin(BaseOrganizationPayoutAdmin):
-
-    actions = ('export_sepa', )
+    actions = ('export_sepa',)
 
     def export_sepa(self, request, queryset):
         """
@@ -367,6 +363,7 @@ class OrganizationPayoutAdmin(BaseOrganizationPayoutAdmin):
 
     export_sepa.short_description = "Export SEPA file."
 
+
 try:
     admin.site.unregister(ORGANIZATION_PAYOUT_MODEL)
 except NotRegistered:
@@ -375,9 +372,8 @@ admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)
 
 
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
-
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
-                    'amount_raised', 'amount_payable', 'rule','percent',
+                    'amount_raised', 'amount_payable', 'rule', 'percent',
                     'admin_has_iban', 'created_date', 'submitted_date',
                     'completed_date']
 
@@ -414,6 +410,7 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
         return response
 
     export_sepa.short_description = "Export SEPA file."
+
 
 try:
     admin.site.unregister(PROJECT_PAYOUT_MODEL)

@@ -34,7 +34,6 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name')
@@ -61,7 +60,6 @@ class StoryField(serializers.WritableField):
 
 
 class ProjectCountrySerializer(CountrySerializer):
-
     subregion = serializers.CharField(source='subregion.name')
 
     class Meta:
@@ -135,13 +133,13 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
-                  'status', 'deadline', 'is_funding', 'vote_count', 'supporter_count',
+                  'status', 'deadline', 'is_funding', 'vote_count',
+                  'supporter_count',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
                   'video_html', 'partner', 'location', 'project_type')
 
 
 class ProjectPreviewSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
     country = ProjectCountrySerializer(source='country')
@@ -169,7 +167,6 @@ class ProjectPreviewSerializer(serializers.ModelSerializer):
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(source='slug', read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
 
@@ -266,11 +263,11 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                 2) the current is new or needs work and the proposed
                    is submitted
                 """
-                if (not (proposed_status == current_status) and
-                        not (proposed_status and
-                             (current_status == new_status or
-                              current_status == needs_work_status) and
-                             proposed_status == submit_status)):
+                if (not (proposed_status == current_status)
+                        and not (proposed_status
+                                 and (current_status == new_status
+                                      or current_status == needs_work_status)
+                                 and proposed_status == submit_status)):
                     raise serializers.ValidationError(
                         _("You can not change the project state."))
 

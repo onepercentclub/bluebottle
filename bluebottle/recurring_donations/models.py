@@ -18,7 +18,7 @@ class MonthlyDonor(models.Model):
     active = models.BooleanField(default=True)
     amount = models.DecimalField(_("amount"), max_digits=6, decimal_places=2)
 
-    iban = IBANField(blank=True, default='')
+    iban = IBANField()
     bic = SWIFTBICField(blank=True, default='')
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)

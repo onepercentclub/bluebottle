@@ -16,8 +16,8 @@ from .models import Page
 
 class PageAdmin(PlaceholderFieldAdmin):
     model = Page
-    list_display = ('title', 'slug', 'status_column', 'full_page', 'modification_date',
-                    'language')
+    list_display = ('title', 'slug', 'status_column', 'full_page',
+                    'modification_date', 'language')
     list_filter = ('status', 'language', 'slug')
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
@@ -47,8 +47,11 @@ class PageAdmin(PlaceholderFieldAdmin):
         base_urls = super(PageAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.module_name
         urlpatterns = patterns('',
-            url(r'^(?P<pk>\d+)/preview/$', self.admin_site.admin_view(self.preview_canvas), name="{0}_{1}_preview".format(*info)),
-        )
+                               url(r'^(?P<pk>\d+)/preview/$',
+                                   self.admin_site.admin_view(
+                                       self.preview_canvas),
+                                   name="{0}_{1}_preview".format(*info)),
+                               )
 
         return urlpatterns + base_urls
 
@@ -93,12 +96,15 @@ class PageAdmin(PlaceholderFieldAdmin):
 
         return all_objects
 
-    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+    def render_change_form(self, request, context, add=False, change=False,
+                           form_url='', obj=None):
         info = self.model._meta.app_label, self.model._meta.module_name
         context.update({
-            'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info), kwargs={'pk': obj.pk if obj else 0}),
+            'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info),
+                                          kwargs={'pk': obj.pk if obj else 0}),
         })
-        return super(PageAdmin, self).render_change_form(request, context, add, change, form_url, obj)
+        return super(PageAdmin, self).render_change_form(request, context, add,
+                                                         change, form_url, obj)
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
@@ -118,10 +124,12 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     def status_column(self, page):
         status = page.status
-        title = [rec[1] for rec in page.PageStatus.choices if rec[0] == status].pop()
+        title = [rec[1] for rec in page.PageStatus.choices if
+                 rec[0] == status].pop()
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
-        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(admin=admin, icon=icon, title=title)
+        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(
+            admin=admin, icon=icon, title=title)
 
     status_column.allow_tags = True
     status_column.short_description = _('Status')
@@ -132,9 +140,11 @@ class PageAdmin(PlaceholderFieldAdmin):
         if rows_updated == 1:
             message = "1 entry was marked as published."
         else:
-            message = "{0} entries were marked as published.".format(rows_updated)
+            message = "{0} entries were marked as published.".format(
+                rows_updated)
         self.message_user(request, message)
 
     make_published.short_description = _("Mark selected entries as published")
+
 
 admin.site.register(Page, PageAdmin)

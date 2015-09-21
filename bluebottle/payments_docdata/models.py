@@ -1,48 +1,60 @@
-from decimal import Decimal as D, Decimal
+from decimal import Decimal
+
 from django.conf import settings
-from django.utils.translation import ugettext as _
 from django.db import models
-from django.db.models.signals import pre_save, post_save, post_delete
-from django_countries.fields import CountryField
+from django.utils.translation import ugettext as _
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, Transaction
-from bluebottle.payments_logger.models import PaymentLogEntry
 
 
 class AbstractDocdataPayment(Payment):
     """ Abstract Docdata  payment class."""
+
     class Meta(Payment.Meta):
         abstract = True
         ordering = ('-created', '-updated')
 
-    merchant_order_id = models.CharField(_("Order ID"), max_length=100, default='')
+    merchant_order_id = models.CharField(_("Order ID"), max_length=100,
+                                         default='')
 
-    payment_cluster_id = models.CharField(_("Payment cluster id"), max_length=200, default='', unique=True)
-    payment_cluster_key = models.CharField(_("Payment cluster key"), max_length=200, default='', unique=True)
+    payment_cluster_id = models.CharField(_("Payment cluster id"),
+                                          max_length=200, default='',
+                                          unique=True)
+    payment_cluster_key = models.CharField(_("Payment cluster key"),
+                                           max_length=200, default='',
+                                           unique=True)
 
-    language = models.CharField(_("Language"), max_length=5, blank=True, default='en')
+    language = models.CharField(_("Language"), max_length=5, blank=True,
+                                default='en')
 
-    ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100, default='')
+    ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100,
+                                       default='')
     default_pm = models.CharField(_("Default Payment Method"), max_length=100)
 
     # Track sent information
     total_gross_amount = models.IntegerField(_("Total gross amount"))
     currency = models.CharField(_("Currency"), max_length=10)
-    country = models.CharField(_("Country_code"), max_length=2, null=True, blank=True)
+    country = models.CharField(_("Country_code"), max_length=2, null=True,
+                               blank=True)
 
     # Track received information
     total_registered = models.IntegerField(_("Total registered"), default=0)
-    total_shopper_pending = models.IntegerField(_("Total shopper pending"), default=0)
-    total_acquirer_pending = models.IntegerField(_("Total acquirer pending"), default=0)
-    total_acquirer_approved = models.IntegerField(_("Total acquirer approved"), default=0)
+    total_shopper_pending = models.IntegerField(_("Total shopper pending"),
+                                                default=0)
+    total_acquirer_pending = models.IntegerField(_("Total acquirer pending"),
+                                                 default=0)
+    total_acquirer_approved = models.IntegerField(_("Total acquirer approved"),
+                                                  default=0)
     total_captured = models.IntegerField(_("Total captured"), default=0)
     total_refunded = models.IntegerField(_("Total refunded"), default=0)
     total_charged_back = models.IntegerField(_("Total charged back"), default=0)
 
     # Track received information
-    # Additional fields from the existing Docdata data. This data comes from the existing DocDataPaymentOrder model that is migrated.
-    customer_id = models.PositiveIntegerField(default=0)  # Defaults to 0 for anonymous.
+    # Additional fields from the existing Docdata data. This data comes
+    # from the existing DocDataPaymentOrder model that is migrated.
+    customer_id = models.PositiveIntegerField(
+        default=0)  # Defaults to 0 for anonymous.
     email = models.EmailField(max_length=254, default='')
     first_name = models.CharField(max_length=200, default='')
     last_name = models.CharField(max_length=200, default='')
@@ -92,6 +104,7 @@ class DocdataPayment(AbstractDocdataPayment):
 
     This class is used to store all payments except direct debit.
     """
+
     class Meta(AbstractDocdataPayment.Meta):
         verbose_name = _("Docdata Payment")
         verbose_name_plural = _("Docdata Payments")
@@ -102,6 +115,7 @@ class DocdataDirectdebitPayment(AbstractDocdataPayment):
 
     Used to store all direct debit payments.
     """
+
     class Meta(AbstractDocdataPayment.Meta):
         verbose_name = _("Docdata Direct Debit Payment")
         verbose_name_plural = _("Docdata Direct Debit Payments")
@@ -132,17 +146,19 @@ class DocdataTransaction(Transaction):
     # This is the payment method id from DocData (e.g. IDEAL, MASTERCARD, etc)
     payment_method = models.CharField(max_length=60, default='', blank=True)
 
-    authorization_status = models.CharField(max_length=60, default='', blank=True)
+    authorization_status = models.CharField(max_length=60, default='',
+                                            blank=True)
     authorization_amount = models.IntegerField(_("Amount in cents"), null=True)
-    authorization_currency = models.CharField(max_length=10, default='', blank=True)
+    authorization_currency = models.CharField(max_length=10, default='',
+                                              blank=True)
 
     capture_status = models.CharField(max_length=60, default='', blank=True)
     capture_amount = models.IntegerField(_("Amount in cents"), null=True)
-    chargeback_amount = models.IntegerField(_("Charge back amount in cents"), null=True)
+    chargeback_amount = models.IntegerField(_("Charge back amount in cents"),
+                                            null=True)
     refund_amount = models.IntegerField(_("Refund amount in cents"), null=True)
     capture_currency = models.CharField(max_length=10, default='', null=True)
     raw_response = models.TextField(blank=True)
 
     def __unicode__(self):
         return self.id
-

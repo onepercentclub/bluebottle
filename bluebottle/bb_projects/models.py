@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
@@ -272,6 +274,7 @@ class BaseProject(models.Model, GetTweetMixin):
     def people_registered(self):
         counts = self.task_set.filter(
             status='open',
+            deadline__gt=datetime.now(),
             members__status__in=['accepted', 'realized']
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
@@ -280,7 +283,10 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_requested(self):
-        return self.task_set.filter(status='open').aggregate(total=Sum('people_needed'))['total']
+        return self.task_set.filter(
+            status='open',
+            deadline__gt=datetime.now(),
+        ).aggregate(total=Sum('people_needed'))['total']
 
     _initial_status = None
 

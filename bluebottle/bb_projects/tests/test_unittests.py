@@ -1,3 +1,5 @@
+import datetime
+
 from django.utils import timezone
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
@@ -111,6 +113,12 @@ class TestProjectPeopleCount(BluebottleTestCase):
 
         self.assertEqual(self.project.people_requested, 10)
 
+    def test_people_requested_expired(self):
+        self.task.deadline = timezone.now() - timezone.timedelta(days=1)
+        self.task.save()
+
+        self.assertEqual(self.project.people_requested, 10)
+
     def test_people_requested_realized_task(self):
         self.task.status = 'realized'
         self.task.save()
@@ -135,6 +143,15 @@ class TestProjectPeopleCount(BluebottleTestCase):
 
     def test_people_registered_closed_task(self):
         self.task.status = 'closed'
+        self.task.save()
+
+        TaskMemberFactory.create(member=self.user,
+                                 task=self.task)
+
+        self.assertEqual(self.project.people_registered, 0)
+
+    def test_people_registered_expired_task(self):
+        self.task.deadline = timezone.now() - timezone.timedelta(days=1)
         self.task.save()
 
         TaskMemberFactory.create(member=self.user,

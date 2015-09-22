@@ -127,9 +127,9 @@ class MetaTestCase(BluebottleTestCase):
             sort_order=3
         )
 
-        # Imgur
+        # Flickr
         self.imgur = OEmbedItem.objects.create(
-            embed_url='http://imgur.com/gallery/CXLgSVc',
+            embed_url='https://www.flickr.com/photos/caterina/88/',
             parent=self.object,
             placeholder=self.ph,
             sort_order=4

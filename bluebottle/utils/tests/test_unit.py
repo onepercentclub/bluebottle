@@ -127,6 +127,14 @@ class MetaTestCase(BluebottleTestCase):
             sort_order=3
         )
 
+        # Imgur
+        self.imgur = OEmbedItem.objects.create(
+            embed_url='http://i.imgur.com/ZtRTS9h.jpg',
+            parent=self.object,
+            placeholder=self.ph,
+            sort_order=4
+        )
+
         # Add tags...
         tags = ['Tag 1', 'Tag 2']
         self.object.tags.add(*tags)
@@ -141,7 +149,7 @@ class MetaTestCase(BluebottleTestCase):
         items = self.object.contents.get_content_items()
 
         self.assertEqual(len(
-            items), 3,
+            items), 4,
             'Error in the setUp function: not all items arecorrectly created.')
 
     def test_return_metadata(self):

@@ -458,3 +458,27 @@ SEND_MAIL = True
 IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
 
 CLOSED_SITE = False
+
+SOCIAL_AUTH_PIPELINE = (
+    'bluebottle.auth.utils.user_from_request',
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    'social.pipeline.social_auth.associate_by_email',
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details',
+    'bluebottle.auth.utils.set_language',
+    'bluebottle.auth.utils.save_profile_picture',
+    'bluebottle.auth.utils.get_extra_facebook_data',
+    'bluebottle.auth.utils.send_welcome_mail_pipe'
+)
+
+AUTHENTICATION_BACKENDS = (
+    'bluebottle.social.backends.NoStateFacebookOAuth2',
+    'social.backends.facebook.FacebookAppOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)

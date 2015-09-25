@@ -28,7 +28,6 @@ class AccessTokenView(APIView):
 
         try:
             store_token(request, backend)
-
             social_auth = request.user.social_auth.get(provider=backend)
 
             if not self._check(social_auth, backend):

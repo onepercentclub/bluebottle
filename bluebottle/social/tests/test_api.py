@@ -29,6 +29,11 @@ def facebook_me_mock(url, request):
     return json.dumps({'firstname': 'bla', 'lastname': 'bla'})
 
 
+@httmock.urlmatch(netloc='graph.facebook.com', path='/me/permissions')
+def facebook_me_permissions_mock(url, request):
+    return json.dumps({"data": [{"permission": "publish_actions", "status": "granted"}]})
+
+
 class SocialTokenAPITestCase(BluebottleTestCase):
     """
     Test the social authorization token api endpoint
@@ -48,7 +53,8 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                     'social.apps.django_app.utils.BACKENDS',
                     ['bluebottle.social.backends.NoStateFacebookOAuth2']):
                 with httmock.HTTMock(facebook_access_token_mock,
-                                     facebook_me_mock):
+                                     facebook_me_mock,
+                                     facebook_me_permissions_mock):
                     response = self.client.post(self.token_url,
                                                 {'code': 'test-code'},
                                                 token=self.user_token)

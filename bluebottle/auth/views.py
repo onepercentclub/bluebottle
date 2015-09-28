@@ -52,17 +52,10 @@ def load_drf_strategy(request=None):
 @psa(redirect_uri='/static/assets/frontend/popup.html',
      load_strategy=load_drf_strategy)
 def complete(request, backend):
-    token = request.POST.get('access_token')
-    if token:
-        try:
-            user = request.backend.do_auth(token)
-        except AuthCanceled:
-            return None
-    else:
-        try:
-            user = request.backend.auth_complete()
-        except AuthCanceled:
-            return None
+    try:
+        user = request.backend.auth_complete()
+    except AuthCanceled:
+        return None
 
     if user and user.is_active:
         user.last_login = datetime.now()

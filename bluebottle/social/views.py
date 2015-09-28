@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from social.exceptions import AuthAlreadyAssociated, AuthCanceled, AuthMissingParameter
+from social.exceptions import (AuthAlreadyAssociated, AuthCanceled,
+                               AuthMissingParameter, AuthException)
 from social.apps.django_app.utils import psa, get_strategy, STORAGE
 
 
@@ -37,7 +38,7 @@ class AccessTokenView(APIView):
                 )
 
             return Response({}, status=status.HTTP_201_CREATED)
-        except (AuthCanceled, AuthMissingParameter), e:
+        except (AuthCanceled, AuthMissingParameter, AuthException), e:
             return Response(
                 {'error': 'Authentication process canceled: {}'.format(e)},
                 status=status.HTTP_400_BAD_REQUEST,

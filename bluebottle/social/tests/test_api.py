@@ -16,7 +16,12 @@ def facebook_me_mock(url, request):
 
 @httmock.urlmatch(netloc='graph.facebook.com', path='/me/permissions')
 def facebook_me_permissions_mock(url, request):
-    return json.dumps({"data": [{"permission": "publish_actions", "status": "granted"}]})
+    print request.headers['authorization']
+    if request.headers['authorization'] == 'Bearer test_token':
+        return json.dumps({"data": [{"permission": "publish_actions", "status": "granted"}]})
+    else:
+        content = json.dumps({'error': 'invalid token'})
+        return {'content': content, 'status_code': 401}
 
 
 def load_signed_request_mock(self, signed_request):
@@ -110,6 +115,31 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                         },
                         token=self.user_token)
                     self.assertEqual(response.status_code, 400)
+
+    @mock.patch(
+        'social.apps.django_app.utils.BACKENDS',
+        ['bluebottle.social.backends.NoStateFacebookOAuth2']
+    )
+    @mock.patch(
+        'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
+        load_signed_request_mock
+    )
+    def test_token_invalid_token(self):
+        with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-secret'):
+            with mock.patch(
+                    'social.apps.django_app.utils.BACKENDS',
+                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
+                with httmock.HTTMock(facebook_me_mock, facebook_me_permissions_mock):
+                    response = self.client.post(
+                        self.token_url,
+                        {
+                            'signed_request': 'test-signed-request',
+                            'access_token': 'invalid-token'
+                        },
+                        token=self.user_token)
+                    self.assertEqual(response.status_code, 404)
+
+
 
     @mock.patch(
         'social.apps.django_app.utils.BACKENDS',

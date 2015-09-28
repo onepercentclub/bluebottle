@@ -32,7 +32,6 @@ class AccessTokenView(APIView):
             social_auth = request.user.social_auth.get(provider=backend)
 
             if not self._check(social_auth, backend):
-                import ipdb;ipdb.set_trace()
                 return Response(
                     {'error': 'Insufficient permissions'},
                     status=status.HTTP_404_NOT_FOUND

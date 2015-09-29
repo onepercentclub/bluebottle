@@ -13,7 +13,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import parsers, renderers
-from social.apps.django_app.utils import strategy
+
+from social.apps.django_app.utils import psa, get_strategy, STORAGE
+from social.exceptions import AuthCanceled
 
 # from social_auth.decorators import
 from datetime import datetime
@@ -32,7 +34,7 @@ class GetAuthToken(APIView):
     def post(self, request, backend):
         # Here we call PSA to authenticate like we would if we used PSA on
         # server side.
-        token_result = register_by_access_token(request, backend)
+        token_result = complete(request, backend)
 
         # If user is active we get or create the REST token and send it back
         # with user data
@@ -43,24 +45,27 @@ class GetAuthToken(APIView):
         return Response({'error': _('No result for token')})
 
 
-@strategy()
-def register_by_access_token(request, backend):
-    backend = request.strategy.backend
+def load_drf_strategy(request=None):
+    return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
 
-    access_token = request.DATA.get('accessToken', None)
 
-    if access_token:
-        user = backend.do_auth(access_token)
-        if user and user.is_active:
-            user.last_login = datetime.now()
-            user.save()
-            return {'token': user.get_jwt_token()}
-        elif user and not user.is_active:
-            return {'error': _(
-                "This user account is disabled, please contact us if you want to re-activate.")}
-        else:
-            return None
-    return None
+@psa(redirect_uri='/static/assets/frontend/popup.html',
+     load_strategy=load_drf_strategy)
+def complete(request, backend):
+    try:
+        user = request.backend.auth_complete()
+    except AuthCanceled:
+        return None
+
+    if user and user.is_active:
+        user.last_login = datetime.now()
+        user.save()
+        return {'token': user.get_jwt_token()}
+    elif user and not user.is_active:
+        return {'error': _(
+            "This user account is disabled, please contact us if you want to re-activate.")}
+    else:
+        return None
 
 
 @csrf_protect

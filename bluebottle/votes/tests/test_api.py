@@ -1,5 +1,6 @@
 import json
 
+
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.utils import BluebottleTestCase

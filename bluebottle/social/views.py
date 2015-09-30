@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
+from requests import HTTPError
 from social.exceptions import (AuthAlreadyAssociated, AuthCanceled,
                                AuthMissingParameter, AuthException)
 from social.apps.django_app.utils import psa, get_strategy, STORAGE
@@ -38,7 +39,7 @@ class AccessTokenView(APIView):
                 )
 
             return Response({}, status=status.HTTP_201_CREATED)
-        except (AuthCanceled, AuthMissingParameter, AuthException), e:
+        except (AuthCanceled, AuthMissingParameter, AuthException, HTTPError), e:
             return Response(
                 {'error': 'Authentication process canceled: {}'.format(e)},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -68,11 +69,12 @@ class AccessTokenView(APIView):
         return False
 
     def get(self, request, backend):
-        social_auth = request.user.social_auth.get(provider=backend)
-
-        if social_auth:
+        try:
+            social_auth = request.user.social_auth.get(provider=backend)
             if self._check(social_auth, backend):
                 return Response({}, status=status.HTTP_201_CREATED)
+        except request.user.social_auth.model.DoesNotExist:
+            pass
 
         return Response(
             {'error': 'No valid accesstoken found'},

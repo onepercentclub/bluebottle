@@ -4,6 +4,7 @@ from south.v2 import DataMigration
 
 
 class Migration(DataMigration):
+    depends_on = (('social.apps.django_app.default', '0001_initial'), )
 
     def forwards(self, orm):
         "Remove all UserAuth objects that have no extra data."

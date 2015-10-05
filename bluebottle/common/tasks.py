@@ -10,7 +10,7 @@ from urlparse import urljoin
 from celery import shared_task
 from sorl.thumbnail.shortcuts import get_thumbnail
 
-from bluebottle.clients.utils import LocalTenant
+from bluebottle.clients.utils import LocalTenant, tenant_url
 from bluebottle.wallposts.models import MediaWallpost
 
 logger = logging.getLogger()
@@ -142,9 +142,10 @@ def _post_to_facebook(instance, tenant=None):
         data = {
             'link': link,
             'name': instance.content_object.title,
-            'caption': instance.content_object.pitch,
-            'description': instance.text,
-            'picture': image
+            'description': instance.content_object.pitch,
+            'message': instance.text,
+            'picture': image,
+            'caption': tenant_url()
         }
 
         # TODO: log failed requests

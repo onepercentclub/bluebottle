@@ -18,4 +18,8 @@ def post_to_facebook(sender, instance, created, **kwargs):
         tenant = None
 
     if created and instance.share_with_facebook:
-        _post_to_facebook.delay(instance, tenant=tenant)
+        _post_to_facebook.apply_async(
+            args=[instance],
+            kwargs={'tenant': tenant},
+            countdown=5
+        )

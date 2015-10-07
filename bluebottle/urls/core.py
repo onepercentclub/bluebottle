@@ -96,6 +96,10 @@ urlpatterns = patterns('',
                        url(r'^api/token-auth/',
                            'rest_framework_jwt.views.obtain_jwt_token'),
 
+                       # Social token authorization
+                       url(r'^api/social/',
+                           include('bluebottle.social.urls.api')),
+
                        url(r'token/', include('token_auth.urls')),
 
                        )

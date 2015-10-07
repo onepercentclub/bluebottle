@@ -49,3 +49,7 @@ class TestCeleryMail(BluebottleTestCase):
                                      body=s,
                                      to=['test@testing.com'])
         _send_celery_mail(msg)
+
+
+class TestFacebookWallpost(BluebottleTestCase):
+    pass

@@ -56,6 +56,10 @@ class ProjectManager(models.Manager):
         if theme:
             qs = qs.filter(theme_id=theme)
 
+        money_needed = query.get('money_needed', None)
+        if money_needed:
+            qs = qs.filter(amount_needed__gt=0)
+
         text = query.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |

@@ -90,50 +90,6 @@ class ProjectPhase(models.Model):
         super(ProjectPhase, self).save(*args, **kwargs)
 
 
-class BaseProjectManager(models.Manager):
-
-    def search(self, query):
-        qs = super(BaseProjectManager, self).get_query_set()
-
-        # Apply filters
-        status = query.getlist(u'status[]', None)
-        if status:
-            qs = qs.filter(status_id__in=status)
-        else:
-            status = query.get('status', None)
-            if status:
-                qs = qs.filter(status_id=status)
-
-        country = query.get('country', None)
-        if country:
-            qs = qs.filter(country=country)
-
-        theme = query.get('theme', None)
-        if theme:
-            qs = qs.filter(theme_id=theme)
-
-        text = query.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(pitch__icontains=text) |
-                           Q(description__icontains=text))
-
-        return self._ordering(query.get('ordering', None), qs)
-
-    def _ordering(self, ordering, queryset):
-
-        if ordering == 'deadline':
-            qs = queryset.order_by('deadline')
-        elif ordering == 'newest':
-            qs = queryset.order_by('-created')
-        elif ordering:
-            qs = queryset.order_by(ordering)
-        else:
-            qs = queryset
-
-        return qs
-
-
 class BaseProjectDocument(models.Model):
 
     """ Document for an Project """
@@ -289,8 +245,6 @@ class BaseProject(models.Model, GetTweetMixin):
         ).aggregate(total=Sum('people_needed'))['total']
 
     _initial_status = None
-
-    objects = BaseProjectManager()
 
     class Meta:
         abstract = True

@@ -187,6 +187,9 @@ def email_followers(sender, instance, created, **kwargs):
     """
     from bluebottle.wallposts.models import Wallpost, SystemWallpost
 
+    if not created:
+        return
+
     if isinstance(instance, Wallpost) and not isinstance(instance,
                                                          SystemWallpost):
         if instance.email_followers:

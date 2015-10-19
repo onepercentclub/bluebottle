@@ -12,7 +12,7 @@ class HomePage(object):
     Slide, Quote and Stats into a dummy object
     """
     def get(self, language):
-        self.id = 1
+        self.id = language
         self.quotes = Quote.objects.published().filter(language=language)
         self.slides = Slide.objects.published().filter(language=language)
         self.stats = Statistics()

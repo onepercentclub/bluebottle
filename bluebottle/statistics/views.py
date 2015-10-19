@@ -34,6 +34,10 @@ class Statistics(object):
             cache.set(tenant_key, None, 0)
 
     @property
+    def id(self):
+        return 1
+
+    @property
     def people_involved(self):
         from bluebottle.tasks.models import TaskMember, Task
         from bluebottle.orders.models import Order

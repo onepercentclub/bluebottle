@@ -1,3 +1,4 @@
+from django.http import Http404
 from rest_framework.generics import (ListAPIView, RetrieveAPIView,
                                      ListCreateAPIView)
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +22,10 @@ class TermsDetailView(RetrieveAPIView):
 
 class CurrentTermsDetailView(TermsDetailView):
     def get_object(self, queryset=None):
-        return Terms.get_current()
+        terms = Terms.get_current()
+        if terms:
+            return terms
+        raise Http404
 
 
 class TermsAgreementListView(ListCreateAPIView):

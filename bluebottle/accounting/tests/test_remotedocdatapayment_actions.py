@@ -21,6 +21,7 @@ from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFacto
 
 
 from bluebottle.utils.utils import StatusDefinition
+from ..forms import update_remote_docdata_status
 from ..models import RemoteDocdataPayment
 
 
@@ -131,6 +132,8 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
                 amount_collected=amount_collected
             )
             self.rdp_list.append(rdp)
+            update_remote_docdata_status(rdp)
+            rdp.save()
         for payment_type in ('chargedback', 'refund'):
             i = i + 1
             rdp = RemoteDocdataPaymentFactory.create(
@@ -141,6 +144,8 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
                 amount_collected=-Decimal(15)
             )
             self.rdp_list.append(rdp)
+            update_remote_docdata_status(rdp)
+            rdp.save()
 
         self.assertEqual(RemoteDocdataPayment.objects.count(), 7)
 

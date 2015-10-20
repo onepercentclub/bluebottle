@@ -294,15 +294,19 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
         Exclude RDP's that only have payouts that are new and unprotected, as
         these will automatically be updated by re-calculating the payout.
         """
+
+        # find RDP's that have project payouts and a 'bad' status
         queryset = RemoteDocdataPayment.objects.filter(
             status=RemoteDocdataPayment.IntegrityStatus.InconsistentChargeback,
-        ).exclude(
-            local_payment__order_payment__order__donations__project__projectpayout=None
+            local_payment__order_payment__order__donations__project__projectpayout__isnull=False
         )
 
         payout_ids = list(queryset.values_list(
             'local_payment__order_payment__order__donations__project__projectpayout', flat=True
         ).distinct())
+
+        if not payout_ids:
+            messages.warn(_('There were no payouts for this payment - aborting.'))
 
         ProjectPayout = get_project_payout_model()
         payouts_to_ignore = list(ProjectPayout.objects.filter(id__in=payout_ids).exclude(

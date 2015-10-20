@@ -54,7 +54,7 @@ class InitProjectDataMixin(object):
         Set up some basic models needed for project creation.
         """
         management.call_command('loaddata', 'project_data.json', verbosity=0)
-        
+
         Language.objects.all().delete()
 
         language_data = [{'code': 'en', 'language_name': 'English', 'native_name': 'English'},
@@ -73,7 +73,7 @@ class ApiClient(RestAPIClient):
 
     def __init__(self, tenant, enforce_csrf_checks=False, **defaults):
         super(ApiClient, self).__init__(enforce_csrf_checks, **defaults)
-        
+
         self.tenant = tenant
 
         self.renderer_classes = {}
@@ -108,7 +108,7 @@ class ApiClient(RestAPIClient):
 
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
- 
+
         return super(ApiClient, self).put(
             path, data=data, format=format, content_type=content_type, **extra)
 
@@ -119,7 +119,7 @@ class ApiClient(RestAPIClient):
 
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
-                
+
         return super(ApiClient, self).patch(
             path, data=data, format=format, content_type=content_type, **extra)
 
@@ -145,7 +145,7 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
         # create a tenant
         tenant_domain = 'testserver'
         cls.tenant = get_tenant_model()(
-            domain_url=tenant_domain, 
+            domain_url=tenant_domain,
             schema_name='test',
             client_name='test')
 

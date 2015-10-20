@@ -198,7 +198,7 @@ class RemoteDocdataPayment(models.Model):
             ).exclude(
                 # left join, so orders with no projectpayouts do return something
                 # we only want to find the donations that have processed payouts attached to them
-                project__projectpayout=None
+                project__projectpayout__isnull=True
             )
             self._has_problematic_payouts = paid_out_donations.exists()
         return self._has_problematic_payouts

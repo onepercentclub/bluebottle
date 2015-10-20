@@ -155,6 +155,28 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['email'][0], 'This field is required.')
 
+    def test_duplicate_user_create(self):
+        """
+        Test creating a user when a user already exists with the same email.
+        """
+        user_1 = BlueBottleUserFactory.create(email='nijntje27@hetkonijntje.nl')
+        user_1.save()
+
+        # Create a user.
+        new_user_email = 'nijntje27@hetkonijntje.nl'
+        new_user_password = 'testing'
+        response = self.client.post(self.user_create_api_url,
+                                    {'email': new_user_email,
+                                     'password': new_user_password})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+                         response.data)
+
+        self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
+        self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
+        self.assertEqual(response.data['non_field_errors'][0]['id'], user_1.pk)
+        self.assertEqual(response.data['email'][0], 'Sign up with this Email address already exists.')
+
     def test_generate_username(self):
         new_user_email = 'nijntje74@hetkonijntje.nl'
         first_name = 'Nijntje'

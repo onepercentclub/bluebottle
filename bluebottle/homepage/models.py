@@ -1,6 +1,6 @@
 from bluebottle.quotes.models import Quote
 from bluebottle.slides.models import Slide
-from bluebottle.statistics.views import Statistics
+from bluebottle.statistics.statistics import Statistics
 from bluebottle.utils.model_dispatcher import get_project_model
 
 PROJECT_MODEL = get_project_model()

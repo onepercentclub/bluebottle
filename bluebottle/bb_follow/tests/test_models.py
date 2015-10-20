@@ -415,3 +415,90 @@ class FollowTests(BluebottleTestCase):
             if "New wallpost on" in email.subject:
                 mail_count += 1
         self.assertEqual(mail_count, 0)
+
+    def test_wallpost_delete_mail_project(self):
+        """ Test that the relevant people don't get an email when the
+            email_followers option is selected for a project 
+            during wallpost create but is then deleted."""
+
+        # On a project page, task owners, fundraisers, and people who donated,  get a mail.
+
+        # Create a follower by being a task owner
+        task_owner1 = BlueBottleUserFactory.create()
+
+        task = TaskFactory.create(
+            author=task_owner1,
+            project=self.project
+        )
+
+        # Add extra project and owner that should not get any email
+        project_owner = BlueBottleUserFactory.create()
+        project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+
+        # iLeaving a wallpost should not create a follower
+        commenter = BlueBottleUserFactory.create()
+        some_wallpost = TextWallpostFactory.create(content_object=self.project,
+                                                   author=commenter,
+                                                   text="test1",
+                                                   email_followers=False)
+
+        # Create a follower by donating
+        donator1 = BlueBottleUserFactory.create()
+        order = OrderFactory.create(user=donator1,
+                                    status=StatusDefinition.CREATED)
+        donation = DonationFactory(order=order, amount=35,
+                                   project=self.project,
+                                   fundraiser=None)
+
+        # Create a follower by being a fundraiser for the project
+        fundraiser_person = BlueBottleUserFactory.create()
+        fundraiser = FundraiserFactory(project=self.project,
+                                       owner=fundraiser_person)
+
+        self.assertEqual(Follow.objects.count(), 3)
+
+        voter = BlueBottleUserFactory.create()
+        vote = VoteFactory(voter=voter, project=self.project)
+
+        self.assertEqual(Follow.objects.count(), 4)
+
+        # Project owner creates a wallpost and emails followers
+        some_wallpost_2 = TextWallpostFactory.create(
+            content_object=self.project, author=self.project.owner,
+            text="test2", email_followers=True)
+
+        mail_count = 0
+
+        # People who should get an email: self.some_user, voter, task_owner1,
+        # fundraiser_person, commenter, and donator1
+        receivers = [voter.email, task_owner1.email,
+                     fundraiser_person.email, donator1.email]
+        for email in mail.outbox:
+            if "New wallpost on" in email.subject:
+                mail_count += 1
+                self.assertTrue(email.to[0] in receivers)
+                receivers.remove(email.to[0])
+        self.assertEqual(mail_count, 4)
+        self.assertEqual(receivers, [])
+
+        # Setup for mail counting after wallpost delete
+        mail_count = 0
+        receivers = [voter.email, task_owner1.email,
+                     fundraiser_person.email, donator1.email]
+
+        # This time we can safely reset the email box to 0
+        mail.outbox = []
+
+        # Ember triggers a save to the record before the actual delete
+        # therefore we can't use the Django delete function. This won't
+        # trigger the email_follower signal to be fired again. To replicate
+        # the server behavior we can simply re-save the wallpost record. This
+        # will cause the signal to fire but with the "created" flag to False.
+        some_wallpost_2.save()
+
+        # Check that no emails about a new wallpost go out
+        for email in mail.outbox:
+            if "New wallpost on" in email.subject:
+                mail_count += 1
+                self.assertTrue(email.to[0] in receivers)
+        self.assertEqual(mail_count, 0)

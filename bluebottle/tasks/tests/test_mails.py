@@ -80,6 +80,11 @@ class TestTaskMails(BluebottleTestCase):
         """
         deadline_reached should send email
         """
+        self.task.status = "in progress"
+        from django.utils import timezone
+        from datetime import timedelta
+        self.task.deadline = timezone.now() - timedelta(days=1)
+        self.task.save()
         self.task.deadline_reached()
-        self.assertEquals(len(mail.outbox), 1)
+        self.assertEquals(len(mail.outbox), 2)
         self.failIf(mail.outbox[0].body.find("The deadline of your task") == -1)

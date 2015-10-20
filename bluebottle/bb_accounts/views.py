@@ -91,7 +91,7 @@ class UserCreate(generics.CreateAPIView):
 
                 # Return whether the conflict was with a user created via
                 # email or social auth
-                errors['conflict'] = {
+                conflict = {
                     'email': user.email,
                     'id': user.id
                 }
@@ -100,10 +100,15 @@ class UserCreate(generics.CreateAPIView):
                 # it
                 if user.social_auth.count() > 0:
                     social_auth = user.social_auth.all()[0]
-                    errors['conflict']['provider'] = social_auth.provider
-                    errors['conflict']['type'] = 'social'
+                    conflict['provider'] = social_auth.provider
+                    conflict['type'] = 'social'
                 else:
-                    errors['conflict']['type'] = 'email'
+                    conflict['type'] = 'email'
+
+                if errors.get('non_field_errors', None):
+                  errors['non_field_errors'].append(conflict)
+                else:
+                  errors['non_field_errors'] = [conflict]
 
         except USER_MODEL.DoesNotExist:
             pass

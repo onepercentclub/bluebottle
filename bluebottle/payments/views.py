@@ -34,10 +34,6 @@ class PaymentMethodList(APIView):
         return response
 
 
-class PaymentMethodDetail(RetrieveAPIView):
-    pass
-
-
 class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer

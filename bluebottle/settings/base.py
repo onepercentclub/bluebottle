@@ -141,6 +141,13 @@ JWT_AUTH = {
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
+SWAGGER_SETTINGS = {
+  'api_version': '1.1',
+  'resource_url_prefix': 'api/',
+  'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
+  'is_authenticated': True
+}
+
 SHARED_APPS = (
     'bluebottle.clients',
     # you must list the app where your tenant model resides in
@@ -256,7 +263,7 @@ TENANT_APPS = (
     'django_tools',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)
+INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'tenant_schemas',)
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"

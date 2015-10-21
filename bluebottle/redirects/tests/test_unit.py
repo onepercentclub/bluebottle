@@ -105,7 +105,7 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/project/foobar')
         self.assertRedirects(response,
                              '/en/projects',
-                             status_code=301, target_status_code=200)
+                             status_code=301, target_status_code=404)
 
         response = self.client.get('/project/foo/details')
         self.assertRedirects(response,

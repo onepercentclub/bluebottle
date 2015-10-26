@@ -57,8 +57,7 @@ urlpatterns = patterns(
         include('django.contrib.auth.urls', namespace='accounts')),
 
     # These URL's will be automatically prefixed with the locale (e.g. '/nl/')
-    url(r'^$', HomeView.as_view(), name='home'),
-    url(r'^.{2}/', HomeView.as_view(), name='home'),
+    url(r'^', HomeView.as_view(), name='home'),
 
 
 )

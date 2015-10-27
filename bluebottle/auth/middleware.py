@@ -165,5 +165,5 @@ class AdminOnlyCsrf(object):
     """
 
     def process_request(self, request):
-        if not (request.path.startswith(ADMINBASE) or request.path.startswith(DOCSBASE)):
+        if not (request.path.startswith(ADMINBASE) or not request.path.startswith(DOCSBASE)):
             setattr(request, '_dont_enforce_csrf_checks', True)

@@ -11,8 +11,12 @@ from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
-DOCSBASE = reverse('django.swagger.base.view')
-ADMINBASE = reverse('admin:index')
+
+def isAdminRequest(request):
+    admin_base = reverse('admin:index')
+    docs_base = reverse('django.swagger.base.view')
+
+    return request.path.startswith(admin_base) or request.path.startswith(docs_base)
 
 
 class UserJwtTokenMiddleware:
@@ -132,13 +136,13 @@ class AdminOnlySessionMiddleware(SessionMiddleware):
     """
 
     def process_request(self, request):
-        if request.path.startswith(ADMINBASE) or request.path.startswith(DOCSBASE):
+        if isAdminRequest(request):
             super(AdminOnlySessionMiddleware, self).process_request(request)
         else:
             return
 
     def process_response(self, request, response):
-        if request.path.startswith(ADMINBASE) or request.path.startswith(DOCSBASE):
+        if isAdminRequest(request):
             return super(AdminOnlySessionMiddleware, self).process_response(
                 request, response)
         else:
@@ -153,7 +157,7 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
     """
 
     def process_request(self, request):
-        if request.path.startswith(ADMINBASE) or request.path.startswith(DOCSBASE):
+        if isAdminRequest(request):
             super(AdminOnlyAuthenticationMiddleware, self).process_request(
                 request)
 
@@ -165,5 +169,5 @@ class AdminOnlyCsrf(object):
     """
 
     def process_request(self, request):
-        if not (request.path.startswith(ADMINBASE) or not request.path.startswith(DOCSBASE)):
+        if not isAdminRequest(request):
             setattr(request, '_dont_enforce_csrf_checks', True)

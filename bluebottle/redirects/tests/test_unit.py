@@ -27,7 +27,7 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/initial')
         self.assertRedirects(response,
                              '/en/new_target', status_code=301,
-                             target_status_code=404)
+                             target_status_code=200)
 
     @override_settings(APPEND_SLASH=True)
     def test_redirect_with_append_slash(self):
@@ -36,7 +36,7 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/initial')
         self.assertRedirects(response,
                              '/en/new_target/', status_code=301,
-                             target_status_code=404)
+                             target_status_code=200)
 
     @override_settings(APPEND_SLASH=True)
     def test_redirect_with_append_slash_and_query_string(self):
@@ -45,7 +45,7 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/initial?foo')
         self.assertRedirects(response,
                              '/en/new_target/', status_code=301,
-                             target_status_code=404)
+                             target_status_code=200)
 
     def test_regular_expression(self):
         Redirect.objects.create(
@@ -105,7 +105,7 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/project/foobar')
         self.assertRedirects(response,
                              '/en/projects',
-                             status_code=301, target_status_code=404)
+                             status_code=301, target_status_code=200)
 
         response = self.client.get('/project/foo/details')
         self.assertRedirects(response,

@@ -13,7 +13,9 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
     fundraiser = serializers.PrimaryKeyRelatedField(required=False)
     order = serializers.PrimaryKeyRelatedField()
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, max_value=1500000
+    )
     status = serializers.CharField(source='status', read_only=True)
 
     class Meta:

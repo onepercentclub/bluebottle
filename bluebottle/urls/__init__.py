@@ -16,5 +16,4 @@ from core import urlpatterns
 urlpatterns += i18n_patterns(
     '',
     url(r'^', include('bluebottle.urls.i18n_urls')),
-    url(r'^docs/', include('rest_framework_swagger.urls')),
 )

@@ -88,7 +88,7 @@ class LocaleMiddleware(object):
         return response
 
     def enable_middleware(self):
-        if ('django.middleware.locale.LocaleMiddleware'
+        if ('bluebottle.utils.middleware.LocaleMiddleware'
             in settings.MIDDLEWARE_CLASSES and
                 self.is_language_prefix_patterns_used()):
             return True

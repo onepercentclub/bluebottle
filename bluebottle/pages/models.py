@@ -12,7 +12,6 @@ from fluent_contents.rendering import render_placeholder
 
 from bluebottle.utils.serializers import MLStripper
 
-
 GROUP_PERMS = {
     'Staff': {
         'perms': (
@@ -21,17 +20,20 @@ GROUP_PERMS = {
     }
 }
 
+
 class Page(models.Model):
     """
     Slides for homepage.
     """
+
     class PageStatus(DjangoChoices):
         published = ChoiceItem('published', label=_('Published'))
         draft = ChoiceItem('draft', label=_('Draft'))
 
     title = models.CharField(_('Title'), max_length=200)
     slug = models.SlugField(_('Slug'), unique=False)
-    full_page = models.BooleanField(default=False, help_text=_('Show this page in full page width.'))
+    full_page = models.BooleanField(default=False, help_text=_(
+        'Show this page in full page width.'))
 
     # Contents
     language = models.CharField(
@@ -50,7 +52,8 @@ class Page(models.Model):
 
     # Metadata
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False, null=True)
+        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False,
+        null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

@@ -1,45 +1,43 @@
 from babel.dates import format_date
 from babel.numbers import format_currency
-from django.template.loader import get_template
-from celery import task
 
-from bluebottle.clients.context import ClientContext
-from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.clients.utils import tenant_url
+from django.utils import translation
+from django.utils.translation import ugettext_lazy as _
 
-@task
+from bluebottle.utils.email_backend import send_mail
+
+from tenant_extras.utils import TenantLanguage
+
+
 def mail_monthly_donation_processed_notification(monthly_order):
-    # TODO: Use English base and the regular translation mechanism.
+    cur_language = translation.get_language()
     receiver = monthly_order.user
+    with TenantLanguage(receiver.primary_language):
+        subject = _("Thank you for your monthly support")
 
-    context = ClientContext(
-                       {'order': monthly_order,
-                       'receiver_first_name': receiver.first_name.capitalize(),
-                       'date': format_date(locale='nl_NL'),
-                       'amount': format_currency(monthly_order.amount, 'EUR', locale='nl_NL'),
-                       'site': tenant_url()})
+    translation.activate(cur_language)
 
-    subject = "Bedankt voor je maandelijkse support"
-    text_content = get_template('monthly_donation.nl.mail.txt').render(context)
-    html_content = get_template('monthly_donation.nl.mail.html').render(context)
-    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
+    send_mail(
+        template_name='recurring_donations/mails/monthly_donation.mail',
+        subject=subject,
+        to=receiver,
+        order=monthly_order,
+        receiver_first_name=receiver.first_name.capitalize(),
+        link='/go/projects',
+        date=format_date(locale='nl_NL'),
+        amount=format_currency(monthly_order.amount, 'EUR', locale='nl_NL')
+    )
 
 
-@task
 def mail_project_funded_monthly_donor_notification(receiver, project):
-    # TODO: Use English base and the regular translation mechanism.
-    context = ClientContext(
-                      {'receiver_first_name': receiver.first_name.capitalize(),
-                       'project': project,
-                       'link': '/go/projects/{0}'.format(project.slug),
-                       'site': tenant_url()})
+    with TenantLanguage(receiver.primary_language):
+        subject = _("Congratulations: project completed!")
 
-    subject = "Gefeliciteerd: project afgerond!"
-    text_content = get_template('project_full_monthly_donor.nl.mail.txt').render(context)
-    html_content = get_template('project_full_monthly_donor.nl.mail.html').render(context)
-    msg = EmailMultiAlternatives(subject=subject, body=text_content, to=[receiver.email])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
-
+    send_mail(
+        template_name='recurring_donations/mails/project_full_monthly_donor.mail',
+        subject=subject,
+        receiver_first_name=receiver.first_name.capitalize(),
+        to=receiver,
+        project=project,
+        link='/go/projects/{0}'.format(project.slug)
+    )

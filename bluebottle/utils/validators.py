@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from localflavor.be.forms import BEPostalCodeField
 from localflavor.ca.forms import CAPostalCodeField
 from localflavor.de.forms import DEZipCodeField

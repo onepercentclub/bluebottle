@@ -1,35 +1,28 @@
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.utils.serializers import AddressSerializer, URLField
+from bluebottle.utils.model_dispatcher import get_organization_model, \
+    get_organizationmember_model
+from bluebottle.utils.serializers import URLField
 
-from .models import Organization, OrganizationDocument
-
-from bluebottle.bb_organizations.serializers import (OrganizationSerializer as BaseOrganizationSerializer,
-                                                     ManageOrganizationSerializer as BaseManageOrganizationSerializer)
-
-
-class OrganizationSerializer(BaseOrganizationSerializer):
-
-    class Meta(BaseOrganizationSerializer):
-        model = BaseOrganizationSerializer.Meta.model
-        fields = BaseOrganizationSerializer.Meta.fields
+ORGANIZATION_MODEL = get_organization_model()
+MEMBER_MODEL = get_organizationmember_model()
 
 
-class OrganizationDocumentSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ORGANIZATION_MODEL
+        fields = ('id', 'name', 'slug', 'address_line1', 'address_line2',
+                  'city', 'state', 'country', 'postal_code', 'phone_number',
+                  'website', 'email')
 
-    file = PrivateFileSerializer()
+
+class ManageOrganizationSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(required=False)
+    name = serializers.CharField(required=True)
+    website = URLField(required=False)
+    email = serializers.EmailField(required=False)
 
     class Meta:
-        model = OrganizationDocument
-        fields = ('id', 'organization', 'file')
-
-
-class ManageOrganizationSerializer(BaseManageOrganizationSerializer):
-
-    slug = serializers.SlugField(required=False)
-
-    class Meta(BaseManageOrganizationSerializer):
-        model = BaseManageOrganizationSerializer.Meta.model
-        fields = BaseManageOrganizationSerializer.Meta.fields
-        
+        model = ORGANIZATION_MODEL
+        fields = OrganizationSerializer.Meta.fields + ('partner_organizations',
+                                                       'created', 'updated')

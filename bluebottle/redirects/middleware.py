@@ -3,13 +3,12 @@ from __future__ import unicode_literals
 import urllib
 import re
 
-from django.conf import settings
-from django.contrib.sites.models import get_current_site
-from django.core.exceptions import ImproperlyConfigured
 from django import http
-from django.utils import translation
+from django.conf import settings
 from django.db import connection
+
 from bluebottle.redirects.models import Redirect
+from bluebottle.clients import properties
 
 
 class RedirectFallbackMiddleware(object):
@@ -19,37 +18,48 @@ class RedirectFallbackMiddleware(object):
 
     It is based on: http://djangosnippets.org/snippets/2784/
     """
-    def __init__(self):
-        if 'django.contrib.sites' not in settings.INSTALLED_APPS:
-            raise ImproperlyConfigured(
-                "You cannot use RedirectFallbackMiddleware when "
-                "django.contrib.sites is not installed."
-            )
 
     def process_response(self, request, response):
 
         if response.status_code != 404:
-            return response # No need to check for a redirect for non-404 responses.
-
+            # No need to check for a redirect for non-404 responses.
+            return response
 
         if connection.tenant.schema_name == 'public':
             # No tenant selected
             return response
 
         full_path = request.get_full_path()
-        current_site = get_current_site(request)
         http_host = request.META.get('HTTP_HOST', '')
-        
+
         if http_host:
             # Crappy workaround for localhost.
-            # Always default to https if not on local machine. This will hopefully fix Safari problems.
+            # Always default to https if not on local machine.
+            # This will hopefully fix Safari problems.
 
-            if http_host in ['testserver', 'localhost', 'localhost:8000', 'localhost:8081', '127.0.0.1:8000', '127.0.0.1'] or http_host.split(":", 1)[0].endswith("localhost"):
+            if http_host in ['testserver', 'localhost', 'localhost:8000',
+                             'localhost:8081',
+                             '127.0.0.1:8000', '127.0.0.1'] or \
+                    http_host.split(":", 1)[0].endswith("localhost"):
                 http_host = 'http://' + http_host
             else:
                 http_host = 'https://' + http_host
 
-        language = translation.get_language()
+        # Get the language that's active in the current thread if
+        # its also in our 'allowed' languages propertie in settings
+        # If there's no language, fallback to the LANGUAGE_CODE
+        from django.utils.translation.trans_real import _active
+
+        language = properties.LANGUAGE_CODE
+
+        t = getattr(_active, "value", None)
+        if t is not None:
+            try:
+                lan = t.to_language()
+                if [i[0] for i in properties.LANGUAGES if i[0] == lan]:
+                    language = lan
+            except AttributeError:
+                pass
 
         def redirect_target(new_path):
             if new_path.startswith("http:") or new_path.startswith("https:"):
@@ -62,35 +72,41 @@ class RedirectFallbackMiddleware(object):
             if redirect.old_path == full_path:
                 redirect.nr_times_visited += 1
                 redirect.save()
-                return http.HttpResponsePermanentRedirect(redirect_target(redirect.new_path))
+                return http.HttpResponsePermanentRedirect(
+                    redirect_target(redirect.new_path))
 
             if settings.APPEND_SLASH and not request.path.endswith('/'):
                 # Try appending a trailing slash.
                 path_len = len(request.path)
-                slashed_full_path = full_path[:path_len] + '/' + full_path[path_len:]
+                slashed_full_path = full_path[:path_len] + \
+                                    '/' + full_path[path_len:]
 
                 if redirect.old_path == slashed_full_path:
                     redirect.nr_times_visited += 1
                     redirect.save()
-                    return http.HttpResponsePermanentRedirect(redirect_target(redirect.new_path))
+                    return http.HttpResponsePermanentRedirect(
+                        redirect_target(redirect.new_path))
 
         # Attempt all regular expression redirects
-        reg_redirects = Redirect.objects.filter(regular_expression=True).order_by('fallback_redirect')
+        reg_redirects = Redirect.objects.filter(
+            regular_expression=True).order_by('fallback_redirect')
         for redirect in reg_redirects:
             try:
                 old_path = re.compile(redirect.old_path, re.IGNORECASE)
             except re.error:
-                # old_path does not compile into regex, ignore it and move on to the next one
+                # old_path does not compile into regex,
+                # ignore it and move on to the next one
                 continue
-                
+
             if re.match(redirect.old_path, full_path):
-                # Convert $1 into \1 (otherwise users would have to enter \1 via the admin 
-                # which would have to be escaped)
+                # Convert $1 into \1 (otherwise users would have
+                # to enter \1 via the admin which would have to be escaped)
                 new_path = redirect.new_path.replace('$', '\\')
                 replaced_path = re.sub(old_path, new_path, full_path)
                 redirect.nr_times_visited += 1
                 redirect.save()
-                return http.HttpResponsePermanentRedirect(redirect_target(replaced_path))
+                return http.HttpResponsePermanentRedirect(
+                    redirect_target(replaced_path))
 
         # No redirect was found. Return the response.
         return response
@@ -98,12 +114,15 @@ class RedirectFallbackMiddleware(object):
 
 class RedirectHashCompatMiddleware(object):
     """
-    Compatability middleware to make Safari 6 and Internet Explorer < 10 work with the hash after a redirect.
+    Compatability middleware to make Safari 6 and Internet Explorer < 10 work
+    with the hash after a redirect.
     """
+
     def process_response(self, request, response):
         if response.status_code in [301, 302]:
             if request.COOKIES.get('hash_compat'):
                 hash_part = urllib.unquote(request.COOKIES.get('hash_compat'))
-                if hash_part and hash_part.startswith('#') and '#' not in response['Location']:
+                if hash_part and hash_part.startswith('#') and '#' not in \
+                        response['Location']:
                     response['Location'] += hash_part
         return response

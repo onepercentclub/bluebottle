@@ -1,25 +1,29 @@
-from bluebottle.test.factory_models.donations import DonationFactory
 import unittest
-from bluebottle.test.utils import BluebottleTestCase
-from django.test import TestCase
+
 from django.core.urlresolvers import reverse
-from bluebottle.test.factory_models.payments import OrderPaymentFactory
+
 from bluebottle.payments.models import OrderPayment
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 
 
-@unittest.skip("The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
+@unittest.skip(
+    "The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
 class PaymentMockTests(BluebottleTestCase):
     """
     Tests for updating and order payment via mock PSP listener. The listener calls the service to fetch the
     appropriate adapter and update the OrderPayment status. It sets the status of the order payment to
     """
+
     def setUp(self):
         super(PaymentMockTests, self).setUp()
         self.init_projects()
 
-        self.order_payment = OrderPaymentFactory.create(status=StatusDefinition.CREATED, amount=100, payment_method='mock')
+        self.order_payment = OrderPaymentFactory.create(
+            status=StatusDefinition.CREATED, amount=100, payment_method='mock')
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
 
@@ -28,7 +32,8 @@ class PaymentMockTests(BluebottleTestCase):
         self.assertEqual(OrderPayment.objects.count(), 1)
 
         data = {'order_payment_id': self.order_payment.id, 'status': status}
-        response = self.client.post(reverse('payment-service-provider-status-update'), data)
+        response = self.client.post(
+            reverse('payment-service-provider-status-update'), data)
 
         self.assertEqual(response.status_code, 200)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
@@ -63,8 +68,10 @@ class PaymentMockTests(BluebottleTestCase):
         """ Test if the mapping resolves to 'unknown' if it tries to map a status that is not known to the mapper """
         self.assertEqual(self.order_payment.status, 'created')
 
-        data = {'order_payment_id': self.order_payment.id, 'status': 'very_obscure_unknown_status'}
-        response = self.client.post(reverse('payment-service-provider-status-update'), data)
+        data = {'order_payment_id': self.order_payment.id,
+                'status': 'very_obscure_unknown_status'}
+        response = self.client.post(
+            reverse('payment-service-provider-status-update'), data)
 
         self.assertEqual(response.status_code, 200)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
@@ -74,7 +81,8 @@ class PaymentMockTests(BluebottleTestCase):
         self.assertEqual(self.order_payment.status, 'created')
 
         data = {'order_payment_id': 5, 'status': 'very_obscure_unknown_status'}
-        response = self.client.post(reverse('payment-service-provider-status-update'), data)
+        response = self.client.post(
+            reverse('payment-service-provider-status-update'), data)
 
         self.assertEqual(response.status_code, 404)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)
@@ -82,11 +90,10 @@ class PaymentMockTests(BluebottleTestCase):
 
 
 class PaymentErrorTests(BluebottleTestCase):
-
     def setUp(self):
         super(PaymentErrorTests, self).setUp()
         self.init_projects()
-        
+
         self.donation1 = DonationFactory.create(amount=500)
         self.donation2 = DonationFactory.create(amount=700)
         self.donation3 = DonationFactory.create(amount=5)
@@ -110,10 +117,12 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, token=self.user1_token)
+        response = self.client.post(self.order_payment_url, data,
+                                    token=self.user1_token)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['payment_method'][0], u'This field is required.')
+        self.assertEqual(response.data['payment_method'][0],
+                         u'This field is required.')
 
     def test_illegal_first_name(self):
         data = {'order': self.donation1.order.id,
@@ -121,7 +130,8 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, token=self.user1_token)
+        response = self.client.post(self.order_payment_url, data,
+                                    token=self.user1_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:10], 'First name')
@@ -132,7 +142,8 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, token=self.user2_token)
+        response = self.client.post(self.order_payment_url, data,
+                                    token=self.user2_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:9], 'Last name')
@@ -146,7 +157,8 @@ class PaymentErrorTests(BluebottleTestCase):
                 'integration_data': {'issuerId': 'huey'}
                 }
 
-        response = self.client.post(self.order_payment_url, data, token=user3_token)
+        response = self.client.post(self.order_payment_url, data,
+                                    token=user3_token)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['detail'][0:6], 'Amount')

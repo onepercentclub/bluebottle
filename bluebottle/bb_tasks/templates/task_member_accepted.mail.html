@@ -2,16 +2,19 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title %}
+    {% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title %}
 
-Hi {{ receiver_name }},
-<br><br>
-Great news! The project initiatior, {{ sender_name }}, assigned the task <i>{{ task_title }}</i> to you.
-<br><br>
-Good luck taking on the task and feel free to keep everyone updated on the progress.
-{% endblocktrans %}
+        Hi {{ receiver_name }},
+        <br><br>
+        Great news! The project initiatior, {{ sender_name }}, assigned the task
+        <i>{{ task_title }}</i> to you.
+        <br><br>
+        Good luck taking on the task and feel free to keep everyone updated on
+        the progress.
+    {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{ site }}{{ link }}" class="action-email">{% trans 'View task' context 'email' %}</a>
+    <a href="{{ site }}{{ link }}"
+       class="action-email">{% trans 'View task' context 'email' %}</a>
 {% endblock %}

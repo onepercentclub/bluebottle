@@ -1,32 +1,44 @@
 import re
-from django.conf import settings
 from django.template import loader
+from django.utils import translation
 
-from bluebottle.clients.context import ClientContext
-from bluebottle.clients.mail import construct_from_header
 from bluebottle.clients.utils import tenant_url, tenant_name
+from bluebottle.utils.email_backend import send_mail
+from bluebottle.clients import properties
+
 
 def send_welcome_mail(user=None):
-    c = ClientContext({
+    cur_language = translation.get_language()
+
+    if user and user.primary_language:
+        translation.activate(user.primary_language)
+    else:
+        translation.activate(properties.LANGUAGE_CODE)
+
+    c = {
         'email': user.email,
         'site': tenant_url(),
         'site_name': tenant_name(),
         'user': user,
-        'LANGUAGE_CODE': user.primary_language
-    })
+        'first_name': user.first_name,
+        'LANGUAGE_CODE': user.primary_language,
+    }
 
     subject_template_name = 'bb_accounts/activation_email_subject.txt'
-
-    # XXX TODO: restore plaintext alternative, like most other mails
-    email_template_name = 'bb_accounts/activation_email.html'
-
     subject = loader.render_to_string(subject_template_name, c)
+
     # Email subject *must not* contain newlines
     subject = ''.join(subject.splitlines())
-    email = loader.render_to_string(email_template_name, c)
 
-    tenant_from = construct_from_header()
-    user.email_user(subject, email, from_email=tenant_from)
+    send_mail(
+        template_name='bb_accounts/activation_email',
+        subject=subject,
+        to=user,
+        **c
+    )
+
+    translation.activate(cur_language)
+
 
 def valid_email(email=None):
     """Returns True if argument is a string with valid email adddress"""
@@ -37,4 +49,3 @@ def valid_email(email=None):
     if p.match(email):
         return True
     return False
-    

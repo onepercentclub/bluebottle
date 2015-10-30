@@ -8,21 +8,23 @@
 <html lang="{{ LANGUAGE_CODE }}">
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width"/>
 
-    <title>{% block title %}{% endblock %}1%Club - Share a little change the world</title>
+    <title>{% block title %}{% endblock %}1%Club - Share a little change the
+        world</title>
     {# Stylesheets #}
     {% compress css %}
-        <link rel="stylesheet" href="{% static 'css/screen.css' %}" media="screen" />
+        <link rel="stylesheet" href="{% static 'css/screen.css' %}"
+              media="screen"/>
     {% endcompress %}
 
 </head>
 <body id="body">
 
-    {% block content %}
-    {% endblock %}
-	
+{% block content %}
+{% endblock %}
+
 </body>
 </html>

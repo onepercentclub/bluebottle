@@ -1,4 +1,3 @@
-import hashlib
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.base import TemplateDoesNotExist
@@ -10,9 +9,11 @@ from django.db import connection
 class FilesystemLoader(BaseLoader):
     """
     Based on FileSystemLoader from django-tenant-schemas:
-    https://github.com/bernardopires/django-tenant-schemas/blob/master/tenant_schemas/template_loaders.py#L79
+    https://github.com/bernardopires/django-tenant-schemas/blob/master/
+    tenant_schemas/template_loaders.py#L79
     Changes are:
-    - Use MULTI_TENANT_DIR from config for path (not multiple paths in MULTITENANT_TEMPLATE_DIRS)
+    - Use MULTI_TENANT_DIR from config for path (not multiple paths
+      in MULTITENANT_TEMPLATE_DIRS)
     - Use tenant.client_name not tenant.domain_url
     """
 
@@ -25,14 +26,18 @@ class FilesystemLoader(BaseLoader):
             try:
                 template_dirs = [settings.MULTI_TENANT_DIR]
             except AttributeError:
-                raise ImproperlyConfigured('To use %s.%s you must define the MULTI_TENANT_DIR' %
-                                           (__name__, FilesystemLoader.__name__))
+                raise ImproperlyConfigured(
+                    'To use %s.%s you must define the MULTI_TENANT_DIR' %
+                    (__name__, FilesystemLoader.__name__))
         for template_dir in template_dirs:
             try:
                 if '%s' in template_dir:
-                    yield safe_join(template_dir % connection.tenant.client_name, 'templates', template_name)
+                    yield safe_join(
+                        template_dir % connection.tenant.client_name,
+                        'templates', template_name)
                 else:
-                    yield safe_join(template_dir, connection.tenant.client_name, 'templates', template_name)
+                    yield safe_join(template_dir, connection.tenant.client_name,
+                                    'templates', template_name)
             except UnicodeDecodeError:
                 # The template dir name was a bytestring that wasn't valid UTF-8.
                 raise
@@ -53,6 +58,8 @@ class FilesystemLoader(BaseLoader):
         if tried:
             error_msg = "Tried %s" % tried
         else:
-            error_msg = "Your TEMPLATE_DIRS setting is empty. Change it to point to at least one template directory."
+            error_msg = "Your TEMPLATE_DIRS setting is empty. Change it to " \
+                        "point to at least one template directory."
         raise TemplateDoesNotExist(error_msg)
+
     load_template_source.is_usable = True

@@ -17,12 +17,12 @@ class RecurringDonationsEnabled(permissions.BasePermission):
 
 class IsOwner(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """
+
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
 
 
 class IsDonor(permissions.BasePermission):
-
     def _get_donor_from_request(self, request):
         if request.DATA:
             order_id = request.DATA.get('donation', None)
@@ -45,4 +45,3 @@ class IsDonor(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.donor.user == request.user
-

@@ -1,20 +1,40 @@
+import os
 from decimal import Decimal
+
+from django.test.utils import override_settings
+from django.conf import settings
+from django.utils import timezone
+
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.payouts.models import ProjectPayout
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_donation_model)
 
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.test.factory_models.projects import ProjectFactory, PartnerFactory
-from django.test.utils import override_settings
+from bluebottle.test.factory_models.projects import ProjectFactory
+
+from ..admin import ProjectPayoutAdmin
 
 PROJECT_MODEL = get_project_model()
+DONATION_MODEL = get_donation_model()
 
 
+class PayoutTestAdmin(BluebottleTestCase):
+    """ verify expected fields/behaviour is present """
+
+    def test_extra_listfields(self):
+        self.failUnless('amount_pending' in ProjectPayoutAdmin.list_display)
+        self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
+
+
+@override_settings(
+    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                  'properties'))
 class PayoutTestCase(BluebottleTestCase):
     """ Test case for Payouts. """
 
@@ -26,12 +46,21 @@ class PayoutTestCase(BluebottleTestCase):
         # Set up a project ready for payout
         organization = OrganizationFactory.create()
         organization.save()
-        self.project = ProjectFactory.create(organization=organization, amount_asked=50)
-        self.project_incomplete = ProjectFactory.create(organization=organization, amount_asked=100)
+        self.project = ProjectFactory.create(
+            organization=organization, amount_asked=50)
+        self.project_incomplete = ProjectFactory.create(
+            organization=organization, amount_asked=100)
 
         # Update phase to campaign.
         self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.campaign_started = (timezone.now() -
+                                         timezone.timedelta(days=10))
         self.project.save()
+
+        self.project_incomplete.campaign_started = (timezone.now() -
+                                                    timezone.
+                                                    timedelta(days=10))
+        self.project_incomplete.save()
 
         self.order = OrderFactory.create()
 
@@ -49,9 +78,9 @@ class PayoutTestCase(BluebottleTestCase):
         )
         self.donation2.save()
 
-
     def _reload_project(self):
-        # Stale project instances aren't updated, so we have to reload it from the db again.
+        # Stale project instances aren't updated, so we have to reload it
+        # from the db again.
         self.project = PROJECT_MODEL.objects.get(pk=self.project.id)
 
     def test_save(self):
@@ -75,7 +104,8 @@ class PayoutTestCase(BluebottleTestCase):
     def test_completed(self):
         """ Test the transition to settled. """
 
-        payout = ProjectPayoutFactory.create(completed=None, status=StatusDefinition.IN_PROGRESS)
+        payout = ProjectPayoutFactory.create(
+            completed=None, status=StatusDefinition.IN_PROGRESS)
         payout.save()
 
         self.assertFalse(payout.completed)
@@ -111,6 +141,25 @@ class PayoutTestCase(BluebottleTestCase):
         # Check the project and the amount
         self.assertEquals(payout.project, self.project)
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
+
+    def test_dont_create_payout(self):
+        """
+        Test that a payout is not generated when the campaign never started
+        """
+
+        organization = OrganizationFactory.create()
+
+        project = ProjectFactory.create(
+            organization=organization, amount_asked=50)
+
+        # No payouts should exist yet as project is not in act phase yet
+        self.assertFalse(ProjectPayout.objects.exists())
+
+        self.assertEqual(project.status,
+                         ProjectPhase.objects.get(slug='plan-new'))
+
+        # Payout should not have been created
+        self.assertEquals(ProjectPayout.objects.count(), 0)
 
     def test_invoice_reference(self):
         """ Test generating invoice_reference. """
@@ -190,7 +239,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is pending but not paid
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.get_amount_pending(), Decimal('60.00'))
         self.assertEquals(payout.get_amount_safe(), Decimal('0.00'))
@@ -198,7 +247,8 @@ class PayoutTestCase(BluebottleTestCase):
 
     def test_amounts_failed(self):
         """
-        Test amounts for pending donation changed into failed after creating payout.
+        Test amounts for pending donation changed into failed after creating
+        payout.
         """
 
         # Set status of donation to pending first
@@ -252,7 +302,7 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
 
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
@@ -283,7 +333,7 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
@@ -305,7 +355,8 @@ class PayoutTestCase(BluebottleTestCase):
 
         # Update phase to act.
         self._reload_project()
-        self.project_incomplete.status = ProjectPhase.objects.get(slug='done-incomplete')
+        self.project_incomplete.status = ProjectPhase.objects.get(
+            slug='done-incomplete')
         self.project_incomplete.save()
 
         # Fetch payout
@@ -314,14 +365,12 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('57.00'))
+        self.assertEquals(payout.amount_payable, Decimal('52.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
-
-    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -347,13 +396,12 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('54.00'))
+        self.assertEquals(payout.amount_payable, Decimal('55.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
-    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -370,7 +418,8 @@ class PayoutTestCase(BluebottleTestCase):
 
         # Update phase to act.
         self._reload_project()
-        self.project_incomplete.status = ProjectPhase.objects.get(slug='done-incomplete')
+        self.project_incomplete.status = ProjectPhase.objects.get(
+            slug='done-incomplete')
         self.project_incomplete.save()
 
         # Fetch payout
@@ -379,12 +428,192 @@ class PayoutTestCase(BluebottleTestCase):
         # Money is safe now, nothing pending
         self.assertEquals(payout.amount_raised, Decimal('60.00'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('30.00'))
+        self.assertEquals(payout.amount_payable, Decimal('52.80'))
 
         self.assertEquals(payout.amount_pending, Decimal('0.00'))
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
+    def test_changed_fees_amounts_beneath_threshold(self):
+        """ Test amounts when donations are beneath minimal payout amount. """
+
+        # Setup organization
+        organization = self.project.organization
+        organization.account_name = 'Funny organization'
+        organization.account_iban = 'NL90ABNA0111111111'
+        organization.account_bic = 'ABNANL2A'
+        organization.save()
+
+        beneath_threshold_project = ProjectFactory.create(
+            organization=organization, amount_asked=50)
+
+        # Update phase to campaign.
+        beneath_threshold_project.status = ProjectPhase.objects.get(
+            slug='campaign')
+        a_week_ago = timezone.now() - timezone.timedelta(days=7)
+        beneath_threshold_project.campaign_started = a_week_ago
+        beneath_threshold_project.save()
+
+        order = OrderFactory.create()
+        donation = DonationFactory.create(
+            project=beneath_threshold_project,
+            order=order,
+            amount=5
+        )
+        donation.save()
+        donation.order.locked()
+        donation.order.succeeded()
+
+        # Update phase to act.
+        self._reload_project()
+        beneath_threshold_project.status = ProjectPhase.objects.get(
+            slug='done-incomplete')
+        beneath_threshold_project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        # Money is safe now, nothing pending
+        self.assertEquals(payout.amount_raised, Decimal('5.00'))
+        self.assertEquals(payout.payout_rule, 'beneath_threshold')
+        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+
+        self.assertEquals(payout.amount_pending, Decimal('0.00'))
+        self.assertEquals(payout.amount_safe, Decimal('5.00'))
+        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+
+    def test_beneath_threshold_status_completed(self):
+        """
+        Test that a payout with payout rule 'beneath_threshold' and no
+        pending donations gets the status 'settled'.
+        """
+        self.assertFalse(ProjectPayout.objects.exists())
+
+        project = ProjectFactory.create(amount_asked=100)
+        project.campaign_started = timezone.now() - timezone.timedelta(days=10)
+        project.status = ProjectPhase.objects.get(slug='closed')
+        project.save()
+
+        # Fetch payout
+        self.assertEquals(ProjectPayout.objects.count(), 1)
+        payout = ProjectPayout.objects.all()[0]
+        self.assertEquals(payout.payout_rule, 'beneath_threshold')
+        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEqual(DONATION_MODEL.objects.filter(project=project)
+                         .count(), 0)
+        self.assertEqual(payout.completed, timezone.now().date())
+        self.assertEqual(payout.status, 'settled')
+        self.assertTrue(payout.completed)
+
+    def test_beneath_threshold_status_not_completed_pending_payments(self):
+        """
+        Test that a payout with rule 'beneath_threshold' but with pending
+        donations does not get the status 'settled'.
+        """
+        self.assertFalse(ProjectPayout.objects.exists())
+
+        project = ProjectFactory.create(amount_asked=100)
+        project.campaign_started = timezone.now() - timezone.timedelta(days=10)
+        project.save()
+
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=project,
+            order=order,
+            amount=1
+        )
+        donation.save()
+
+        # Set status of donation to pending
+        donation.order.locked()
+        donation.order.pending()
+        donation.order.save()
+
+        self.assertEqual(donation.status, 'pending')
+
+        project.status = ProjectPhase.objects.get(slug='done-incomplete')
+        project.save()
+
+        # Fetch payout
+        self.assertEquals(ProjectPayout.objects.count(), 1)
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEquals(payout.payout_rule, 'beneath_threshold')
+        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEqual(DONATION_MODEL.objects.filter(project=project)
+                         .count(), 1)
+        self.assertEqual(payout.status, 'new')
+        self.assertTrue(not payout.completed)
+
+    def test_invalid_iban(self):
+        """
+        Test that the iban field is not populated if the account number
+        is not a valid IBAN
+        """
+        self.project.account_number = "nefwkjfnwkflewblablabla"
+        self.project.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+        self.donation.order.save()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEqual(payout.receiver_account_iban, '')
+
+    def test_valid_iban_nl(self):
+        """
+        Test that the iban field is populated if the account number is
+        valid Dutch account
+        """
+        self.project.account_number = "NL91ABNA0417164300"
+        self.project.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+        self.donation.order.save()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEqual(payout.receiver_account_iban, 'NL91ABNA0417164300')
+
+    def test_valid_iban_de(self):
+        """
+        Test that the iban field is populated if the account number
+        is a valid German account"""
+        self.project.account_number = "DE89370400440532013000"
+        self.project.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+        self.donation.order.save()
+
+        # Update phase to act.
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        self.assertEqual(payout.receiver_account_iban,
+                         'DE89370400440532013000')
     def test_protected_payout(self):
         """
         Test that a protected payout cannot be recalculated and does not return

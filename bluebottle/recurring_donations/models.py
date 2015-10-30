@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from django_extensions.db.fields import CreationDateTimeField, \
+    ModificationDateTimeField
 from django_iban.fields import IBANField, SWIFTBICField
 from django.utils.translation import ugettext as _
 
@@ -17,7 +18,7 @@ class MonthlyDonor(models.Model):
     active = models.BooleanField(default=True)
     amount = models.DecimalField(_("amount"), max_digits=6, decimal_places=2)
 
-    iban = IBANField(blank=True, default='')
+    iban = IBANField()
     bic = SWIFTBICField(blank=True, default='')
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)
@@ -51,7 +52,6 @@ class MonthlyDonorProject(models.Model):
 
 
 class MonthlyBatch(models.Model):
-
     date = models.DateField()
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -71,17 +71,18 @@ class MonthlyProject(models.Model):
 
     batch = models.ForeignKey(MonthlyBatch)
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    amount = models.DecimalField(_("amount"), default=0, max_digits=6, decimal_places=2)
+    amount = models.DecimalField(_("amount"), default=0, max_digits=6,
+                                 decimal_places=2)
 
 
 class MonthlyOrder(models.Model):
-
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
     batch = models.ForeignKey(MonthlyBatch, related_name='orders')
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
+    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
+                                 default=0)
     currency = models.CharField(max_length=3, default='EUR')
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)
@@ -89,7 +90,9 @@ class MonthlyOrder(models.Model):
     bic = SWIFTBICField(blank=True, default='')
     country = models.CharField(max_length=2, default='')
 
-    processed = models.BooleanField(help_text=_("Whether a payment has been created for this order."), default=False)
+    processed = models.BooleanField(
+        help_text=_("Whether a payment has been created for this order."),
+        default=False)
     error = models.CharField(max_length=1000, blank=True, null=True, default='')
 
     def __unicode__(self):
@@ -97,10 +100,8 @@ class MonthlyOrder(models.Model):
 
 
 class MonthlyDonation(models.Model):
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     order = models.ForeignKey(MonthlyOrder, related_name='donations')
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
-
-
+    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
+                                 default=0)

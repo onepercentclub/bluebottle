@@ -2,8 +2,6 @@ import logging
 from django.http import Http404
 from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
 from bluebottle.bb_orders.signals import order_requested
-from bluebottle.geo.models import Country
-from bluebottle.utils.utils import StatusDefinition
 from rest_framework import generics
 from bluebottle.utils.model_dispatcher import get_order_model, get_project_model
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
@@ -39,7 +37,8 @@ class ManageOrderList(generics.ListCreateAPIView):
         if self.request.user.is_authenticated():
             return queryset.filter(user=self.request.user)
         else:
-            order_id = getattr(self.request.session, anonymous_order_id_session_key, 0)
+            order_id = getattr(self.request.session,
+                               anonymous_order_id_session_key, 0)
             return queryset.filter(id=order_id)
 
     def pre_save(self, obj):

@@ -29,6 +29,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.fundraisers.*',
             'bluebottle.organizations.*',
             'bluebottle.bb_organizations.*',
+            'bluebottle.suggestions.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -112,7 +113,6 @@ FLUENT_DASHBOARD_APP_ICONS = {
     'members/member': 'icons/flaticons_stroke/SVGs/user-1.svg',
     'auth/group': 'icons/flaticons_stroke/SVGs/group-1.svg',
     'registration/registrationprofile': 'icons/flaticons_stroke/SVGs/add-user-1.svg',
-
 
     # Projects
     'bb_projects/projectphase': 'icons/flaticons_stroke/SVGs/history-1.svg',

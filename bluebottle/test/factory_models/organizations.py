@@ -1,6 +1,7 @@
 import factory
 
-from bluebottle.utils.model_dispatcher import get_organization_model, get_organizationmember_model
+from bluebottle.utils.model_dispatcher import get_organization_model, \
+    get_organizationmember_model
 from .geo import CountryFactory
 from .accounts import BlueBottleUserFactory
 
@@ -25,9 +26,6 @@ class OrganizationFactory(factory.DjangoModelFactory):
     website = 'http://onepercentclub.com'
 
     email = 'info@onepercentclub.com'
-    twitter = '@1percentclub'
-    facebook = '/onepercentclub'
-    skype = 'onepercentclub'
 
 
 class OrganizationMemberFactory(factory.DjangoModelFactory):
@@ -36,4 +34,3 @@ class OrganizationMemberFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
     function = 'owner'
     organization = factory.SubFactory(OrganizationFactory)
-

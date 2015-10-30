@@ -5,20 +5,22 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.models import ContentItem
-from sorl.thumbnail import ImageField
+from bluebottle.utils.fields import ImageField
 
 
 class PictureItem(ContentItem):
     """
     Picture content item
     """
+
     class PictureAlignment(DjangoChoices):
         float_left = ChoiceItem('float-left', label=_("Float left"))
         center = ChoiceItem('center', label=_("Center"))
         float_right = ChoiceItem('float-right', label=_("Float right"))
 
     image = ImageField(_("Picture"), upload_to='content_images')
-    align = models.CharField(_("Align"), max_length=50, choices=PictureAlignment.choices)
+    align = models.CharField(_("Align"), max_length=50,
+                             choices=PictureAlignment.choices)
 
     class Meta:
         verbose_name = _("Picture")

@@ -14,4 +14,3 @@ project_funded = Signal(providing_args=['first_time_funded'])
 @receiver(donation_status_changed)
 def _donation_status_changed(sender, donation):
     donation.project.update_amounts()
-

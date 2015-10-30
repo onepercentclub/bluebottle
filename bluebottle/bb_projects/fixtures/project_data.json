@@ -39,14 +39,39 @@
         }
     },
     {
+        "pk": 4,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "name": "Voting",
+            "slug": "voting",
+            "sequence": 4,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
         "pk": 5,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "name": "Voting - Done",
+            "slug": "voting-done",
+            "sequence": 5,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },    {
+        "pk": 6,
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
             "slug": "campaign",
             "name": "Campaign",
             "sequence": 6,
-            "editable": true,
+            "editable": false,
             "active": true,
             "description": ""
         }

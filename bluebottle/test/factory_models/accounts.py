@@ -14,4 +14,3 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     first_name = factory.Sequence(lambda f: u'user_{0}'.format(f))
     last_name = factory.Sequence(lambda l: u'user_{0}'.format(l))
     is_active = True
-

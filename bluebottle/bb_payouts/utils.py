@@ -19,7 +19,7 @@ def money_from_cents(amount):
     # Make sure integer work too
     amount = float(amount)
 
-    return decimal.Decimal(str(amount/100))
+    return decimal.Decimal(str(amount / 100))
 
 
 def round_money(amount):
@@ -30,7 +30,8 @@ def round_money(amount):
 
     assert isinstance(amount, decimal.Decimal)
 
-    return amount.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_HALF_DOWN)
+    return amount.quantize(decimal.Decimal('.01'),
+                           rounding=decimal.ROUND_HALF_DOWN)
 
 
 def calculate_vat(amount):

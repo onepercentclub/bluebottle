@@ -1,9 +1,8 @@
 from bluebottle.clients.utils import tenant_url
 
-class WallpostObserver:
 
+class WallpostObserver(object):
     def __init__(self, instance):
-
         # the object wall the post is left (project, task...)
         self.post = instance.content_object
 
@@ -16,8 +15,7 @@ class WallpostObserver:
         pass
 
 
-class ReactionObserver:
-
+class ReactionObserver(object):
     def __init__(self, instance):
         self.reaction = instance
         self.post = instance.wallpost
@@ -30,7 +28,6 @@ class ReactionObserver:
 
 
 class ObserversContainer:
-
     wallpost_observer_list = []
     reaction_observer_list = []
 
@@ -39,7 +36,8 @@ class ObserversContainer:
     # Singleton
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(ObserversContainer, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(ObserversContainer, cls).__new__(
+                cls, *args, **kwargs)
         return cls._instance
 
     def register(self, observer):

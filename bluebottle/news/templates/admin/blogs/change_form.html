@@ -16,23 +16,25 @@
         // Preserve that so the autocomplete still works.
         var jQuery_taggit_autocomplete = window.jQuery;
     </script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/libs/jquery-1.7.2.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/plugins/jquery.colorbox.js"></script>
+    <script type="text/javascript"
+            src="{{ STATIC_URL }}js/libs/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript"
+            src="{{ STATIC_URL }}js/plugins/jquery.colorbox.js"></script>
     <script type="text/javascript">
-        (function($){
+        (function ($) {
             // NOTE: doesn't deal with blogs/news distinction.
             var preview_canvas_url = "{{ preview_canvas_url }}";
             var get_preview_url = "{{ get_preview_url }}";
 
             var $submit,
-                $addanother,
-                $continue,
-                $statusField,
-                submitValue,
-                addanotherValue,
-                continueValue;
+                    $addanother,
+                    $continue,
+                    $statusField,
+                    submitValue,
+                    addanotherValue,
+                    continueValue;
 
-            $.fn.ready(function(){
+            $.fn.ready(function () {
                 // Fetch DOM objects
                 $submit = $('.submit-row input.default');
                 $addanother = $('.submit-row input[name=_addanother]');
@@ -46,9 +48,9 @@
                 // Add preview button
                 var $previewButton = $('<input type="submit" name="_preview" value="{% trans "Preview" %}"/>');
                 $continue
-                    .after('&nbsp;')
-                    .after($previewButton)
-                    .after('&nbsp;');
+                        .after('&nbsp;')
+                        .after($previewButton)
+                        .after('&nbsp;');
 
                 // Bind events
                 $("#id_status input").change(setSubmitButtonText);
@@ -67,7 +69,7 @@
 
                 // Save all WYSYWYG editors to the form.
                 // NOTE: currently doesn't use django_wysiwyg abstraction, as it doesn't provide a .save() method.
-                for(var i = 0; i < tinymce.editors.length; i++) {
+                for (var i = 0; i < tinymce.editors.length; i++) {
                     tinymce.editors[i].save();
                 }
 
@@ -83,7 +85,7 @@
                     iframe: true,
                     fastIframe: false,
                     href: preview_canvas_url,
-                    onComplete: function() {
+                    onComplete: function () {
                         // Iframe with preview frame is loaded.
                         var $preview_div = $('#colorbox iframe.cboxIframe').contents().find('#preview_contents');
 
@@ -94,10 +96,10 @@
                             'type': 'POST',
                             dataType: 'json',
                             data: postdata,
-                            success: function(data) {
+                            success: function (data) {
                                 $preview_div.html(data.contents);
                             },
-                            error: function() {
+                            error: function () {
                                 $preview_div.html('<p>{% trans "Internal CMS error: failed to fetch preview data!" %}</p>');
                             }
                         });
@@ -107,7 +109,7 @@
             }
 
             function setSubmitButtonText() {
-                if($("#id_status input[value=published]")[0].checked) {
+                if ($("#id_status input[value=published]")[0].checked) {
                     showPublishedButtons();
                 }
                 else {

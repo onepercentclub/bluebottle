@@ -1,6 +1,5 @@
 from .testing import *
 
-
 DEFAULT_DB_ALIAS = 'default'
 DATABASES = {
     'default': {

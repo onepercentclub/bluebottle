@@ -1,11 +1,13 @@
 # Either import these settings in your base.py or write your own.
 
+_ = lambda s: s
+
 DOCDATA_PAYMENT_METHODS = (
     {
         'provider': 'docdata',
         'id': 'docdata-ideal',
         'profile': 'ideal',
-        'name': 'iDEAL',
+        'name': _('iDEAL'),
         'restricted_countries': ('NL', 'Netherlands'),
         'supports_recurring': False,
     },
@@ -13,21 +15,21 @@ DOCDATA_PAYMENT_METHODS = (
         'provider': 'docdata',
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
-        'name': 'CreditCard',
+        'name': _('CreditCard'),
         'supports_recurring': False,
     },
     {
         'provider': 'docdata',
         'id': 'docdata-paypal',
         'profile': 'paypal',
-        'name': 'Paypal',
+        'name': _('Paypal'),
         'supports_recurring': False,
     },
     {
         'provider': 'docdata',
         'id': 'docdata-directdebit',
         'profile': 'directdebit',
-        'name': 'Direct Debit',
+        'name': _('Direct Debit'),
         'supports_recurring': True,
     }
 )

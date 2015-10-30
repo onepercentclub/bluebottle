@@ -1,0 +1,17 @@
+{% load i18n %}
+
+{% blocktrans %}
+Hi {{share_name}}
+
+
+{{sender_name}} ({{sender_email}}) wants to share a project with you:
+
+{{share_motivation}}
+
+----- project flyer ------
+
+{{project_title}}
+
+{{project_pitch}}
+
+{% endblocktrans %}

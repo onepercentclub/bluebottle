@@ -13,8 +13,11 @@ readme = read_file('README.rst')
 changes = ''
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
-    'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
+    'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
+    'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
+    'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
+    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.0#egg=django-tenant-extras-1.9.0',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.1#egg=django-token-auth-0.2.1'
 ]
 
 install_requires = [
@@ -25,15 +28,18 @@ install_requires = [
     'South==1.0',
     'Sphinx==1.2b1',
     'bunch==1.0.1',
+    'celery==3.1.17',
     'django-celery==3.0.17',
     'django-apptemplates==0.0.1',
     'django-choices==1.1.11',
     'django-compressor==1.3',
     'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
+    'django-exportdb==0.4.5',
     'django-filter==0.6',
+    'django-geoposition==0.2.2',
     'django-iban==0.2.1',
-    'django-localflavor==1.0',
+    'django-localflavor==1.1',
     'django-social-auth==0.7.23',
     'django-taggit==0.12.1',
     'django-templatetag-handlebars==1.2.0',
@@ -45,10 +51,11 @@ install_requires = [
     'djangorestframework==2.3.14',
     'dkimpy==0.5.4',
     'html5lib==0.95',
+    'httmock==1.2.3',
     'micawber==0.2.6',
     'requests==2.3.0',
     'sorl-thumbnail==11.12',
-    'transifex-client==0.9.1',
+    'transifex-client==0.11b3',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz==1.2',
@@ -58,7 +65,7 @@ install_requires = [
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
     'pygeoip==0.3.1',
-    'python-social-auth==0.1.26',
+    'python-social-auth==0.2.12',
     'python-memcached==1.53',
     'lxml==3.1.2',
     'unicodecsv==0.9.4',
@@ -68,16 +75,19 @@ install_requires = [
     'django_polymorphic==0.6.1',
     'dnspython',
     'fabric',
-    'django-tenant-schemas==1.5.1-4-g45c9ee9',
-    'django-salesforce==0.5',
+    'django-tenant-schemas==1.5.2',
     'raven==5.1.1',
     'djangorestframework-jwt==1.1.1',
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
+    'django-rest-swagger==0.3.4',
 
     # Github requirements
-    'django-taggit-autocomplete-modified<=0.1.1',
-    'django-fluent-contents<=1.0c3',
+    'django-taggit-autocomplete-modified==0.1.1b1',
+    'django-fluent-contents==1.0c3',
+    'django-bb-salesforce==1.1.18',
+    'django-tenant-extras==1.9.0',
+    'django-token-auth==0.2.1'
 ]
 
 tests_requires = [
@@ -132,5 +142,5 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development :: Libraries :: Application Frameworks'
-    ],
+    ]
 )

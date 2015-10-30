@@ -52,7 +52,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
         Tests that the list of project phases can be obtained from its
         endpoint.
         """
-        
+
         response = self.client.get(reverse('project_phase_list'))
 
         self.assertEqual(response.status_code, 200)
@@ -72,7 +72,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
             self.assertIn('active', item)
             self.assertIn('editable', item)
             self.assertIn('viewable', item)
-    
+
 
 class TestProjectList(ProjectEndpointTestCase):
     """
@@ -102,7 +102,7 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('meta_data', item)
             self.assertIn('owner', item)
             self.assertIn('status', item)
-            
+
             #Ensure that non-viewable status are filtered out
             phase = ProjectPhase.objects.get(id=item['status'])
             self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
@@ -220,6 +220,28 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             self.assertIn('id', item)
             self.assertIn('name', item)
 
+    def test_api_project_theme_list_endpoint_disabled(self):
+        """
+        Test the API endpoint for Project theme list. Verify that disabled
+        themes are not returned
+        """
+        all_themes = list(ProjectTheme.objects.all())
+        disabled = all_themes[0]
+        disabled.disabled = True
+        disabled.save()
+
+        response = self.client.get(reverse('project_theme_list'))
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(len(data), 16)
+
+        for item in data:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertNotEquals(item['id'], disabled.id)
 
 class TestProjectThemeDetail(ProjectEndpointTestCase):
     """
@@ -373,3 +395,20 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('country', data)
         self.assertIn('editable', data)
+        self.assertIn('project_type', data)
+
+    def test_api_manage_project_detail_check_not_editable(self):
+        """
+        Test successful request for a logged in user over the API endpoint for
+        manage Project detail.
+        """
+        self.project_1.set_status('campaign')
+
+        response = self.client.put(
+            reverse('project_manage_detail', kwargs={'slug': self.project_1.slug}),
+            token=self.user_token, data={'title': 'test-new'})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue('permission' in response.content)
+
+

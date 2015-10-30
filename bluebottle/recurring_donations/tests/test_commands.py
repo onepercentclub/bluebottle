@@ -1,17 +1,25 @@
 from decimal import Decimal
+from mock import patch
+
+from django.core.management import call_command
+from django.test.utils import override_settings
+from django.core import mail
+
 from bluebottle.recurring_donations.models import MonthlyOrder
-from bluebottle.recurring_donations.tests.model_factory import MonthlyDonorFactory, MonthlyDonorProjectFactory
+from bluebottle.recurring_donations.tests.model_factory import \
+    MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
-from django.core.management import call_command
 
+
+@override_settings(SEND_WELCOME_MAIL=False)
 class MonthlyDonationCommandsTest(BluebottleTestCase):
-
     def setUp(self):
         super(MonthlyDonationCommandsTest, self).setUp()
 
@@ -22,7 +30,9 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.projects = []
 
         for amount in [500, 100, 1500, 300, 200]:
-            self.projects.append(ProjectFactory.create(amount_asked=amount, status=self.phase_campaign))
+            self.projects.append(
+                ProjectFactory.create(amount_asked=amount,
+                                      status=self.phase_campaign))
 
         # Some donations to get the popularity going
         # Top 3 after this should be projects 4, 3, 0
@@ -39,22 +49,25 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         order.locked()
         order.succeeded()
 
-        # Since we force the transitions update_amounts isn't triggered by signal, so we run it manually here.
+        # Since we force the transitions update_amounts isn't triggered by
+        # signal, so we run it manually here.
         for project in self.projects:
             project.update_amounts()
 
         self.user1 = BlueBottleUserFactory.create()
         self.user2 = BlueBottleUserFactory.create()
 
-    def test_prepare(self):
         # Create a monthly donor with a preferred project
-        monthly_donor1 = MonthlyDonorFactory(user=self.user1, amount=25)
-        monthly_donor1_project = MonthlyDonorProjectFactory(donor=monthly_donor1, project=self.projects[0])
+        self.monthly_donor1 = MonthlyDonorFactory(user=self.user1, amount=25)
+        self.monthly_donor1_project = MonthlyDonorProjectFactory(
+            donor=self.monthly_donor1, project=self.projects[0])
 
         # Create a monthly donor without preferred projects
-        monthly_donor2 = MonthlyDonorFactory(user=self.user2, amount=100)
+        self.monthly_donor2 = MonthlyDonorFactory(user=self.user2, amount=100)
 
-        call_command('process_monthly_donations', prepare=True)
+    def test_prepare(self):
+        call_command('process_monthly_donations', prepare=True,
+                     tenant='test')
 
         # Now check that we have 2 prepared donations.
         self.assertEqual(MonthlyOrder.objects.count(), 2)
@@ -64,14 +77,16 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
         # Should have one donation
         self.assertEqual(monthly_order.donations.count(), 1)
-        
+
         # Donation should have amount 25 and go to first project
         self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('25'))
-        self.assertEqual(monthly_order.donations.all()[0].project, self.projects[0])
+        self.assertEqual(monthly_order.donations.all()[0].project,
+                         self.projects[0])
 
         # Check second monthly order
         # Should have 3 donations
-        monthly_donations = MonthlyOrder.objects.get(user=self.user2).donations.all()
+        monthly_donations = MonthlyOrder.objects.get(
+            user=self.user2).donations.all()
         self.assertEqual(len(monthly_donations), 3)
 
         self.assertEqual(monthly_donations[0].amount, Decimal('33.33'))
@@ -82,3 +97,15 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
         self.assertEqual(monthly_donations[2].amount, Decimal('33.34'))
         self.assertEqual(monthly_donations[2].project, self.projects[0])
+
+    def test_email(self):
+
+        with patch.object(LocalTenant, '__new__') as mocked_init:
+            # Clear the outbox before running monthly donations
+            for m in mail.outbox: mail.outbox.pop(0)
+            call_command('process_monthly_donations', tenant='test')
+
+            self.assertEquals(len(mail.outbox), 6)
+            # LocalTenant should be called once to set the correct tenant properties
+            mocked_init.assert_called_once_with(LocalTenant, self.tenant,
+                                                clear_tenant=True)

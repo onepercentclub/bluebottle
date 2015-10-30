@@ -1,9 +1,13 @@
-from bluebottle.partners.serializers import PartnerOrganizationSerializer
+from bluebottle.partners.serializers import (
+    PartnerOrganizationSerializer, PartnerOrganizationPreviewSerializer
+)
+
 from bluebottle.projects.models import Project, PartnerOrganization
 from django.views.generic.list import ListView
 from rest_framework import generics
 
 from bluebottle.clients.utils import tenant_url
+
 
 # API view
 
@@ -12,13 +16,23 @@ class PartnerDetail(generics.RetrieveAPIView):
     serializer_class = PartnerOrganizationSerializer
 
 
+class PartnerList(generics.ListAPIView):
+    model = PartnerOrganization
+    serializer_class = PartnerOrganizationSerializer
+
+
+class PartnerPreviewList(generics.ListAPIView):
+    model = PartnerOrganization
+    serializer_class = PartnerOrganizationPreviewSerializer
+
+
 # Django view
 
 class MacroMicroListView(ListView):
-
     template_name = 'macromicro_list.html'
     model = Project
-    queryset = Project.objects.filter(partner_organization__slug='macro_micro').filter(status__viewable=True)
+    queryset = Project.objects.filter(
+        partner_organization__slug='macro_micro').filter(status__viewable=True)
 
     def render_to_response(self, context, **response_kwargs):
         return super(MacroMicroListView, self).render_to_response(
@@ -31,4 +45,3 @@ class MacroMicroListView(ListView):
         context = super(MacroMicroListView, self).get_context_data(**kwargs)
         context['site'] = tenant_url()
         return context
-

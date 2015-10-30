@@ -1,12 +1,13 @@
+from HTMLParser import HTMLParser
 import sys
 import re
 
 from django.conf import settings
-from django.core.exceptions import FieldError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
 from django.utils.importlib import import_module
-from django_tools.middlewares import ThreadLocal
 
+from django_tools.middlewares import ThreadLocal
 from rest_framework import serializers
 from rest_framework.serializers import get_component
 from taggit.managers import _TaggableManager
@@ -16,11 +17,17 @@ from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from .validators import validate_postal_code
 from .models import Address, Language
 
-from HTMLParser import HTMLParser
+
+class ShareSerializer(serializers.Serializer):
+    share_name = serializers.CharField(max_length=256, required=True)
+    share_email = serializers.EmailField(required=True)
+    share_motivation = serializers.CharField(default="", required=True)
+    share_cc = serializers.BooleanField(default=False, required=True)
+
+    project = serializers.CharField(max_length=256, required=True)
 
 
 class LanguageSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Language
         fields = ('id', 'code', 'language_name', 'native_name')
@@ -28,17 +35,19 @@ class LanguageSerializer(serializers.ModelSerializer):
 
 class MLStripper(HTMLParser):
     """ Used to strip HTML tags for meta fields (e.g. description) """
+
     def __init__(self):
         self.reset()
         self.fed = []
+
     def handle_data(self, d):
         self.fed.append(d)
+
     def get_data(self):
         return ''.join(self.fed)
 
 
 class AddressSerializer(serializers.ModelSerializer):
-
     def validate_postal_code(self, attrs, source):
         value = attrs[source]
         if value:
@@ -54,11 +63,12 @@ class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address
-        fields = ('id', 'line1', 'line2', 'city', 'state', 'country', 'postal_code')
-
+        fields = (
+            'id', 'line1', 'line2', 'city', 'state', 'country', 'postal_code')
 
 
 SCHEME_PATTERN = r'^https?://'
+
 
 class URLField(serializers.URLField):
     """ URLField allowing absence of url scheme """
@@ -68,7 +78,7 @@ class URLField(serializers.URLField):
         if not value:
             return value
         m = re.match(SCHEME_PATTERN, value)
-        if not m: # no scheme
+        if not m:  # no scheme
             value = "http://%s" % value
         return value
 
@@ -124,10 +134,10 @@ class MetaField(serializers.Field):
     Currently, images are only used for facebook
     """
 
-    def __init__(self, title = 'title',
-                description = 'description', keywords = 'tags',
-                image_source = None,
-                *args, **kwargs):
+    def __init__(self, title='title',
+                 description='description', keywords='tags',
+                 image_source=None,
+                 *args, **kwargs):
 
         # default to None, return the default title/image if no explicit title/image were provided
         self.fb_title = kwargs.pop('fb_title', None)
@@ -222,7 +232,7 @@ class MetaField(serializers.Field):
             else:
                 try:
                     image, is_url = image_source[0], image_source[1]
-                except TypeError: # no indexing, so not a tupple that was returned
+                except TypeError:  # no indexing, so not a tupple that was returned
                     image, is_url = image_source, False
 
             if is_url:
@@ -244,7 +254,6 @@ class MetaField(serializers.Field):
             value['url'] = url
 
         return self.to_native(value)
-
 
     def _get_field(self, obj, field_name):
         """ Allow traversing the relations tree for fields """
@@ -268,7 +277,7 @@ class MetaField(serializers.Field):
             if callable(_attr):
                 request = ThreadLocal.get_current_request()
                 return _attr(request=request)
-        except AttributeError: # not a model/object attribute or relation does not exist
+        except AttributeError:  # not a model/object attribute or relation does not exist
             pass
         return None
 
@@ -313,7 +322,8 @@ class HumanReadableChoiceField(serializers.ChoiceField):
 
         components = source.split('.')
         for component in components:
-            if component == components[-1]: # last item, fetch human readable form
+            # last item, fetch human readable form
+            if component == components[-1]:
                 component = 'get_{0}_display'.format(component)
             value = get_component(value, component)
             if value is None:
@@ -322,21 +332,18 @@ class HumanReadableChoiceField(serializers.ChoiceField):
         return self.to_native(value.lower())
 
 
-#### TESTS #############
 # Below is test-only stuff
 INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
 
 if 'test' in sys.argv or INCLUDE_TEST_MODELS:
-
     from .models import MetaDataModel
 
     class MetaDataSerializer(serializers.ModelSerializer):
-
         meta_data = MetaField(
-            description = None,
-            image_source = None,
-            keywords = 'tags'
-            )
+            description=None,
+            image_source=None,
+            keywords='tags'
+        )
 
         class Meta:
             model = MetaDataModel

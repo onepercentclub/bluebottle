@@ -1,6 +1,7 @@
 # Django settings for BlueBottle project.
 
-import os, datetime
+import os
+import datetime
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -140,16 +141,22 @@ JWT_AUTH = {
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
+SWAGGER_SETTINGS = {
+  'api_version': '1.1',
+  'resource_url_prefix': 'api/',
+  'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
+  'is_authenticated': True
+}
 
 SHARED_APPS = (
-    'bluebottle.clients',  # you must list the app where your tenant model resides in
+    'bluebottle.clients',  
     'bluebottle.accounting',
+    
     # Django apps
     'south',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -173,7 +180,7 @@ TENANT_APPS = (
     'south',
     'polymorphic',
 
-    #'social_auth',
+    # 'social_auth',
     'social.apps.django_app.default',
 
     # Custom dashboard
@@ -192,7 +199,7 @@ TENANT_APPS = (
     # FB Auth
     'bluebottle.auth',
 
-    #Widget
+    # Widget
     'bluebottle.widget',
 
     'rest_framework.authtoken',
@@ -209,7 +216,6 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
-    'bluebottle.bluebottle_salesforce',
 
     # Plain Bluebottle apps
     'bluebottle.wallposts',
@@ -231,6 +237,7 @@ TENANT_APPS = (
     'bluebottle.journals',
     'bluebottle.accounting',
     'bluebottle.csvimport',
+    'bluebottle.votes',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -247,6 +254,7 @@ TENANT_APPS = (
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
+    'bluebottle.suggestions',
 
     # CMS page contents
     'fluent_contents',
@@ -259,9 +267,10 @@ TENANT_APPS = (
     'django_tools',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)
+INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'tenant_schemas',)
 
 TENANT_MODEL = "clients.Client"
+TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SOUTH_DATABASE_ADAPTERS = {
     'default': 'south.db.postgresql_psycopg2',
@@ -284,7 +293,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
-
 THUMBNAIL_DEBUG = True
 THUMBNAIL_QUALITY = 85
 
@@ -297,12 +305,29 @@ THUMBNAIL_QUALITY = 85
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
     'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'logging.NullHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -318,6 +343,26 @@ LOGGING = {
         }
     },
     'loggers': {
+        'null': {
+            'handlers': ['null'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'console': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'recurring_donations': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'bluebottle.salesforce': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
             'level': 'INFO',
@@ -335,6 +380,7 @@ LOGGING = {
 AUTH_USER_MODEL = 'members.Member'
 
 PROJECTS_PROJECT_MODEL = 'projects.Project'
+PROJECT_DOCUMENT_MODEL = 'projects.ProjectDocument'
 PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
 
 FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
@@ -345,7 +391,6 @@ TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
 TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
 
 ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-ORGANIZATIONS_DOCUMENT_MODEL = 'organizations.OrganizationDocument'
 ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
 
 ORDERS_ORDER_MODEL = 'orders.Order'
@@ -361,10 +406,12 @@ DONATIONS_ENABLED = True
 
 
 # For building frontend code
-BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
-           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
-           'projects', 'tasks', 'fundraisers', 'donations', 'orders',
-           'homepage', 'recurring-donations', 'partners']
+BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 
+           'slides', 'quotes', 'payments', 'payments-docdata', 
+           'payments-voucher', 'payments-mock', 'members', 
+           'organizations', 'projects', 'tasks', 'fundraisers', 
+           'donations', 'orders', 'homepage', 'recurring-donations', 
+           'partners']
 
 MINIMAL_PAYOUT_AMOUNT = 21.00
 VAT_RATE = '0.21'
@@ -394,6 +441,8 @@ SEND_WELCOME_MAIL = False
 
 TENANT_MAIL_PROPERTIES = {}
 
+MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'clients')
+
 TENANT_BASE = os.path.join(PROJECT_ROOT, 'static', 'media')
 
 PROJECT_PAYOUT_FEES = {
@@ -402,9 +451,9 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
-EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key', 'git_commit', \
-                             'debug', 'compress_templates', 'facebook_auth_id', 'installed_apps', \
-                             'bb_apps', ]
+EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key',
+                             'git_commit', 'debug', 'compress_templates',
+                             'facebook_auth_id', 'installed_apps', 'bb_apps']
 
 MIXPANEL = ''
 MAPS_API_KEY = ''
@@ -413,3 +462,34 @@ GIT_COMMIT = ''
 DEBUG = True
 COMPRESS_TEMPLATES = False
 FACEBOOK_AUTH_ID = ''
+
+CELERY_MAIL = False
+SEND_MAIL = True
+
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
+
+CLOSED_SITE = False
+
+SOCIAL_AUTH_PIPELINE = (
+    'bluebottle.auth.utils.user_from_request',
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    'social.pipeline.social_auth.associate_by_email',
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details',
+    'bluebottle.auth.utils.set_language',
+    'bluebottle.auth.utils.save_profile_picture',
+    'bluebottle.auth.utils.get_extra_facebook_data',
+    'bluebottle.auth.utils.send_welcome_mail_pipe'
+)
+
+AUTHENTICATION_BACKENDS = (
+    'bluebottle.social.backends.NoStateFacebookOAuth2',
+    'social.backends.facebook.FacebookAppOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)

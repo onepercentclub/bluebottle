@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from django.utils.translation import ugettext as _
+
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
@@ -10,14 +12,23 @@ from django.conf import settings
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
+from bluebottle.bb_payouts.models import (BaseProjectPayout,
+                                          BaseOrganizationPayout)
+from bluebottle.clients import properties
+from bluebottle.sepa.sepa import SepaDocument, SepaAccount
+from bluebottle.utils.utils import StatusDefinition
+
+from djchoices.choices import DjangoChoices, ChoiceItem
+
 
 class ProjectPayout(BaseProjectPayout):
-
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
-        beneath_threshold = ChoiceItem('beneath_threshold', label=_("Beneath minimal payout amount"))
+        beneath_threshold = ChoiceItem('beneath_threshold',
+                                       label=_("Beneath minimal payout amount"))
         fully_funded = ChoiceItem('fully_funded', label=_("Fully funded"))
-        not_fully_funded = ChoiceItem('not_fully_funded', label=_("Not fully funded"))
+        not_fully_funded = ChoiceItem('not_fully_funded',
+                                      label=_("Not fully funded"))
 
         # Legacy payout rules
         old = ChoiceItem('old', label=_("Legacy: Old 1%/5%"))
@@ -102,14 +113,17 @@ class ProjectPayout(BaseProjectPayout):
         # 1st of January 2014
         start_2014 = timezone.datetime(2014, 1, 1, tzinfo=timezone.utc)
 
+        threshold = properties.MINIMAL_PAYOUT_AMOUNT
+
         if self.project.created >= start_2014:
             # New rules per 2014
 
-            if self.project.amount_donated >= self.project.amount_asked:
-                return self.PayoutRules.fully_funded
-            elif self.project.amount_donated < settings.MINIMAL_PAYOUT_AMOUNT:
+            if self.project.amount_donated <= threshold:
                 # Funding less then minimal payment amount.
-                return self.PayoutRules.hundred
+                return self.PayoutRules.beneath_threshold
+            elif self.project.amount_donated >= self.project.amount_asked:
+                # Fully funded
+                return self.PayoutRules.fully_funded
             else:
                 # Not fully funded
                 return self.PayoutRules.not_fully_funded
@@ -157,7 +171,6 @@ class ProjectPayout(BaseProjectPayout):
 
 
 class OrganizationPayout(BaseOrganizationPayout):
-
     @classmethod
     def create_sepa_xml(cls, qs):
         """ Create a SEPA XML file for OrganizationPayouts in QuerySet. """

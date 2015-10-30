@@ -11,7 +11,7 @@ BB_PROJECT_MODEL = get_project_model()
 
 
 class TaskApiTestcase(BluebottleTestCase):
-    """ Tests for Tasks in Booking """
+    """ Tests tasks api """
 
     def setUp(self):
         super(TaskApiTestcase, self).setUp()
@@ -22,7 +22,8 @@ class TaskApiTestcase(BluebottleTestCase):
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 
         campaign_status = ProjectPhase.objects.get(slug='campaign')
-        self.some_project = ProjectFactory.create(owner=self.some_user, status=campaign_status)
+        self.some_project = ProjectFactory.create(owner=self.some_user,
+                                                  status=campaign_status)
 
         self.task1 = TaskFactory.create(
             status=BB_TASK_MODEL.TaskStatuses.open,
@@ -35,28 +36,35 @@ class TaskApiTestcase(BluebottleTestCase):
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
 
         self.yet_another_user = BlueBottleUserFactory.create()
-        self.yet_another_token = "JWT {0}".format(self.yet_another_user.get_jwt_token())
+        self.yet_another_token = "JWT {0}".format(
+            self.yet_another_user.get_jwt_token())
 
         self.previews_url = '/api/bb_projects/previews/'
-
 
     def test_task_count(self):
         """ Test various task_count values """
 
         # No task members assigned to a task of a project, so there is a task open
-        response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.previews_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 1)
 
-        task_member = TaskMemberFactory.create(member=self.another_user, task=self.task1, status='accepted')
+        task_member = TaskMemberFactory.create(member=self.another_user,
+                                               task=self.task1,
+                                               status='accepted')
 
         # The task has one task member and two people needed, still one task open
-        response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.previews_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 1)
 
-        task_member2 = TaskMemberFactory.create(member=self.yet_another_user, task=self.task1, status='accepted')
-        
+        task_member2 = TaskMemberFactory.create(member=self.yet_another_user,
+                                                task=self.task1,
+                                                status='accepted')
+
         # The task has two accepted task members for two people_needed, no more task open
-        response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.previews_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 0)
 
         task_member2.status = 'applied'
@@ -71,18 +79,20 @@ class TaskApiTestcase(BluebottleTestCase):
         self.task1.save()
 
         # The task is closed, so don't give a task_count
-        response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.previews_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 0)
 
         self.task1.status = BB_TASK_MODEL.TaskStatuses.realized
         self.task1.save()
 
         # The task is realized, so don't give a task_count
-        response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.previews_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 0)
 
         self.task1.status = BB_TASK_MODEL.TaskStatuses.open
-        self.task1.save()      
+        self.task1.save()
 
         task2 = TaskFactory.create(
             status=BB_TASK_MODEL.TaskStatuses.open,
@@ -92,6 +102,6 @@ class TaskApiTestcase(BluebottleTestCase):
         )
 
         # There are now two tasks for the same project, so task_count gives 2
-        response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
+        response = self.client.get(self.previews_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 2)
-

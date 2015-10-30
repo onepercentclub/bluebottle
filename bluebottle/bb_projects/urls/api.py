@@ -3,8 +3,10 @@ from django.conf.urls import patterns, url
 from ..views import (
     ManageProjectDetail, ManageProjectList, ProjectDetail,
     ProjectList, ProjectThemeDetail, ProjectThemeList,
-    ProjectPreviewDetail, ProjectPreviewList,
-    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList, ProjectPhaseLogList, ProjectPhaseLogDetail)
+    ProjectPreviewDetail, ProjectPreviewList, ProjectTinyPreviewList,
+    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList,
+    ProjectPhaseLogList, ProjectPhaseLogDetail,
+    ManageProjectDocumentList, ManageProjectDocumentDetail)
 
 
 urlpatterns = patterns(
@@ -13,6 +15,8 @@ urlpatterns = patterns(
     url(r'^projects/(?P<slug>[\w-]+)$', ProjectDetail.as_view(),
         name='project_detail'),
 
+    url(r'^tiny-previews/$', ProjectTinyPreviewList.as_view(),
+        name='project_tiny_preview_list'),
     url(r'^previews/$', ProjectPreviewList.as_view(),
         name='project_preview_list'),
     url(r'^previews/(?P<slug>[\w-]+)$', ProjectPreviewDetail.as_view(),
@@ -37,4 +41,9 @@ urlpatterns = patterns(
     # Manage stuff
     url(r'^manage/$', ManageProjectList.as_view(), name='project_manage_list'),
     url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(), name='project_manage_detail'),
+
+    url(r'^documents/manage/$', ManageProjectDocumentList.as_view(), name='manage_project_document_list'),
+    url(r'^documents/manage/(?P<pk>\d+)$', ManageProjectDocumentDetail.as_view(),
+        name='manage_project_document_detail'),
+
 )

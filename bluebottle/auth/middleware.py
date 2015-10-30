@@ -12,7 +12,15 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 
+def isAdminRequest(request):
+    admin_base = reverse('admin:index')
+    docs_base = reverse('django.swagger.base.view')
+
+    return request.path.startswith(admin_base) or request.path.startswith(docs_base)
+
+
 class UserJwtTokenMiddleware:
+
     """
     Custom middleware to set the User on the request when using
     Jwt Token authentication.
@@ -38,6 +46,7 @@ class UserJwtTokenMiddleware:
 
 
 class SlidingJwtTokenMiddleware:
+
     """
     Custom middleware to set a sliding window for the jwt auth token expiration.
     """
@@ -120,19 +129,20 @@ class SlidingJwtTokenMiddleware:
 
 
 class AdminOnlySessionMiddleware(SessionMiddleware):
+
     """
     Only do the session stuff for admin urls.
     The frontend relies on auth tokens.
     """
 
     def process_request(self, request):
-        if request.path.startswith(reverse('admin:index')):
+        if isAdminRequest(request):
             super(AdminOnlySessionMiddleware, self).process_request(request)
         else:
             return
 
     def process_response(self, request, response):
-        if request.path.startswith(reverse('admin:index')):
+        if isAdminRequest(request):
             return super(AdminOnlySessionMiddleware, self).process_response(
                 request, response)
         else:
@@ -140,22 +150,24 @@ class AdminOnlySessionMiddleware(SessionMiddleware):
 
 
 class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
+
     """
     Only do the session authentication stuff for admin urls.
     The frontend relies on auth tokens so we clear the user.
     """
 
     def process_request(self, request):
-        if request.path.startswith(reverse('admin:index')):
+        if isAdminRequest(request):
             super(AdminOnlyAuthenticationMiddleware, self).process_request(
                 request)
 
 
 class AdminOnlyCsrf(object):
+
     """
     Disable csrf for non-Admin requests, eg API
     """
 
     def process_request(self, request):
-        if not request.path.startswith(reverse('admin:index')):
+        if not isAdminRequest(request):
             setattr(request, '_dont_enforce_csrf_checks', True)

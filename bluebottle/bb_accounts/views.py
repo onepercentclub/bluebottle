@@ -27,18 +27,49 @@ USER_MODEL = get_user_model()
 
 
 class UserProfileDetail(generics.RetrieveAPIView):
+    """
+    Fetch User Details
+
+    """
     model = USER_MODEL
     permission_classes = (TenantConditionalOpenClose,)
     serializer_class = UserProfileSerializer
 
 
 class ManageProfileDetail(generics.RetrieveUpdateAPIView):
+    """
+    Manage User Details
+    ---
+    PUT:
+        serializer: ManageProfileSerializer
+        omit_serializer: false
+        parameters_strategy: merge
+        parameters:
+            - name: location
+              type: geo.Location
+              paramType: form
+            - name: avatar
+              type: file
+        responseMessages:
+            - code: 401
+              message: Not authenticated
+        consumes:
+            - application/json
+            - multipart/form-data
+        produces:
+            - application/json
+    """
+    documentable = True
     model = USER_MODEL
     permission_classes = (TenantConditionalOpenClose, IsCurrentUser)
     serializer_class = ManageProfileSerializer
 
 
 class CurrentUser(generics.RetrieveAPIView):
+    """
+    Fetch Current User
+
+    """
     model = USER_MODEL
 
     def get_serializer_class(self):
@@ -56,6 +87,10 @@ class CurrentUser(generics.RetrieveAPIView):
 
 
 class UserCreate(generics.CreateAPIView):
+    """
+    Create User
+
+    """
     model = USER_MODEL
     serializer_class = UserCreateSerializer
 
@@ -291,6 +326,7 @@ class PasswordSet(views.APIView):
 
 
 class DisableAccount(views.APIView):
+
     def post(self, request, *args, **kwargs):
         user_id = self.kwargs.get("user_id")
         token = self.kwargs.get("token")

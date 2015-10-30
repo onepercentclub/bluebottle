@@ -157,7 +157,8 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
             schema_name='test',
             client_name='test')
 
-        cls.tenant.save(verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
+        cls.tenant.save(
+            verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
         connection.set_tenant(cls.tenant)
 
     @classmethod

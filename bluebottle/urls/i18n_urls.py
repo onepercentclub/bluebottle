@@ -10,7 +10,6 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    url(r'^$', HomeView.as_view(), name='home'),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',
@@ -42,13 +41,8 @@ urlpatterns = patterns(
     url(r'^accounts/',
         include('django.contrib.auth.urls', namespace='accounts')),
 
-    # account login/logout, password reset, and password change
-    url(r'^accounts/', include('django.contrib.auth.urls')),
-
-    url(r'social/', include('social_auth.urls')),
-
     # These URL's will be automatically prefixed with the locale (e.g. '/nl/')
-    url(r'^$', HomeView.as_view(), name='home'),
+    url(r'^', HomeView.as_view(), name='home'),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset',
@@ -67,4 +61,5 @@ urlpatterns = patterns(
     # account login/logout, password reset, and password change
     url(r'^accounts/',
         include('django.contrib.auth.urls', namespace='accounts')),
+)
 )

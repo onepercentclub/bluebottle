@@ -9,11 +9,20 @@ from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-
-from dateutil.relativedelta import relativedelta
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from django_fsm.db.fields import FSMField, transition
+
+from bluebottle.bb_payouts.exceptions import PayoutException
+from bluebottle.bb_projects.fields import MoneyField
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.payments.models import OrderPayment
+from bluebottle.utils.utils import StatusDefinition
+
+from bluebottle.utils.model_dispatcher import (get_project_model,
+                                               get_donation_model,
+                                               get_project_payout_model)
 
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_projects.fields import MoneyField
@@ -374,6 +383,12 @@ class BaseProjectPayout(PayoutBase):
             message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
             raise PayoutException(message)
         return calculator
+
+        self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
+        self.organization_fee = self.amount_raised - self.amount_payable
+
+        if save:
+            self.save()
 
     def generate_invoice_reference(self):
         """

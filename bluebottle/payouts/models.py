@@ -20,8 +20,8 @@ from bluebottle.utils.utils import StatusDefinition
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-
 class ProjectPayout(BaseProjectPayout):
+    
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
         beneath_threshold = ChoiceItem('beneath_threshold',

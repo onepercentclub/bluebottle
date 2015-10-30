@@ -115,7 +115,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    'bluebottle.utils.middleware.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
@@ -234,6 +234,7 @@ TENANT_APPS = (
     'bluebottle.payments_manual',
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
+    'bluebottle.votes',
     'bluebottle.journals',
     'bluebottle.accounting',
     'bluebottle.csvimport',
@@ -406,12 +407,10 @@ DONATIONS_ENABLED = True
 
 
 # For building frontend code
-BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 
-           'slides', 'quotes', 'payments', 'payments-docdata', 
-           'payments-voucher', 'payments-mock', 'members', 
-           'organizations', 'projects', 'tasks', 'fundraisers', 
-           'donations', 'orders', 'homepage', 'recurring-donations', 
-           'partners']
+BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
+           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
+           'projects', 'tasks', 'fundraisers', 'donations', 'orders',
+           'homepage', 'recurring-donations', 'partners']
 
 MINIMAL_PAYOUT_AMOUNT = 21.00
 VAT_RATE = '0.21'

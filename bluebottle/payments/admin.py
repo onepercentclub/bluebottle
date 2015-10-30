@@ -5,17 +5,12 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
 from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments_docdata.admin import (DocdataPaymentAdmin,
-                                               DocdataDirectdebitPaymentAdmin)
+from bluebottle.payments_docdata.admin import (
+    DocdataPaymentAdmin, DocdataPaymentAdmin,
+    DocdataDirectdebitPaymentAdmin)
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from bluebottle.payments.exception import PaymentAdminException
-from bluebottle.payments_docdata.admin import DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin
-from bluebottle.payments_docdata.models import DocdataPayment
-from bluebottle.payments_manual.admin import ManualPaymentAdmin
-from bluebottle.payments_manual.models import ManualPayment
-from bluebottle.payments_mock.admin import MockPaymentAdmin
 from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
-
 
 class OrderPaymentAdmin(admin.ModelAdmin):
     model = OrderPayment
@@ -84,10 +79,12 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     ordering = ('-created',)
 
     def get_child_models(self):
-        try:
-            return tuple((cls, globals()['{0}Admin'.format(cls.__name__)]) for cls in Payment.__subclasses__())
-        except KeyError as e:
-            raise PaymentAdminException('Class not found: {0}. Classes extending Payment need a corresponding Admin class.'.format(e.message))
+        return tuple(
+            (admin.model, admin) for admin in (
+                DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
+                VoucherPaymentAdmin
+            )
+        )
 
     def order_payment_amount(self, instance):
         return instance.order_payment.amount

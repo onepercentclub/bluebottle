@@ -1,10 +1,6 @@
 import decimal
 import datetime
 from decimal import Decimal
-from bluebottle.bb_payouts.exceptions import PayoutException
-from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import StatusDefinition
 
 from django.conf import settings
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -13,8 +9,6 @@ from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from dateutil.relativedelta import relativedelta
@@ -26,10 +20,6 @@ from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
-
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_donation_model,
-                                               get_project_payout_model)
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
@@ -124,17 +114,14 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
         SETTLED = ChoiceItem(StatusDefinition.SETTLED, _('Settled'))
         RETRY = ChoiceItem(StatusDefinition.RETRY, _('Retry'))
 
-    planned = models.DateField(_("Planned"), help_text=_("Date on which this batch should be processed."))
-    planned = models.DateField(_("Planned"), help_text=_(
-        "Date on which this batch should be processed."))
+    planned = models.DateField(_("Planned"),
+                               help_text=_("Date on which this batch should be processed."))
 
-    status = FSMField(_("status"), max_length=20, default=Statuses.NEW, choices=Statuses.choices, protected=True)
+    status = FSMField(_("status"), max_length=20, default=Statuses.NEW,
+                      choices=Statuses.choices, protected=True)
     protected = models.BooleanField(
         _("protected"), default=False,
         help_text=_('If a payout is protected, the amounts can only be updated via journals.'))
-    status = models.CharField(_("status"), max_length=20,
-                              choices=STATUS_CHOICES,
-                              default=StatusDefinition.NEW)
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
@@ -319,9 +306,7 @@ class BaseProjectPayout(PayoutBase):
         if not self.amount_payable:
             return "-"
 
-        return "{}%".format(round(((
-                                       self.amount_raised - self.amount_payable) / self.amount_raised) * 100,
-                                  1))
+        return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised) * 100,1))
 
     def get_payout_rule(self):
         """
@@ -330,13 +315,14 @@ class BaseProjectPayout(PayoutBase):
 
         Default is just payout rule 5.
         """
-        return self.PayoutRules.five
+        return self.PayoutRules.fully_funded
 
     def calculate_amount_payable_rule_five(self, total):
         """
         Calculate the amount payable for 5% rule
         """
         return self.amount_raised * Decimal(0.95)
+
     def calculate_amounts(self, save=True):
         """
         Calculate amounts according to payment_rule.
@@ -380,7 +366,7 @@ class BaseProjectPayout(PayoutBase):
         if save:
             self.save()
 
-     def get_calculator(self):
+    def get_calculator(self):
         calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
         try:
             calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))

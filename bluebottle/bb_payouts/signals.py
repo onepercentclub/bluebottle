@@ -23,59 +23,45 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     if project.is_realised and project.amount_asked:
         PROJECT_PAYOUT_MODEL = get_project_payout_model()
         next_date = PROJECT_PAYOUT_MODEL.get_next_planned_date()
-    if (project.is_realised or project.is_closed) and project.amount_asked:
-
-        with LocalTenant():
-
-            if now.day <= 15:
-                next_date = timezone.datetime(now.year, now.month, 15)
-            else:
-                next_date = timezone.datetime(now.year, now.month, 1) + \
-                            timedelta(days=20)
 
         try:
             # Update existing Payout
             payout = PROJECT_PAYOUT_MODEL.objects.get(project=project, protected=False)
-            PROJECT_PAYOUT_MODEL = get_project_payout_model()
 
-            try:
-                # Update existing Payout
-                payout = PROJECT_PAYOUT_MODEL.objects.get(project=project)
+            if payout.status == StatusDefinition.NEW:
+                # Update planned payout date for new Payouts
+                payout.calculate_amounts()
+                payout.planned = next_date
+                payout.save()
 
-                if payout.status == StatusDefinition.NEW:
-                    # Update planned payout date for new Payouts
-                    payout.calculate_amounts()
-                    payout.planned = next_date
-                    payout.save()
+        except PROJECT_PAYOUT_MODEL.DoesNotExist:
 
-            except PROJECT_PAYOUT_MODEL.DoesNotExist:
+            if project.campaign_started:
+                # Create new Payout
+                payout = PROJECT_PAYOUT_MODEL(
+                    planned=next_date,
+                    project=project
+                )
 
-                if project.campaign_started:
-                    # Create new Payout
-                    payout = PROJECT_PAYOUT_MODEL(
-                        planned=next_date,
-                        project=project
-                    )
+                # Calculate amounts
+                payout.calculate_amounts()
 
-                    # Calculate amounts
-                    payout.calculate_amounts()
+                if project.is_closed:
+                    payout.status = StatusDefinition.SETTLED
 
-                    if project.is_closed:
-                        payout.status = StatusDefinition.SETTLED
+                # Set payment details
+                try:
+                    IBANValidator()(project.account_number)
+                    payout.receiver_account_iban = project.account_number
+                except ValidationError as e:
+                    logger.info(
+                        "IBAN error payout {0}, project: {1}: {2}".format(
+                            payout.id, project.id, e.message))
 
-                    # Set payment details
-                    try:
-                        IBANValidator()(project.account_number)
-                        payout.receiver_account_iban = project.account_number
-                    except ValidationError as e:
-                        logger.info(
-                            "IBAN error payout {0}, project: {1}: {2}".format(
-                                payout.id, project.id, e.message))
+                payout.receiver_account_bic = project.account_bic
+                payout.receiver_account_number = project.account_number
+                payout.receiver_account_name = project.account_holder_name
+                payout.receiver_account_city = project.account_holder_city
+                payout.receiver_account_country = project.account_bank_country
 
-                    payout.receiver_account_bic = project.account_bic
-                    payout.receiver_account_number = project.account_number
-                    payout.receiver_account_name = project.account_holder_name
-                    payout.receiver_account_city = project.account_holder_city
-                    payout.receiver_account_country = project.account_bank_country
-
-                    payout.save()
+                payout.save()

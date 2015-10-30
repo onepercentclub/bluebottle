@@ -1,12 +1,11 @@
-from django.conf.urls import include, url, patterns
+from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf.urls import patterns
-from surlex.dj import surl
-from bluebottle.accounting.views import MultiTenantAccountingDashboardView, MultiTenantAccountingOverviewView
 
 from bluebottle.views import HomeView
 
 admin.autodiscover()
+
 
 urlpatterns = patterns(
     '',
@@ -61,5 +60,4 @@ urlpatterns = patterns(
     # account login/logout, password reset, and password change
     url(r'^accounts/',
         include('django.contrib.auth.urls', namespace='accounts')),
-)
 )

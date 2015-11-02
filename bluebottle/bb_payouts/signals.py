@@ -1,12 +1,9 @@
-from datetime import timedelta
 import logging
 
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.clients.utils import LocalTenant
 
 logger = logging.getLogger()
 
@@ -18,9 +15,13 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     """
     from localflavor.generic.validators import IBANValidator
 
+    PROJECT_PAYOUT_MODEL = get_project_payout_model()
+
     project = instance
 
-    if project.is_realised and project.amount_asked:
+    if project.status.slug in ['done-complete', 'done-incomplete'] \
+            and project.amount_asked:
+
         PROJECT_PAYOUT_MODEL = get_project_payout_model()
         next_date = PROJECT_PAYOUT_MODEL.get_next_planned_date()
 
@@ -35,6 +36,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 payout.save()
 
         except PROJECT_PAYOUT_MODEL.DoesNotExist:
+
 
             if project.campaign_started:
                 # Create new Payout

@@ -21,16 +21,6 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
 
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_donation_model,
-                                               get_project_payout_model)
-
-from bluebottle.bb_payouts.exceptions import PayoutException
-from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.clients.utils import LocalTenant
-from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import StatusDefinition
-
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
 from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
 from bluebottle.utils.utils import FSMTransition
@@ -346,6 +336,7 @@ class BaseProjectPayout(PayoutBase):
         Should only be called for Payouts with status 'new'.
         """
         assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
+        assert not self.protected, 'Can only recalculate for un-protected payouts'
 
         # Set payout rule if none set.
         if not self.payout_rule:
@@ -368,9 +359,11 @@ class BaseProjectPayout(PayoutBase):
             self.amount_payable = Decimal(
                 round(calculator(self.get_amount_raised()), 2))
 
-        if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
-            self.settled()
         self.organization_fee = self.amount_raised - self.amount_payable
+
+        if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
+            self.in_progress()
+            self.settled()
 
         if save:
             self.save()
@@ -573,6 +566,7 @@ class BaseOrganizationPayout(PayoutBase):
         Should only be called for Payouts with status 'new'.
         """
         assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
+        assert not self.protected, 'Can only recalculate for un-protected payouts'
 
         # Calculate original values
         self.organization_fee_incl = self._get_organization_fee()

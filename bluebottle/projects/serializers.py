@@ -95,7 +95,7 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    owner = get_serializer_class('AUTH_USER_MODEL', 'default')()
     image = ImageSerializer(required=False)
     tags = TagSerializer()
     task_count = serializers.IntegerField(source='task_count')

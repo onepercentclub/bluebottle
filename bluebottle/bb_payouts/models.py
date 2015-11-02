@@ -369,8 +369,7 @@ class BaseProjectPayout(PayoutBase):
                 round(calculator(self.get_amount_raised()), 2))
 
         if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
-            self.status = StatusDefinition.SETTLED
-
+            self.settled()
         self.organization_fee = self.amount_raised - self.amount_payable
 
         if save:
@@ -384,12 +383,6 @@ class BaseProjectPayout(PayoutBase):
             message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
             raise PayoutException(message)
         return calculator
-
-        self.amount_payable = Decimal(round(calculator(self.get_amount_raised()), 2))
-        self.organization_fee = self.amount_raised - self.amount_payable
-
-        if save:
-            self.save()
 
     def generate_invoice_reference(self):
         """

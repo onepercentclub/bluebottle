@@ -67,7 +67,7 @@ install_requires = [
     'pygeoip==0.3.1',
     'python-social-auth==0.2.12',
     'python-memcached==1.53',
-    'lxml==3.1.2',
+    'lxml==3.4.4',
     'unicodecsv==0.9.4',
     'python-dateutil==1.5',
     'gunicorn==19.2.1',

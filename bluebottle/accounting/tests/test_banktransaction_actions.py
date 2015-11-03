@@ -3,9 +3,11 @@ from decimal import Decimal
 
 from django.db.models import Sum
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from django_webtest import WebTestMixin
+from bluebottle.bb_projects.models import ProjectPhase
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -23,18 +25,43 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
 
     def setUp(self):
         super(BankTransactionActionTests, self).setUp()
+        self.init_projects()
         self.app.extra_environ['HTTP_HOST'] = self.tenant.domain_url
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
+    def _add_completed_donation(self, project, amount):
+        donation = DonationFactory.create(project=project, amount=amount)
+        donation.order.locked()
+        donation.order.succeeded()
+
     def _initialize_unmatched_transactions(self):
         # required for project save
-        ProjectPhaseFactory.create(name='Plan - submitted', slug='plan-submitted', sequence=2)
+        start = timezone.now() - timedelta(days=10)
+        status_campaign = ProjectPhase.objects.get(slug='campaign')
+        status_done = ProjectPhase.objects.get(slug='done-complete')
 
         # projects to match with
-        self.project1 = ProjectFactory.create(status__name='Campaign', status__sequence=5)
-        self.project2 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
-        self.project3 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
-        self.project4 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
+        self.project1 = ProjectFactory.create(status=status_campaign)
+        self.project2 = ProjectFactory.create(status=status_campaign,
+                                              amount_asked=200)
+        self.project3 = ProjectFactory.create(status=status_campaign,
+                                              amount_asked=200)
+        self.project4 = ProjectFactory.create(status=status_campaign,
+                                              amount_asked=200)
+
+        # Add some donations so the amount_donated isn't below threshold.
+        self._add_completed_donation(self.project1, 100)
+        self._add_completed_donation(self.project2, 100)
+        self._add_completed_donation(self.project3, 100)
+        self._add_completed_donation(self.project4, 100)
+
+        # Close some of the projects
+        self.project2.status = status_done
+        self.project2.save()
+        self.project3.status = status_done
+        self.project3.save()
+        self.project4.status = status_done
+        self.project4.save()
 
         # update payout for project 2 & 3, no donations exist yet so just make it zero/empty
         # adding a new donation (for a closed payout) should create a new payout

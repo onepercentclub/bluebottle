@@ -37,7 +37,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
         except PROJECT_PAYOUT_MODEL.DoesNotExist:
 
-
             if project.campaign_started:
                 # Create new Payout
                 payout = PROJECT_PAYOUT_MODEL(

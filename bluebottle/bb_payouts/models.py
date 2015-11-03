@@ -348,12 +348,11 @@ class BaseProjectPayout(PayoutBase):
             calculator_name = "calculate_amount_payable_rule_{0}".format(
                 self.payout_rule)
             try:
-                calculator = getattr(self,
-                                     "calculate_amount_payable_rule_{0}".format(
-                                         self.payout_rule))
+                cmd = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
+                calculator = getattr(self, cmd)
             except AttributeError:
-                message = "Missing calculator for payout rule '{0}': '{1}'".format(
-                    self.payout_rule, calculator_name)
+                message = "Missing calculator for payout rule '{0}':" \
+                          " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
             self.amount_payable = Decimal(

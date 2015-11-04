@@ -71,11 +71,8 @@ urlpatterns = patterns('',
 
                        # Urls for partner sites
                        url(r'^pp/',
-                           include('bluebottle.partners.urls.partners')),
+                          include('bluebottle.partners.urls.partners')),
 
-                       # Project view that search engines will use.
-                       url(r'^projects/',
-                           include('bluebottle.projects.urls.seo')),
                        url(r'^api/organizations/',
                            include('bluebottle.organizations.urls.api')),
                        url(r'^api/suggestions/',

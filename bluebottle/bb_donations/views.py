@@ -23,7 +23,6 @@ class ValidDonationsMixin(object):
     """
     Filter query set on "valid" donations.
     """
-
     def get_queryset(self):
         queryset = super(ValidDonationsMixin, self).get_queryset()
         queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS,
@@ -77,7 +76,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
-        filter_kwargs['order__user__is_co_financer'] = co_financing
+        if co_financing:
+            filter_kwargs['order__user__is_co_financer'] = co_financing
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")

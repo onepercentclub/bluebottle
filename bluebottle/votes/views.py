@@ -29,13 +29,12 @@ class VoteList(generics.ListCreateAPIView):
     def pre_save(self, obj):
         """
         Set the voter.
-        Check that a user has not vote before
+        Check that a user has not voted before
         """
-
         try:
             self.get_queryset().get(voter=self.request.user,
                                     project=obj.project)
-            raise exceptions.ParseError('You cannot vote twice')
+            raise exceptions.ParseError(["You cannot vote twice"])
         except Vote.DoesNotExist:
             pass
 

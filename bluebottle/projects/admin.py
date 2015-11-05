@@ -9,7 +9,7 @@ from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
@@ -257,3 +257,5 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
 
 admin.site.register(Project, ProjectAdmin)
+
+admin.site.register(ProjectPhase)

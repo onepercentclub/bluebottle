@@ -42,11 +42,11 @@ class ProjectManager(models.Manager):
         # Apply filters
         status = query.getlist(u'status[]', None)
         if status:
-            qs = qs.filter(status_id__in=status)
+            qs = qs.filter(status__slug__in=status)
         else:
             status = query.get('status', None)
             if status:
-                qs = qs.filter(status_id=status)
+                qs = qs.filter(status__slug=status)
 
         country = query.get('country', None)
         if country:

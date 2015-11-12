@@ -310,6 +310,13 @@ class Project(BaseProject):
         """ Get the URL for the current project. """
         return '/projects/{}'.format(self.slug)
 
+    def get_meta_title(self, **kwargs):
+        return u"%(name_project)s | %(theme)s | %(country)s" % {
+            'name_project': self.title,
+            'theme': self.theme.name if self.theme else '',
+            'country': self.country.name if self.country else '',
+        }
+
     def get_fb_title(self, **kwargs):
         title = _(u"{name_project} in {country}").format(
             name_project=self.title,

@@ -117,7 +117,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(_('email address'), max_length=254, unique=True,
                               db_index=True)
-    username = models.SlugField(_('username'), unique=True)
+    username = models.CharField(_('username'), unique=True, max_length=254)
     is_staff = models.BooleanField(
         _('staff status'), default=False, help_text=_(
             'Designates whether the user can log into this admin site.'))

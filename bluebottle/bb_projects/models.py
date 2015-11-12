@@ -279,11 +279,6 @@ class BaseProject(models.Model, GetTweetMixin):
             get_project_phaselog_model().objects.create(
                 project=self, status=self.status)
 
-    @models.permalink
-    def get_absolute_url(self):
-        url = "/#!/projects/{0}".format(self.slug)
-        return url
-
     def update_amounts(self, save=True):
         """
         Update amount_donated and amount_needed

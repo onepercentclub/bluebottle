@@ -32,6 +32,7 @@ class IsOrderCreator(permissions.BasePermission):
             order = obj
         else:
             order = obj.order
+
         # Permission is granted if:
         #   * the order user is the logged in user
         #   * the order has no user but the current
@@ -74,7 +75,7 @@ class IsOrderCreator(permissions.BasePermission):
 
         if view.model == ORDER_MODEL:
             # Order must belong to the current user or have no user assigned (anonymous)
-            order_user_id = int(request.DATA.get('user', None))
+            order_user_id = int(request.DATA.get('user', 0))
             if order_user_id and order_user_id != request.user.pk:
                 return False
             return True

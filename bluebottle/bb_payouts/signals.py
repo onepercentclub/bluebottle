@@ -71,6 +71,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                     payout.receiver_account_number = project.account_number
                     payout.receiver_account_name = project.account_holder_name
                     payout.receiver_account_city = project.account_holder_city
-                    payout.receiver_account_country = project.account_bank_country
+                    payout.receiver_account_country = project.account_bank_country.name
 
                     payout.save()

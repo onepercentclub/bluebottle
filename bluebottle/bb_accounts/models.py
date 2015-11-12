@@ -350,7 +350,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def project_count(self):
         """ Return the number of projects a user started / is owner of """
-        return get_project_model().objects.filter(owner=self).count()
+        return get_project_model().objects.filter(
+            owner=self,
+            status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done']
+        ).count()
 
     @property
     def fundraiser_count(self):

@@ -43,8 +43,8 @@ class IsOrderCreator(permissions.BasePermission):
         if request.user.is_authenticated():
             # Does the order match the current user, or do they have an order
             # in the session which matches this order?
-            return (order.user == request.user or order.pk ==
-                    request.session.get('new_order_id'))
+            return (order.user == request.user or
+                    order.pk == request.session.get('new_order_id'))
 
         # Case 2: Anonymous user.
         else:
@@ -74,8 +74,8 @@ class IsOrderCreator(permissions.BasePermission):
 
         if view.model == ORDER_MODEL:
             # Order must belong to the current user or have no user assigned (anonymous)
-            order_user = request.DATA.get('user', None)
-            if order_user and order_user != request.user.pk:
+            order_user_id = int(request.DATA.get('user', None))
+            if order_user_id and order_user_id != request.user.pk:
                 return False
             return True
         else:  # This is for creating new objects that have a relation (fk) to Order.

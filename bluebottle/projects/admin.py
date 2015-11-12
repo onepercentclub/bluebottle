@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import logging
 
 from django import forms
@@ -66,6 +67,11 @@ class ProjectAdmin(BaseProjectAdmin):
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
     actions = (export_as_csv_action(fields=export_fields), )
+
+    def get_actions(self, request):
+        "Order the action in reverse (delete at the bottom)."
+        actions = super(ProjectAdmin, self).get_actions(request)
+        return OrderedDict(reversed(actions.items()))
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization', 'status', 'title',

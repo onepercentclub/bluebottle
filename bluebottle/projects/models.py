@@ -306,17 +306,9 @@ class Project(BaseProject):
             return 100
         return int(100 * self.amount_donated / self.amount_asked)
 
-    @models.permalink
     def get_absolute_url(self):
         """ Get the URL for the current project. """
-        return 'project-detail', (), {'slug': self.slug}
-
-    def get_absolute_frontend_url(self):
-        url = self.get_absolute_url()
-        # insert the hashbang, after the language string
-        bits = url.split('/')
-        url = "/".join(bits[:2] + ['#!'] + bits[2:])
-        return url
+        return '/projects/{}'.format(self.slug)
 
     def get_meta_title(self, **kwargs):
         return u"%(name_project)s | %(theme)s | %(country)s" % {

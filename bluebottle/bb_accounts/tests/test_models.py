@@ -168,7 +168,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_calculate_task_count(self):
         """
         Test that the task_count property on a user is calculated correctly.
-        We count a) tasks where a user is a task author and 
+        We count a) tasks where a user is a task author and
         b) TaskMembers where a user is applied, accepted or realized
         """
         self.assertEqual(self.user.task_count, 0)

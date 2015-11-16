@@ -124,7 +124,7 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
     def wallpost_link(self, obj):
         if str(obj.content_type) == 'task':
             task = obj.content_object
-            url = '/#!/projects/{project_slug}/tasks/{task_id}'.format(
+            url = '/projects/{project_slug}/tasks/{task_id}'.format(
                 project_slug=task.project.slug,
                 task_id=task.id,
             )

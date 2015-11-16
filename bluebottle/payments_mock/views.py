@@ -45,7 +45,7 @@ class PaymentResponseMockHandler(TemplateView):
         order_payment.authorized()
 
         if order_payment and status in self.payment_responses:
-            url = "/en/#!/orders/{0}/{1}".format(order_payment.order.id, status)
+            url = "/en/orders/{0}/{1}".format(order_payment.order.id, status)
 
         else:
             raise Http404

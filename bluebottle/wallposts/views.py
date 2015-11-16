@@ -1,13 +1,14 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 import django_filters
-from rest_framework import permissions
+from rest_framework import permissions, exceptions
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import (
     ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
 from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_fundraiser_model)
+                                               get_fundraiser_model,
+                                               get_task_model)
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 
 from .models import (TextWallpost, MediaWallpost, MediaWallpostPhoto,
@@ -21,6 +22,7 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 PROJECT_MODEL = get_project_model()
 FUNDRAISER_MODEL = get_fundraiser_model()
+TASK_MODEL = get_task_model()
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -87,11 +89,30 @@ class TextWallpostList(ListCreateAPIView):
         return queryset
 
     def pre_save(self, obj):
+        can_save = False
+
+        # If followers will be emailed then check the request user
+        # has permissions, eg they are the owner / author of the
+        # parent object (project, task, fundraiser).
+        if obj.email_followers:
+            parent_obj = obj.content_object
+
+            if isinstance(parent_obj, PROJECT_MODEL) or \
+               isinstance(parent_obj, FUNDRAISER_MODEL):
+                can_save = parent_obj.owner == self.request.user
+            elif isinstance(parent_obj, TASK_MODEL):
+                can_save = parent_obj.author == self.request.user
+        else:
+          can_save = True
+
+        if not can_save:
+            raise exceptions.PermissionDenied()
+
+        # Set the author / editor and ip address for the request
         if not obj.author:
             obj.author = self.request.user
         else:
             obj.editor = self.request.user
-        obj.ip_address = get_client_ip(self.request)
 
 
 class MediaWallpostList(TextWallpostList):
